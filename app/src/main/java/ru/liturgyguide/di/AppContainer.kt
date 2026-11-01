@@ -1,4 +1,4 @@
-package ru.liturgyguide
+package ru.liturgyguide.di
 
 import android.content.Context
 import ru.liturgyguide.service.CalendarEngine

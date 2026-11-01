@@ -16,7 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilledButton
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -104,7 +104,7 @@ fun ServiceScreen(
         // Progress bar
         item {
             LinearProgressIndicator(
-                progress = { progress.progressPercent / 100f },
+                progress = progress.progressPercent / 100f,
                 modifier = Modifier.fillMaxWidth().height(8.dp)
             )
         }
@@ -181,11 +181,11 @@ fun ServiceScreen(
                 }
 
                 if (nextStage != null) {
-                    FilledButton(onClick = { currentIndex++ }) {
+                    Button(onClick = { currentIndex++ }) {
                         Text("Далее: ${nextStage.name}")
                     }
                 } else {
-                    FilledButton(onClick = onBack) {
+                    Button(onClick = onBack) {
                         Text("Завершить")
                     }
                 }
