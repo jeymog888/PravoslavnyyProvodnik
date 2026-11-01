@@ -1,0 +1,36 @@
+{
+  "service": "Тестовая Литургия",
+  "total_duration_min": 30,
+  "stages": [
+    {
+      "id": "test1",
+      "order": 1,
+      "name": "Первый этап",
+      "description": "Первый тестовый этап",
+      "duration_min": 10,
+      "texts": [
+        {"type": "молитва", "original": "Текст 1", "translation": "Перевод 1", "explanation": "Пояснение 1"}
+      ]
+    },
+    {
+      "id": "test2",
+      "order": 2,
+      "name": "Второй этап",
+      "description": "Второй тестовый этап",
+      "duration_min": 10,
+      "texts": [
+        {"type": "возглас", "original": "Текст 2", "translation": "Перевод 2", "explanation": "Пояснение 2"}
+      ]
+    },
+    {
+      "id": "test3",
+      "order": 3,
+      "name": "Третий этап",
+      "description": "Третий тестовый этап",
+      "duration_min": 10,
+      "texts": [
+        {"type": "ектения", "original": "Текст 3", "translation": "Перевод 3", "explanation": "Пояснение 3"}
+      ]
+    }
+  ]
+}
