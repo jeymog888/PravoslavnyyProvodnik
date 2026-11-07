@@ -303,6 +303,54 @@ class GuideNavigationTest {
     }
 
     @Test
+    fun spellingVariantsOpenTheSamePairedPhraseFromMainSearch() {
+        data class SearchCase(
+            val queries: List<String>, val stageId: String, val stageTitle: String,
+            val trackIndex: Int, val lineIndex: Int, val original: String, val russian: String
+        )
+        val cases = listOf(
+            SearchCase(listOf("святого евангелия", "святаго евангелия"), "gospel", "Чтение Евангелия", 0, 0,
+                "Премудрость, прости, услышим Святаго Евангелия",
+                "Премудрость! Станем прямо и внимательно послушаем Святое Евангелие"),
+            SearchCase(listOf("святой боже", "святый боже"), "troparia_trisagion", "Песнопения дня и Трисвятое", 0, 0,
+                "Святый Боже, Святый Крепкий, Святый Безсмертный, помилуй нас.",
+                "Святой Боже, Святой Всемогущий, Святой Бессмертный, помилуй нас"),
+            SearchCase(listOf("духа святого животворящаго"), "creed", "Символ веры", 1, 12,
+                "И в Духа Святаго, Господа, Животворящаго,",
+                "И в Святого Духа, Господа, дарующего жизнь.")
+        )
+        cases.forEach { expected ->
+            val track = tracksFor(expected.stageId)[expected.trackIndex]
+            expected.queries.forEach { query ->
+                openStage(expected.stageId, query)
+                compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals(expected.stageTitle)
+                compose.onNodeWithTag("current_track_title", useUnmergedTree = true).assertTextEquals(track.title)
+                compose.onNodeWithTag("lyric_line_${expected.lineIndex}")
+                    .assertIsSelected().assertIsDisplayed().assertTextEquals(expected.russian)
+                assertEquals(track.id, preferences.getString("lyric_track_${expected.stageId}", null))
+                assertEquals(track.lines[expected.lineIndex].id, preferences.getString("lyric_phrase_${track.id}", null))
+                assertManualReading()
+
+                selectOriginal()
+                compose.onNodeWithTag("lyric_line_${expected.lineIndex}")
+                    .assertIsSelected().assertIsDisplayed().assertTextEquals(expected.original)
+                if (expected.stageId == "creed") captureQaScreenshot("s2-search-creed-original")
+                compose.onNodeWithTag("toggle_original").performClick()
+                compose.onNodeWithTag("language_russian").performClick()
+                compose.onNodeWithTag("lyric_line_${expected.lineIndex}")
+                    .assertIsSelected().assertIsDisplayed().assertTextEquals(expected.russian)
+                if (expected.stageId == "creed") captureQaScreenshot("s2-search-creed-russian")
+                pressBack()
+            }
+        }
+        tapMain("find_stage")
+        compose.onNodeWithTag("stage_search").performTextReplacement("святого евангелия квазислово")
+        closeSoftKeyboard()
+        compose.onNodeWithText("Пока не нашли эти слова").assertIsDisplayed()
+        compose.onNodeWithTag("stage_gospel").assertDoesNotExist()
+    }
+
+    @Test
     fun searchingForCreedOpensTheMatchingTextAndClosesTheKeyboard() {
         tapMain("find_stage")
         compose.onNodeWithTag("stage_search").performTextReplacement("Верую")

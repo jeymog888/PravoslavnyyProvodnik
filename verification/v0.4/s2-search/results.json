@@ -1,0 +1,202 @@
+{
+  "task": "S2.1 limited liturgical spelling search",
+  "captured_at_utc": "2026-11-07T22:52:00.991290+00:00",
+  "git_head": "16334a6170129cefdf3169df7846476a833366ee",
+  "git_branch": "codex/feoria-0.4-arrival",
+  "device": {
+    "serial": "emulator-5554",
+    "android": "15",
+    "model": "sdk_gphone64_arm64",
+    "screen": "Physical size: 1080x2400",
+    "density": "Physical density: 420",
+    "font_scale": "1.0",
+    "auto_time": "1"
+  },
+  "app_apk_sha256": "5a0e56def33e11a212f2d9e75c004e61647217a588b848de4d009ee91938459e",
+  "android_test_apk_sha256": "2ab986670b85189a2998ad06acddc80294dfc8b9a5434649963348b81411a06f",
+  "setup": "Authorized replacement of signed release 0.3 on emulator-5554 with debug build. Emulator left running. No user phone touched",
+  "build": "assembleDebug and assembleDebugAndroidTest passed",
+  "test_result": {
+    "tests": 11,
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "attempts": 1,
+    "suites": [
+      {
+        "file": "TEST-Liturgy_API_35(AVD) - 15-_app-.xml",
+        "attributes": {
+          "name": "ru.liturgyguide.ui.GuideNavigationTest",
+          "tests": "11",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0",
+          "time": "54.441",
+          "timestamp": "2026-11-07T22:51:33",
+          "hostname": "localhost"
+        },
+        "tests": [
+          {
+            "name": "searchingAfterFinishingDoesNotReusePositionsFromThePreviousService",
+            "classname": "ru.liturgyguide.ui.GuideNavigationTest",
+            "time": "9.817",
+            "status": "passed"
+          },
+          {
+            "name": "findingAPrayerFromMeaningOpensItsTextAtTheMatchedPhrase",
+            "classname": "ru.liturgyguide.ui.GuideNavigationTest",
+            "time": "5.849",
+            "status": "passed"
+          },
+          {
+            "name": "spellingVariantsOpenTheSamePairedPhraseFromMainSearch",
+            "classname": "ru.liturgyguide.ui.GuideNavigationTest",
+            "time": "14.555",
+            "status": "passed"
+          },
+          {
+            "name": "anUnknownPhraseCanBeClearedToRestoreTheGuide",
+            "classname": "ru.liturgyguide.ui.GuideNavigationTest",
+            "time": "2.572",
+            "status": "passed"
+          },
+          {
+            "name": "searchingForADailyReadingUsesTodaysTextAndKeepsItsNoteOptional",
+            "classname": "ru.liturgyguide.ui.GuideNavigationTest",
+            "time": "4.0",
+            "status": "passed"
+          },
+          {
+            "name": "searchingForCreedOpensTheMatchingTextAndClosesTheKeyboard",
+            "classname": "ru.liturgyguide.ui.GuideNavigationTest",
+            "time": "2.48",
+            "status": "passed"
+          },
+          {
+            "name": "heardWordsLeadToTheRelevantExplanation",
+            "classname": "ru.liturgyguide.ui.GuideNavigationTest",
+            "time": "3.258",
+            "status": "passed"
+          },
+          {
+            "name": "bothSpellingsFindTheSameStageAndPreserveTheEnteredQuery",
+            "classname": "ru.liturgyguide.ui.DailyReadingSearchTest",
+            "time": "4.868",
+            "status": "passed"
+          },
+          {
+            "name": "aReadingFromAnotherDayIsNotOfferedAsTodaysText",
+            "classname": "ru.liturgyguide.ui.DailyReadingSearchTest",
+            "time": "1.786",
+            "status": "passed"
+          },
+          {
+            "name": "aWordFromTheDailyGospelFindsItsStageAndPreservesTheQuery",
+            "classname": "ru.liturgyguide.ui.DailyReadingSearchTest",
+            "time": "2.239",
+            "status": "passed"
+          },
+          {
+            "name": "aMissingDailyReadingIsExplainedInBothTextAndMeaning",
+            "classname": "ru.liturgyguide.ui.DailyReadingSearchTest",
+            "time": "1.014",
+            "status": "passed"
+          }
+        ]
+      }
+    ]
+  },
+  "unit_tests": "Not repeated as requested; root reported 111 passing before this QA task",
+  "new_android_test": "GuideNavigationTest#spellingVariantsOpenTheSamePairedPhraseFromMainSearch",
+  "qa_production_changes": [],
+  "defects": [],
+  "screenshots": [
+    {
+      "file": "s2-search-creed-original.png",
+      "width": 1080,
+      "height": 2400,
+      "sha256": "abf0fefa0741078757f11c7a83186f2a0254f5e3b0d64da1178b35f2fdb9ffdd",
+      "origin": "Native Android screencap after selected phrase and exact text assertions"
+    },
+    {
+      "file": "s2-search-creed-russian.png",
+      "width": 1080,
+      "height": 2400,
+      "sha256": "aca614f7c0a08d1afe63c6949ff1d0815e8cbfd12d461bdca16cbb480e7f48a8",
+      "origin": "Native Android screencap after selected phrase and exact text assertions"
+    }
+  ],
+  "verified_behavior": [
+    {
+      "queries": [
+        "святого евангелия",
+        "святаго евангелия"
+      ],
+      "stage": "gospel",
+      "track_index": 0,
+      "line_index": 0,
+      "original": "Премудрость, прости, услышим Святаго Евангелия",
+      "russian": "Премудрость! Станем прямо и внимательно послушаем Святое Евангелие"
+    },
+    {
+      "queries": [
+        "святой боже",
+        "святый боже"
+      ],
+      "stage": "troparia_trisagion",
+      "track_index": 0,
+      "line_index": 0,
+      "original": "Святый Боже, Святый Крепкий, Святый Безсмертный, помилуй нас.",
+      "russian": "Святой Боже, Святой Всемогущий, Святой Бессмертный, помилуй нас"
+    },
+    {
+      "queries": [
+        "духа святого животворящаго"
+      ],
+      "stage": "creed",
+      "track_index": 1,
+      "line_index": 12,
+      "original": "И в Духа Святаго, Господа, Животворящаго,",
+      "russian": "И в Святого Духа, Господа, дарующего жизнь."
+    },
+    {
+      "query": "святого евангелия квазислово",
+      "result": "Пока не нашли эти слова",
+      "gospel_result_absent": true
+    }
+  ],
+  "visual_review": {
+    "status": "passed",
+    "screenshots_inspected": 2,
+    "observations": [
+      "Creed phrase 13 of 20 is selected and fully visible in both languages",
+      "Original and Russian meaning show the same paired phrase",
+      "Manual reading status and navigation controls remain visible"
+    ]
+  },
+  "qa_modified_test_files": [
+    "app/src/androidTest/java/ru/liturgyguide/ui/GuideNavigationTest.kt"
+  ],
+  "source_hashes": {
+    "app/src/androidTest/java/ru/liturgyguide/ui/DailyReadingSearchTest.kt": "70a91642bdc1e45eac51d3076d94892a89fe9647b2420be619a84441e186e9df",
+    "app/src/androidTest/java/ru/liturgyguide/ui/GuideNavigationTest.kt": "2b9551066a3fd30ce83ffca8c009b1bf1d4bf281508a6f2d6263bd4e0774ac60",
+    "app/src/main/java/ru/liturgyguide/service/LiturgicalSpelling.kt": "993d0743340bfba62755a234267f1adeb791dab4646e0022beef1e3f736bca3f",
+    "app/src/main/java/ru/liturgyguide/service/PhraseMatcher.kt": "29b10ae344110df134239140ba55cbf4c09260200689e1f339e839e7f58e54f1",
+    "app/src/main/java/ru/liturgyguide/service/PrayerTextSearch.kt": "0630fb71a17e48df947d8e4425e4001826b7a3cf72f47164edcebe71018aca26",
+    "app/src/test/java/ru/liturgyguide/service/PhraseMatcherTest.kt": "83e1ac7c9752b29738731fcf81b50f24f0da3afe6b0676a3f7427b6c251aa6c9",
+    "app/src/test/java/ru/liturgyguide/service/PrayerTextSearchTest.kt": "cd6a1cfe9e632940fc2eae8490430eb9448ecefcc47e18d4a74efa03247b9134"
+  },
+  "orchestrator_review": {
+    "source_diff_reviewed": true,
+    "qa_test_reviewed": true,
+    "screenshots_reviewed": 2,
+    "unit_xml_totals": {
+      "tests": 111,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "independent_review_model": "gpt-6-astra",
+    "accepted": true
+  }
+}

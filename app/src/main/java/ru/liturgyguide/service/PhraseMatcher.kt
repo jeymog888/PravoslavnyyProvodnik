@@ -52,15 +52,6 @@ class PhraseMatcher(anchors: List<StageAnchor>) {
         private val marks = Regex("\\p{M}")
         private val separators = Regex("[^а-яa-z]+")
         private val terminalHardSign = Regex("ъ(?=[^а-яa-z]|$)")
-        // Common spelling changes made by a Russian recognizer. This is not a
-        // general fuzzy match: a complete phrase must still occur in order.
-        private val spellingAliases = mapOf(
-            "благословенно" to "благословено", "святаго" to "святого",
-            "святый" to "святой", "соборнаго" to "соборного",
-            "единаго" to "единого", "небеснаго" to "небесного",
-            "безсмертный" to "бессмертный", "безсмертнаго" to "бессмертного",
-            "божиих" to "божьих", "божиим" to "божьим"
-        )
         private val genericWords = setOf("господи", "помилуй", "аминь", "слава", "тебе", "боже").map(::normalize).toSet()
         private val genericPhrases = setOf(
             "мир всем", "и духови твоему", "и духу твоему", "господу помолимся",
@@ -88,7 +79,7 @@ class PhraseMatcher(anchors: List<StageAnchor>) {
                 .replace('ѳ', 'ф').replace('ѵ', 'и').replace('ё', 'е')
             return separators.replace(terminalHardSign.replace(modernLetters, ""), " ")
                 .trim().split(' ').filter(String::isNotEmpty)
-                .joinToString(" ") { spellingAliases[it] ?: it }
+                .joinToString(" ", transform = LiturgicalSpelling::canonicalWord)
         }
     }
 }

@@ -19,6 +19,31 @@ class DailyReadingSearchTest {
     private val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext)
 
     @Test
+    fun bothSpellingsFindTheSameStageAndPreserveTheEnteredQuery() {
+        val selected = AtomicReference<Pair<String, String?>>()
+        compose.setContent {
+            GuideTheme(dark = false) {
+                StageSelector(container.getStageMatcher(), null, true, null,
+                    onSelect = { id, query -> selected.set(id to query) }, onSearch = {}, onBack = {})
+            }
+        }
+        listOf(
+            "святого евангелия" to "gospel", "святаго евангелия" to "gospel",
+            "святой боже" to "troparia_trisagion", "святый боже" to "troparia_trisagion"
+        ).forEach { (query, stageId) ->
+            compose.onNodeWithTag("stage_search").performTextReplacement(query)
+            closeSoftKeyboard()
+            compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_$stageId"))
+            compose.onNodeWithTag("stage_$stageId").assertIsDisplayed().performClick()
+            assertEquals(stageId to query, selected.get())
+        }
+        compose.onNodeWithTag("stage_search").performTextReplacement("святого евангелия квазислово")
+        closeSoftKeyboard()
+        compose.onNodeWithText("Пока не нашли эти слова").assertIsDisplayed()
+        compose.onNodeWithTag("stage_gospel").assertDoesNotExist()
+    }
+
+    @Test
     fun aWordFromTheDailyGospelFindsItsStageAndPreservesTheQuery() {
         val day = requireNotNull(container.readings?.days?.firstOrNull { it.date == "2026-11-08" })
         val selected = AtomicReference<Pair<String, String?>>()

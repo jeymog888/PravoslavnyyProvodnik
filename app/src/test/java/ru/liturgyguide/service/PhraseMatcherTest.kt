@@ -58,6 +58,16 @@ class PhraseMatcherTest {
     }
 
     @Test
+    fun `different spellings of a shared phrase remain ambiguous for audio`() {
+        val ambiguous = PhraseMatcher(listOf(
+            StageAnchor("first", listOf("Святый Боже")),
+            StageAnchor("second", listOf("Святой Боже"))
+        ))
+        assertNull(ambiguous.match("Святый Боже"))
+        assertNull(ambiguous.match("Святой Боже"))
+    }
+
+    @Test
     fun `a transcript spanning two stages needs manual correction`() {
         assertNull(matcher.match("Премудрость прости иже херувимы тайно образующе"))
     }

@@ -17,6 +17,12 @@ class PrayerTextSearchTest {
     private fun track(id: String, title: String, vararg texts: String): PrayerTrack = PrayerTrack(id, title, "",
         texts.mapIndexed { index, text -> PlayerLine("$id:$index", text, null) }, null, false)
 
+    private fun phraseIds(tracks: List<PrayerTrack>, query: String): Pair<String, String> {
+        val match = requireNotNull(PrayerTextSearch.find(tracks, query))
+        val track = tracks[match.trackIndex]
+        return track.id to track.lines[match.lineIndex].id
+    }
+
     @Test fun `Veruyu opens the actual Creed instead of the introductory prayer`() {
         val tracks = stageTracks("creed")
         val match = requireNotNull(PrayerTextSearch.find(tracks, "Верую"))
@@ -63,6 +69,63 @@ class PrayerTextSearchTest {
         val prayers = stageTracks("lords_prayer")
         assertEquals(PrayerTextSearch.find(prayers, "хлеб насущный"),
             PrayerTextSearch.find(prayers, "ХЛЕ́Б, НАСУ́ЩНЫЙ!"))
+    }
+
+    @Test fun `both Gospel spellings locate the same original call and paired meaning`() {
+        val tracks = stageTracks("gospel")
+        val expected = requireNotNull(PrayerTextSearch.find(tracks, "святаго евангелия"))
+        val expectedIds = phraseIds(tracks, "святаго евангелия")
+        assertEquals(expectedIds, phraseIds(tracks, "святого евангелия"))
+        assertEquals(expectedIds, phraseIds(tracks, "СВЯТО́ГО, ЕВАНГЕ́ЛИЯ!"))
+        val line = tracks[expected.trackIndex].lines[expected.lineIndex]
+        assertEquals("Премудрость, прости, услышим Святаго Евангелия", line.original)
+        assertEquals("Премудрость! Станем прямо и внимательно послушаем Святое Евангелие", line.russian)
+    }
+
+    @Test fun `both Trisagion spellings locate the same phrase including original-only words`() {
+        val tracks = stageTracks("troparia_trisagion")
+        val expected = requireNotNull(PrayerTextSearch.find(tracks, "святый боже"))
+        val expectedIds = phraseIds(tracks, "святый боже")
+        listOf("святой боже", "святый крепкий", "святой крепкий").forEach { query ->
+            assertEquals(query, expectedIds, phraseIds(tracks, query))
+        }
+        val line = tracks[expected.trackIndex].lines[expected.lineIndex]
+        assertEquals("Святый Боже, Святый Крепкий, Святый Безсмертный, помилуй нас.", line.original)
+        assertEquals("Святой Боже, Святой Всемогущий, Святой Бессмертный, помилуй нас", line.russian)
+    }
+
+    @Test fun `spelling variants find a later paired phrase instead of the track beginning`() {
+        val tracks = stageTracks("creed")
+        val expected = requireNotNull(PrayerTextSearch.find(tracks, "духа святаго животворящаго"))
+        assertEquals(expected, PrayerTextSearch.find(tracks, "духа святого животворящаго"))
+        assertTrue(expected.trackIndex > 0)
+        assertTrue(expected.lineIndex > 0)
+        val line = tracks[expected.trackIndex].lines[expected.lineIndex]
+        assertEquals("И в Духа Святаго, Господа, Животворящаго,", line.original)
+        assertEquals("И в Святого Духа, Господа, дарующего жизнь.", line.russian)
+    }
+
+    @Test fun `unknown words and unlisted spelling guesses do not choose a real prayer`() {
+        val stages = StageMatcher(asset("liturgy_stages.json")).getAllStages()
+        val tracks = stages.flatMap { PrayerTrackFactory.build(it, null) }
+        listOf("святого евангелия квазислово", "святова евангелия", "святаво евангелия", "квазислово")
+            .forEach { query -> assertNull(query, PrayerTextSearch.find(tracks, query)) }
+    }
+
+    @Test fun `search folds the curated whole words without rewriting unknown word fragments`() {
+        assertEquals(
+            "благословено святого святой соборного единого небесного бессмертный бессмертного божьих божьим",
+            TextSearch.normalize("благословенно святаго святый соборнаго единаго небеснаго безсмертный безсмертнаго божиих божиим")
+        )
+        assertEquals("несвятаго святыйство единагообразный",
+            TextSearch.normalize("несвятаго святыйство единагообразный"))
+    }
+
+    @Test fun `search removes stress but preserves the difference between short i and i`() {
+        assertEquals("святой май", TextSearch.normalize("СВЯТЫ́Й, МА́Й!"))
+        assertEquals("святой май", TextSearch.normalize("святыи\u0306 маи\u0306"))
+        assertNotEquals(TextSearch.normalize("май"), TextSearch.normalize("маи"))
+        assertNotEquals(TextSearch.normalize("святый"), TextSearch.normalize("святыи"))
     }
 
     @Test fun `a long original anchor remains searchable across paired phrases`() {

@@ -9,8 +9,16 @@ object TextSearch {
     private val marks = Regex("\\p{M}")
     private val punctuation = Regex("[^а-яa-z0-9]+")
 
-    fun normalize(value: String): String = Normalizer.normalize(value, Normalizer.Form.NFD)
-        .replace(marks, "").lowercase(Locale.ROOT).replace('ё', 'е').replace(punctuation, " ").trim()
+    fun normalize(value: String): String {
+        val decomposed = Normalizer.normalize(value.lowercase(Locale.ROOT), Normalizer.Form.NFD)
+        // Remove stress, but keep the breve so й remains a letter distinct from и.
+        val withoutMarks = Normalizer.normalize(
+            marks.replace(decomposed) { if (it.value == "\u0306") it.value else "" },
+            Normalizer.Form.NFC
+        )
+        return withoutMarks.replace('ё', 'е').replace(punctuation, " ").trim()
+            .split(' ').joinToString(" ", transform = LiturgicalSpelling::canonicalWord)
+    }
 }
 
 data class PrayerTextMatch(val trackIndex: Int, val lineIndex: Int)
