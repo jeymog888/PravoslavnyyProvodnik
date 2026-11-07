@@ -16,10 +16,9 @@ import ru.liturgyguide.model.Parish
 import ru.liturgyguide.service.ContextSuggestion
 import ru.liturgyguide.service.ServiceRelation
 import java.time.LocalDate
-import java.time.ZoneId
 
 @Composable
-fun MainScreen(lastStage: LiturgyStage?, savedEarlier: Boolean = false, onStart: () -> Unit, onResume: () -> Unit, onFindStage: () -> Unit,
+fun MainScreen(lastStage: LiturgyStage?, currentDate: LocalDate, savedEarlier: Boolean = false, onStart: () -> Unit, onResume: () -> Unit, onFindStage: () -> Unit,
     church: Parish?, onChurch: () -> Unit, suggestion: ContextSuggestion?, onJoinService: () -> Unit,
     onOrder: () -> Unit, bottomBar: @Composable () -> Unit) {
     Scaffold(bottomBar = bottomBar) { padding ->
@@ -29,7 +28,7 @@ fun MainScreen(lastStage: LiturgyStage?, savedEarlier: Boolean = false, onStart:
                 FeoriaBrand()
             }
             item {
-                Text(friendlyDate(LocalDate.now(ZoneId.of(church?.timezone ?: "Europe/Moscow"))),
+                Text(friendlyDate(currentDate),
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 TextButton(onClick = onChurch, contentPadding = PaddingValues(vertical = 4.dp), modifier = Modifier.testTag("open_church")) {
                     Icon(Icons.Default.Place, null, Modifier.size(18.dp))

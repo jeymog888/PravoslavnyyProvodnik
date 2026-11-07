@@ -13,6 +13,7 @@ import ru.liturgyguide.model.ParishService
 import ru.liturgyguide.service.ContextSuggestion
 import ru.liturgyguide.service.ServiceRelation
 import java.time.Instant
+import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicInteger
 
 @RunWith(AndroidJUnit4::class)
@@ -30,7 +31,7 @@ class MainContextTest {
             ServiceRelation.InProgress, Instant.parse("2026-11-08T04:00:00Z"), "gospel")
         compose.setContent {
             GuideTheme(dark = false) {
-                MainScreen(lastStage = stage, savedEarlier = true, onStart = {}, onResume = { resumed.incrementAndGet() },
+                MainScreen(lastStage = stage, currentDate = LocalDate.of(2026, 11, 8), savedEarlier = true, onStart = {}, onResume = { resumed.incrementAndGet() },
                     onFindStage = {}, church = parish, onChurch = {}, suggestion = suggestion,
                     onJoinService = { joined.incrementAndGet() }, onOrder = {}, bottomBar = {})
             }

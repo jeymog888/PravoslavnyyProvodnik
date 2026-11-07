@@ -1,0 +1,160 @@
+{
+  "status": "PASS",
+  "scope": "S2.3 reactive currentDate - Main and Church",
+  "device": "emulator-5554 / Liturgy_API_35 / Android 15 / API 35",
+  "build": {
+    "assembleDebug": "PASS",
+    "assembleDebugAndroidTest": "PASS"
+  },
+  "source": {
+    "sha256": "94bb664054bbb5dce31f76ffeaf3a2187f1ef10ade79f8553e5d422005b64240",
+    "file_count": 60,
+    "unchanged_during_qa": true,
+    "manifest": "app/build/verification/v0.4/s2-date/source-after.json"
+  },
+  "apk_sha256": "a7b82dbff1732c6fd813862cc4c0e2ce1130e267e9c1a04775833dc5e53c3691",
+  "test_apk_sha256": "87aa6a70e1403a88442788419a6701aa8e14cec149263094a682bca96c9b3fce",
+  "ui": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0,
+    "tests": [
+      {
+        "class": "ru.liturgyguide.ui.MainContextTest",
+        "name": "anOldReadingKeepsTheCurrentServicePrimaryAndCanStillBeOpened",
+        "passed": true
+      },
+      {
+        "class": "ru.liturgyguide.ui.DateRolloverTest",
+        "name": "mainDateUpdatesWhileTheScreenStaysOpen",
+        "passed": true
+      },
+      {
+        "class": "ru.liturgyguide.ui.DateRolloverTest",
+        "name": "scheduleKeepsTodayAndTomorrowRelativeAcrossTheMonthBoundary",
+        "passed": true
+      }
+    ]
+  },
+  "native": {
+    "total": 9,
+    "passed": 9,
+    "failed": 0,
+    "checks": [
+      {
+        "name": "main-before-midnight",
+        "passed": true,
+        "device_date": "Sun Nov  8 20:59:07 UTC 2026"
+      },
+      {
+        "name": "main-after-midnight",
+        "passed": true,
+        "device_date": "Sun Nov  8 21:01:09 UTC 2026"
+      },
+      {
+        "name": "church-before-midnight",
+        "passed": true,
+        "device_date": "Sun Nov  8 20:59:11 UTC 2026"
+      },
+      {
+        "name": "church-after-midnight",
+        "passed": true,
+        "device_date": "Sun Nov  8 21:01:09 UTC 2026"
+      },
+      {
+        "name": "month-last-today",
+        "passed": true,
+        "device_date": "Mon Nov 30 20:59:08 UTC 2026"
+      },
+      {
+        "name": "month-last-tomorrow",
+        "passed": true,
+        "device_date": "Mon Nov 30 20:59:13 UTC 2026"
+      },
+      {
+        "name": "month-new-tomorrow",
+        "passed": true,
+        "device_date": "Mon Nov 30 21:01:09 UTC 2026"
+      },
+      {
+        "name": "church-background-return",
+        "passed": true,
+        "device_date": "Sun Nov  8 21:01:04 UTC 2026"
+      },
+      {
+        "name": "main-background-return",
+        "passed": true,
+        "device_date": "Sun Nov  8 21:01:04 UTC 2026"
+      }
+    ],
+    "scenario_sha256": "5b09478e275e79d14e55a11fd4cdec34988b6ea9bc5c817323b86c1f51f1a279",
+    "first_attempt": {
+      "total": 9,
+      "passed": 8,
+      "failed": [
+        {
+          "name": "main-background-return",
+          "required": [
+            "9 ноября, понедельник"
+          ],
+          "forbidden": [
+            "8 ноября, воскресенье"
+          ],
+          "missing": [
+            "9 ноября, понедельник"
+          ],
+          "unexpected": [
+            "8 ноября, воскресенье"
+          ],
+          "device_date": "Sun Nov  8 21:01:03 UTC 2026",
+          "passed": false
+        }
+      ],
+      "evidence": "app/build/verification/v0.4/s2-date/native-attempt-1",
+      "classification": "Harness lifecycle race; original failure preserved"
+    }
+  },
+  "restoration": {
+    "device_date": "Sun Nov  8 02:16:59 MSK 2026",
+    "timezone": "Europe/Moscow",
+    "auto_time": "1",
+    "auto_time_zone": "1",
+    "adb_identity": "uid=2000(shell) gid=2000(shell) groups=2000(shell),1004(input),1007(log),1011(adb),1015(sdcard_rw),1028(sdcard_r),1078(ext_data_rw),1079(ext_obb_rw),3001(net_bt_admin),3002(net_bt),3003(inet),3006(net_bw_stats),3009(readproc),3011(uhid),3012(readtracefs) context=u:r:shell:s0",
+    "verified": true,
+    "clock_difference_seconds": 0
+  },
+  "harness_changes": [
+    {
+      "change": "Wait for MainActivity STOPPED after HOME before advancing the clock",
+      "reason": "Original immediate return could race PAUSED/STOPPING lifecycle transitions",
+      "diagnostic_states": [
+        {
+          "after_home_seconds": 0.272,
+          "state": "PAUSED"
+        },
+        {
+          "after_home_seconds": 0.467,
+          "state": "STOPPING"
+        },
+        {
+          "after_home_seconds": 0.784,
+          "state": "STOPPED"
+        }
+      ],
+      "launch_wait_seconds": 1,
+      "launch_wait_changed": false,
+      "reruns": 1
+    }
+  ],
+  "screenshots": [
+    "verification/v0.4/s2-date/main-after-midnight.png",
+    "verification/v0.4/s2-date/church-after-midnight.png",
+    "verification/v0.4/s2-date/month-new-tomorrow.png"
+  ],
+  "full_logs": "app/build/verification/v0.4/s2-date",
+  "review": {
+    "root": "ACCEPTED",
+    "root_evidence": "Independently checked UI XML 3 tests, 0 failures, 0 errors, 0 skipped; native 9 PASS; reviewed all 3 selected PNGs and implementation diff",
+    "astra": "ACCEPTED implementation diff (reported by root)"
+  }
+}

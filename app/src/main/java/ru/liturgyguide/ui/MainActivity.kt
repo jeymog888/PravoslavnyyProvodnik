@@ -31,6 +31,7 @@ import ru.liturgyguide.service.PrayerTrackFactory
 import ru.liturgyguide.service.PrayerTextSearch
 import com.google.gson.Gson
 import java.time.Instant
+import java.time.ZoneId
 import kotlinx.coroutines.delay
 
 private enum class Screen { MAIN, SERVICE, STAGE_SELECTOR, SEARCH, SETTINGS, SOURCES, CHURCH }
@@ -73,7 +74,8 @@ fun AppNavigation(container: AppContainer) {
     val church = parishes?.selected(churchId)
     val contextEngine = remember(stages) { if (stages.isEmpty()) null else ContextSuggestionEngine(stages) }
     val suggestion = church?.let { contextEngine?.suggest(it, now) }
-    val readingDate = now.atZone(java.time.ZoneId.of(church?.timezone ?: "Europe/Moscow")).toLocalDate().toString()
+    val currentDate = now.atZone(ZoneId.of(church?.timezone ?: "Europe/Moscow")).toLocalDate()
+    val readingDate = currentDate.toString()
     val readingDay = container.readings?.days?.firstOrNull { it.date == readingDate }
     val density = LocalDensity.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -102,8 +104,7 @@ fun AppNavigation(container: AppContainer) {
         if (existing == null) clearReadingPositions()
         if (!query.isNullOrBlank()) {
             val stage = matcher?.getStageById(id)
-            val date = now.atZone(java.time.ZoneId.of(church?.timezone ?: "Europe/Moscow")).toLocalDate().toString()
-            val tracks = stage?.let { PrayerTrackFactory.build(it, container.readings?.days?.firstOrNull { day -> day.date == date }) }.orEmpty()
+            val tracks = stage?.let { PrayerTrackFactory.build(it, readingDay) }.orEmpty()
             PrayerTextSearch.find(tracks, query)?.let { hit ->
                 screenStateHolder.removeState(Screen.SERVICE.name)
                 val track = tracks[hit.trackIndex]
@@ -154,6 +155,7 @@ fun AppNavigation(container: AppContainer) {
                 } else when (screen) {
                     Screen.MAIN -> MainScreen(
                         lastStage = selectedStage,
+                        currentDate = currentDate,
                         savedEarlier = position?.requiresResume ?: (selectedStage != null),
                         church = church,
                         suggestion = suggestion,
@@ -227,6 +229,7 @@ fun AppNavigation(container: AppContainer) {
                     )
                     Screen.CHURCH -> ChurchScreen(
                         churches = parishes?.directory?.churches.orEmpty(), selectedId = church?.id,
+                        currentDate = currentDate,
                         onSelect = {
                             if (church?.id != it) {
                                 clearReadingPositions()

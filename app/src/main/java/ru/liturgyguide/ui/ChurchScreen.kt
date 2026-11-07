@@ -15,13 +15,12 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import ru.liturgyguide.model.Parish
 import java.time.LocalDate
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChurchScreen(churches: List<Parish>, selectedId: String?, onSelect: (String) -> Unit,
+fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: LocalDate, onSelect: (String) -> Unit,
     onOpenUrl: (String) -> Unit, onBack: () -> Unit, showBack: Boolean = true, bottomBar: @Composable () -> Unit = {}) {
     val church = churches.firstOrNull { it.id == selectedId } ?: churches.firstOrNull()
     var picker by rememberSaveable { mutableStateOf(false) }
@@ -57,7 +56,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, onSelect: (String)
                     TextButton(onClick = { picker = true }, modifier = Modifier.testTag("change_church"), contentPadding = PaddingValues(vertical = 10.dp)) { Text("Выбрать другой храм") }
                 }
                 item {
-                    val date = LocalDate.now(ZoneId.of(church.timezone)).plusDays(dayOffset.toLong())
+                    val date = currentDate.plusDays(dayOffset.toLong())
                     val entries = church.schedule.filter { it.date == date.toString() }.sortedBy { it.time }
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text("Расписание", style = MaterialTheme.typography.titleLarge)
