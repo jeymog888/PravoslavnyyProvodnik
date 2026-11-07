@@ -21,14 +21,22 @@ class PhraseMatcher(anchors: List<StageAnchor>) {
             val normalized = normalize(phrase)
             val tokens = normalized.split(' ').filter(String::isNotEmpty)
             if (anchor.stageId.isBlank() || tokens.size < 2 ||
-                tokens.all { it in genericWords } || normalized in genericPhrases
+                tokens.all { it in genericWords } || normalized in genericPhrases ||
+                repeatedLitanyPhrases.any { repeated -> normalized == repeated || normalized.startsWith("$repeated ") }
             ) {
                 null
             } else {
                 Candidate(anchor.stageId, phrase, normalized)
             }
         }
-    }.distinctBy { it.stageId to it.normalized }
+    }.distinctBy { it.stageId to it.normalized }.let { candidates ->
+        // A shared phrase is not evidence for either stage. Another distinctive
+        // phrase in the same transcript can still support one of them.
+        val ambiguous = candidates.groupBy { it.normalized }.filterValues { group ->
+            group.map { it.stageId }.distinct().size > 1
+        }.keys
+        candidates.filterNot { it.normalized in ambiguous }
+    }
 
     fun match(transcript: String): PhraseMatch? {
         val normalized = normalize(transcript)
@@ -58,6 +66,14 @@ class PhraseMatcher(anchors: List<StageAnchor>) {
             "мир всем", "и духови твоему", "и духу твоему", "господу помолимся",
             "слава отцу и сыну и святому духу", "слава отцу и сыну и святому духу аминь",
             "ныне и присно и во веки веков", "и ныне и присно и во веки веков"
+        ).map(::normalize).toSet()
+
+        // These petitions recur in the litany of the faithful after the Gospel.
+        // They remain useful human-readable listenFor cues in the guide, but
+        // their length does not make them unique acoustic evidence of the opening.
+        private val repeatedLitanyPhrases = setOf(
+            "о свышнем мире и спасении",
+            "о мире всего мира благостоянии святых Божиих Церквей"
         ).map(::normalize).toSet()
 
         private fun normalize(value: String): String {

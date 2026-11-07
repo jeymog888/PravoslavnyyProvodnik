@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -26,11 +27,13 @@ import ru.liturgyguide.di.AppContainer
 import ru.liturgyguide.service.ServiceSession
 import ru.liturgyguide.service.ServiceSessionEngine
 import ru.liturgyguide.service.ContextSuggestionEngine
+import ru.liturgyguide.service.PrayerTrackFactory
+import ru.liturgyguide.service.PrayerTextSearch
 import com.google.gson.Gson
 import java.time.Instant
 import kotlinx.coroutines.delay
 
-private enum class Screen { MAIN, SERVICE, STAGE_SELECTOR, SETTINGS, SOURCES, CHURCH }
+private enum class Screen { MAIN, SERVICE, STAGE_SELECTOR, SEARCH, SETTINGS, SOURCES, CHURCH }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,14 +46,16 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation(container: AppContainer) {
     val context = LocalContext.current
+    val screenStateHolder = rememberSaveableStateHolder()
     val preferences = remember { context.getSharedPreferences("guide_preferences", 0) }
     val systemDark = isSystemInDarkTheme()
     var dark by rememberSaveable { mutableStateOf(preferences.getBoolean("dark", systemDark)) }
     var textSize by rememberSaveable { mutableIntStateOf(preferences.getInt("text_size", 0).coerceIn(0, 2)) }
-    var showPrayerTexts by rememberSaveable { mutableStateOf(preferences.getBoolean("show_texts", false)) }
     var selectedId by rememberSaveable { mutableStateOf(preferences.getString("stage_id", null)) }
     var screen by rememberSaveable { mutableStateOf(Screen.MAIN) }
     var selectorOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
+    var searchOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
+    var settingsOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
     var churchOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
     var churchId by rememberSaveable { mutableStateOf(preferences.getString("church_id", null)) }
     var session by remember {
@@ -68,6 +73,8 @@ fun AppNavigation(container: AppContainer) {
     val church = parishes?.selected(churchId)
     val contextEngine = remember(stages) { if (stages.isEmpty()) null else ContextSuggestionEngine(stages) }
     val suggestion = church?.let { contextEngine?.suggest(it, now) }
+    val readingDate = now.atZone(java.time.ZoneId.of(church?.timezone ?: "Europe/Moscow")).toLocalDate().toString()
+    val readingDay = container.readings?.days?.firstOrNull { it.date == readingDate }
     val density = LocalDensity.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
 
@@ -83,14 +90,36 @@ fun AppNavigation(container: AppContainer) {
         now = Instant.now()
     }
 
-    fun selectStage(id: String) {
+    fun clearReadingPositions() {
+        val editor = preferences.edit()
+        preferences.all.keys.filter { key -> key.startsWith("lyric_track_") || key.startsWith("lyric_line_") || key.startsWith("lyric_offset_") || key.startsWith("lyric_phrase_") || key.startsWith("lyric_saved_tempo_") }.forEach { editor.remove(it) }
+        editor.apply()
+        screenStateHolder.removeState(Screen.SERVICE.name)
+    }
+    fun selectStage(id: String, query: String? = null) {
         val engine = sessionEngine ?: return
-        saveSession(session?.let { engine.correct(it, id) } ?: engine.start(id))
+        val existing = session?.takeIf(engine::isValid)
+        if (existing == null) clearReadingPositions()
+        if (!query.isNullOrBlank()) {
+            val stage = matcher?.getStageById(id)
+            val date = now.atZone(java.time.ZoneId.of(church?.timezone ?: "Europe/Moscow")).toLocalDate().toString()
+            val tracks = stage?.let { PrayerTrackFactory.build(it, container.readings?.days?.firstOrNull { day -> day.date == date }) }.orEmpty()
+            PrayerTextSearch.find(tracks, query)?.let { hit ->
+                screenStateHolder.removeState(Screen.SERVICE.name)
+                val track = tracks[hit.trackIndex]
+                preferences.edit().putString("lyric_track_$id", track.id)
+                    .putInt("lyric_line_${track.id}", hit.lineIndex).putString("lyric_phrase_${track.id}", track.lines[hit.lineIndex].id)
+                    .putInt("lyric_saved_tempo_${track.id}", preferences.getInt("lyric_tempo", 12)).putLong("lyric_offset_${track.id}", 0L).apply()
+            }
+        }
+        saveSession(existing?.let { engine.correct(it, id) } ?: engine.start(id))
         screen = Screen.SERVICE
     }
     fun back() {
         screen = when (screen) {
             Screen.STAGE_SELECTOR -> selectorOrigin
+            Screen.SEARCH -> searchOrigin
+            Screen.SETTINGS -> settingsOrigin
             Screen.SOURCES -> Screen.SETTINGS
             Screen.CHURCH -> churchOrigin
             else -> Screen.MAIN
@@ -104,17 +133,26 @@ fun AppNavigation(container: AppContainer) {
     }
     BackHandler(enabled = screen != Screen.MAIN) { back() }
 
+    val navigationBar: @Composable () -> Unit = {
+        GuideBottomBar(selected = when (screen) { Screen.CHURCH -> "church"; Screen.SETTINGS -> "settings"; else -> "home" },
+            onHome = { screen = Screen.MAIN },
+            onChurch = { churchOrigin = Screen.MAIN; screen = Screen.CHURCH },
+            onSettings = { settingsOrigin = Screen.MAIN; screen = Screen.SETTINGS })
+    }
     GuideTheme(dark = dark) {
         CompositionLocalProvider(LocalDensity provides Density(density.density, density.fontScale * listOf(1f, 1.15f, 1.3f)[textSize])) {
             Surface(Modifier.fillMaxSize()) {
+                screenStateHolder.SaveableStateProvider(screen.name) {
                 if (stages.isEmpty() || matcher == null) {
                     ContentUnavailable(onRetry = { reload++ })
                 } else when (screen) {
                     Screen.MAIN -> MainScreen(
                         lastStage = selectedStage,
-                        church = church, parishes = parishes,
+                        savedEarlier = position?.requiresResume ?: (selectedStage != null),
+                        church = church,
                         suggestion = suggestion,
                         onJoinService = {
+                            clearReadingPositions()
                             sessionEngine?.let { engine ->
                                 saveSession(engine.start(suggestion?.approximateStageId ?: "preparation", approximate = suggestion?.approximateStageId != null,
                                     elapsedInStageMillis = suggestion?.approximateElapsedInStageMillis ?: 0))
@@ -122,25 +160,24 @@ fun AppNavigation(container: AppContainer) {
                             }
                         },
                         onChurch = { churchOrigin = Screen.MAIN; screen = Screen.CHURCH },
-                        onStart = { sessionEngine?.let { saveSession(it.start(stages.first().id)); screen = Screen.SERVICE } },
+                        onStart = { clearReadingPositions(); sessionEngine?.let { saveSession(it.start(stages.first().id)); screen = Screen.SERVICE } },
                         onResume = {
                             if (position == null) selectedStage?.let { stage -> sessionEngine?.let { saveSession(it.start(stage.id)) } }
                             screen = Screen.SERVICE
                         },
-                        onFindStage = { selectorOrigin = Screen.MAIN; screen = Screen.STAGE_SELECTOR },
-                        onSettings = { screen = Screen.SETTINGS }
+                        onFindStage = { searchOrigin = Screen.MAIN; screen = Screen.SEARCH },
+                        onOrder = { selectorOrigin = Screen.MAIN; screen = Screen.STAGE_SELECTOR },
+                        bottomBar = navigationBar
                     )
                     Screen.SERVICE -> ServiceScreen(
                         stageMatcher = matcher,
                         stageId = selectedStage?.id,
-                        onStageChange = ::selectStage,
+                        onStageChange = { selectStage(it) },
                         onBack = { screen = Screen.MAIN },
                         dark = dark,
                         onDarkChange = { dark = !dark; preferences.edit().putBoolean("dark", dark).apply() },
                         onOpenSource = { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(it))) },
-                        showTexts = showPrayerTexts,
-                        onShowTextsChange = { showPrayerTexts = !showPrayerTexts; preferences.edit().putBoolean("show_texts", showPrayerTexts).apply() },
-                        readingDay = container.readings?.days?.firstOrNull { it.date == java.time.LocalDate.now(java.time.ZoneId.of(church?.timezone ?: "Europe/Moscow")).toString() },
+                        readingDay = readingDay,
                         sessionPosition = position,
                         onToggleFollowing = {
                             val engine = sessionEngine
@@ -150,16 +187,22 @@ fun AppNavigation(container: AppContainer) {
                         },
                         onSoundSettings = { openExternal(Intent(Settings.ACTION_SOUND_SETTINGS)) },
                         onFinish = {
-                            session?.let { current -> sessionEngine?.pause(current)?.let(::saveSession) }
+                            session = null; selectedId = null
+                            preferences.edit().remove("session").remove("stage_id").apply()
                             screen = Screen.MAIN
                             Toast.makeText(context, "Если включали режим тишины, не забудьте проверить его после службы", Toast.LENGTH_LONG).show()
                         },
-                        onSelectStage = { selectorOrigin = Screen.SERVICE; screen = Screen.STAGE_SELECTOR }
+                        onSelectStage = { selectorOrigin = Screen.SERVICE; screen = Screen.STAGE_SELECTOR },
+                        onFindStage = { searchOrigin = Screen.SERVICE; screen = Screen.SEARCH },
+                        onSettings = { settingsOrigin = Screen.SERVICE; screen = Screen.SETTINGS }
                     )
-                    Screen.STAGE_SELECTOR -> StageSelector(
+                    Screen.STAGE_SELECTOR, Screen.SEARCH -> StageSelector(
                         stageMatcher = matcher,
                         selectedId = selectedStage?.id,
-                        onSelect = ::selectStage,
+                        searchMode = screen == Screen.SEARCH,
+                        readingDay = readingDay,
+                        onSearch = { searchOrigin = Screen.STAGE_SELECTOR; screen = Screen.SEARCH },
+                        onSelect = { id, query -> selectStage(id, query) },
                         onBack = ::back
                     )
                     Screen.SETTINGS -> SettingsScreen(
@@ -167,9 +210,9 @@ fun AppNavigation(container: AppContainer) {
                         onDarkChange = { dark = it; preferences.edit().putBoolean("dark", it).apply() },
                         onTextSizeChange = { textSize = it; preferences.edit().putInt("text_size", it).apply() },
                         onSoundSettings = { openExternal(Intent(Settings.ACTION_SOUND_SETTINGS)) },
-                        churchName = church?.shortName,
-                        onChurch = { churchOrigin = Screen.SETTINGS; screen = Screen.CHURCH },
-                        onSources = { screen = Screen.SOURCES }, onBack = ::back
+                        onSources = { screen = Screen.SOURCES }, onBack = ::back,
+                        showBack = settingsOrigin != Screen.MAIN,
+                        bottomBar = { if (settingsOrigin == Screen.MAIN) navigationBar() }
                     )
                     Screen.SOURCES -> SourcesScreen(
                         sourceUrl = matcher.getSourceUrl(), contentNote = matcher.getContentNote(),
@@ -180,13 +223,17 @@ fun AppNavigation(container: AppContainer) {
                         churches = parishes?.directory?.churches.orEmpty(), selectedId = church?.id,
                         onSelect = {
                             if (church?.id != it) {
+                                clearReadingPositions()
                                 session = null; selectedId = null
                                 preferences.edit().remove("session").remove("stage_id").apply()
                             }
                             churchId = it; preferences.edit().putString("church_id", it).apply()
                         },
-                        onOpenUrl = { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(it))) }, onBack = ::back
+                        onOpenUrl = { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(it))) }, onBack = ::back,
+                        showBack = churchOrigin != Screen.MAIN,
+                        bottomBar = { if (churchOrigin == Screen.MAIN) navigationBar() }
                     )
+                }
                 }
             }
         }

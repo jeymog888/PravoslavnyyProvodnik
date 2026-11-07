@@ -1,0 +1,35 @@
+{
+  "recorded_at_utc": "2026-11-07T22:20:55.588373+00:00",
+  "setup": "Installed released 0.2 in a clean synthetic emulator app slot; configured preferences through UI",
+  "before_package": [
+    "appId=10226",
+    "versionCode=2 minSdk=26 targetSdk=35",
+    "versionName=0.2.0-guide",
+    "lastUpdateTime=2026-11-08 01:18:04",
+    "firstInstallTime=2026-11-08 01:18:04"
+  ],
+  "expected_preferences": {
+    "dark": "true",
+    "text_size": "1",
+    "church_id": "vsetsaritsa_nakhabino",
+    "stage_id": "cherubic_hymn"
+  },
+  "install_result": "Performing Streamed Install\nSuccess\n",
+  "preferences_file_unchanged_during_upgrade": true,
+  "after_package": [
+    "appId=10226",
+    "versionCode=3 minSdk=26 targetSdk=35",
+    "versionName=0.3.0-guide",
+    "lastUpdateTime=2026-11-08 01:20:54",
+    "firstInstallTime=2026-11-08 01:18:04"
+  ],
+  "launch_result": "Starting: Intent { cmp=ru.liturgyguide/.ui.MainActivity }\nStatus: ok\nLaunchState: COLD\nActivity: ru.liturgyguide/.ui.MainActivity\nTotalTime: 639\nWaitTime: 642\nComplete\n",
+  "retained_preferences": {
+    "dark": "true",
+    "text_size": "1",
+    "church_id": "vsetsaritsa_nakhabino",
+    "stage_id": "cherubic_hymn"
+  },
+  "preferences_retained_after_smoke": true,
+  "smoke": "Passed launch, preserved stage, next phrase, Meaning/Text and cold resume"
+}

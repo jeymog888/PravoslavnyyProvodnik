@@ -25,7 +25,7 @@ import ru.liturgyguide.model.LiturgyStage
 import ru.liturgyguide.service.*
 
 @Composable
-fun ListeningCard(stages: List<LiturgyStage>, onSelect: (String) -> Unit) {
+fun ListeningCard(stages: List<LiturgyStage>, onSelect: (String, String?) -> Unit) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     var state by remember { mutableStateOf(SpeechGuideState()) }
@@ -55,13 +55,14 @@ fun ListeningCard(stages: List<LiturgyStage>, onSelect: (String) -> Unit) {
             } else {
                 Text(if (state.status == SpeechStatus.IDLE) "Послушаем до 15 секунд и попробуем найти знакомую фразу. Работает на телефоне, без сохранения записи." else state.message,
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.bodyMedium)
-                if (state.transcript.isNotBlank()) Text("Услышано: \"${state.transcript}\"", style = MaterialTheme.typography.bodySmall)
+                if (state.transcript.isNotBlank()) Text("Распознано: \"${state.transcript}\"", style = MaterialTheme.typography.bodySmall)
                 if (stage != null) {
                     Text("Похоже, сейчас: ${stage.name}", style = MaterialTheme.typography.titleMedium)
+                    Text("Совпала фраза: \"${match?.matchedPhrase.orEmpty()}\"", style = MaterialTheme.typography.bodySmall)
                     Text(stage.cue.orEmpty(), style = MaterialTheme.typography.bodySmall)
-                    Button(onClick = { speech.stop(); onSelect(stage.id) }, modifier = Modifier.fillMaxWidth()) { Text("Открыть этот этап") }
+                    Button(onClick = { speech.stop(); onSelect(stage.id, match?.matchedPhrase) }, modifier = Modifier.fillMaxWidth()) { Text("Открыть этот этап") }
                 } else if (state.status == SpeechStatus.RESULT) {
-                    Text("По этой фразе не удалось уверенно найти этап. Попробуйте поиск по словам ниже.", style = MaterialTheme.typography.bodyMedium)
+                    Text("По этой фразе не удалось уверенно найти этап. Попробуйте поиск по словам.", style = MaterialTheme.typography.bodyMedium)
                 }
                 if (state.isActive) {
                     OutlinedButton(onClick = { speech.stop() }, modifier = Modifier.fillMaxWidth()) { Text("Выключить микрофон") }

@@ -1,8 +1,6 @@
 package ru.liturgyguide.di
 
 import android.content.Context
-import ru.liturgyguide.service.CalendarEngine
-import ru.liturgyguide.service.ProgressTracker
 import ru.liturgyguide.service.StageMatcher
 import ru.liturgyguide.service.ParishRepository
 import com.google.gson.Gson
@@ -10,7 +8,6 @@ import ru.liturgyguide.model.DailyReadings
 
 class AppContainer(context: Context) {
     private val appContext = context.applicationContext
-    private val calendar by lazy { CalendarEngine() }
     private var stageMatcherResult: Result<StageMatcher>? = null
     val parishes: Result<ParishRepository> by lazy {
         runCatching {
@@ -24,8 +21,6 @@ class AppContainer(context: Context) {
             }
         }.getOrNull()
     }
-
-    fun getCalendarEngine(): CalendarEngine = calendar
 
     fun getStageMatcher(): StageMatcher = getStageMatcherResult().getOrThrow()
 
@@ -41,6 +36,4 @@ class AppContainer(context: Context) {
         }
         return requireNotNull(stageMatcherResult)
     }
-
-    fun getProgressTracker(): ProgressTracker = ProgressTracker(getStageMatcher())
 }

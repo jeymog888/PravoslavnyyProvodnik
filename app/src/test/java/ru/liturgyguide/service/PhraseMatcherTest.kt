@@ -96,4 +96,38 @@ class PhraseMatcherTest {
         ))
         assertEquals("first", duplicate.match("Благословенно Царство")?.stageId)
     }
+
+    @Test fun `repeated litany petitions cannot imply the opening even when listed only there`() {
+        val litany = PhraseMatcher(listOf(StageAnchor("great_litany", listOf(
+            "О свышнем мире и спасении", "О свышнем мире и спасении душ наших",
+            "О мире всего мира благостоянии святых Божиих Церквей"
+        ))))
+        assertNull(litany.match("О свышнем мире и спасении душ наших Господу помолимся"))
+        assertNull(litany.match("О мире всего мира благостоянии святых божьих церквей"))
+    }
+
+    @Test fun `a distinctive later phrase still identifies its stage alongside repeated petitions`() {
+        val litany = PhraseMatcher(listOf(
+            StageAnchor("great_litany", listOf("О свышнем мире и спасении душ наших")),
+            StageAnchor("litanies", listOf("Елицы оглашеннии изыдите"))
+        ))
+        val match = litany.match("Елицы оглашеннии изыдите. О свышнем мире и спасении душ наших")
+        assertEquals("litanies", match?.stageId)
+        assertEquals("Елицы оглашеннии изыдите", match?.matchedPhrase)
+    }
+
+    @Test fun `shared anchors add no false ambiguity when an independent unique phrase is heard`() {
+        val shared = PhraseMatcher(listOf(
+            StageAnchor("first", listOf("Повторяющаяся фраза", "Начальное особое песнопение")),
+            StageAnchor("second", listOf("Повторяющаяся фраза", "Последующее особое песнопение"))
+        ))
+        assertNull(shared.match("Повторяющаяся фраза"))
+        assertEquals("second", shared.match("Повторяющаяся фраза. Последующее особое песнопение")?.stageId)
+        assertNull(shared.match("Начальное особое песнопение. Последующее особое песнопение"))
+    }
+
+    @Test fun `a short but liturgically distinctive phrase is not rejected just for its length`() {
+        val distinctive = PhraseMatcher(listOf(StageAnchor("clergy_communion", listOf("Святая святым"))))
+        assertEquals("clergy_communion", distinctive.match("Святая святым")?.stageId)
+    }
 }

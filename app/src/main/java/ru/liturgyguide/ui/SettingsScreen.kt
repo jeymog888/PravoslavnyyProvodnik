@@ -1,92 +1,70 @@
 package ru.liturgyguide.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.NotificationsOff
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun SettingsScreen(
-    dark: Boolean, textSize: Int, onDarkChange: (Boolean) -> Unit,
-    onTextSizeChange: (Int) -> Unit, onSoundSettings: () -> Unit,
-    onSources: () -> Unit, onBack: () -> Unit,
-    churchName: String?, onChurch: () -> Unit
-) {
-    Scaffold(topBar = { Column(Modifier.statusBarsPadding()) { PageHeader("Удобно в храме", onBack) } }) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("settings_content"),
-            contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(28.dp)) {
+fun SettingsScreen(dark: Boolean, textSize: Int, onDarkChange: (Boolean) -> Unit,
+    onTextSizeChange: (Int) -> Unit, onSoundSettings: () -> Unit, onSources: () -> Unit,
+    onBack: () -> Unit, showBack: Boolean = true, bottomBar: @Composable () -> Unit = {}) {
+    Scaffold(topBar = { Column(Modifier.statusBarsPadding()) {
+        if (showBack) PageHeader("Настройки", onBack)
+        else Text("Настройки", Modifier.padding(horizontal = 24.dp, vertical = 16.dp), style = MaterialTheme.typography.headlineLarge)
+    } }, bottomBar = bottomBar) { padding ->
+        LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("settings_content"), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(28.dp)) {
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Меньше отвлечений", style = MaterialTheme.typography.headlineLarge)
-                    Text("Настройте экран один раз. Ваш выбор сохранится.", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Экран", style = MaterialTheme.typography.titleLarge)
+                Spacer(Modifier.height(12.dp))
+                Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
+                    ListItem(headlineContent = { Text("Темный экран") }, supportingContent = { Text("Меньше света во время службы") },
+                        leadingContent = { Icon(Icons.Default.DarkMode, null) },
+                        trailingContent = { Switch(checked = dark, onCheckedChange = onDarkChange,
+                            modifier = Modifier.testTag("dark_switch").semantics { contentDescription = "Темный экран" }) })
                 }
             }
             item {
-                OutlinedCard {
-                    Row(Modifier.fillMaxWidth().padding(20.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Icon(Icons.Default.DarkMode, null, tint = MaterialTheme.colorScheme.primary)
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text("Темный экран", style = MaterialTheme.typography.titleMedium)
-                            Text("Спокойные цвета при слабом свете", style = MaterialTheme.typography.bodySmall)
-                        }
-                        Switch(checked = dark, onCheckedChange = onDarkChange, modifier = Modifier.testTag("dark_switch").semantics { contentDescription = "Темный экран" })
-                    }
-                }
-            }
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Размер текста", style = MaterialTheme.typography.titleLarge)
-                    Text("Учитывается и размер шрифта в настройках телефона", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    listOf("Обычный", "Крупный", "Очень крупный").forEachIndexed { index, label ->
-                        OutlinedCard(onClick = { onTextSizeChange(index) }, modifier = Modifier.fillMaxWidth().testTag("text_size_$index").semantics { selected = textSize == index; role = Role.RadioButton },
-                            colors = CardDefaults.outlinedCardColors(containerColor = if (textSize == index) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface)) {
-                            Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                                RadioButton(selected = textSize == index, onClick = null)
-                                Text(label, Modifier.padding(start = 12.dp), style = MaterialTheme.typography.bodyLarge)
-                            }
+                Text("Размер текста", style = MaterialTheme.typography.titleLarge)
+                Spacer(Modifier.height(12.dp))
+                Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
+                    Column {
+                        listOf("Обычный", "Крупный", "Очень крупный").forEachIndexed { index, title ->
+                            ListItem(headlineContent = { Text(title) }, trailingContent = { RadioButton(selected = textSize == index, onClick = null) },
+                                modifier = Modifier.selectable(selected = textSize == index, role = Role.RadioButton, onClick = { onTextSizeChange(index) }).testTag("text_size_$index"))
+                            if (index < 2) HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
                         }
                     }
                 }
+                Spacer(Modifier.height(12.dp))
+                Text("Учитывается и размер шрифта на телефоне", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             item {
-                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
-                    Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Icon(Icons.Default.NotificationsOff, null)
-                        Text("Тишина во время службы", style = MaterialTheme.typography.titleLarge)
-                        Text("Включите \"Не беспокоить\" в настройках телефона. Там же выберите, какие важные звонки и будильники оставить.", style = MaterialTheme.typography.bodyMedium)
-                        OutlinedButton(onClick = onSoundSettings, modifier = Modifier.fillMaxWidth()) { Text("Открыть настройки звука") }
-                        Text("После службы выключите режим, если он больше не нужен", style = MaterialTheme.typography.bodySmall)
-                    }
+                Text("Тишина", style = MaterialTheme.typography.titleLarge)
+                Spacer(Modifier.height(12.dp))
+                Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
+                    GuideActionRow("Не беспокоить", "Открыть настройки телефона", Icons.Default.NotificationsOff, onSoundSettings, "sound_settings")
                 }
+                Spacer(Modifier.height(12.dp))
+                Text("В настройках телефона можно оставить важные звонки и будильники. После службы проверьте, нужен ли режим тишины дальше.",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             item {
-                OutlinedCard(onClick = onChurch, modifier = Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Eyebrow("МОЙ ХРАМ")
-                        Text(churchName ?: "Выбрать храм", style = MaterialTheme.typography.titleMedium)
-                        Text("Адрес, расписание и контакты", style = MaterialTheme.typography.bodySmall)
-                    }
+                Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
+                    GuideActionRow("О Феории", "Тексты, источники и возможности", Icons.Default.Info, onSources, "open_sources")
                 }
-            }
-            item {
-                TextButton(onClick = onSources, modifier = Modifier.fillMaxWidth().testTag("open_sources")) {
-                    Text("О текстах и возможностях", Modifier.weight(1f))
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, null)
-                }
-                Text("Феория · 0.2\nЛитургия Иоанна Златоуста", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Феория · 0.3", Modifier.padding(top = 16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -113,6 +91,11 @@ fun SourcesScreen(sourceUrl: String?, contentNote: String?, onOpenUrl: (String) 
                 sourceUrl?.let { url -> TextButton(onClick = { onOpenUrl(url) }) { Text("Открыть чин литургии") } }
             }
             item {
+                Text("Как работает текстовый плеер", style = MaterialTheme.typography.titleLarge)
+                Spacer(Modifier.height(8.dp))
+                Text("Выберите молитву или чтение и нажмите нужную фразу. В молитвах можно переключаться между русским смыслом и церковнославянским оригиналом, сохраняя место. Чтения Писания даны в Синодальном переводе. Автопрокрутка сменяет фразы в выбранном темпе и останавливается в конце текста. Она помогает читать, но не подстраивается под голос или хор. При выходе из плеера прокрутка останавливается.")
+            }
+            item {
                 Text("Подсказка по звуку", style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(8.dp))
                 Text("На совместимых телефонах можно послушать короткий фрагмент и поискать знакомую фразу. Эхо, хор и церковнославянская речь могут мешать распознаванию. Подсказку нужно сверить с тем, что происходит в храме.")
@@ -125,7 +108,7 @@ fun SourcesScreen(sourceUrl: String?, contentNote: String?, onOpenUrl: (String) 
             item {
                 Text("Живая служба может отличаться", style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(8.dp))
-                Text("Песнопения и чтения меняются по дню, а продолжительность - по ходу службы. Режим \"Авто\" использует примерную длительность частей и может расходиться с реальной службой. Он включается отдельно и допускает ручную поправку. По вопросам участия в таинствах и местных обычаев лучше обратиться к священнику своего храма.")
+                Text("Песнопения и чтения меняются по дню, а продолжительность - по ходу службы. Режим \"Этапы по времени\" использует примерную длительность частей и может расходиться с реальной службой. Его можно остановить и поправить этап. По вопросам участия в таинствах и местных обычаев лучше обратиться к священнику своего храма.")
             }
         }
     }

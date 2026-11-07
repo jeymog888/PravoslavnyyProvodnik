@@ -1,0 +1,408 @@
+{
+  "schema_version": 1,
+  "baseline_version": "0.2.0-guide",
+  "target_version": "0.3.0-guide",
+  "completed_new_build_cycles": 5,
+  "baseline_evidence": [
+    "cycle-00/baseline-home.png",
+    "../screenshots/release-service-next.png",
+    "../screenshots/final-translation.png",
+    "../screenshots/final-stage-map.png"
+  ],
+  "source_guidance": "https://developer.apple.com/design/human-interface-guidelines/layout",
+  "baseline_findings": [
+    {
+      "id": "B01",
+      "severity": "high",
+      "observation": "Главное действие ниже логотипа, миссии и выбора храма; продолжение чтения находится еще ниже",
+      "acceptance": "Активное чтение или вход в службу имеют первый визуальный приоритет"
+    },
+    {
+      "id": "B02",
+      "severity": "high",
+      "observation": "Слова молитвы скрыты после нескольких секций статьи и отдельного раскрытия",
+      "acceptance": "Вкладка Текст сразу показывает текущую строку; Смысл доступен отдельно"
+    },
+    {
+      "id": "B03",
+      "severity": "high",
+      "observation": "Авто с иконкой play выглядит как звуковой проигрыватель, хотя включает приблизительное продвижение этапов",
+      "acceptance": "Механизм продвижения и статус синхронизации понятны без ложного обещания аудио"
+    },
+    {
+      "id": "B04",
+      "severity": "high",
+      "observation": "Порядок этапов находится после большой панели распознавания и поиска",
+      "acceptance": "Порядок, поиск и подсказка по звуку имеют разные ясные входы"
+    },
+    {
+      "id": "B05",
+      "severity": "medium",
+      "observation": "Следующий этап повторяется в тексте и закрепленной нижней кнопке",
+      "acceptance": "Одно постоянное средство перехода без дублирования"
+    },
+    {
+      "id": "B06",
+      "severity": "medium",
+      "observation": "Заголовок, объяснение, совет и цитата соперничают за внимание",
+      "acceptance": "Текущая строка самая заметная, пояснения подчинены выбранной вкладке"
+    },
+    {
+      "id": "B07",
+      "severity": "medium",
+      "observation": "После прокрутки исчезает название этапа; остается только номер",
+      "acceptance": "Текущая молитва или песнопение остается узнаваемой при прокрутке"
+    }
+  ],
+  "cycles": [
+    {
+      "cycle": 1,
+      "status": "reviewed",
+      "purpose": "Новая структура и первый работающий текстовый плеер",
+      "build": "cycle-01/build.json",
+      "validation": {
+        "assemble": "passed",
+        "unit_tests": 88,
+        "failures": 0,
+        "errors": 0
+      },
+      "screenshots": [
+        "home-resume",
+        "player-beginning",
+        "meaning-beginning",
+        "order",
+        "search",
+        "player-creed",
+        "player-creed-text",
+        "scroll-introduction",
+        "manual-dismiss-still-scrolling"
+      ],
+      "improvements_verified": [
+        "Продолжение службы стало главным действием",
+        "Текст сразу доступен в отдельной вкладке",
+        "Объяснение отделено во вкладку Смысл",
+        "Порядок службы отделен от поиска и распознавания",
+        "Название этапа остается закрепленным"
+      ],
+      "findings": [
+        {
+          "id": "C1-F01",
+          "severity": "high",
+          "observation": "После Читать вручную в открытом темпе автопрокрутка продолжает идти",
+          "evidence": "manual-dismiss-still-scrolling.png",
+          "expected": "Действие должно остановить автопрокрутку"
+        },
+        {
+          "id": "C1-F02",
+          "severity": "medium",
+          "observation": "Подзаголовок повторяет Фрагмент дважды и Смысл по-русски рядом с По-русски",
+          "evidence": "player-beginning.png",
+          "expected": "Один короткий подзаголовок без повторов"
+        },
+        {
+          "id": "C1-F03",
+          "severity": "medium",
+          "observation": "Кнопка По-русски выглядит как текущая подпись без указания выбора языка",
+          "evidence": "player-creed-text.png",
+          "expected": "Явный выбор языка с понятными вариантами"
+        },
+        {
+          "id": "C1-F04",
+          "severity": "medium",
+          "observation": "Источник текста и конец фрагмента создают лишние акценты внутри lyric pane",
+          "evidence": "player-beginning.png",
+          "expected": "Источники и пояснения доступны отдельно"
+        },
+        {
+          "id": "C1-F05",
+          "severity": "medium",
+          "observation": "Выбор этапа Символ веры сначала открывает короткий Призыв, а ожидаемый Верую требует выбора следующего текста",
+          "evidence": "player-creed.png",
+          "expected": "Поиск конкретной молитвы приводит к подходящему тексту"
+        },
+        {
+          "id": "C1-F06",
+          "severity": "medium",
+          "observation": "Вкладка Смысл содержит объяснение этапа, но не выбранного текста",
+          "evidence": "meaning-beginning.png",
+          "expected": "Контекст выбранной молитвы или чтения доступен в Смысле"
+        }
+      ]
+    },
+    {
+      "cycle": 2,
+      "status": "reviewed",
+      "purpose": "Prayer metadata, explicit language selection and manual pause",
+      "build": "cycle-02/build.json",
+      "validation": {
+        "assemble": "passed",
+        "unit_tests": 98,
+        "unit_failures": 0,
+        "ui_tests_first_attempt": 17,
+        "ui_tests_passed_first_attempt": 8,
+        "ui_tests_harness_failures_first_attempt": 9,
+        "harness_cause": "Merged semantics hid current_stage_title; corrected finder will be recompiled normally in cycle 3",
+        "manual_pause_regression": "passed"
+      },
+      "screenshots": [
+        "home-fresh",
+        "beginning-clean",
+        "language-menu",
+        "beginning-original",
+        "gospel-text",
+        "gospel-meaning",
+        "manual-reading-fixed"
+      ],
+      "improvements_verified": [
+        "Manual reading action stops active automatic scrolling",
+        "Fragment subtitle no longer duplicated",
+        "Language dropdown explicitly identifies both choices",
+        "Prayer and reading names are recognizable",
+        "Selected reading explanation and day note appear in Meaning",
+        "Source link moved from lyrics into Meaning"
+      ],
+      "findings": [
+        {
+          "id": "C2-F01",
+          "severity": "medium",
+          "observation": "Long daily note pushes stage explanation down the Meaning screen",
+          "evidence": "gospel-meaning.png",
+          "expected": "Daily details can expand on demand"
+        },
+        {
+          "id": "C2-F02",
+          "severity": "medium",
+          "observation": "Repeated tap-a-phrase instruction consumes vertical room on each track",
+          "evidence": "beginning-clean.png",
+          "expected": "Reduce permanent helper text after controls become clear"
+        }
+      ]
+    },
+    {
+      "cycle": 3,
+      "status": "reviewed",
+      "purpose": "Search deep links, navigation state and parish schedule",
+      "build": "cycle-03/build.json",
+      "validation": {
+        "assemble": "passed",
+        "unit_tests": 109,
+        "unit_failures": 0,
+        "ui_scenarios": 22,
+        "ui_first_attempt_passed": 20,
+        "ui_first_attempt_harness_failures": 2,
+        "ui_corrected_search_recheck_passed": 3,
+        "all_distinct_ui_scenarios_confirmed": 22,
+        "harness_cause": "Test appended a new query to the preserved old query; changed helper to replace text"
+      },
+      "screenshots": [
+        "church-picker",
+        "church-today",
+        "church-tomorrow",
+        "creed-dark-largest",
+        "creed-invitation",
+        "creed-landscape-largest",
+        "creed-largest",
+        "creed-meaning",
+        "creed-small-max",
+        "creed-text",
+        "gospel-largest",
+        "gospel-small-max",
+        "home",
+        "player-options",
+        "settings",
+        "stale-home-before-fix",
+        "stale-player-before-fix"
+      ],
+      "improvements_verified": [
+        "Prayer search opens matching text and closes keyboard",
+        "Meaning and phrase survive order/home/settings navigation",
+        "Finished service does not leak old phrase positions into new search",
+        "Church screen offers Today/Tomorrow and separate parish selection",
+        "Changing parish resets service and reading context",
+        "Settings have clear grouped sections",
+        "Dark theme remains legible"
+      ],
+      "findings": [
+        {
+          "id": "C3-F01",
+          "severity": "high",
+          "observation": "360x640dp with system font 1.3 and largest app font leaves only about 36dp for current phrase; header/footer consume almost all height",
+          "evidence": "creed-small-max.png",
+          "expected": "Compact controls leave enough room to read current phrase"
+        },
+        {
+          "id": "C3-F02",
+          "severity": "medium",
+          "observation": "Landscape helper instruction is clipped; current phrase has little vertical space",
+          "evidence": "creed-landscape-largest.png",
+          "expected": "Remove redundant helper and compact service chrome"
+        },
+        {
+          "id": "C3-F03",
+          "severity": "high",
+          "observation": "A saved session older than 6 hours hides the current scheduled service and is not identified as old on home",
+          "evidence": "stale-home-before-fix.png",
+          "expected": "Old reading is labelled and current scheduled service remains reachable"
+        },
+        {
+          "id": "C3-F04",
+          "severity": "medium",
+          "observation": "Old paused session still presents its stage as a current time-based suggestion",
+          "evidence": "stale-player-before-fix.png",
+          "expected": "Explain stale state and require an explicit new context"
+        }
+      ]
+    },
+    {
+      "cycle": 4,
+      "status": "reviewed",
+      "purpose": "Responsive player, daily reading search and progressive disclosure",
+      "build": "cycle-04/build.json",
+      "validation": {
+        "assemble": "passed",
+        "unit_tests": 112,
+        "unit_failures": 0,
+        "ui_tests": 25,
+        "ui_failures": 0,
+        "initial_harness_compile_correction": "DpRect sizes calculated from edges; no production compile failure",
+        "responsive_cases": [
+          "360x640dp system font 1.3 + largest app text",
+          "640x360dp system font 1.3 + largest app text",
+          "Long Creed phrase",
+          "112-character Gospel phrase",
+          "Native MainActivity search to Luke 16:19-31"
+        ]
+      },
+      "screenshots": [
+        "creed-largest.png",
+        "creed-long-landscape-max.png",
+        "creed-long-small-max.png",
+        "creed-small-landscape-max.png",
+        "creed-small-max-next.png",
+        "creed-small-max.png",
+        "gospel-long-landscape-max.png",
+        "gospel-long-small-max.png",
+        "gospel-longest-landscape-max.png",
+        "gospel-longest-small-max.png",
+        "gospel-track-picker.png",
+        "home.png",
+        "instrumentation-screenshots/creed-search-match.png",
+        "instrumentation-screenshots/daily-meaning-collapsed.png",
+        "instrumentation-screenshots/daily-meaning-expanded.png",
+        "instrumentation-screenshots/daily-search-match.png"
+      ],
+      "improvements_verified": [
+        "Compact controls free sufficient room for full active phrases on small portrait and landscape",
+        "Current phrase is tested for complete bounds rather than partial visibility",
+        "Search Lazarus opens correct daily Gospel and phrase",
+        "Daily note expands on demand",
+        "Explicit reading choice exposes all three readings",
+        "Introductory call precedes readings",
+        "Footer explicitly advances to next stage"
+      ],
+      "findings": [
+        {
+          "id": "C4-F01",
+          "severity": "medium",
+          "observation": "Compact stage title has no disclosure hint after breadcrumb is hidden",
+          "evidence": "creed-small-max.png",
+          "expected": "Add a small disclosure arrow without consuming another row"
+        },
+        {
+          "id": "C4-F02",
+          "severity": "medium",
+          "observation": "Outside packaged reading dates, introductory call needs clear explanation that daily text is unavailable",
+          "expected": "Honest missing-reading message in Text and Meaning"
+        },
+        {
+          "id": "C4-F03",
+          "severity": "medium",
+          "observation": "Saved reading needs track-specific tempo when restoring offsets and completion state",
+          "expected": "Cold launch and track switching preserve fraction and finished state"
+        }
+      ]
+    },
+    {
+      "cycle": 5,
+      "status": "reviewed",
+      "purpose": "Cold restoration, honest unavailable readings, final regression and tempo-dialog refinement",
+      "build": "cycle-05/build.json",
+      "validation": {
+        "assemble": "passed",
+        "unit_tests": 104,
+        "unit_failures": 0,
+        "removed_unused_unit_tests": 8,
+        "ui_tests": 30,
+        "ui_failures": 0,
+        "lint": "passed with 13 warnings, no errors",
+        "full_suite_build": "cycle-05/build-before-tempo-polish.json",
+        "final_tempo_targeted_ui_tests": 5,
+        "final_tempo_targeted_ui_failures": 0,
+        "final_tempo_lint": "passed",
+        "release_upgrade": "passed without clearing data"
+      },
+      "screenshots": [
+        "church.png",
+        "home.png",
+        "instrumentation-screenshots/creed-search-match.png",
+        "instrumentation-screenshots/daily-meaning-collapsed.png",
+        "instrumentation-screenshots/daily-meaning-expanded.png",
+        "instrumentation-screenshots/daily-search-match.png",
+        "meaning.png",
+        "order.png",
+        "player-small-max.png",
+        "player.png",
+        "reading-unavailable-meaning.png",
+        "reading-unavailable-text.png",
+        "release-cold-resume.png",
+        "release-meaning.png",
+        "release-reader-next.png",
+        "release-reader.png",
+        "stale-home.png",
+        "stale-player.png",
+        "tempo-landscape-manual-stopped.png",
+        "tempo-landscape-max-fixed.png",
+        "tempo-landscape-max.png",
+        "tempo-small-manual-stopped.png",
+        "tempo-small-max-fixed.png",
+        "tempo-small-max-selected.png",
+        "tempo-small-max.png",
+        "today-service-from-stale.png",
+        "upgrade-02-fresh.png",
+        "upgrade-02-parish-bottom.png",
+        "upgrade-02-parish-picker.png",
+        "upgrade-02-saved-reader.png",
+        "upgrade-02-settings.png",
+        "upgrade-03-home.png"
+      ],
+      "improvements_verified": [
+        "Cold old reading stays paused and is labelled as saved earlier",
+        "Current scheduled service remains primary while old reading remains accessible",
+        "Starting a new service clears old phrase positions",
+        "Track-specific tempo restoration preserves fractional position and finished state",
+        "Missing reading is explained in both Text and Meaning",
+        "Compact stage title has a disclosure hint",
+        "All 8/12/16-second controls are fully visible in small portrait and landscape tempo dialogs",
+        "Manual reading stops an active timer on small screens"
+      ],
+      "findings": [
+        {
+          "id": "C5-F01",
+          "severity": "medium",
+          "observation": "First full-pass APK placed long explanation before tempo; options were clipped at max font",
+          "evidence": "tempo-small-max.png",
+          "fix": "Put tempo options first and shorten explanation/title",
+          "verification": "5 related UI tests plus lint passed; native portrait/landscape controls fully visible and usable",
+          "status": "resolved",
+          "after": [
+            "tempo-small-max-fixed.png",
+            "tempo-landscape-max-fixed.png",
+            "tempo-landscape-manual-stopped.png"
+          ]
+        }
+      ],
+      "release_metadata": "cycle-05/release-metadata.json",
+      "upgrade_evidence": "cycle-05/upgrade-result.json"
+    }
+  ]
+}

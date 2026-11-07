@@ -20,9 +20,10 @@ private val LightColors = lightColorScheme(
     primaryContainer = Color(0xFFE0EADF), onPrimaryContainer = Color(0xFF203D32),
     secondary = Color(0xFF766037), onSecondary = Color.White,
     secondaryContainer = Color(0xFFF0E5CD), onSecondaryContainer = Color(0xFF514022),
-    background = Color(0xFFF7F5EF), onBackground = Color(0xFF232D28),
-    surface = Color(0xFFF7F5EF), onSurface = Color(0xFF232D28),
-    surfaceVariant = Color(0xFFEDECE3), onSurfaceVariant = Color(0xFF596159),
+    background = Color(0xFFF7F7F2), onBackground = Color(0xFF232D28),
+    surface = Color(0xFFFFFFFF), onSurface = Color(0xFF232D28),
+    surfaceContainerLow = Color(0xFFFFFFFF), surfaceContainer = Color(0xFFF0F2EB), surfaceContainerHigh = Color(0xFFE9EDE5),
+    surfaceVariant = Color(0xFFEDEFE7), onSurfaceVariant = Color(0xFF596159),
     outline = Color(0xFF7D857B), outlineVariant = Color(0xFFD7DCD0)
 )
 private val DarkColors = darkColorScheme(
@@ -32,16 +33,17 @@ private val DarkColors = darkColorScheme(
     secondaryContainer = Color(0xFF3C3526), onSecondaryContainer = Color(0xFFE8D7B1),
     background = Color(0xFF151C18), onBackground = Color(0xFFE1E6DC),
     surface = Color(0xFF151C18), onSurface = Color(0xFFE1E6DC),
+    surfaceContainerLow = Color(0xFF202923), surfaceContainer = Color(0xFF273029), surfaceContainerHigh = Color(0xFF2E3930),
     surfaceVariant = Color(0xFF252E27), onSurfaceVariant = Color(0xFFBAC4B7),
     outline = Color(0xFF8A9687), outlineVariant = Color(0xFF3D4A3D)
 )
 private val GuideTypography = Typography(
-    displaySmall = TextStyle(fontFamily = FontFamily.Serif, fontSize = 38.sp, lineHeight = 44.sp),
-    headlineLarge = TextStyle(fontFamily = FontFamily.Serif, fontSize = 32.sp, lineHeight = 38.sp),
+    displaySmall = TextStyle(fontFamily = FontFamily.Serif, fontSize = 36.sp, lineHeight = 42.sp),
+    headlineLarge = TextStyle(fontFamily = FontFamily.Serif, fontSize = 30.sp, lineHeight = 36.sp),
     headlineMedium = TextStyle(fontFamily = FontFamily.Serif, fontSize = 28.sp, lineHeight = 34.sp),
     titleLarge = TextStyle(fontFamily = FontFamily.Serif, fontSize = 23.sp, lineHeight = 29.sp),
     titleMedium = TextStyle(fontWeight = FontWeight.Medium, fontSize = 18.sp, lineHeight = 25.sp),
-    bodyLarge = TextStyle(fontSize = 18.sp, lineHeight = 28.sp),
+    bodyLarge = TextStyle(fontSize = 17.sp, lineHeight = 26.sp),
     bodyMedium = TextStyle(fontSize = 16.sp, lineHeight = 24.sp),
     bodySmall = TextStyle(fontSize = 14.sp, lineHeight = 21.sp),
     labelLarge = TextStyle(fontWeight = FontWeight.Medium, fontSize = 16.sp, lineHeight = 22.sp),

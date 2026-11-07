@@ -26,8 +26,13 @@ data class StageText(
     val explanation: String,
     val sourceUrl: String? = null,
     val sourceTitle: String? = null,
-    val isExcerpt: Boolean = true
+    val isExcerpt: Boolean = true,
+    val lines: List<PrayerLine> = emptyList(),
+    val title: String? = null
 )
+
+/** One editorially aligned pair; switching language must retain this position. */
+data class PrayerLine(val original: String, val translation: String)
 
 data class LiturgyService(
     val service: String,
@@ -35,23 +40,4 @@ data class LiturgyService(
     val stages: List<LiturgyStage>,
     @SerializedName("source_url") val sourceUrl: String? = null,
     @SerializedName("content_note") val contentNote: String? = null
-)
-
-data class ChurchDay(
-    val date: String,
-    val dayOfWeek: String,
-    val fasting: String? = null,
-    val feast: String? = null,
-    val typicalService: String? = null,
-    val scheduleToday: String? = null
-)
-
-data class ServiceProgress(
-    val currentStage: LiturgyStage?,
-    val stageNumber: Int,
-    val totalStages: Int,
-    /** Position in the guide, not a prediction of how much of the service has elapsed. */
-    val progressPercent: Int,
-    val nextStage: LiturgyStage?,
-    val previousStage: LiturgyStage?
 )

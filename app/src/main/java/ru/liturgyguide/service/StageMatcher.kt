@@ -5,6 +5,7 @@ import com.google.gson.JsonParseException
 import com.google.gson.annotations.SerializedName
 import ru.liturgyguide.model.LiturgyService
 import ru.liturgyguide.model.LiturgyStage
+import ru.liturgyguide.model.PrayerLine
 import ru.liturgyguide.model.StageText
 
 class StageMatcher(jsonString: String) {
@@ -66,14 +67,35 @@ class StageMatcher(jsonString: String) {
             val texts = requireNotNull(stage.texts) { "У этапа $id отсутствует список текстов" }
                 .mapIndexed { textIndex, nullableText ->
                     val text = requireNotNull(nullableText) { "Текст ${textIndex + 1} этапа $id отсутствует" }
+                    val original = requiredText(text.original, "Исходный текст этапа $id")
+                    val translation = requiredText(text.translation, "Пересказ текста этапа $id")
+                    val lines = text.lines?.let { lineData ->
+                        require(lineData.isNotEmpty()) { "Строки текста этапа $id пусты" }
+                        lineData.mapIndexed { lineIndex, nullableLine ->
+                            val line = requireNotNull(nullableLine) { "Строка ${lineIndex + 1} этапа $id отсутствует" }
+                            PrayerLine(
+                                requiredText(line.original, "Исходная строка ${lineIndex + 1} этапа $id"),
+                                requiredText(line.translation, "Перевод строки ${lineIndex + 1} этапа $id")
+                            )
+                        }.also { paired ->
+                            require(normalizeNewlines(original) == paired.joinToString("\n") { it.original }) {
+                                "Исходные строки этапа $id расходятся с полным текстом"
+                            }
+                            require(normalizeNewlines(translation) == paired.joinToString("\n") { it.translation }) {
+                                "Перевод строк этапа $id расходится с полным текстом"
+                            }
+                        }
+                    }.orEmpty()
                     StageText(
                         type = requiredText(text.type, "Тип текста этапа $id"),
-                        original = requiredText(text.original, "Исходный текст этапа $id"),
-                        translation = requiredText(text.translation, "Пересказ текста этапа $id"),
+                        original = original,
+                        translation = translation,
                         explanation = requiredText(text.explanation, "Пояснение текста этапа $id"),
                         sourceUrl = text.sourceUrl?.takeIf { it.startsWith("https://") },
                         sourceTitle = text.sourceTitle,
-                        isExcerpt = text.isExcerpt ?: true
+                        isExcerpt = text.isExcerpt ?: true,
+                        lines = lines,
+                        title = text.title?.let { requiredText(it, "Название текста этапа $id") }
                     )
                 }
             LiturgyStage(
@@ -114,6 +136,8 @@ class StageMatcher(jsonString: String) {
         return value.trim()
     }
 
+    private fun normalizeNewlines(value: String): String = value.replace("\r\n", "\n").replace('\r', '\n')
+
     // Gson bypasses Kotlin constructors and nullability. Decode to nullable fields, then validate.
     private data class ServiceData(
         val service: String? = null,
@@ -146,6 +170,10 @@ class StageMatcher(jsonString: String) {
         val explanation: String? = null,
         val sourceUrl: String? = null,
         val sourceTitle: String? = null,
-        val isExcerpt: Boolean? = null
+        val isExcerpt: Boolean? = null,
+        val lines: List<PrayerLineData?>? = null,
+        val title: String? = null
     )
+
+    private data class PrayerLineData(val original: String? = null, val translation: String? = null)
 }

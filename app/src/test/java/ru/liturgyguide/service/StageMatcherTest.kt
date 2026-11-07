@@ -108,4 +108,49 @@ class StageMatcherTest {
             assertThrows(IllegalArgumentException::class.java) { StageMatcher(source.toString()) }
         }
     }
+
+    @Test fun `aligned prayer lines are validated and decoded without losing the legacy text`() {
+        val matcher = StageMatcher(guideWithLines("""[{"original":"Исходный текст","translation":"Смысловой пересказ"}]"""))
+        val text = matcher.getStageById("second")!!.texts.single()
+        assertEquals(text.original, text.lines.single().original)
+        assertEquals(text.translation, text.lines.single().translation)
+    }
+
+    @Test fun `missing or null lines remain compatible with legacy single blocks`() {
+        assertTrue(StageMatcher(testGuideJson()).getStageById("second")!!.texts.single().lines.isEmpty())
+        assertTrue(StageMatcher(guideWithLines("null")).getStageById("second")!!.texts.single().lines.isEmpty())
+    }
+
+    @Test fun `explicit empty null or incomplete prayer lines fail at content load`() {
+        listOf("[]", "[null]", "[{}]", """[{"original":"Исходный текст"}]""",
+            """[{"original":" ","translation":"Смысловой пересказ"}]""",
+            """[{"original":"Исходный текст","translation":null}]""").forEach { lines ->
+            assertThrows(IllegalArgumentException::class.java) { StageMatcher(guideWithLines(lines)) }
+        }
+    }
+
+    @Test fun `prayer lines cannot silently disagree with either complete text`() {
+        listOf("""[{"original":"Другой текст","translation":"Смысловой пересказ"}]""",
+            """[{"original":"Исходный текст","translation":"Другой смысл"}]""").forEach { lines ->
+            assertThrows(IllegalArgumentException::class.java) { StageMatcher(guideWithLines(lines)) }
+        }
+    }
+
+    @Test fun `optional prayer title is retained but a declared blank title is rejected`() {
+        val source = JsonParser.parseString(testGuideJson()).asJsonObject
+        val text = source.getAsJsonArray("stages")[1].asJsonObject.getAsJsonArray("texts")[0].asJsonObject
+        text.addProperty("title", "  Отче наш  ")
+        assertEquals("Отче наш", StageMatcher(source.toString()).getStageById("second")!!.texts.single().title)
+        text.addProperty("title", " ")
+        assertThrows(IllegalArgumentException::class.java) { StageMatcher(source.toString()) }
+        text.remove("title")
+        assertNull(StageMatcher(source.toString()).getStageById("second")!!.texts.single().title)
+    }
+
+    private fun guideWithLines(lines: String): String {
+        val source = JsonParser.parseString(testGuideJson()).asJsonObject
+        source.getAsJsonArray("stages")[1].asJsonObject.getAsJsonArray("texts")[0].asJsonObject
+            .add("lines", JsonParser.parseString(lines))
+        return source.toString()
+    }
 }
