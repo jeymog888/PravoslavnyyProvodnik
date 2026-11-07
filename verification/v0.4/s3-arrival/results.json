@@ -1,0 +1,164 @@
+{
+  "scope": "Feoria v0.4 S3.1 arrival QA",
+  "git_head": "2e9d551b1e779274fbbd5fb33d7c3efda6dbda8a",
+  "build_debug": "passed",
+  "build_android_test": "passed",
+  "unit": {
+    "tests": 111,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "targeted_ui": {
+    "tests": 12,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "targeted_ui_breakdown": {
+    "ArrivalFlowTest": 6,
+    "SavedReadingTest": 3,
+    "GuideNavigationTest": 2,
+    "MainContextTest": 1
+  },
+  "native_status": "passed_by_orchestrator",
+  "native_product_checks_completed": 6,
+  "attempts": [
+    {
+      "kind": "build-and-unit",
+      "attempt": 1,
+      "status": "passed",
+      "log": "build-and-unit-attempt-1.log"
+    },
+    {
+      "kind": "targeted-ui",
+      "attempt": 1,
+      "status": "passed",
+      "tests": 12,
+      "log": "targeted-ui-attempt-1.log"
+    },
+    {
+      "kind": "native",
+      "attempt": 1,
+      "status": "not-executed",
+      "reason": "App removed by connectedDebugAndroidTest cleanup; run-as reported unknown package before UI opened",
+      "log": "native-attempt-1.log",
+      "restored_settings": true,
+      "unroot_verified": true
+    },
+    {
+      "kind": "native",
+      "attempt": 2,
+      "status": "blocked-by-harness",
+      "reason": "After installing the same hashed APK, reading seeded preferences failed with XML ParseError at line 1, column 0 before UI opened. Later read-only retrieval parsed locally; exact transient cause unconfirmed",
+      "log": "native-attempt-2.log",
+      "restored_settings": true,
+      "unroot_verified": true
+    }
+  ],
+  "source_hashes": {
+    "app/src/main/java/ru/liturgyguide/ui/MainActivity.kt": "183aab470414a15c4cb249531e41667d9da528e8a88dc6d2d0666374a0d06e9f",
+    "app/src/main/java/ru/liturgyguide/ui/ArrivalScreen.kt": "254e8e5dc9146a6c9c4ea4694139d2f0b138ddd418195900e7ad4fd014f2380c",
+    "app/src/androidTest/java/ru/liturgyguide/ui/ArrivalFlowTest.kt": "5f4bcc63e60ced07272087bb57e1f935b9972e90b447a5f076646dea5db30bbe"
+  },
+  "source_files_verified_unchanged": 62,
+  "source_changes_during_qa": [],
+  "apk_hashes": {
+    "app/build/outputs/apk/debug/app-debug.apk": {
+      "sha256": "02475fd21790d548044c5f5e55ec364d93460f9db7f6dd785024bc23a5217467",
+      "bytes": 16994974
+    },
+    "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": {
+      "sha256": "3891dc5df911a898cc0c1d960879b57b0e273ab9dbe664e8e3b7d99c376e8c6f",
+      "bytes": 1096263
+    }
+  },
+  "full_evidence": "app/build/verification/v0.4/s3-arrival",
+  "native_ui_owner": "root",
+  "screenshots": [
+    "proposal.png",
+    "proposal-landscape.png",
+    "previous-reading-restored.png",
+    "confirmed-player.png"
+  ],
+  "qa_production_edits": false,
+  "qa_commits": false,
+  "native_root_result": {
+    "checks": [
+      {
+        "name": "proposal",
+        "expected": [
+          "Херувимская песнь",
+          "Открыть этот момент",
+          "Найти другой момент"
+        ],
+        "missing": [],
+        "passed": true
+      },
+      {
+        "name": "proposal-landscape",
+        "expected": [
+          "Херувимская песнь"
+        ],
+        "missing": [],
+        "passed": true
+      },
+      {
+        "name": "cancel-and-rotation-preserve-all-preferences",
+        "passed": true,
+        "keys": 12
+      },
+      {
+        "name": "previous-reading-restored",
+        "expected": [
+          "Символ веры",
+          "Иже от Отца рожденнаго прежде всех век."
+        ],
+        "missing": [],
+        "passed": true
+      },
+      {
+        "name": "confirmed-player",
+        "expected": [
+          "Херувимская песнь"
+        ],
+        "missing": [],
+        "passed": true
+      },
+      {
+        "name": "accept-clears-old-bookmarks-preserves-settings-and-stays-manual",
+        "passed": true,
+        "session": {
+          "anchorEpochMillis": 1794112828868,
+          "anchorIsApproximate": true,
+          "anchorStageId": "cherubic_hymn",
+          "autoAdvance": false,
+          "elapsedInStageMillis": 205004
+        }
+      }
+    ],
+    "restored": {
+      "auto_time": "1",
+      "auto_time_zone": "1",
+      "timezone": "Europe/Moscow",
+      "rotation": "0",
+      "accelerometer": "1"
+    },
+    "apk_sha256": "02475fd21790d548044c5f5e55ec364d93460f9db7f6dd785024bc23a5217467"
+  },
+  "native_harness_resolution": "After Android UI runner removed the package, the identical hashed APK was installed. Root replaced stdin-based seed writing with adb push and synchronous run-as cp; native behavior assertions then passed without product changes.",
+  "orchestrator_review": {
+    "source_files_hashes_checked": 62,
+    "source_diff_reviewed": true,
+    "independent_review_model": "gpt-6-astra",
+    "ui_xml_totals": {
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "screenshots_reviewed": 4,
+    "accepted": true
+  },
+  "visual_followup": "Landscape proposal scrolls; secondary action is below the first viewport. Recheck action placement in planned S4.3 polish."
+}
