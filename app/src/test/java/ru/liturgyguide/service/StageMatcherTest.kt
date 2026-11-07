@@ -1,121 +1,111 @@
 package ru.liturgyguide.service
 
+import com.google.gson.Gson
+import com.google.gson.JsonParser
 import org.junit.Assert.*
 import org.junit.Test
-import java.io.File
-import java.io.FileWriter
+import ru.liturgyguide.model.LiturgyService
 
 class StageMatcherTest {
-
-    private val testJson = """
-        {
-          "service": "Тестовая Литургия",
-          "total_duration_min": 30,
-          "stages": [
-            {
-              "id": "test1",
-              "order": 1,
-              "name": "Первый этап",
-              "description": "Первый тестовый этап",
-              "duration_min": 10,
-              "texts": [
-                {"type": "молитва", "original": "Текст 1", "translation": "Перевод 1", "explanation": "Пояснение 1"}
-              ]
-            },
-            {
-              "id": "test2",
-              "order": 2,
-              "name": "Второй этап",
-              "description": "Второй тестовый этап",
-              "duration_min": 10,
-              "texts": [
-                {"type": "возглас", "original": "Текст 2", "translation": "Перевод 2", "explanation": "Пояснение 2"}
-              ]
-            },
-            {
-              "id": "test3",
-              "order": 3,
-              "name": "Третий этап",
-              "description": "Третий тестовый этап",
-              "duration_min": 10,
-              "texts": [
-                {"type": "ектения", "original": "Текст 3", "translation": "Перевод 3", "explanation": "Пояснение 3"}
-              ]
-            }
-          ]
-        }
-    """.trimIndent()
-
-    private fun createTestMatcher(): StageMatcher = StageMatcher(testJson)
-
     @Test
-    fun `getAllStages returns all stages`() {
-        val matcher = createTestMatcher()
+    fun `packaged guide loads all stages and positive snake case durations`() {
+        val stream = requireNotNull(javaClass.classLoader?.getResourceAsStream("liturgy_stages.json")) {
+            "The production guide must be included in unit test resources"
+        }
+        val json = stream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+        val source = JsonParser.parseString(json).asJsonObject
+        val matcher = StageMatcher(json)
         val stages = matcher.getAllStages()
 
-        assertEquals(3, stages.size)
-        assertEquals("Первый этап", stages[0].name)
-        assertEquals("Второй этап", stages[1].name)
-        assertEquals("Третий этап", stages[2].name)
+        assertEquals(source.getAsJsonArray("stages").size(), stages.size)
+        assertEquals("preparation", stages.first().id)
+        assertEquals("dismissal", stages.last().id)
+        assertTrue(stages.all { it.durationMin > 0 })
+        assertTrue(stages.all { !it.cue.isNullOrBlank() })
+        assertEquals(stages.sumOf { it.durationMin }, matcher.getTotalDuration())
+        assertFalse(matcher.getContentNote().isNullOrBlank())
+        assertTrue(matcher.getSourceUrl()?.startsWith("https://") == true)
     }
 
     @Test
-    fun `getStage finds stage by name`() {
-        val matcher = createTestMatcher()
-        val stage = matcher.getStage("Второй этап")
+    fun `model maps both snake case duration fields`() {
+        val service = Gson().fromJson(testGuideJson(), LiturgyService::class.java)
 
-        assertNotNull(stage)
-        assertEquals("Второй этап", stage?.name)
-        assertEquals(2, stage?.order)
+        assertEquals(30, service.totalDurationMin)
+        assertEquals(listOf(10, 10, 10), service.stages.map { it.durationMin })
+        assertEquals("https://example.org/source", service.sourceUrl)
+        assertEquals("Учебный справочник", service.contentNote)
     }
 
     @Test
-    fun `getStage returns null for unknown name`() {
-        val matcher = createTestMatcher()
-        val stage = matcher.getStage("Несуществующий")
+    fun `stage order is normalized and navigation uses stable ids`() {
+        val source = JsonParser.parseString(testGuideJson()).asJsonObject
+        source.getAsJsonArray("stages")[0].asJsonObject.addProperty("order", 3)
+        source.getAsJsonArray("stages")[2].asJsonObject.addProperty("order", 1)
+        val matcher = StageMatcher(source.toString())
 
-        assertNull(stage)
+        assertEquals(listOf("third", "second", "first"), matcher.getAllStages().map { it.id })
+        assertEquals("second", matcher.getNextStageById("third")?.id)
+        assertEquals("third", matcher.getPreviousStage("second")?.id)
+        assertEquals(3, matcher.getStageNumber(requireNotNull(matcher.getStageById("first"))))
+        assertNull(matcher.getNextStageById("missing"))
+        assertNull(matcher.getPreviousStage("missing"))
     }
 
     @Test
-    fun `getStageByOrder finds stage by order`() {
-        val matcher = createTestMatcher()
-        val stage = matcher.getStageByOrder(3)
+    fun `a stale declared total cannot disagree with stage durations`() {
+        val matcher = StageMatcher(testGuideJson().replace("\"total_duration_min\": 30", "\"total_duration_min\": 0"))
 
-        assertNotNull(stage)
-        assertEquals("Третий этап", stage?.name)
+        assertEquals(30, matcher.getTotalDuration())
     }
 
     @Test
-    fun `getNextStage returns next stage`() {
-        val matcher = createTestMatcher()
-        val next = matcher.getNextStage("Первый этап")
+    fun `missing required stage fields fail at load instead of in the screen`() {
+        listOf("id", "order", "name", "description", "duration_min", "texts").forEach { field ->
+            val source = JsonParser.parseString(testGuideJson()).asJsonObject
+            source.getAsJsonArray("stages")[0].asJsonObject.remove(field)
 
-        assertNotNull(next)
-        assertEquals("Второй этап", next?.name)
+            assertThrows("Missing $field", IllegalArgumentException::class.java) {
+                StageMatcher(source.toString())
+            }
+        }
     }
 
     @Test
-    fun `getNextStage returns null for last stage`() {
-        val matcher = createTestMatcher()
-        val next = matcher.getNextStage("Третий этап")
+    fun `missing nested text is rejected instead of violating Kotlin nullability`() {
+        val source = JsonParser.parseString(testGuideJson()).asJsonObject
+        source.getAsJsonArray("stages")[1].asJsonObject
+            .getAsJsonArray("texts")[0].asJsonObject.remove("translation")
 
-        assertNull(next)
+        assertThrows(IllegalArgumentException::class.java) { StageMatcher(source.toString()) }
     }
 
     @Test
-    fun `getTotalDuration returns correct total`() {
-        val matcher = createTestMatcher()
-        val total = matcher.getTotalDuration()
-
-        assertEquals(30, total)
+    fun `invalid and empty guides fail with a load error`() {
+        listOf("not json", "null", "{}", "{\"service\":\"test\",\"stages\":[]}",
+            "{\"service\":\"test\",\"stages\":[null]}").forEach { json ->
+            assertThrows(IllegalArgumentException::class.java) { StageMatcher(json) }
+        }
     }
 
     @Test
-    fun `getServiceName returns service name`() {
-        val matcher = createTestMatcher()
-        val name = matcher.getServiceName()
+    fun `zero negative and overflowing durations are rejected`() {
+        listOf(0, -1, Int.MAX_VALUE).forEach { duration ->
+            val source = JsonParser.parseString(testGuideJson()).asJsonObject
+            source.getAsJsonArray("stages")[0].asJsonObject.addProperty("duration_min", duration)
 
-        assertEquals("Тестовая Литургия", name)
+            assertThrows(IllegalArgumentException::class.java) { StageMatcher(source.toString()) }
+        }
+    }
+
+    @Test
+    fun `duplicate identity or order cannot create ambiguous navigation`() {
+        listOf("id", "order").forEach { field ->
+            val source = JsonParser.parseString(testGuideJson()).asJsonObject
+            val stages = source.getAsJsonArray("stages")
+            stages[1].asJsonObject.add(field, stages[0].asJsonObject[field])
+
+            assertThrows(IllegalArgumentException::class.java) { StageMatcher(source.toString()) }
+        }
     }
 }

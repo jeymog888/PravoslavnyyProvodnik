@@ -2,56 +2,48 @@ package ru.liturgyguide.service
 
 import org.junit.Assert.*
 import org.junit.Test
+import java.time.Clock
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeParseException
 
 class CalendarEngineTest {
-
-    private val engine = CalendarEngine()
-
     @Test
-    fun `getDay returns correct day name for known date`() {
-        val result = engine.getDay("2026-11-01")
+    fun `all weekdays are correct including previously incorrect November fifth`() {
+        val engine = CalendarEngine()
+        val first = LocalDate.of(2026, 11, 1)
+        val names = listOf("Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота")
 
-        assertEquals("Воскресенье", result.dayOfWeek)
-        assertEquals("8:00 Литургия Молебен", result.scheduleToday)
+        names.forEachIndexed { offset, expected ->
+            assertEquals(expected, engine.getDay(first.plusDays(offset.toLong()).toString()).dayOfWeek)
+        }
     }
 
     @Test
-    fun `getDay returns correct day name for monday`() {
-        val result = engine.getDay("2026-11-02")
+    fun `today uses the parish clock across UTC midnight boundary`() {
+        val clock = Clock.fixed(Instant.parse("2026-11-06T21:30:00Z"), ZoneId.of("Europe/Moscow"))
+        val today = CalendarEngine(clock).getToday()
 
-        assertEquals("Понедельник", result.dayOfWeek)
-        assertNull(result.scheduleToday)
+        assertEquals("2026-11-07", today.date)
+        assertEquals("Суббота", today.dayOfWeek)
     }
 
     @Test
-    fun `getDay returns feast day info`() {
-        val result = engine.getDay("2026-11-04")
+    fun `unverified schedules feast fasting and service claims remain absent`() {
+        val engine = CalendarEngine()
+        listOf("2026-11-01", "2026-11-04", "2026-11-28", "2027-01-07").forEach { date ->
+            val day = engine.getDay(date)
 
-        assertEquals("Казанская икона Божией Матери", result.feast)
+            assertNull(day.scheduleToday)
+            assertNull(day.feast)
+            assertNull(day.fasting)
+            assertNull(day.typicalService)
+        }
     }
 
     @Test
-    fun `getDay returns fasting day info`() {
-        val result = engine.getDay("2026-11-28")
-
-        assertEquals("Начало Рождественского поста", result.fasting)
-    }
-
-    @Test
-    fun `getDay returns typical service`() {
-        val result = engine.getDay("2026-11-01")
-
-        assertEquals("Литургия Иоанна Златоуста", result.typicalService)
-    }
-
-    @Test
-    fun `getDay handles date without schedule`() {
-        val result = engine.getDay("2026-11-05")
-
-        assertEquals("Среда", result.dayOfWeek)
-        assertNull(result.scheduleToday)
-        assertNull(result.feast)
-        assertNull(result.fasting)
+    fun `invalid dates do not silently become another day`() {
+        assertThrows(DateTimeParseException::class.java) { CalendarEngine().getDay("2026-02-30") }
     }
 }

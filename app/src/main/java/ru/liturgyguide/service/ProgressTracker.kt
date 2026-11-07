@@ -1,69 +1,23 @@
 package ru.liturgyguide.service
 
-import ru.liturgyguide.model.LiturgyStage
 import ru.liturgyguide.model.ServiceProgress
-import java.time.LocalTime
-import java.time.Duration
 
+/** Tracks the user's selected place in the guide. It does not listen to or time the service. */
 class ProgressTracker(private val stageMatcher: StageMatcher) {
-
-    fun getProgress(
-        startTime: LocalTime,
-        currentStageName: String?
-    ): ServiceProgress {
-        val allStages = stageMatcher.getAllStages()
-        val totalDuration = stageMatcher.getTotalDuration()
-        val now = LocalTime.now()
-
-        val elapsed = Duration.between(startTime, now)
-        val elapsedMin = elapsed.toMinutes().toInt()
-
-        if (currentStageName == null) {
-            var accumulated = 0
-            for (stage in allStages) {
-                accumulated += stage.durationMin
-                if (elapsedMin <= accumulated) {
-                    return buildProgress(stage, allStages, elapsedMin, totalDuration)
-                }
-            }
-            return buildProgress(allStages.last(), allStages, elapsedMin, totalDuration)
-        }
-
-        val currentStage = stageMatcher.getStage(currentStageName)
-        if (currentStage == null) {
-            return ServiceProgress(
-                currentStage = null,
-                stageNumber = 0,
-                totalStages = allStages.size,
-                elapsedMinutes = elapsedMin,
-                remainingMinutes = (totalDuration - elapsedMin).coerceAtLeast(0),
-                progressPercent = ((elapsedMin * 100) / totalDuration).coerceAtMost(100),
-                nextStage = allStages.firstOrNull()
-            )
-        }
-
-        return buildProgress(currentStage, allStages, elapsedMin, totalDuration)
-    }
-
-    private fun buildProgress(
-        stage: LiturgyStage,
-        allStages: List<LiturgyStage>,
-        elapsedMin: Int,
-        totalDuration: Int
-    ): ServiceProgress {
-        val stageNumber = stageMatcher.getStageNumber(stage)
-        val nextStage = stageMatcher.getNextStage(stage.name)
-        val remaining = (totalDuration - elapsedMin).coerceAtLeast(0)
-        val percent = ((elapsedMin * 100) / totalDuration).coerceAtMost(100)
+    fun getProgress(stageId: String?): ServiceProgress {
+        val stages = stageMatcher.getAllStages()
+        val currentStage = stageId?.let(stageMatcher::getStageById)
+        val stageNumber = currentStage?.let(stageMatcher::getStageNumber) ?: 0
 
         return ServiceProgress(
-            currentStage = stage,
+            currentStage = currentStage,
             stageNumber = stageNumber,
-            totalStages = allStages.size,
-            elapsedMinutes = elapsedMin,
-            remainingMinutes = remaining,
-            progressPercent = percent,
-            nextStage = nextStage
+            totalStages = stages.size,
+            progressPercent = if (stages.isEmpty()) 0 else
+                (stageNumber.toLong() * 100 / stages.size).toInt().coerceIn(0, 100),
+            nextStage = if (currentStage == null) stages.firstOrNull() else
+                stageMatcher.getNextStageById(currentStage.id),
+            previousStage = currentStage?.let { stageMatcher.getPreviousStage(it.id) }
         )
     }
 }

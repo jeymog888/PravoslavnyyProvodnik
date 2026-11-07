@@ -1,128 +1,71 @@
 package ru.liturgyguide.service
 
+import com.google.gson.JsonParser
 import org.junit.Assert.*
 import org.junit.Test
-import java.io.File
-import java.io.FileWriter
-import java.time.LocalTime
 
 class ProgressTrackerTest {
+    private val tracker = ProgressTracker(StageMatcher(testGuideJson()))
 
-    private val testJson = """
-        {
-          "service": "Тестовая Литургия",
-          "total_duration_min": 30,
-          "stages": [
-            {
-              "id": "test1",
-              "order": 1,
-              "name": "Первый этап",
-              "description": "Первый тестовый этап",
-              "duration_min": 10,
-              "texts": []
-            },
-            {
-              "id": "test2",
-              "order": 2,
-              "name": "Второй этап",
-              "description": "Второй тестовый этап",
-              "duration_min": 10,
-              "texts": []
-            },
-            {
-              "id": "test3",
-              "order": 3,
-              "name": "Третий этап",
-              "description": "Третий тестовый этап",
-              "duration_min": 10,
-              "texts": []
-            }
-          ]
+    @Test
+    fun `no selection or a stale saved id does not claim a current stage`() {
+        listOf(null, "deleted-stage", "Второй этап").forEach { id ->
+            val progress = tracker.getProgress(id)
+
+            assertNull(progress.currentStage)
+            assertEquals(0, progress.stageNumber)
+            assertEquals(0, progress.progressPercent)
+            assertEquals(3, progress.totalStages)
+            assertNull(progress.previousStage)
+            assertEquals("first", progress.nextStage?.id)
         }
-    """.trimIndent()
-
-    private fun createTracker(): ProgressTracker {
-        val matcher = StageMatcher(testJson)
-        return ProgressTracker(matcher)
     }
 
     @Test
-    fun `getProgress returns correct stage number`() {
-        val tracker = createTracker()
-        val startTime = LocalTime.now().minusMinutes(5)
-        val progress = tracker.getProgress(startTime, "Первый этап")
+    fun `manual jump and return use selection without a running clock`() {
+        val last = tracker.getProgress("third")
+        val middle = tracker.getProgress("second")
+        val first = tracker.getProgress("first")
+
+        assertEquals(3, last.stageNumber)
+        assertEquals(100, last.progressPercent)
+        assertNull(last.nextStage)
+        assertEquals("second", last.previousStage?.id)
+        assertEquals(2, middle.stageNumber)
+        assertEquals(66, middle.progressPercent)
+        assertEquals("first", middle.previousStage?.id)
+        assertEquals("third", middle.nextStage?.id)
+        assertEquals(1, first.stageNumber)
+        assertEquals(33, first.progressPercent)
+        assertNull(first.previousStage)
+        assertEquals("second", first.nextStage?.id)
+    }
+
+    @Test
+    fun `a single stage has safe boundaries and a bounded position`() {
+        val source = JsonParser.parseString(testGuideJson()).asJsonObject
+        val stages = source.getAsJsonArray("stages")
+        stages.remove(2)
+        stages.remove(1)
+        val singleTracker = ProgressTracker(StageMatcher(source.toString()))
+        val progress = singleTracker.getProgress("first")
 
         assertEquals(1, progress.stageNumber)
-        assertEquals(3, progress.totalStages)
-        assertEquals("Первый этап", progress.currentStage?.name)
-    }
-
-    @Test
-    fun `getProgress returns second stage`() {
-        val tracker = createTracker()
-        val startTime = LocalTime.now().minusMinutes(15)
-        val progress = tracker.getProgress(startTime, "Второй этап")
-
-        assertEquals(2, progress.stageNumber)
-        assertEquals("Второй этап", progress.currentStage?.name)
-    }
-
-    @Test
-    fun `getProgress returns next stage`() {
-        val tracker = createTracker()
-        val startTime = LocalTime.now().minusMinutes(5)
-        val progress = tracker.getProgress(startTime, "Первый этап")
-
-        assertNotNull(progress.nextStage)
-        assertEquals("Второй этап", progress.nextStage?.name)
-    }
-
-    @Test
-    fun `getProgress last stage has no next`() {
-        val tracker = createTracker()
-        val startTime = LocalTime.now().minusMinutes(25)
-        val progress = tracker.getProgress(startTime, "Третий этап")
-
+        assertEquals(1, progress.totalStages)
+        assertEquals(100, progress.progressPercent)
+        assertNull(progress.previousStage)
         assertNull(progress.nextStage)
     }
 
     @Test
-    fun `getProgress auto-detects stage by time`() {
-        val tracker = createTracker()
-        val startTime = LocalTime.now().minusMinutes(25)
-        val progress = tracker.getProgress(startTime, null)
+    fun `illustrative duration never determines selected stage or position`() {
+        val source = JsonParser.parseString(testGuideJson()).asJsonObject
+        source.getAsJsonArray("stages")[0].asJsonObject.addProperty("duration_min", 1000)
+        val alteredTracker = ProgressTracker(StageMatcher(source.toString()))
 
-        assertNotNull(progress.currentStage)
-        assertEquals("Третий этап", progress.currentStage?.name)
-    }
-
-    @Test
-    fun `getProgress returns zero stage for unknown name`() {
-        val tracker = createTracker()
-        val startTime = LocalTime.now().minusMinutes(5)
-        val progress = tracker.getProgress(startTime, "Неизвестный этап")
-
-        assertEquals(0, progress.stageNumber)
-        assertNull(progress.currentStage)
-    }
-
-    @Test
-    fun `getProgress elapsed time is non-negative`() {
-        val tracker = createTracker()
-        val startTime = LocalTime.now().minusMinutes(5)
-        val progress = tracker.getProgress(startTime, "Первый этап")
-
-        assertTrue(progress.elapsedMinutes >= 0)
-        assertTrue(progress.remainingMinutes >= 0)
-    }
-
-    @Test
-    fun `getProgress percent is between 0 and 100`() {
-        val tracker = createTracker()
-        val startTime = LocalTime.now().minusMinutes(5)
-        val progress = tracker.getProgress(startTime, "Первый этап")
-
-        assertTrue(progress.progressPercent >= 0)
-        assertTrue(progress.progressPercent <= 100)
+        assertEquals(tracker.getProgress("second").stageNumber,
+            alteredTracker.getProgress("second").stageNumber)
+        assertEquals(tracker.getProgress("second").progressPercent,
+            alteredTracker.getProgress("second").progressPercent)
     }
 }
