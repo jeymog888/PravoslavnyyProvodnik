@@ -115,6 +115,12 @@ fun AppNavigation(container: AppContainer) {
         saveSession(existing?.let { engine.correct(it, id) } ?: engine.start(id))
         screen = Screen.SERVICE
     }
+    fun openOrder(origin: Screen) {
+        // A fresh entry follows the current stage; search/back and recreation keep browsing position.
+        screenStateHolder.removeState(Screen.STAGE_SELECTOR.name)
+        selectorOrigin = origin
+        screen = Screen.STAGE_SELECTOR
+    }
     fun back() {
         screen = when (screen) {
             Screen.STAGE_SELECTOR -> selectorOrigin
@@ -166,7 +172,7 @@ fun AppNavigation(container: AppContainer) {
                             screen = Screen.SERVICE
                         },
                         onFindStage = { searchOrigin = Screen.MAIN; screen = Screen.SEARCH },
-                        onOrder = { selectorOrigin = Screen.MAIN; screen = Screen.STAGE_SELECTOR },
+                        onOrder = { openOrder(Screen.MAIN) },
                         bottomBar = navigationBar
                     )
                     Screen.SERVICE -> ServiceScreen(
@@ -192,7 +198,7 @@ fun AppNavigation(container: AppContainer) {
                             screen = Screen.MAIN
                             Toast.makeText(context, "Если включали режим тишины, не забудьте проверить его после службы", Toast.LENGTH_LONG).show()
                         },
-                        onSelectStage = { selectorOrigin = Screen.SERVICE; screen = Screen.STAGE_SELECTOR },
+                        onSelectStage = { openOrder(Screen.SERVICE) },
                         onFindStage = { searchOrigin = Screen.SERVICE; screen = Screen.SEARCH },
                         onSettings = { settingsOrigin = Screen.SERVICE; screen = Screen.SETTINGS }
                     )

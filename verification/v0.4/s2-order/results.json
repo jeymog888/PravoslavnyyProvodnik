@@ -1,0 +1,143 @@
+{
+  "task": "S2.2 service order opens at the current stage",
+  "captured_at_utc": "2026-11-07T23:06:57.346417+00:00",
+  "git_head": "ecb25b2072c89c5719876ed1f5dfe782787a6ad3",
+  "git_branch": "codex/feoria-0.4-arrival",
+  "device": {
+    "serial": "emulator-5554",
+    "android": "15",
+    "model": "sdk_gphone64_arm64",
+    "screen": "Physical size: 1080x2400",
+    "density": "Physical density: 420",
+    "font_scale": "1.0",
+    "auto_time": "1"
+  },
+  "app_apk_sha256": "c2d0ee13a2b71b301a4e327a6188052aaee5a94a6c2c246c8b4a6015b0a87e90",
+  "android_test_apk_sha256": "67294b876b7e424b3360900c74f56de8894f033770338229f2d88e23f3bbbe7f",
+  "build": {
+    "tasks": [
+      "assembleDebug",
+      "assembleDebugAndroidTest"
+    ],
+    "status": "passed"
+  },
+  "test_result": {
+    "tests": 6,
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "attempts": 1,
+    "suites": [
+      {
+        "file": "TEST-Liturgy_API_35(AVD) - 15-_app-.xml",
+        "name": "ru.liturgyguide.ui.GuideNavigationTest",
+        "tests": "6",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "time": "24.804",
+        "timestamp": "2026-11-07T23:05:42",
+        "hostname": "localhost"
+      }
+    ],
+    "cases": [
+      {
+        "name": "orderOpensAtDismissalWithLargestAppText",
+        "classname": "ru.liturgyguide.ui.GuideNavigationTest",
+        "time": "6.535",
+        "status": "passed"
+      },
+      {
+        "name": "serviceOrderIsSeparateFromSearchAndOptionalListening",
+        "classname": "ru.liturgyguide.ui.GuideNavigationTest",
+        "time": "2.655",
+        "status": "passed"
+      },
+      {
+        "name": "orderOpensAtTheBeginningFromThePlayer",
+        "classname": "ru.liturgyguide.ui.GuideNavigationTest",
+        "time": "3.721",
+        "status": "passed"
+      },
+      {
+        "name": "orderOpensAtCreedAndManualBrowsingReturnsToTheCurrentPhrase",
+        "classname": "ru.liturgyguide.ui.GuideNavigationTest",
+        "time": "7.835",
+        "status": "passed"
+      },
+      {
+        "name": "updatingTheCurrentStageDoesNotInterruptManualBrowsing",
+        "classname": "ru.liturgyguide.ui.StageSelectorTest",
+        "time": "1.296",
+        "status": "passed"
+      },
+      {
+        "name": "searchStartsAtTheTopEvenWhenTheCurrentStageIsLate",
+        "classname": "ru.liturgyguide.ui.StageSelectorTest",
+        "time": "1.068",
+        "status": "passed"
+      }
+    ]
+  },
+  "verified_behavior": [
+    "Fresh entry from the player shows the selected preparation, creed or dismissal stage without test-driven scrolling",
+    "Dismissal selection is fully visible with the largest app text setting (text_size_2)",
+    "Manual browsing survives activity recreation and search/back, and returning to the player keeps the selected creed phrase",
+    "Reopening the order from the player shows the current creed stage instead of the previous manual list position",
+    "Updating the current stage does not move a manually browsed list",
+    "Search starts at the top even with dismissal selected, while order remains separate from search and optional listening"
+  ],
+  "screenshots": [
+    {
+      "file": "s2-order-preparation.png",
+      "width": 1080,
+      "height": 2400,
+      "sha256": "85608ed0addfef322af2ae9537b4440c1abf959413ea15b0cd47555d8dd1437a",
+      "origin": "Native Android screencap after selected stage visibility assertion"
+    },
+    {
+      "file": "s2-order-creed.png",
+      "width": 1080,
+      "height": 2400,
+      "sha256": "304af684a60edcd1bae2fd9d615aa6e60f1fac50a984437506f83dbf52756abc",
+      "origin": "Native Android screencap after selected stage visibility assertion"
+    },
+    {
+      "file": "s2-order-dismissal-large.png",
+      "width": 1080,
+      "height": 2400,
+      "sha256": "97233a1af1c12d3401b1732b18269e0724f0bd279fb6ebf98ecd4459af03c222",
+      "origin": "Native Android screencap after selected stage visibility assertion"
+    }
+  ],
+  "visual_review": {
+    "status": "passed",
+    "screenshots_inspected": 3,
+    "observations": [
+      "Preparation and creed have fully visible selected cards with a selection label and check mark",
+      "At the largest app text size, the dismissal card wraps naturally and stays fully visible above the system navigation area",
+      "The order title, back action and search action are visible without overlap"
+    ]
+  },
+  "source_hashes": {
+    "app/src/main/java/ru/liturgyguide/ui/StageSelector.kt": "44ea955c8a480a33280a0755670bb8784c87e1df3f6f4c71a1a291bd6268a86d",
+    "app/src/main/java/ru/liturgyguide/ui/MainActivity.kt": "907513f021ccb85f4c7671967fddf6f0381aa2afbb82e8fd1cb09427fbef5143",
+    "app/src/androidTest/java/ru/liturgyguide/ui/StageSelectorTest.kt": "5aa1223bb6b288c47529dc58f476b2bd7394b8fac596f24d7878f50bb5e52946",
+    "app/src/androidTest/java/ru/liturgyguide/ui/GuideNavigationTest.kt": "8f840e74d49f6c7ff65453b1a9125ffe9eb18e579d70cf219f11c7fd2dd0b302"
+  },
+  "source_hashes_unchanged_during_run": true,
+  "qa_production_changes": [],
+  "qa_modified_test_files": [],
+  "defects": [],
+  "unit_tests": "Not repeated per QA scope; this run covers UI only",
+  "emulator": "emulator-5554 was already running, used exclusively for this QA run and left running",
+  "full_evidence_directory": "app/build/verification/v0.4/s2-order",
+  "orchestrator_review": {
+    "source_diff_reviewed": true,
+    "source_hashes_verified": 4,
+    "screenshots_reviewed": 3,
+    "independent_review_model": "gpt-6-astra",
+    "scroll_restoration_regression_fixed": true,
+    "accepted": true
+  }
+}

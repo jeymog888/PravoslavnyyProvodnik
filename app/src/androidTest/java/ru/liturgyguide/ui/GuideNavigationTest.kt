@@ -97,14 +97,55 @@ class GuideNavigationTest {
     }
 
     @Test
-    fun returningFromTheOrderKeepsTheCurrentPhrase() {
+    fun orderOpensAtTheBeginningFromThePlayer() {
+        tapMain("start_guide")
+        compose.onNodeWithTag("open_map").performClick()
+        compose.onNodeWithTag("stage_preparation").assertIsSelected().assertIsDisplayed()
+        captureQaScreenshot("s2-order-preparation")
+    }
+
+    @Test
+    fun orderOpensAtDismissalWithLargestAppText() {
+        compose.onNodeWithTag("open_settings").performClick()
+        compose.onNodeWithTag("settings_content").performScrollToNode(hasTestTag("text_size_2"))
+        compose.onNodeWithTag("text_size_2").performClick()
+        pressBack()
+        openStage("dismissal", "благодарение")
+        compose.onNodeWithTag("open_map").performClick()
+        compose.onNodeWithTag("stage_dismissal").assertIsSelected().assertIsDisplayed()
+        captureQaScreenshot("s2-order-dismissal-large")
+    }
+
+    @Test
+    fun orderOpensAtCreedAndManualBrowsingReturnsToTheCurrentPhrase() {
         openCreed()
         compose.onNodeWithTag("next_line").performClick()
         compose.onNodeWithTag("lyric_line_1").assertIsSelected()
         compose.onNodeWithTag("open_map").performClick()
         compose.onNodeWithTag("stage_search").assertDoesNotExist()
+        // No scrolling before this assertion: the selected stage must be visible on entry.
+        compose.onNodeWithTag("stage_creed").assertIsSelected().assertIsDisplayed()
+        captureQaScreenshot("s2-order-creed")
+        compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_anaphora"))
+        compose.onNodeWithTag("stage_anaphora").assertIsDisplayed().assertIsNotSelected()
+        compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_preparation"))
+        compose.onNodeWithTag("stage_preparation").assertIsDisplayed().assertIsNotSelected()
+        compose.onNodeWithTag("stage_creed").assertIsNotDisplayed()
+        compose.activityRule.scenario.recreate()
+        compose.onNodeWithTag("stage_preparation").assertIsDisplayed().assertIsNotSelected()
+        compose.onNodeWithTag("stage_creed").assertIsNotDisplayed()
+        compose.onNodeWithContentDescription("Найти по словам").performClick()
+        compose.onNodeWithTag("stage_search").assertIsDisplayed()
+        pressBack()
+        compose.onNodeWithTag("stage_preparation").assertIsDisplayed().assertIsNotSelected()
+        compose.onNodeWithTag("stage_creed").assertIsNotDisplayed()
         pressBack()
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Символ веры")
+        compose.onNodeWithTag("lyric_line_1").assertIsSelected().assertIsDisplayed()
+        // A fresh entry should show the current stage, not the saved list position at preparation.
+        compose.onNodeWithTag("open_map").performClick()
+        compose.onNodeWithTag("stage_creed").assertIsSelected().assertIsDisplayed()
+        pressBack()
         compose.onNodeWithTag("lyric_line_1").assertIsSelected().assertIsDisplayed()
     }
 

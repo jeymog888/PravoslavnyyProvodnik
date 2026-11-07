@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -37,6 +38,10 @@ fun StageSelector(stageMatcher: StageMatcher, selectedId: String?, searchMode: B
     var query by rememberSaveable { mutableStateOf("") }
     var showListening by rememberSaveable { mutableStateOf(false) }
     val stages = stageMatcher.getAllStages()
+    val listState = rememberLazyListState(
+        // Item 0 is the order heading and the fallback when there is no selected stage.
+        initialFirstVisibleItemIndex = if (searchMode) 0 else stages.indexOfFirst { it.id == selectedId } + 1
+    )
     val filtered = remember(query, stages, searchMode, readingDay) {
         val words = if (searchMode) normalizedSearch(query).split(' ').filter { it.isNotEmpty() } else emptyList()
         stages.filter { stage ->
@@ -62,6 +67,7 @@ fun StageSelector(stageMatcher: StageMatcher, selectedId: String?, searchMode: B
         }
     }) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding).imePadding().testTag("stage_list"),
+            state = listState,
             contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 32.dp)) {
             if (searchMode && query.isBlank()) item {
                 TextButton(onClick = { showListening = !showListening }, modifier = Modifier.fillMaxWidth().testTag("open_listening")) {
