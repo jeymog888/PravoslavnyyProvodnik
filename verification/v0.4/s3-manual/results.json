@@ -1,0 +1,230 @@
+{
+  "head": "7a5e62ef97d065f26b5afffa0fbdbb902aed0827",
+  "checked_at_utc": "2026-11-07T23:57:24.770241+00:00",
+  "result": "PASS after one harness correction",
+  "counts": {
+    "distinct_scenarios": 53,
+    "distinct_passed": 53,
+    "legacy_scenarios": 44,
+    "manual_moment_scenarios": 9,
+    "total_executions": 62,
+    "initial_harness_failures": 1,
+    "unresolved_failures": 0,
+    "skipped": 0
+  },
+  "environment": {
+    "JAVA_HOME": "/private/tmp/liturgy-android-toolchain/jdk-17.0.21+9/Contents/Home",
+    "GRADLE_USER_HOME": "/private/tmp/liturgy-android-toolchain/gradle-home",
+    "ANDROID_HOME": "/private/tmp/liturgy-android-toolchain/sdk",
+    "ANDROID_USER_HOME": "/private/tmp/liturgy-android-toolchain/android-user",
+    "ANDROID_AVD_HOME": "/private/tmp/liturgy-android-toolchain/android-user/avd",
+    "ANDROID_SERIAL": "emulator-5554"
+  },
+  "build": {
+    "command": "./gradlew --console=plain assembleDebug assembleDebugAndroidTest",
+    "attempts": 2,
+    "exit_codes": [
+      0,
+      0
+    ],
+    "logs": [
+      "app/build/verification/v0.4/s3-manual/build.log",
+      "app/build/verification/v0.4/s3-manual/build-after-harness-fix.log"
+    ]
+  },
+  "ui_attempts": [
+    {
+      "attempt": 1,
+      "command": "./gradlew --console=plain connectedDebugAndroidTest",
+      "scope": "all Android UI tests",
+      "exit_code": 1,
+      "counts": {
+        "tests": 53,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0
+      },
+      "passed": 52,
+      "xml": "app/build/verification/v0.4/s3-manual/connected-attempt-1/results/debug/TEST-Liturgy_API_35(AVD) - 15-_app-.xml",
+      "reports": "app/build/verification/v0.4/s3-manual/connected-attempt-1/reports",
+      "log": "app/build/verification/v0.4/s3-manual/connected-attempt-1.log",
+      "test_apk_sha256": "965b5ebb1dcccfba793794775817caabab54fce84701350d2397abe06ba749e1"
+    },
+    {
+      "attempt": 2,
+      "command": "./gradlew --console=plain connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=ru.liturgyguide.ui.ManualMomentFlowTest",
+      "scope": "all 9 ManualMomentFlowTest scenarios after harness synchronization fix",
+      "exit_code": 0,
+      "counts": {
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "passed": 9,
+      "xml": "app/build/verification/v0.4/s3-manual/connected-attempt-2/results/debug/TEST-Liturgy_API_35(AVD) - 15-_app-.xml",
+      "reports": "app/build/verification/v0.4/s3-manual/connected-attempt-2/reports",
+      "log": "app/build/verification/v0.4/s3-manual/connected-attempt-2.log",
+      "test_apk_sha256": "decf93650c1cc418226d19a29d72899b1b660f1723d2bac42c1ea36b9d13fcb0"
+    }
+  ],
+  "hashes": {
+    "app_apk": "app/build/outputs/apk/debug/app-debug.apk",
+    "app_apk_sha256": "29d1bc131bd973d53339aae9ad7301e3c4c3fc416d9186d22a4ed5dc017648ac",
+    "app_apk_unchanged_through_handoff": true,
+    "source_manifest": "app/build/verification/v0.4/s3-manual/source-hashes.json",
+    "source_manifest_sha256": "fccc99f4e5d56d923ec63742983b7ee2f81a078edfddc2e78f4ed784cce66a62",
+    "source_files_checked": 66,
+    "production_unchanged": true,
+    "source_hashes_match_after_final_run": true,
+    "apk_manifest": "app/build/verification/v0.4/s3-manual/apk-hashes.json"
+  },
+  "defects": [
+    {
+      "classification": "test harness synchronization",
+      "status": "resolved",
+      "scenario": "ru.liturgyguide.ui.ManualMomentFlowTest.allFiveLandmarksWithoutAScheduleOpenTheExpectedTextAndPhraseAfterVerification",
+      "attempt": 1,
+      "failure_location": "ManualMomentFlowTest.kt:68",
+      "cause": "The second iteration captured preferences before the previous player completed onDispose. PrayerPlayerState.pause/persist then wrote the default lyric_tempo=12, causing the full-map equality assertion to fail. No reading or session values differed.",
+      "fix": "Added compose.waitForIdle() after returning via К службе; all assertions preserved",
+      "verified_by_attempt": 2
+    }
+  ],
+  "audit": {
+    "all_53_source_scenarios_match_first_run_xml": true,
+    "all_26_existing_GuideNavigationTest_scenarios_retained": true,
+    "old_assertions_not_weakened": true,
+    "all_9_manual_tests_retained": true,
+    "ignored_or_skipped_tests_added": false,
+    "production_changes_by_qa": false,
+    "unit_tests_rerun": false,
+    "full_suite_not_repeated_after_harness_fix": "Per root instruction: other 44 tests already passed, production unchanged; one rerun covered all 9 affected ManualMomentFlowTest scenarios"
+  },
+  "ui_handoff": {
+    "device": "emulator-5554",
+    "install_command": "/private/tmp/liturgy-android-toolchain/sdk/platform-tools/adb -s emulator-5554 install -r app/build/outputs/apk/debug/app-debug.apk",
+    "exit_code": 0,
+    "result": "Success",
+    "log": "app/build/verification/v0.4/s3-manual/install-handoff.log",
+    "same_hashed_apk": true,
+    "emulator_left_running": true,
+    "handed_to": "root",
+    "native_verification": "root-owned, not run by QA"
+  },
+  "native": {
+    "checks": [
+      {
+        "name": "main-entry",
+        "passed": true,
+        "missing": [],
+        "expected": [
+          "Я в храме"
+        ]
+      },
+      {
+        "name": "manual-options",
+        "passed": true,
+        "missing": [],
+        "expected": [
+          "Поиск по словам",
+          "Выносят Евангелие",
+          "Слышно \"Верую во единаго Бога\""
+        ]
+      },
+      {
+        "name": "manual-confirmation",
+        "passed": true,
+        "missing": [],
+        "expected": [
+          "Вы выбрали ориентир",
+          "Символ веры",
+          "Открыть этот момент"
+        ]
+      },
+      {
+        "name": "creed-phrase-four",
+        "passed": true,
+        "missing": [],
+        "expected": [
+          "Символ веры",
+          "Фраза 4 из 20 · вручную",
+          "Уточнить"
+        ]
+      },
+      {
+        "name": "manual-landscape-confirmation",
+        "passed": true,
+        "missing": [],
+        "expected": [
+          "Причащение верующих"
+        ]
+      },
+      {
+        "name": "cancel-restores-meaning",
+        "passed": true,
+        "missing": [],
+        "expected": [
+          "Символ веры",
+          "Об этом тексте"
+        ]
+      },
+      {
+        "name": "cancel-and-rotation-preserve-all-preferences",
+        "passed": true,
+        "keys": 8
+      },
+      {
+        "name": "cancel-restores-phrase",
+        "passed": true,
+        "missing": [],
+        "expected": [
+          "Символ веры",
+          "Фраза 4 из 20 · вручную",
+          "Уточнить"
+        ]
+      },
+      {
+        "name": "accepted-correction",
+        "passed": true,
+        "missing": [],
+        "expected": [
+          "Молитва \"Отче наш\"",
+          "Уточнить"
+        ]
+      },
+      {
+        "name": "correction-preserves-other-stage-bookmarks-and-stays-manual",
+        "passed": true
+      }
+    ],
+    "device_date": "Sun Nov  8 02:58:27 MSK 2026",
+    "apk_sha256": "29d1bc131bd973d53339aae9ad7301e3c4c3fc416d9186d22a4ed5dc017648ac",
+    "restored_rotation": "0",
+    "restored_accelerometer": "1"
+  },
+  "screenshots": [
+    "main-entry.png",
+    "manual-options.png",
+    "manual-confirmation.png",
+    "cancel-restores-phrase.png",
+    "accepted-correction.png",
+    "manual-landscape-confirmation.png"
+  ],
+  "orchestrator_review": {
+    "source_hashes_checked": 66,
+    "source_diff_reviewed": true,
+    "qa_waitForIdle_change_reviewed": true,
+    "unit_xml_totals": {
+      "tests": 111,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "ui_xml_attempts_verified": 2,
+    "native_checks": 10,
+    "screenshots_reviewed": 6,
+    "independent_review_model": "gpt-6-astra",
+    "accepted": true
+  }
+}

@@ -70,7 +70,7 @@ class GuideNavigationTest {
 
     @Test
     fun anUnknownPhraseCanBeClearedToRestoreTheGuide() {
-        tapMain("find_stage")
+        openMainSearch()
         compose.onNodeWithTag("stage_search").performTextInput("несуществующаяфраза")
         closeSoftKeyboard()
         compose.onNodeWithTag("stage_list").performScrollToNode(hasText("Пока не нашли эти слова"))
@@ -90,7 +90,7 @@ class GuideNavigationTest {
         compose.onNodeWithTag("open_listening").assertDoesNotExist()
         compose.onNodeWithTag("stage_preparation").assertIsDisplayed()
         pressBack()
-        tapMain("find_stage")
+        openMainSearch()
         compose.onNodeWithTag("stage_search").assertIsDisplayed()
         compose.onNodeWithTag("open_listening").assertIsDisplayed()
         compose.onNodeWithText("Послушать фрагмент").assertDoesNotExist()
@@ -326,6 +326,7 @@ class GuideNavigationTest {
             }
             compose.waitForIdle()
             compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Символ веры").assertIsDisplayed()
+            compose.onNodeWithTag("clarify_moment").assertIsDisplayed()
             compose.onNodeWithTag("lyric_line_0").assertIsSelected().assertIsDisplayed()
             assertWholePhraseVisible(0)
             compose.onNodeWithTag("next_line").assertIsDisplayed().performClick()
@@ -384,7 +385,7 @@ class GuideNavigationTest {
                 pressBack()
             }
         }
-        tapMain("find_stage")
+        openMainSearch()
         compose.onNodeWithTag("stage_search").performTextReplacement("святого евангелия квазислово")
         closeSoftKeyboard()
         compose.onNodeWithText("Пока не нашли эти слова").assertIsDisplayed()
@@ -393,7 +394,7 @@ class GuideNavigationTest {
 
     @Test
     fun searchingForCreedOpensTheMatchingTextAndClosesTheKeyboard() {
-        tapMain("find_stage")
+        openMainSearch()
         compose.onNodeWithTag("stage_search").performTextReplacement("Верую")
         compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_creed"))
         compose.onNodeWithTag("stage_creed").performClick()
@@ -419,7 +420,7 @@ class GuideNavigationTest {
             ?.firstOrNull { it.kind == "gospel" && it.text.contains("Лазарь") }
         if (reading == null) {
             // A downloaded calendar with no matching day must not offer an old Gospel as current.
-            tapMain("find_stage")
+            openMainSearch()
             compose.onNodeWithTag("stage_search").performTextReplacement("Лазарь")
             closeSoftKeyboard()
             compose.onNodeWithText("Пока не нашли эти слова").assertIsDisplayed()
@@ -491,8 +492,9 @@ class GuideNavigationTest {
         openCreed()
         compose.onNodeWithTag("next_line").performClick()
         compose.onNodeWithTag("player_meaning_tab").performClick()
-        compose.onNodeWithTag("player_menu").performClick()
-        compose.onNodeWithText("Уточнить текущий момент").performClick()
+        compose.onNodeWithTag("clarify_moment").performClick()
+        compose.onNodeWithTag("manual_content").performScrollToNode(hasTestTag("manual_search"))
+        compose.onNodeWithTag("manual_search").performClick()
         compose.onNodeWithTag("stage_search").performTextReplacement("Верую")
         closeSoftKeyboard()
         compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_creed"))
@@ -525,8 +527,14 @@ class GuideNavigationTest {
         compose.onNodeWithTag(tag).performClick()
     }
 
-    private fun openStage(id: String, phrase: String) {
+    private fun openMainSearch() {
         tapMain("find_stage")
+        compose.onNodeWithTag("manual_content").performScrollToNode(hasTestTag("manual_search"))
+        compose.onNodeWithTag("manual_search").performClick()
+    }
+
+    private fun openStage(id: String, phrase: String) {
+        openMainSearch()
         compose.onNodeWithTag("stage_search").performTextReplacement(phrase)
         closeSoftKeyboard()
         compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_$id"))

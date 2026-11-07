@@ -35,7 +35,7 @@ import java.time.Clock
 import java.time.ZoneId
 import kotlinx.coroutines.delay
 
-private enum class Screen { MAIN, ARRIVAL, SERVICE, STAGE_SELECTOR, SEARCH, SETTINGS, SOURCES, CHURCH }
+private enum class Screen { MAIN, MANUAL, ARRIVAL, SERVICE, STAGE_SELECTOR, SEARCH, SETTINGS, SOURCES, CHURCH }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -129,16 +129,34 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
         now = actualNow
         if (church?.id != draft.churchId || stages.none { it.id == id }) return
         // A manual choice is valid today even when yesterday's time estimate has expired.
-        val actualDate = actualNow.atZone(ZoneId.of(church.timezone)).toLocalDate().toString()
+        val actualDate = actualNow.atZone(ZoneId.of(church?.timezone ?: "Europe/Moscow")).toLocalDate().toString()
         if (fromSchedule && draft.serviceDate != actualDate) return
         val newSession = engine.start(id, now = actualNow, autoAdvance = false,
             approximate = fromSchedule && draft.stageId != null,
             elapsedInStageMillis = if (fromSchedule && draft.stageId != null) draft.elapsedInStageMillis else 0L)
-        clearReadingPositions()
+        if (draft.mode == ArrivalMode.NEW_SERVICE) clearReadingPositions()
+        else screenStateHolder.removeState(Screen.SERVICE.name)
         if (!fromSchedule) saveSearchPosition(id, query, actualDate)
         saveSession(newSession)
         arrivalDraft = null
         screen = Screen.SERVICE
+    }
+    fun beginArrival(draft: ArrivalDraft, destination: Screen) {
+        // A fresh flow resets its screens; back and recreation preserve the current draft.
+        listOf(Screen.MANUAL, Screen.ARRIVAL, Screen.SEARCH).forEach { screenStateHolder.removeState(it.name) }
+        arrivalDraft = draft
+        screen = destination
+    }
+    fun openManual(mode: ArrivalMode) {
+        val engine = sessionEngine
+        val current = session?.takeIf { engine?.isValid(it) == true }
+        val stopTimer = mode == ArrivalMode.CORRECTION && position?.autoAdvanceActive == true
+        if (stopTimer && engine != null && current != null) {
+            // Freeze the displayed stage, even if the clock crossed its boundary since the last tick.
+            saveSession(engine.pause(current, now = now))
+        }
+        beginArrival(ArrivalDraft(church?.id, church?.shortName ?: "Храм не выбран", mode,
+            ArrivalSource.MANUAL, automationStopped = stopTimer), Screen.MANUAL)
     }
     fun openOrder(origin: Screen) {
         // A fresh entry follows the current stage; search/back and recreation keep browsing position.
@@ -147,8 +165,9 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
         screen = Screen.STAGE_SELECTOR
     }
     fun back() {
-        if (screen == Screen.ARRIVAL) arrivalDraft = null
-        screen = when (screen) {
+        val destination = when (screen) {
+            Screen.MANUAL -> if (arrivalDraft?.mode == ArrivalMode.CORRECTION) Screen.SERVICE else Screen.MAIN
+            Screen.ARRIVAL -> if (arrivalDraft?.source == ArrivalSource.MANUAL) Screen.MANUAL else Screen.MAIN
             Screen.STAGE_SELECTOR -> selectorOrigin
             Screen.SEARCH -> searchOrigin
             Screen.SETTINGS -> settingsOrigin
@@ -156,6 +175,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
             Screen.CHURCH -> churchOrigin
             else -> Screen.MAIN
         }
+        if (screen == Screen.MANUAL || (screen == Screen.ARRIVAL && destination == Screen.MAIN)) arrivalDraft = null
+        screen = destination
     }
     fun openExternal(intent: Intent) {
         try { context.startActivity(intent) }
@@ -186,13 +207,10 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
                         suggestion = suggestion,
                         onJoinService = {
                             if (church != null && suggestion != null) {
-                                arrivalDraft = ArrivalDraft(church.id, church.shortName, suggestion.service.date,
+                                beginArrival(ArrivalDraft(church.id, church.shortName,
+                                    ArrivalMode.NEW_SERVICE, ArrivalSource.SCHEDULE, suggestion.service.date,
                                     suggestion.service.time, suggestion.relation == ServiceRelation.Upcoming,
-                                    suggestion.approximateStageId, suggestion.approximateElapsedInStageMillis)
-                                // Reset only on a new entry; back and recreation keep this draft's search.
-                                screenStateHolder.removeState(Screen.SEARCH.name)
-                                screenStateHolder.removeState(Screen.ARRIVAL.name)
-                                screen = Screen.ARRIVAL
+                                    suggestion.approximateStageId, suggestion.approximateElapsedInStageMillis), Screen.ARRIVAL)
                             }
                         },
                         onChurch = { churchOrigin = Screen.MAIN; screen = Screen.CHURCH },
@@ -201,17 +219,30 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
                             if (position == null) selectedStage?.let { stage -> sessionEngine?.let { saveSession(it.start(stage.id)) } }
                             screen = Screen.SERVICE
                         },
-                        onFindStage = { searchOrigin = Screen.MAIN; screen = Screen.SEARCH },
+                        onFindStage = { openManual(ArrivalMode.NEW_SERVICE) },
                         onOrder = { openOrder(Screen.MAIN) },
                         bottomBar = navigationBar
                     )
+                    Screen.MANUAL -> arrivalDraft?.let { draft ->
+                        ManualMomentScreen(draft = draft,
+                            onLandmark = { landmark ->
+                                arrivalDraft = draft.copy(stageId = landmark.stageId, query = landmark.query)
+                                // A newly chosen landmark must show its cue before the accept button.
+                                screenStateHolder.removeState(Screen.ARRIVAL.name)
+                                screen = Screen.ARRIVAL
+                            },
+                            onSearch = { searchOrigin = Screen.MANUAL; screen = Screen.SEARCH },
+                            onBack = ::back)
+                    }
                     Screen.ARRIVAL -> arrivalDraft?.let { draft ->
                         val stage = stages.firstOrNull { it.id == draft.stageId }
                         ArrivalScreen(draft = draft, stage = stage,
                             preparationCue = stages.firstOrNull { it.id == "preparation" }?.cue,
-                            canAccept = church?.id == draft.churchId && draft.serviceDate == readingDate &&
+                            canAccept = church?.id == draft.churchId &&
+                                (draft.source != ArrivalSource.SCHEDULE || draft.serviceDate == readingDate) &&
                                 stages.any { it.id == (draft.stageId ?: "preparation") },
-                            onAccept = { acceptArrival(draft.stageId ?: "preparation", fromSchedule = true) },
+                            onAccept = { acceptArrival(draft.stageId ?: "preparation", draft.query,
+                                fromSchedule = draft.source == ArrivalSource.SCHEDULE) },
                             onSearch = { searchOrigin = Screen.ARRIVAL; screen = Screen.SEARCH },
                             onBack = ::back)
                     }
@@ -239,17 +270,17 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
                             Toast.makeText(context, "Если включали режим тишины, не забудьте проверить его после службы", Toast.LENGTH_LONG).show()
                         },
                         onSelectStage = { openOrder(Screen.SERVICE) },
-                        onFindStage = { searchOrigin = Screen.SERVICE; screen = Screen.SEARCH },
+                        onFindStage = { openManual(ArrivalMode.CORRECTION) },
                         onSettings = { settingsOrigin = Screen.SERVICE; screen = Screen.SETTINGS }
                     )
                     Screen.STAGE_SELECTOR, Screen.SEARCH -> StageSelector(
                         stageMatcher = matcher,
-                        selectedId = if (screen == Screen.SEARCH && searchOrigin == Screen.ARRIVAL && arrivalDraft != null) null else selectedStage?.id,
+                        selectedId = if (screen == Screen.SEARCH && searchOrigin in setOf(Screen.MANUAL, Screen.ARRIVAL) && arrivalDraft != null) null else selectedStage?.id,
                         searchMode = screen == Screen.SEARCH,
                         readingDay = readingDay,
                         onSearch = { searchOrigin = Screen.STAGE_SELECTOR; screen = Screen.SEARCH },
                         onSelect = { id, query ->
-                            if (screen == Screen.SEARCH && searchOrigin == Screen.ARRIVAL && arrivalDraft != null)
+                            if (screen == Screen.SEARCH && searchOrigin in setOf(Screen.MANUAL, Screen.ARRIVAL) && arrivalDraft != null)
                                 acceptArrival(id, query, fromSchedule = false)
                             else selectStage(id, query)
                         },

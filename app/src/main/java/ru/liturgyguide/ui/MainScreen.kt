@@ -64,10 +64,10 @@ fun MainScreen(lastStage: LiturgyStage?, currentDate: LocalDate, savedEarlier: B
                             Text("Я на этой службе")
                         }
                     } else {
-                        Text("Читайте слова молитвы и открывайте смысл происходящего", style = MaterialTheme.typography.bodyLarge,
+                        Text("Найдите момент по тому, что сейчас слышно или видно в храме", style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Button(onClick = onStart, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("start_guide")) {
-                            Text("Открыть службу")
+                        Button(onClick = onFindStage, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("find_stage")) {
+                            Text("Я в храме")
                             Spacer(Modifier.width(12.dp))
                             Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(20.dp))
                         }
@@ -82,13 +82,15 @@ fun MainScreen(lastStage: LiturgyStage?, currentDate: LocalDate, savedEarlier: B
             item {
                 Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
                     Column {
-                        GuideActionRow("Найти текущий момент", "По словам или короткому аудиофрагменту", Icons.Default.Search, onFindStage, "find_stage")
-                        HorizontalDivider(Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                        if (lastStage != null || suggestion != null) {
+                            GuideActionRow("Найти текущий момент", "По ориентиру или словам молитвы", Icons.Default.Search, onFindStage, "find_stage")
+                            HorizontalDivider(Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                        }
                         GuideActionRow("Порядок службы", "Части и этапы литургии", Icons.Default.FormatListNumbered, onOrder, "open_order")
                     }
                 }
             }
-            if (lastStage != null || suggestion != null) item {
+            item {
                 TextButton(onClick = onStart, modifier = Modifier.fillMaxWidth().testTag("start_guide")) { Text("Читать с начала") }
             }
             item {

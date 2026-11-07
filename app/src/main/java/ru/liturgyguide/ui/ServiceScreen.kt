@@ -60,6 +60,7 @@ fun ServiceScreen(stageMatcher: StageMatcher, stageId: String?, onStageChange: (
         else { if (sessionPosition?.autoAdvanceActive == true) onToggleFollowing(); player.play() }
     }
     fun selectTab(value: Int) { if (value != tab) player?.pause(); tab = value }
+    fun clarifyMoment() { player?.pause(); onFindStage() }
 
     if (tracksOpen && player != null) ModalBottomSheet(onDismissRequest = { tracksOpen = false }) {
         Text("Тексты этого этапа", Modifier.padding(horizontal = 24.dp, vertical = 12.dp), style = MaterialTheme.typography.headlineMedium)
@@ -114,10 +115,11 @@ fun ServiceScreen(stageMatcher: StageMatcher, stageId: String?, onStageChange: (
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 if (landscape) ReaderTabs(tab, ::selectTab, true, inline = true)
+                TextButton(onClick = ::clarifyMoment, contentPadding = PaddingValues(horizontal = 8.dp),
+                    modifier = Modifier.testTag("clarify_moment")) { Text("Уточнить", maxLines = 1) }
                 Box {
                     IconButton(onClick = { menu = true }, modifier = Modifier.testTag("player_menu")) { Icon(Icons.Default.MoreHoriz, "Действия со службой") }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                        DropdownMenuItem(text = { Text("Уточнить текущий момент") }, leadingIcon = { Icon(Icons.Default.Search, null) }, onClick = { menu = false; player?.pause(); onFindStage() })
                         DropdownMenuItem(text = { Text(if (sessionPosition?.autoAdvanceActive == true) "Остановить переходы этапов" else "Этапы по времени") },
                             onClick = { menu = false; if (sessionPosition?.autoAdvanceActive == true) onToggleFollowing() else stageTimerDialog = true }, modifier = Modifier.testTag("toggle_follow"))
                         DropdownMenuItem(text = { Text(if (dark) "Светлый экран" else "Темный экран") }, leadingIcon = { Icon(Icons.Default.Contrast, null) }, onClick = { menu = false; onDarkChange() })
@@ -129,12 +131,12 @@ fun ServiceScreen(stageMatcher: StageMatcher, stageId: String?, onStageChange: (
             }
             if (sessionPosition?.requiresResume == true) {
                 Text("Сохранено ранее · уточните этап",
-                    Modifier.fillMaxWidth().clickable(onClick = onFindStage).padding(horizontal = 24.dp, vertical = 6.dp).testTag("saved_earlier_notice"),
+                    Modifier.fillMaxWidth().clickable(onClick = ::clarifyMoment).padding(horizontal = 24.dp, vertical = 6.dp).testTag("saved_earlier_notice"),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary,
                     maxLines = if (compact) 1 else 2, overflow = TextOverflow.Ellipsis)
             } else if (sessionPosition?.isApproximate == true) {
                 Text(if (sessionPosition.autoAdvanceActive) "Примерные переходы этапов включены" else "Этап предложен по времени · можно уточнить",
-                    Modifier.fillMaxWidth().clickable(onClick = onFindStage).padding(horizontal = 24.dp, vertical = 6.dp),
+                    Modifier.fillMaxWidth().clickable(onClick = ::clarifyMoment).padding(horizontal = 24.dp, vertical = 6.dp),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
             }
             if (!landscape) ReaderTabs(tab, ::selectTab, compact)
