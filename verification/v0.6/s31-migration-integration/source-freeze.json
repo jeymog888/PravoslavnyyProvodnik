@@ -1,0 +1,35 @@
+{
+  "status": "SOURCE FREEZE",
+  "scope": "3.1b - explicit acceptance and UI integration of published 0.5 playback migration",
+  "tests": {
+    "newUnitMethods": 3,
+    "newInstrumentationMethods": 11,
+    "executed": false
+  },
+  "files": [
+    {
+      "path": "app/src/main/java/ru/liturgyguide/di/AppContainer.kt",
+      "sha256": "61fcf861166c9a35d539b6fc4a6212f72fe3b5167952c70d9d6a1e41f4e1467d"
+    },
+    {
+      "path": "app/src/main/java/ru/liturgyguide/ui/MainActivity.kt",
+      "sha256": "5d2cf0fc092bbeaabdab3c8d220195ccf4ea01f55ed01eaafe3b66c034e00ba8"
+    },
+    {
+      "path": "app/src/main/java/ru/liturgyguide/ui/ServicePlayerState.kt",
+      "sha256": "53a607a2bf05dc6db8d56d8bc0c23c0fcf9f4bd5f6340075b6a645ebfeed167b"
+    },
+    {
+      "path": "app/src/main/java/ru/liturgyguide/ui/ServiceScreen.kt",
+      "sha256": "1b2c1fe64d8c7cd30cf94ab73bf48aa19cc0a667b464b7501bf2710786274f77"
+    },
+    {
+      "path": "app/src/test/java/ru/liturgyguide/ui/ServicePlayerStateTest.kt",
+      "sha256": "b67bb5eb81eb583159fd739080aa0c3cf98deb54b81884960908aeb041d32311"
+    },
+    {
+      "path": "app/src/androidTest/java/ru/liturgyguide/ui/Published05PlaybackIntegrationTest.kt",
+      "sha256": "9349a80708384ad8738d44a39bbbeb301aa18dae3a40a9a86ecffa60d3991c69"
+    }
+  ]
+}

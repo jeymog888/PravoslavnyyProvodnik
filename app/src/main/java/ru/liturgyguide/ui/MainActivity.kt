@@ -68,7 +68,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     var userStarts by remember { mutableStateOf(startStore.records()) }
     val readingContextStore = remember(preferences) { ReadingContextStore(preferences) }
     val readingAcceptanceStore = remember(preferences) { ReadingAcceptanceStore(preferences) }
-    val playbackStore = remember(preferences) { ServicePlaybackStore(preferences) }
+    val playbackStore = remember(preferences, container) { ServicePlaybackStore(preferences, container.historical05Content) }
     var readingContext by remember { mutableStateOf(readingContextStore.restore()) }
     var hasReadingMetadata by remember { mutableStateOf(preferences.contains(ReadingContextStore.CONTEXT_KEY)) }
     var hasPlaybackSnapshot by remember { mutableStateOf(preferences.contains(ServicePlaybackStore.PLAYBACK_KEY)) }
@@ -127,7 +127,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                 container.readings?.days?.firstOrNull { it.date == accepted.serviceDate })
         }.getOrNull() }
     }
-    val restored = remember(availablePlan, availableContext, hasPlaybackSnapshot, hasReadingMetadata, session, playbackRevision) {
+    val restored = remember(playbackStore, availablePlan, availableContext, hasPlaybackSnapshot, hasReadingMetadata, session, playbackRevision) {
         if (!hasPlaybackSnapshot) PlaybackRestoreResult.Absent
         else if (!hasReadingMetadata || invalidReadingMetadata || availablePlan == null || availableContext == null)
             PlaybackRestoreResult.Invalid(PlaybackRestoreResult.Reason.CONTEXT_MISMATCH)
@@ -137,6 +137,11 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     val restoredReading = (restored as? PlaybackRestoreResult.Valid)?.let { result ->
         ActiveServicePlayback(requireNotNull(availablePlan), result.stored.context, result.state,
             isApproximate = validSession?.anchorIsApproximate == true)
+    }
+    // A verified address is a preview until the existing atomic writer accepts it explicitly.
+    val migrationCandidate = (restored as? PlaybackRestoreResult.MigrationCandidate)?.let { result ->
+        ActiveServicePlayback(requireNotNull(availablePlan), result.originalStored.context, result.state,
+            isApproximate = validSession?.anchorIsApproximate == true, migrationNote = result.note)
     }
     val legacyCandidate = remember(availablePlan, availableContext, legacyStage?.id, hasPlaybackSnapshot, invalidRecovery) {
         if (hasPlaybackSnapshot || invalidRecovery || availablePlan == null || availableContext == null || legacyStage == null) null
@@ -194,7 +199,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     DisposableEffect(churchSelectionGuard) {
         onDispose { churchSelectionGuard.close() }
     }
-    val selectedStage = if (invalidRecovery) null else player.reading?.stage ?: restoredReading?.stage ?: legacyStage
+    val selectedStage = if (invalidRecovery) null else player.reading?.stage ?: restoredReading?.stage ?: migrationCandidate?.stage ?: legacyStage
     val activeReadingContext = if (invalidRecovery) null else player.reading?.context ?: availableContext?.takeIf { selectedStage != null }
     val readingNeedsExplicitDate = selectedStage != null && activeReadingContext == null
     val scopedSearch = screen == Screen.SEARCH && searchOrigin in setOf(Screen.MANUAL, Screen.ARRIVAL)
@@ -325,10 +330,14 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
             }
         }
     }
+    fun speedForContext(accepted: ReadingContext): PlaybackSpeed =
+        player.reading?.takeIf { it.context == accepted }?.state?.speed
+            ?: migrationCandidate?.takeIf { it.context == accepted }?.state?.speed
+            ?: PlaybackSpeed.NORMAL
     fun selectStage(id: String, query: String? = null) {
         val existing = player.reading
         val accepted = existing?.context ?: activeReadingContext ?: ReadingContextFactory.manual(church, clock.instant()) ?: return
-        val value = candidate(accepted, id, query, speed = existing?.state?.speed ?: PlaybackSpeed.NORMAL) ?: return
+        val value = candidate(accepted, id, query, speed = speedForContext(accepted)) ?: return
         if (!beginReading(value, resetBookmarks = selectedStage == null)) return
         navigate(Screen.SERVICE)
     }
@@ -343,7 +352,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
             player.reading?.context ?: activeReadingContext else ReadingContextFactory.manual(church, actualNow)
         if (accepted == null) return
         val value = candidate(accepted, id, query, speed = if (draft.mode == ArrivalMode.CORRECTION)
-            player.reading?.state?.speed ?: PlaybackSpeed.NORMAL else PlaybackSpeed.NORMAL) ?: return
+            speedForContext(accepted) else PlaybackSpeed.NORMAL) ?: return
         if (!beginReading(value, resetBookmarks = draft.mode == ArrivalMode.NEW_SERVICE)) return
         arrivalDraft = null
         navigate(Screen.SERVICE)
@@ -449,7 +458,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         if (invalidArrival) recoverArrival()
     }
     // A saved SERVICE screen may be a 0.4 restoration. Migrate before rendering a live reader.
-    LaunchedEffect(screen, player.reading == null, invalidRecovery, legacyCandidate, restoredReading) {
+    LaunchedEffect(screen, player.reading == null, invalidRecovery, legacyCandidate, restoredReading, migrationCandidate) {
         if (screen == Screen.SERVICE && player.reading == null) {
             val pending = if (invalidRecovery) null else restoredReading ?: legacyCandidate
             if (pending == null || !beginReading(pending, resetBookmarks = false, resetReaderUi = false,
@@ -457,6 +466,9 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         } else if (screen == Screen.SERVICE && invalidRecovery) navigate(Screen.MAIN)
     }
     BackHandler(enabled = screen != Screen.MAIN) { back() }
+
+    // A callback held by an old MAIN frame cannot revive a candidate after accept/clear.
+    val resumeGeneration = player.generation
 
     val navigationBar: @Composable () -> Unit = {
         GuideBottomBar(selected = when (screen) { Screen.CHURCH -> "church"; Screen.SETTINGS -> "settings"; else -> "home" },
@@ -479,7 +491,14 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                             invalidRecovery -> "Не удалось восстановить сохраненное чтение. Выберите службу или начните с начала"
                             else -> null
                         },
-                        savedReadingNote = if (readingNeedsExplicitDate) "Дата не сохранена · откроется на сегодня" else null,
+                        savedReadingNote = when {
+                            migrationCandidate != null && player.reading == null -> listOfNotNull(
+                                "Тексты на ${LocalDate.parse(migrationCandidate.context.serviceDate).format(java.time.format.DateTimeFormatter.ofPattern("d MMMM uuuu", java.util.Locale.forLanguageTag("ru")))}",
+                                migrationCandidate.migrationNote?.let { "Тексты дополнены. При открытии вернемся к последней сохраненной фразе" }
+                            ).joinToString(" · ")
+                            readingNeedsExplicitDate -> "Дата не сохранена · откроется на сегодня"
+                            else -> null
+                        },
                         church = church,
                         overview = overview,
                         onOpenService = ::openScheduledService,
@@ -490,12 +509,13 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                             val value = accepted?.let { candidate(it, stages.first().id) }
                             if (value != null && beginReading(value, resetBookmarks = true)) navigate(Screen.SERVICE)
                         },
-                        onResume = {
+                        onResume = resume@{
+                            if (screen != Screen.MAIN || resumeGeneration != player.generation) return@resume
                             if (!invalidRecovery) {
                                 if (player.reading != null) navigate(Screen.SERVICE)
                                 else {
                                     // A bookmark without a usable old date is explicitly opened on today.
-                                    val pending = restoredReading ?: legacyCandidate ?: selectedStage?.let { stage ->
+                                    val pending = restoredReading ?: migrationCandidate ?: legacyCandidate ?: selectedStage?.let { stage ->
                                         ReadingContextFactory.manual(church, clock.instant())?.let { accepted ->
                                             candidate(accepted, stage.id)?.let { value ->
                                                 val migrated = LegacyPlaybackMigration.resolve(value.plan, stage.id, preferences.all)

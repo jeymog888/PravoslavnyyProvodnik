@@ -39,6 +39,11 @@ import java.util.Locale
 
 private data class OpenReadingDetails(val reading: ActiveServicePlayback, val restored: Boolean)
 
+private fun PlaybackMigrationNote.message(): String = when (this) {
+    PlaybackMigrationNote.EXPANDED_STAGE_LAST_PHRASE ->
+        "Тексты дополнены. Вернулись к последней сохраненной фразе"
+}
+
 private fun TextStyle.readingParagraph() = copy(
     hyphens = Hyphens.Auto, lineBreak = LineBreak.Paragraph, localeList = LocaleList("ru")
 )
@@ -95,6 +100,10 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
                 Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     val date = snapshot.reading.plan.serviceDate.format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru")))
                     Text("Тексты на $date", Modifier.testTag("reading_details_date"), style = MaterialTheme.typography.bodyLarge.readingParagraph())
+                    snapshot.reading.migrationNote?.let { note ->
+                        Text(note.message(), Modifier.testTag("reading_details_migration_notice"),
+                            style = MaterialTheme.typography.bodyMedium.readingParagraph())
+                    }
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text("Этап", style = MaterialTheme.typography.bodySmall)
                         Text(snapshot.reading.stage.name, Modifier.testTag("reading_details_stage"), style = MaterialTheme.typography.titleMedium)
@@ -220,10 +229,20 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
             onPreviousStage = { if (generation == player.generation && index > 0) { player.pause(generation); onStageChange(reading.plan.stages[index - 1].id) } },
             onNextStage = { nextStage() }, onTempo = { if (generation == player.generation) tempoOpen = true })
     }) { padding ->
-        if (meaning) ReaderMeaning(reading, missing, Modifier.padding(padding)) { if (generation == player.generation) onOpenSource(it) }
-        else Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = RoundedCornerShape(24.dp),
-            modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = if (compact) 8.dp else 16.dp, vertical = 8.dp)) {
-            ReaderLyrics(reading, player, generation, original, compact, missing, { clarify() }, { nextStage() })
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            reading.migrationNote?.let { note ->
+                Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = MaterialTheme.shapes.small,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    Text(note.message(), Modifier.padding(12.dp).testTag("playback_migration_notice"),
+                        style = MaterialTheme.typography.bodySmall.readingParagraph(),
+                        color = MaterialTheme.colorScheme.onSecondaryContainer)
+                }
+            }
+            if (meaning) ReaderMeaning(reading, missing, Modifier.weight(1f)) { if (generation == player.generation) onOpenSource(it) }
+            else Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = RoundedCornerShape(24.dp),
+                modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = if (compact) 8.dp else 16.dp, vertical = 8.dp)) {
+                ReaderLyrics(reading, player, generation, original, compact, missing, { clarify() }, { nextStage() })
+            }
         }
     }
 }

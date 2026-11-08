@@ -1,0 +1,121 @@
+{
+  "uniqueScenarios": 29,
+  "latestResults": {
+    "ru.liturgyguide.ui.SavedReadingTest#legacyTrackBookmarksKeepTheirPhraseButDiscardTheOldTimerOffsets": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.SavedReadingTest#anOldSavedReadingIsLabelledPausedAndANewServiceClearsItsPositions": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.SavedReadingTest#aPresentCorruptSnapshotCannotSilentlyReimportLegacyBookmarks": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.SavedReadingTest#aLegacyFinishedTextRestoresItsLastPhrasePausedWithoutInventingNewElapsedTime": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExplanationSourceFlowTest#aDifferentStageOrAddressAtRestorationCannotInheritTheOldExpandedSource": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExplanationSourceFlowTest#recreationKeepsTheExpandedPublicationWithoutOpeningItOrChangingTheReading": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExplanationSourceFlowTest#changingTheStageOrItsAddressResetsDisclosureAndMissingAddressHasNoAction": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExplanationSourceFlowTest#disclosureIsLocalAndOpeningThePublicationPreservesThePausedReading": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#restoredCorrectionKeepsTheValidatedContextAndFastSpeedOnExplicitAcceptance": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#restoredServiceAndBackFromItsChildrenNeverAcceptThePendingCandidate": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#changedWaitExplainsTheReturnOnlyAfterAcceptanceAndKeepsTheNoticeAcrossHomeAndTheme": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#aConfirmedChurchChangeClearsTheCandidateAndRejectsItsOldResumeCallback": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#previewUsesTheSnapshotAddressAndExplicitResumeRetriesWithoutLosingPreferences": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#aNewManualMomentUsesTodayAndNormalSpeedAndLateResumeCannotReplaceIt": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#anExhaustedOccurrenceKeepsItsOwnDateAndNormalSpeedInsteadOfTheCandidateTempo": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#failedCommitAndRollbackDoNotReportAcceptanceAndTheSameCandidateCanBeRetried": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#assetReaderPreservesDefaultInputsCacheFailuresAndExplicitStageRetry": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#missingOrCorruptHistoricalAssetsNeverFallBackToLegacyButCurrentValidStillWorks": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#choosingFromOrderKeepsTheValidatedContextAndSlowSpeedWithoutAMigrationNotice": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#foreignOrCorruptContextRestoredInServiceRequiresANewExplicitChoice": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#anInvalidLegacySessionCannotSupplyTheDateForAnOtherwiseValidBookmark": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#explicitlyStartingAgainUsesTodayInsteadOfThePreviouslyOpenedFutureDate": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#watchingRecalculatesTheStageAtTheClickAndOpensTextPaused": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#aPersonalStartOpensItsOwnEstimateAndIsRecordedAsPersonal": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#resumingALegacyBookmarkPinsItsOriginalAnchorDateWithoutClearingThePhrase": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#anExpiredClickDoesNotReplaceOrClearTheSavedReading": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#aNextServiceBecomesCurrentBetweenDisplayAndClickWithoutSwitchingOccurrence": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#restorationStraightIntoLegacyServicePinsTheAnchorDateBeforeAnyCorrection": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#tomorrowsReadingKeepsItsDateAcrossCorrectionMidnightAndRestoration": {
+      "run": "s31b-migration-integration-r1",
+      "status": "PASS"
+    }
+  }
+}

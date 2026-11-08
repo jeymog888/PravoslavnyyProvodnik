@@ -13,7 +13,8 @@ data class ActiveServicePlayback(
     val plan: ServicePlaybackPlan,
     val context: ReadingContext,
     val state: ServicePlaybackState,
-    val isApproximate: Boolean = false
+    val isApproximate: Boolean = false,
+    val migrationNote: PlaybackMigrationNote? = null
 ) {
     val engine = ServicePlaybackEngine(plan)
     init {
@@ -158,7 +159,9 @@ class ServicePlayerState(
     private fun seek(transform: (ActiveServicePlayback) -> ActiveServicePlayback): Boolean {
         pause()
         val previous = reading ?: return false
-        val next = runCatching { transform(previous) }.getOrNull() ?: return false
+        // A successful explicit choice supersedes the explanation of the migrated position.
+        // Build it before writing; failure must leave the old position and its note intact.
+        val next = runCatching { transform(previous).copy(migrationNote = null) }.getOrNull() ?: return false
         val now = monotonicMillis()
         if (!write(next, false, now)) return false
         reading = next

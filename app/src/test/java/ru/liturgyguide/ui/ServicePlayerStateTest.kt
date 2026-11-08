@@ -271,4 +271,68 @@ class ServicePlayerStateTest {
         assertFalse(h.player.continueAfterMissing(oldGeneration))
         assertEquals(missing, h.current)
     }
+
+    @Test fun `migration acceptance remains a proposal on write failure and preserves exact paused position on retry`() {
+        val original = reading()
+        val proposed = original.copy(state = original.state.copy(elapsedQuarterMillis = 12_345,
+            speed = PlaybackSpeed.FAST), migrationNote = PlaybackMigrationNote.EXPANDED_STAGE_LAST_PHRASE)
+        val h = Harness(null)
+        h.writable = false
+        assertFalse(h.player.accept(proposed, resetBookmarks = false))
+        assertNull(h.player.reading)
+        assertEquals(0, h.player.generation)
+        h.writable = true
+        h.bookmarks["unrelated"] = "kept"
+        assertTrue(h.player.accept(proposed, resetBookmarks = false))
+        assertEquals(proposed, h.current)
+        assertFalse(h.current.state.isPlaying)
+        assertEquals("kept", h.bookmarks["unrelated"])
+        assertEquals(proposed.engine.snapshot(proposed.state, h.now), h.saved)
+    }
+
+    @Test fun `migration note survives ordinary progress and failed correction but clears only after committed choice`() {
+        val h = Harness(reading().copy(migrationNote = PlaybackMigrationNote.EXPANDED_STAGE_LAST_PHRASE))
+        val expected = h.current.migrationNote
+        val hash = h.current.plan.fingerprint
+        assertTrue(h.player.play())
+        h.now += 4_001
+        h.player.tick(h.player.generation)
+        assertEquals(expected, h.current.migrationNote)
+        assertTrue(h.player.changeSpeed(PlaybackSpeed.SLOW))
+        assertEquals(expected, h.current.migrationNote)
+        assertTrue(h.player.pause())
+        assertTrue(h.selectTrack(0)) // Pausing the already selected text is not a new choice.
+        assertEquals(expected, h.current.migrationNote)
+        assertEquals(hash, h.current.plan.fingerprint)
+        val beforeFailure = h.current
+        h.writable = false
+        assertFalse(h.seekLine(0))
+        assertEquals(beforeFailure, h.current)
+        h.writable = true
+        assertTrue(h.seekLine(0))
+        assertNull(h.current.migrationNote)
+        assertEquals(0, h.current.lineIndex)
+        assertEquals(PlaybackSpeed.SLOW, h.current.state.speed)
+    }
+
+    @Test fun `all explicit navigation paths drop the migration note without carrying it to a new reading`() {
+        val proposed = reading().copy(migrationNote = PlaybackMigrationNote.EXPANDED_STAGE_LAST_PHRASE)
+        val track = Harness(proposed)
+        assertTrue(track.selectTrack(1))
+        assertNull(track.current.migrationNote)
+        val stage = Harness(proposed)
+        assertTrue(stage.player.seekStage("second"))
+        assertNull(stage.current.migrationNote)
+
+        val missingPlan = ServicePlaybackPlan.build(
+            listOf(stages.first().copy(id = "epistle", texts = emptyList()), stages.last()), date, null)
+        val barrier = Harness(reading(missingPlan).copy(migrationNote = PlaybackMigrationNote.EXPANDED_STAGE_LAST_PHRASE))
+        assertTrue(barrier.current.segment is PlaybackSegment.MissingReading)
+        assertTrue(barrier.player.continueAfterMissing())
+        assertNull(barrier.current.migrationNote)
+
+        val newService = Harness(proposed)
+        assertTrue(newService.player.accept(reading(), resetBookmarks = true))
+        assertNull(newService.current.migrationNote)
+    }
 }
