@@ -20,6 +20,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
@@ -41,9 +42,12 @@ fun ServiceScreen(stageMatcher: StageMatcher, stageId: String?, onStageChange: (
     val stage = stageId?.let(stageMatcher::getStageById) ?: stages.first()
     val index = stages.indexOf(stage)
     val config = LocalConfiguration.current
-    val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale
+    val density = LocalDensity.current
+    val fontScale = density.fontScale
     val landscape = config.screenHeightDp < 480
     val compact = landscape || (config.screenHeightDp < 720 && fontScale > 1.2f)
+    val compactControls = compact || fontScale > 1.5f
+    val separateHeaderActions = !landscape && config.screenWidthDp < 400 && fontScale > 1.5f
     val tracks = remember(stage, readingDay) { PrayerTrackFactory.build(stage, readingDay) }
     val player = rememberPrayerPlayer(stage.id, tracks)
     val readingMissing = stage.id in setOf("epistle", "gospel") && tracks.none { it.isScripture }
@@ -102,21 +106,22 @@ fun ServiceScreen(stageMatcher: StageMatcher, stageId: String?, onStageChange: (
         dismissButton = { TextButton(onClick = { stageTimerDialog = false }) { Text("Менять этапы самому") } })
 
     Scaffold(topBar = {
+        // Keep navigation labels usable without changing prayer, explanation or dialog text sizes.
+        NavigationTextScale(enabled = compactControls) {
         Column(Modifier.statusBarsPadding()) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = if (compact) 0.dp else 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = if (compactControls) 0.dp else 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "К службе") }
-                Column(Modifier.weight(1f).clickable(onClick = onSelectStage).testTag("open_map").semantics { role = Role.Button; contentDescription = "Порядок службы" }.padding(horizontal = 8.dp, vertical = if (compact) 2.dp else 6.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Column(Modifier.weight(1f).clickable(onClick = onSelectStage).testTag("open_map").semantics { role = Role.Button; contentDescription = "Порядок службы" }.padding(horizontal = 8.dp, vertical = if (compactControls) 2.dp else 6.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(stage.name, style = MaterialTheme.typography.titleMedium, maxLines = if (compact) 1 else 2, overflow = TextOverflow.Ellipsis,
+                        Text(stage.name, style = MaterialTheme.typography.titleMedium, maxLines = if (landscape) 1 else 2, overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f, fill = false).testTag("current_stage_title").semantics { heading() })
                         Icon(Icons.Default.ExpandMore, null, Modifier.padding(start = 4.dp).size(16.dp))
                     }
-                    if (!compact) Text("${index + 1} из ${stages.size} · Порядок службы", style = MaterialTheme.typography.bodySmall,
+                    if (!compactControls) Text("${index + 1} из ${stages.size} · Порядок службы", style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 if (landscape) ReaderTabs(tab, ::selectTab, true, inline = true)
-                TextButton(onClick = ::clarifyMoment, contentPadding = PaddingValues(horizontal = 8.dp),
-                    modifier = Modifier.testTag("clarify_moment")) { Text("Уточнить", maxLines = 1) }
+                if (!separateHeaderActions) ClarifyMomentButton(::clarifyMoment)
                 Box {
                     IconButton(onClick = { menu = true }, modifier = Modifier.testTag("player_menu")) { Icon(Icons.Default.MoreHoriz, "Действия со службой") }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
@@ -133,17 +138,21 @@ fun ServiceScreen(stageMatcher: StageMatcher, stageId: String?, onStageChange: (
                 Text("Сохранено ранее · уточните этап",
                     Modifier.fillMaxWidth().clickable(onClick = ::clarifyMoment).padding(horizontal = 24.dp, vertical = 6.dp).testTag("saved_earlier_notice"),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary,
-                    maxLines = if (compact) 1 else 2, overflow = TextOverflow.Ellipsis)
+                    maxLines = if (compactControls) 1 else 2, overflow = TextOverflow.Ellipsis)
             } else if (sessionPosition?.isApproximate == true) {
                 Text(if (sessionPosition.autoAdvanceActive) "Примерные переходы этапов включены" else "Этап предложен по времени · можно уточнить",
                     Modifier.fillMaxWidth().clickable(onClick = ::clarifyMoment).padding(horizontal = 24.dp, vertical = 6.dp),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
             }
-            if (!landscape) ReaderTabs(tab, ::selectTab, compact)
-            if (player != null) PlayerTrackHeader(player, compact, tab == 0) { player.pause(); tracksOpen = true }
+            if (!landscape) ReaderTabs(tab, ::selectTab, compactControls)
+            if (player != null) PlayerTrackHeader(player, compactControls, tab == 0, separateHeaderActions,
+                onClarify = ::clarifyMoment, onTracks = { player.pause(); tracksOpen = true })
+            else if (separateHeaderActions) Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.End) { ClarifyMomentButton(::clarifyMoment) }
+        }
         }
     }, bottomBar = {
-        PlayerFooter(player, tab == 0, compact, stages, index, onStageChange, onFinish, ::playOrPause, { scrollOptions = true })
+        PlayerFooter(player, tab == 0, compactControls, stages, index, onStageChange, onFinish, ::playOrPause, { scrollOptions = true })
     }) { padding ->
         if (tab == 1) StageMeaning(stage, player?.track, readingMissing, Modifier.padding(padding), onOpenSource)
         else if (player != null) PrayerLyrics(player, compact, readingMissing, Modifier.padding(padding))
@@ -154,6 +163,12 @@ fun ServiceScreen(stageMatcher: StageMatcher, stageId: String?, onStageChange: (
             item { OutlinedButton(onClick = { selectTab(1) }) { Text("Что происходит и почему") } }
         }
     }
+}
+
+@Composable
+private fun ClarifyMomentButton(onClick: () -> Unit) {
+    TextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 8.dp),
+        modifier = Modifier.heightIn(min = 48.dp).testTag("clarify_moment")) { Text("Уточнить", maxLines = 1) }
 }
 
 @Composable
@@ -221,7 +236,8 @@ private fun StageMeaning(stage: LiturgyStage, track: PrayerTrack?, readingMissin
 }
 
 @Composable
-private fun PlayerTrackHeader(player: PrayerPlayerState, compact: Boolean, showLanguage: Boolean, onTracks: () -> Unit) {
+private fun PlayerTrackHeader(player: PrayerPlayerState, compact: Boolean, showLanguage: Boolean,
+    separateActions: Boolean, onClarify: () -> Unit, onTracks: () -> Unit) {
     val readingCount = player.tracks.count { it.isScripture }
     val choiceLabel = if (readingCount > 0) {
         if (compact) "Чтения · $readingCount" else "Выбрать чтение · $readingCount"
@@ -232,17 +248,23 @@ private fun PlayerTrackHeader(player: PrayerPlayerState, compact: Boolean, showL
                 if (player.tracks.size > 1) TextButton(onClick = onTracks, modifier = Modifier.weight(1f).testTag("choose_track"),
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)) {
                     Text(player.track.title, Modifier.weight(1f).testTag("current_track_title"),
-                        style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        style = MaterialTheme.typography.bodySmall, maxLines = if (separateActions) 2 else 1, overflow = TextOverflow.Ellipsis)
                     Icon(Icons.Default.ExpandMore, "Выбрать текст", Modifier.size(18.dp))
                 } else Text(player.track.title, Modifier.weight(1f).padding(vertical = 8.dp).testTag("current_track_title"), style = MaterialTheme.typography.bodySmall,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    maxLines = if (separateActions) 2 else 1, overflow = TextOverflow.Ellipsis)
             } else Column(Modifier.weight(1f).padding(vertical = 8.dp)) {
                 Text(player.track.title, modifier = Modifier.testTag("current_track_title"), style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 if (showLanguage) Text((if (player.original && player.supportsOriginal) "Церковнославянский оригинал" else player.track.subtitle) +
                     if (player.track.isExcerpt) " · фрагмент" else "", style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+            if (!separateActions && showLanguage && player.supportsOriginal) PlayerLanguageMenu(player)
+        }
+        if (separateActions) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End) {
             if (showLanguage && player.supportsOriginal) PlayerLanguageMenu(player)
+            Spacer(Modifier.weight(1f))
+            ClarifyMomentButton(onClarify)
         }
         if (!compact && player.tracks.size > 1) TextButton(onClick = onTracks, modifier = Modifier.testTag("choose_track"),
             contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp)) {

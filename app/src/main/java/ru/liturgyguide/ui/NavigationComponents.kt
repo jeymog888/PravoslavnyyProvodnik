@@ -12,17 +12,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun GuideBottomBar(selected: String, onHome: () -> Unit, onChurch: () -> Unit, onSettings: () -> Unit) {
+    NavigationTextScale {
     NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp) {
         listOf(Triple("home", "Служба", Icons.Default.MenuBook), Triple("church", "Храм", Icons.Default.Place),
             Triple("settings", "Настройки", Icons.Default.Tune)).forEach { (id, title, icon) ->
             NavigationBarItem(selected = selected == id, onClick = when(id) { "church" -> onChurch; "settings" -> onSettings; else -> onHome },
-                icon = { Icon(icon, null) }, label = { Text(title) },
+                icon = { Icon(icon, null) }, label = { Text(title, style = LocalTextStyle.current.copy(letterSpacing = 0.sp)) },
                 modifier = Modifier.testTag(if (id == "settings") "open_settings" else "nav_$id"),
                 colors = NavigationBarItemDefaults.colors(indicatorColor = MaterialTheme.colorScheme.primaryContainer, selectedIconColor = MaterialTheme.colorScheme.primary, selectedTextColor = MaterialTheme.colorScheme.primary))
         }
+    }
     }
 }
 

@@ -18,7 +18,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: LocalDate, onSelect: (String) -> Unit,
     onOpenUrl: (String) -> Unit, onBack: () -> Unit, showBack: Boolean = true, bottomBar: @Composable () -> Unit = {}) {
@@ -44,7 +44,9 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     }
     Scaffold(topBar = { Column(Modifier.statusBarsPadding()) {
         if (showBack) PageHeader("Мой храм", onBack)
-        else Text("Мой храм", Modifier.padding(horizontal = 24.dp, vertical = 16.dp), style = MaterialTheme.typography.headlineLarge)
+        else NavigationTextScale {
+            Text("Мой храм", Modifier.padding(horizontal = 24.dp, vertical = 16.dp).testTag("church_title"), style = MaterialTheme.typography.headlineLarge)
+        }
     } }, bottomBar = bottomBar) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("church_content"), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(28.dp)) {
             if (church == null) item { Text("Список храмов недоступен", style = MaterialTheme.typography.titleLarge) }
@@ -60,7 +62,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                     val entries = church.schedule.filter { it.date == date.toString() }.sortedBy { it.time }
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text("Расписание", style = MaterialTheme.typography.titleLarge)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilterChip(selected = dayOffset == 0, onClick = { dayOffset = 0 }, label = { Text("Сегодня") }, modifier = Modifier.testTag("schedule_today"))
                             FilterChip(selected = dayOffset == 1, onClick = { dayOffset = 1 }, label = { Text("Завтра") }, modifier = Modifier.testTag("schedule_tomorrow"))
                         }

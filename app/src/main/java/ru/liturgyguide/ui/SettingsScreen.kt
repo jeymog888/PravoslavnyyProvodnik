@@ -22,7 +22,9 @@ fun SettingsScreen(dark: Boolean, textSize: Int, onDarkChange: (Boolean) -> Unit
     onBack: () -> Unit, showBack: Boolean = true, bottomBar: @Composable () -> Unit = {}) {
     Scaffold(topBar = { Column(Modifier.statusBarsPadding()) {
         if (showBack) PageHeader("Настройки", onBack)
-        else Text("Настройки", Modifier.padding(horizontal = 24.dp, vertical = 16.dp), style = MaterialTheme.typography.headlineLarge)
+        else NavigationTextScale {
+            Text("Настройки", Modifier.padding(horizontal = 24.dp, vertical = 16.dp).testTag("settings_title"), style = MaterialTheme.typography.headlineLarge)
+        }
     } }, bottomBar = bottomBar) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("settings_content"), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(28.dp)) {
             item {

@@ -1,0 +1,220 @@
+{
+  "final_ui": {
+    "owner": "root",
+    "build_exit_code": 0,
+    "ui_exit_code": 0,
+    "counts": {
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "source_files_verified": 67,
+    "apk_sha256": "587415810e422dbe4a87f56323d310ef1fc91af86a86dc541f278f66da55454f",
+    "install_exit_code": 0,
+    "classes": [
+      "ru.liturgyguide.ui.ReaderAccessibilityTest",
+      "ru.liturgyguide.ui.GuideNavigationTest#landscapeWithLargestAppTextKeepsCurrentPhraseAndControlsVisible",
+      "ru.liturgyguide.ui.GuideNavigationTest#largeTextAndDarkModePersistAndNavigationRemainsUsable",
+      "ru.liturgyguide.ui.GuideNavigationTest#churchHasTodayAndTomorrowAndChangingItStartsAFreshContext",
+      "ru.liturgyguide.ui.ManualMomentFlowTest#correctionCancelRestoresMeaningAndANonInitialPhraseAcrossAllThreeScreens"
+    ]
+  },
+  "native": {
+    "checks": [
+      {
+        "name": "player-320-font2",
+        "passed": true,
+        "missing": []
+      },
+      {
+        "name": "cancel-meaning-320",
+        "passed": true,
+        "missing": []
+      },
+      {
+        "name": "large-font-cancel-preserves-preferences",
+        "passed": true
+      },
+      {
+        "name": "original-same-phrase-320",
+        "passed": true,
+        "missing": []
+      },
+      {
+        "name": "order-selected-320",
+        "passed": true,
+        "missing": []
+      },
+      {
+        "name": "player-640-landscape",
+        "passed": true,
+        "missing": []
+      },
+      {
+        "name": "cold-resume",
+        "passed": true,
+        "missing": []
+      },
+      {
+        "name": "cold-resume-keeps-language-phrase-theme-and-size",
+        "passed": true
+      },
+      {
+        "name": "church-tomorrow-320",
+        "passed": true,
+        "missing": []
+      }
+    ],
+    "apk_sha256": "587415810e422dbe4a87f56323d310ef1fc91af86a86dc541f278f66da55454f",
+    "restored": {
+      "font": "1.0",
+      "rotation": "0",
+      "accelerometer": "1"
+    }
+  },
+  "prior_attempts": {
+    "head": "6294d547c6d76ef6f0ea2a2e4726d3aa70e30d51",
+    "checked_at_utc": "2026-11-08T00:48:30.381401+00:00",
+    "result": "FAIL - reader has zero height in the tall narrow accessibility scenario",
+    "counts": {
+      "latest_tests": 11,
+      "latest_passed": 10,
+      "latest_failures": 1,
+      "latest_errors": 0,
+      "latest_skipped": 0,
+      "qa_ui_attempts": 2,
+      "qa_total_executions": 21,
+      "distinct_targeted_scenarios": 11
+    },
+    "command": "./gradlew --console=plain connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=ru.liturgyguide.ui.ReaderAccessibilityTest,ru.liturgyguide.ui.GuideNavigationTest#landscapeWithLargestAppTextKeepsCurrentPhraseAndControlsVisible,ru.liturgyguide.ui.GuideNavigationTest#largeTextAndDarkModePersistAndNavigationRemainsUsable,ru.liturgyguide.ui.GuideNavigationTest#churchHasTodayAndTomorrowAndChangingItStartsAFreshContext,ru.liturgyguide.ui.ManualMomentFlowTest#correctionCancelRestoresMeaningAndANonInitialPhraseAcrossAllThreeScreens",
+    "environment": {
+      "JAVA_HOME": "/private/tmp/liturgy-android-toolchain/jdk-17.0.21+9/Contents/Home",
+      "GRADLE_USER_HOME": "/private/tmp/liturgy-android-toolchain/gradle-home",
+      "ANDROID_HOME": "/private/tmp/liturgy-android-toolchain/sdk",
+      "ANDROID_USER_HOME": "/private/tmp/liturgy-android-toolchain/android-user",
+      "ANDROID_AVD_HOME": "/private/tmp/liturgy-android-toolchain/android-user/avd",
+      "ANDROID_SERIAL": "emulator-5554"
+    },
+    "attempt_1": {
+      "counts": {
+        "tests": 10,
+        "passed": 4,
+        "failures": 6,
+        "errors": 0,
+        "skipped": 0,
+        "ui_attempts": 1,
+        "ReaderAccessibilityTest_passed": 0,
+        "ReaderAccessibilityTest_failed": 6,
+        "legacy_targeted_passed": 4
+      },
+      "original_qa_result": "app/build/verification/v0.4/s4-cycle3/qa/connected-attempt-1/qa-results.json",
+      "xml": "app/build/verification/v0.4/s4-cycle3/qa/connected-attempt-1/results/debug/TEST-Liturgy_API_35(AVD) - 15-_app-.xml",
+      "source_manifest": "app/build/verification/v0.4/s4-cycle3/qa/source-hashes.json",
+      "apk_manifest": "app/build/verification/v0.4/s4-cycle3/qa/apk-hashes.json",
+      "original_evidence_preserved": true,
+      "classification_update": "Six overflow failures were false positives from unused MultiParagraph width, confirmed by root diagnostic line bounds and no ellipsis or exceeded lines",
+      "diagnostic": "app/build/verification/v0.4/s4-cycle3/diagnostic/results.json"
+    },
+    "attempt_2": {
+      "build_command": "./gradlew --console=plain assembleDebug assembleDebugAndroidTest",
+      "build_exit_code": 0,
+      "build_log": "app/build/verification/v0.4/s4-cycle3/qa/build-attempt-2.log",
+      "ui_exit_code": 1,
+      "xml": "app/build/verification/v0.4/s4-cycle3/qa/connected-attempt-2/results/debug/TEST-Liturgy_API_35(AVD) - 15-_app-.xml",
+      "reports": "app/build/verification/v0.4/s4-cycle3/qa/connected-attempt-2/reports",
+      "log": "app/build/verification/v0.4/s4-cycle3/qa/connected-attempt-2.log",
+      "selected_scenarios": "app/build/verification/v0.4/s4-cycle3/qa/selected-scenarios-attempt-2.json",
+      "exact_selected_scenarios_matched_xml": true,
+      "ReaderAccessibilityTest": {
+        "tests": 7,
+        "passed": 6,
+        "failures": 1
+      },
+      "legacy_targeted": {
+        "tests": 4,
+        "passed": 4,
+        "failures": 0
+      }
+    },
+    "hashes": {
+      "app_apk": "app/build/outputs/apk/debug/app-debug.apk",
+      "app_apk_sha256": "7c1f5b1b056a53065c81d9407080eb4af0316f3f4e2321a0aef166f08a202310",
+      "apk_manifest": "app/build/verification/v0.4/s4-cycle3/qa/apk-hashes-attempt-2.json",
+      "source_manifest": "app/build/verification/v0.4/s4-cycle3/qa/source-hashes-attempt-2.json",
+      "source_manifest_sha256": "e671ebcf67ebbbccd7be3b1f4b62c4a74eacbb7665ff9a1817a8010a63799ed7",
+      "source_and_build_files_checked": 67,
+      "sources_and_both_apks_unchanged_during_attempt_2": true,
+      "code_changed_by_root_between_attempts": true
+    },
+    "defects": [
+      {
+        "scenario": "ru.liturgyguide.ui.ReaderAccessibilityTest#aTallNarrowScreenKeepsReadableActionsWithoutReducingThePrayerSize",
+        "classification": "zero reader height in test layout; root diagnosis pending",
+        "status": "open",
+        "configuration": "320x800 dp, system font scale 2.0, largest app text, expected prayer scale 2.6 and font size 28sp",
+        "assertion": "compose.onNodeWithTag(\"lyrics_list\").assertHeightIsAtLeast(120.dp)",
+        "assertion_location": "ReaderAccessibilityTest.kt:233",
+        "scenario_location": "ReaderAccessibilityTest.kt:90",
+        "observed_height_dp": 0.0,
+        "expected_minimum_height_dp": 120.0,
+        "failure_stack": "java.lang.AssertionError: Actual height is 0.0.dp, expected at least 120.0.dp (tolerance: 0.5.dp)\nat androidx.compose.ui.test.BoundsAssertionsKt.assertIsAtLeast-cWfXhoU(BoundsAssertions.kt:290)\nat androidx.compose.ui.test.BoundsAssertionsKt.assertIsAtLeast-cWfXhoU$default(BoundsAssertions.kt:287)\nat androidx.compose.ui.test.BoundsAssertionsKt$assertHeightIsAtLeast$1.invoke(BoundsAssertions.kt:100)\nat androidx.compose.ui.test.BoundsAssertionsKt$assertHeightIsAtLeast$1.invoke(BoundsAssertions.kt:99)\nat androidx.compose.ui.test.BoundsAssertionsKt.withUnclippedBoundsInRoot(BoundsAssertions.kt:211)\nat androidx.compose.ui.test.BoundsAssertionsKt.assertHeightIsAtLeast-3ABfNKs(BoundsAssertions.kt:99)\nat ru.liturgyguide.ui.ReaderAccessibilityTest.assertReadingSpaceAndScale-kncR6DU(ReaderAccessibilityTest.kt:233)\nat ru.liturgyguide.ui.ReaderAccessibilityTest.aTallNarrowScreenKeepsReadableActionsWithoutReducingThePrayerSize(ReaderAccessibilityTest.kt:90)\n",
+        "preceding_assertions_passed": "Readable stage title, track title, tabs, clarification action and По-русски language label"
+      }
+    ],
+    "audit": {
+      "source_or_assertion_changes_by_qa": false,
+      "legacy_test_files_unchanged_from_attempt_1": true,
+      "one_repeat_only_after_root_and_reviewer_acceptance": true,
+      "further_repeats": false,
+      "first_source_and_apk_manifests_not_overwritten": true
+    },
+    "ui_handoff": {
+      "device": "emulator-5554",
+      "command": "/private/tmp/liturgy-android-toolchain/sdk/platform-tools/adb -s emulator-5554 install -r app/build/outputs/apk/debug/app-debug.apk",
+      "exit_code": 0,
+      "result": "Success",
+      "log": "app/build/verification/v0.4/s4-cycle3/qa/install-handoff-attempt-2.log",
+      "same_hashed_attempt_2_apk": true,
+      "emulator_left_running": true,
+      "handed_to": "root",
+      "next_action": "root diagnosis; no further QA repeat"
+    }
+  },
+  "diagnostic": {
+    "purpose": "Diagnose strict overflow assertion before changing it",
+    "test_source_sha256": "741d9d4d3d39116a1cca315412beb58f32c71bfffcb9e71ec573aee9294e7db6",
+    "diagnostic_lines": [
+      "INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: Visible label must not overflow: Текст; size=160 x 71; paragraph=352.0x71.0; intrinsicWidth=160.0; overflowWidth=true; overflowHeight=false; exceededLines=false; lines=[[0.0, 159.74219, 0.0, 71.0]]; ellipsized=[false]; bounds=Rect.fromLTRB(164.0, 345.0, 324.0, 416.0)",
+      "java.lang.AssertionError: Visible label must not overflow: Текст; size=160 x 71; paragraph=352.0x71.0; intrinsicWidth=160.0; overflowWidth=true; overflowHeight=false; exceededLines=false; lines=[[0.0, 159.74219, 0.0, 71.0]]; ellipsized=[false]; bounds=Rect.fromLTRB(164.0, 345.0, 324.0, 416.0)",
+      "INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: Visible label must not overflow: Текст; size=160 x 71; paragraph=352.0x71.0; intrinsicWidth=160.0; overflowWidth=true; overflowHeight=false; exceededLines=false; lines=[[0.0, 159.74219, 0.0, 71.0]]; ellipsized=[false]; bounds=Rect.fromLTRB(164.0, 345.0, 324.0, 416.0)",
+      "java.lang.AssertionError: Visible label must not overflow: Текст; size=160 x 71; paragraph=352.0x71.0; intrinsicWidth=160.0; overflowWidth=true; overflowHeight=false; exceededLines=false; lines=[[0.0, 159.74219, 0.0, 71.0]]; ellipsized=[false]; bounds=Rect.fromLTRB(164.0, 345.0, 324.0, 416.0)",
+      "INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: Visible label must not overflow: Сегодня; size=421 x 128; paragraph=630.0x128.0; intrinsicWidth=421.0; overflowWidth=true; overflowHeight=false; exceededLines=false; lines=[[0.0, 420.7539, 0.0, 128.0]]; ellipsized=[false]; bounds=Rect.fromLTRB(105.0, 1024.0, 526.0, 1152.0)",
+      "java.lang.AssertionError: Visible label must not overflow: Сегодня; size=421 x 128; paragraph=630.0x128.0; intrinsicWidth=421.0; overflowWidth=true; overflowHeight=false; exceededLines=false; lines=[[0.0, 420.7539, 0.0, 128.0]]; ellipsized=[false]; bounds=Rect.fromLTRB(105.0, 1024.0, 526.0, 1152.0)",
+      "INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: Visible label must not overflow: Символ веры; size=404 x 73; paragraph=451.0x73.0; intrinsicWidth=404.0; overflowWidth=true; overflowHeight=false; exceededLines=false; lines=[[0.0, 403.5078, 0.0, 73.0]]; ellipsized=[false]; bounds=Rect.fromLTRB(168.0, 163.0, 572.0, 236.0)",
+      "java.lang.AssertionError: Visible label must not overflow: Символ веры; size=404 x 73; paragraph=451.0x73.0; intrinsicWidth=404.0; overflowWidth=true; overflowHeight=false; exceededLines=false; lines=[[0.0, 403.5078, 0.0, 73.0]]; ellipsized=[false]; bounds=Rect.fromLTRB(168.0, 163.0, 572.0, 236.0)",
+      "INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: Visible label must not overflow: Символ веры; size=404 x 73; paragraph=511.0x73.0; intrinsicWidth=404.0; overflowWidth=true; overflowHeight=false; exceededLines=false; lines=[[0.0, 403.5078, 0.0, 73.0]]; ellipsized=[false]; bounds=Rect.fromLTRB(168.0, 106.0, 572.0, 179.0)",
+      "java.lang.AssertionError: Visible label must not overflow: Символ веры; size=404 x 73; paragraph=511.0x73.0; intrinsicWidth=404.0; overflowWidth=true; overflowHeight=false; exceededLines=false; lines=[[0.0, 403.5078, 0.0, 73.0]]; ellipsized=[false]; bounds=Rect.fromLTRB(168.0, 106.0, 572.0, 179.0)",
+      "INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: Visible label must not overflow: Символ веры; size=404 x 73; paragraph=451.0x73.0; intrinsicWidth=404.0; overflowWidth=true; overflowHeight=false; exceededLines=false; lines=[[0.0, 403.5078, 0.0, 73.0]]; ellipsized=[false]; bounds=Rect.fromLTRB(168.0, 163.0, 572.0, 236.0)",
+      "java.lang.AssertionError: Visible label must not overflow: Символ веры; size=404 x 73; paragraph=451.0x73.0; intrinsicWidth=404.0; overflowWidth=true; overflowHeight=false; exceededLines=false; lines=[[0.0, 403.5078, 0.0, 73.0]]; ellipsized=[false]; bounds=Rect.fromLTRB(168.0, 163.0, 572.0, 236.0)",
+      "java.lang.AssertionError: Visible label must not overflow: Текст; size=160 x 71; paragraph=352.0x71.0; intrinsicWidth=160.0; overflowWidth=true; overflowHeight=false; exceededLines=false; lines=[[0.0, 159.74219, 0.0, 71.0]]; ellipsized=[false]; bounds=Rect.fromLTRB(164.0, 345.0, 324.0, 416.0)",
+      "java.lang.AssertionError: Visible label must not overflow: Текст; size=160 x 71; paragraph=352.0x71.0; intrinsicWidth=160.0; overflowWidth=true; overflowHeight=false; exceededLines=false; lines=[[0.0, 159.74219, 0.0, 71.0]]; ellipsized=[false]; bounds=Rect.fromLTRB(164.0, 345.0, 324.0, 416.0)",
+      "java.lang.AssertionError: Visible label must not overflow: Сегодня; size=421 x 128; paragraph=630.0x128.0; intrinsicWidth=421.0; overflowWidth=true; overflowHeight=false; exceededLines=false; lines=[[0.0, 420.7539, 0.0, 128.0]]; ellipsized=[false]; bounds=Rect.fromLTRB(105.0, 1024.0, 526.0, 1152.0)",
+      "java.lang.AssertionError: Visible label must not overflow: Символ веры; size=404 x 73; paragraph=451.0x73.0; intrinsicWidth=404.0; overflowWidth=true; overflowHeight=false; exceededLines=false; lines=[[0.0, 403.5078, 0.0, 73.0]]; ellipsized=[false]; bounds=Rect.fromLTRB(168.0, 163.0, 572.0, 236.0)",
+      "java.lang.AssertionError: Visible label must not overflow: Символ веры; size=404 x 73; paragraph=511.0x73.0; intrinsicWidth=404.0; overflowWidth=true; overflowHeight=false; exceededLines=false; lines=[[0.0, 403.5078, 0.0, 73.0]]; ellipsized=[false]; bounds=Rect.fromLTRB(168.0, 106.0, 572.0, 179.0)",
+      "java.lang.AssertionError: Visible label must not overflow: Символ веры; size=404 x 73; paragraph=451.0x73.0; intrinsicWidth=404.0; overflowWidth=true; overflowHeight=false; exceededLines=false; lines=[[0.0, 403.5078, 0.0, 73.0]]; ellipsized=[false]; bounds=Rect.fromLTRB(168.0, 163.0, 572.0, 236.0)"
+    ]
+  },
+  "orchestrator_review": {
+    "source_hashes_verified": 67,
+    "independent_review": "gpt-6-astra",
+    "accepted": true,
+    "real_defects_fixed": [
+      "Stage/track title disappeared and tabs split at large font",
+      "Day chip label narrowed into letters",
+      "Fixed headers/nav consumed reading space",
+      "Tall large-font player footer left zero lyrics height; separate compactControls preserves prayer scale"
+    ],
+    "diagnostic_conclusion": "Compose 1.7.3 String Text semantics reconstructed MultiParagraph uses available maxWidth; actual line bounds remain within measured Text size. Tests now assert actual line extents, line limits, ellipsis and unclipped node bounds."
+  }
+}
