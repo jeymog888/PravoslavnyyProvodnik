@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.service.PersonalStoresRollbackTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-11-08T17:06:44" hostname="MacBook-Air-Dmitrij.local" time="0.048">
+  <properties/>
+  <testcase name="favorite rollback owns a copy of the old set" classname="ru.liturgyguide.service.PersonalStoresRollbackTest" time="0.005"/>
+  <testcase name="rollback false or throw after memory restoration never becomes success or another retry" classname="ru.liturgyguide.service.PersonalStoresRollbackTest" time="0.014"/>
+  <testcase name="first personal save replacement and removal restore the exact old memory on false or throw" classname="ru.liturgyguide.service.PersonalStoresRollbackTest" time="0.013"/>
+  <testcase name="successful writes use one commit and publish the intended records or favorites" classname="ru.liturgyguide.service.PersonalStoresRollbackTest" time="0.001"/>
+  <testcase name="an unavailable rollback editor is best effort and never reports the attempted write as accepted" classname="ru.liturgyguide.service.PersonalStoresRollbackTest" time="0.002"/>
+  <testcase name="all supported old preference types are restored without coercing damaged storage" classname="ru.liturgyguide.service.PersonalStoresRollbackTest" time="0.004"/>
+  <testcase name="failed favorite add removal and first toggle restore raw favorites including unavailable IDs" classname="ru.liturgyguide.service.PersonalStoresRollbackTest" time="0.0"/>
+  <testcase name="unreadable snapshots do not open an editor" classname="ru.liturgyguide.service.PersonalStoresRollbackTest" time="0.003"/>
+  <testcase name="rollback touches only its key and preserves unrelated callback writes" classname="ru.liturgyguide.service.PersonalStoresRollbackTest" time="0.001"/>
+  <testcase name="first directory save and replacement restore absence or the original encoded value" classname="ru.liturgyguide.service.PersonalStoresRollbackTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

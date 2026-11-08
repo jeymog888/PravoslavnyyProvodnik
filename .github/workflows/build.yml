@@ -55,12 +55,13 @@ jobs:
           arch: x86_64
           target: google_apis
           profile: pixel_7
+          emulator-port: 5554
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader -noaudio -no-boot-anim -camera-back none
           # IME tests observe a visible software keyboard before verifying dismissal.
           script: |
-            adb shell settings put secure show_ime_with_hard_keyboard 1
-            ./gradlew --no-daemon connectedDebugAndroidTest
+            adb -s emulator-5554 shell settings put secure show_ime_with_hard_keyboard 1
+            python3 scripts/ci/run_android_ui_tests.py --serial emulator-5554 --run-id "${{ github.run_id }}-${{ github.run_attempt }}" --out app/build/ci-diagnostics -- ./gradlew --no-daemon connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.feoriaCiDiagnostics=true -Pandroid.testInstrumentationRunnerArguments.feoriaCiDiagnosticsRun=${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -76,6 +77,8 @@ jobs:
           name: verification-reports
           path: |
             app/build/reports/tests/testDebugUnitTest/
+            app/build/test-results/testDebugUnitTest/
+            app/build/ci-diagnostics/
             app/build/reports/lint-results-debug.html
             app/build/reports/lint-results-debug.xml
             app/build/reports/androidTests/connected/

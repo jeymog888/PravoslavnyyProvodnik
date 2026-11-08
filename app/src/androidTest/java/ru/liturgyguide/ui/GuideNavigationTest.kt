@@ -10,8 +10,8 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
-import androidx.test.espresso.Espresso.closeSoftKeyboard
-import androidx.test.espresso.Espresso.pressBack
+import ru.liturgyguide.ui.closeSoftKeyboardWithCiDiagnostics as closeSoftKeyboard
+import ru.liturgyguide.ui.pressBackWithCiDiagnostics as pressBack
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.gson.Gson
@@ -89,7 +89,7 @@ class GuideNavigationTest {
 
     @Test
     fun showingAllStagesAfterUnknownWordsDismissesTheKeyboardAndFocus() {
-        fun waitForKeyboard(visible: Boolean) {
+        fun waitForKeyboard(visible: Boolean) = withCiFailureDiagnostics("guide.waitForKeyboard($visible)") {
             compose.waitUntil(timeoutMillis = 10_000) {
                 var matches = false
                 compose.activityRule.scenario.onActivity {

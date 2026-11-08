@@ -334,7 +334,7 @@ class ReaderAccessibilityTest {
         awaitPlatformReady()
     }
 
-    private fun awaitPlatformReady() {
+    private fun awaitPlatformReady() = withCiFailureDiagnostics("reader.awaitPlatformReady") {
         compose.waitUntil(timeoutMillis = 10_000) {
             var ready = false
             compose.activityRule.scenario.onActivity { activity ->

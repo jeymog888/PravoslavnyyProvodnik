@@ -288,7 +288,7 @@ class CompactReaderMatrixTest {
         return results.single()
     }
 
-    private fun orient(requested: Int, expected: Int) {
+    private fun orient(requested: Int, expected: Int) = withCiFailureDiagnostics("matrix.orient($expected)") {
         compose.activityRule.scenario.onActivity { it.requestedOrientation = requested }
         compose.waitUntil(10_000) {
             var ready = false

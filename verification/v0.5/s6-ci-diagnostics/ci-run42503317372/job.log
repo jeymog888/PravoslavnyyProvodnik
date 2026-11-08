@@ -1,0 +1,1318 @@
+﻿2026-11-08T17:07:05.1622812Z Current runner version: '2.338.2'
+2026-11-08T17:07:05.1644410Z ##[group]Runner Image Provisioner
+2026-11-08T17:07:05.1645244Z Hosted Compute Agent
+2026-11-08T17:07:05.1645724Z Version: 20261028.624
+2026-11-08T17:07:05.1646313Z Commit: 54898b74c23fde5556c9b3c3a2290865feef0dfe
+2026-11-08T17:07:05.1646900Z Build Date: 2026-10-28T21:51:42Z
+2026-11-08T17:07:05.1647434Z Worker ID: {16c82a8d-ecee-4445-98fc-000785f1a544}
+2026-11-08T17:07:05.1648081Z Region: westus2
+2026-11-08T17:07:05.1648531Z Cloud: Azure
+2026-11-08T17:07:05.1648992Z ##[endgroup]
+2026-11-08T17:07:05.1650067Z ##[group]Operating System
+2026-11-08T17:07:05.1650748Z Ubuntu
+2026-11-08T17:07:05.1651260Z 26.04.1
+2026-11-08T17:07:05.1651681Z LTS
+2026-11-08T17:07:05.1652189Z ##[endgroup]
+2026-11-08T17:07:05.1652722Z ##[group]Runner Image
+2026-11-08T17:07:05.1653211Z Image: ubuntu-26.04
+2026-11-08T17:07:05.1653737Z Version: 20261101.186.1
+2026-11-08T17:07:05.1654765Z Included Software: https://github.com/actions/runner-images/blob/ubuntu26/20261101.186/images/ubuntu/Ubuntu2604-Readme.md
+2026-11-08T17:07:05.1656023Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu26%2F20261101.186
+2026-11-08T17:07:05.1656791Z ##[endgroup]
+2026-11-08T17:07:05.1657731Z ##[group]GITHUB_TOKEN Permissions
+2026-11-08T17:07:05.1659231Z Contents: read
+2026-11-08T17:07:05.1660112Z Metadata: read
+2026-11-08T17:07:05.1660827Z ##[endgroup]
+2026-11-08T17:07:05.1662593Z Secret source: Actions
+2026-11-08T17:07:05.1663508Z Cache mode: write
+2026-11-08T17:07:05.1664066Z Prepare workflow directory
+2026-11-08T17:07:05.1923701Z Prepare all required actions
+2026-11-08T17:07:05.1962780Z Getting action download info
+2026-11-08T17:07:05.5754368Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-11-08T17:07:05.6871042Z Download action repository 'actions/setup-java@v4' (SHA:cf277c60eb25467037889841efdb72551f06f6c3)
+2026-11-08T17:07:06.0005390Z Download action repository 'android-actions/setup-android@v3' (SHA:9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407)
+2026-11-08T17:07:06.1855039Z Download action repository 'gradle/actions@v4' (SHA:ed408507eac070d1f99cc633dbcf757c94c7933a)
+2026-11-08T17:07:07.2302822Z Download action repository 'reactivecircus/android-emulator-runner@v2' (SHA:a421e43855164a8197daf9d8d40fe71c6996bb0d)
+2026-11-08T17:07:07.4487114Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-11-08T17:07:07.7309197Z Complete job name: build
+2026-11-08T17:07:07.8221933Z ##[group]Run actions/checkout@v4
+2026-11-08T17:07:07.8223022Z with:
+2026-11-08T17:07:07.8223792Z   repository: jeymog888/PravoslavnyyProvodnik
+2026-11-08T17:07:07.8231303Z   token: ***
+2026-11-08T17:07:07.8232012Z   ssh-strict: true
+2026-11-08T17:07:07.8232730Z   ssh-user: git
+2026-11-08T17:07:07.8233462Z   persist-credentials: true
+2026-11-08T17:07:07.8234263Z   clean: true
+2026-11-08T17:07:07.8235014Z   sparse-checkout-cone-mode: true
+2026-11-08T17:07:07.8235883Z   fetch-depth: 1
+2026-11-08T17:07:07.8236596Z   fetch-tags: false
+2026-11-08T17:07:07.8237403Z   show-progress: true
+2026-11-08T17:07:07.8238142Z   lfs: false
+2026-11-08T17:07:07.8238821Z   submodules: false
+2026-11-08T17:07:07.8239555Z   set-safe-directory: true
+2026-11-08T17:07:07.8240477Z   allow-unsafe-pr-checkout: false
+2026-11-08T17:07:07.8241547Z ##[endgroup]
+2026-11-08T17:07:08.0900723Z Syncing repository: jeymog888/PravoslavnyyProvodnik
+2026-11-08T17:07:08.0904395Z ##[group]Getting Git version info
+2026-11-08T17:07:08.0906576Z Working directory is '/home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik'
+2026-11-08T17:07:08.0909571Z [command]/usr/bin/git version
+2026-11-08T17:07:08.0910940Z git version 2.56.0
+2026-11-08T17:07:08.0914839Z ##[endgroup]
+2026-11-08T17:07:08.0925677Z Temporarily overriding HOME='/home/runner/work/_temp/afb127cd-b2bc-486e-9b55-ba8c561f8bf5' before making global git config changes
+2026-11-08T17:07:08.0929124Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-08T17:07:08.0932788Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik
+2026-11-08T17:07:08.1000036Z Deleting the contents of '/home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik'
+2026-11-08T17:07:08.1003562Z ##[group]Initializing the repository
+2026-11-08T17:07:08.1007965Z [command]/usr/bin/git init /home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik
+2026-11-08T17:07:08.1094649Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-08T17:07:08.1097162Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-08T17:07:08.1099525Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-08T17:07:08.1101563Z hint: call:
+2026-11-08T17:07:08.1102958Z hint:
+2026-11-08T17:07:08.1104295Z hint: 	git config --global init.defaultBranch <name>
+2026-11-08T17:07:08.1105887Z hint:
+2026-11-08T17:07:08.1107401Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-08T17:07:08.1109784Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-08T17:07:08.1111815Z hint:
+2026-11-08T17:07:08.1112967Z hint: 	git branch -m <name>
+2026-11-08T17:07:08.1114236Z hint:
+2026-11-08T17:07:08.1116088Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-08T17:07:08.1119321Z Initialized empty Git repository in /home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/.git/
+2026-11-08T17:07:08.1124827Z [command]/usr/bin/git remote add origin https://github.com/jeymog888/PravoslavnyyProvodnik
+2026-11-08T17:07:08.1176689Z ##[endgroup]
+2026-11-08T17:07:08.1178890Z ##[group]Disabling automatic garbage collection
+2026-11-08T17:07:08.1181183Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-08T17:07:08.1212961Z ##[endgroup]
+2026-11-08T17:07:08.1214781Z ##[group]Setting up auth
+2026-11-08T17:07:08.1217616Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-08T17:07:08.1250246Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-08T17:07:08.1646626Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-08T17:07:08.1681311Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-08T17:07:08.1919007Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-08T17:07:08.1951276Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-08T17:07:08.2196543Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-08T17:07:08.2612929Z ##[endgroup]
+2026-11-08T17:07:08.2614398Z ##[group]Fetching the repository
+2026-11-08T17:07:08.2623583Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +03554e613ad141b3473a5ed5cde1972f4e5b23f4:refs/remotes/origin/codex/feoria-0.5-service-player
+2026-11-08T17:07:10.2505718Z From https://github.com/jeymog888/PravoslavnyyProvodnik
+2026-11-08T17:07:10.2506326Z  * [new ref]         03554e613ad141b3473a5ed5cde1972f4e5b23f4 -> origin/codex/feoria-0.5-service-player
+2026-11-08T17:07:10.2509047Z ##[endgroup]
+2026-11-08T17:07:10.2509549Z ##[group]Determining the checkout info
+2026-11-08T17:07:10.2511901Z ##[endgroup]
+2026-11-08T17:07:10.2517021Z [command]/usr/bin/git sparse-checkout disable
+2026-11-08T17:07:10.2562761Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-08T17:07:10.2588710Z ##[group]Checking out the ref
+2026-11-08T17:07:10.2593705Z [command]/usr/bin/git checkout --progress --force -B codex/feoria-0.5-service-player refs/remotes/origin/codex/feoria-0.5-service-player
+2026-11-08T17:07:10.4799611Z Switched to a new branch 'codex/feoria-0.5-service-player'
+2026-11-08T17:07:10.4802659Z branch 'codex/feoria-0.5-service-player' set up to track 'origin/codex/feoria-0.5-service-player'.
+2026-11-08T17:07:10.4820722Z ##[endgroup]
+2026-11-08T17:07:10.4860678Z [command]/usr/bin/git log -1 --format=%H
+2026-11-08T17:07:10.4882439Z 03554e613ad141b3473a5ed5cde1972f4e5b23f4
+2026-11-08T17:07:10.5130570Z ##[group]Run actions/setup-java@v4
+2026-11-08T17:07:10.5130880Z with:
+2026-11-08T17:07:10.5131059Z   java-version: 17
+2026-11-08T17:07:10.5131239Z   distribution: temurin
+2026-11-08T17:07:10.5131425Z   java-package: jdk
+2026-11-08T17:07:10.5131608Z   check-latest: false
+2026-11-08T17:07:10.5131784Z   server-id: github
+2026-11-08T17:07:10.5131963Z   server-username: GITHUB_ACTOR
+2026-11-08T17:07:10.5132175Z   server-password: GITHUB_TOKEN
+2026-11-08T17:07:10.5132382Z   overwrite-settings: true
+2026-11-08T17:07:10.5132581Z   job-status: success
+2026-11-08T17:07:10.5134647Z   token: ***
+2026-11-08T17:07:10.5134829Z ##[endgroup]
+2026-11-08T17:07:10.6533045Z ##[warning]setup-java v4 is deprecated and will no longer receive updates. Please migrate to actions/setup-java@v5.
+2026-11-08T17:07:10.6539132Z ##[group]Installed distributions
+2026-11-08T17:07:10.6561788Z Resolved Java 17.0.21+9 from tool-cache
+2026-11-08T17:07:10.6562178Z Setting Java 17.0.21+9 as the default
+2026-11-08T17:07:10.6569829Z (node:2201) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-08T17:07:10.6570527Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-08T17:07:10.6573081Z Creating toolchains.xml for JDK version 17 from temurin
+2026-11-08T17:07:10.6628474Z Writing to /home/runner/.m2/toolchains.xml
+2026-11-08T17:07:10.6628765Z 
+2026-11-08T17:07:10.6628879Z Java configuration:
+2026-11-08T17:07:10.6629134Z   Distribution: temurin
+2026-11-08T17:07:10.6629324Z   Version: 17.0.21+9
+2026-11-08T17:07:10.6629731Z   Path: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T17:07:10.6630000Z 
+2026-11-08T17:07:10.6630718Z ##[endgroup]
+2026-11-08T17:07:10.6649540Z Creating settings.xml with server-id: github
+2026-11-08T17:07:10.6669510Z Writing to /home/runner/.m2/settings.xml
+2026-11-08T17:07:10.6813878Z ##[group]Run android-actions/setup-android@v3
+2026-11-08T17:07:10.6814148Z with:
+2026-11-08T17:07:10.6814331Z   packages: platform-tools
+2026-11-08T17:07:10.6814557Z   log-accepted-android-sdk-licenses: false
+2026-11-08T17:07:10.6814805Z   cmdline-tools-version: 12266719
+2026-11-08T17:07:10.6815038Z   accept-android-sdk-licenses: true
+2026-11-08T17:07:10.6815248Z env:
+2026-11-08T17:07:10.6815489Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T17:07:10.6815870Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T17:07:10.6816163Z ##[endgroup]
+2026-11-08T17:07:10.7474219Z Found preinstalled sdkmanager in /usr/local/lib/android/sdk/cmdline-tools/latest with following source.properties:
+2026-11-08T17:07:10.7475314Z Pkg.Revision=20.0
+2026-11-08T17:07:10.7475659Z Pkg.Path=cmdline-tools;20.0
+2026-11-08T17:07:10.7476028Z Pkg.Desc=Android SDK Command-line Tools
+2026-11-08T17:07:10.7476274Z 
+2026-11-08T17:07:10.7476524Z Wrong version in preinstalled sdkmanager
+2026-11-08T17:07:10.7477173Z Downloading commandline tools from https://dl.google.com/android/repository/commandlinetools-linux-12266719_latest.zip
+2026-11-08T17:07:11.3510333Z [command]/usr/bin/unzip -o -q /home/runner/work/_temp/78acd3a0-4bdb-4066-9d71-afe1dca1a95b
+2026-11-08T17:07:12.0304125Z Accepting Android SDK licenses
+2026-11-08T17:07:23.5894477Z [command]/usr/local/lib/android/sdk/cmdline-tools/16.0/bin/sdkmanager platform-tools
+2026-11-08T17:07:24.2464187Z Loading package information...                                                  
+2026-11-08T17:07:24.3341748Z Loading local repository...                                                     
+2026-11-08T17:07:24.3342585Z [                                       ] 3% Loading local repository...        
+2026-11-08T17:07:24.3418523Z [                                       ] 3% Fetch remote repository...         
+2026-11-08T17:07:24.5452619Z [=                                      ] 3% Fetch remote repository...         
+2026-11-08T17:07:24.6714242Z [=                                      ] 4% Fetch remote repository...         
+2026-11-08T17:07:24.7139771Z [=                                      ] 5% Fetch remote repository...         
+2026-11-08T17:07:24.7652045Z [==                                     ] 5% Fetch remote repository...         
+2026-11-08T17:07:24.8342224Z [==                                     ] 6% Fetch remote repository...         
+2026-11-08T17:07:24.9024621Z [==                                     ] 7% Fetch remote repository...         
+2026-11-08T17:07:24.9111340Z [==                                     ] 7% Computing updates...               
+2026-11-08T17:07:24.9151183Z [===                                    ] 8% Computing updates...               
+2026-11-08T17:07:24.9181290Z [===                                    ] 10% Computing updates...              
+2026-11-08T17:07:24.9182279Z [=======================================] 100% Computing updates...             
+2026-11-08T17:07:24.9191089Z 
+2026-11-08T17:07:24.9629911Z ##[group]Run sdkmanager 'platforms;android-35' 'build-tools;34.0.0'
+2026-11-08T17:07:24.9630626Z [36;1msdkmanager 'platforms;android-35' 'build-tools;34.0.0'[0m
+2026-11-08T17:07:24.9677372Z shell: /usr/bin/bash -e {0}
+2026-11-08T17:07:24.9677591Z env:
+2026-11-08T17:07:24.9677850Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T17:07:24.9678242Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T17:07:24.9678558Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2026-11-08T17:07:24.9678806Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2026-11-08T17:07:24.9679030Z ##[endgroup]
+2026-11-08T17:07:25.6482751Z Loading package information...                                                  
+2026-11-08T17:07:25.7336107Z Loading local repository...                                                     
+2026-11-08T17:07:25.7339215Z [                                       ] 3% Loading local repository...        
+2026-11-08T17:07:25.7426912Z [                                       ] 3% Fetch remote repository...         
+2026-11-08T17:07:26.0162914Z [=                                      ] 3% Fetch remote repository...         
+2026-11-08T17:07:26.0832260Z [=                                      ] 4% Fetch remote repository...         
+2026-11-08T17:07:26.1146433Z [=                                      ] 5% Fetch remote repository...         
+2026-11-08T17:07:26.1730160Z [==                                     ] 5% Fetch remote repository...         
+2026-11-08T17:07:26.2542597Z [==                                     ] 6% Fetch remote repository...         
+2026-11-08T17:07:26.3133027Z [==                                     ] 7% Fetch remote repository...         
+2026-11-08T17:07:26.3161299Z [==                                     ] 7% Computing updates...               
+2026-11-08T17:07:26.3242593Z [===                                    ] 8% Computing updates...               
+2026-11-08T17:07:26.3301629Z [===                                    ] 10% Computing updates...              
+2026-11-08T17:07:26.3302462Z [=======================================] 100% Computing updates...             
+2026-11-08T17:07:26.3302916Z 
+2026-11-08T17:07:26.3751485Z ##[group]Run gradle/actions/setup-gradle@v4
+2026-11-08T17:07:26.3751734Z with:
+2026-11-08T17:07:26.3751906Z   cache-disabled: false
+2026-11-08T17:07:26.3752101Z   cache-read-only: true
+2026-11-08T17:07:26.3752284Z   cache-write-only: false
+2026-11-08T17:07:26.3752700Z   cache-overwrite-existing: false
+2026-11-08T17:07:26.3752916Z   cache-cleanup: on-success
+2026-11-08T17:07:26.3753149Z   gradle-home-cache-includes: caches
+notifications
+
+2026-11-08T17:07:26.3753573Z   add-job-summary: always
+2026-11-08T17:07:26.3753784Z   add-job-summary-as-pr-comment: never
+2026-11-08T17:07:26.3754014Z   dependency-graph: disabled
+2026-11-08T17:07:26.3754261Z   dependency-graph-report-dir: dependency-graph-reports
+2026-11-08T17:07:26.3754548Z   dependency-graph-continue-on-failure: true
+2026-11-08T17:07:26.3754793Z   build-scan-publish: false
+2026-11-08T17:07:26.3754992Z   validate-wrappers: true
+2026-11-08T17:07:26.3755191Z   allow-snapshot-wrappers: false
+2026-11-08T17:07:26.3755511Z   gradle-home-cache-strict-match: false
+2026-11-08T17:07:26.3755832Z   workflow-job-context: null
+2026-11-08T17:07:26.3757909Z   github-token: ***
+2026-11-08T17:07:26.3758081Z env:
+2026-11-08T17:07:26.3758333Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T17:07:26.3758714Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T17:07:26.3759030Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2026-11-08T17:07:26.3759272Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2026-11-08T17:07:26.3759502Z ##[endgroup]
+2026-11-08T17:07:26.7699179Z Merged default JDK locations into /home/runner/.m2/toolchains.xml
+2026-11-08T17:07:26.7706126Z ##[group]Restore Gradle state from cache
+2026-11-08T17:07:27.0051679Z Gradle User Home cache not found. Will initialize empty.
+2026-11-08T17:07:27.0052280Z ##[endgroup]
+2026-11-08T17:07:27.0393589Z ##[group]All Gradle Wrapper jars are valid
+2026-11-08T17:07:27.0394391Z ✓ Found known Gradle Wrapper JAR files:
+2026-11-08T17:07:27.0394926Z   cb0da6751c2b753a16ac168bb354870ebb1e162e9083f116729cec9c781156b8 gradle/wrapper/gradle-wrapper.jar
+2026-11-08T17:07:27.0395437Z ##[endgroup]
+2026-11-08T17:07:27.0506733Z ##[group]Run ./gradlew --no-daemon testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest
+2026-11-08T17:07:27.0507339Z [36;1m./gradlew --no-daemon testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest[0m
+2026-11-08T17:07:27.0553083Z shell: /usr/bin/bash -e {0}
+2026-11-08T17:07:27.0553309Z env:
+2026-11-08T17:07:27.0553574Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T17:07:27.0553969Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T17:07:27.0554287Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2026-11-08T17:07:27.0554523Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2026-11-08T17:07:27.0554774Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2026-11-08T17:07:27.0555010Z   GRADLE_USER_HOME: /home/runner/.gradle
+2026-11-08T17:07:27.0555236Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2026-11-08T17:07:27.0555464Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2026-11-08T17:07:27.0555835Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2026-11-08T17:07:27.0556205Z   DEVELOCITY_INJECTION_CUSTOM_VALUE: gradle-actions
+2026-11-08T17:07:27.0556456Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2026-11-08T17:07:27.0556665Z ##[endgroup]
+2026-11-08T17:07:27.1656203Z Downloading https://services.gradle.org/distributions/gradle-8.7-bin.zip
+2026-11-08T17:07:28.4907918Z ............10%.............20%.............30%.............40%............50%.............60%.............70%.............80%.............90%............100%
+2026-11-08T17:07:29.5798298Z 
+2026-11-08T17:07:29.5798935Z Welcome to Gradle 8.7!
+2026-11-08T17:07:29.5799182Z 
+2026-11-08T17:07:29.5799806Z Here are the highlights of this release:
+2026-11-08T17:07:29.5801046Z  - Compiling and testing with Java 22
+2026-11-08T17:07:29.5801885Z  - Cacheable Groovy script compilation
+2026-11-08T17:07:29.5802899Z  - New methods in lazy collection properties
+2026-11-08T17:07:29.5803294Z 
+2026-11-08T17:07:29.5811315Z For more details see https://docs.gradle.org/8.7/release-notes.html
+2026-11-08T17:07:29.5811570Z 
+2026-11-08T17:07:29.8793631Z To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.7/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+2026-11-08T17:07:31.0791504Z Daemon will be stopped at the end of the build 
+2026-11-08T17:08:15.2822938Z > Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-11-08T17:08:15.2827698Z > Task :app:preBuild UP-TO-DATE
+2026-11-08T17:08:15.2828203Z > Task :app:preDebugBuild UP-TO-DATE
+2026-11-08T17:08:21.6798088Z > Task :app:generateDebugResValues
+2026-11-08T17:08:21.6802199Z > Task :app:checkDebugAarMetadata
+2026-11-08T17:08:21.7799178Z > Task :app:mapDebugSourceSetPaths
+2026-11-08T17:08:21.7806632Z > Task :app:generateDebugResources
+2026-11-08T17:08:22.9790647Z > Task :app:packageDebugResources
+2026-11-08T17:08:23.0790583Z > Task :app:mergeDebugResources
+2026-11-08T17:08:24.5791498Z > Task :app:createDebugCompatibleScreenManifests
+2026-11-08T17:08:24.5794823Z > Task :app:extractDeepLinksDebug
+2026-11-08T17:08:24.8809101Z > Task :app:parseDebugLocalResources
+2026-11-08T17:08:25.0789937Z > Task :app:processDebugMainManifest
+2026-11-08T17:08:25.0790814Z > Task :app:processDebugManifest
+2026-11-08T17:08:25.1807049Z > Task :app:preDebugUnitTestBuild UP-TO-DATE
+2026-11-08T17:08:25.1834874Z > Task :app:preDebugAndroidTestBuild SKIPPED
+2026-11-08T17:08:25.1835603Z > Task :app:javaPreCompileDebug
+2026-11-08T17:08:25.1836722Z > Task :app:javaPreCompileDebugUnitTest
+2026-11-08T17:08:25.1882436Z > Task :app:generateDebugAndroidTestResValues FROM-CACHE
+2026-11-08T17:08:25.1889459Z > Task :app:extractProguardFiles
+2026-11-08T17:08:25.1891092Z > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+2026-11-08T17:08:25.1907830Z > Task :app:mergeDebugShaders
+2026-11-08T17:08:25.1908654Z > Task :app:compileDebugShaders NO-SOURCE
+2026-11-08T17:08:25.1909673Z > Task :app:generateDebugAssets UP-TO-DATE
+2026-11-08T17:08:25.2842090Z > Task :app:mergeDebugAssets
+2026-11-08T17:08:25.2862952Z > Task :app:desugarDebugFileDependencies
+2026-11-08T17:08:25.2864516Z > Task :app:compressDebugAssets
+2026-11-08T17:08:26.6791833Z > Task :app:mergeDebugJniLibFolders
+2026-11-08T17:08:26.6793111Z > Task :app:processDebugManifestForPackage
+2026-11-08T17:08:26.6793780Z > Task :app:checkDebugDuplicateClasses
+2026-11-08T17:08:27.5821776Z > Task :app:processDebugResources
+2026-11-08T17:08:57.1801716Z > Task :app:mergeExtDexDebug
+2026-11-08T17:09:36.5811616Z > Task :app:mergeLibDexDebug
+2026-11-08T17:09:36.6790723Z > Task :app:mergeDebugNativeLibs
+2026-11-08T17:09:37.5831685Z > Task :app:validateSigningDebug
+2026-11-08T17:09:37.5908413Z > Task :app:writeDebugAppMetadata
+2026-11-08T17:09:37.5951158Z > Task :app:writeDebugSigningConfigVersions
+2026-11-08T17:09:37.5980768Z 
+2026-11-08T17:09:37.6021132Z > Task :app:stripDebugDebugSymbols
+2026-11-08T17:09:37.6081573Z Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so.
+2026-11-08T17:09:38.8801269Z 
+2026-11-08T17:09:38.8831521Z > Task :app:checkDebugAndroidTestAarMetadata
+2026-11-08T17:09:38.8871315Z > Task :app:mapDebugAndroidTestSourceSetPaths
+2026-11-08T17:09:38.9812648Z > Task :app:generateDebugAndroidTestResources
+2026-11-08T17:09:39.3801747Z > Task :app:processDebugAndroidTestManifest
+2026-11-08T17:09:39.3887958Z > Task :app:javaPreCompileDebugAndroidTest FROM-CACHE
+2026-11-08T17:09:39.3921373Z > Task :app:mergeDebugAndroidTestShaders
+2026-11-08T17:09:39.3948968Z > Task :app:compileDebugAndroidTestShaders NO-SOURCE
+2026-11-08T17:09:39.3967126Z > Task :app:generateDebugAndroidTestAssets UP-TO-DATE
+2026-11-08T17:09:39.5894369Z > Task :app:mergeDebugAndroidTestAssets
+2026-11-08T17:09:39.5920029Z > Task :app:compressDebugAndroidTestAssets
+2026-11-08T17:09:39.5968409Z > Task :app:desugarDebugAndroidTestFileDependencies FROM-CACHE
+2026-11-08T17:09:39.6801787Z > Task :app:mergeDebugAndroidTestResources
+2026-11-08T17:09:39.8790479Z > Task :app:checkDebugAndroidTestDuplicateClasses
+2026-11-08T17:09:40.4791962Z > Task :app:processDebugAndroidTestResources
+2026-11-08T17:09:46.7812465Z > Task :app:mergeLibDexDebugAndroidTest FROM-CACHE
+2026-11-08T17:09:46.8821676Z > Task :app:mergeDebugAndroidTestJniLibFolders
+2026-11-08T17:09:46.8871690Z > Task :app:mergeDebugAndroidTestNativeLibs NO-SOURCE
+2026-11-08T17:09:46.9014198Z > Task :app:stripDebugAndroidTestDebugSymbols NO-SOURCE
+2026-11-08T17:09:46.9821639Z > Task :app:validateSigningDebugAndroidTest
+2026-11-08T17:09:46.9851494Z > Task :app:writeDebugAndroidTestSigningConfigVersions
+2026-11-08T17:09:47.8801753Z > Task :app:mergeExtDexDebugAndroidTest
+2026-11-08T17:09:56.8790912Z > Task :app:compileDebugKotlin
+2026-11-08T17:10:07.4795814Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/ChurchDiscoveryScreen.kt:124:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+2026-11-08T17:10:07.4799898Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/ChurchScreen.kt:239:164 'val Icons.Filled.OpenInNew: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.OpenInNew.
+2026-11-08T17:10:07.4802933Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/GuideTheme.kt:60:20 'var statusBarColor: Int' is deprecated. Deprecated in Java.
+2026-11-08T17:10:07.4805991Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/GuideTheme.kt:61:20 'var navigationBarColor: Int' is deprecated. Deprecated in Java.
+2026-11-08T17:10:07.4809306Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/ListeningCard.kt:30:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+2026-11-08T17:10:07.4813096Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/LocateChurchCard.kt:27:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+2026-11-08T17:10:07.4817322Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/MainActivity.kt:179:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+2026-11-08T17:10:07.4820874Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/NavigationComponents.kt:21:55 'val Icons.Filled.MenuBook: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.MenuBook.
+2026-11-08T17:10:07.4824991Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/PrayerPlayerState.kt:81:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+2026-11-08T17:10:07.4844292Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/SavedChurchForm.kt:122:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+2026-11-08T17:10:07.7789504Z 
+2026-11-08T17:10:07.7790661Z > Task :app:compileDebugJavaWithJavac NO-SOURCE
+2026-11-08T17:10:07.7791599Z > Task :app:processDebugJavaRes
+2026-11-08T17:10:07.8790050Z > Task :app:bundleDebugClassesToCompileJar
+2026-11-08T17:10:07.8791186Z > Task :app:bundleDebugClassesToRuntimeJar
+2026-11-08T17:10:09.5798841Z > Task :app:generateDebugLintReportModel
+2026-11-08T17:10:09.9802620Z > Task :app:generateDebugAndroidTestLintModel
+2026-11-08T17:10:09.9805831Z > Task :app:generateDebugUnitTestLintModel
+2026-11-08T17:10:18.6821144Z 
+2026-11-08T17:10:18.6851441Z > Task :app:compileDebugUnitTestKotlin
+2026-11-08T17:10:18.6873228Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:157:55 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T17:10:18.6895040Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:167:55 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T17:10:18.6922864Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:177:55 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T17:10:18.6942948Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:188:55 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T17:10:18.6974235Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:199:55 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T17:10:18.7003191Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:209:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T17:10:18.7022936Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:210:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T17:10:18.7063020Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:211:31 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T17:10:18.7082768Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:212:31 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T17:10:18.7085149Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:219:34 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T17:10:18.7088049Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:228:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T17:10:18.7091727Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:229:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T17:10:18.7094510Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:230:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T17:10:18.7101149Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:236:34 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T17:10:18.7103692Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:238:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T17:10:18.7106185Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:244:34 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T17:10:18.8791232Z 
+2026-11-08T17:10:18.8823510Z > Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+2026-11-08T17:10:18.8833046Z > Task :app:processDebugUnitTestJavaRes
+2026-11-08T17:10:29.3790001Z > Task :app:testDebugUnitTest
+2026-11-08T17:10:39.4792583Z > Task :app:dexBuilderDebug
+2026-11-08T17:10:39.6841593Z > Task :app:mergeDebugGlobalSynthetics
+2026-11-08T17:10:39.9807724Z > Task :app:lintAnalyzeDebug
+2026-11-08T17:10:41.3790678Z > Task :app:mergeDebugJavaResource
+2026-11-08T17:10:42.1801600Z > Task :app:mergeProjectDexDebug
+2026-11-08T17:10:43.5794754Z > Task :app:packageDebug
+2026-11-08T17:10:43.5831692Z > Task :app:createDebugApkListingFileRedirect
+2026-11-08T17:10:43.5860995Z > Task :app:assembleDebug
+2026-11-08T17:10:44.9806363Z > Task :app:lintAnalyzeDebugAndroidTest
+2026-11-08T17:10:45.0831892Z > Task :app:lintAnalyzeDebugUnitTest
+2026-11-08T17:10:53.4791636Z > Task :app:compileDebugAndroidTestKotlin
+2026-11-08T17:10:53.4921624Z > Task :app:compileDebugAndroidTestJavaWithJavac NO-SOURCE
+2026-11-08T17:10:55.0792949Z > Task :app:dexBuilderDebugAndroidTest
+2026-11-08T17:10:55.1791711Z > Task :app:mergeDebugAndroidTestGlobalSynthetics FROM-CACHE
+2026-11-08T17:10:55.1813116Z > Task :app:processDebugAndroidTestJavaRes
+2026-11-08T17:10:55.4841820Z > Task :app:mergeDebugAndroidTestJavaResource
+2026-11-08T17:10:55.5791572Z > Task :app:mergeProjectDexDebugAndroidTest
+2026-11-08T17:10:55.7795501Z > Task :app:packageDebugAndroidTest
+2026-11-08T17:10:55.7851447Z > Task :app:createDebugAndroidTestApkListingFileRedirect
+2026-11-08T17:10:55.7861589Z > Task :app:assembleDebugAndroidTest
+2026-11-08T17:11:23.5789193Z 
+2026-11-08T17:11:23.5791919Z > Task :app:lintReportDebug
+2026-11-08T17:11:23.5793145Z Wrote HTML report to file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/build/reports/lint-results-debug.html
+2026-11-08T17:11:23.5794030Z 
+2026-11-08T17:11:23.5794380Z > Task :app:lintDebug
+2026-11-08T17:11:23.6722257Z gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_2-1794157655260.json
+2026-11-08T17:11:23.6740917Z 
+2026-11-08T17:11:23.6748911Z BUILD SUCCESSFUL in 3m 56s
+2026-11-08T17:11:23.6749379Z 76 actionable tasks: 71 executed, 5 from cache
+2026-11-08T17:11:24.0087492Z ##[group]Run echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+2026-11-08T17:11:24.0088539Z [36;1mecho 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules[0m
+2026-11-08T17:11:24.0089205Z [36;1msudo udevadm control --reload-rules[0m
+2026-11-08T17:11:24.0089593Z [36;1msudo udevadm trigger --name-match=kvm[0m
+2026-11-08T17:11:24.0154786Z shell: /usr/bin/bash -e {0}
+2026-11-08T17:11:24.0155008Z env:
+2026-11-08T17:11:24.0155264Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T17:11:24.0155672Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T17:11:24.0156165Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2026-11-08T17:11:24.0156400Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2026-11-08T17:11:24.0156652Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2026-11-08T17:11:24.0156931Z   GRADLE_USER_HOME: /home/runner/.gradle
+2026-11-08T17:11:24.0157168Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2026-11-08T17:11:24.0157413Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2026-11-08T17:11:24.0157760Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2026-11-08T17:11:24.0158133Z   DEVELOCITY_INJECTION_CUSTOM_VALUE: gradle-actions
+2026-11-08T17:11:24.0158384Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2026-11-08T17:11:24.0158595Z ##[endgroup]
+2026-11-08T17:11:24.0298119Z KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"
+2026-11-08T17:11:24.0827873Z ##[group]Run reactivecircus/android-emulator-runner@v2
+2026-11-08T17:11:24.0828153Z with:
+2026-11-08T17:11:24.0828338Z   api-level: 35
+2026-11-08T17:11:24.0828516Z   arch: x86_64
+2026-11-08T17:11:24.0828688Z   target: google_apis
+2026-11-08T17:11:24.0828876Z   profile: pixel_7
+2026-11-08T17:11:24.0829052Z   disable-animations: true
+2026-11-08T17:11:24.0829374Z   emulator-options: -no-window -gpu swiftshader -noaudio -no-boot-anim -camera-back none
+2026-11-08T17:11:24.0829905Z   script: adb shell settings put secure show_ime_with_hard_keyboard 1
+./gradlew --no-daemon connectedDebugAndroidTest
+
+2026-11-08T17:11:24.0830319Z   cores: 2
+2026-11-08T17:11:24.0830678Z   avd-name: test
+2026-11-08T17:11:24.0830861Z   force-avd-creation: true
+2026-11-08T17:11:24.0831058Z   emulator-boot-timeout: 600
+2026-11-08T17:11:24.0831260Z   emulator-port: 5554
+2026-11-08T17:11:24.0831446Z   disable-spellchecker: false
+2026-11-08T17:11:24.0831660Z   disable-linux-hw-accel: auto
+2026-11-08T17:11:24.0831880Z   enable-hw-keyboard: false
+2026-11-08T17:11:24.0832075Z   channel: stable
+2026-11-08T17:11:24.0832240Z env:
+2026-11-08T17:11:24.0832484Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T17:11:24.0832876Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T17:11:24.0833192Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2026-11-08T17:11:24.0833428Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2026-11-08T17:11:24.0833712Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2026-11-08T17:11:24.0833977Z   GRADLE_USER_HOME: /home/runner/.gradle
+2026-11-08T17:11:24.0834213Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2026-11-08T17:11:24.0834454Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2026-11-08T17:11:24.0834795Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2026-11-08T17:11:24.0835159Z   DEVELOCITY_INJECTION_CUSTOM_VALUE: gradle-actions
+2026-11-08T17:11:24.0835416Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2026-11-08T17:11:24.0835632Z ##[endgroup]
+2026-11-08T17:11:24.1350969Z ##[group]Configure emulator
+2026-11-08T17:11:24.1352643Z API level: 35
+2026-11-08T17:11:24.1353198Z System image API level: 35
+2026-11-08T17:11:24.1353662Z target: google_apis
+2026-11-08T17:11:24.1354090Z CPU architecture: x86_64
+2026-11-08T17:11:24.1354663Z Hardware profile: pixel_7
+2026-11-08T17:11:24.1356889Z Cores: 2
+2026-11-08T17:11:24.1357151Z RAM size: 
+2026-11-08T17:11:24.1357407Z Heap size: 
+2026-11-08T17:11:24.1357882Z SD card path or size: 
+2026-11-08T17:11:24.1358262Z Disk size: 
+2026-11-08T17:11:24.1358577Z AVD name: test
+2026-11-08T17:11:24.1358980Z force avd creation: true
+2026-11-08T17:11:24.1359367Z Emulator boot timeout: 600
+2026-11-08T17:11:24.1359732Z emulator port: 5554
+2026-11-08T17:11:24.1360579Z emulator options: -no-window -gpu swiftshader -noaudio -no-boot-anim -camera-back none
+2026-11-08T17:11:24.1361301Z disable animations: true
+2026-11-08T17:11:24.1361713Z disable spellchecker: false
+2026-11-08T17:11:24.1362205Z disable Linux hardware acceleration: false
+2026-11-08T17:11:24.1362638Z enable hardware keyboard: false
+2026-11-08T17:11:24.1363319Z Channel: 0 (stable)
+2026-11-08T17:11:24.1363579Z Script:
+2026-11-08T17:11:24.1363993Z adb shell settings put secure show_ime_with_hard_keyboard 1
+2026-11-08T17:11:24.1364510Z ./gradlew --no-daemon connectedDebugAndroidTest
+2026-11-08T17:11:24.1364959Z Pre emulator launch script:
+2026-11-08T17:11:24.1365509Z ##[endgroup]
+2026-11-08T17:11:24.1366012Z ##[group]Install Android SDK
+2026-11-08T17:11:24.1397120Z [command]/usr/bin/sh -c \yes | sdkmanager --licenses > /dev/null
+2026-11-08T17:11:29.1594291Z Installing latest build tools, platform tools, and platform.
+2026-11-08T17:11:29.1605685Z [command]/usr/bin/sh -c \sdkmanager --install 'build-tools;37.0.0' platform-tools 'platforms;android-35'> /dev/null
+2026-11-08T17:11:30.5406729Z Installing latest emulator.
+2026-11-08T17:11:30.5416875Z [command]/usr/bin/sh -c \sdkmanager --install emulator --channel=0 > /dev/null
+2026-11-08T17:11:41.5104703Z Installing system images.
+2026-11-08T17:11:41.5115524Z [command]/usr/bin/sh -c \sdkmanager --install 'system-images;android-35;google_apis;x86_64' --channel=0 > /dev/null
+2026-11-08T17:12:14.4485953Z ##[endgroup]
+2026-11-08T17:12:14.4486971Z ##[group]Create AVD
+2026-11-08T17:12:14.4487511Z Creating AVD.
+2026-11-08T17:12:14.4503088Z [command]/usr/bin/sh -c \echo no | avdmanager create avd --force -n test --package 'system-images;android-35;google_apis;x86_64' --device 'pixel_7'
+2026-11-08T17:12:15.1871312Z Loading local repository...                                                     
+2026-11-08T17:12:15.9323213Z [=========                              ] 25% Loading local repository...       
+2026-11-08T17:12:15.9323761Z Auto-selecting single ABI x86_64
+2026-11-08T17:12:16.3766667Z [command]/usr/bin/sh -c \printf 'hw.cpu.ncore=2\n' >> /home/runner/.android/avd/test.avd/config.ini
+2026-11-08T17:12:16.3785846Z ##[endgroup]
+2026-11-08T17:12:16.3787613Z ##[group]Launch Emulator
+2026-11-08T17:12:16.3788019Z Starting emulator.
+2026-11-08T17:12:16.3801840Z [command]/usr/bin/sh -c \/usr/local/lib/android/sdk/emulator/emulator -port 5554 -avd test -no-window -gpu swiftshader -noaudio -no-boot-anim -camera-back none &
+2026-11-08T17:12:16.3908018Z INFO         | Android emulator version 37.2.13.0 (build_id 16740729) (CL:N/A)
+2026-11-08T17:12:16.3908517Z INFO         | Graphics backend: gfxstream
+2026-11-08T17:12:16.3909000Z INFO         | Found systemPath /usr/local/lib/android/sdk/system-images/android-35/google_apis/x86_64/
+2026-11-08T17:12:16.4342547Z INFO         | Saving last run QEMU version for the AVD to 2
+2026-11-08T17:12:16.4343239Z INFO         | Increasing RAM size to 2560MB
+2026-11-08T17:12:16.4343924Z INFO         | Guest GLES Driver: Auto (ext controls)
+2026-11-08T17:12:16.4344759Z INFO         | emuglConfig_init: vulkan_mode_selected:swiftshader gles_mode_selected:swiftshader
+2026-11-08T17:12:16.4345533Z INFO         | Checking system compatibility:
+2026-11-08T17:12:16.4346158Z INFO         |   Checking: hasSufficientDiskSpace
+2026-11-08T17:12:16.4346851Z INFO         |      Ok: Disk space requirements to run avd: `test` are met
+2026-11-08T17:12:16.4347515Z INFO         |   Checking: hasSufficientHwGpu
+2026-11-08T17:12:16.4348190Z INFO         |      Ok: Hardware GPU compatibility checks are not required
+2026-11-08T17:12:16.4348840Z INFO         |   Checking: hasSufficientSystem
+2026-11-08T17:12:16.4349486Z INFO         |      Ok: System requirements to run avd: `test` are met
+2026-11-08T17:12:16.4350987Z WARNING      | Feature QuickbootFileBacked is disabled due to stability issues, if you really want that, the environment variable ANDROID_EMU_FORCE_QUICKBOOT_FILE_BACKED need to set to 1
+2026-11-08T17:12:17.5983951Z ERROR        | Unable to connect to adb daemon on port: 5037
+2026-11-08T17:12:17.6009476Z INFO         | Storing crashdata in: /tmp/android-runner/emu-crash-37.2.13.db, detection is enabled for process: 3412
+2026-11-08T17:12:17.6010247Z INFO         | Initializing gfxstream backend
+2026-11-08T17:12:17.6018702Z INFO         | startOpenglesRendererImpl: gpu info
+2026-11-08T17:12:17.6019099Z INFO         | 
+2026-11-08T17:12:17.6021604Z INFO         | initIcdPaths: ICD set to 'swiftshader', using Swiftshader ICD
+2026-11-08T17:12:17.6022548Z INFO         | Setting ICD filenames for the loader = /usr/local/lib/android/sdk/emulator/lib64/vulkan/vk_swiftshader_icd.json
+2026-11-08T17:12:17.6023373Z INFO         | SharedLibrary::open for [/usr/local/lib/android/sdk/emulator/qemu/linux-x86_64/lib64/vulkan/libvulkan.so]
+2026-11-08T17:12:17.6024109Z INFO         | SharedLibrary::open for [/usr/local/lib/android/sdk/emulator/qemu/linux-x86_64/lib64/vulkan/libvulkan.so.1]
+2026-11-08T17:12:17.6024821Z INFO         | SharedLibrary::open for [/usr/local/lib/android/sdk/emulator/lib64/vulkan/libvulkan.so]
+2026-11-08T17:12:17.6025604Z INFO         | Added library: /usr/local/lib/android/sdk/emulator/lib64/vulkan/libvulkan.so
+2026-11-08T17:12:17.7848681Z INFO         | Selecting Vulkan device: SwiftShader Device (Subzero), Version: 1.3.0
+2026-11-08T17:12:17.7849341Z INFO         | Using Vulkan externalMemoryMode: OpaqueFd for VkEmulation
+2026-11-08T17:12:17.8218640Z INFO         | Format VK_FORMAT_G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16 does not support YCbCr sampler conversion
+2026-11-08T17:12:17.8244006Z INFO         | SharedLibrary::open for [libX11]
+2026-11-08T17:12:17.8245555Z WARNING      | Could not open libX11.so, try libX11.so.6
+2026-11-08T17:12:17.8246015Z INFO         | SharedLibrary::open for [libX11.so.6]
+2026-11-08T17:12:17.8246473Z INFO         | SharedLibrary::open for [libX11-xcb]
+2026-11-08T17:12:17.8247365Z WARNING      | Could not open libX11-xcb.so, try libX11-xcb.so.1
+2026-11-08T17:12:17.8247908Z INFO         | SharedLibrary::open for [libX11-xcb.so.1]
+2026-11-08T17:12:17.8330985Z INFO         | Initializing VkEmulation features:
+2026-11-08T17:12:17.8331704Z INFO         |     glInteropSupported: false
+2026-11-08T17:12:17.8332375Z INFO         |     useDeferredCommands: true
+2026-11-08T17:12:17.8332918Z INFO         |     createResourceWithRequirements: true
+2026-11-08T17:12:17.8333413Z INFO         |     useVulkanComposition: false
+2026-11-08T17:12:17.8333886Z INFO         |     useVulkanNativeSwapchain: false
+2026-11-08T17:12:17.8334333Z INFO         |     enable guestRenderDoc: false
+2026-11-08T17:12:17.8334734Z INFO         |     ASTC LDR emulation mode: Gpu
+2026-11-08T17:12:17.8335095Z INFO         |     enable ETC2 emulation: true
+2026-11-08T17:12:17.8335459Z INFO         |     enable Ycbcr emulation: false
+2026-11-08T17:12:17.8335845Z INFO         |     guestVulkanOnly: false
+2026-11-08T17:12:17.8336223Z INFO         |     useDedicatedAllocations: false
+2026-11-08T17:12:17.8336635Z INFO         |     guestVulkanMaxApiVersion: 1.3.0
+2026-11-08T17:12:17.8337057Z INFO         |     enableProtectedMemoryEmulation: false
+2026-11-08T17:12:17.8342492Z INFO         | Graphics Adapter Vendor Google (Google Inc.)
+2026-11-08T17:12:17.8343142Z INFO         | Graphics Adapter Android Emulator OpenGL ES Translator (Google SwiftShader)
+2026-11-08T17:12:17.8344171Z INFO         | Graphics API Version OpenGL ES 3.0 (OpenGL ES 3.0 SwiftShader 4.0.0.1)
+2026-11-08T17:12:17.8347762Z INFO         | Graphics API Extensions GL_OES_EGL_sync GL_OES_EGL_image GL_OES_EGL_image_external GL_OES_depth24 GL_OES_depth32 GL_OES_element_index_uint GL_OES_texture_float GL_OES_texture_float_linear GL_OES_compressed_paletted_texture GL_OES_compressed_ETC1_RGB8_texture GL_OES_depth_texture GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_packed_depth_stencil GL_OES_vertex_half_float GL_OES_standard_derivatives GL_OES_texture_npot GL_OES_rgb8_rgba8 GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_texture_format_BGRA8888 GL_APPLE_texture_format_BGRA8888 
+2026-11-08T17:12:17.8350799Z INFO         | Graphics Device Extensions N/A
+2026-11-08T17:12:17.8351420Z INFO         | Disabling sparse binding feature support
+2026-11-08T17:12:17.8429189Z INFO         | Sending adb public key [QAAAAGtgi3O9s80Yn5Aeb/lyW7BMfGM5oJknhoYi1ed0MujrGZJ/qqy5gc0VaIHw+HJkh/N/VfmxcO7YNLiDh9D4UNQF4v7vWVZOvjXvx4LopNMa+y3/6YxUsxhRN7HPQ05YZvhsGnaJAT26/8TPmwHTH7W0QOuXlYnl6hkC2cUha6/dH06MW7wiQM3QfqHB6coTMYiwXwwT22BSFNIwrW/oejs0xMgH8rsqzJG0lmECfY3Wx1cZgfHTr53rgMHBrvN0TpGINhK5+wDs6eZYOFPCeaGZz9yYRul7RSxZT2t52pcOa1g98egLYABvZ2wEWnPt5e7OEY9Stbr4RV3w4oWoxBRZZxThapyTqt++a1zqxHxPCO6gQCvxNPdY/V1pPN1yKYZwcqs4k3xtfKpD4yKy9Ray5gOYchhSzyuqtGuCTd/bsiFGVlNmR8a4+O9Szi/rk7i8P5t5MAwZY5TGmH00vwdxjVOgiq9p+ofoDdhJ5STOQRBf8Ile6BNcNQVZux39fNtItwxlzbhzAR6XXb8Dp4WUOyYj5x0/WMehbmS6QiGHi7olh8jAB9X4Ryaad5AW+mHHatqntGFzxyH0O3e02CGAtGjR9X8l4/omIwY/iMd/mespv5hKzPo4AiB8kcbA/Z6TIxcdjMBCz1j0jqVkuj5YZEI1LLer9sbJvsrpAJTKeGQWfwEAAQA= runner@unknown]
+2026-11-08T17:12:17.8433784Z INFO         | Userspace boot properties:
+2026-11-08T17:12:17.8434433Z INFO         |   androidboot.boot_devices=pci0000:00/0000:00:03.0 pci0000:00/0000:00:06.0
+2026-11-08T17:12:17.8435055Z INFO         |   androidboot.dalvik.vm.heapsize=576m
+2026-11-08T17:12:17.8435748Z INFO         |   androidboot.debug.hwui.renderer=skiagl
+2026-11-08T17:12:17.8436278Z INFO         |   androidboot.debug.sf.nobootanimation=1
+2026-11-08T17:12:17.8436769Z INFO         |   androidboot.hardware=ranchu
+2026-11-08T17:12:17.8437244Z INFO         |   androidboot.hardware.gltransport=pipe
+2026-11-08T17:12:17.8437724Z INFO         |   androidboot.hardware.vulkan=ranchu
+2026-11-08T17:12:17.8438142Z INFO         |   androidboot.logcat=*:V
+2026-11-08T17:12:17.8438555Z INFO         |   androidboot.opengles.version=196608
+2026-11-08T17:12:17.8438985Z INFO         |   androidboot.qemu=1
+2026-11-08T17:12:17.8443886Z INFO         |   androidboot.qemu.adb.pubkey=QAAAAGtgi3O9s80Yn5Aeb/lyW7BMfGM5oJknhoYi1ed0MujrGZJ/qqy5gc0VaIHw+HJkh/N/VfmxcO7YNLiDh9D4UNQF4v7vWVZOvjXvx4LopNMa+y3/6YxUsxhRN7HPQ05YZvhsGnaJAT26/8TPmwHTH7W0QOuXlYnl6hkC2cUha6/dH06MW7wiQM3QfqHB6coTMYiwXwwT22BSFNIwrW/oejs0xMgH8rsqzJG0lmECfY3Wx1cZgfHTr53rgMHBrvN0TpGINhK5+wDs6eZYOFPCeaGZz9yYRul7RSxZT2t52pcOa1g98egLYABvZ2wEWnPt5e7OEY9Stbr4RV3w4oWoxBRZZxThapyTqt++a1zqxHxPCO6gQCvxNPdY/V1pPN1yKYZwcqs4k3xtfKpD4yKy9Ray5gOYchhSzyuqtGuCTd/bsiFGVlNmR8a4+O9Szi/rk7i8P5t5MAwZY5TGmH00vwdxjVOgiq9p+ofoDdhJ5STOQRBf8Ile6BNcNQVZux39fNtItwxlzbhzAR6XXb8Dp4WUOyYj5x0/WMehbmS6QiGHi7olh8jAB9X4Ryaad5AW+mHHatqntGFzxyH0O3e02CGAtGjR9X8l4/omIwY/iMd/mespv5hKzPo4AiB8kcbA/Z6TIxcdjMBCz1j0jqVkuj5YZEI1LLer9sbJvsrpAJTKeGQWfwEAAQA= runner@unknown
+2026-11-08T17:12:17.8446766Z INFO         |   androidboot.qemu.avd_name=test
+2026-11-08T17:12:17.8447111Z INFO         |   androidboot.qemu.camera_hq_edge_processing=0
+2026-11-08T17:12:17.8447453Z INFO         |   androidboot.qemu.camera_protocol_ver=1
+2026-11-08T17:12:17.8447795Z INFO         |   androidboot.qemu.cpuvulkan.version=4206592
+2026-11-08T17:12:17.8448175Z INFO         |   androidboot.qemu.gltransport.drawFlushInterval=800
+2026-11-08T17:12:17.8448545Z INFO         |   androidboot.qemu.gltransport.name=pipe
+2026-11-08T17:12:17.8448868Z INFO         |   androidboot.qemu.hwcodec.avcdec=2
+2026-11-08T17:12:17.8449187Z INFO         |   androidboot.qemu.hwcodec.hevcdec=2
+2026-11-08T17:12:17.8449496Z INFO         |   androidboot.qemu.hwcodec.vpxdec=2
+2026-11-08T17:12:17.8449886Z INFO         |   androidboot.qemu.settings.system.screen_off_timeout=2147483647
+2026-11-08T17:12:17.8450257Z INFO         |   androidboot.qemu.skin=1080x2400
+2026-11-08T17:12:17.8450780Z INFO         |   androidboot.qemu.virtiowifi=1
+2026-11-08T17:12:17.8451088Z INFO         |   androidboot.qemu.vsync=60
+2026-11-08T17:12:17.8451395Z INFO         |   androidboot.serialno=EMULATOR37X2X13X0
+2026-11-08T17:12:17.8451886Z INFO         |   androidboot.vbmeta.digest=b3271ba499104f4631ae3723913d5c12574e01715fce5b82d60beed097ead264
+2026-11-08T17:12:17.8452326Z INFO         |   androidboot.vbmeta.hash_alg=sha256
+2026-11-08T17:12:17.8452617Z INFO         |   androidboot.vbmeta.size=6720
+2026-11-08T17:12:17.8452902Z INFO         |   androidboot.veritymode=enforcing
+2026-11-08T17:12:18.0304875Z WARNING: cannnot unmap ptr 0x777f86401000 as it is in the protected range from 0x777ee6400000 to 0x777f86600000
+2026-11-08T17:12:18.0578620Z INFO         | Monitoring duration of emulator setup.
+2026-11-08T17:12:18.9014524Z INFO         | Successfully initialized netsim WiFi
+2026-11-08T17:12:18.9015242Z INFO         | Activated packet streamer for bluetooth emulation
+2026-11-08T17:12:18.9062663Z INFO         | Setting display: 0 configuration to: 1080x2400, dpi: 420x420 
+2026-11-08T17:12:18.9063275Z INFO         | setDisplayActiveConfig: id:0, 1080x2400
+2026-11-08T17:12:18.9063890Z INFO         | emulatorSetupEnvironment: Environment scene is not required
+2026-11-08T17:12:18.9131313Z INFO         | Loading snapshot 'default_boot'...
+2026-11-08T17:12:18.9132271Z WARNING      | Failed to process .ini file /home/runner/.android/emu-update-last-check.ini for reading.
+2026-11-08T17:12:18.9314901Z WARNING      | Device 'cache' does not have the requested snapshot 'default_boot'
+2026-11-08T17:12:18.9315288Z 
+2026-11-08T17:12:18.9315541Z WARNING      | Failed to load snapshot 'default_boot'
+2026-11-08T17:12:18.9316999Z USER_INFO    | The emulator is performing a cold boot without a saved state because there's no snapshot and you have configured it not to save on exit.
+2026-11-08T17:12:19.0382115Z WARNING      | Failed to process .ini file /home/runner/.android/emu-update-last-check.ini for reading.
+2026-11-08T17:12:26.3905182Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T17:12:26.3955288Z * daemon not running; starting now at tcp:5037
+2026-11-08T17:12:26.7573522Z * daemon started successfully
+2026-11-08T17:12:26.7588200Z adb: device offline
+2026-11-08T17:12:26.7592497Z The process '/usr/local/lib/android/sdk/platform-tools/adb' failed with exit code 1
+2026-11-08T17:12:28.7626163Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T17:12:28.7656008Z adb: device offline
+2026-11-08T17:12:28.7661043Z The process '/usr/local/lib/android/sdk/platform-tools/adb' failed with exit code 1
+2026-11-08T17:12:30.7732455Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T17:12:30.7872672Z 
+2026-11-08T17:12:32.7952505Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T17:12:32.8122648Z 
+2026-11-08T17:12:34.8183052Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T17:12:34.8372862Z 
+2026-11-08T17:12:36.8461434Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T17:12:36.8696270Z 
+2026-11-08T17:12:38.8745246Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T17:12:38.8924499Z 
+2026-11-08T17:12:40.8992170Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T17:12:40.9419830Z 
+2026-11-08T17:12:42.9471758Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T17:12:42.9778028Z 
+2026-11-08T17:12:44.9817785Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T17:12:45.0006544Z 
+2026-11-08T17:12:47.0058453Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T17:12:47.0287676Z 
+2026-11-08T17:12:49.0337746Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T17:12:49.0524055Z 
+2026-11-08T17:12:49.4897495Z INFO         | Boot completed in 33073 ms
+2026-11-08T17:12:49.4904220Z INFO         | Increasing screen off timeout, logcat buffer size to 2M.
+2026-11-08T17:12:51.0551575Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T17:12:51.0799442Z 1
+2026-11-08T17:12:51.0816569Z Emulator booted.
+2026-11-08T17:12:51.0843775Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell input keyevent 82
+2026-11-08T17:12:56.9983809Z Disabling animations.
+2026-11-08T17:12:56.9985541Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell settings put global window_animation_scale 0.0
+2026-11-08T17:12:57.0842789Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell settings put global transition_animation_scale 0.0
+2026-11-08T17:12:57.1361917Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell settings put global animator_duration_scale 0.0
+2026-11-08T17:12:57.4842132Z ##[endgroup]
+2026-11-08T17:12:57.4876211Z [command]/usr/bin/sh -c adb shell settings put secure show_ime_with_hard_keyboard 1
+2026-11-08T17:12:57.8610177Z [command]/usr/bin/sh -c ./gradlew --no-daemon connectedDebugAndroidTest
+2026-11-08T17:12:58.8975924Z To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.7/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+2026-11-08T17:13:00.5051639Z Daemon will be stopped at the end of the build 
+2026-11-08T17:13:12.5026599Z > Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-11-08T17:13:12.5032655Z > Task :app:preBuild UP-TO-DATE
+2026-11-08T17:13:12.5044346Z > Task :app:preDebugBuild UP-TO-DATE
+2026-11-08T17:13:13.4981904Z > Task :app:checkDebugAarMetadata UP-TO-DATE
+2026-11-08T17:13:13.4982664Z > Task :app:generateDebugResValues UP-TO-DATE
+2026-11-08T17:13:13.4983331Z > Task :app:mapDebugSourceSetPaths UP-TO-DATE
+2026-11-08T17:13:13.4987537Z > Task :app:generateDebugResources UP-TO-DATE
+2026-11-08T17:13:13.6990285Z > Task :app:mergeDebugResources UP-TO-DATE
+2026-11-08T17:13:13.7021890Z > Task :app:packageDebugResources UP-TO-DATE
+2026-11-08T17:13:13.7054384Z > Task :app:parseDebugLocalResources UP-TO-DATE
+2026-11-08T17:13:13.7055381Z > Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+2026-11-08T17:13:13.7081514Z > Task :app:extractDeepLinksDebug UP-TO-DATE
+2026-11-08T17:13:13.8968028Z > Task :app:processDebugMainManifest UP-TO-DATE
+2026-11-08T17:13:13.8969158Z > Task :app:processDebugManifest UP-TO-DATE
+2026-11-08T17:13:13.8991343Z > Task :app:processDebugManifestForPackage UP-TO-DATE
+2026-11-08T17:13:14.1967314Z > Task :app:processDebugResources UP-TO-DATE
+2026-11-08T17:13:14.6968865Z > Task :app:compileDebugKotlin UP-TO-DATE
+2026-11-08T17:13:14.6969652Z > Task :app:javaPreCompileDebug UP-TO-DATE
+2026-11-08T17:13:14.7991885Z > Task :app:compileDebugJavaWithJavac NO-SOURCE
+2026-11-08T17:13:14.8132272Z > Task :app:bundleDebugClassesToCompileJar UP-TO-DATE
+2026-11-08T17:13:14.8234837Z > Task :app:preDebugAndroidTestBuild SKIPPED
+2026-11-08T17:13:14.9082283Z > Task :app:checkDebugAndroidTestAarMetadata UP-TO-DATE
+2026-11-08T17:13:14.9165774Z > Task :app:generateDebugAndroidTestResValues UP-TO-DATE
+2026-11-08T17:13:14.9182961Z > Task :app:mapDebugAndroidTestSourceSetPaths UP-TO-DATE
+2026-11-08T17:13:14.9221427Z > Task :app:generateDebugAndroidTestResources UP-TO-DATE
+2026-11-08T17:13:14.9991880Z > Task :app:mergeDebugAndroidTestResources UP-TO-DATE
+2026-11-08T17:13:15.0092594Z > Task :app:processDebugAndroidTestManifest UP-TO-DATE
+2026-11-08T17:13:15.1000077Z > Task :app:processDebugAndroidTestResources UP-TO-DATE
+2026-11-08T17:13:15.3121899Z > Task :app:compileDebugAndroidTestKotlin UP-TO-DATE
+2026-11-08T17:13:15.3161473Z > Task :app:javaPreCompileDebugAndroidTest UP-TO-DATE
+2026-11-08T17:13:15.3192077Z > Task :app:compileDebugAndroidTestJavaWithJavac NO-SOURCE
+2026-11-08T17:13:15.3222373Z > Task :app:mergeDebugShaders UP-TO-DATE
+2026-11-08T17:13:15.3238095Z > Task :app:compileDebugShaders NO-SOURCE
+2026-11-08T17:13:15.3271488Z > Task :app:generateDebugAssets UP-TO-DATE
+2026-11-08T17:13:15.3991877Z > Task :app:mergeDebugAssets UP-TO-DATE
+2026-11-08T17:13:15.4081391Z > Task :app:compressDebugAssets UP-TO-DATE
+2026-11-08T17:13:15.4101054Z > Task :app:desugarDebugFileDependencies UP-TO-DATE
+2026-11-08T17:13:15.4211324Z > Task :app:dexBuilderDebug UP-TO-DATE
+2026-11-08T17:13:16.0985625Z > Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
+2026-11-08T17:13:16.1004324Z > Task :app:processDebugJavaRes UP-TO-DATE
+2026-11-08T17:13:16.1037397Z > Task :app:mergeDebugJavaResource UP-TO-DATE
+2026-11-08T17:13:16.2010091Z > Task :app:checkDebugDuplicateClasses UP-TO-DATE
+2026-11-08T17:13:16.2021710Z > Task :app:mergeExtDexDebug UP-TO-DATE
+2026-11-08T17:13:16.2044646Z > Task :app:mergeLibDexDebug UP-TO-DATE
+2026-11-08T17:13:16.2072151Z > Task :app:mergeProjectDexDebug UP-TO-DATE
+2026-11-08T17:13:16.2138067Z > Task :app:mergeDebugJniLibFolders UP-TO-DATE
+2026-11-08T17:13:16.2989310Z > Task :app:mergeDebugNativeLibs UP-TO-DATE
+2026-11-08T17:13:16.3020072Z > Task :app:stripDebugDebugSymbols UP-TO-DATE
+2026-11-08T17:13:16.3071564Z > Task :app:validateSigningDebug UP-TO-DATE
+2026-11-08T17:13:16.3102268Z > Task :app:writeDebugAppMetadata UP-TO-DATE
+2026-11-08T17:13:16.3102935Z > Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+2026-11-08T17:13:16.3146039Z > Task :app:packageDebug UP-TO-DATE
+2026-11-08T17:13:16.3166042Z > Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+2026-11-08T17:13:16.3166713Z > Task :app:mergeDebugAndroidTestShaders UP-TO-DATE
+2026-11-08T17:13:16.3992008Z > Task :app:compileDebugAndroidTestShaders NO-SOURCE
+2026-11-08T17:13:16.4039799Z > Task :app:generateDebugAndroidTestAssets UP-TO-DATE
+2026-11-08T17:13:16.4063219Z > Task :app:mergeDebugAndroidTestAssets UP-TO-DATE
+2026-11-08T17:13:16.4118257Z > Task :app:compressDebugAndroidTestAssets UP-TO-DATE
+2026-11-08T17:13:16.4141216Z > Task :app:desugarDebugAndroidTestFileDependencies UP-TO-DATE
+2026-11-08T17:13:16.4216298Z > Task :app:dexBuilderDebugAndroidTest UP-TO-DATE
+2026-11-08T17:13:16.4992005Z > Task :app:mergeDebugAndroidTestGlobalSynthetics UP-TO-DATE
+2026-11-08T17:13:16.5023903Z > Task :app:processDebugAndroidTestJavaRes UP-TO-DATE
+2026-11-08T17:13:16.5025944Z > Task :app:mergeDebugAndroidTestJavaResource UP-TO-DATE
+2026-11-08T17:13:16.5027152Z > Task :app:checkDebugAndroidTestDuplicateClasses UP-TO-DATE
+2026-11-08T17:13:16.6033629Z > Task :app:mergeExtDexDebugAndroidTest UP-TO-DATE
+2026-11-08T17:13:16.6121870Z > Task :app:mergeLibDexDebugAndroidTest UP-TO-DATE
+2026-11-08T17:13:16.6239894Z > Task :app:mergeProjectDexDebugAndroidTest UP-TO-DATE
+2026-11-08T17:13:16.6341350Z > Task :app:mergeDebugAndroidTestJniLibFolders UP-TO-DATE
+2026-11-08T17:13:16.6342246Z > Task :app:mergeDebugAndroidTestNativeLibs NO-SOURCE
+2026-11-08T17:13:16.6343061Z > Task :app:stripDebugAndroidTestDebugSymbols NO-SOURCE
+2026-11-08T17:13:16.6343793Z > Task :app:validateSigningDebugAndroidTest UP-TO-DATE
+2026-11-08T17:13:16.6344588Z > Task :app:writeDebugAndroidTestSigningConfigVersions UP-TO-DATE
+2026-11-08T17:13:16.6345330Z > Task :app:packageDebugAndroidTest UP-TO-DATE
+2026-11-08T17:13:16.6346095Z > Task :app:createDebugAndroidTestApkListingFileRedirect UP-TO-DATE
+2026-11-08T17:13:23.4015709Z [EmulatorConsole]: Failed to start Emulator console for 5554
+2026-11-08T17:13:37.4970585Z 
+2026-11-08T17:13:37.4974020Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:13:37.4975747Z Starting 119 tests on emulator-5554 - 15
+2026-11-08T17:13:47.4972001Z 
+2026-11-08T17:13:47.4999905Z emulator-5554 - 15 Tests 2/119 completed. (0 skipped) (0 failed)
+2026-11-08T17:13:57.4963689Z emulator-5554 - 15 Tests 5/119 completed. (0 skipped) (0 failed)
+2026-11-08T17:14:07.4966310Z emulator-5554 - 15 Tests 9/119 completed. (0 skipped) (0 failed)
+2026-11-08T17:14:17.4982982Z emulator-5554 - 15 Tests 10/119 completed. (0 skipped) (0 failed)
+2026-11-08T17:14:21.1981001Z 
+2026-11-08T17:14:21.2037436Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:14:21.2041217Z 
+2026-11-08T17:14:21.2042826Z ru.liturgyguide.ui.ChurchDiscoveryScreenTest > timeoutEmptyResultsAndOldCachedResultsRemainDistinct[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:14:21.2044482Z 	androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms
+2026-11-08T17:14:21.2045903Z 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:441)
+2026-11-08T17:14:27.4962820Z 
+2026-11-08T17:14:27.4969441Z emulator-5554 - 15 Tests 11/119 completed. (0 skipped) (1 failed)
+2026-11-08T17:14:33.3980970Z 
+2026-11-08T17:14:33.4001496Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:14:33.4030689Z 
+2026-11-08T17:14:33.4032399Z ru.liturgyguide.ui.ChurchDiscoveryScreenTest > longMapNamesAndAddressesReachTheFormAndStorageUnshortened[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:14:33.4091728Z 	androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms
+2026-11-08T17:14:33.4121522Z 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:441)
+2026-11-08T17:14:37.4961959Z 
+2026-11-08T17:14:37.4962854Z emulator-5554 - 15 Tests 12/119 completed. (0 skipped) (2 failed)
+2026-11-08T17:14:45.2963594Z 
+2026-11-08T17:14:45.2964536Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:14:45.2965089Z 
+2026-11-08T17:14:45.2967055Z ru.liturgyguide.ui.ChurchDiscoveryScreenTest > searchesOnlyAfterAnActionAndSavesOnlyAfterReviewingTheSelectedCityAndTimeZone[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:14:45.2968745Z 	androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms
+2026-11-08T17:14:45.2970119Z 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:441)
+2026-11-08T17:14:47.4961910Z 
+2026-11-08T17:14:47.4962490Z emulator-5554 - 15 Tests 13/119 completed. (0 skipped) (3 failed)
+2026-11-08T17:14:56.5971488Z 
+2026-11-08T17:14:56.6001511Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:14:56.6030821Z 
+2026-11-08T17:14:56.6040171Z ru.liturgyguide.ui.ChurchDiscoveryScreenTest > leavingTheForegroundCancelsSearchAndReturningDoesNotRestartIt[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:14:56.6061537Z 	androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms
+2026-11-08T17:14:56.6086891Z 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:441)
+2026-11-08T17:14:57.4980997Z 
+2026-11-08T17:14:57.5011565Z emulator-5554 - 15 Tests 14/119 completed. (0 skipped) (4 failed)
+2026-11-08T17:15:08.2966361Z 
+2026-11-08T17:15:08.3012120Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:15:08.3041557Z 
+2026-11-08T17:15:08.3045658Z ru.liturgyguide.ui.ChurchDiscoveryScreenTest > cancellingARequestIgnoresItsLateResultAndLeavesManualNavigationAvailable[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:15:08.3072152Z 	androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms
+2026-11-08T17:15:08.3102084Z 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:441)
+2026-11-08T17:15:17.4962039Z 
+2026-11-08T17:15:17.4962635Z emulator-5554 - 15 Tests 15/119 completed. (0 skipped) (5 failed)
+2026-11-08T17:15:19.5971588Z 
+2026-11-08T17:15:19.5974063Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:15:19.5974686Z 
+2026-11-08T17:15:19.5976281Z ru.liturgyguide.ui.ChurchDiscoveryScreenTest > filteringAndCancellingImportDoNotSaveAnythingOrStartAnotherNetworkSearch[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:15:19.5977892Z 	androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms
+2026-11-08T17:15:19.5979295Z 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:441)
+2026-11-08T17:15:27.4971148Z 
+2026-11-08T17:15:27.4981333Z emulator-5554 - 15 Tests 18/119 completed. (0 skipped) (6 failed)
+2026-11-08T17:15:37.4972282Z emulator-5554 - 15 Tests 22/119 completed. (0 skipped) (6 failed)
+2026-11-08T17:15:47.4962488Z emulator-5554 - 15 Tests 23/119 completed. (0 skipped) (6 failed)
+2026-11-08T17:16:01.5020970Z 
+2026-11-08T17:16:01.5081340Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:16:01.5140771Z 
+2026-11-08T17:16:01.5162798Z ru.liturgyguide.ui.CompactReaderMatrixTest > allEighteenLandscapeNamesKeepFullAccessibleContextAndReadingSpace[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:16:01.5191212Z 	androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms
+2026-11-08T17:16:01.5231752Z 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:441)
+2026-11-08T17:16:07.4961856Z 
+2026-11-08T17:16:07.4962680Z emulator-5554 - 15 Tests 25/119 completed. (0 skipped) (7 failed)
+2026-11-08T17:16:16.6080841Z 
+2026-11-08T17:16:16.6111255Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:16:16.6173934Z 
+2026-11-08T17:16:16.6175602Z ru.liturgyguide.ui.DailyReadingSearchTest > bothSpellingsFindTheSameStageAndPreserveTheEnteredQuery[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:16:16.6185352Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:16:16.6188591Z 	Root{application-window-token=android.view.ViewRootImpl$W@9123efe, window-token=android.view.ViewRootImpl$W@9123efe, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:16:17.4962509Z 
+2026-11-08T17:16:17.4965069Z emulator-5554 - 15 Tests 26/119 completed. (0 skipped) (8 failed)
+2026-11-08T17:16:29.0964608Z 
+2026-11-08T17:16:29.0967838Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:16:29.0968359Z 
+2026-11-08T17:16:29.0969750Z ru.liturgyguide.ui.DailyReadingSearchTest > aReadingFromAnotherDayIsNotOfferedAsTodaysText[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:16:29.0972573Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:16:29.0975755Z 	Root{application-window-token=android.view.ViewRootImpl$W@fe86462, window-token=android.view.ViewRootImpl$W@fe86462, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:16:37.4962040Z 
+2026-11-08T17:16:37.4962696Z emulator-5554 - 15 Tests 27/119 completed. (0 skipped) (9 failed)
+2026-11-08T17:16:41.3984592Z 
+2026-11-08T17:16:41.4016821Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:16:41.4017437Z 
+2026-11-08T17:16:41.4042066Z ru.liturgyguide.ui.DailyReadingSearchTest > aWordFromTheDailyGospelFindsItsStageAndPreservesTheQuery[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:16:41.4072365Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:16:41.4098078Z 	Root{application-window-token=android.view.ViewRootImpl$W@3aad237, window-token=android.view.ViewRootImpl$W@3aad237, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:16:47.5001718Z 
+2026-11-08T17:16:47.5034319Z emulator-5554 - 15 Tests 31/119 completed. (0 skipped) (10 failed)
+2026-11-08T17:16:57.4962186Z emulator-5554 - 15 Tests 32/119 completed. (0 skipped) (10 failed)
+2026-11-08T17:17:03.9981098Z 
+2026-11-08T17:17:03.9981950Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:17:03.9982490Z 
+2026-11-08T17:17:03.9983878Z ru.liturgyguide.ui.DiscoveryNavigationTest > discoveryReturnsToSavedPickerAndOnlyConfirmationReplacesTheParish[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:17:03.9986352Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:17:04.0041471Z 	Root{application-window-token=android.view.ViewRootImpl$W@7314337, window-token=android.view.ViewRootImpl$W@7314337, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:17:07.4961971Z 
+2026-11-08T17:17:07.4962578Z emulator-5554 - 15 Tests 34/119 completed. (0 skipped) (11 failed)
+2026-11-08T17:17:18.3985603Z 
+2026-11-08T17:17:18.4011474Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:17:18.4020931Z 
+2026-11-08T17:17:18.4042345Z ru.liturgyguide.ui.FirstVisitFlowTest > firstVisitOpensThePickerDirectlyAndManualReadingKeepsNoParishAfterRestore[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:17:18.4082758Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:17:18.4105545Z 	Root{application-window-token=android.view.ViewRootImpl$W@fe873a2, window-token=android.view.ViewRootImpl$W@fe873a2, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:17:27.4962487Z 
+2026-11-08T17:17:27.4963252Z emulator-5554 - 15 Tests 36/119 completed. (0 skipped) (12 failed)
+2026-11-08T17:17:34.2989207Z 
+2026-11-08T17:17:34.3021661Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:17:34.3034491Z 
+2026-11-08T17:17:34.3062371Z ru.liturgyguide.ui.FirstVisitFlowTest > newTempleWithoutScheduleLeadsThroughPersonalTimeToTheExactService[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:17:34.3073619Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:17:34.3103178Z 	Root{application-window-token=android.view.ViewRootImpl$W@b482217, window-token=android.view.ViewRootImpl$W@b482217, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:17:37.4964545Z 
+2026-11-08T17:17:37.4991855Z emulator-5554 - 15 Tests 38/119 completed. (0 skipped) (13 failed)
+2026-11-08T17:17:50.0991179Z 
+2026-11-08T17:17:50.0992066Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:17:50.0992429Z 
+2026-11-08T17:17:50.0993767Z ru.liturgyguide.ui.FirstVisitFlowTest > retryAfterDirectorySaveAndFailedSelectionReusesTheSameRecord[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:17:50.0996310Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:17:50.0999306Z 	Root{application-window-token=android.view.ViewRootImpl$W@7fc3d4e, window-token=android.view.ViewRootImpl$W@7fc3d4e, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:17:57.4961647Z 
+2026-11-08T17:17:57.4962414Z emulator-5554 - 15 Tests 39/119 completed. (0 skipped) (14 failed)
+2026-11-08T17:18:03.1991102Z 
+2026-11-08T17:18:03.2014694Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:18:03.2017115Z 
+2026-11-08T17:18:03.2042138Z ru.liturgyguide.ui.GuideNavigationTest > churchHasTodayAndTomorrowAndChangingItStartsAFreshContext[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:18:03.2050534Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:18:03.2074100Z 	Root{application-window-token=android.view.ViewRootImpl$W@a3c7cf5, window-token=android.view.ViewRootImpl$W@a3c7cf5, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:18:07.4961469Z 
+2026-11-08T17:18:07.4962045Z emulator-5554 - 15 Tests 40/119 completed. (0 skipped) (15 failed)
+2026-11-08T17:18:15.5041048Z 
+2026-11-08T17:18:15.5081264Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:18:15.5140937Z 
+2026-11-08T17:18:15.5192014Z ru.liturgyguide.ui.GuideNavigationTest > unifiedPlaybackHasNoSeparateStageTimerAndManualSeekPausesIt[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:18:15.5222418Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:18:15.5251862Z 	Root{application-window-token=android.view.ViewRootImpl$W@a336aa3, window-token=android.view.ViewRootImpl$W@a336aa3, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:18:17.4961645Z 
+2026-11-08T17:18:17.4962379Z emulator-5554 - 15 Tests 41/119 completed. (0 skipped) (16 failed)
+2026-11-08T17:18:28.0008514Z 
+2026-11-08T17:18:28.0041855Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:18:28.0055117Z 
+2026-11-08T17:18:28.0081819Z ru.liturgyguide.ui.GuideNavigationTest > startingANewServiceClearsPositionsButKeepsTheLanguagePreference[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:18:28.0103095Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:18:28.0108654Z 	Root{application-window-token=android.view.ViewRootImpl$W@e1867e6, window-token=android.view.ViewRootImpl$W@e1867e6, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:18:28.4780514Z ERROR        | Failed to find ColorBuffer: 1361
+2026-11-08T17:18:28.4811066Z ERROR        | Failed to bind to texture: invalid color buffer.
+2026-11-08T17:18:37.4961331Z 
+2026-11-08T17:18:37.4961970Z emulator-5554 - 15 Tests 42/119 completed. (0 skipped) (17 failed)
+2026-11-08T17:18:40.5991130Z 
+2026-11-08T17:18:40.6009571Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:18:40.6022164Z 
+2026-11-08T17:18:40.6052667Z ru.liturgyguide.ui.GuideNavigationTest > trackPhraseAndLanguageSurviveRecreationAndReturningHome[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:18:40.6082892Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:18:40.6132712Z 	Root{application-window-token=android.view.ViewRootImpl$W@9f3e2ba, window-token=android.view.ViewRootImpl$W@9f3e2ba, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:18:47.4961795Z 
+2026-11-08T17:18:47.4962377Z emulator-5554 - 15 Tests 43/119 completed. (0 skipped) (18 failed)
+2026-11-08T17:18:53.6980981Z 
+2026-11-08T17:18:53.6998850Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:18:53.7030553Z 
+2026-11-08T17:18:53.7041718Z ru.liturgyguide.ui.GuideNavigationTest > orderOpensAtDismissalWithLargestAppText[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:18:53.7092212Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:18:53.7122107Z 	Root{application-window-token=android.view.ViewRootImpl$W@843dbe8, window-token=android.view.ViewRootImpl$W@843dbe8, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:18:57.4961475Z 
+2026-11-08T17:18:57.4962370Z emulator-5554 - 15 Tests 44/119 completed. (0 skipped) (19 failed)
+2026-11-08T17:19:06.4011079Z 
+2026-11-08T17:19:06.4011973Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:19:06.4060848Z 
+2026-11-08T17:19:06.4077544Z ru.liturgyguide.ui.GuideNavigationTest > choosingManualReadingFromTempoOptionsStopsAnActiveScroll[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:19:06.4089595Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:19:06.4114859Z 	Root{application-window-token=android.view.ViewRootImpl$W@b1e751b, window-token=android.view.ViewRootImpl$W@b1e751b, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:19:07.4997058Z 
+2026-11-08T17:19:07.5032458Z emulator-5554 - 15 Tests 45/119 completed. (0 skipped) (20 failed)
+2026-11-08T17:19:19.1041189Z 
+2026-11-08T17:19:19.1078651Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:19:19.1100593Z 
+2026-11-08T17:19:19.1151005Z ru.liturgyguide.ui.GuideNavigationTest > searchingAfterFinishingDoesNotReusePositionsFromThePreviousService[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:19:19.1153454Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:19:19.1160650Z 	Root{application-window-token=android.view.ViewRootImpl$W@a5ebfbe, window-token=android.view.ViewRootImpl$W@a5ebfbe, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:19:27.4962266Z 
+2026-11-08T17:19:27.4962907Z emulator-5554 - 15 Tests 47/119 completed. (0 skipped) (21 failed)
+2026-11-08T17:19:35.8983624Z 
+2026-11-08T17:19:35.9011548Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:19:35.9040854Z 
+2026-11-08T17:19:35.9072245Z ru.liturgyguide.ui.GuideNavigationTest > selectedParishUsesItsLocalDateAndManualChoiceRemainsAvailable[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:19:35.9074876Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:19:35.9100231Z 	Root{application-window-token=android.view.ViewRootImpl$W@7f80a7e, window-token=android.view.ViewRootImpl$W@7f80a7e, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:19:37.4974041Z 
+2026-11-08T17:19:37.4992397Z emulator-5554 - 15 Tests 48/119 completed. (0 skipped) (22 failed)
+2026-11-08T17:19:47.4961830Z emulator-5554 - 15 Tests 49/119 completed. (0 skipped) (22 failed)
+2026-11-08T17:19:50.5031092Z 
+2026-11-08T17:19:50.5051429Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:19:50.5071954Z 
+2026-11-08T17:19:50.5102340Z ru.liturgyguide.ui.GuideNavigationTest > serviceOrderIsSeparateFromSearchAndOptionalListening[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:19:50.5132834Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:19:50.5136374Z 	Root{application-window-token=android.view.ViewRootImpl$W@3a3667, window-token=android.view.ViewRootImpl$W@3a3667, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:19:57.4962242Z 
+2026-11-08T17:19:57.4962880Z emulator-5554 - 15 Tests 50/119 completed. (0 skipped) (23 failed)
+2026-11-08T17:20:03.6023422Z 
+2026-11-08T17:20:03.6052266Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:20:03.6095452Z 
+2026-11-08T17:20:03.6162418Z ru.liturgyguide.ui.GuideNavigationTest > largeTextAndDarkModePersistAndNavigationRemainsUsable[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:20:03.6183512Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:20:03.6223323Z 	Root{application-window-token=android.view.ViewRootImpl$W@ab0b187, window-token=android.view.ViewRootImpl$W@ab0b187, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:20:07.4961476Z 
+2026-11-08T17:20:07.4962089Z emulator-5554 - 15 Tests 51/119 completed. (0 skipped) (24 failed)
+2026-11-08T17:20:16.1964504Z 
+2026-11-08T17:20:16.2001361Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:20:16.2041640Z 
+2026-11-08T17:20:16.2072350Z ru.liturgyguide.ui.GuideNavigationTest > explanationChangesWithTheSelectedText[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:20:16.2102478Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:20:16.2105729Z 	Root{application-window-token=android.view.ViewRootImpl$W@ec0da31, window-token=android.view.ViewRootImpl$W@ec0da31, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:20:17.4970923Z 
+2026-11-08T17:20:17.4997935Z emulator-5554 - 15 Tests 52/119 completed. (0 skipped) (25 failed)
+2026-11-08T17:20:28.9983021Z 
+2026-11-08T17:20:29.0091440Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:20:29.0121252Z 
+2026-11-08T17:20:29.0212235Z ru.liturgyguide.ui.GuideNavigationTest > landscapeWithLargestAppTextKeepsCurrentPhraseAndControlsVisible[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:20:29.0333527Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:20:29.0352297Z 	Root{application-window-token=android.view.ViewRootImpl$W@2e771f8, window-token=android.view.ViewRootImpl$W@2e771f8, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:20:37.4961477Z 
+2026-11-08T17:20:37.4962132Z emulator-5554 - 15 Tests 53/119 completed. (0 skipped) (26 failed)
+2026-11-08T17:20:41.9002576Z 
+2026-11-08T17:20:41.9061278Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:20:41.9091676Z 
+2026-11-08T17:20:41.9111853Z ru.liturgyguide.ui.GuideNavigationTest > findingAPrayerFromMeaningOpensItsTextAtTheMatchedPhrase[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:20:41.9124866Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:20:41.9131738Z 	Root{application-window-token=android.view.ViewRootImpl$W@578256b, window-token=android.view.ViewRootImpl$W@578256b, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:20:47.4961747Z 
+2026-11-08T17:20:47.4962434Z emulator-5554 - 15 Tests 54/119 completed. (0 skipped) (27 failed)
+2026-11-08T17:20:54.7011034Z 
+2026-11-08T17:20:54.7061535Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:20:54.7092221Z 
+2026-11-08T17:20:54.7152023Z ru.liturgyguide.ui.GuideNavigationTest > backgroundingAndRecreationKeepTheAcceptedPhrasePaused[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:20:54.7154856Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:20:54.7157641Z 	Root{application-window-token=android.view.ViewRootImpl$W@a6dde4e, window-token=android.view.ViewRootImpl$W@a6dde4e, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:20:57.4962489Z 
+2026-11-08T17:20:57.4963105Z emulator-5554 - 15 Tests 55/119 completed. (0 skipped) (28 failed)
+2026-11-08T17:21:07.7052024Z 
+2026-11-08T17:21:07.7081260Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:21:07.7137105Z 
+2026-11-08T17:21:07.7171154Z ru.liturgyguide.ui.GuideNavigationTest > spellingVariantsOpenTheSamePairedPhraseFromMainSearch[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:21:07.7243252Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:21:07.7272553Z 	Root{application-window-token=android.view.ViewRootImpl$W@14c826d, window-token=android.view.ViewRootImpl$W@14c826d, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:21:17.4961236Z 
+2026-11-08T17:21:17.4961904Z emulator-5554 - 15 Tests 56/119 completed. (0 skipped) (29 failed)
+2026-11-08T17:21:20.3971432Z 
+2026-11-08T17:21:20.4002448Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:21:20.4041238Z 
+2026-11-08T17:21:20.4053451Z ru.liturgyguide.ui.GuideNavigationTest > anUnknownPhraseCanBeClearedToRestoreTheGuide[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:21:20.4092767Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:21:20.4122409Z 	Root{application-window-token=android.view.ViewRootImpl$W@a3ee265, window-token=android.view.ViewRootImpl$W@a3ee265, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:21:27.4961538Z 
+2026-11-08T17:21:27.4969833Z emulator-5554 - 15 Tests 57/119 completed. (0 skipped) (30 failed)
+2026-11-08T17:21:31.9978285Z 
+2026-11-08T17:21:31.9991745Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:21:32.0008751Z 
+2026-11-08T17:21:32.0015023Z ru.liturgyguide.ui.GuideNavigationTest > showingAllStagesAfterUnknownWordsDismissesTheKeyboardAndFocus[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:21:32.0071450Z 	androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms
+2026-11-08T17:21:32.0081633Z 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:441)
+2026-11-08T17:21:37.4961743Z 
+2026-11-08T17:21:37.4962829Z emulator-5554 - 15 Tests 58/119 completed. (0 skipped) (31 failed)
+2026-11-08T17:21:44.7993258Z 
+2026-11-08T17:21:44.8044368Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:21:44.8093898Z 
+2026-11-08T17:21:44.8122536Z ru.liturgyguide.ui.GuideNavigationTest > meaningAndReadingPositionSurviveOrderHomeAndSettingsNavigation[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:21:44.8165137Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:21:44.8213051Z 	Root{application-window-token=android.view.ViewRootImpl$W@cd6e82f, window-token=android.view.ViewRootImpl$W@cd6e82f, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:21:47.4962269Z 
+2026-11-08T17:21:47.4962925Z emulator-5554 - 15 Tests 59/119 completed. (0 skipped) (32 failed)
+2026-11-08T17:21:57.1981053Z 
+2026-11-08T17:21:57.1991651Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:21:57.1992066Z 
+2026-11-08T17:21:57.1993109Z ru.liturgyguide.ui.GuideNavigationTest > choosingAnotherPhraseStopsAutomaticScrolling[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:21:57.1994414Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:21:57.1995940Z 	Root{application-window-token=android.view.ViewRootImpl$W@3989a62, window-token=android.view.ViewRootImpl$W@3989a62, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:21:57.4971351Z 
+2026-11-08T17:21:57.4992098Z emulator-5554 - 15 Tests 60/119 completed. (0 skipped) (33 failed)
+2026-11-08T17:22:09.8104409Z 
+2026-11-08T17:22:09.8153970Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:22:09.8160849Z 
+2026-11-08T17:22:09.8182192Z ru.liturgyguide.ui.GuideNavigationTest > switchingToMeaningPausesScrollingAndKeepsThePhrase[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:22:09.8212650Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:22:09.8242459Z 	Root{application-window-token=android.view.ViewRootImpl$W@d22da11, window-token=android.view.ViewRootImpl$W@d22da11, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:22:17.4961256Z 
+2026-11-08T17:22:17.4962011Z emulator-5554 - 15 Tests 62/119 completed. (0 skipped) (34 failed)
+2026-11-08T17:22:24.4963685Z 
+2026-11-08T17:22:24.5001242Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:22:24.5020934Z 
+2026-11-08T17:22:24.5052431Z ru.liturgyguide.ui.GuideNavigationTest > orderOpensAtCreedAndManualBrowsingReturnsToTheCurrentPhrase[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:22:24.5059131Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:22:24.5100665Z 	Root{application-window-token=android.view.ViewRootImpl$W@be7adce, window-token=android.view.ViewRootImpl$W@be7adce, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:22:27.4961500Z 
+2026-11-08T17:22:27.4962262Z emulator-5554 - 15 Tests 63/119 completed. (0 skipped) (35 failed)
+2026-11-08T17:22:36.9977097Z 
+2026-11-08T17:22:36.9991742Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:22:36.9996466Z 
+2026-11-08T17:22:36.9998103Z ru.liturgyguide.ui.GuideNavigationTest > searchingForADailyReadingUsesTodaysTextAndKeepsItsNoteOptional[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:22:37.0000266Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:22:37.0003391Z 	Root{application-window-token=android.view.ViewRootImpl$W@a8647ed, window-token=android.view.ViewRootImpl$W@a8647ed, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:22:37.5022137Z 
+2026-11-08T17:22:37.5061698Z emulator-5554 - 15 Tests 64/119 completed. (0 skipped) (36 failed)
+2026-11-08T17:22:47.4961842Z emulator-5554 - 15 Tests 65/119 completed. (0 skipped) (36 failed)
+2026-11-08T17:22:51.7997771Z 
+2026-11-08T17:22:51.8041255Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:22:51.8061497Z 
+2026-11-08T17:22:51.8095612Z ru.liturgyguide.ui.GuideNavigationTest > heardWordsLeadToTheRelevantExplanation[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:22:51.8131933Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:22:51.8133617Z 	Root{application-window-token=android.view.ViewRootImpl$W@b393277, window-token=android.view.ViewRootImpl$W@b393277, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:22:57.4971500Z 
+2026-11-08T17:22:57.4977614Z emulator-5554 - 15 Tests 69/119 completed. (0 skipped) (37 failed)
+2026-11-08T17:23:07.4962168Z emulator-5554 - 15 Tests 73/119 completed. (0 skipped) (37 failed)
+2026-11-08T17:23:18.0026827Z 
+2026-11-08T17:23:18.0039627Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:23:18.0110694Z 
+2026-11-08T17:23:18.0142205Z ru.liturgyguide.ui.ManualMomentFlowTest > correctionSearchAcceptsTheMatchingPhraseAndPreservesOtherBookmarks[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:23:18.0149944Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:23:18.0157205Z 	Root{application-window-token=android.view.ViewRootImpl$W@6c63705, window-token=android.view.ViewRootImpl$W@6c63705, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:23:27.4971215Z 
+2026-11-08T17:23:27.5001635Z emulator-5554 - 15 Tests 76/119 completed. (0 skipped) (38 failed)
+2026-11-08T17:23:37.4961499Z emulator-5554 - 15 Tests 77/119 completed. (0 skipped) (38 failed)
+2026-11-08T17:23:42.8997406Z 
+2026-11-08T17:23:42.8998196Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:23:42.8998697Z 
+2026-11-08T17:23:42.9000288Z ru.liturgyguide.ui.ManualMomentFlowTest > correctionCancelRestoresMeaningAndANonInitialPhraseAcrossAllThreeScreens[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:23:42.9003060Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:23:42.9005931Z 	Root{application-window-token=android.view.ViewRootImpl$W@309225b, window-token=android.view.ViewRootImpl$W@309225b, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:23:47.4971040Z 
+2026-11-08T17:23:47.4993542Z emulator-5554 - 15 Tests 79/119 completed. (0 skipped) (39 failed)
+2026-11-08T17:23:57.4962196Z emulator-5554 - 15 Tests 80/119 completed. (0 skipped) (39 failed)
+2026-11-08T17:24:00.4981390Z 
+2026-11-08T17:24:00.5011308Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:24:00.5021308Z 
+2026-11-08T17:24:00.5043346Z ru.liturgyguide.ui.ManualMomentFlowTest > aFreshManualEntryResetsSearchListeningAndScrollButBackPreservesThem[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:24:00.5073042Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:24:00.5102112Z 	Root{application-window-token=android.view.ViewRootImpl$W@c01f07a, window-token=android.view.ViewRootImpl$W@c01f07a, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:24:07.4961402Z 
+2026-11-08T17:24:07.4962052Z emulator-5554 - 15 Tests 82/119 completed. (0 skipped) (40 failed)
+2026-11-08T17:24:15.4981471Z 
+2026-11-08T17:24:15.5005138Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:24:15.5030771Z 
+2026-11-08T17:24:15.5045450Z ru.liturgyguide.ui.PersonalServiceTimeTest > failedStorageKeepsTheDraftAndCancelDoesNotTryAgain[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:24:15.5048404Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:24:15.5061699Z 	Root{application-window-token=android.view.ViewRootImpl$W@44c62a9, window-token=android.view.ViewRootImpl$W@44c62a9, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:24:17.4961725Z 
+2026-11-08T17:24:17.4962322Z emulator-5554 - 15 Tests 83/119 completed. (0 skipped) (41 failed)
+2026-11-08T17:24:27.3991183Z 
+2026-11-08T17:24:27.4004245Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:24:27.4051082Z 
+2026-11-08T17:24:27.4052898Z ru.liturgyguide.ui.PersonalServiceTimeTest > impossibleDateAndOutOfRangeTimeRemainEditableWithoutSaving[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:24:27.4082760Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:24:27.4112379Z 	Root{application-window-token=android.view.ViewRootImpl$W@322e644, window-token=android.view.ViewRootImpl$W@322e644, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:24:27.4963626Z 
+2026-11-08T17:24:27.4983223Z emulator-5554 - 15 Tests 84/119 completed. (0 skipped) (42 failed)
+2026-11-08T17:24:39.3963005Z 
+2026-11-08T17:24:39.4011683Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:24:39.4023971Z 
+2026-11-08T17:24:39.4052380Z ru.liturgyguide.ui.PersonalServiceTimeTest > removalTargetsOnlyTheSelectedDateAndReportsFailure[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:24:39.4082324Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:24:39.4085417Z 	Root{application-window-token=android.view.ViewRootImpl$W@68db23a, window-token=android.view.ViewRootImpl$W@68db23a, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:24:47.4961512Z 
+2026-11-08T17:24:47.4962421Z emulator-5554 - 15 Tests 85/119 completed. (0 skipped) (43 failed)
+2026-11-08T17:24:51.5971098Z 
+2026-11-08T17:24:51.5972324Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:24:51.5972658Z 
+2026-11-08T17:24:51.5974031Z ru.liturgyguide.ui.PersonalServiceTimeTest > anAbsoluteDateAndDraftSurviveRestorationAndSaveWithTheParishContext[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:24:51.5976431Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:24:51.5979740Z 	Root{application-window-token=android.view.ViewRootImpl$W@acf22dc, window-token=android.view.ViewRootImpl$W@acf22dc, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:24:57.4961567Z 
+2026-11-08T17:24:57.4962298Z emulator-5554 - 15 Tests 86/119 completed. (0 skipped) (44 failed)
+2026-11-08T17:25:04.2992440Z 
+2026-11-08T17:25:04.3031382Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:25:04.3100972Z 
+2026-11-08T17:25:04.3148277Z ru.liturgyguide.ui.PersonalServiceTimeTest > changingTheDateLoadsOnlyThatDatesSavedTime[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:25:04.3211463Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:25:04.3223742Z 	Root{application-window-token=android.view.ViewRootImpl$W@3a1d9e2, window-token=android.view.ViewRootImpl$W@3a1d9e2, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:25:07.4961387Z 
+2026-11-08T17:25:07.4962015Z emulator-5554 - 15 Tests 87/119 completed. (0 skipped) (45 failed)
+2026-11-08T17:25:16.5972244Z 
+2026-11-08T17:25:16.6031753Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:25:16.6056541Z 
+2026-11-08T17:25:16.6066987Z ru.liturgyguide.ui.PersonalServiceTimeTest > daylightSavingGapAndRepeatedHourAreNotSilentlyCorrected[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:25:16.6092830Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:25:16.6108018Z 	Root{application-window-token=android.view.ViewRootImpl$W@86e1ed6, window-token=android.view.ViewRootImpl$W@86e1ed6, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:25:17.4962649Z 
+2026-11-08T17:25:17.4983939Z emulator-5554 - 15 Tests 88/119 completed. (0 skipped) (46 failed)
+2026-11-08T17:25:29.8981917Z 
+2026-11-08T17:25:29.8991757Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:25:29.9003709Z 
+2026-11-08T17:25:29.9005824Z ru.liturgyguide.ui.PersonalServiceTimeTest > publishedAndPersonalStartsStaySeparateAndRemovingPersonalRestoresTheEmptyState[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:25:29.9042577Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:25:29.9045742Z 	Root{application-window-token=android.view.ViewRootImpl$W@db2b872, window-token=android.view.ViewRootImpl$W@db2b872, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:25:37.4961323Z 
+2026-11-08T17:25:37.4961936Z emulator-5554 - 15 Tests 89/119 completed. (0 skipped) (47 failed)
+2026-11-08T17:25:41.5001099Z 
+2026-11-08T17:25:41.5031267Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:25:41.5060766Z 
+2026-11-08T17:25:41.5082577Z ru.liturgyguide.ui.ReaderAccessibilityTest > aSingleTextRetainsItsFullTitleAndTheClarificationAction[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:25:41.5089299Z 	androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms
+2026-11-08T17:25:41.5110843Z 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:441)
+2026-11-08T17:25:47.4961906Z 
+2026-11-08T17:25:47.4962828Z emulator-5554 - 15 Tests 90/119 completed. (0 skipped) (48 failed)
+2026-11-08T17:25:52.5963593Z 
+2026-11-08T17:25:52.5964738Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:25:52.5965237Z 
+2026-11-08T17:25:52.5966690Z ru.liturgyguide.ui.ReaderAccessibilityTest > scriptureAndAnEmptyTextStageKeepClarificationWithoutALanguageMenu[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:25:52.5968162Z 	androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms
+2026-11-08T17:25:52.5969522Z 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:441)
+2026-11-08T17:25:57.4961241Z 
+2026-11-08T17:25:57.4962003Z emulator-5554 - 15 Tests 92/119 completed. (0 skipped) (49 failed)
+2026-11-08T17:26:06.3963332Z 
+2026-11-08T17:26:06.3977857Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:26:06.3988636Z 
+2026-11-08T17:26:06.4012507Z ru.liturgyguide.ui.ReaderAccessibilityTest > aTallNarrowScreenKeepsReadableActionsWithoutReducingThePrayerSize[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:26:06.4041564Z 	androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms
+2026-11-08T17:26:06.4051650Z 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:441)
+2026-11-08T17:26:07.4988110Z 
+2026-11-08T17:26:07.5011865Z emulator-5554 - 15 Tests 93/119 completed. (0 skipped) (50 failed)
+2026-11-08T17:26:28.2967873Z 
+2026-11-08T17:26:28.2981363Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:26:28.2991107Z 
+2026-11-08T17:26:28.2992811Z ru.liturgyguide.ui.ReaderAccessibilityTest > landscapeKeepsTabsOnOneLineAndLeavesSpaceForTheRequestedPrayerSize[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:26:28.2994502Z 	androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms
+2026-11-08T17:26:28.2996074Z 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:441)
+2026-11-08T17:26:37.4961369Z 
+2026-11-08T17:26:37.4962237Z emulator-5554 - 15 Tests 95/119 completed. (0 skipped) (51 failed)
+2026-11-08T17:26:42.1971549Z 
+2026-11-08T17:26:42.1999382Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:26:42.1999815Z 
+2026-11-08T17:26:42.2001698Z ru.liturgyguide.ui.ReaderAccessibilityTest > aTallScreenAtTheHeaderWidthBoundaryKeepsItsReadingArea[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:26:42.2003178Z 	androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms
+2026-11-08T17:26:42.2004589Z 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:441)
+2026-11-08T17:26:47.4961282Z 
+2026-11-08T17:26:47.4962050Z emulator-5554 - 15 Tests 96/119 completed. (0 skipped) (52 failed)
+2026-11-08T17:26:53.3966618Z 
+2026-11-08T17:26:53.3969153Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:26:53.3970746Z 
+2026-11-08T17:26:53.4002782Z ru.liturgyguide.ui.ReaderAccessibilityTest > narrowLargeTextKeepsNamesReadableAndCancellationPreservesThePhrase[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:26:53.4024437Z 	androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms
+2026-11-08T17:26:53.4025845Z 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:441)
+2026-11-08T17:26:57.4961556Z 
+2026-11-08T17:26:57.4962171Z emulator-5554 - 15 Tests 97/119 completed. (0 skipped) (53 failed)
+2026-11-08T17:27:04.7965461Z 
+2026-11-08T17:27:04.7986410Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:27:04.8036408Z 
+2026-11-08T17:27:04.8062266Z ru.liturgyguide.ui.ReaderAccessibilityTest > ordinaryFooterKeepsSeparateTargetsAtTheNarrowWidthAndFastestSpeed[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:27:04.8127217Z 	androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms
+2026-11-08T17:27:04.8129058Z 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:441)
+2026-11-08T17:27:07.4961306Z 
+2026-11-08T17:27:07.4961958Z emulator-5554 - 15 Tests 98/119 completed. (0 skipped) (54 failed)
+2026-11-08T17:27:18.5970997Z 
+2026-11-08T17:27:18.6001740Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:27:18.6030731Z 
+2026-11-08T17:27:18.6032666Z ru.liturgyguide.ui.SavedChurchFlowTest > cancellingANewTempleAndAnEmptySearchKeepTheCurrentParish[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:27:18.6062526Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:27:18.6092409Z 	Root{application-window-token=android.view.ViewRootImpl$W@aae91d1, window-token=android.view.ViewRootImpl$W@aae91d1, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:27:27.4961364Z 
+2026-11-08T17:27:27.4962216Z emulator-5554 - 15 Tests 99/119 completed. (0 skipped) (55 failed)
+2026-11-08T17:27:33.5011542Z 
+2026-11-08T17:27:33.5069772Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:27:33.5100759Z 
+2026-11-08T17:27:33.5114037Z ru.liturgyguide.ui.SavedChurchFlowTest > aTempleInAnotherCityAndItsTimeZoneSurviveRecreation[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:27:33.5123074Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:27:33.5132384Z 	Root{application-window-token=android.view.ViewRootImpl$W@83ac945, window-token=android.view.ViewRootImpl$W@83ac945, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:27:37.4961519Z 
+2026-11-08T17:27:37.4962264Z emulator-5554 - 15 Tests 100/119 completed. (0 skipped) (56 failed)
+2026-11-08T17:27:46.4993346Z 
+2026-11-08T17:27:46.5014881Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:27:46.5016253Z 
+2026-11-08T17:27:46.5035729Z ru.liturgyguide.ui.SavedChurchFlowTest > favoriteDoesNotChooseAnotherParishOrEraseTheSavedStage[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:27:46.5093151Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:27:46.5116687Z 	Root{application-window-token=android.view.ViewRootImpl$W@1a8c286, window-token=android.view.ViewRootImpl$W@1a8c286, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:27:47.4971092Z 
+2026-11-08T17:27:47.4991395Z emulator-5554 - 15 Tests 101/119 completed. (0 skipped) (57 failed)
+2026-11-08T17:27:57.4961710Z emulator-5554 - 15 Tests 102/119 completed. (0 skipped) (57 failed)
+2026-11-08T17:28:03.8991826Z 
+2026-11-08T17:28:03.9091559Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:28:03.9150865Z 
+2026-11-08T17:28:03.9203515Z ru.liturgyguide.ui.SavedReadingTest > anOldSavedReadingIsLabelledPausedAndANewServiceClearsItsPositions[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:28:03.9232687Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:28:03.9257125Z 	Root{application-window-token=android.view.ViewRootImpl$W@b066786, window-token=android.view.ViewRootImpl$W@b066786, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:28:07.5001092Z 
+2026-11-08T17:28:07.5009714Z emulator-5554 - 15 Tests 104/119 completed. (0 skipped) (58 failed)
+2026-11-08T17:28:17.4967350Z emulator-5554 - 15 Tests 107/119 completed. (0 skipped) (58 failed)
+2026-11-08T17:28:26.6963550Z 
+2026-11-08T17:28:26.6967298Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:28:26.7003907Z 
+2026-11-08T17:28:26.7005257Z ru.liturgyguide.ui.StageSelectorTest > restoringSearchKeepsTheQueryAndTheManuallyBrowsedPosition[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:28:26.7009018Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:28:26.7013010Z 	Root{application-window-token=android.view.ViewRootImpl$W@daa7a3d, window-token=android.view.ViewRootImpl$W@daa7a3d, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:28:27.4981225Z 
+2026-11-08T17:28:27.5001911Z emulator-5554 - 15 Tests 108/119 completed. (0 skipped) (59 failed)
+2026-11-08T17:28:39.2991253Z 
+2026-11-08T17:28:39.3000948Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:28:39.3010805Z 
+2026-11-08T17:28:39.3042307Z ru.liturgyguide.ui.StageSelectorTest > editingAndClearingAQueryShowTheBeginningOfTheNewResults[emulator-5554 - 15] [31mFAILED [0m
+2026-11-08T17:28:39.3044905Z 	androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:
+2026-11-08T17:28:39.3054027Z 	Root{application-window-token=android.view.ViewRootImpl$W@6dec308, window-token=android.view.ViewRootImpl$W@6dec308, has-window-focus=false, layout-params-type=1, layout-params-string={(0,0)(fillxfill) sim={forwardNavigation} ty=BASE_APPLICATION wanim=0x1030309
+2026-11-08T17:28:47.4989026Z 
+2026-11-08T17:28:47.4998693Z emulator-5554 - 15 Tests 111/119 completed. (0 skipped) (60 failed)
+2026-11-08T17:28:57.4981829Z emulator-5554 - 15 Tests 113/119 completed. (0 skipped) (60 failed)
+2026-11-08T17:29:07.4962838Z emulator-5554 - 15 Tests 117/119 completed. (0 skipped) (60 failed)
+2026-11-08T17:29:16.6996165Z Finished 119 tests on emulator-5554 - 15
+2026-11-08T17:29:16.7010563Z 
+2026-11-08T17:29:16.7039516Z > Task :app:connectedDebugAndroidTest
+2026-11-08T17:29:16.7071482Z Tests on emulator-5554 - 15 failed: There was 60 failure(s).
+2026-11-08T17:29:18.0963905Z 
+2026-11-08T17:29:18.0974442Z > Task :app:connectedDebugAndroidTest FAILED
+2026-11-08T17:29:18.1971536Z gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__reactivecircus_android-emulator-runner-1794157983256.json
+2026-11-08T17:29:18.1973090Z 63 actionable tasks: 1 executed, 62 up-to-date
+2026-11-08T17:29:18.1997543Z 
+2026-11-08T17:29:18.2024976Z FAILURE: Build failed with an exception.
+2026-11-08T17:29:18.2027602Z 
+2026-11-08T17:29:18.2027945Z * What went wrong:
+2026-11-08T17:29:18.2028539Z Execution failed for task ':app:connectedDebugAndroidTest'.
+2026-11-08T17:29:18.2039708Z > There were failing tests. See the report at: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/build/reports/androidTests/connected/debug/index.html
+2026-11-08T17:29:18.2040856Z 
+2026-11-08T17:29:18.2041092Z * Try:
+2026-11-08T17:29:18.2041606Z > Run with --stacktrace option to get the stack trace.
+2026-11-08T17:29:18.2042954Z > Run with --info or --debug option to get more log output.
+2026-11-08T17:29:18.2043552Z > Run with --scan to get full insights.
+2026-11-08T17:29:18.2044102Z > Get more help at https://help.gradle.org.
+2026-11-08T17:29:18.2044483Z 
+2026-11-08T17:29:18.2045101Z BUILD FAILED in 16m 20s
+2026-11-08T17:29:18.6593923Z ##[error]The process '/usr/bin/sh' failed with exit code 1
+2026-11-08T17:29:18.6595640Z ##[group]Terminate Emulator
+2026-11-08T17:29:18.6605033Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 emu kill
+2026-11-08T17:29:18.6672357Z OK: killing emulator, bye bye
+2026-11-08T17:29:18.6672814Z OK
+2026-11-08T17:29:18.6673421Z ##[endgroup]
+2026-11-08T17:29:18.6674763Z INFO         | Wait for emulator (pid 3412) 20 seconds to shutdown gracefully before kill;you can set environment variable ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL(in seconds) to change the default value (20 seconds)
+2026-11-08T17:29:18.6675719Z 
+2026-11-08T17:29:22.6115507Z INFO         | Saving with gfxstream=1
+2026-11-08T17:29:22.7682804Z INFO         | Saving snapshot 'default_boot' took 4072 ms
+2026-11-08T17:29:23.3896814Z ERROR        | stop: Not implemented
+2026-11-08T17:29:23.3897552Z WARNING      | Emulator client has not yet been configured.. Call configure me first!
+2026-11-08T17:29:23.4089539Z INFO         | removeAll
+2026-11-08T17:29:23.4776008Z WARNING      | Netsim Wifi dns:///localhost:45747 is gone due to Stream removed (CANCELLED)
+2026-11-08T17:29:24.2523497Z ##[group]Run actions/upload-artifact@v4
+2026-11-08T17:29:24.2523737Z with:
+2026-11-08T17:29:24.2523912Z   name: verification-reports
+2026-11-08T17:29:24.2524615Z   path: app/build/reports/tests/testDebugUnitTest/
+app/build/reports/lint-results-debug.html
+app/build/reports/lint-results-debug.xml
+app/build/reports/androidTests/connected/
+app/build/outputs/androidTest-results/connected/
+
+2026-11-08T17:29:24.2525318Z   if-no-files-found: ignore
+2026-11-08T17:29:24.2525515Z   compression-level: 6
+2026-11-08T17:29:24.2525702Z   overwrite: false
+2026-11-08T17:29:24.2525884Z   include-hidden-files: false
+2026-11-08T17:29:24.2526077Z env:
+2026-11-08T17:29:24.2526317Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T17:29:24.2526698Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T17:29:24.2527015Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2026-11-08T17:29:24.2527312Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2026-11-08T17:29:24.2527570Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2026-11-08T17:29:24.2527807Z   GRADLE_USER_HOME: /home/runner/.gradle
+2026-11-08T17:29:24.2528044Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2026-11-08T17:29:24.2528274Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2026-11-08T17:29:24.2528610Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2026-11-08T17:29:24.2528973Z   DEVELOCITY_INJECTION_CUSTOM_VALUE: gradle-actions
+2026-11-08T17:29:24.2529230Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2026-11-08T17:29:24.2529461Z   ANDROID_AVD_HOME: /home/runner/.android/avd
+2026-11-08T17:29:24.2529679Z ##[endgroup]
+2026-11-08T17:29:24.5707442Z (node:5595) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-08T17:29:24.5708085Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-08T17:29:24.6014166Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-11-08T17:29:24.6017000Z The least common ancestor is /home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/build. This will be the root directory of the artifact
+2026-11-08T17:29:24.6018000Z With the provided path, there will be 187 files uploaded
+2026-11-08T17:29:24.6021465Z Artifact name is valid!
+2026-11-08T17:29:24.6022867Z Root directory input is valid!
+2026-11-08T17:29:24.9765786Z Beginning upload of artifact content to blob storage
+2026-11-08T17:29:25.2511662Z (node:5595) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-08T17:29:25.8957353Z Uploaded bytes 1711232
+2026-11-08T17:29:25.9700774Z Finished uploading artifact content to blob storage!
+2026-11-08T17:29:25.9701710Z SHA256 digest of uploaded artifact zip is f638d596811f5f668d257011f394bcabbdd2c88a5b534472bc9ee7cfa7af9ffc
+2026-11-08T17:29:25.9702744Z Finalizing artifact upload
+2026-11-08T17:29:26.4210092Z Artifact verification-reports.zip successfully finalized. Artifact ID 13626787820
+2026-11-08T17:29:26.4211346Z Artifact verification-reports has been successfully uploaded! Final size is 1711232 bytes. Artifact ID is 13626787820
+2026-11-08T17:29:26.4216746Z Artifact download URL: https://github.com/jeymog888/PravoslavnyyProvodnik/actions/runs/42503317372/artifacts/13626787820
+2026-11-08T17:29:26.4725631Z Post job cleanup.
+2026-11-08T17:29:26.7682136Z In post-action step
+2026-11-08T17:29:26.7691717Z Cache is read-only: will not save state for use in subsequent builds.
+2026-11-08T17:29:26.7697348Z Generating Job Summary
+2026-11-08T17:29:26.7713645Z Completed post-action step
+2026-11-08T17:29:26.7874571Z Post job cleanup.
+2026-11-08T17:29:26.9147622Z (node:5622) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-08T17:29:26.9148260Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-08T17:29:26.9344991Z Post job cleanup.
+2026-11-08T17:29:27.0316126Z [command]/usr/bin/git version
+2026-11-08T17:29:27.0343334Z git version 2.56.0
+2026-11-08T17:29:27.0379981Z Temporarily overriding HOME='/home/runner/work/_temp/fa2922d2-3c58-45c4-b210-cc577e1baf60' before making global git config changes
+2026-11-08T17:29:27.0381163Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-08T17:29:27.0385353Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik
+2026-11-08T17:29:27.0445666Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-08T17:29:27.0489267Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-08T17:29:27.0870256Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-08T17:29:27.0905187Z http.https://github.com/.extraheader
+2026-11-08T17:29:27.0917530Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-08T17:29:27.0961998Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-08T17:29:27.1268684Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-08T17:29:27.1303535Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-08T17:29:27.1711912Z Cleaning up orphan processes
+2026-11-08T17:29:27.2045699Z Terminate orphan process: pid (3517) (adb)
+2026-11-08T17:29:27.2170768Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-java@v4, actions/upload-artifact@v4, android-actions/setup-android@v3, gradle/actions/setup-gradle@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

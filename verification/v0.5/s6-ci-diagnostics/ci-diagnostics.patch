@@ -1,0 +1,397 @@
+--- a/.github/workflows/build.yml
++++ b/.github/workflows/build.yml
+@@ -55,12 +55,13 @@
+           arch: x86_64
+           target: google_apis
+           profile: pixel_7
++          emulator-port: 5554
+           disable-animations: true
+           emulator-options: -no-window -gpu swiftshader -noaudio -no-boot-anim -camera-back none
+           # IME tests observe a visible software keyboard before verifying dismissal.
+           script: |
+-            adb shell settings put secure show_ime_with_hard_keyboard 1
+-            ./gradlew --no-daemon connectedDebugAndroidTest
++            adb -s emulator-5554 shell settings put secure show_ime_with_hard_keyboard 1
++            python3 scripts/ci/run_android_ui_tests.py --serial emulator-5554 --run-id "${{ github.run_id }}-${{ github.run_attempt }}" --out app/build/ci-diagnostics -- ./gradlew --no-daemon connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.feoriaCiDiagnostics=true -Pandroid.testInstrumentationRunnerArguments.feoriaCiDiagnosticsRun=${{ github.run_id }}-${{ github.run_attempt }}
+ 
+       - name: Upload APK
+         uses: actions/upload-artifact@v4
+@@ -76,6 +77,8 @@
+           name: verification-reports
+           path: |
+             app/build/reports/tests/testDebugUnitTest/
++            app/build/test-results/testDebugUnitTest/
++            app/build/ci-diagnostics/
+             app/build/reports/lint-results-debug.html
+             app/build/reports/lint-results-debug.xml
+             app/build/reports/androidTests/connected/
+--- a/app/src/androidTest/java/ru/liturgyguide/ui/ChurchDiscoveryScreenTest.kt
++++ b/app/src/androidTest/java/ru/liturgyguide/ui/ChurchDiscoveryScreenTest.kt
+@@ -204,7 +204,7 @@
+             assertEquals(centers, fake.centers)
+         }
+     }
+-    private fun waitForVisibleKeyboard() {
++    private fun waitForVisibleKeyboard() = withCiFailureDiagnostics("discovery.waitForVisibleKeyboard") {
+         // Text injection requests IME asynchronously. Observe its opening before submitting,
+         // otherwise a "hidden" check may pass before a queued show changes the viewport.
+         compose.waitUntil(timeoutMillis = 10_000) {
+@@ -217,7 +217,7 @@
+         }
+     }
+ 
+-    private fun waitForHiddenKeyboard() {
++    private fun waitForHiddenKeyboard() = withCiFailureDiagnostics("discovery.waitForHiddenKeyboard") {
+         compose.waitUntil(timeoutMillis = 10_000) {
+             var hidden = false
+             compose.activityRule.scenario.onActivity { activity ->
+--- /dev/null
++++ b/app/src/androidTest/java/ru/liturgyguide/ui/CiFailureDiagnostics.kt
+@@ -0,0 +1,118 @@
++package ru.liturgyguide.ui
++
++import android.app.KeyguardManager
++import android.content.Context
++import android.os.ParcelFileDescriptor
++import android.os.PowerManager
++import android.os.SystemClock
++import android.util.Log
++import androidx.test.espresso.Espresso
++import androidx.test.platform.app.InstrumentationRegistry
++import org.json.JSONArray
++import org.json.JSONObject
++import org.junit.Test
++import java.io.File
++import java.util.concurrent.FutureTask
++import java.util.concurrent.TimeUnit
++import java.util.concurrent.atomic.AtomicBoolean
++import java.util.concurrent.atomic.AtomicReference
++
++/** No retry, changed expectation or new Espresso handler: rethrow the original failure. */
++internal fun withCiFailureDiagnostics(source: String, block: () -> Unit): Unit = try {
++    block()
++} catch (failure: Throwable) {
++    CiFailureDiagnostics.capture(source, failure)
++    throw failure
++}
++
++internal fun closeSoftKeyboardWithCiDiagnostics() =
++    withCiFailureDiagnostics("Espresso.closeSoftKeyboard") { Espresso.closeSoftKeyboard() }
++
++internal fun pressBackWithCiDiagnostics() =
++    withCiFailureDiagnostics("Espresso.pressBack") { Espresso.pressBack() }
++
++/** androidTest-only, opt-in, one first-failure packet per instrumentation process. */
++private object CiFailureDiagnostics {
++    private val captured = AtomicBoolean(false)
++
++    fun capture(source: String, original: Throwable) {
++        try {
++            val arguments = InstrumentationRegistry.getArguments()
++            if (arguments.getString("feoriaCiDiagnostics") != "true" || !captured.compareAndSet(false, true)) return
++            val run = requireNotNull(arguments.getString("feoriaCiDiagnosticsRun"))
++            require(run.matches(Regex("[A-Za-z0-9_-]{1,100}")))
++            val instrumentation = InstrumentationRegistry.getInstrumentation()
++            val context = instrumentation.targetContext
++            val directory = File(requireNotNull(context.getExternalFilesDir("ci-diagnostics")),
++                "$run/first-failure-${System.currentTimeMillis()}")
++            check(directory.mkdirs())
++            File(directory, "failure.txt").writeText(original.stackTraceToString())
++            val test = original.stackTrace.firstOrNull { frame ->
++                frame.className.startsWith("ru.liturgyguide.ui.") && runCatching {
++                    Class.forName(frame.className, false, javaClass.classLoader).declaredMethods.any {
++                        it.name == frame.methodName && it.isAnnotationPresent(Test::class.java)
++                    }
++                }.getOrDefault(false)
++            }?.let { "${it.className}#${it.methodName}" } ?: "UNRESOLVED-see-failure.txt"
++            val power = context.getSystemService(Context.POWER_SERVICE) as PowerManager
++            val keyguard = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
++            val record = JSONObject().put("test", test).put("source", source).put("run", run)
++                .put("wallTimeMillis", System.currentTimeMillis()).put("uptimeMillis", SystemClock.uptimeMillis())
++                .put("isInteractive", power.isInteractive).put("isKeyguardLocked", keyguard.isKeyguardLocked)
++                .put("isDeviceLocked", keyguard.isDeviceLocked).put("verdict", "DIAGNOSTIC_ONLY")
++            File(directory, "failure-context.json").writeText(record.toString(2))
++            val deadline = SystemClock.uptimeMillis() + 30_000L
++            val commands = JSONArray()
++            // Focus owner first, before the failed test's finally block or ActivityScenario.close.
++            val reads = listOf(
++                "windows.txt" to "dumpsys -t 2 window windows",
++                "displays.txt" to "dumpsys -t 2 window displays",
++                "screen.png" to "screencap -p",
++                "power.txt" to "dumpsys -t 2 power",
++                "policy.txt" to "dumpsys -t 2 window policy",
++                "activity.txt" to "dumpsys -t 2 activity activities",
++                "input-method.txt" to "dumpsys -t 2 input_method",
++                "screen-off-timeout.txt" to "settings get system screen_off_timeout",
++                "stay-on.txt" to "settings get global stay_on_while_plugged_in",
++                "show-ime.txt" to "settings get secure show_ime_with_hard_keyboard"
++            )
++            reads.forEach { (name, command) ->
++                commands.put(read(directory, name, command, deadline))
++            }
++            record.put("finishedUptimeMillis", SystemClock.uptimeMillis()).put("commands", commands)
++            File(directory, "capture.json").writeText(record.toString(2))
++            Log.e("FeoriaCiDiagnostics", "First failure evidence: ${directory.absolutePath}")
++        } catch (diagnosticFailure: Throwable) {
++            // A collection problem must not replace the failure that triggered this packet.
++            Log.e("FeoriaCiDiagnostics", "Could not finish first failure evidence", diagnosticFailure)
++        }
++    }
++
++    private fun read(directory: File, name: String, command: String, deadline: Long): JSONObject {
++        val started = SystemClock.uptimeMillis()
++        val record = JSONObject().put("file", name).put("command", command).put("startedUptimeMillis", started)
++        val budget = minOf(3_000L, deadline - started)
++        if (budget <= 0) return record.put("outcome", "BUDGET_EXHAUSTED")
++        val descriptor = AtomicReference<ParcelFileDescriptor?>()
++        val cancelled = AtomicBoolean(false)
++        val task = FutureTask<ByteArray> {
++            val pipe = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(command)
++            descriptor.set(pipe)
++            if (cancelled.get()) { pipe.close(); throw IllegalStateException("diagnostic read cancelled") }
++            ParcelFileDescriptor.AutoCloseInputStream(pipe).use { it.readBytes() }
++        }
++        Thread(task, "feoria-ci-diagnostic").apply { isDaemon = true; start() }
++        try {
++            val data = task.get(budget, TimeUnit.MILLISECONDS)
++            File(directory, name).writeBytes(data)
++            record.put("outcome", if (data.isEmpty()) "EMPTY" else "RECORDED").put("bytes", data.size)
++        } catch (failure: Exception) {
++            record.put("outcome", "ERROR").put("error", failure.toString())
++        } finally {
++            cancelled.set(true)
++            runCatching { descriptor.get()?.close() }
++            task.cancel(true)
++        }
++        return record.put("finishedUptimeMillis", SystemClock.uptimeMillis())
++    }
++}
+--- a/app/src/androidTest/java/ru/liturgyguide/ui/CompactReaderMatrixTest.kt
++++ b/app/src/androidTest/java/ru/liturgyguide/ui/CompactReaderMatrixTest.kt
+@@ -288,7 +288,7 @@
+         return results.single()
+     }
+ 
+-    private fun orient(requested: Int, expected: Int) {
++    private fun orient(requested: Int, expected: Int) = withCiFailureDiagnostics("matrix.orient($expected)") {
+         compose.activityRule.scenario.onActivity { it.requestedOrientation = requested }
+         compose.waitUntil(10_000) {
+             var ready = false
+--- a/app/src/androidTest/java/ru/liturgyguide/ui/DailyReadingSearchTest.kt
++++ b/app/src/androidTest/java/ru/liturgyguide/ui/DailyReadingSearchTest.kt
+@@ -2,7 +2,7 @@
+ 
+ import androidx.compose.ui.test.*
+ import androidx.compose.ui.test.junit4.createComposeRule
+-import androidx.test.espresso.Espresso.closeSoftKeyboard
++import ru.liturgyguide.ui.closeSoftKeyboardWithCiDiagnostics as closeSoftKeyboard
+ import androidx.test.ext.junit.runners.AndroidJUnit4
+ import androidx.test.platform.app.InstrumentationRegistry
+ import org.junit.Assert.assertEquals
+--- a/app/src/androidTest/java/ru/liturgyguide/ui/DiscoveryNavigationTest.kt
++++ b/app/src/androidTest/java/ru/liturgyguide/ui/DiscoveryNavigationTest.kt
+@@ -4,7 +4,7 @@
+ import androidx.compose.ui.test.*
+ import androidx.compose.ui.test.junit4.StateRestorationTester
+ import androidx.compose.ui.test.junit4.createComposeRule
+-import androidx.test.espresso.Espresso.pressBack
++import ru.liturgyguide.ui.pressBackWithCiDiagnostics as pressBack
+ import androidx.test.ext.junit.runners.AndroidJUnit4
+ import androidx.test.platform.app.InstrumentationRegistry
+ import org.junit.Assert.*
+--- a/app/src/androidTest/java/ru/liturgyguide/ui/FirstVisitFlowTest.kt
++++ b/app/src/androidTest/java/ru/liturgyguide/ui/FirstVisitFlowTest.kt
+@@ -6,8 +6,8 @@
+ import androidx.compose.ui.text.AnnotatedString
+ import androidx.compose.ui.test.junit4.StateRestorationTester
+ import androidx.compose.ui.test.junit4.createComposeRule
+-import androidx.test.espresso.Espresso.closeSoftKeyboard
+-import androidx.test.espresso.Espresso.pressBack
++import ru.liturgyguide.ui.closeSoftKeyboardWithCiDiagnostics as closeSoftKeyboard
++import ru.liturgyguide.ui.pressBackWithCiDiagnostics as pressBack
+ import androidx.test.ext.junit.runners.AndroidJUnit4
+ import androidx.test.platform.app.InstrumentationRegistry
+ import com.google.gson.Gson
+--- a/app/src/androidTest/java/ru/liturgyguide/ui/GuideNavigationTest.kt
++++ b/app/src/androidTest/java/ru/liturgyguide/ui/GuideNavigationTest.kt
+@@ -10,8 +10,8 @@
+ import androidx.core.view.ViewCompat
+ import androidx.core.view.WindowInsetsCompat
+ import androidx.lifecycle.Lifecycle
+-import androidx.test.espresso.Espresso.closeSoftKeyboard
+-import androidx.test.espresso.Espresso.pressBack
++import ru.liturgyguide.ui.closeSoftKeyboardWithCiDiagnostics as closeSoftKeyboard
++import ru.liturgyguide.ui.pressBackWithCiDiagnostics as pressBack
+ import androidx.test.ext.junit.runners.AndroidJUnit4
+ import androidx.test.platform.app.InstrumentationRegistry
+ import com.google.gson.Gson
+@@ -89,7 +89,7 @@
+ 
+     @Test
+     fun showingAllStagesAfterUnknownWordsDismissesTheKeyboardAndFocus() {
+-        fun waitForKeyboard(visible: Boolean) {
++        fun waitForKeyboard(visible: Boolean) = withCiFailureDiagnostics("guide.waitForKeyboard($visible)") {
+             compose.waitUntil(timeoutMillis = 10_000) {
+                 var matches = false
+                 compose.activityRule.scenario.onActivity {
+--- a/app/src/androidTest/java/ru/liturgyguide/ui/ManualMomentFlowTest.kt
++++ b/app/src/androidTest/java/ru/liturgyguide/ui/ManualMomentFlowTest.kt
+@@ -11,7 +11,7 @@
+ import androidx.compose.ui.test.junit4.createComposeRule
+ import androidx.compose.ui.text.AnnotatedString
+ import androidx.compose.ui.unit.dp
+-import androidx.test.espresso.Espresso.closeSoftKeyboard
++import ru.liturgyguide.ui.closeSoftKeyboardWithCiDiagnostics as closeSoftKeyboard
+ import androidx.test.ext.junit.runners.AndroidJUnit4
+ import androidx.test.platform.app.InstrumentationRegistry
+ import com.google.gson.Gson
+--- a/app/src/androidTest/java/ru/liturgyguide/ui/PersonalServiceTimeTest.kt
++++ b/app/src/androidTest/java/ru/liturgyguide/ui/PersonalServiceTimeTest.kt
+@@ -6,7 +6,7 @@
+ import androidx.compose.ui.text.AnnotatedString
+ import androidx.compose.ui.test.junit4.StateRestorationTester
+ import androidx.compose.ui.test.junit4.createComposeRule
+-import androidx.test.espresso.Espresso.closeSoftKeyboard
++import ru.liturgyguide.ui.closeSoftKeyboardWithCiDiagnostics as closeSoftKeyboard
+ import androidx.test.ext.junit.runners.AndroidJUnit4
+ import org.junit.Assert.*
+ import org.junit.Rule
+--- a/app/src/androidTest/java/ru/liturgyguide/ui/ReaderAccessibilityTest.kt
++++ b/app/src/androidTest/java/ru/liturgyguide/ui/ReaderAccessibilityTest.kt
+@@ -334,7 +334,7 @@
+         awaitPlatformReady()
+     }
+ 
+-    private fun awaitPlatformReady() {
++    private fun awaitPlatformReady() = withCiFailureDiagnostics("reader.awaitPlatformReady") {
+         compose.waitUntil(timeoutMillis = 10_000) {
+             var ready = false
+             compose.activityRule.scenario.onActivity { activity ->
+--- a/app/src/androidTest/java/ru/liturgyguide/ui/SavedChurchFlowTest.kt
++++ b/app/src/androidTest/java/ru/liturgyguide/ui/SavedChurchFlowTest.kt
+@@ -3,8 +3,8 @@
+ import android.content.Context
+ import androidx.compose.ui.test.*
+ import androidx.compose.ui.test.junit4.createAndroidComposeRule
+-import androidx.test.espresso.Espresso.closeSoftKeyboard
+-import androidx.test.espresso.Espresso.pressBack
++import ru.liturgyguide.ui.closeSoftKeyboardWithCiDiagnostics as closeSoftKeyboard
++import ru.liturgyguide.ui.pressBackWithCiDiagnostics as pressBack
+ import androidx.test.ext.junit.runners.AndroidJUnit4
+ import androidx.test.platform.app.InstrumentationRegistry
+ import org.junit.Assert.*
+--- a/app/src/androidTest/java/ru/liturgyguide/ui/SavedReadingTest.kt
++++ b/app/src/androidTest/java/ru/liturgyguide/ui/SavedReadingTest.kt
+@@ -4,7 +4,7 @@
+ import androidx.compose.ui.test.*
+ import androidx.compose.ui.test.junit4.createEmptyComposeRule
+ import androidx.test.core.app.ActivityScenario
+-import androidx.test.espresso.Espresso.pressBack
++import ru.liturgyguide.ui.pressBackWithCiDiagnostics as pressBack
+ import androidx.test.ext.junit.runners.AndroidJUnit4
+ import androidx.test.platform.app.InstrumentationRegistry
+ import com.google.gson.Gson
+--- a/app/src/androidTest/java/ru/liturgyguide/ui/StageSelectorTest.kt
++++ b/app/src/androidTest/java/ru/liturgyguide/ui/StageSelectorTest.kt
+@@ -4,7 +4,7 @@
+ import androidx.compose.ui.test.*
+ import androidx.compose.ui.test.junit4.createComposeRule
+ import androidx.compose.ui.test.junit4.StateRestorationTester
+-import androidx.test.espresso.Espresso.closeSoftKeyboard
++import ru.liturgyguide.ui.closeSoftKeyboardWithCiDiagnostics as closeSoftKeyboard
+ import androidx.test.ext.junit.runners.AndroidJUnit4
+ import androidx.test.platform.app.InstrumentationRegistry
+ import org.junit.Assert.assertEquals
+--- /dev/null
++++ b/scripts/ci/run_android_ui_tests.py
+@@ -0,0 +1,90 @@
++#!/usr/bin/env python3
++"""Read-only environment evidence around one UI-suite; keep its original exit code."""
++import argparse
++import json
++from pathlib import Path
++import re
++import subprocess
++import sys
++import time
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--adb", default="adb")
++    parser.add_argument("--serial", required=True)
++    parser.add_argument("--run-id", required=True)
++    parser.add_argument("--out", required=True, type=Path)
++    parser.add_argument("command", nargs=argparse.REMAINDER)
++    args = parser.parse_args()
++    if not args.serial or args.serial.startswith("-") or not re.fullmatch(r"[A-Za-z0-9_-]{1,100}", args.run_id):
++        parser.error("explicit serial and safe run-id are required")
++    command = args.command[1:] if args.command[:1] == ["--"] else args.command
++    if not command:
++        parser.error("test command required after --")
++    args.out.mkdir(parents=True, exist_ok=False)
++    journal = []
++
++    def read(name, *adb_args, timeout=5):
++        record = {"name": name, "argv": [args.adb, "-s", args.serial, *adb_args],
++                  "started_ns": time.time_ns(), "started_monotonic_ns": time.monotonic_ns()}
++        try:
++            result = subprocess.run(record["argv"], capture_output=True, timeout=timeout)
++            (args.out / (name + ".stdout")).write_bytes(result.stdout)
++            (args.out / (name + ".stderr")).write_bytes(result.stderr)
++            record.update(exit_code=result.returncode, stdout_bytes=len(result.stdout), stderr_bytes=len(result.stderr))
++        except (OSError, subprocess.TimeoutExpired) as error:
++            record["error"] = str(error)
++        record["finished_monotonic_ns"] = time.monotonic_ns()
++        journal.append(record)
++        (args.out / "commands.json").write_text(json.dumps(journal, indent=2) + "\n")
++
++    def snapshot(phase):
++        # Observe without waking/unlocking/changing timeouts or retrying the test.
++        for name, tail in (
++            ("sdk", ("getprop", "ro.build.version.sdk")),
++            ("fingerprint", ("getprop", "ro.build.fingerprint")),
++            ("screen-off-timeout", ("settings", "get", "system", "screen_off_timeout")),
++            ("stay-on", ("settings", "get", "global", "stay_on_while_plugged_in")),
++            ("show-ime", ("settings", "get", "secure", "show_ime_with_hard_keyboard")),
++            ("power", ("dumpsys", "-t", "2", "power")),
++            ("windows", ("dumpsys", "-t", "2", "window", "windows")),
++            ("displays", ("dumpsys", "-t", "2", "window", "displays")),
++            ("policy", ("dumpsys", "-t", "2", "window", "policy")),
++            ("activity", ("dumpsys", "-t", "2", "activity", "activities")),
++            ("input-method", ("dumpsys", "-t", "2", "input_method")),
++        ):
++            read(phase + "-" + name, "shell", *tail)
++        read(phase + "-screen.png", "exec-out", "screencap", "-p")
++        source = args.out / (phase + "-screen.png.stdout")
++        if source.exists() and source.read_bytes().startswith(b"\x89PNG\r\n\x1a\n"):
++            source.rename(args.out / (phase + "-screen.png"))
++
++    def best_effort(label, operation):
++        try:
++            operation()
++        except Exception as error:
++            print(f"CI diagnostics {label} failed: {error}", file=sys.stderr, flush=True)
++
++    best_effort("preflight", lambda: snapshot("preflight"))
++    result = {"serial": args.serial, "run_id": args.run_id, "command": command,
++              "started_ns": time.time_ns(), "diagnostics": "observations only, not a readiness PASS or a root-cause fix"}
++    exit_code = 2
++    try:
++        exit_code = subprocess.run(command).returncode
++        result["test_exit_code"] = exit_code
++    except OSError as error:
++        result["launch_error"] = str(error)
++    finally:
++        # This must run inside emulator-runner's script, before it kills the emulator.
++        best_effort("after-suite", lambda: snapshot("after-suite"))
++        best_effort("pull-first-failure", lambda: read("pull-first-failure", "pull",
++             "/sdcard/Android/data/ru.liturgyguide/files/ci-diagnostics/" + args.run_id,
++             str(args.out / "first-failure"), timeout=20))
++        result["finished_ns"] = time.time_ns()
++        best_effort("suite-result", lambda: (args.out / "suite-result.json").write_text(json.dumps(result, indent=2) + "\n"))
++    return exit_code if exit_code >= 0 else 128 - exit_code
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())

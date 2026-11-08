@@ -204,7 +204,7 @@ class ChurchDiscoveryScreenTest {
             assertEquals(centers, fake.centers)
         }
     }
-    private fun waitForVisibleKeyboard() {
+    private fun waitForVisibleKeyboard() = withCiFailureDiagnostics("discovery.waitForVisibleKeyboard") {
         // Text injection requests IME asynchronously. Observe its opening before submitting,
         // otherwise a "hidden" check may pass before a queued show changes the viewport.
         compose.waitUntil(timeoutMillis = 10_000) {
@@ -217,7 +217,7 @@ class ChurchDiscoveryScreenTest {
         }
     }
 
-    private fun waitForHiddenKeyboard() {
+    private fun waitForHiddenKeyboard() = withCiFailureDiagnostics("discovery.waitForHiddenKeyboard") {
         compose.waitUntil(timeoutMillis = 10_000) {
             var hidden = false
             compose.activityRule.scenario.onActivity { activity ->

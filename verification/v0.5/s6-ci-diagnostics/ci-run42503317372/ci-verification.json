@@ -1,0 +1,78 @@
+{
+  "run": {
+    "id": 42503317372,
+    "run_attempt": 1,
+    "head_sha": "03554e613ad141b3473a5ed5cde1972f4e5b23f4",
+    "status": "completed",
+    "conclusion": "failure",
+    "created_at": "2026-11-08T17:07:00Z",
+    "updated_at": "2026-11-08T17:29:30Z",
+    "html_url": "https://github.com/jeymog888/PravoslavnyyProvodnik/actions/runs/42503317372"
+  },
+  "job": {
+    "id": 128800543789,
+    "started_at": "2026-11-08T17:07:04Z",
+    "completed_at": "2026-11-08T17:29:30Z",
+    "status": "completed",
+    "conclusion": "failure"
+  },
+  "artifact": {
+    "id": 13626787820,
+    "name": "verification-reports",
+    "created_at": "2026-11-08T17:29:26Z",
+    "updated_at": "2026-11-08T17:29:26Z",
+    "digest": "sha256:f638d596811f5f668d257011f394bcabbdd2c88a5b534472bc9ee7cfa7af9ffc",
+    "size_in_bytes": 1711232,
+    "workflow_run": {
+      "id": 42503317372,
+      "repository_id": 1442209239,
+      "head_repository_id": 1442209239,
+      "head_branch": "codex/feoria-0.5-service-player",
+      "head_sha": "03554e613ad141b3473a5ed5cde1972f4e5b23f4"
+    }
+  },
+  "artifact_zip_sha256": "f638d596811f5f668d257011f394bcabbdd2c88a5b534472bc9ee7cfa7af9ffc",
+  "artifact_digest_matches": true,
+  "unit": {
+    "source": "HTML report; unit JUnit XML not uploaded by workflow",
+    "tests": 335,
+    "failures": 0,
+    "ignored": 0,
+    "report": "artifact/reports/tests/testDebugUnitTest/index.html"
+  },
+  "ui": {
+    "tests": 119,
+    "passed": 59,
+    "failures": 60,
+    "errors": 0,
+    "skipped": 0,
+    "timestamp": "2026-11-08T17:29:16",
+    "duration_seconds": 939.264,
+    "report": "artifact/outputs/androidTest-results/connected/debug/TEST-emulator-5554 - 15-_app-.xml",
+    "failure_categories": {
+      "ChurchDiscoveryScreenTest.waitForVisibleKeyboard timeout": 6,
+      "CompactReaderMatrixTest.orient timeout": 1,
+      "RootViewWithoutFocusException": 45,
+      "GuideNavigationTest keyboard visibility timeout": 1,
+      "ReaderAccessibilityTest.awaitPlatformReady timeout": 7
+    }
+  },
+  "lint": {
+    "errors": 0,
+    "fatal": 0,
+    "warnings": 14
+  },
+  "apk_uploaded": false,
+  "job_timeout": false,
+  "diagnosis": {
+    "established": "OS window focus / IME / orientation readiness failures across independent UI scenarios",
+    "root_cause": "not established from retained evidence",
+    "app_crash_or_anr_matches_in_retained_logcat": [],
+    "retained_logcat_files": 119,
+    "missing": "No screenshots, window/power/keyguard/input-method state dumps at the first failure",
+    "screen_timeout_hypothesis": "not established; first IME failure ~33 sec into test suite, boot property screen_off_timeout=2147483647; actual runtime setting was not captured"
+  },
+  "runner_source": "https://raw.githubusercontent.com/ReactiveCircus/android-emulator-runner/a421e43855164a8197daf9d8d40fe71c6996bb0d/src/emulator-manager.ts",
+  "mutations_performed": [],
+  "rerun_or_cancel_performed": false
+}
