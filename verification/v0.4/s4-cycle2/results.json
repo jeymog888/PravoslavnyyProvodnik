@@ -1,0 +1,121 @@
+{
+  "head": "3f421602b10a43aa40361e4ed92be5a59371c371",
+  "checked_at_utc": "2026-11-08T00:21:07.355802+00:00",
+  "result": "PASS",
+  "counts": {
+    "tests": 8,
+    "passed": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "ui_attempts": 1
+  },
+  "command": "./gradlew --console=plain connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=ru.liturgyguide.ui.StageSelectorTest,ru.liturgyguide.ui.GuideNavigationTest#showingAllStagesAfterUnknownWordsDismissesTheKeyboardAndFocus,ru.liturgyguide.ui.GuideNavigationTest#anUnknownPhraseCanBeClearedToRestoreTheGuide,ru.liturgyguide.ui.GuideNavigationTest#orderOpensAtCreedAndManualBrowsingReturnsToTheCurrentPhrase,ru.liturgyguide.ui.ManualMomentFlowTest#aFreshManualEntryResetsSearchListeningAndScrollButBackPreservesThem -Pandroid.testInstrumentationRunnerArguments.feoriaQaScreenshots=true",
+  "environment": {
+    "JAVA_HOME": "/private/tmp/liturgy-android-toolchain/jdk-17.0.21+9/Contents/Home",
+    "GRADLE_USER_HOME": "/private/tmp/liturgy-android-toolchain/gradle-home",
+    "ANDROID_HOME": "/private/tmp/liturgy-android-toolchain/sdk",
+    "ANDROID_USER_HOME": "/private/tmp/liturgy-android-toolchain/android-user",
+    "ANDROID_AVD_HOME": "/private/tmp/liturgy-android-toolchain/android-user/avd",
+    "ANDROID_SERIAL": "emulator-5554"
+  },
+  "build": {
+    "command": "./gradlew --console=plain assembleDebug assembleDebugAndroidTest",
+    "attempts": 1,
+    "exit_code": 0,
+    "log": "app/build/verification/v0.4/s4-cycle2/qa/build.log"
+  },
+  "ui": {
+    "exit_code": 0,
+    "xml": "app/build/verification/v0.4/s4-cycle2/qa/connected-attempt-1/results/debug/TEST-Liturgy_API_35(AVD) - 15-_app-.xml",
+    "reports": "app/build/verification/v0.4/s4-cycle2/qa/connected-attempt-1/reports",
+    "log": "app/build/verification/v0.4/s4-cycle2/qa/connected-attempt-1.log",
+    "selected_scenarios": "app/build/verification/v0.4/s4-cycle2/qa/selected-scenarios.json",
+    "exact_selected_scenarios_matched_xml": true
+  },
+  "hashes": {
+    "app_apk": "app/build/outputs/apk/debug/app-debug.apk",
+    "app_apk_sha256": "eee75e62c5a486fe2b5231436c4c579e1a5028d316d7505d50aaa56d1e98dba6",
+    "apk_manifest": "app/build/verification/v0.4/s4-cycle2/qa/apk-hashes.json",
+    "source_manifest": "app/build/verification/v0.4/s4-cycle2/qa/source-hashes.json",
+    "source_manifest_sha256": "d65c70a2607220400ca6b83dad861d6054b288f2c92433c0b1c22b8ee49113ef",
+    "source_and_build_files_checked": 66,
+    "sources_and_both_apks_unchanged_during_run": true
+  },
+  "defects": [],
+  "audit": {
+    "source_changes_by_qa": false,
+    "existing_assertions_not_weakened": true,
+    "additional_tests_run": false,
+    "git_diff_check": "PASS",
+    "ui_started_only_after_root_handoff": true
+  },
+  "screenshots": {
+    "show_all_without_keyboard": "app/build/verification/v0.4/s4-cycle2/qa/screenshots/show-all-without-keyboard.png",
+    "order_creed": "app/build/verification/v0.4/s4-cycle2/qa/screenshots/s2-order-creed.png",
+    "visual_check": "Search field empty and unfocused, keyboard absent, preparation visible at beginning; selected Creed visible near top of order"
+  },
+  "ui_handoff": {
+    "device": "emulator-5554",
+    "command": "/private/tmp/liturgy-android-toolchain/sdk/platform-tools/adb -s emulator-5554 install -r app/build/outputs/apk/debug/app-debug.apk",
+    "exit_code": 0,
+    "result": "Success",
+    "log": "app/build/verification/v0.4/s4-cycle2/qa/install-handoff.log",
+    "same_hashed_apk": true,
+    "emulator_left_running": true,
+    "handed_to": "root"
+  },
+  "native_before": {
+    "before_ime_visible": true,
+    "after_ime_visible": true,
+    "scenario": "Unknown words -> Show all stages, without dismissing keyboard"
+  },
+  "native_after": {
+    "before_ime_visible": true,
+    "after_ime_visible": false,
+    "scenario": "Unknown words -> Show all stages, without dismissing keyboard"
+  },
+  "native_permissions": {
+    "checks": [
+      {
+        "name": "audio-availability",
+        "visible_texts": [
+          "Скрыть аудиоподсказку",
+          "Подсказка по звуку",
+          "Послушаем до 15 секунд и попробуем найти знакомую фразу. Работает на телефоне, без сохранения записи.",
+          "Послушать фрагмент",
+          "Экспериментальная подсказка: хор и эхо могут мешать. Сверяйте результат со службой.",
+          "Или выберите знакомый момент ниже",
+          "Перед началом",
+          "1",
+          "Подготовка к литургии",
+          "Слышно чтение псалмов и молитв. Если вы здесь с самого начала, возглас \"Благословено Царство\" еще не прозвучал",
+          "Начало службы",
+          "2",
+          "Начало литургии",
+          "Звучит \"Благословено Царство Отца и Сына и Святаго Духа\"",
+          "Найти момент",
+          "Слова, которые слышите"
+        ]
+      },
+      {
+        "name": "audio-denied-manual-fallback",
+        "passed": true
+      },
+      {
+        "name": "geo-denied-and-manual-church-selected",
+        "passed": true
+      }
+    ]
+  },
+  "permission_check_apk_sha256": "1f9c6bc11e664b556eb2ea525b936d0b468f89304b122f8bffa96ec0e24dbfed",
+  "permission_scope": "Same unchanged audio/geolocation sources as current cycle; first harness attempt failed to recognize curly apostrophe in Android permission label, corrected before second attempt; actual microphone and location denials passed",
+  "orchestrator_review": {
+    "source_hashes_verified": 66,
+    "xml_verified": true,
+    "screenshots_reviewed": 5,
+    "source_diff_reviewed": true,
+    "independent_review": "gpt-6-astra",
+    "accepted": true
+  }
+}

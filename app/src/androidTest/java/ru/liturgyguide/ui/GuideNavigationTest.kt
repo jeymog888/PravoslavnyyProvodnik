@@ -84,6 +84,33 @@ class GuideNavigationTest {
     }
 
     @Test
+    fun showingAllStagesAfterUnknownWordsDismissesTheKeyboardAndFocus() {
+        fun waitForKeyboard(visible: Boolean) {
+            compose.waitUntil(timeoutMillis = 10_000) {
+                var matches = false
+                compose.activityRule.scenario.onActivity {
+                    matches = ViewCompat.getRootWindowInsets(it.window.decorView)
+                        ?.isVisible(WindowInsetsCompat.Type.ime()) == visible
+                }
+                matches
+            }
+        }
+        openMainSearch()
+        compose.onNodeWithTag("stage_search").performClick().performTextInput("несуществующаяфраза")
+        waitForKeyboard(true)
+        compose.onNodeWithTag("stage_search").assertIsFocused()
+        compose.onNodeWithText("Пока не нашли эти слова").assertIsDisplayed()
+        compose.onNodeWithText("Показать все этапы").performScrollTo().assertIsDisplayed().performClick()
+        waitForKeyboard(false)
+        compose.onNodeWithTag("stage_search").assertIsNotFocused().assert(
+            SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString(""))
+        )
+        compose.onNodeWithTag("open_listening").assertIsDisplayed()
+        compose.onNodeWithTag("stage_preparation").assertIsDisplayed()
+        captureQaScreenshot("show-all-without-keyboard")
+    }
+
+    @Test
     fun serviceOrderIsSeparateFromSearchAndOptionalListening() {
         tapMain("open_order")
         compose.onNodeWithTag("stage_search").assertDoesNotExist()

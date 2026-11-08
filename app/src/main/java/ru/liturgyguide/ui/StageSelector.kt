@@ -27,6 +27,7 @@ import ru.liturgyguide.model.ReadingDay
 import ru.liturgyguide.service.TextSearch
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import kotlinx.coroutines.launch
 
 internal fun normalizedSearch(value: String): String = TextSearch.normalize(value)
 
@@ -42,6 +43,12 @@ fun StageSelector(stageMatcher: StageMatcher, selectedId: String?, searchMode: B
         // Item 0 is the order heading and the fallback when there is no selected stage.
         initialFirstVisibleItemIndex = if (searchMode) 0 else stages.indexOfFirst { it.id == selectedId } + 1
     )
+    val scope = rememberCoroutineScope()
+    fun updateQuery(value: String) {
+        query = value
+        // Reset only after an explicit edit, leaving restored browsing positions intact.
+        scope.launch { listState.scrollToItem(0) }
+    }
     val filtered = remember(query, stages, searchMode, readingDay) {
         val words = if (searchMode) normalizedSearch(query).split(' ').filter { it.isNotEmpty() } else emptyList()
         stages.filter { stage ->
@@ -56,11 +63,11 @@ fun StageSelector(stageMatcher: StageMatcher, selectedId: String?, searchMode: B
                 if (!searchMode) IconButton(onClick = onSearch) { Icon(Icons.Default.Search, "Найти по словам") }
             }
             if (searchMode) {
-                OutlinedTextField(value = query, onValueChange = { query = it },
+                OutlinedTextField(value = query, onValueChange = ::updateQuery,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).testTag("stage_search"),
                     label = { Text("Слова, которые слышите") }, placeholder = { Text("Например: херувимы") },
                     leadingIcon = { Icon(Icons.Default.Search, null) },
-                    trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { query = "" }) { Icon(Icons.Default.Close, "Очистить поиск") } },
+                    trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { updateQuery("") }) { Icon(Icons.Default.Close, "Очистить поиск") } },
                     singleLine = true, keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), shape = MaterialTheme.shapes.medium)
                 Spacer(Modifier.height(12.dp))
             }
@@ -91,7 +98,7 @@ fun StageSelector(stageMatcher: StageMatcher, selectedId: String?, searchMode: B
                 Column(Modifier.padding(vertical = 28.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("Пока не нашли эти слова", style = MaterialTheme.typography.titleLarge)
                     Text("Попробуйте одно слово: Евангелие, верую или причащение", style = MaterialTheme.typography.bodyLarge)
-                    TextButton(onClick = { query = "" }) { Text("Показать все этапы") }
+                    TextButton(onClick = { updateQuery(""); keyboard?.hide(); focus.clearFocus() }) { Text("Показать все этапы") }
                 }
             }
             itemsIndexed(filtered, key = { _, stage -> stage.id }) { index, stage ->
