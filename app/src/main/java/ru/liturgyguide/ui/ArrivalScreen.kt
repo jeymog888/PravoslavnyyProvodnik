@@ -54,10 +54,12 @@ internal fun ArrivalScreen(draft: ArrivalDraft, stage: LiturgyStage?, preparatio
         LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("arrival_content"),
             contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(draft.churchName, style = MaterialTheme.typography.titleLarge)
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(draft.churchName, style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (draft.source == ArrivalSource.SCHEDULE) {
-                        Text("Начало по расписанию в ${draft.serviceTime}", style = MaterialTheme.typography.bodyLarge)
+                        Text("Начало по расписанию в ${draft.serviceTime}", style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     if (draft.automationStopped) {
                         Text("Автоматические переходы остановлены", style = MaterialTheme.typography.bodyMedium)
@@ -77,10 +79,8 @@ internal fun ArrivalScreen(draft: ArrivalDraft, stage: LiturgyStage?, preparatio
                         }
                         Text("Можно открыть подготовку или найти момент по тому, что слышно в храме", style = MaterialTheme.typography.bodyLarge)
                     } else if (stage != null) {
-                        Text(stage.name, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.testTag("arrival_stage"))
+                        Text(stage.name, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.testTag("arrival_stage"))
                         stage.cue?.let { Text(it, style = MaterialTheme.typography.bodyLarge) }
-                        Text("Сверьте ориентир с тем, что сейчас происходит в храме", style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
                     } else {
                         Text("По времени не удалось определить этап", style = MaterialTheme.typography.headlineSmall)
                         Text("Можно открыть подготовку или найти момент вручную", style = MaterialTheme.typography.bodyLarge)

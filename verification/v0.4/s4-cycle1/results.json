@@ -1,0 +1,367 @@
+{
+  "head": "c95e553e269a39f059a811343e4448872876cc4b",
+  "checked_at_utc": "2026-11-08T00:12:28.467790+00:00",
+  "result": "PASS after one approved harness correction",
+  "counts": {
+    "distinct_targeted_scenarios": 5,
+    "distinct_passed": 5,
+    "total_executions": 10,
+    "initial_harness_failures": 1,
+    "unresolved_failures": 0,
+    "skipped": 0
+  },
+  "command": "./gradlew --console=plain connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=ru.liturgyguide.ui.ManualMomentFlowTest#allFiveLandmarksWithoutAScheduleOpenTheExpectedTextAndPhraseAfterVerification,ru.liturgyguide.ui.ManualMomentFlowTest#choosingAnotherLandmarkShowsItsNewCueBeforeConfirmation,ru.liturgyguide.ui.ManualMomentFlowTest#correctionCancelRestoresMeaningAndANonInitialPhraseAcrossAllThreeScreens,ru.liturgyguide.ui.ArrivalFlowTest#acceptingScheduleUsesTheSnapshotAndClearsOnlyOldReadingPositions,ru.liturgyguide.ui.ArrivalFlowTest#upcomingServiceOffersPreparationWithoutClaimingACurrentStage",
+  "environment": {
+    "JAVA_HOME": "/private/tmp/liturgy-android-toolchain/jdk-17.0.21+9/Contents/Home",
+    "GRADLE_USER_HOME": "/private/tmp/liturgy-android-toolchain/gradle-home",
+    "ANDROID_HOME": "/private/tmp/liturgy-android-toolchain/sdk",
+    "ANDROID_USER_HOME": "/private/tmp/liturgy-android-toolchain/android-user",
+    "ANDROID_AVD_HOME": "/private/tmp/liturgy-android-toolchain/android-user/avd",
+    "ANDROID_SERIAL": "emulator-5554"
+  },
+  "compile": {
+    "command": "./gradlew --console=plain compileDebugAndroidTestKotlin",
+    "attempts": 1,
+    "exit_code": 0,
+    "log": "app/build/verification/v0.4/s4-cycle1/qa/compile.log"
+  },
+  "build": {
+    "command": "./gradlew --console=plain assembleDebug assembleDebugAndroidTest",
+    "attempts": 2,
+    "exit_codes": [
+      0,
+      0
+    ],
+    "logs": [
+      "app/build/verification/v0.4/s4-cycle1/qa/build.log",
+      "app/build/verification/v0.4/s4-cycle1/qa/build-after-harness-fix.log"
+    ]
+  },
+  "ui_attempts": [
+    {
+      "attempt": 1,
+      "exit_code": 1,
+      "counts": {
+        "tests": 5,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0
+      },
+      "passed": 4,
+      "xml": "app/build/verification/v0.4/s4-cycle1/qa/connected-attempt-1/results/debug/TEST-Liturgy_API_35(AVD) - 15-_app-.xml",
+      "log": "app/build/verification/v0.4/s4-cycle1/qa/connected-attempt-1.log",
+      "reports": "app/build/verification/v0.4/s4-cycle1/qa/connected-attempt-1/reports"
+    },
+    {
+      "attempt": 2,
+      "exit_code": 0,
+      "counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "passed": 5,
+      "xml": "app/build/verification/v0.4/s4-cycle1/qa/connected-attempt-2/results/debug/TEST-Liturgy_API_35(AVD) - 15-_app-.xml",
+      "log": "app/build/verification/v0.4/s4-cycle1/qa/connected-attempt-2.log",
+      "reports": "app/build/verification/v0.4/s4-cycle1/qa/connected-attempt-2/reports"
+    }
+  ],
+  "hashes": {
+    "app_apk": "app/build/outputs/apk/debug/app-debug.apk",
+    "app_apk_sha256": "1f9c6bc11e664b556eb2ea525b936d0b468f89304b122f8bffa96ec0e24dbfed",
+    "app_apk_unchanged_through_handoff": true,
+    "apk_manifest": "app/build/verification/v0.4/s4-cycle1/qa/apk-hashes.json",
+    "source_manifest": "app/build/verification/v0.4/s4-cycle1/qa/source-hashes.json",
+    "source_manifest_sha256": "248b8fe8792bf12cb7a7bbb5af1ed6b90bc283252ffcbf0d4753ea2a0e6fa5ff",
+    "source_and_build_files_checked": 66,
+    "source_hashes_match_after_final_run": true
+  },
+  "defects": [
+    {
+      "classification": "test harness visibility precondition",
+      "status": "resolved",
+      "scenario": "ru.liturgyguide.ui.ManualMomentFlowTest#choosingAnotherLandmarkShowsItsNewCueBeforeConfirmation",
+      "attempt": 1,
+      "failure_location": "ManualMomentFlowTest.kt:98",
+      "failure": "arrival_stage.assertIsDisplayed(): The component is not displayed",
+      "cause": "After grouping all landmark rows in one lazy item, performScrollToNode could locate an already composed descendant without making the lower row visible. The helper then clicked without checking row visibility.",
+      "fix": "Only landmark helper: performScrollTo().assertIsDisplayed().performClick() instead of performClick(); scenario assertions and 320 dp viewport unchanged",
+      "approval": "root and reviewer_manual accepted before rerun",
+      "verified_by_attempt": 2
+    }
+  ],
+  "audit": {
+    "exactly_5_requested_scenarios_ran_in_each_attempt": true,
+    "production_changed_by_qa": false,
+    "assertions_not_weakened": true,
+    "viewport_not_changed_by_qa": true,
+    "additional_tests_run": false,
+    "git_diff_check": "PASS"
+  },
+  "ui_handoff": {
+    "device": "emulator-5554",
+    "command": "/private/tmp/liturgy-android-toolchain/sdk/platform-tools/adb -s emulator-5554 install -r app/build/outputs/apk/debug/app-debug.apk",
+    "exit_code": 0,
+    "result": "Success",
+    "log": "app/build/verification/v0.4/s4-cycle1/qa/install-handoff.log",
+    "same_hashed_apk": true,
+    "emulator_left_running": true,
+    "handed_to": "root",
+    "native_verification": "root-owned"
+  },
+  "native": {
+    "before": {
+      "checks": [
+        {
+          "name": "proposal",
+          "expected": [
+            "Херувимская песнь",
+            "Открыть этот момент",
+            "Найти другой момент"
+          ],
+          "missing": [],
+          "passed": true
+        },
+        {
+          "name": "proposal-landscape",
+          "expected": [
+            "Херувимская песнь"
+          ],
+          "missing": [],
+          "passed": true
+        },
+        {
+          "name": "cancel-and-rotation-preserve-all-preferences",
+          "passed": true,
+          "keys": 12
+        },
+        {
+          "name": "previous-reading-restored",
+          "expected": [
+            "Символ веры",
+            "Иже от Отца рожденнаго прежде всех век."
+          ],
+          "missing": [],
+          "passed": true
+        },
+        {
+          "name": "confirmed-player",
+          "expected": [
+            "Херувимская песнь"
+          ],
+          "missing": [],
+          "passed": true
+        },
+        {
+          "name": "accept-clears-old-bookmarks-preserves-settings-and-stays-manual",
+          "passed": true,
+          "session": {
+            "anchorEpochMillis": 1794112829462,
+            "anchorIsApproximate": true,
+            "anchorStageId": "cherubic_hymn",
+            "autoAdvance": false,
+            "elapsedInStageMillis": 205918
+          }
+        }
+      ],
+      "restored": {
+        "auto_time": "1",
+        "auto_time_zone": "1",
+        "timezone": "Europe/Moscow",
+        "rotation": "0",
+        "accelerometer": "1"
+      },
+      "apk_sha256": "29d1bc131bd973d53339aae9ad7301e3c4c3fc416d9186d22a4ed5dc017648ac"
+    },
+    "after": {
+      "checks": [
+        {
+          "name": "proposal",
+          "expected": [
+            "Херувимская песнь",
+            "Открыть этот момент",
+            "Найти другой момент"
+          ],
+          "missing": [],
+          "passed": true
+        },
+        {
+          "name": "proposal-landscape",
+          "expected": [
+            "Херувимская песнь"
+          ],
+          "missing": [],
+          "passed": true
+        },
+        {
+          "name": "cancel-and-rotation-preserve-all-preferences",
+          "passed": true,
+          "keys": 12
+        },
+        {
+          "name": "previous-reading-restored",
+          "expected": [
+            "Символ веры",
+            "Иже от Отца рожденнаго прежде всех век."
+          ],
+          "missing": [],
+          "passed": true
+        },
+        {
+          "name": "confirmed-player",
+          "expected": [
+            "Херувимская песнь"
+          ],
+          "missing": [],
+          "passed": true
+        },
+        {
+          "name": "accept-clears-old-bookmarks-preserves-settings-and-stays-manual",
+          "passed": true,
+          "session": {
+            "anchorEpochMillis": 1794112828416,
+            "anchorIsApproximate": true,
+            "anchorStageId": "cherubic_hymn",
+            "autoAdvance": false,
+            "elapsedInStageMillis": 204443
+          }
+        }
+      ],
+      "restored": {
+        "auto_time": "1",
+        "auto_time_zone": "1",
+        "timezone": "Europe/Moscow",
+        "rotation": "0",
+        "accelerometer": "1"
+      },
+      "apk_sha256": "1f9c6bc11e664b556eb2ea525b936d0b468f89304b122f8bffa96ec0e24dbfed"
+    },
+    "manual-after": {
+      "checks": [
+        {
+          "name": "main-entry",
+          "passed": true,
+          "missing": [],
+          "expected": [
+            "Я в храме"
+          ]
+        },
+        {
+          "name": "manual-options",
+          "passed": true,
+          "missing": [],
+          "expected": [
+            "Поиск по словам",
+            "Выносят Евангелие",
+            "Слышно \"Верую во единаго Бога\""
+          ]
+        },
+        {
+          "name": "manual-confirmation",
+          "passed": true,
+          "missing": [],
+          "expected": [
+            "Вы выбрали ориентир",
+            "Символ веры",
+            "Открыть этот момент"
+          ]
+        },
+        {
+          "name": "creed-phrase-four",
+          "passed": true,
+          "missing": [],
+          "expected": [
+            "Символ веры",
+            "Фраза 4 из 20 · вручную",
+            "Уточнить"
+          ]
+        },
+        {
+          "name": "same-phrase-original",
+          "passed": true,
+          "missing": [],
+          "expected": [
+            "Фраза 4 из 20 · вручную",
+            "Иже от Отца рожденнаго прежде всех век."
+          ]
+        },
+        {
+          "name": "order-at-current-moment",
+          "passed": true,
+          "missing": [],
+          "expected": [
+            "Символ веры",
+            "Выбранный этап"
+          ]
+        },
+        {
+          "name": "order-return-same-phrase",
+          "passed": true,
+          "missing": [],
+          "expected": [
+            "Символ веры",
+            "Фраза 4 из 20 · вручную"
+          ]
+        },
+        {
+          "name": "manual-landscape-confirmation",
+          "passed": true,
+          "missing": [],
+          "expected": [
+            "Причащение верующих"
+          ]
+        },
+        {
+          "name": "cancel-restores-meaning",
+          "passed": true,
+          "missing": [],
+          "expected": [
+            "Символ веры",
+            "Об этом тексте"
+          ]
+        },
+        {
+          "name": "cancel-and-rotation-preserve-all-preferences",
+          "passed": true,
+          "keys": 9
+        },
+        {
+          "name": "cancel-restores-phrase",
+          "passed": true,
+          "missing": [],
+          "expected": [
+            "Символ веры",
+            "Фраза 4 из 20 · вручную",
+            "Уточнить"
+          ]
+        },
+        {
+          "name": "accepted-correction",
+          "passed": true,
+          "missing": [],
+          "expected": [
+            "Молитва \"Отче наш\"",
+            "Уточнить"
+          ]
+        },
+        {
+          "name": "correction-preserves-other-stage-bookmarks-and-stays-manual",
+          "passed": true
+        }
+      ],
+      "device_date": "Sun Nov  8 03:14:21 MSK 2026",
+      "apk_sha256": "1f9c6bc11e664b556eb2ea525b936d0b468f89304b122f8bffa96ec0e24dbfed",
+      "restored_rotation": "0",
+      "restored_accelerometer": "1"
+    }
+  },
+  "orchestrator_review": {
+    "source_hashes_verified": 66,
+    "ui_xml_attempts_verified": 2,
+    "reviewer": "gpt-6-astra",
+    "source_diff_reviewed": true,
+    "screenshots_reviewed": 5,
+    "accepted": true
+  }
+}

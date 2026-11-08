@@ -1,12 +1,15 @@
 package ru.liturgyguide.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 
 internal data class ManualLandmark(val label: String, val stageId: String, val query: String)
@@ -31,12 +34,11 @@ internal fun ManualMomentScreen(draft: ArrivalDraft, onLandmark: (ManualLandmark
             contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(draft.churchName, style = MaterialTheme.typography.titleLarge)
+                    Text(draft.churchName, style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (draft.automationStopped) {
                         Text("Автоматические переходы остановлены", style = MaterialTheme.typography.bodyMedium)
                     }
-                    Text("Выберите то, что сейчас слышно или видно в храме, затем сверьте ориентир",
-                        style = MaterialTheme.typography.bodyLarge)
                 }
             }
             item {
@@ -44,11 +46,26 @@ internal fun ManualMomentScreen(draft: ArrivalDraft, onLandmark: (ManualLandmark
                     Text("Поиск по словам")
                 }
             }
-            items(manualLandmarks, key = { it.stageId }) { landmark ->
-                OutlinedButton(onClick = { onLandmark(landmark) },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("manual_${landmark.stageId}"),
-                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp)) {
-                    Text(landmark.label, Modifier.fillMaxWidth())
+            item {
+                Text("Что сейчас слышно или видно?", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(12.dp))
+                Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
+                    Column {
+                        manualLandmarks.forEachIndexed { index, landmark ->
+                            Row(Modifier.fillMaxWidth().heightIn(min = 56.dp)
+                                .clickable(role = Role.Button) { onLandmark(landmark) }
+                                .testTag("manual_${landmark.stageId}")
+                                .padding(horizontal = 20.dp, vertical = 18.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                Text(landmark.label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(18.dp),
+                                    tint = MaterialTheme.colorScheme.primary)
+                            }
+                            if (index < manualLandmarks.lastIndex) HorizontalDivider(Modifier.padding(horizontal = 20.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant)
+                        }
+                    }
                 }
             }
         }

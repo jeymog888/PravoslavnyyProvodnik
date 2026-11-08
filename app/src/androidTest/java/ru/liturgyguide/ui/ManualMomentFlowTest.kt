@@ -85,7 +85,7 @@ class ManualMomentFlowTest {
     fun choosingAnotherLandmarkShowsItsNewCueBeforeConfirmation() {
         seed()
         compose.setContent {
-            Box(Modifier.size(width = 320.dp, height = 400.dp)) {
+            Box(Modifier.size(width = 320.dp, height = 320.dp)) {
                 AppNavigation(container, Clock.fixed(instant, ZoneOffset.UTC))
             }
         }
@@ -309,7 +309,7 @@ class ManualMomentFlowTest {
     private fun back() { compose.onNodeWithContentDescription("Назад").performClick() }
     private fun landmark(id: String) {
         compose.onNodeWithTag("manual_content").performScrollToNode(hasTestTag("manual_$id"))
-        compose.onNodeWithTag("manual_$id").performClick()
+        compose.onNodeWithTag("manual_$id").performScrollTo().assertIsDisplayed().performClick()
     }
     private fun searchFromManual() {
         compose.onNodeWithTag("manual_content").performScrollToNode(hasTestTag("manual_search"))
