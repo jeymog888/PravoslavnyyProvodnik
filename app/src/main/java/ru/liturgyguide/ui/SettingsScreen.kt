@@ -66,7 +66,7 @@ fun SettingsScreen(dark: Boolean, textSize: Int, onDarkChange: (Boolean) -> Unit
                 Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
                     GuideActionRow("О Феории", "Тексты, источники и возможности", Icons.Default.Info, onSources, "open_sources")
                 }
-                Text("Феория · 0.4", Modifier.padding(top = 16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Феория · 0.5", Modifier.padding(top = 16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
