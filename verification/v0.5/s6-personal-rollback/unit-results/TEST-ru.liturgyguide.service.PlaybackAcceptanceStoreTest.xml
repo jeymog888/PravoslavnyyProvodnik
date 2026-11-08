@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" tests="16" skipped="0" failures="0" errors="0" timestamp="2026-11-08T16:46:55" hostname="MacBook-Air-Dmitrij.local" time="0.031">
+  <properties/>
+  <testcase name="commit false rolls back existing new snapshot and touched bookmarks after Android memory changed" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.01"/>
+  <testcase name="failed first migration removes the newly created key and preserves every legacy value" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.003"/>
+  <testcase name="reset removes old bookmarks but keeps the newly accepted current bookmark and snapshot" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.002"/>
+  <testcase name="Wait and End retain the last text bookmark without pretending to be a running marker" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.002"/>
+  <testcase name="failed legacy acceptance restores the new snapshot together with the old marker" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.001"/>
+  <testcase name="invalid replacement parish is rejected before touching a valid reading" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.001"/>
+  <testcase name="clear does not erase unrelated changes on a failed write or retry indefinitely" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.002"/>
+  <testcase name="a failed clear restores parish snapshot context and all bookmarks after memory changed" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.001"/>
+  <testcase name="legacy acceptance removes an existing new snapshot in the same transaction" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.0"/>
+  <testcase name="wrong stage running marker and old stage offset cannot be accepted" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.0"/>
+  <testcase name="rollback preserves a malformed old new-format key exactly instead of enabling remigration" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.002"/>
+  <testcase name="changing parish clears the old reading and accepts the new parish in one editor" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.001"/>
+  <testcase name="finishing removes every reading key and bookmark but keeps the chosen parish and settings" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.001"/>
+  <testcase name="acceptance stores snapshot context paused marker and current bookmark in one editor" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.001"/>
+  <testcase name="double write failure stays failed with one rollback and preserves unrelated concurrent writes" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.001"/>
+  <testcase name="wrong plan date invalid snapshot and foreign bookmark fail before opening editor" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

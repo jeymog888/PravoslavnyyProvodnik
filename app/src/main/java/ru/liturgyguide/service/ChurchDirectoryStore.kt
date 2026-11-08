@@ -12,14 +12,14 @@ class ChurchDirectoryStore(private val preferences: SharedPreferences) {
         val current = records()
         if (current.size >= SavedChurchCodec.MAX_RECORDS && current.none { it.id == valid.id }) return false
         val encoded = runCatching { SavedChurchCodec.encode(current.filterNot { it.id == valid.id } + valid) }.getOrNull() ?: return false
-        return runCatching { preferences.edit().putString(RECORDS_KEY, encoded).commit() }.getOrDefault(false)
+        return SinglePreferenceCommit.write(preferences, RECORDS_KEY, encoded)
     }
 
     fun toggleFavorite(id: String, availableIds: Set<String>): Set<String> {
         val current = favorites().intersect(availableIds)
         if (id !in availableIds) return current
         val updated = if (id in current) current - id else current + id
-        return if (runCatching { preferences.edit().putStringSet(FAVORITES_KEY, updated).commit() }.getOrDefault(false)) updated else current
+        return if (SinglePreferenceCommit.write(preferences, FAVORITES_KEY, updated)) updated else current
     }
 
     companion object {

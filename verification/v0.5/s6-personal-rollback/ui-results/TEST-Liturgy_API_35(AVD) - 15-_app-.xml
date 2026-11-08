@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="ru.liturgyguide.ui.PersonalServiceTimeTest" tests="16" failures="0" errors="0" skipped="0" time="52.549" timestamp="2026-11-08T16:46:53" hostname="localhost">
+  <properties>
+    <property name="device" value="Liturgy_API_35(AVD) - 15" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="failedStorageKeepsTheDraftAndCancelDoesNotTryAgain" classname="ru.liturgyguide.ui.PersonalServiceTimeTest" time="4.229" />
+  <testcase name="impossibleDateAndOutOfRangeTimeRemainEditableWithoutSaving" classname="ru.liturgyguide.ui.PersonalServiceTimeTest" time="6.909" />
+  <testcase name="removalTargetsOnlyTheSelectedDateAndReportsFailure" classname="ru.liturgyguide.ui.PersonalServiceTimeTest" time="3.601" />
+  <testcase name="anAbsoluteDateAndDraftSurviveRestorationAndSaveWithTheParishContext" classname="ru.liturgyguide.ui.PersonalServiceTimeTest" time="3.826" />
+  <testcase name="changingTheDateLoadsOnlyThatDatesSavedTime" classname="ru.liturgyguide.ui.PersonalServiceTimeTest" time="3.843" />
+  <testcase name="daylightSavingGapAndRepeatedHourAreNotSilentlyCorrected" classname="ru.liturgyguide.ui.PersonalServiceTimeTest" time="5.753" />
+  <testcase name="publishedAndPersonalStartsStaySeparateAndRemovingPersonalRestoresTheEmptyState" classname="ru.liturgyguide.ui.PersonalServiceTimeTest" time="2.498" />
+  <testcase name="cancellingANewTempleAndAnEmptySearchKeepTheCurrentParish" classname="ru.liturgyguide.ui.SavedChurchFlowTest" time="4.17" />
+  <testcase name="aTempleInAnotherCityAndItsTimeZoneSurviveRecreation" classname="ru.liturgyguide.ui.SavedChurchFlowTest" time="4.345" />
+  <testcase name="favoriteDoesNotChooseAnotherParishOrEraseTheSavedStage" classname="ru.liturgyguide.ui.SavedChurchFlowTest" time="3.64" />
+  <testcase name="publishedFractionalSecondsAreNotSilentlyRounded" classname="ru.liturgyguide.ui.MainScheduleOverviewTest" time="1.027" />
+  <testcase name="evenARecentSavedReadingNeverMasksCurrentOrNextService" classname="ru.liturgyguide.ui.MainScheduleOverviewTest" time="1.243" />
+  <testcase name="eachServiceButtonRetainsItsExactOccurrence" classname="ru.liturgyguide.ui.MainScheduleOverviewTest" time="1.628" />
+  <testcase name="unknownScheduleKeepsManualReadingAndTempleSelectionAvailable" classname="ru.liturgyguide.ui.MainScheduleOverviewTest" time="2.1" />
+  <testcase name="aFuturePersonalStartShowsItsYearAndTheParishTimeZone" classname="ru.liturgyguide.ui.MainScheduleOverviewTest" time="1.389" />
+  <testcase name="informationOnlyCardsRemainVisibleWhenOpeningIsUnavailable" classname="ru.liturgyguide.ui.MainScheduleOverviewTest" time="0.943" />
+</testsuite>

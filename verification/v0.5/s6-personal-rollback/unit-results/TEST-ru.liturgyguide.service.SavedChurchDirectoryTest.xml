@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.service.SavedChurchDirectoryTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-11-08T16:46:55" hostname="MacBook-Air-Dmitrij.local" time="0.549">
+  <properties/>
+  <testcase name="validation rejects invalid zones coordinates and invented sources" classname="ru.liturgyguide.service.SavedChurchDirectoryTest" time="0.001"/>
+  <testcase name="city name and address search is case tolerant and favorites do not select anything" classname="ru.liturgyguide.service.SavedChurchDirectoryTest" time="0.002"/>
+  <testcase name="wrong preference types recover without crashing and favorites are independent" classname="ru.liturgyguide.service.SavedChurchDirectoryTest" time="0.001"/>
+  <testcase name="OSM record retains its source and has no made up schedule" classname="ru.liturgyguide.service.SavedChurchDirectoryTest" time="0.001"/>
+  <testcase name="approximate location returns options outside the old 500 meter radius" classname="ru.liturgyguide.service.SavedChurchDirectoryTest" time="0.0"/>
+  <testcase name="oversized saves fail without losing the previously saved records" classname="ru.liturgyguide.service.SavedChurchDirectoryTest" time="0.54"/>
+  <testcase name="a personal temple keeps a stable identity without borrowing a schedule" classname="ru.liturgyguide.service.SavedChurchDirectoryTest" time="0.0"/>
+  <testcase name="pinning requires a fresh fix while nearby search can reuse a recent one" classname="ru.liturgyguide.service.SavedChurchDirectoryTest" time="0.001"/>
+  <testcase name="complete map names and addresses survive storage without silent truncation" classname="ru.liturgyguide.service.SavedChurchDirectoryTest" time="0.0"/>
+  <testcase name="own temple without invented validity dates is safe for the shared schedule API" classname="ru.liturgyguide.service.SavedChurchDirectoryTest" time="0.001"/>
+  <testcase name="invalid entries do not discard neighboring valid temples" classname="ru.liturgyguide.service.SavedChurchDirectoryTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

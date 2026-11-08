@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.service.ServiceSessionTest" tests="22" skipped="0" failures="0" errors="0" timestamp="2026-11-08T16:46:56" hostname="MacBook-Air-Dmitrij.local" time="0.004">
+  <properties/>
+  <testcase name="old running session stays at its saved anchor until explicitly resumed" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.001"/>
+  <testcase name="arrival before next liturgy is not placed at the previous estimated dismissal" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.0"/>
+  <testcase name="estimated completion stays on last stage without claiming service has ended" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.0"/>
+  <testcase name="automatic progression crosses exact stage boundaries and is approximate" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.0"/>
+  <testcase name="correction does not enable auto mode in a paused session" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.0"/>
+  <testcase name="upcoming suggestion has no invented current stage" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.0"/>
+  <testcase name="malformed times are skipped without hiding a usable service" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.001"/>
+  <testcase name="six hour boundary is stale and correction does not silently restart it" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.0"/>
+  <testcase name="manual session never advances without explicit opt in" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.0"/>
+  <testcase name="wrong date expired schedule and nonliturgical services are never inferred" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.0"/>
+  <testcase name="schedule stage offset survives opt in without restarting that stage" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.0"/>
+  <testcase name="services outside plausible windows do not become current" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.0"/>
+  <testcase name="estimated guide end alone does not assert that a service has finished" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.0"/>
+  <testcase name="very distant clock and invalid saved stage do not crash or auto start" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.0"/>
+  <testcase name="an unexhausted estimated service still takes priority over an upcoming one" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.001"/>
+  <testcase name="backwards clock change never gives negative elapsed time" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.0"/>
+  <testcase name="context uses parish local date rather than clock zone or another day" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.0"/>
+  <testcase name="manual correction can go backwards and resets the time anchor" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.0"/>
+  <testcase name="pause and resume preserve elapsed part of the current stage" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.0"/>
+  <testcase name="context uses latest plausible started liturgy and excludes preparation" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.0"/>
+  <testcase name="context without known beginning suggests only the service" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.0"/>
+  <testcase name="restored active session continues across midnight using an instant" classname="ru.liturgyguide.service.ServiceSessionTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

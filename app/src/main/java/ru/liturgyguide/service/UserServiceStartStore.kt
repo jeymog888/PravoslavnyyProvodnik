@@ -24,7 +24,7 @@ class UserServiceStartStore(private val preferences: SharedPreferences) {
 
     private fun write(records: List<UserServiceStart>): Boolean {
         val encoded = runCatching { UserServiceStartCodec.encode(records) }.getOrNull() ?: return false
-        return runCatching { preferences.edit().putString(RECORDS_KEY, encoded).commit() }.getOrDefault(false)
+        return SinglePreferenceCommit.write(preferences, RECORDS_KEY, encoded)
     }
 
     companion object { const val RECORDS_KEY = "user_service_starts_v1" }
