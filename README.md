@@ -2,7 +2,7 @@
 
 Android-приложение, которое помогает следить за литургией Иоанна Златоуста: читать молитвы, понимать происходящее простым русским языком и видеть следующий этап
 
-Версия 0.5.0-guide готовится к выпуску. [APK Феории 0.5](https://github.com/jeymog888/PravoslavnyyProvodnik/releases/download/v0.5.0-guide/Feoria-0.5.0.apk) пока не опубликован; ссылка заработает после выпуска. Результаты финальной проверки будут собраны в [VERIFICATION-0.5.md](VERIFICATION-0.5.md)
+Версия 0.5.0-guide. [APK Феории 0.5](https://github.com/jeymog888/PravoslavnyyProvodnik/releases/download/v0.5.0-guide/Feoria-0.5.0.apk), [проверки и ограничения](VERIFICATION-0.5.md). Фактическая сборка финальной ревизии и проверка скачивания подтверждаются `delivery.json` на странице [GitHub Release 0.5](https://github.com/jeymog888/PravoslavnyyProvodnik/releases/tag/v0.5.0-guide)
 
 Android 8 и новее. Встроенные тексты, поиск по словам, сохраненные храмы и ручное чтение доступны без интернета. Для поиска новых храмов во внешних источниках нужна сеть
 
@@ -62,7 +62,7 @@ Android 8 и новее. Встроенные тексты, поиск по сл
 
 Для установки release APK подписывается отдельно. В Gradle не настроена автоматическая подпись release: `assembleRelease` создает неподписанный пакет. Ключ для обновлений и параметры подписи не включаются в репозиторий. Debug-артефакт CI не заменяет подписанную установочную версию
 
-Порядок проверки текущей версии описан в [docs/quality-harness-v0.5.md](docs/quality-harness-v0.5.md), а результаты финального прогона будут в [VERIFICATION-0.5.md](VERIFICATION-0.5.md). Наличие тестов не означает, что все проверки выпуска уже завершены, и не заменяет испытание распознавания на конкретном телефоне в храме
+Порядок проверки текущей версии описан в [docs/quality-harness-v0.5.md](docs/quality-harness-v0.5.md), а результаты принятых проверок записаны в [VERIFICATION-0.5.md](VERIFICATION-0.5.md). Проверки эмуляторов не заменяют испытание распознавания на конкретном телефоне в храме
 
 Техническое устройство: [ARCHITECTURE.md](ARCHITECTURE.md). Изменения: [CHANGELOG.md](CHANGELOG.md). План: [NIGHT_PLAN.md](NIGHT_PLAN.md). Дизайн: [docs/design-system-v0.5.md](docs/design-system-v0.5.md)
 

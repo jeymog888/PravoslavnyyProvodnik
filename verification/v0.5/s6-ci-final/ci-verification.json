@@ -1,0 +1,102 @@
+{
+  "run_id": 42517059562,
+  "attempt": 1,
+  "head_sha": "e8ad6a072d8a601f8f33a1939de2206974993d12",
+  "url": "https://github.com/jeymog888/PravoslavnyyProvodnik/actions/runs/42517059562",
+  "conclusion": "success",
+  "artifact": {
+    "id": 13631623274,
+    "name": "verification-reports",
+    "sha256": "210feeb9b3acc663c7442f3a451f3af1646f7befdae589d29f01f39421807bf6",
+    "api_digest": "sha256:210feeb9b3acc663c7442f3a451f3af1646f7befdae589d29f01f39421807bf6",
+    "digest_verified": true,
+    "size_bytes": 4642301
+  },
+  "unit": {
+    "tests": 336,
+    "passed": 336,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "unique": 336,
+    "xml_files": 25
+  },
+  "ui": {
+    "tests": 120,
+    "passed": 120,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "unique": 120,
+    "start_log": "2026-11-08T19:56:25.3974053Z",
+    "finish_log": "2026-11-08T20:01:56.6975779Z"
+  },
+  "lint": {
+    "errors": 0,
+    "fatal": 0,
+    "warnings": 14
+  },
+  "readiness": {
+    "serial": "emulator-5554",
+    "run_id": "42517059562-1",
+    "command": [
+      "./gradlew",
+      "--no-daemon",
+      "connectedDebugAndroidTest",
+      "-Pandroid.testInstrumentationRunnerArguments.feoriaCiDiagnostics=true",
+      "-Pandroid.testInstrumentationRunnerArguments.feoriaCiDiagnosticsRun=42517059562-1"
+    ],
+    "started_ns": 1794167743995042584,
+    "tests_started": true,
+    "test_exit_code": 0,
+    "recovery_count": 0,
+    "environment": "READY",
+    "readiness": [
+      {
+        "phase": "preflight",
+        "verdict": "READY",
+        "reason": "awake unlocked normal HOME with known visible windows",
+        "home": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity"
+      },
+      {
+        "phase": "readiness-1",
+        "verdict": "READY",
+        "reason": "awake unlocked normal HOME with known visible windows",
+        "home": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity"
+      },
+      {
+        "phase": "readiness-2",
+        "verdict": "READY",
+        "reason": "awake unlocked normal HOME with known visible windows",
+        "home": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity"
+      }
+    ],
+    "test_command_attempted": true,
+    "finished_ns": 1794168119055497771
+  },
+  "readiness_raw_replay": [
+    "preflight READY",
+    "readiness-1 READY",
+    "readiness-2 READY",
+    "after-suite READY"
+  ],
+  "readiness_runner_sha256": "51054a2795168d97b634fe4497fe1710b067f882be07adbb4a78e046d6da4e98",
+  "recovery_actions_observed": 0,
+  "first_failure_mirror": {
+    "prepare_exit": 0,
+    "pull_exit": 0,
+    "files_pulled": 0,
+    "failure_capture_exercised": false
+  },
+  "app_external_pull": {
+    "exit": 1,
+    "expected_absent_without_failure": true
+  },
+  "limitations": [
+    "One successful CI run, not statistical flakiness elimination",
+    "Known launcher ANR recovery path not exercised in this run",
+    "First-failure mirror contains no packet because no tests failed; preservation across actual failure not validated by this run",
+    "CI debug artifact is not the separately verified signed release APK",
+    "No adb/Gradle/workflow mutation performed by reviewer"
+  ]
+}

@@ -1,0 +1,872 @@
+﻿2026-11-08T19:50:45.8250047Z Current runner version: '2.338.2'
+2026-11-08T19:50:45.8266329Z ##[group]Runner Image Provisioner
+2026-11-08T19:50:45.8266958Z Hosted Compute Agent
+2026-11-08T19:50:45.8267354Z Version: 20261028.624
+2026-11-08T19:50:45.8267720Z Commit: 54898b74c23fde5556c9b3c3a2290865feef0dfe
+2026-11-08T19:50:45.8268196Z Build Date: 2026-10-28T21:51:42Z
+2026-11-08T19:50:45.8268613Z Worker ID: {e5b3b40e-27ce-4d02-8f21-0aa7e8c04ae9}
+2026-11-08T19:50:45.8269056Z Region: centralus
+2026-11-08T19:50:45.8269430Z Cloud: Azure
+2026-11-08T19:50:45.8269761Z ##[endgroup]
+2026-11-08T19:50:45.8270562Z ##[group]Operating System
+2026-11-08T19:50:45.8270923Z Ubuntu
+2026-11-08T19:50:45.8271269Z 26.04.1
+2026-11-08T19:50:45.8271625Z LTS
+2026-11-08T19:50:45.8271941Z ##[endgroup]
+2026-11-08T19:50:45.8272302Z ##[group]Runner Image
+2026-11-08T19:50:45.8272668Z Image: ubuntu-26.04
+2026-11-08T19:50:45.8273001Z Version: 20261101.186.1
+2026-11-08T19:50:45.8274053Z Included Software: https://github.com/actions/runner-images/blob/ubuntu26/20261101.186/images/ubuntu/Ubuntu2604-Readme.md
+2026-11-08T19:50:45.8275184Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu26%2F20261101.186
+2026-11-08T19:50:45.8275746Z ##[endgroup]
+2026-11-08T19:50:45.8276479Z ##[group]GITHUB_TOKEN Permissions
+2026-11-08T19:50:45.8277780Z Contents: read
+2026-11-08T19:50:45.8278113Z Metadata: read
+2026-11-08T19:50:45.8278534Z ##[endgroup]
+2026-11-08T19:50:45.8279782Z Secret source: Actions
+2026-11-08T19:50:45.8280436Z Cache mode: write
+2026-11-08T19:50:45.8280845Z Prepare workflow directory
+2026-11-08T19:50:45.8516987Z Prepare all required actions
+2026-11-08T19:50:45.8547746Z Getting action download info
+2026-11-08T19:50:46.1100531Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-11-08T19:50:46.1919234Z Download action repository 'actions/setup-java@v4' (SHA:cf277c60eb25467037889841efdb72551f06f6c3)
+2026-11-08T19:50:46.7117737Z Download action repository 'android-actions/setup-android@v3' (SHA:9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407)
+2026-11-08T19:50:46.9754615Z Download action repository 'gradle/actions@v4' (SHA:ed408507eac070d1f99cc633dbcf757c94c7933a)
+2026-11-08T19:50:47.8941820Z Download action repository 'reactivecircus/android-emulator-runner@v2' (SHA:a421e43855164a8197daf9d8d40fe71c6996bb0d)
+2026-11-08T19:50:48.2551611Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-11-08T19:50:48.4312040Z Complete job name: build
+2026-11-08T19:50:48.4954128Z ##[group]Run actions/checkout@v4
+2026-11-08T19:50:48.4954478Z with:
+2026-11-08T19:50:48.4954702Z   repository: jeymog888/PravoslavnyyProvodnik
+2026-11-08T19:50:48.4956527Z   token: ***
+2026-11-08T19:50:48.4956717Z   ssh-strict: true
+2026-11-08T19:50:48.4956914Z   ssh-user: git
+2026-11-08T19:50:48.4957117Z   persist-credentials: true
+2026-11-08T19:50:48.4957340Z   clean: true
+2026-11-08T19:50:48.4957659Z   sparse-checkout-cone-mode: true
+2026-11-08T19:50:48.4958001Z   fetch-depth: 1
+2026-11-08T19:50:48.4958324Z   fetch-tags: false
+2026-11-08T19:50:48.4958641Z   show-progress: true
+2026-11-08T19:50:48.4958929Z   lfs: false
+2026-11-08T19:50:48.4959203Z   submodules: false
+2026-11-08T19:50:48.4959435Z   set-safe-directory: true
+2026-11-08T19:50:48.4959664Z   allow-unsafe-pr-checkout: false
+2026-11-08T19:50:48.4960072Z ##[endgroup]
+2026-11-08T19:50:48.7220615Z Syncing repository: jeymog888/PravoslavnyyProvodnik
+2026-11-08T19:50:48.7221829Z ##[group]Getting Git version info
+2026-11-08T19:50:48.7222259Z Working directory is '/home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik'
+2026-11-08T19:50:48.7222772Z [command]/usr/bin/git version
+2026-11-08T19:50:48.7223580Z git version 2.56.0
+2026-11-08T19:50:48.7235777Z ##[endgroup]
+2026-11-08T19:50:48.7245628Z Temporarily overriding HOME='/home/runner/work/_temp/88c321de-5e46-4df5-9d1a-0eec02459fc5' before making global git config changes
+2026-11-08T19:50:48.7246531Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-08T19:50:48.7249130Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik
+2026-11-08T19:50:48.7309966Z Deleting the contents of '/home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik'
+2026-11-08T19:50:48.7315657Z ##[group]Initializing the repository
+2026-11-08T19:50:48.7318649Z [command]/usr/bin/git init /home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik
+2026-11-08T19:50:48.7431244Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-08T19:50:48.7432085Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-08T19:50:48.7432883Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-08T19:50:48.7433631Z hint: call:
+2026-11-08T19:50:48.7434045Z hint:
+2026-11-08T19:50:48.7434602Z hint: 	git config --global init.defaultBranch <name>
+2026-11-08T19:50:48.7435170Z hint:
+2026-11-08T19:50:48.7435714Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-08T19:50:48.7436472Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-08T19:50:48.7437070Z hint:
+2026-11-08T19:50:48.7437540Z hint: 	git branch -m <name>
+2026-11-08T19:50:48.7437986Z hint:
+2026-11-08T19:50:48.7438550Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-08T19:50:48.7445425Z Initialized empty Git repository in /home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/.git/
+2026-11-08T19:50:48.7453794Z [command]/usr/bin/git remote add origin https://github.com/jeymog888/PravoslavnyyProvodnik
+2026-11-08T19:50:48.7499380Z ##[endgroup]
+2026-11-08T19:50:48.7499953Z ##[group]Disabling automatic garbage collection
+2026-11-08T19:50:48.7501501Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-08T19:50:48.7529724Z ##[endgroup]
+2026-11-08T19:50:48.7530215Z ##[group]Setting up auth
+2026-11-08T19:50:48.7534833Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-08T19:50:48.7561935Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-08T19:50:48.7961122Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-08T19:50:48.7988755Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-08T19:50:48.8213818Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-08T19:50:48.8241765Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-08T19:50:48.8450968Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-08T19:50:48.8483562Z ##[endgroup]
+2026-11-08T19:50:48.8484096Z ##[group]Fetching the repository
+2026-11-08T19:50:48.8490314Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +e8ad6a072d8a601f8f33a1939de2206974993d12:refs/remotes/origin/codex/feoria-0.5-service-player
+2026-11-08T19:50:51.1440748Z From https://github.com/jeymog888/PravoslavnyyProvodnik
+2026-11-08T19:50:51.1441250Z  * [new ref]         e8ad6a072d8a601f8f33a1939de2206974993d12 -> origin/codex/feoria-0.5-service-player
+2026-11-08T19:50:51.1444349Z ##[endgroup]
+2026-11-08T19:50:51.1444579Z ##[group]Determining the checkout info
+2026-11-08T19:50:51.1446453Z ##[endgroup]
+2026-11-08T19:50:51.1450810Z [command]/usr/bin/git sparse-checkout disable
+2026-11-08T19:50:51.1496082Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-08T19:50:51.1524104Z ##[group]Checking out the ref
+2026-11-08T19:50:51.1528291Z [command]/usr/bin/git checkout --progress --force -B codex/feoria-0.5-service-player refs/remotes/origin/codex/feoria-0.5-service-player
+2026-11-08T19:50:51.3849403Z Switched to a new branch 'codex/feoria-0.5-service-player'
+2026-11-08T19:50:51.3853206Z branch 'codex/feoria-0.5-service-player' set up to track 'origin/codex/feoria-0.5-service-player'.
+2026-11-08T19:50:51.3875620Z ##[endgroup]
+2026-11-08T19:50:51.3918296Z [command]/usr/bin/git log -1 --format=%H
+2026-11-08T19:50:51.3939472Z e8ad6a072d8a601f8f33a1939de2206974993d12
+2026-11-08T19:50:51.4171435Z ##[group]Run actions/setup-java@v4
+2026-11-08T19:50:51.4171630Z with:
+2026-11-08T19:50:51.4171751Z   java-version: 17
+2026-11-08T19:50:51.4171875Z   distribution: temurin
+2026-11-08T19:50:51.4172010Z   java-package: jdk
+2026-11-08T19:50:51.4172140Z   check-latest: false
+2026-11-08T19:50:51.4172269Z   server-id: github
+2026-11-08T19:50:51.4172400Z   server-username: GITHUB_ACTOR
+2026-11-08T19:50:51.4172556Z   server-password: GITHUB_TOKEN
+2026-11-08T19:50:51.4172708Z   overwrite-settings: true
+2026-11-08T19:50:51.4172852Z   job-status: success
+2026-11-08T19:50:51.4174621Z   token: ***
+2026-11-08T19:50:51.4174836Z ##[endgroup]
+2026-11-08T19:50:51.5278967Z ##[warning]setup-java v4 is deprecated and will no longer receive updates. Please migrate to actions/setup-java@v5.
+2026-11-08T19:50:51.5284180Z ##[group]Installed distributions
+2026-11-08T19:50:51.5305050Z Resolved Java 17.0.21+9 from tool-cache
+2026-11-08T19:50:51.5305298Z Setting Java 17.0.21+9 as the default
+2026-11-08T19:50:51.5310972Z (node:2208) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-08T19:50:51.5311350Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-08T19:50:51.5313323Z Creating toolchains.xml for JDK version 17 from temurin
+2026-11-08T19:50:51.5368620Z Writing to /home/runner/.m2/toolchains.xml
+2026-11-08T19:50:51.5369187Z 
+2026-11-08T19:50:51.5369373Z Java configuration:
+2026-11-08T19:50:51.5369621Z   Distribution: temurin
+2026-11-08T19:50:51.5369855Z   Version: 17.0.21+9
+2026-11-08T19:50:51.5370173Z   Path: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T19:50:51.5370438Z 
+2026-11-08T19:50:51.5370800Z ##[endgroup]
+2026-11-08T19:50:51.5387617Z Creating settings.xml with server-id: github
+2026-11-08T19:50:51.5387954Z Writing to /home/runner/.m2/settings.xml
+2026-11-08T19:50:51.5536074Z ##[group]Run android-actions/setup-android@v3
+2026-11-08T19:50:51.5536378Z with:
+2026-11-08T19:50:51.5536572Z   packages: platform-tools
+2026-11-08T19:50:51.5536825Z   log-accepted-android-sdk-licenses: false
+2026-11-08T19:50:51.5537105Z   cmdline-tools-version: 12266719
+2026-11-08T19:50:51.5537385Z   accept-android-sdk-licenses: true
+2026-11-08T19:50:51.5537619Z env:
+2026-11-08T19:50:51.5537888Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T19:50:51.5538249Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T19:50:51.5538461Z ##[endgroup]
+2026-11-08T19:50:51.6123254Z Found preinstalled sdkmanager in /usr/local/lib/android/sdk/cmdline-tools/latest with following source.properties:
+2026-11-08T19:50:51.6124128Z Pkg.Revision=20.0
+2026-11-08T19:50:51.6124485Z Pkg.Path=cmdline-tools;20.0
+2026-11-08T19:50:51.6124804Z Pkg.Desc=Android SDK Command-line Tools
+2026-11-08T19:50:51.6125111Z 
+2026-11-08T19:50:51.6125345Z Wrong version in preinstalled sdkmanager
+2026-11-08T19:50:51.6126008Z Downloading commandline tools from https://dl.google.com/android/repository/commandlinetools-linux-12266719_latest.zip
+2026-11-08T19:50:53.0385335Z [command]/usr/bin/unzip -o -q /home/runner/work/_temp/df4df1f7-42c7-48e6-9936-064b99c7bd80
+2026-11-08T19:50:53.5294421Z Accepting Android SDK licenses
+2026-11-08T19:50:55.3471805Z [command]/usr/local/lib/android/sdk/cmdline-tools/16.0/bin/sdkmanager platform-tools
+2026-11-08T19:50:55.8624618Z Loading package information...                                                  
+2026-11-08T19:50:55.9255551Z Loading local repository...                                                     
+2026-11-08T19:50:55.9256846Z [                                       ] 3% Loading local repository...        
+2026-11-08T19:50:55.9331219Z [                                       ] 3% Fetch remote repository...         
+2026-11-08T19:50:56.1035628Z [=                                      ] 3% Fetch remote repository...         
+2026-11-08T19:50:56.1425297Z [=                                      ] 4% Fetch remote repository...         
+2026-11-08T19:50:56.1674974Z [=                                      ] 5% Fetch remote repository...         
+2026-11-08T19:50:56.1988316Z [==                                     ] 5% Fetch remote repository...         
+2026-11-08T19:50:56.2256953Z [==                                     ] 6% Fetch remote repository...         
+2026-11-08T19:50:56.2744702Z [==                                     ] 7% Fetch remote repository...         
+2026-11-08T19:50:56.2756991Z [==                                     ] 7% Computing updates...               
+2026-11-08T19:50:56.2831866Z [===                                    ] 8% Computing updates...               
+2026-11-08T19:50:56.2872648Z [===                                    ] 10% Computing updates...              
+2026-11-08T19:50:56.2873371Z [=======================================] 100% Computing updates...             
+2026-11-08T19:50:56.2873941Z 
+2026-11-08T19:50:56.3351655Z ##[group]Run sdkmanager 'platforms;android-35' 'build-tools;34.0.0'
+2026-11-08T19:50:56.3351974Z [36;1msdkmanager 'platforms;android-35' 'build-tools;34.0.0'[0m
+2026-11-08T19:50:56.3395589Z shell: /usr/bin/bash -e {0}
+2026-11-08T19:50:56.3395748Z env:
+2026-11-08T19:50:56.3395929Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T19:50:56.3396211Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T19:50:56.3396440Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2026-11-08T19:50:56.3396617Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2026-11-08T19:50:56.3396784Z ##[endgroup]
+2026-11-08T19:50:56.9072902Z Loading package information...                                                  
+2026-11-08T19:50:56.9774462Z Loading local repository...                                                     
+2026-11-08T19:50:56.9777510Z [                                       ] 3% Loading local repository...        
+2026-11-08T19:50:56.9856647Z [                                       ] 3% Fetch remote repository...         
+2026-11-08T19:50:57.2120833Z [=                                      ] 3% Fetch remote repository...         
+2026-11-08T19:50:57.3081648Z [=                                      ] 4% Fetch remote repository...         
+2026-11-08T19:50:57.3351317Z [=                                      ] 5% Fetch remote repository...         
+2026-11-08T19:50:57.3994799Z [==                                     ] 5% Fetch remote repository...         
+2026-11-08T19:50:57.4499899Z [==                                     ] 6% Fetch remote repository...         
+2026-11-08T19:50:57.5029869Z [==                                     ] 7% Fetch remote repository...         
+2026-11-08T19:50:57.5044436Z [==                                     ] 7% Computing updates...               
+2026-11-08T19:50:57.5124705Z [===                                    ] 8% Computing updates...               
+2026-11-08T19:50:57.5167999Z [===                                    ] 10% Computing updates...              
+2026-11-08T19:50:57.5172307Z [=======================================] 100% Computing updates...             
+2026-11-08T19:50:57.5172716Z 
+2026-11-08T19:50:57.5704941Z ##[group]Run gradle/actions/setup-gradle@v4
+2026-11-08T19:50:57.5705135Z with:
+2026-11-08T19:50:57.5705260Z   cache-disabled: false
+2026-11-08T19:50:57.5705397Z   cache-read-only: true
+2026-11-08T19:50:57.5705536Z   cache-write-only: false
+2026-11-08T19:50:57.5705686Z   cache-overwrite-existing: false
+2026-11-08T19:50:57.5705841Z   cache-cleanup: on-success
+2026-11-08T19:50:57.5706011Z   gradle-home-cache-includes: caches
+notifications
+
+2026-11-08T19:50:57.5706342Z   add-job-summary: always
+2026-11-08T19:50:57.5706497Z   add-job-summary-as-pr-comment: never
+2026-11-08T19:50:57.5706660Z   dependency-graph: disabled
+2026-11-08T19:50:57.5706846Z   dependency-graph-report-dir: dependency-graph-reports
+2026-11-08T19:50:57.5707057Z   dependency-graph-continue-on-failure: true
+2026-11-08T19:50:57.5707232Z   build-scan-publish: false
+2026-11-08T19:50:57.5707375Z   validate-wrappers: true
+2026-11-08T19:50:57.5707519Z   allow-snapshot-wrappers: false
+2026-11-08T19:50:57.5707716Z   gradle-home-cache-strict-match: false
+2026-11-08T19:50:57.5707880Z   workflow-job-context: null
+2026-11-08T19:50:57.5709545Z   github-token: ***
+2026-11-08T19:50:57.5709669Z env:
+2026-11-08T19:50:57.5709850Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T19:50:57.5710121Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T19:50:57.5710346Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2026-11-08T19:50:57.5710519Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2026-11-08T19:50:57.5710685Z ##[endgroup]
+2026-11-08T19:50:57.8138667Z Merged default JDK locations into /home/runner/.m2/toolchains.xml
+2026-11-08T19:50:57.8140193Z ##[group]Restore Gradle state from cache
+2026-11-08T19:50:57.9328183Z Gradle User Home cache not found. Will initialize empty.
+2026-11-08T19:50:57.9328652Z ##[endgroup]
+2026-11-08T19:50:57.9666683Z ##[group]All Gradle Wrapper jars are valid
+2026-11-08T19:50:57.9667609Z ✓ Found known Gradle Wrapper JAR files:
+2026-11-08T19:50:57.9668225Z   cb0da6751c2b753a16ac168bb354870ebb1e162e9083f116729cec9c781156b8 gradle/wrapper/gradle-wrapper.jar
+2026-11-08T19:50:57.9668817Z ##[endgroup]
+2026-11-08T19:50:57.9780764Z ##[group]Run ./gradlew --no-daemon testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest
+2026-11-08T19:50:57.9781223Z [36;1m./gradlew --no-daemon testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest[0m
+2026-11-08T19:50:57.9823569Z shell: /usr/bin/bash -e {0}
+2026-11-08T19:50:57.9823738Z env:
+2026-11-08T19:50:57.9823923Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T19:50:57.9824202Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T19:50:57.9824428Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2026-11-08T19:50:57.9824603Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2026-11-08T19:50:57.9824788Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2026-11-08T19:50:57.9824960Z   GRADLE_USER_HOME: /home/runner/.gradle
+2026-11-08T19:50:57.9825123Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2026-11-08T19:50:57.9825297Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2026-11-08T19:50:57.9825581Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2026-11-08T19:50:57.9825848Z   DEVELOCITY_INJECTION_CUSTOM_VALUE: gradle-actions
+2026-11-08T19:50:57.9826030Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2026-11-08T19:50:57.9826184Z ##[endgroup]
+2026-11-08T19:50:58.0507293Z Downloading https://services.gradle.org/distributions/gradle-8.7-bin.zip
+2026-11-08T19:50:59.5614655Z ............10%.............20%.............30%.............40%............50%.............60%.............70%.............80%.............90%............100%
+2026-11-08T19:51:00.4753605Z 
+2026-11-08T19:51:00.4769386Z Welcome to Gradle 8.7!
+2026-11-08T19:51:00.4773602Z 
+2026-11-08T19:51:00.4774075Z Here are the highlights of this release:
+2026-11-08T19:51:00.4774588Z  - Compiling and testing with Java 22
+2026-11-08T19:51:00.4775089Z  - Cacheable Groovy script compilation
+2026-11-08T19:51:00.4775584Z  - New methods in lazy collection properties
+2026-11-08T19:51:00.4775933Z 
+2026-11-08T19:51:00.4776413Z For more details see https://docs.gradle.org/8.7/release-notes.html
+2026-11-08T19:51:00.4776960Z 
+2026-11-08T19:51:00.4778166Z To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.7/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+2026-11-08T19:51:01.1751525Z Daemon will be stopped at the end of the build 
+2026-11-08T19:51:43.1743913Z > Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-11-08T19:51:43.1746577Z > Task :app:preBuild UP-TO-DATE
+2026-11-08T19:51:43.1746779Z > Task :app:preDebugBuild UP-TO-DATE
+2026-11-08T19:52:02.3735287Z > Task :app:checkDebugAarMetadata
+2026-11-08T19:52:02.3745922Z > Task :app:generateDebugResValues
+2026-11-08T19:52:02.4730054Z > Task :app:mapDebugSourceSetPaths
+2026-11-08T19:52:02.4737867Z > Task :app:generateDebugResources
+2026-11-08T19:52:03.1734469Z > Task :app:packageDebugResources
+2026-11-08T19:52:03.5733641Z > Task :app:mergeDebugResources
+2026-11-08T19:52:04.2769237Z > Task :app:createDebugCompatibleScreenManifests
+2026-11-08T19:52:04.2797042Z > Task :app:extractDeepLinksDebug
+2026-11-08T19:52:04.2803590Z > Task :app:parseDebugLocalResources
+2026-11-08T19:52:04.4730836Z > Task :app:processDebugMainManifest
+2026-11-08T19:52:04.4731251Z > Task :app:processDebugManifest
+2026-11-08T19:52:04.5728749Z > Task :app:preDebugUnitTestBuild UP-TO-DATE
+2026-11-08T19:52:04.5729049Z > Task :app:preDebugAndroidTestBuild SKIPPED
+2026-11-08T19:52:04.5733922Z > Task :app:javaPreCompileDebug
+2026-11-08T19:52:04.5734829Z > Task :app:processDebugManifestForPackage
+2026-11-08T19:52:04.5735155Z > Task :app:javaPreCompileDebugUnitTest
+2026-11-08T19:52:05.3730867Z > Task :app:generateDebugAndroidTestResValues FROM-CACHE
+2026-11-08T19:52:05.3752956Z > Task :app:extractProguardFiles
+2026-11-08T19:52:05.3753746Z > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+2026-11-08T19:52:05.4742787Z > Task :app:mergeDebugShaders
+2026-11-08T19:52:05.4756531Z > Task :app:compileDebugShaders NO-SOURCE
+2026-11-08T19:52:05.4786542Z > Task :app:generateDebugAssets UP-TO-DATE
+2026-11-08T19:52:05.5730316Z > Task :app:mergeDebugAssets
+2026-11-08T19:52:05.5763727Z > Task :app:compressDebugAssets
+2026-11-08T19:52:05.5764473Z > Task :app:desugarDebugFileDependencies
+2026-11-08T19:52:06.3733958Z > Task :app:processDebugResources
+2026-11-08T19:52:07.0729388Z > Task :app:checkDebugDuplicateClasses
+2026-11-08T19:52:36.7794500Z > Task :app:compileDebugKotlin
+2026-11-08T19:52:43.1744463Z > Task :app:mergeExtDexDebug
+2026-11-08T19:53:00.8753836Z 
+2026-11-08T19:53:00.8754927Z > Task :app:compileDebugKotlin
+2026-11-08T19:53:00.8782474Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/ChurchDiscoveryScreen.kt:124:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+2026-11-08T19:53:00.8814967Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/ChurchScreen.kt:239:164 'val Icons.Filled.OpenInNew: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.OpenInNew.
+2026-11-08T19:53:00.8816916Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/GuideTheme.kt:60:20 'var statusBarColor: Int' is deprecated. Deprecated in Java.
+2026-11-08T19:53:00.8841633Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/GuideTheme.kt:61:20 'var navigationBarColor: Int' is deprecated. Deprecated in Java.
+2026-11-08T19:53:00.8874923Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/ListeningCard.kt:30:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+2026-11-08T19:53:00.8904954Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/LocateChurchCard.kt:27:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+2026-11-08T19:53:00.8934907Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/MainActivity.kt:190:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+2026-11-08T19:53:00.8937275Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/NavigationComponents.kt:21:55 'val Icons.Filled.MenuBook: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.MenuBook.
+2026-11-08T19:53:00.8964885Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/PrayerPlayerState.kt:81:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+2026-11-08T19:53:00.8994812Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/SavedChurchForm.kt:122:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+2026-11-08T19:53:18.0757803Z 
+2026-11-08T19:53:18.0764158Z > Task :app:compileDebugJavaWithJavac NO-SOURCE
+2026-11-08T19:53:18.1764404Z > Task :app:processDebugJavaRes
+2026-11-08T19:53:18.2756922Z > Task :app:bundleDebugClassesToRuntimeJar
+2026-11-08T19:53:18.2773982Z > Task :app:bundleDebugClassesToCompileJar
+2026-11-08T19:53:20.6730129Z > Task :app:generateDebugLintReportModel
+2026-11-08T19:53:25.1737673Z > Task :app:generateDebugAndroidTestLintModel
+2026-11-08T19:53:25.2744289Z > Task :app:generateDebugUnitTestLintModel
+2026-11-08T19:53:29.2733694Z 
+2026-11-08T19:53:29.2754077Z > Task :app:compileDebugUnitTestKotlin
+2026-11-08T19:53:29.2784917Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:157:55 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T19:53:29.2814648Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:167:55 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T19:53:29.2844682Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:177:55 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T19:53:29.2863831Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:188:55 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T19:53:29.2904499Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:199:55 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T19:53:29.2914762Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:209:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T19:53:29.2927706Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:210:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T19:53:29.2948590Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:211:31 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T19:53:29.2954814Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:212:31 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T19:53:29.2957062Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:219:34 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T19:53:29.2959310Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:228:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T19:53:29.2961552Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:229:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T19:53:29.2964120Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:230:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T19:53:29.2966343Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:236:34 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T19:53:29.2968549Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:238:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T19:53:29.2970834Z w: file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:244:34 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+2026-11-08T19:53:30.7729730Z 
+2026-11-08T19:53:30.7734164Z > Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+2026-11-08T19:53:30.7754069Z > Task :app:processDebugUnitTestJavaRes
+2026-11-08T19:53:37.1761683Z > Task :app:testDebugUnitTest
+2026-11-08T19:53:41.9735544Z > Task :app:dexBuilderDebug
+2026-11-08T19:53:42.1729707Z > Task :app:mergeDebugGlobalSynthetics
+2026-11-08T19:53:43.1734370Z > Task :app:mergeDebugJavaResource
+2026-11-08T19:53:43.2764451Z > Task :app:mergeLibDexDebug
+2026-11-08T19:53:43.7736693Z > Task :app:mergeProjectDexDebug
+2026-11-08T19:53:43.7773777Z > Task :app:mergeDebugJniLibFolders
+2026-11-08T19:53:44.1741222Z > Task :app:mergeDebugNativeLibs
+2026-11-08T19:53:44.2735919Z 
+2026-11-08T19:53:44.2754159Z > Task :app:stripDebugDebugSymbols
+2026-11-08T19:53:44.2783943Z Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so.
+2026-11-08T19:53:45.6729711Z 
+2026-11-08T19:53:45.6739715Z > Task :app:validateSigningDebug
+2026-11-08T19:53:45.6740304Z > Task :app:writeDebugAppMetadata
+2026-11-08T19:53:45.7734731Z > Task :app:writeDebugSigningConfigVersions
+2026-11-08T19:53:46.7794393Z > Task :app:packageDebug
+2026-11-08T19:53:46.7837306Z > Task :app:createDebugApkListingFileRedirect
+2026-11-08T19:53:46.7914141Z > Task :app:assembleDebug
+2026-11-08T19:53:46.8784407Z > Task :app:checkDebugAndroidTestAarMetadata
+2026-11-08T19:53:46.8813907Z > Task :app:mapDebugAndroidTestSourceSetPaths
+2026-11-08T19:53:46.9734386Z > Task :app:generateDebugAndroidTestResources
+2026-11-08T19:53:47.5774703Z > Task :app:mergeDebugAndroidTestResources
+2026-11-08T19:53:47.7794910Z > Task :app:processDebugAndroidTestManifest
+2026-11-08T19:53:48.1765916Z > Task :app:processDebugAndroidTestResources
+2026-11-08T19:53:55.2764453Z > Task :app:lintAnalyzeDebug
+2026-11-08T19:53:57.8745323Z > Task :app:compileDebugAndroidTestKotlin
+2026-11-08T19:53:57.8817071Z > Task :app:javaPreCompileDebugAndroidTest FROM-CACHE
+2026-11-08T19:53:57.8843921Z > Task :app:compileDebugAndroidTestJavaWithJavac NO-SOURCE
+2026-11-08T19:53:57.8844356Z > Task :app:mergeDebugAndroidTestShaders
+2026-11-08T19:53:57.8844762Z > Task :app:compileDebugAndroidTestShaders NO-SOURCE
+2026-11-08T19:53:57.8845156Z > Task :app:generateDebugAndroidTestAssets UP-TO-DATE
+2026-11-08T19:53:57.9784273Z > Task :app:mergeDebugAndroidTestAssets
+2026-11-08T19:53:57.9838486Z > Task :app:compressDebugAndroidTestAssets
+2026-11-08T19:53:57.9894172Z > Task :app:desugarDebugAndroidTestFileDependencies FROM-CACHE
+2026-11-08T19:53:59.2764263Z > Task :app:dexBuilderDebugAndroidTest
+2026-11-08T19:54:03.5734634Z > Task :app:lintAnalyzeDebugAndroidTest
+2026-11-08T19:54:04.5754315Z > Task :app:mergeDebugAndroidTestGlobalSynthetics FROM-CACHE
+2026-11-08T19:54:04.5755901Z > Task :app:processDebugAndroidTestJavaRes
+2026-11-08T19:54:04.7754536Z > Task :app:mergeDebugAndroidTestJavaResource
+2026-11-08T19:54:04.7774193Z > Task :app:checkDebugAndroidTestDuplicateClasses
+2026-11-08T19:54:04.7827681Z > Task :app:mergeDebugAndroidTestJniLibFolders
+2026-11-08T19:54:04.8772540Z > Task :app:mergeLibDexDebugAndroidTest FROM-CACHE
+2026-11-08T19:54:05.5730244Z > Task :app:mergeExtDexDebugAndroidTest
+2026-11-08T19:54:05.5784194Z > Task :app:mergeProjectDexDebugAndroidTest
+2026-11-08T19:54:05.5814011Z > Task :app:mergeDebugAndroidTestNativeLibs NO-SOURCE
+2026-11-08T19:54:05.5843853Z > Task :app:stripDebugAndroidTestDebugSymbols NO-SOURCE
+2026-11-08T19:54:05.5853739Z > Task :app:validateSigningDebugAndroidTest
+2026-11-08T19:54:05.5872584Z > Task :app:writeDebugAndroidTestSigningConfigVersions
+2026-11-08T19:54:05.6729318Z > Task :app:packageDebugAndroidTest
+2026-11-08T19:54:05.7732925Z > Task :app:createDebugAndroidTestApkListingFileRedirect
+2026-11-08T19:54:05.7754157Z > Task :app:assembleDebugAndroidTest
+2026-11-08T19:54:07.0744388Z > Task :app:lintAnalyzeDebugUnitTest
+2026-11-08T19:54:22.8753776Z 
+2026-11-08T19:54:22.8754804Z > Task :app:lintReportDebug
+2026-11-08T19:54:22.8784210Z Wrote HTML report to file:///home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/build/reports/lint-results-debug.html
+2026-11-08T19:54:22.8813344Z 
+2026-11-08T19:54:22.8843602Z > Task :app:lintDebug
+2026-11-08T19:54:22.9734863Z gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_2-1794167463622.json
+2026-11-08T19:54:22.9735441Z 
+2026-11-08T19:54:22.9753698Z BUILD SUCCESSFUL in 3m 24s
+2026-11-08T19:54:22.9759190Z 76 actionable tasks: 71 executed, 5 from cache
+2026-11-08T19:54:23.3219954Z ##[group]Run echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+2026-11-08T19:54:23.3220648Z [36;1mecho 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules[0m
+2026-11-08T19:54:23.3221100Z [36;1msudo udevadm control --reload-rules[0m
+2026-11-08T19:54:23.3221365Z [36;1msudo udevadm trigger --name-match=kvm[0m
+2026-11-08T19:54:23.3269137Z shell: /usr/bin/bash -e {0}
+2026-11-08T19:54:23.3269343Z env:
+2026-11-08T19:54:23.3269585Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T19:54:23.3270149Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T19:54:23.3270464Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2026-11-08T19:54:23.3270703Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2026-11-08T19:54:23.3270959Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2026-11-08T19:54:23.3271235Z   GRADLE_USER_HOME: /home/runner/.gradle
+2026-11-08T19:54:23.3271464Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2026-11-08T19:54:23.3271698Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2026-11-08T19:54:23.3272036Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2026-11-08T19:54:23.3272406Z   DEVELOCITY_INJECTION_CUSTOM_VALUE: gradle-actions
+2026-11-08T19:54:23.3272654Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2026-11-08T19:54:23.3272866Z ##[endgroup]
+2026-11-08T19:54:23.3403293Z KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"
+2026-11-08T19:54:23.3858182Z ##[group]Run reactivecircus/android-emulator-runner@v2
+2026-11-08T19:54:23.3858401Z with:
+2026-11-08T19:54:23.3858521Z   api-level: 35
+2026-11-08T19:54:23.3858636Z   arch: x86_64
+2026-11-08T19:54:23.3858753Z   target: google_apis
+2026-11-08T19:54:23.3858876Z   profile: pixel_7
+2026-11-08T19:54:23.3858998Z   emulator-port: 5554
+2026-11-08T19:54:23.3859125Z   disable-animations: true
+2026-11-08T19:54:23.3859362Z   emulator-options: -no-window -gpu swiftshader -noaudio -no-boot-anim -camera-back none
+2026-11-08T19:54:23.3860404Z   script: adb -s emulator-5554 shell settings put secure show_ime_with_hard_keyboard 1
+python3 scripts/ci/run_android_ui_tests.py --recover-known-launcher-anr --serial emulator-5554 --run-id "42517059562-1" --out app/build/ci-diagnostics -- ./gradlew --no-daemon connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.feoriaCiDiagnostics=true -Pandroid.testInstrumentationRunnerArguments.feoriaCiDiagnosticsRun=42517059562-1
+
+2026-11-08T19:54:23.3861346Z   cores: 2
+2026-11-08T19:54:23.3861460Z   avd-name: test
+2026-11-08T19:54:23.3861584Z   force-avd-creation: true
+2026-11-08T19:54:23.3861721Z   emulator-boot-timeout: 600
+2026-11-08T19:54:23.3861866Z   disable-spellchecker: false
+2026-11-08T19:54:23.3862016Z   disable-linux-hw-accel: auto
+2026-11-08T19:54:23.3862160Z   enable-hw-keyboard: false
+2026-11-08T19:54:23.3862291Z   channel: stable
+2026-11-08T19:54:23.3862405Z env:
+2026-11-08T19:54:23.3862609Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T19:54:23.3862883Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T19:54:23.3863259Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2026-11-08T19:54:23.3863429Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2026-11-08T19:54:23.3863608Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2026-11-08T19:54:23.3863778Z   GRADLE_USER_HOME: /home/runner/.gradle
+2026-11-08T19:54:23.3863945Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2026-11-08T19:54:23.3864110Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2026-11-08T19:54:23.3864360Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2026-11-08T19:54:23.3864622Z   DEVELOCITY_INJECTION_CUSTOM_VALUE: gradle-actions
+2026-11-08T19:54:23.3864799Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2026-11-08T19:54:23.3864945Z ##[endgroup]
+2026-11-08T19:54:23.4281824Z ##[group]Configure emulator
+2026-11-08T19:54:23.4282303Z API level: 35
+2026-11-08T19:54:23.4282675Z System image API level: 35
+2026-11-08T19:54:23.4282975Z target: google_apis
+2026-11-08T19:54:23.4283415Z CPU architecture: x86_64
+2026-11-08T19:54:23.4283728Z Hardware profile: pixel_7
+2026-11-08T19:54:23.4284073Z Cores: 2
+2026-11-08T19:54:23.4284253Z RAM size: 
+2026-11-08T19:54:23.4284453Z Heap size: 
+2026-11-08T19:54:23.4285653Z SD card path or size: 
+2026-11-08T19:54:23.4286113Z Disk size: 
+2026-11-08T19:54:23.4286336Z AVD name: test
+2026-11-08T19:54:23.4286563Z force avd creation: true
+2026-11-08T19:54:23.4286849Z Emulator boot timeout: 600
+2026-11-08T19:54:23.4287689Z emulator port: 5554
+2026-11-08T19:54:23.4288343Z emulator options: -no-window -gpu swiftshader -noaudio -no-boot-anim -camera-back none
+2026-11-08T19:54:23.4288786Z disable animations: true
+2026-11-08T19:54:23.4289057Z disable spellchecker: false
+2026-11-08T19:54:23.4289345Z disable Linux hardware acceleration: false
+2026-11-08T19:54:23.4289827Z enable hardware keyboard: false
+2026-11-08T19:54:23.4290076Z Channel: 0 (stable)
+2026-11-08T19:54:23.4290301Z Script:
+2026-11-08T19:54:23.4290664Z adb -s emulator-5554 shell settings put secure show_ime_with_hard_keyboard 1
+2026-11-08T19:54:23.4292414Z python3 scripts/ci/run_android_ui_tests.py --recover-known-launcher-anr --serial emulator-5554 --run-id "42517059562-1" --out app/build/ci-diagnostics -- ./gradlew --no-daemon connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.feoriaCiDiagnostics=true -Pandroid.testInstrumentationRunnerArguments.feoriaCiDiagnosticsRun=42517059562-1
+2026-11-08T19:54:23.4294116Z Pre emulator launch script:
+2026-11-08T19:54:23.4294554Z ##[endgroup]
+2026-11-08T19:54:23.4295030Z ##[group]Install Android SDK
+2026-11-08T19:54:23.4323950Z [command]/usr/bin/sh -c \yes | sdkmanager --licenses > /dev/null
+2026-11-08T19:54:24.5782029Z Installing latest build tools, platform tools, and platform.
+2026-11-08T19:54:24.5790515Z [command]/usr/bin/sh -c \sdkmanager --install 'build-tools;37.0.0' platform-tools 'platforms;android-35'> /dev/null
+2026-11-08T19:54:25.5080221Z Installing latest emulator.
+2026-11-08T19:54:25.5088528Z [command]/usr/bin/sh -c \sdkmanager --install emulator --channel=0 > /dev/null
+2026-11-08T19:54:35.0019746Z Installing system images.
+2026-11-08T19:54:35.0028113Z [command]/usr/bin/sh -c \sdkmanager --install 'system-images;android-35;google_apis;x86_64' --channel=0 > /dev/null
+2026-11-08T19:55:08.8467343Z ##[endgroup]
+2026-11-08T19:55:08.8468380Z ##[group]Create AVD
+2026-11-08T19:55:08.8468946Z Creating AVD.
+2026-11-08T19:55:08.8484140Z [command]/usr/bin/sh -c \echo no | avdmanager create avd --force -n test --package 'system-images;android-35;google_apis;x86_64' --device 'pixel_7'
+2026-11-08T19:55:09.4376540Z Loading local repository...                                                     
+2026-11-08T19:55:09.4707572Z [=========                              ] 25% Loading local repository...       
+2026-11-08T19:55:09.4709239Z Auto-selecting single ABI x86_64
+2026-11-08T19:55:09.7622562Z [command]/usr/bin/sh -c \printf 'hw.cpu.ncore=2\n' >> /home/runner/.android/avd/test.avd/config.ini
+2026-11-08T19:55:09.7642408Z ##[endgroup]
+2026-11-08T19:55:09.7642794Z ##[group]Launch Emulator
+2026-11-08T19:55:09.7644516Z Starting emulator.
+2026-11-08T19:55:09.7654627Z [command]/usr/bin/sh -c \/usr/local/lib/android/sdk/emulator/emulator -port 5554 -avd test -no-window -gpu swiftshader -noaudio -no-boot-anim -camera-back none &
+2026-11-08T19:55:09.7737105Z INFO         | Android emulator version 37.2.13.0 (build_id 16740729) (CL:N/A)
+2026-11-08T19:55:09.7737551Z INFO         | Graphics backend: gfxstream
+2026-11-08T19:55:09.7737953Z INFO         | Found systemPath /usr/local/lib/android/sdk/system-images/android-35/google_apis/x86_64/
+2026-11-08T19:55:10.0312393Z INFO         | Saving last run QEMU version for the AVD to 2
+2026-11-08T19:55:10.0312802Z INFO         | Increasing RAM size to 2560MB
+2026-11-08T19:55:10.0313252Z INFO         | Guest GLES Driver: Auto (ext controls)
+2026-11-08T19:55:10.0313758Z INFO         | emuglConfig_init: vulkan_mode_selected:swiftshader gles_mode_selected:swiftshader
+2026-11-08T19:55:10.0314209Z INFO         | Checking system compatibility:
+2026-11-08T19:55:10.0314532Z INFO         |   Checking: hasSufficientDiskSpace
+2026-11-08T19:55:10.0314921Z INFO         |      Ok: Disk space requirements to run avd: `test` are met
+2026-11-08T19:55:10.0315279Z INFO         |   Checking: hasSufficientHwGpu
+2026-11-08T19:55:10.0315654Z INFO         |      Ok: Hardware GPU compatibility checks are not required
+2026-11-08T19:55:10.0316049Z INFO         |   Checking: hasSufficientSystem
+2026-11-08T19:55:10.0316979Z INFO         |      Ok: System requirements to run avd: `test` are met
+2026-11-08T19:55:10.0317829Z WARNING      | Feature QuickbootFileBacked is disabled due to stability issues, if you really want that, the environment variable ANDROID_EMU_FORCE_QUICKBOOT_FILE_BACKED need to set to 1
+2026-11-08T19:55:10.0318566Z ERROR        | Unable to connect to adb daemon on port: 5037
+2026-11-08T19:55:10.0330332Z INFO         | Storing crashdata in: /tmp/android-runner/emu-crash-37.2.13.db, detection is enabled for process: 3305
+2026-11-08T19:55:10.0330839Z INFO         | Initializing gfxstream backend
+2026-11-08T19:55:10.0339086Z INFO         | startOpenglesRendererImpl: gpu info
+2026-11-08T19:55:10.0339385Z INFO         | 
+2026-11-08T19:55:10.0341206Z INFO         | initIcdPaths: ICD set to 'swiftshader', using Swiftshader ICD
+2026-11-08T19:55:10.0342011Z INFO         | Setting ICD filenames for the loader = /usr/local/lib/android/sdk/emulator/lib64/vulkan/vk_swiftshader_icd.json
+2026-11-08T19:55:10.0342518Z INFO         | SharedLibrary::open for [/usr/local/lib/android/sdk/emulator/qemu/linux-x86_64/lib64/vulkan/libvulkan.so]
+2026-11-08T19:55:10.0344504Z INFO         | SharedLibrary::open for [/usr/local/lib/android/sdk/emulator/qemu/linux-x86_64/lib64/vulkan/libvulkan.so.1]
+2026-11-08T19:55:10.0346124Z INFO         | SharedLibrary::open for [/usr/local/lib/android/sdk/emulator/lib64/vulkan/libvulkan.so]
+2026-11-08T19:55:10.0346592Z INFO         | Added library: /usr/local/lib/android/sdk/emulator/lib64/vulkan/libvulkan.so
+2026-11-08T19:55:10.0385501Z INFO         | Selecting Vulkan device: SwiftShader Device (Subzero), Version: 1.3.0
+2026-11-08T19:55:10.0385921Z INFO         | Using Vulkan externalMemoryMode: OpaqueFd for VkEmulation
+2026-11-08T19:55:10.0774071Z INFO         | Format VK_FORMAT_G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16 does not support YCbCr sampler conversion
+2026-11-08T19:55:10.0796700Z INFO         | SharedLibrary::open for [libX11]
+2026-11-08T19:55:10.0797149Z WARNING      | Could not open libX11.so, try libX11.so.6
+2026-11-08T19:55:10.0797696Z INFO         | SharedLibrary::open for [libX11.so.6]
+2026-11-08T19:55:10.0798024Z INFO         | SharedLibrary::open for [libX11-xcb]
+2026-11-08T19:55:10.0798393Z WARNING      | Could not open libX11-xcb.so, try libX11-xcb.so.1
+2026-11-08T19:55:10.0798768Z INFO         | SharedLibrary::open for [libX11-xcb.so.1]
+2026-11-08T19:55:10.0849240Z INFO         | Initializing VkEmulation features:
+2026-11-08T19:55:10.0849563Z INFO         |     glInteropSupported: false
+2026-11-08T19:55:10.0849857Z INFO         |     useDeferredCommands: true
+2026-11-08T19:55:10.0850179Z INFO         |     createResourceWithRequirements: true
+2026-11-08T19:55:10.0850503Z INFO         |     useVulkanComposition: false
+2026-11-08T19:55:10.0850822Z INFO         |     useVulkanNativeSwapchain: false
+2026-11-08T19:55:10.0851143Z INFO         |     enable guestRenderDoc: false
+2026-11-08T19:55:10.0851458Z INFO         |     ASTC LDR emulation mode: Gpu
+2026-11-08T19:55:10.0851756Z INFO         |     enable ETC2 emulation: true
+2026-11-08T19:55:10.0852065Z INFO         |     enable Ycbcr emulation: false
+2026-11-08T19:55:10.0852355Z INFO         |     guestVulkanOnly: false
+2026-11-08T19:55:10.0852544Z INFO         |     useDedicatedAllocations: false
+2026-11-08T19:55:10.0852744Z INFO         |     guestVulkanMaxApiVersion: 1.3.0
+2026-11-08T19:55:10.0852956Z INFO         |     enableProtectedMemoryEmulation: false
+2026-11-08T19:55:10.0858648Z INFO         | Graphics Adapter Vendor Google (Google Inc.)
+2026-11-08T19:55:10.0859152Z INFO         | Graphics Adapter Android Emulator OpenGL ES Translator (Google SwiftShader)
+2026-11-08T19:55:10.0859628Z INFO         | Graphics API Version OpenGL ES 3.0 (OpenGL ES 3.0 SwiftShader 4.0.0.1)
+2026-11-08T19:55:10.0861305Z INFO         | Graphics API Extensions GL_OES_EGL_sync GL_OES_EGL_image GL_OES_EGL_image_external GL_OES_depth24 GL_OES_depth32 GL_OES_element_index_uint GL_OES_texture_float GL_OES_texture_float_linear GL_OES_compressed_paletted_texture GL_OES_compressed_ETC1_RGB8_texture GL_OES_depth_texture GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_packed_depth_stencil GL_OES_vertex_half_float GL_OES_standard_derivatives GL_OES_texture_npot GL_OES_rgb8_rgba8 GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_texture_format_BGRA8888 GL_APPLE_texture_format_BGRA8888 
+2026-11-08T19:55:10.0862739Z INFO         | Graphics Device Extensions N/A
+2026-11-08T19:55:10.0863238Z INFO         | Disabling sparse binding feature support
+2026-11-08T19:55:10.0918421Z INFO         | Sending adb public key [QAAAAOVkeQATR9rNPIQpViT/yf39bvUsCw7td0xCyJ98ZH5eYdnsFRTVs4RLTP0wBg+CcMixErfAv3i3jjeizVqHgvcHrLCtXc8mJXEik800dMPStlEvqD078Syn+lCIZt2BOJzoqCg7Mbe/JK+ibC1ltRTdviV8VGdHASAvNCvKd4rG1+5bBLalMb/j0FWHH0UnITP4ySHJInAh02cljuUbtGbgYxOgzxkPImawZ/8L5t61yOfA/m4GlctPQ2CWJ3XqEKpiiXAy29J/zoJDla12uinl6og5nE8GsJzuxAnFEKaqUzTwHqzDUwDc59lrySF8+EEhrTvsQQmLO6f2h5uQlBcbDcrhEbuJP4gkerve3aqwL/gIPjKyECdG4RaiNLD4Yyo30d6lH5VuCJ+KUqTtUi5L5o2C+VOMQ2KUwjc0/Lu5xLtTBpKxfXrdHT/HN0YmWpYXTLY/rBPLxbqdhX+rQzT8FCvCgU+Hr0LHbQseBDUW+Cn1IzfjPcs+n+C/p3CYFp5jRbrxitXhRrWh8iu33UXgYErsP73HxeTanhAILyEgq0E8aN0cpcvQCIADOvY+baWQKB0rY2lNMQ9UZ5QzxEwIOpi6J+ZLdM8KMDM/siIP/U29xWWdsdXyFMkYVyn0dYTygpAdNLPc+Y2MHo4ymRFeXyEIzMN/Sa8HOzPUYqz4nyPacgEAAQA= runner@unknown]
+2026-11-08T19:55:10.0920140Z INFO         | Userspace boot properties:
+2026-11-08T19:55:10.0920433Z INFO         |   androidboot.boot_devices=pci0000:00/0000:00:03.0 pci0000:00/0000:00:06.0
+2026-11-08T19:55:10.0920703Z INFO         |   androidboot.dalvik.vm.heapsize=576m
+2026-11-08T19:55:10.0920929Z INFO         |   androidboot.debug.hwui.renderer=skiagl
+2026-11-08T19:55:10.0921153Z INFO         |   androidboot.debug.sf.nobootanimation=1
+2026-11-08T19:55:10.0921357Z INFO         |   androidboot.hardware=ranchu
+2026-11-08T19:55:10.0921567Z INFO         |   androidboot.hardware.gltransport=pipe
+2026-11-08T19:55:10.0921781Z INFO         |   androidboot.hardware.vulkan=ranchu
+2026-11-08T19:55:10.0921978Z INFO         |   androidboot.logcat=*:V
+2026-11-08T19:55:10.0922176Z INFO         |   androidboot.opengles.version=196608
+2026-11-08T19:55:10.0922364Z INFO         |   androidboot.qemu=1
+2026-11-08T19:55:10.0924738Z INFO         |   androidboot.qemu.adb.pubkey=QAAAAOVkeQATR9rNPIQpViT/yf39bvUsCw7td0xCyJ98ZH5eYdnsFRTVs4RLTP0wBg+CcMixErfAv3i3jjeizVqHgvcHrLCtXc8mJXEik800dMPStlEvqD078Syn+lCIZt2BOJzoqCg7Mbe/JK+ibC1ltRTdviV8VGdHASAvNCvKd4rG1+5bBLalMb/j0FWHH0UnITP4ySHJInAh02cljuUbtGbgYxOgzxkPImawZ/8L5t61yOfA/m4GlctPQ2CWJ3XqEKpiiXAy29J/zoJDla12uinl6og5nE8GsJzuxAnFEKaqUzTwHqzDUwDc59lrySF8+EEhrTvsQQmLO6f2h5uQlBcbDcrhEbuJP4gkerve3aqwL/gIPjKyECdG4RaiNLD4Yyo30d6lH5VuCJ+KUqTtUi5L5o2C+VOMQ2KUwjc0/Lu5xLtTBpKxfXrdHT/HN0YmWpYXTLY/rBPLxbqdhX+rQzT8FCvCgU+Hr0LHbQseBDUW+Cn1IzfjPcs+n+C/p3CYFp5jRbrxitXhRrWh8iu33UXgYErsP73HxeTanhAILyEgq0E8aN0cpcvQCIADOvY+baWQKB0rY2lNMQ9UZ5QzxEwIOpi6J+ZLdM8KMDM/siIP/U29xWWdsdXyFMkYVyn0dYTygpAdNLPc+Y2MHo4ymRFeXyEIzMN/Sa8HOzPUYqz4nyPacgEAAQA= runner@unknown
+2026-11-08T19:55:10.0926418Z INFO         |   androidboot.qemu.avd_name=test
+2026-11-08T19:55:10.0926644Z INFO         |   androidboot.qemu.camera_hq_edge_processing=0
+2026-11-08T19:55:10.0926871Z INFO         |   androidboot.qemu.camera_protocol_ver=1
+2026-11-08T19:55:10.0927096Z INFO         |   androidboot.qemu.cpuvulkan.version=4206592
+2026-11-08T19:55:10.0927350Z INFO         |   androidboot.qemu.gltransport.drawFlushInterval=800
+2026-11-08T19:55:10.0927590Z INFO         |   androidboot.qemu.gltransport.name=pipe
+2026-11-08T19:55:10.0927799Z INFO         |   androidboot.qemu.hwcodec.avcdec=2
+2026-11-08T19:55:10.0928011Z INFO         |   androidboot.qemu.hwcodec.hevcdec=2
+2026-11-08T19:55:10.0928216Z INFO         |   androidboot.qemu.hwcodec.vpxdec=2
+2026-11-08T19:55:10.0928476Z INFO         |   androidboot.qemu.settings.system.screen_off_timeout=2147483647
+2026-11-08T19:55:10.0928723Z INFO         |   androidboot.qemu.skin=1080x2400
+2026-11-08T19:55:10.0928920Z INFO         |   androidboot.qemu.virtiowifi=1
+2026-11-08T19:55:10.0929113Z INFO         |   androidboot.qemu.vsync=60
+2026-11-08T19:55:10.0929439Z INFO         |   androidboot.serialno=EMULATOR37X2X13X0
+2026-11-08T19:55:10.0929756Z INFO         |   androidboot.vbmeta.digest=b3271ba499104f4631ae3723913d5c12574e01715fce5b82d60beed097ead264
+2026-11-08T19:55:10.0930053Z INFO         |   androidboot.vbmeta.hash_alg=sha256
+2026-11-08T19:55:10.0930248Z INFO         |   androidboot.vbmeta.size=6720
+2026-11-08T19:55:10.0930442Z INFO         |   androidboot.veritymode=enforcing
+2026-11-08T19:55:10.1084381Z WARNING: cannnot unmap ptr 0x70b2c9801000 as it is in the protected range from 0x70b229800000 to 0x70b2c9a00000
+2026-11-08T19:55:10.1360446Z INFO         | Monitoring duration of emulator setup.
+2026-11-08T19:55:11.1247456Z INFO         | Successfully initialized netsim WiFi
+2026-11-08T19:55:11.1247917Z INFO         | Activated packet streamer for bluetooth emulation
+2026-11-08T19:55:11.1283542Z INFO         | Setting display: 0 configuration to: 1080x2400, dpi: 420x420 
+2026-11-08T19:55:11.1284072Z INFO         | setDisplayActiveConfig: id:0, 1080x2400
+2026-11-08T19:55:11.1284359Z INFO         | emulatorSetupEnvironment: Environment scene is not required
+2026-11-08T19:55:11.1333624Z INFO         | Loading snapshot 'default_boot'...
+2026-11-08T19:55:11.1333992Z WARNING      | Failed to process .ini file /home/runner/.android/emu-update-last-check.ini for reading.
+2026-11-08T19:55:11.1525906Z WARNING      | Device 'cache' does not have the requested snapshot 'default_boot'
+2026-11-08T19:55:11.1526189Z 
+2026-11-08T19:55:11.1526367Z WARNING      | Failed to load snapshot 'default_boot'
+2026-11-08T19:55:11.1527104Z USER_INFO    | The emulator is performing a cold boot without a saved state because there's no snapshot and you have configured it not to save on exit.
+2026-11-08T19:55:11.3337484Z WARNING      | Failed to process .ini file /home/runner/.android/emu-update-last-check.ini for reading.
+2026-11-08T19:55:19.7693219Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T19:55:19.7726536Z * daemon not running; starting now at tcp:5037
+2026-11-08T19:55:19.9874982Z * daemon started successfully
+2026-11-08T19:55:19.9880299Z adb: device offline
+2026-11-08T19:55:19.9885812Z The process '/usr/local/lib/android/sdk/platform-tools/adb' failed with exit code 1
+2026-11-08T19:55:21.9986589Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T19:55:22.0234879Z 
+2026-11-08T19:55:24.0314671Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T19:55:24.0443363Z 
+2026-11-08T19:55:26.0514810Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T19:55:26.0674754Z 
+2026-11-08T19:55:28.0742272Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T19:55:28.1266115Z 
+2026-11-08T19:55:30.1344897Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T19:55:30.1554218Z 
+2026-11-08T19:55:32.1583591Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T19:55:32.1753722Z 
+2026-11-08T19:55:34.1864962Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T19:55:34.2217627Z 
+2026-11-08T19:55:35.7868153Z INFO         | Boot completed in 25994 ms
+2026-11-08T19:55:35.7895285Z INFO         | Increasing screen off timeout, logcat buffer size to 2M.
+2026-11-08T19:55:36.2284838Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell getprop sys.boot_completed
+2026-11-08T19:55:36.2401543Z 1
+2026-11-08T19:55:36.2402537Z Emulator booted.
+2026-11-08T19:55:36.2420515Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell input keyevent 82
+2026-11-08T19:55:42.9428092Z Disabling animations.
+2026-11-08T19:55:42.9445324Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell settings put global window_animation_scale 0.0
+2026-11-08T19:55:43.5584231Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell settings put global transition_animation_scale 0.0
+2026-11-08T19:55:43.8114066Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell settings put global animator_duration_scale 0.0
+2026-11-08T19:55:43.8911476Z ##[endgroup]
+2026-11-08T19:55:43.8965382Z [command]/usr/bin/sh -c adb -s emulator-5554 shell settings put secure show_ime_with_hard_keyboard 1
+2026-11-08T19:55:43.9521014Z [command]/usr/bin/sh -c python3 scripts/ci/run_android_ui_tests.py --recover-known-launcher-anr --serial emulator-5554 --run-id "42517059562-1" --out app/build/ci-diagnostics -- ./gradlew --no-daemon connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.feoriaCiDiagnostics=true -Pandroid.testInstrumentationRunnerArguments.feoriaCiDiagnosticsRun=42517059562-1
+2026-11-08T19:55:50.5000947Z To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.7/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+2026-11-08T19:55:51.7015981Z Daemon will be stopped at the end of the build 
+2026-11-08T19:55:58.0983891Z 
+2026-11-08T19:55:58.1024364Z > Configure project :app
+2026-11-08T19:55:58.1084905Z Passing custom test runner argument android.testInstrumentationRunnerArguments.feoriaCiDiagnostics from gradle.properties or command line is not compatible with configuration caching. Please specify this argument using android gradle dsl.
+2026-11-08T19:55:58.1114693Z Passing custom test runner argument android.testInstrumentationRunnerArguments.feoriaCiDiagnosticsRun from gradle.properties or command line is not compatible with configuration caching. Please specify this argument using android gradle dsl.
+2026-11-08T19:56:00.7982495Z 
+2026-11-08T19:56:00.7983942Z > Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-11-08T19:56:00.8006408Z > Task :app:preBuild UP-TO-DATE
+2026-11-08T19:56:00.8034380Z > Task :app:preDebugBuild UP-TO-DATE
+2026-11-08T19:56:01.2972114Z > Task :app:checkDebugAarMetadata UP-TO-DATE
+2026-11-08T19:56:01.2994013Z > Task :app:generateDebugResValues UP-TO-DATE
+2026-11-08T19:56:01.3972268Z > Task :app:mapDebugSourceSetPaths UP-TO-DATE
+2026-11-08T19:56:01.3993862Z > Task :app:generateDebugResources UP-TO-DATE
+2026-11-08T19:56:01.4023745Z > Task :app:mergeDebugResources UP-TO-DATE
+2026-11-08T19:56:01.4039456Z > Task :app:packageDebugResources UP-TO-DATE
+2026-11-08T19:56:01.4073594Z > Task :app:parseDebugLocalResources UP-TO-DATE
+2026-11-08T19:56:01.4074327Z > Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+2026-11-08T19:56:01.4098668Z > Task :app:extractDeepLinksDebug UP-TO-DATE
+2026-11-08T19:56:01.4979336Z > Task :app:processDebugMainManifest UP-TO-DATE
+2026-11-08T19:56:01.4983680Z > Task :app:processDebugManifest UP-TO-DATE
+2026-11-08T19:56:01.5013560Z > Task :app:processDebugManifestForPackage UP-TO-DATE
+2026-11-08T19:56:01.7974061Z > Task :app:processDebugResources UP-TO-DATE
+2026-11-08T19:56:02.1992304Z > Task :app:compileDebugKotlin UP-TO-DATE
+2026-11-08T19:56:02.2011034Z > Task :app:javaPreCompileDebug UP-TO-DATE
+2026-11-08T19:56:02.2042124Z > Task :app:compileDebugJavaWithJavac NO-SOURCE
+2026-11-08T19:56:02.2045047Z > Task :app:bundleDebugClassesToCompileJar UP-TO-DATE
+2026-11-08T19:56:02.2076220Z > Task :app:preDebugAndroidTestBuild SKIPPED
+2026-11-08T19:56:02.2984957Z > Task :app:checkDebugAndroidTestAarMetadata UP-TO-DATE
+2026-11-08T19:56:02.3976615Z > Task :app:generateDebugAndroidTestResValues UP-TO-DATE
+2026-11-08T19:56:02.4036247Z > Task :app:mapDebugAndroidTestSourceSetPaths UP-TO-DATE
+2026-11-08T19:56:02.4038432Z > Task :app:generateDebugAndroidTestResources UP-TO-DATE
+2026-11-08T19:56:02.4038991Z > Task :app:mergeDebugAndroidTestResources UP-TO-DATE
+2026-11-08T19:56:02.4995249Z > Task :app:processDebugAndroidTestManifest UP-TO-DATE
+2026-11-08T19:56:02.5015142Z > Task :app:processDebugAndroidTestResources UP-TO-DATE
+2026-11-08T19:56:02.5993680Z > Task :app:compileDebugAndroidTestKotlin UP-TO-DATE
+2026-11-08T19:56:02.6027908Z > Task :app:javaPreCompileDebugAndroidTest UP-TO-DATE
+2026-11-08T19:56:02.6051956Z > Task :app:compileDebugAndroidTestJavaWithJavac NO-SOURCE
+2026-11-08T19:56:02.6052473Z > Task :app:mergeDebugShaders UP-TO-DATE
+2026-11-08T19:56:02.7005570Z > Task :app:compileDebugShaders NO-SOURCE
+2026-11-08T19:56:02.7026551Z > Task :app:generateDebugAssets UP-TO-DATE
+2026-11-08T19:56:02.7073742Z > Task :app:mergeDebugAssets UP-TO-DATE
+2026-11-08T19:56:02.7104219Z > Task :app:compressDebugAssets UP-TO-DATE
+2026-11-08T19:56:02.7118887Z > Task :app:desugarDebugFileDependencies UP-TO-DATE
+2026-11-08T19:56:02.7123524Z > Task :app:dexBuilderDebug UP-TO-DATE
+2026-11-08T19:56:03.1004725Z > Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
+2026-11-08T19:56:03.1053893Z > Task :app:processDebugJavaRes UP-TO-DATE
+2026-11-08T19:56:03.1094715Z > Task :app:mergeDebugJavaResource UP-TO-DATE
+2026-11-08T19:56:03.1984745Z > Task :app:checkDebugDuplicateClasses UP-TO-DATE
+2026-11-08T19:56:03.2023924Z > Task :app:mergeExtDexDebug UP-TO-DATE
+2026-11-08T19:56:03.2053735Z > Task :app:mergeLibDexDebug UP-TO-DATE
+2026-11-08T19:56:03.2074992Z > Task :app:mergeProjectDexDebug UP-TO-DATE
+2026-11-08T19:56:03.2093714Z > Task :app:mergeDebugJniLibFolders UP-TO-DATE
+2026-11-08T19:56:03.3035583Z > Task :app:mergeDebugNativeLibs UP-TO-DATE
+2026-11-08T19:56:03.3058500Z > Task :app:stripDebugDebugSymbols UP-TO-DATE
+2026-11-08T19:56:03.3084227Z > Task :app:validateSigningDebug UP-TO-DATE
+2026-11-08T19:56:03.3088357Z > Task :app:writeDebugAppMetadata UP-TO-DATE
+2026-11-08T19:56:03.3148475Z > Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+2026-11-08T19:56:03.3207601Z > Task :app:packageDebug UP-TO-DATE
+2026-11-08T19:56:03.3252836Z > Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+2026-11-08T19:56:03.3303803Z > Task :app:mergeDebugAndroidTestShaders UP-TO-DATE
+2026-11-08T19:56:03.3341219Z > Task :app:compileDebugAndroidTestShaders NO-SOURCE
+2026-11-08T19:56:03.3385324Z > Task :app:generateDebugAndroidTestAssets UP-TO-DATE
+2026-11-08T19:56:03.4006082Z > Task :app:mergeDebugAndroidTestAssets UP-TO-DATE
+2026-11-08T19:56:03.4014843Z > Task :app:compressDebugAndroidTestAssets UP-TO-DATE
+2026-11-08T19:56:03.4054024Z > Task :app:desugarDebugAndroidTestFileDependencies UP-TO-DATE
+2026-11-08T19:56:03.4105878Z > Task :app:dexBuilderDebugAndroidTest UP-TO-DATE
+2026-11-08T19:56:03.4129307Z > Task :app:mergeDebugAndroidTestGlobalSynthetics UP-TO-DATE
+2026-11-08T19:56:03.4134096Z > Task :app:processDebugAndroidTestJavaRes UP-TO-DATE
+2026-11-08T19:56:03.4164341Z > Task :app:mergeDebugAndroidTestJavaResource UP-TO-DATE
+2026-11-08T19:56:03.5011584Z > Task :app:checkDebugAndroidTestDuplicateClasses UP-TO-DATE
+2026-11-08T19:56:03.5073934Z > Task :app:mergeExtDexDebugAndroidTest UP-TO-DATE
+2026-11-08T19:56:03.5113778Z > Task :app:mergeLibDexDebugAndroidTest UP-TO-DATE
+2026-11-08T19:56:03.5143795Z > Task :app:mergeProjectDexDebugAndroidTest UP-TO-DATE
+2026-11-08T19:56:03.5165404Z > Task :app:mergeDebugAndroidTestJniLibFolders UP-TO-DATE
+2026-11-08T19:56:03.5184975Z > Task :app:mergeDebugAndroidTestNativeLibs NO-SOURCE
+2026-11-08T19:56:03.5185619Z > Task :app:stripDebugAndroidTestDebugSymbols NO-SOURCE
+2026-11-08T19:56:03.5186039Z > Task :app:validateSigningDebugAndroidTest UP-TO-DATE
+2026-11-08T19:56:03.5216153Z > Task :app:writeDebugAndroidTestSigningConfigVersions UP-TO-DATE
+2026-11-08T19:56:03.5217206Z > Task :app:packageDebugAndroidTest UP-TO-DATE
+2026-11-08T19:56:03.5217898Z > Task :app:createDebugAndroidTestApkListingFileRedirect UP-TO-DATE
+2026-11-08T19:56:13.5971203Z [EmulatorConsole]: Failed to start Emulator console for 5554
+2026-11-08T19:56:25.3970259Z 
+2026-11-08T19:56:25.3973235Z > Task :app:connectedDebugAndroidTest
+2026-11-08T19:56:25.3974053Z Starting 120 tests on emulator-5554 - 15
+2026-11-08T19:56:35.3986420Z 
+2026-11-08T19:56:35.4024047Z emulator-5554 - 15 Tests 2/120 completed. (0 skipped) (0 failed)
+2026-11-08T19:56:45.3974355Z emulator-5554 - 15 Tests 7/120 completed. (0 skipped) (0 failed)
+2026-11-08T19:56:55.4054599Z emulator-5554 - 15 Tests 10/120 completed. (0 skipped) (0 failed)
+2026-11-08T19:57:05.3989794Z emulator-5554 - 15 Tests 12/120 completed. (0 skipped) (0 failed)
+2026-11-08T19:57:15.3984583Z emulator-5554 - 15 Tests 15/120 completed. (0 skipped) (0 failed)
+2026-11-08T19:57:25.3994538Z emulator-5554 - 15 Tests 19/120 completed. (0 skipped) (0 failed)
+2026-11-08T19:57:35.3974020Z emulator-5554 - 15 Tests 23/120 completed. (0 skipped) (0 failed)
+2026-11-08T19:57:45.3984180Z emulator-5554 - 15 Tests 24/120 completed. (0 skipped) (0 failed)
+2026-11-08T19:57:55.4004338Z emulator-5554 - 15 Tests 27/120 completed. (0 skipped) (0 failed)
+2026-11-08T19:58:05.3973744Z emulator-5554 - 15 Tests 32/120 completed. (0 skipped) (0 failed)
+2026-11-08T19:58:15.3970552Z emulator-5554 - 15 Tests 36/120 completed. (0 skipped) (0 failed)
+2026-11-08T19:58:25.3997968Z emulator-5554 - 15 Tests 39/120 completed. (0 skipped) (0 failed)
+2026-11-08T19:58:35.3970995Z emulator-5554 - 15 Tests 41/120 completed. (0 skipped) (0 failed)
+2026-11-08T19:58:45.3970750Z emulator-5554 - 15 Tests 44/120 completed. (0 skipped) (0 failed)
+2026-11-08T19:58:55.3984691Z emulator-5554 - 15 Tests 48/120 completed. (0 skipped) (0 failed)
+2026-11-08T19:59:05.3971232Z emulator-5554 - 15 Tests 52/120 completed. (0 skipped) (0 failed)
+2026-11-08T19:59:15.3970525Z emulator-5554 - 15 Tests 55/120 completed. (0 skipped) (0 failed)
+2026-11-08T19:59:25.3975323Z emulator-5554 - 15 Tests 57/120 completed. (0 skipped) (0 failed)
+2026-11-08T19:59:35.4015528Z emulator-5554 - 15 Tests 60/120 completed. (0 skipped) (0 failed)
+2026-11-08T19:59:45.3969929Z emulator-5554 - 15 Tests 63/120 completed. (0 skipped) (0 failed)
+2026-11-08T19:59:55.3994467Z emulator-5554 - 15 Tests 70/120 completed. (0 skipped) (0 failed)
+2026-11-08T20:00:05.3994220Z emulator-5554 - 15 Tests 76/120 completed. (0 skipped) (0 failed)
+2026-11-08T20:00:15.4004633Z emulator-5554 - 15 Tests 80/120 completed. (0 skipped) (0 failed)
+2026-11-08T20:00:25.3968394Z emulator-5554 - 15 Tests 83/120 completed. (0 skipped) (0 failed)
+2026-11-08T20:00:35.3984344Z emulator-5554 - 15 Tests 87/120 completed. (0 skipped) (0 failed)
+2026-11-08T20:00:45.3974602Z emulator-5554 - 15 Tests 91/120 completed. (0 skipped) (0 failed)
+2026-11-08T20:00:55.3989770Z emulator-5554 - 15 Tests 93/120 completed. (0 skipped) (0 failed)
+2026-11-08T20:01:05.3970646Z emulator-5554 - 15 Tests 98/120 completed. (0 skipped) (0 failed)
+2026-11-08T20:01:15.3990501Z emulator-5554 - 15 Tests 100/120 completed. (0 skipped) (0 failed)
+2026-11-08T20:01:25.3976838Z emulator-5554 - 15 Tests 104/120 completed. (0 skipped) (0 failed)
+2026-11-08T20:01:35.4026150Z emulator-5554 - 15 Tests 109/120 completed. (0 skipped) (0 failed)
+2026-11-08T20:01:45.3969282Z emulator-5554 - 15 Tests 114/120 completed. (0 skipped) (0 failed)
+2026-11-08T20:01:55.4014343Z emulator-5554 - 15 Tests 120/120 completed. (0 skipped) (0 failed)
+2026-11-08T20:01:56.6975779Z Finished 120 tests on emulator-5554 - 15
+2026-11-08T20:01:57.6977569Z gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__reactivecircus_android-emulator-runner-1794167753930.json
+2026-11-08T20:01:57.6978544Z 
+2026-11-08T20:01:57.6978937Z BUILD SUCCESSFUL in 6m 7s
+2026-11-08T20:01:57.6979363Z 63 actionable tasks: 1 executed, 62 up-to-date
+2026-11-08T20:01:59.0629905Z ##[group]Terminate Emulator
+2026-11-08T20:01:59.0638637Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 emu kill
+2026-11-08T20:01:59.0663239Z OK: killing emulator, bye bye
+2026-11-08T20:01:59.0664833Z OK
+2026-11-08T20:01:59.0667999Z INFO         | Wait for emulator (pid 3305) 20 seconds to shutdown gracefully before kill;you can set environment variable ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL(in seconds) to change the default value (20 seconds)
+2026-11-08T20:01:59.0668583Z 
+2026-11-08T20:01:59.0668840Z ##[endgroup]
+2026-11-08T20:02:02.5472003Z INFO         | Saving with gfxstream=1
+2026-11-08T20:02:02.6978541Z INFO         | Saving snapshot 'default_boot' took 3596 ms
+2026-11-08T20:02:03.4262846Z ERROR        | stop: Not implemented
+2026-11-08T20:02:03.4263789Z WARNING      | Emulator client has not yet been configured.. Call configure me first!
+2026-11-08T20:02:03.4460095Z INFO         | removeAll
+2026-11-08T20:02:03.6614965Z WARNING      | Netsim Wifi dns:///localhost:44921 is gone due to Stream removed (CANCELLED)
+2026-11-08T20:02:04.5222426Z ##[group]Run actions/upload-artifact@v4
+2026-11-08T20:02:04.5222592Z with:
+2026-11-08T20:02:04.5222703Z   name: app-debug
+2026-11-08T20:02:04.5222841Z   path: app/build/outputs/apk/debug/app-debug.apk
+2026-11-08T20:02:04.5223012Z   if-no-files-found: error
+2026-11-08T20:02:04.5223333Z   compression-level: 6
+2026-11-08T20:02:04.5223490Z   overwrite: false
+2026-11-08T20:02:04.5223610Z   include-hidden-files: false
+2026-11-08T20:02:04.5223742Z env:
+2026-11-08T20:02:04.5223910Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T20:02:04.5224184Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T20:02:04.5224400Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2026-11-08T20:02:04.5224562Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2026-11-08T20:02:04.5224733Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2026-11-08T20:02:04.5224897Z   GRADLE_USER_HOME: /home/runner/.gradle
+2026-11-08T20:02:04.5225072Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2026-11-08T20:02:04.5225226Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2026-11-08T20:02:04.5225455Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2026-11-08T20:02:04.5225704Z   DEVELOCITY_INJECTION_CUSTOM_VALUE: gradle-actions
+2026-11-08T20:02:04.5225872Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2026-11-08T20:02:04.5226028Z   ANDROID_AVD_HOME: /home/runner/.android/avd
+2026-11-08T20:02:04.5226177Z ##[endgroup]
+2026-11-08T20:02:04.9145648Z (node:4814) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-08T20:02:04.9146102Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-08T20:02:04.9174650Z With the provided path, there will be 1 file uploaded
+2026-11-08T20:02:04.9177879Z Artifact name is valid!
+2026-11-08T20:02:04.9178995Z Root directory input is valid!
+2026-11-08T20:02:05.2025129Z Beginning upload of artifact content to blob storage
+2026-11-08T20:02:05.3885091Z (node:4814) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-08T20:02:05.8279017Z Uploaded bytes 8388608
+2026-11-08T20:02:06.0115901Z Uploaded bytes 16587413
+2026-11-08T20:02:06.0474297Z Finished uploading artifact content to blob storage!
+2026-11-08T20:02:06.0475167Z SHA256 digest of uploaded artifact zip is 02dcb69f0f68a737bd3b3d5f8a041042ce91ca2d3c27619d67ff49284198ef41
+2026-11-08T20:02:06.0476429Z Finalizing artifact upload
+2026-11-08T20:02:06.4854076Z Artifact app-debug.zip successfully finalized. Artifact ID 13632271035
+2026-11-08T20:02:06.4854558Z Artifact app-debug has been successfully uploaded! Final size is 16587413 bytes. Artifact ID is 13632271035
+2026-11-08T20:02:06.4858840Z Artifact download URL: https://github.com/jeymog888/PravoslavnyyProvodnik/actions/runs/42517059562/artifacts/13632271035
+2026-11-08T20:02:06.5458023Z ##[group]Run actions/upload-artifact@v4
+2026-11-08T20:02:06.5458189Z with:
+2026-11-08T20:02:06.5458310Z   name: verification-reports
+2026-11-08T20:02:06.5458922Z   path: app/build/reports/tests/testDebugUnitTest/
+app/build/test-results/testDebugUnitTest/
+app/build/ci-diagnostics/
+app/build/reports/lint-results-debug.html
+app/build/reports/lint-results-debug.xml
+app/build/reports/androidTests/connected/
+app/build/outputs/androidTest-results/connected/
+
+2026-11-08T20:02:06.5459533Z   if-no-files-found: ignore
+2026-11-08T20:02:06.5459674Z   compression-level: 6
+2026-11-08T20:02:06.5459950Z   overwrite: false
+2026-11-08T20:02:06.5460111Z   include-hidden-files: false
+2026-11-08T20:02:06.5460246Z env:
+2026-11-08T20:02:06.5460411Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T20:02:06.5460677Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+2026-11-08T20:02:06.5460900Z   ANDROID_HOME: /usr/local/lib/android/sdk
+2026-11-08T20:02:06.5461104Z   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+2026-11-08T20:02:06.5461280Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2026-11-08T20:02:06.5461449Z   GRADLE_USER_HOME: /home/runner/.gradle
+2026-11-08T20:02:06.5461612Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2026-11-08T20:02:06.5461774Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2026-11-08T20:02:06.5462008Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2026-11-08T20:02:06.5462262Z   DEVELOCITY_INJECTION_CUSTOM_VALUE: gradle-actions
+2026-11-08T20:02:06.5462446Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2026-11-08T20:02:06.5462608Z   ANDROID_AVD_HOME: /home/runner/.android/avd
+2026-11-08T20:02:06.5462761Z ##[endgroup]
+2026-11-08T20:02:06.6751567Z (node:4828) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-08T20:02:06.6752333Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-08T20:02:06.7208032Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-11-08T20:02:06.7211033Z The least common ancestor is /home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik/app/build. This will be the root directory of the artifact
+2026-11-08T20:02:06.7211858Z With the provided path, there will be 313 files uploaded
+2026-11-08T20:02:06.7212563Z Artifact name is valid!
+2026-11-08T20:02:06.7212937Z Root directory input is valid!
+2026-11-08T20:02:06.9768354Z Beginning upload of artifact content to blob storage
+2026-11-08T20:02:07.2428554Z (node:4828) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-08T20:02:07.6384328Z Uploaded bytes 4642301
+2026-11-08T20:02:07.6738024Z Finished uploading artifact content to blob storage!
+2026-11-08T20:02:07.6738814Z SHA256 digest of uploaded artifact zip is 210feeb9b3acc663c7442f3a451f3af1646f7befdae589d29f01f39421807bf6
+2026-11-08T20:02:07.6740082Z Finalizing artifact upload
+2026-11-08T20:02:08.0962898Z Artifact verification-reports.zip successfully finalized. Artifact ID 13631623274
+2026-11-08T20:02:08.0963554Z Artifact verification-reports has been successfully uploaded! Final size is 4642301 bytes. Artifact ID is 13631623274
+2026-11-08T20:02:08.0968437Z Artifact download URL: https://github.com/jeymog888/PravoslavnyyProvodnik/actions/runs/42517059562/artifacts/13631623274
+2026-11-08T20:02:08.1188267Z Post job cleanup.
+2026-11-08T20:02:08.2737315Z In post-action step
+2026-11-08T20:02:08.2744240Z Cache is read-only: will not save state for use in subsequent builds.
+2026-11-08T20:02:08.2747731Z Generating Job Summary
+2026-11-08T20:02:08.2759819Z Completed post-action step
+2026-11-08T20:02:08.2843745Z Post job cleanup.
+2026-11-08T20:02:08.3723535Z (node:4852) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-08T20:02:08.3724267Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-08T20:02:08.3890473Z Post job cleanup.
+2026-11-08T20:02:08.4459312Z [command]/usr/bin/git version
+2026-11-08T20:02:08.4500842Z git version 2.56.0
+2026-11-08T20:02:08.4513259Z Temporarily overriding HOME='/home/runner/work/_temp/3381ad3f-9cb5-44ad-93b1-3be8e8b7fd84' before making global git config changes
+2026-11-08T20:02:08.4514186Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-08T20:02:08.4516417Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/PravoslavnyyProvodnik/PravoslavnyyProvodnik
+2026-11-08T20:02:08.4550296Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-08T20:02:08.4578783Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-08T20:02:08.4892336Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-08T20:02:08.4918889Z http.https://github.com/.extraheader
+2026-11-08T20:02:08.4927786Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-08T20:02:08.4968187Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-08T20:02:08.5192857Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-08T20:02:08.5222619Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-08T20:02:08.5545950Z Cleaning up orphan processes
+2026-11-08T20:02:08.5868977Z Terminate orphan process: pid (3411) (adb)
+2026-11-08T20:02:08.5981695Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-java@v4, actions/upload-artifact@v4, android-actions/setup-android@v3, gradle/actions/setup-gradle@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
