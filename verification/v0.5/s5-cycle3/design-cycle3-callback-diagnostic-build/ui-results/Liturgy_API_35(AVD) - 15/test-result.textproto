@@ -1,0 +1,73 @@
+# 2026-11-08T16:02:54.964813Z:
+test_suite_meta_data {
+  scheduled_test_case_count: 1
+}
+test_status: FAILED
+test_result {
+  test_case {
+    test_class: "CompactReaderMatrixTest"
+    test_package: "ru.liturgyguide.ui"
+    test_method: "allEighteenLandscapeNamesKeepFullAccessibleContextAndReadingSpace"
+    start_time {
+      seconds: 1794153759
+      nanos: 317000000
+    }
+    end_time {
+      seconds: 1794153773
+      nanos: 339000000
+    }
+  }
+  test_status: FAILED
+  error {
+    error_message: "java.lang.AssertionError: Failed to assert the following: (Selected = \'true\')\nSemantics of the node:\nNode #29 at (l=555.0, t=224.0, r=812.0, b=350.0)px, Tag: \'player_meaning_tab\'\nFocused = \'false\'\nRole = \'Tab\'\nSelected = \'false\'\nText = \'[\320\241\320\274\321\213\321\201\320\273]\'\nActions = [OnClick, RequestFocus, SetTextSubstitution, ShowTextSubstitution, ClearTextSubstitution, GetTextLayoutResult]\nMergeDescendants = \'true\'\nSelector used: (TestTag = \'player_meaning_tab\')\n\nat androidx.compose.ui.test.AssertionsKt.assert(Assertions.kt:265)\nat androidx.compose.ui.test.AssertionsKt.assert$default(Assertions.kt:255)\nat androidx.compose.ui.test.AssertionsKt.assertIsSelected(Assertions.kt:84)\nat ru.liturgyguide.ui.CompactReaderMatrixTest.allEighteenLandscapeNamesKeepFullAccessibleContextAndReadingSpace(CompactReaderMatrixTest.kt:71)\n"
+    error_type: "java.lang.AssertionError"
+    stack_trace: "java.lang.AssertionError: Failed to assert the following: (Selected = \'true\')\nSemantics of the node:\nNode #29 at (l=555.0, t=224.0, r=812.0, b=350.0)px, Tag: \'player_meaning_tab\'\nFocused = \'false\'\nRole = \'Tab\'\nSelected = \'false\'\nText = \'[\320\241\320\274\321\213\321\201\320\273]\'\nActions = [OnClick, RequestFocus, SetTextSubstitution, ShowTextSubstitution, ClearTextSubstitution, GetTextLayoutResult]\nMergeDescendants = \'true\'\nSelector used: (TestTag = \'player_meaning_tab\')\n\nat androidx.compose.ui.test.AssertionsKt.assert(Assertions.kt:265)\nat androidx.compose.ui.test.AssertionsKt.assert$default(Assertions.kt:255)\nat androidx.compose.ui.test.AssertionsKt.assertIsSelected(Assertions.kt:84)\nat ru.liturgyguide.ui.CompactReaderMatrixTest.allEighteenLandscapeNamesKeepFullAccessibleContextAndReadingSpace(CompactReaderMatrixTest.kt:71)\n"
+  }
+  output_artifact {
+    label {
+      label: "logcat"
+      namespace: "android"
+    }
+    source_path {
+      path: "/Users/dmitriymoguschiy/Documents/Spectrion Projects/\320\235\320\276\320\262\321\213\320\271-\321\207\320\260\321\202-21AE5054/PravoslavnyyProvodnik/app/build/outputs/androidTest-results/connected/debug/Liturgy_API_35(AVD) - 15/logcat-ru.liturgyguide.ui.CompactReaderMatrixTest-allEighteenLandscapeNamesKeepFullAccessibleContextAndReadingSpace.txt"
+    }
+  }
+  output_artifact {
+    label {
+      label: "device-info"
+      namespace: "android"
+    }
+    source_path {
+      path: "/Users/dmitriymoguschiy/Documents/Spectrion Projects/\320\235\320\276\320\262\321\213\320\271-\321\207\320\260\321\202-21AE5054/PravoslavnyyProvodnik/app/build/outputs/androidTest-results/connected/debug/Liturgy_API_35(AVD) - 15/device-info.pb"
+    }
+  }
+  output_artifact {
+    label {
+      label: "device-info.meminfo"
+      namespace: "android"
+    }
+    source_path {
+      path: "/Users/dmitriymoguschiy/Documents/Spectrion Projects/\320\235\320\276\320\262\321\213\320\271-\321\207\320\260\321\202-21AE5054/PravoslavnyyProvodnik/app/build/outputs/androidTest-results/connected/debug/Liturgy_API_35(AVD) - 15/meminfo"
+    }
+  }
+  output_artifact {
+    label {
+      label: "device-info.cpuinfo"
+      namespace: "android"
+    }
+    source_path {
+      path: "/Users/dmitriymoguschiy/Documents/Spectrion Projects/\320\235\320\276\320\262\321\213\320\271-\321\207\320\260\321\202-21AE5054/PravoslavnyyProvodnik/app/build/outputs/androidTest-results/connected/debug/Liturgy_API_35(AVD) - 15/cpuinfo"
+    }
+  }
+}
+output_artifact {
+  label {
+    label: "test-results.log"
+    namespace: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
+  }
+  source_path {
+    path: "/Users/dmitriymoguschiy/Documents/Spectrion Projects/\320\235\320\276\320\262\321\213\320\271-\321\207\320\260\321\202-21AE5054/PravoslavnyyProvodnik/app/build/outputs/androidTest-results/connected/debug/Liturgy_API_35(AVD) - 15/testlog/test-results.log"
+  }
+  type: TEST_DATA
+  mime_type: "text/plain"
+}

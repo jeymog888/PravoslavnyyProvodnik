@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.service.discovery.PlaceDiscoveryTest" tests="16" skipped="0" failures="0" errors="0" timestamp="2026-11-08T16:05:17" hostname="MacBook-Air-Dmitrij.local" time="0.038">
+  <properties/>
+  <testcase name="real city response keeps ambiguous towns separate with their region" classname="ru.liturgyguide.service.discovery.PlaceDiscoveryTest" time="0.009"/>
+  <testcase name="city query is encoded once without changing parameters" classname="ru.liturgyguide.service.discovery.PlaceDiscoveryTest" time="0.003"/>
+  <testcase name="partial Overpass response and invalid JSON are failures rather than empty success" classname="ru.liturgyguide.service.discovery.PlaceDiscoveryTest" time="0.004"/>
+  <testcase name="expired cache survives network failure with its old date and an explicit reason" classname="ru.liturgyguide.service.discovery.PlaceDiscoveryTest" time="0.003"/>
+  <testcase name="malformed and ineligible elements are rejected individually" classname="ru.liturgyguide.service.discovery.PlaceDiscoveryTest" time="0.002"/>
+  <testcase name="real churches use orthodox tags and stable source IDs without inferring schedule" classname="ru.liturgyguide.service.discovery.PlaceDiscoveryTest" time="0.004"/>
+  <testcase name="cache older than seven days or from the future is never used" classname="ru.liturgyguide.service.discovery.PlaceDiscoveryTest" time="0.001"/>
+  <testcase name="invalid query coordinates and radius never send requests" classname="ru.liturgyguide.service.discovery.PlaceDiscoveryTest" time="0.001"/>
+  <testcase name="query centers and haversine remain valid at map boundaries" classname="ru.liturgyguide.service.discovery.PlaceDiscoveryTest" time="0.0"/>
+  <testcase name="real Petersburg response removes unnamed objects and bell towers" classname="ru.liturgyguide.service.discovery.PlaceDiscoveryTest" time="0.003"/>
+  <testcase name="broken cache and failed cache writes cannot break a valid search" classname="ru.liturgyguide.service.discovery.PlaceDiscoveryTest" time="0.001"/>
+  <testcase name="changed provider cannot reuse results from the previous endpoint" classname="ru.liturgyguide.service.discovery.PlaceDiscoveryTest" time="0.001"/>
+  <testcase name="large responses are rejected even with an injected transport" classname="ru.liturgyguide.service.discovery.PlaceDiscoveryTest" time="0.003"/>
+  <testcase name="malformed city geometry cannot become a selectable zero coordinate" classname="ru.liturgyguide.service.discovery.PlaceDiscoveryTest" time="0.001"/>
+  <testcase name="fresh cache avoids a second request but a different query cannot reuse it" classname="ru.liturgyguide.service.discovery.PlaceDiscoveryTest" time="0.001"/>
+  <testcase name="cancellation is not converted to an offline result" classname="ru.liturgyguide.service.discovery.PlaceDiscoveryTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

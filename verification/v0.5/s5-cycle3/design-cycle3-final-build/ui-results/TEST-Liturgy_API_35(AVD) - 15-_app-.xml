@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="ru.liturgyguide.ui.UnifiedPlayerFlowTest" tests="28" failures="0" errors="0" skipped="0" time="85.144" timestamp="2026-11-08T16:37:40" hostname="localhost">
+  <properties>
+    <property name="device" value="Liturgy_API_35(AVD) - 15" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="languageAndProgrammaticScrollKeepPlayingButMeaningAndUserDragPause" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="4.632" />
+  <testcase name="endStopsThePlayerAndFinishingClearsTheAcceptedReading" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="2.663" />
+  <testcase name="oldRunningSessionAndWallClockChangesCannotMoveTheUnifiedReader" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="3.227" />
+  <testcase name="shortenedDuplicateTitleKeepsBothTextsDiscoverableAndRestoresTheSelectedPhrase" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="2.0" />
+  <testcase name="missingDatedReadingsStopHugeTicksAndEachNeedsItsOwnManualContinuation" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="2.826" />
+  <testcase name="onePlayMovesThroughTextsAUsefulWaitAndTheNextStage" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="2.655" />
+  <testcase name="changingSpeedCapturesTheOldMultiplierWithoutMovingToAnotherPhrase" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="2.229" />
+  <testcase name="explicitRestartReplacesOnlyTheCorruptSnapshotEvenWhenContextAndMarkerAreIdentical" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="1.264" />
+  <testcase name="losingResumedStatePausesAndDoesNotConsumeTimeBeforeReturning" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="1.558" />
+  <testcase name="scriptureCannotMasqueradeAsOriginalAndThePreferredLanguageReturnsForPrayer" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="2.569" />
+  <testcase name="epistleAt412DpRetainsTheRequestedClarifyScaleAndTheWholeTitle" classname="ru.liturgyguide.ui.CompactReaderMatrixTest" time="1.359" />
+  <testcase name="acceptingTheSameReadingRefreshesControlsWhileCapturedOldActionsStayInvalid" classname="ru.liturgyguide.ui.CompactReaderMatrixTest" time="1.777" />
+  <testcase name="readingDetailsUseTheAcceptedDateAndTheStageMaterializedByPause" classname="ru.liturgyguide.ui.CompactReaderMatrixTest" time="1.8" />
+  <testcase name="staleDetailsActionCannotPauseOrDescribeAReplacementReading" classname="ru.liturgyguide.ui.CompactReaderMatrixTest" time="1.901" />
+  <testcase name="nextStageUsesTheCurrentlyDisplayedStageAfterAutomaticMovement" classname="ru.liturgyguide.ui.CompactReaderMatrixTest" time="1.299" />
+  <testcase name="allEighteenPortraitStageNamesRemainWholeWithLargeTextAndAnApproximationNotice" classname="ru.liturgyguide.ui.CompactReaderMatrixTest" time="2.66" />
+  <testcase name="longTrackNamesWrapAndLanguageChangesKeepTheCanonicalPhraseAndFullScale" classname="ru.liturgyguide.ui.CompactReaderMatrixTest" time="2.338" />
+  <testcase name="allEighteenLandscapeNamesKeepFullAccessibleContextAndReadingSpace" classname="ru.liturgyguide.ui.CompactReaderMatrixTest" time="12.732" />
+  <testcase name="compactSavedReadingExposesItsDateWithoutPretendingToBeSynchronized" classname="ru.liturgyguide.ui.CompactReaderMatrixTest" time="2.218" />
+  <testcase name="aSingleTextRetainsItsFullTitleAndTheClarificationAction" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="1.879" />
+  <testcase name="scriptureAndAnEmptyTextStageKeepClarificationWithoutALanguageMenu" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="2.15" />
+  <testcase name="narrowScheduleKeepsBothDayLabelsOnOneLineAndSelectable" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="2.182" />
+  <testcase name="aTallNarrowScreenKeepsReadableActionsWithoutReducingThePrayerSize" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="1.897" />
+  <testcase name="landscapeKeepsTabsOnOneLineAndLeavesSpaceForTheRequestedPrayerSize" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="7.48" />
+  <testcase name="largeTextNavigationLeavesSpaceForChurchAndSettingsWithoutScalingTheirContent" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="1.855" />
+  <testcase name="aTallScreenAtTheHeaderWidthBoundaryKeepsItsReadingArea" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="6.228" />
+  <testcase name="narrowLargeTextKeepsNamesReadableAndCancellationPreservesThePhrase" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="3.188" />
+  <testcase name="ordinaryFooterKeepsSeparateTargetsAtTheNarrowWidthAndFastestSpeed" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="2.845" />
+</testsuite>

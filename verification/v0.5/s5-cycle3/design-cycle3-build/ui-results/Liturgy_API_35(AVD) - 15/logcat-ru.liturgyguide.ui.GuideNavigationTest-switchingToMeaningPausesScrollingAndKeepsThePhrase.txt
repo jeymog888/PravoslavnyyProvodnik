@@ -1,0 +1,278 @@
+11-08 18:54:30.117 26577 26592 I TestRunner: started: switchingToMeaningPausesScrollingAndKeepsThePhrase(ru.liturgyguide.ui.GuideNavigationTest)
+11-08 18:54:30.167  1210  1443 D EGL_emulation: app_time_stats: avg=935.86ms min=207.43ms max=2773.86ms count=4
+11-08 18:54:30.183 26616 26616 D VRI[InstrumentationActivityInvoker$EmptyActivity]: visibilityChanged oldVisibility=true newVisibility=false
+11-08 18:54:30.211   540   653 I ImeTracker: com.google.android.apps.nexuslauncher:a2a525ea: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 18:54:30.211   540   653 I ImeTracker: com.google.android.apps.nexuslauncher:a2a525ea: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 18:54:30.247 26577 26592 D IdlingRegistry: Registering idling resources: [androidx.compose.ui.test.EspressoLink@cdb27e6]
+11-08 18:54:30.249 26577 26592 W Settings: Setting always_finish_activities has moved from android.provider.Settings.System to android.provider.Settings.Global, returning read-only value.
+11-08 18:54:30.272 26616 26616 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@e0920b6
+11-08 18:54:30.276   540  1609 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10287, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 18:54:30.311  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 18:54:30.359  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 18:54:30.360  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=com.google.android.apps.nexuslauncher, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 18:54:30.378  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 18:54:30.379  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 18:54:30.441  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=1787
+11-08 18:54:30.441  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=1787
+11-08 18:54:30.484   442 26701 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 18:54:30.492   540   568 W system_server: Long monitor contention with owner binder:540_C (1609) at int com.android.server.wm.ActivityStarter.execute()(ActivityStarter.java:825) waiters=2 in void com.android.server.wm.RootWindowContainer$RankTaskLayersRunnable.run() for 201ms
+11-08 18:54:30.506   540  1636 W system_server: Long monitor contention with owner binder:540_C (1609) at int com.android.server.wm.ActivityStarter.execute()(ActivityStarter.java:825) waiters=5 in int com.android.server.wm.ActivityTaskManagerService.getLastResumedActivityUserId() for 148ms
+11-08 18:54:30.509   540  1637 W InputManager-JNI: Input channel object '33a1cd0 ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity (client)' was disposed without first being removed with the input manager!
+11-08 18:54:30.520   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 18:54:30.548   345   419 I netd    : tetherGetStats() -> {[]} <4.86ms>
+11-08 18:54:30.574   772   941 D EGL_emulation: app_time_stats: avg=974.76ms min=47.87ms max=3346.21ms count=4
+11-08 18:54:30.638  1210  1210 W SplitSelectStateCtor: Missing session instanceIds
+11-08 18:54:30.638  1210  1210 D StatsLog: LAUNCHER_SPLIT_SELECTION_EXIT_INTERRUPTED
+11-08 18:54:30.642   772   865 D SplashScreenView: Build android.window.SplashScreenView{f7b7a4c V.E...... ......ID 0,0-0,0}
+11-08 18:54:30.642   772   865 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-08 18:54:30.642   772   865 D SplashScreenView: Branding: view: android.view.View{99e6a95 G.ED..... ......I. 0,0-0,0 #1020503 android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-08 18:54:30.643  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=1789, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10008000 cmp=ru.liturgyguide/.ui.MainActivity }
+11-08 18:54:30.678   772   855 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@37f85cb
+11-08 18:54:30.682   540  1625 W InputManager-JNI: Input channel object '64f9b1e Splash Screen ru.liturgyguide.test (client)' was disposed without first being removed with the input manager!
+11-08 18:54:30.684  1210  1210 D SearchTargetUtil: query= size=0
+11-08 18:54:30.689   442 26701 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 18:54:30.697 26577 26577 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@9ec87ca in: PRE_ON_CREATE
+11-08 18:54:30.697 26577 26577 V ActivityScenario: Activity lifecycle changed event received but ignored because the reported transition was not ON_CREATE while the last known transition was PRE_ON_CREATE
+11-08 18:54:30.741 26577 26577 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@9ec87ca in: CREATED
+11-08 18:54:30.741 26577 26577 V ActivityScenario: Update currentActivityStage to CREATED, currentActivity=ru.liturgyguide.ui.MainActivity@9ec87ca
+11-08 18:54:30.742 26577 26577 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@9ec87ca in: STARTED
+11-08 18:54:30.742 26577 26577 V ActivityScenario: Update currentActivityStage to STARTED, currentActivity=ru.liturgyguide.ui.MainActivity@9ec87ca
+11-08 18:54:30.780   974 22331 E WakeLock: GCM_HB_ALARM release without a matched acquire!
+11-08 18:54:30.780   974 22331 W WakeLock: GCM_HB_ALARM counter does not exist
+11-08 18:54:30.796  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=1788
+11-08 18:54:30.796  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=1788
+11-08 18:54:30.804 26577 26577 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@9ec87ca in: RESUMED
+11-08 18:54:30.804 26577 26577 V ActivityScenario: Update currentActivityStage to RESUMED, currentActivity=ru.liturgyguide.ui.MainActivity@9ec87ca
+11-08 18:54:30.847 26577 26577 D AutofillManager: Fill dialog is enabled:false, hints=[password, passwordAuto, creditCardNumber, creditCardSecurityCode, creditCardExpirationDate]
+11-08 18:54:30.879   540   688 D ConnectivityService: reportNetworkConnectivity(103, false) by 10144
+11-08 18:54:30.891   832  6641 D NetworkMonitor/103: Forcing reevaluation for UID 10144. Dns signal count: 0
+11-08 18:54:30.901   974 22331 I AlarmManager: setExactAndAllowWhileIdle [name: GCM_CONN_ALARM type: 2 triggerAtMillis: 15934422]
+11-08 18:54:30.909   974 22331 E WakeLock: GCM_CONN_ALARM release without a matched acquire!
+11-08 18:54:30.916  1210  1210 D VRI[NexusLauncherActivity]: visibilityChanged oldVisibility=true newVisibility=false
+11-08 18:54:30.918   974 22331 W WakeLock: GCM_CONN_ALARM counter does not exist
+11-08 18:54:30.935  1210  1210 D NexusLauncherModelDelegate: notifySmartspaceEvent: SmartspaceTargetEvent{mSmartspaceTarget=null, mSmartspaceActionId='null', mEventType=7}
+11-08 18:54:30.955   832 27085 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 18:54:30.956   832 27084 D TrafficStats: tagSocket(132) with statsTag=0xffffff81, statsUid=-1
+11-08 18:54:30.957   832 27085 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 18:54:30.959   345 27086 I resolv  : ResNSendHandler::run: 0 / {103 983143 103 983143 1073 1}
+11-08 18:54:30.961   345 27087 I resolv  : ResNSendHandler::run: 0 / {103 983143 103 983143 1073 1}
+11-08 18:54:30.963   832 27084 D TrafficStats: tagSocket(132) with statsTag=0xffffff81, statsUid=-1
+11-08 18:54:30.965   345 27088 I resolv  : ResNSendHandler::run: 0 / {103 983143 103 983143 1073 1}
+11-08 18:54:30.969   345 27089 I resolv  : ResNSendHandler::run: 0 / {103 983143 103 983143 1073 1}
+11-08 18:54:31.140   772   855 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@6481b11
+11-08 18:54:31.141   540   903 W InputManager-JNI: Input channel object '6031ea Splash Screen ru.liturgyguide (client)' was disposed without first being removed with the input manager!
+11-08 18:54:31.144   345 27089 I resolv  : res_nsend: used send_dg 160 terrno: 0
+11-08 18:54:31.145   345 27087 I resolv  : res_nsend: used send_dg 63 terrno: 0
+11-08 18:54:31.145   345 27088 I resolv  : res_nsend: used send_dg 256 terrno: 0
+11-08 18:54:31.145   345 27086 I resolv  : res_nsend: used send_dg 75 terrno: 0
+11-08 18:54:31.147   540   565 W ziparchive: Unable to open '/data/app/~~rIBsjHDqKvm5PX7lmhsoww==/ru.liturgyguide-ZoPSkPBXR5Vz-Z9p1NtqVA==/base.dm': No such file or directory
+11-08 18:54:31.147   540   565 I ActivityTaskManager: Displayed ru.liturgyguide/.ui.MainActivity for user 0: +858ms
+11-08 18:54:31.150   832   832 D TrafficStats: tagSocket(125) with statsTag=0xffffffff, statsUid=-1
+11-08 18:54:31.151   442 26701 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 18:54:31.153   832   832 D TrafficStats: tagSocket(125) with statsTag=0xffffffff, statsUid=-1
+11-08 18:54:31.154   832   832 D TrafficStats: tagSocket(125) with statsTag=0xffffffff, statsUid=-1
+11-08 18:54:31.154   832   832 D TrafficStats: tagSocket(125) with statsTag=0xffffffff, statsUid=-1
+11-08 18:54:31.159   832   832 D TrafficStats: tagSocket(125) with statsTag=0xffffffff, statsUid=-1
+11-08 18:54:31.160   832   832 D TrafficStats: tagSocket(125) with statsTag=0xffffffff, statsUid=-1
+11-08 18:54:31.160   832   832 D TrafficStats: tagSocket(125) with statsTag=0xffffffff, statsUid=-1
+11-08 18:54:31.161   832   832 D TrafficStats: tagSocket(125) with statsTag=0xffffffff, statsUid=-1
+11-08 18:54:31.161   832   832 D TrafficStats: tagSocket(125) with statsTag=0xffffffff, statsUid=-1
+11-08 18:54:31.161   832   832 D TrafficStats: tagSocket(125) with statsTag=0xffffffff, statsUid=-1
+11-08 18:54:31.162   832   832 D TrafficStats: tagSocket(125) with statsTag=0xffffffff, statsUid=-1
+11-08 18:54:31.162   832   832 D TrafficStats: tagSocket(125) with statsTag=0xffffffff, statsUid=-1
+11-08 18:54:31.165   832   832 D TrafficStats: tagSocket(125) with statsTag=0xffffffff, statsUid=-1
+11-08 18:54:31.166   832   832 D TrafficStats: tagSocket(125) with statsTag=0xffffffff, statsUid=-1
+11-08 18:54:31.166   832   832 D TrafficStats: tagSocket(125) with statsTag=0xffffffff, statsUid=-1
+11-08 18:54:31.166   832   832 D TrafficStats: tagSocket(125) with statsTag=0xffffffff, statsUid=-1
+11-08 18:54:31.167   832 27084 D NetworkMonitor/103: PROBE_DNS www.google.com 210ms OK 142.251.150.119,142.251.152.119,142.251.156.119,142.251.151.119,142.251.155.119,142.251.153.119,142.251.157.119,142.251.154.119,2001:4860:4827:7700::,2001:4860:4826:7700::,2001:4860:4829:7700::,2001:4860:4828:7700::,2001:4860:482d:7700::,2001:4860:482c:7700::,2001:4860:482a:7700::,2001:4860:482b:7700::
+11-08 18:54:31.168   832   832 D TrafficStats: tagSocket(124) with statsTag=0xffffffff, statsUid=-1
+11-08 18:54:31.168   832   832 D TrafficStats: tagSocket(124) with statsTag=0xffffffff, statsUid=-1
+11-08 18:54:31.175  1210  1210 D BaseDepthController: setSurface:
+11-08 18:54:31.175  1210  1210 D BaseDepthController: 	mWaitingOnSurfaceValidity: false
+11-08 18:54:31.175  1210  1210 D BaseDepthController: 	mSurface: null
+11-08 18:54:31.175  1210  1210 D BaseDepthController: mSurface is null and mCurrentBlur is: 0
+11-08 18:54:31.176   832 27085 D NetworkMonitor/103: PROBE_DNS connectivitycheck.gstatic.com 221ms OK 142.251.150.120,2001:4860:4826:7800::
+11-08 18:54:31.177  1210  1210 D StateManager: goToState - fromState: Normal, toState: Normal, partial trace:
+11-08 18:54:31.177  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StateManager.moveToRestState(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:4)
+11-08 18:54:31.177  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StateManager.moveToRestState(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:1)
+11-08 18:54:31.177  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StatefulActivity.onStop(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:34)
+11-08 18:54:31.178   540   653 I ImeTracker: ru.liturgyguide:a39d5f4a: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 18:54:31.178   540   653 I ImeTracker: ru.liturgyguide:a39d5f4a: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 18:54:31.181   345 27091 I resolv  : GetAddrInfoHandler::run: {103 983143 103 983143 1073 1}
+11-08 18:54:31.181  1210  1210 D StatsLog: LAUNCHER_ONSTOP
+11-08 18:54:31.181   345 27092 I resolv  : GetAddrInfoHandler::run: {103 983143 103 983143 1073 1}
+11-08 18:54:31.182   345 27093 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+11-08 18:54:31.182   345 27093 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bf9dd0
+11-08 18:54:31.182   345 27093 I resolv  : doQuery: rcode=0, ancount=1, return value=75
+11-08 18:54:31.182  1210  1210 D StatsLog: LAUNCHER_GOOGLE_SEARCH_RESTORE_LIST_SIZE_AFTER_ACTIVITY_RESTART
+11-08 18:54:31.183   345 27096 I resolv  : res_nmkquery: (QUERY, IN, A)
+11-08 18:54:31.183   345 27096 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb400007384bfd470
+11-08 18:54:31.183   345 27096 I resolv  : doQuery: rcode=0, ancount=8, return value=160
+11-08 18:54:31.183   345 27094 I resolv  : res_nmkquery: (QUERY, IN, A)
+11-08 18:54:31.183   345 27095 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+11-08 18:54:31.183   345 27094 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bf8d30
+11-08 18:54:31.184   345 27094 I resolv  : doQuery: rcode=0, ancount=1, return value=63
+11-08 18:54:31.189  1210  1578 D OneSearchSuggestProvider: Shut down the binder channel
+11-08 18:54:31.193   345 27095 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb400007304bf3f50
+11-08 18:54:31.193   345 27095 I resolv  : doQuery: rcode=0, ancount=8, return value=256
+11-08 18:54:31.194   832 27085 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 18:54:31.208  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 18:54:31.212  1210 11762 I IPCThreadState: oneway function results for code 2 on binder at 0xb4000077d41583f0 will be dropped but finished with status UNKNOWN_TRANSACTION
+11-08 18:54:31.214  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 18:54:31.215   832 27084 D TrafficStats: tagSocket(125) with statsTag=0xffffff81, statsUid=-1
+11-08 18:54:31.217  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 18:54:31.217  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 18:54:31.219  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 18:54:31.218  1441  2242 I IPCThreadState: oneway function results for code 2 on binder at 0xb4000077d41233e0 will be dropped but finished with status UNKNOWN_TRANSACTION
+11-08 18:54:31.282 26577 26577 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+11-08 18:54:31.282 26577 26577 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+11-08 18:54:31.416   832 27085 D NetworkMonitor/103: PROBE_HTTP http://connectivitycheck.gstatic.com/generate_204 time=235ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Sun, 08 Nov 2026 15:54:31 GMT], X-Android-Received-Millis=[1794153271415], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1794153271239]}
+11-08 18:54:31.483 26577 26577 E FrameTracker: force finish cuj, time out: J<IME_INSETS_HIDE_ANIMATION::1@1@ru.liturgyguide>
+11-08 18:54:31.534   832 27084 D NetworkMonitor/103: PROBE_HTTPS https://www.google.com/generate_204 time=353ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Alt-Svc=[h3=":443"; ma=2592000,h3-29=":443"; ma=2592000], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Sun, 08 Nov 2026 15:54:31 GMT], X-Android-Received-Millis=[1794153271533], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1794153271481]}
+11-08 18:54:31.536   832 27083 D NetworkMonitor/103: isCaptivePortal: isSuccessful()=true isPortal()=false RedirectUrl=null isPartialConnectivity()=false Time=622ms
+11-08 18:54:31.538   540   688 D ConnectivityService: [103 WIFI] validation passed
+11-08 18:54:31.553 26577 26577 D InsetsController: show(ime(), fromIme=false)
+11-08 18:54:31.554 26577 26577 I ImeTracker: ru.liturgyguide:ad0a9bfa: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT_BY_INSETS_API fromUser false
+11-08 18:54:31.555 26577 26577 D InputMethodManager: showSoftInput() view=androidx.compose.ui.platform.AndroidComposeView{49e777a VFED..... .F....ID 0,0-1080,2400 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT_BY_INSETS_API
+11-08 18:54:31.557  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 18:54:31.559  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 18:54:31.560  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=8001, inputTypeString=Normal, enableLearning=true, autoCorrection=true, autoComplete=true, imeOptions=2000003, privateImeOptions=null, actionName=SEARCH, actionLabel=null, initialSelStart=0, initialSelEnd=0, initialCapsMode=0, label=null, fieldId=-1, fieldName=null, extras=Bundle[mParcelledData.dataSize=404], hintText=null, hintLocales=[]}}, false)
+11-08 18:54:31.560  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 18:54:31.561  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: en-US, ime_english_united_states
+11-08 18:54:31.567  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=8001, inputTypeString=Normal, enableLearning=true, autoCorrection=true, autoComplete=true, imeOptions=2000003, privateImeOptions=null, actionName=SEARCH, actionLabel=null, initialSelStart=0, initialSelEnd=0, initialCapsMode=0, label=null, fieldId=-1, fieldName=null, extras=Bundle[mParcelledData.dataSize=404], hintText=null, hintLocales=[]}}, true)
+11-08 18:54:31.569  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 18:54:31.569  1271  1271 W SessionManager: SessionManager.beginSession():53 Try to begin an already begun session [INPUT_SESSION], end it first
+11-08 18:54:31.569  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: en-US, ime_english_united_states
+11-08 18:54:31.578  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInputView():2098 onStartInputView(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=8001, inputTypeString=Normal, enableLearning=true, autoCorrection=true, autoComplete=true, imeOptions=2000003, privateImeOptions=null, actionName=SEARCH, actionLabel=null, initialSelStart=0, initialSelEnd=0, initialCapsMode=0, label=null, fieldId=-1, fieldName=null, extras=Bundle[{android.support.text.emoji.emojiCompat_metadataVersion=11, androidx.core.view.inputmethod.EditorInfoCompat.STYLUS_HANDWRITING_ENABLED=true, android.support.text.emoji.emojiCompat_replaceAll=false}], hintText=null, hintLocales=[]}}, false)
+11-08 18:54:31.588  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 18:54:31.589  1271  1271 I StylusEducationPopupDialog: StylusEducationPopupDialog.onStartInputView():59 Schedule to show first time education
+11-08 18:54:31.591   345   419 I netd    : tetherGetStats() -> {[]} <0.30ms>
+11-08 18:54:31.602 26577 26577 I ImeTracker: ru.liturgyguide:710cd635: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser false
+11-08 18:54:31.603 26577 26577 D InputMethodManager: showSoftInput() view=androidx.compose.ui.platform.AndroidComposeView{49e777a VFED..... .F....ID 0,0-1080,2400 aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+11-08 18:54:31.606  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.getOemKeyboardHeightRatio():206 systemKeyboardHeightRatio:1.000000.
+11-08 18:54:31.606  1271  1271 I AndroidIME: AbstractIme.onActivate():89 LatinIme.onActivate() : EditorInfo = EditorInfo{packageName=ru.liturgyguide, inputType=8001, inputTypeString=Normal, enableLearning=true, autoCorrection=true, autoComplete=true, imeOptions=2000003, privateImeOptions=null, actionName=SEARCH, actionLabel=null, initialSelStart=0, initialSelEnd=0, initialCapsMode=0, label=null, fieldId=-1, fieldName=null, extras=Bundle[{android.support.text.emoji.emojiCompat_metadataVersion=11, androidx.core.view.inputmethod.EditorInfoCompat.STYLUS_HANDWRITING_ENABLED=true, android.support.text.emoji.emojiCompat_replaceAll=false}], hintText=null, hintLocales=[]}, IncognitoMode = false, DeviceLocked = false
+11-08 18:54:31.607  1271  1271 I Delight5Facilitator: Delight5Facilitator.initializeForIme():747 initializeForIme() : Locale = [en_US], layout = qwerty
+11-08 18:54:31.608  1271  1271 I VoiceInputHandler: VoiceInputHandler.onActivateIme():99 registering TalkbackStateListener
+11-08 18:54:31.609  1271  1271 I VoiceInputManagerWrapper: VoiceInputManagerWrapper.cancelShutdown():102 cancelShutdown()
+11-08 18:54:31.609  1271  1271 I VoiceInputManagerWrapper: VoiceInputManagerWrapper.syncLanguagePacks():114 syncLanguagePacks()
+11-08 18:54:31.609  1271  1271 I LatinIme: LatinIme.updateEnableInlineSuggestionsOnDecoderSideFlags():1174 inline flag updated to:false
+11-08 18:54:31.609  1271  3966 I SpeechFactory: SpeechRecognitionFactory.maybeScheduleAutoPackDownloadForFallback():200 maybeScheduleAutoPackDownloadForFallback()
+11-08 18:54:31.609  1271  3966 I FallbackOnDeviceRecognitionProvider: FallbackOnDeviceRecognitionProvider.maybeScheduleAutoPackDownload():197 maybeScheduleAutoPackDownload() for language tag en-US
+11-08 18:54:31.615  1271  1271 I InputBundle: InputBundle.consumeEvent():884 Skip consuming an event as keyboard status is 0
+11-08 18:54:31.619  1271  1271 I KeyboardWrapper: KeyboardWrapper.activateKeyboard():575 activateKeyboard(): type=prime, status=0, imeDef=ktt{stringId=ime_english_united_states, language=en-US, languageTag=en-US, processedConditions={enable_number_row=false, device=phone}, className=com.google.android.apps.inputmethod.libs.latin5.LatinIme, label=0, keyEventInterpreter=null, inlineComposing=true, autoCapital=true, announceAutoSelectedCandidate=true, statusIcon=0, primeKeyboardType=SOFT, indicatorIcon=0, indicatorLabel=US, displayAppCompletions=true, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=true, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@a4480b0, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=true, supportsAccessPoints=true}
+11-08 18:54:31.619  1271  1271 I KeyboardManager: KeyboardManager.requestKeyboard():234 Creating keyboard prime, imeId=ime_english_united_states, cacheKey=theme_border_stylesheet_noshadow_gsans_pillkey_silkpopup_hover_light_phone_bottom4dp_navredesign
+11-08 18:54:31.620  1271  1271 I KeyboardWrapper: KeyboardWrapper.onKeyboardReady():239 onKeyboardReady(): type=prime(prime), kb=com.google.android.apps.inputmethod.latin.keyboard.LatinPrimeKeyboard@7f4914f
+11-08 18:54:31.620  1271  1271 I KeyboardWrapper: KeyboardWrapper.doActivateKeyboard():606 doActivateKeyboard(): prime
+11-08 18:54:31.638  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 18:54:31.639  1271  1271 W Keyboard: Keyboard.getKeyboardViewHelper():574 null helper is returned: keyboardDef=kuo{processedConditions={enable_more_candidates_view_for_multilingual=false, enable_secondary_symbols=false, variant=qwerty, language=en-US, device=phone, expressions=normal, keyboard_mode=normal, show_secondary_digits=true, enable_preemptive_decode=true, rtl_layout=false}, globalConditions={global_theme_key=theme_border_stylesheet_noshadow_gsans_pillkey_silkpopup_hover_light_phone_bottom4dp_navredesign, global_locale=en_US, global_density_dpi=420, global_orientation=1}, className=.latin.keyboard.LatinPrimeKeyboard, resourceIds=[#0x7f170663, #0x7f1708e0], initialStates=0, keyboardViewDefs=[kvb{direction=null, id=#0x7f0b014d, isScalable=true, layoutId=#0x7f0e039d, type=BODY, touchable=true, defaultShow=true}, kvb{direction=null, id=#0x7f0b014d, isScalable=false, layoutId=#0x7f0e01aa, type=FLOATING_CANDIDATES, touchable=false, defaultShow=false}, kvb{direction=LOCALE, id=#0x7f0b014d, isScalable=false, layoutId=#0x7f0e0591, type=HEADER, touchable=true, defaultShow=true}], persistentStates=0, persistentStatesPrefKey=null, popupBubbleLayoutId=#0x7f0e068d, recentKeyLayoutId=0, recentKeyPopupLayoutId=0, recentKeyType=null, rememberRecentKey=NONE, sessionStates=17592186044419}, type=WIDGET, helpersCreated=[kib@c759330, kib@8087ba9, kib@f00552e, null], context.getResources().getConfiguration(): {1.0 310mcc260mnc [en_US] ldltr sw411dp w411dp h914dp 420dpi nrml long port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2400) mAppBounds=Rect(0, 0 - 1080, 2400) mMaxBounds=Rect(0, 0 - 1080, 2400) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} as.2 s.32 fontWeightAdjustment=0}
+11-08 18:54:31.641  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 18:54:31.645  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.startInputIfInputViewStarted():3728 startInputIfInputViewStarted(): default prime
+11-08 18:54:31.646  1271  1271 I KeyboardModeManager: KeyboardModeManager.setInputViewKeyboardViewHolderProvider():625 setInputView() : supportsOneHandedMode=true supportsSplitMode=true
+11-08 18:54:31.646  1271  1271 I NormalModeController: NormalModeController.getKeyboardBodyViewHolderPaddingBottom():104 currentPrimeKeyboardType:SOFT systemPaddingBottom:-1
+11-08 18:54:31.646  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 18:54:31.646  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 18:54:31.646  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 18:54:31.646  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 18:54:31.646  1271  1271 I NormalModeController: NormalModeController.getKeyboardBodyViewHolderPaddingBottom():104 currentPrimeKeyboardType:SOFT systemPaddingBottom:-1
+11-08 18:54:31.648  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 18:54:31.648  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 18:54:31.648  1271  1271 I KeyboardModeManager: KeyboardModeManager.setInputViewKeyboardViewHolderProvider():613 setInputView() : supportsOneHandedMode=true, supportSplitMode=true
+11-08 18:54:31.650  1271  1271 I CrowdsourceExtension: CrowdsourceExtension.checkIfDefaultBrowserIsAllowed():110 Failed to get default browser. The default browser may be deactived.
+11-08 18:54:31.654  1271  1271 I AccessoryInputModeManager: AccessoryInputModeManager.onModeStarted():308 Accessory input mode started: null
+11-08 18:54:31.654  1271  1271 W SupplementaryKeyboardsWrapper: SupplementaryKeyboardsWrapper.deactivateKeyboard():159 keyboard accessory_candidates_consumer is not activated before!
+11-08 18:54:31.655  1271  1271 I VoiceImeExtension: VoiceImeExtension.shouldStartVoiceInputAutomaticallyInCurrentInputBox():415 No private IME option set to start voice input.
+11-08 18:54:31.672  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 18:54:31.672  1271  1271 I WindowMetricsNotification: WindowMetricsNotification.notifyWithWindow():113
+11-08 18:54:31.672  1271  1271 I WindowMetricsNotification: WindowMetricsNotification.notify():106 WindowMetricsNotification{bounds=Rect(0, 136 - 1080, 2400), insets=Rect(0, 0 - 0, 126), densityDpi=420, smallestScreenWidthDp=411, displayWidth=1080, displayHeight=2400, xdpi=420.0, ydpi=420.0}; DisplayMetrics{density=2.625, width=1080, height=2400, scaledDensity=2.625, xdpi=420.0, ydpi=420.0}
+11-08 18:54:31.795  1271  1271 I GoogleInputMethodService: GoogleInputMethodService$1.onKeyboardViewShown():494 onKeyboardViewShown: keyboardType=prime, keyboardViewType=HEADER keyboardView=com.google.android.libraries.inputmethod.widgets.SoftKeyboardView{c73010 V.E...... ........ 0,0-1080,116}
+11-08 18:54:31.796  1271  1271 I GoogleInputMethodService: GoogleInputMethodService$1.onKeyboardViewShown():494 onKeyboardViewShown: keyboardType=prime, keyboardViewType=BODY keyboardView=com.google.android.libraries.inputmethod.widgets.SoftKeyboardView{d66c121 V.E...... ........ 0,0-1080,641}
+11-08 18:54:31.796  1271  1271 I NewLanguagePromptExtension: NewLanguagePromptExtension$1.onKeyboardViewShown():115 Not show new language banner: no new languages.
+11-08 18:54:31.797  1271  1271 I WindowMetricsNotification: WindowMetricsNotification.notifyWithWindow():113
+11-08 18:54:31.797  1271  1271 I WindowMetricsNotification: WindowMetricsNotification.notify():106 WindowMetricsNotification{bounds=Rect(0, 136 - 1080, 2400), insets=Rect(0, 0 - 0, 126), densityDpi=420, smallestScreenWidthDp=411, displayWidth=1080, displayHeight=2400, xdpi=420.0, ydpi=420.0}; DisplayMetrics{density=2.625, width=1080, height=2400, scaledDensity=2.625, xdpi=420.0, ydpi=420.0}
+11-08 18:54:31.797  1271  1271 I WindowMetricsNotification: WindowMetricsNotification.notifyWithWindow():113
+11-08 18:54:31.797  1271  1271 I WindowMetricsNotification: WindowMetricsNotification.notify():106 WindowMetricsNotification{bounds=Rect(0, 136 - 1080, 2400), insets=Rect(0, 0 - 0, 126), densityDpi=420, smallestScreenWidthDp=411, displayWidth=1080, displayHeight=2400, xdpi=420.0, ydpi=420.0}; DisplayMetrics{density=2.625, width=1080, height=2400, scaledDensity=2.625, xdpi=420.0, ydpi=420.0}
+11-08 18:54:31.797  1271  1271 I NormalModeController: NormalModeController.getKeyboardBodyViewHolderPaddingBottom():104 currentPrimeKeyboardType:SOFT systemPaddingBottom:-1
+11-08 18:54:31.798  1271  1739 I Delight5Decoder: Delight5DecoderWrapper.setKeyboardLayout():511 setKeyboardLayout()
+11-08 18:54:31.842 26577 26577 D InsetsController: show(ime(), fromIme=true)
+11-08 18:54:31.843 26577 26577 D InsetsController: show(ime(), fromIme=true)
+11-08 18:54:31.843 26577 26577 I ImeTracker: ru.liturgyguide:710cd635: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+11-08 18:54:31.869 26577 26577 I ImeTracker: ru.liturgyguide:ad0a9bfa: onShown
+11-08 18:54:31.907  1271  1271 I StylusEducationPopupDialog: StylusEducationPopupDialog.showFirstTimeEducation():79 First time education not shown for null
+11-08 18:54:31.952 26577 26577 I ViewInteraction: Performing 'close keyboard' action on view view.getRootView() to equal view
+11-08 18:54:31.952 26577 26577 D IdlingRegistry: Registering idling resources: [androidx.test.espresso.action.CloseKeyboardAction$CloseKeyboardIdlingResult@211ad47]
+11-08 18:54:31.955 26577 26577 I ImeTracker: ru.liturgyguide:5b06456: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser false
+11-08 18:54:31.958  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInputView():2393
+11-08 18:54:31.970 26577 26577 D InsetsController: hide(ime(), fromIme=true)
+11-08 18:54:31.973  1271  1271 W TooltipLifecycleManager: TooltipLifecycleManager.dismissTooltips():152 Tooltip with id spell_check_add_to_dictionary not found in tooltipManager.
+11-08 18:54:31.975  1271  1271 I InputBundle: InputBundle.consumeEvent():884 Skip consuming an event as keyboard status is 0
+11-08 18:54:31.977  1271  1271 I VoiceInputHandler: VoiceInputHandler.onDeactivateIme():115 unregistering TalkbackStateListener
+11-08 18:54:31.977  1271  1271 I VoiceInputManagerWrapper: VoiceInputManagerWrapper.shutdown():124 shutdown()
+11-08 18:54:31.977  1271  1271 I AndroidIME: AbstractIme.onDeactivate():202 LatinIme.onDeactivate()
+11-08 18:54:31.978  1271  1601 W ModuleManager: ModuleManager.loadModule():473 Module mgc is not available
+11-08 18:54:32.003 26577 26577 I ImeTracker: ru.liturgyguide:c2a7570b: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT_ON_ANIMATION_STATE_CHANGED fromUser false
+11-08 18:54:32.004 26577 26577 I ImeTracker: ru.liturgyguide:5b06456: onHidden
+11-08 18:54:32.005   540   653 I ImeTracker: ru.liturgyguide:c2a7570b: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 18:54:32.006  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 18:54:32.099  1271  1271 I WindowMetricsNotification: WindowMetricsNotification.notifyWithWindow():113
+11-08 18:54:32.099  1271  1271 I WindowMetricsNotification: WindowMetricsNotification.notify():106 WindowMetricsNotification{bounds=Rect(0, 136 - 1080, 2400), insets=Rect(0, 0 - 0, 126), densityDpi=420, smallestScreenWidthDp=411, displayWidth=1080, displayHeight=2400, xdpi=420.0, ydpi=420.0}; DisplayMetrics{density=2.625, width=1080, height=2400, scaledDensity=2.625, xdpi=420.0, ydpi=420.0}
+11-08 18:54:32.300 26577 26577 D IdlingRegistry: Unregistering idling resources: [androidx.test.espresso.action.CloseKeyboardAction$CloseKeyboardIdlingResult@211ad47]
+11-08 18:54:32.341 26577 26577 D InsetsController: hide(ime(), fromIme=false)
+11-08 18:54:32.343 26577 26577 I ImeTracker: ru.liturgyguide:2a175457: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT_BY_INSETS_API fromUser false
+11-08 18:54:32.343 26577 26577 I ImeTracker: ru.liturgyguide:2a175457: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+11-08 18:54:32.345  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, true)
+11-08 18:54:32.345  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 18:54:32.345  1271  1271 W SessionManager: SessionManager.beginSession():53 Try to begin an already begun session [INPUT_SESSION], end it first
+11-08 18:54:32.346  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 18:54:32.348 26577 26594 D EGL_emulation: app_time_stats: avg=72.32ms min=16.01ms max=210.95ms count=16
+11-08 18:54:32.460 26577 26577 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+11-08 18:54:32.460 26577 26577 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+11-08 18:54:32.488 26577 26577 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+11-08 18:54:32.488 26577 26577 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+11-08 18:54:32.663   540   653 I ImeTracker: ru.liturgyguide:9d332c4d: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 18:54:32.663   540   653 I ImeTracker: ru.liturgyguide:9d332c4d: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 18:54:32.672  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 18:54:32.692  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 18:54:32.692  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 18:54:32.693  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 18:54:32.694  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 18:54:32.734 26577 26577 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@716d707
+11-08 18:54:32.833   540   829 W InputManager-JNI: Input channel object '1dd3838 ru.liturgyguide/ru.liturgyguide.ui.MainActivity (client)' was disposed without first being removed with the input manager!
+11-08 18:54:32.891   772   941 D EGL_emulation: app_time_stats: avg=577.18ms min=41.52ms max=1886.57ms count=4
+11-08 18:54:32.954   540   653 I ImeTracker: ru.liturgyguide:fabeb117: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 18:54:32.954   540   653 I ImeTracker: ru.liturgyguide:fabeb117: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 18:54:32.960  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 18:54:32.961  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 18:54:32.961  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 18:54:32.961  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 18:54:32.961  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 18:54:33.381 26577 26594 D EGL_emulation: app_time_stats: avg=42.20ms min=13.35ms max=217.59ms count=19
+11-08 18:54:33.473 26577 26577 E FrameTracker: force finish cuj, time out: J<IME_INSETS_HIDE_ANIMATION::1@1@ru.liturgyguide>
+11-08 18:54:33.542   540  1625 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10288, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 18:54:33.562 26577 26577 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@9ec87ca in: PAUSED
+11-08 18:54:33.563 26577 26577 V ActivityScenario: Update currentActivityStage to PAUSED, currentActivity=ru.liturgyguide.ui.MainActivity@9ec87ca
+11-08 18:54:33.568   772   865 D SplashScreenView: Build android.window.SplashScreenView{6c3d5d6 V.E...... ......ID 0,0-0,0}
+11-08 18:54:33.568   772   865 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-08 18:54:33.568   772   865 D SplashScreenView: Branding: view: android.view.View{60d7057 G.ED..... ......I. 0,0-0,0 #1020503 android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-08 18:54:33.576   442   442 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 18:54:33.603   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 18:54:33.636  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=1790, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10000000 cmp=ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity }
+11-08 18:54:33.658   345   419 I netd    : tetherGetStats() -> {[]} <1.84ms>
+11-08 18:54:33.736 26616 26633 I EGL_emulation: Opening libGLESv1_CM_emulation.so
+11-08 18:54:33.738 26616 26633 I EGL_emulation: Opening libGLESv2_emulation.so
+11-08 18:54:33.739 26577 26577 D VRI[MainActivity]: visibilityChanged oldVisibility=true newVisibility=false
+11-08 18:54:33.750 26616 26633 W HWUI    : Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+11-08 18:54:33.770 26616 26633 W HWUI    : Failed to initialize 101010-2 format, error = EGL_SUCCESS
+11-08 18:54:33.827  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=776, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10000100 cmp=com.google.android.apps.nexuslauncher/.NexusLauncherActivity }
+11-08 18:54:33.835   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 18:54:33.838  1210  1210 D NexusLauncherModelDelegate: notifySmartspaceEvent: SmartspaceTargetEvent{mSmartspaceTarget=null, mSmartspaceActionId='null', mEventType=6}
+11-08 18:54:33.855 26577 26577 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@9ec87ca in: STOPPED
+11-08 18:54:33.855 26577 26577 V ActivityScenario: Update currentActivityStage to STOPPED, currentActivity=ru.liturgyguide.ui.MainActivity@9ec87ca
+11-08 18:54:33.859  1210  1210 D BaseDepthController: setSurface:
+11-08 18:54:33.859  1210  1210 D BaseDepthController: 	mWaitingOnSurfaceValidity: false
+11-08 18:54:33.859  1210  1210 D BaseDepthController: 	mSurface: Surface(name=com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity)/@0x2913254
+11-08 18:54:33.864 26577 26577 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@9ec87ca in: DESTROYED
+11-08 18:54:33.864 26577 26577 V ActivityScenario: Update currentActivityStage to DESTROYED, currentActivity=null
+11-08 18:54:33.864 26577 26577 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@ba0519a
+11-08 18:54:33.867   540   829 W InputManager-JNI: Input channel object '710328e ru.liturgyguide/ru.liturgyguide.ui.MainActivity (client)' was disposed without first being removed with the input manager!
+11-08 18:54:33.874 26577 26592 D IdlingRegistry: Unregistering idling resources: [androidx.compose.ui.test.EspressoLink@cdb27e6]
+11-08 18:54:33.898 26577 26592 I TestRunner: finished: switchingToMeaningPausesScrollingAndKeepsThePhrase(ru.liturgyguide.ui.GuideNavigationTest)

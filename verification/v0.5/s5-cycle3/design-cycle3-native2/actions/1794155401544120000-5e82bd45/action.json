@@ -1,0 +1,38 @@
+{
+  "run_id": "c6bb21839cd145329d5354fcd67a0966",
+  "case_id": "waiting-context",
+  "apk_sha256": "11d66e15575954c24c53bb9d05ca1f4bfeb8faa434913489fab4820d4c27fad9",
+  "selector": {
+    "text": "С миром изыдем"
+  },
+  "expected": [
+    {
+      "text": "С миром изыдем"
+    },
+    {
+      "content-desc": "Включить плеер",
+      "ancestor": {
+        "class": "android.view.View",
+        "enabled": true,
+        "clickable": true
+      }
+    }
+  ],
+  "status": "PASS",
+  "coordinates": [
+    540,
+    2158
+  ],
+  "artifacts": [
+    {
+      "path": "actions/1794155401544120000-5e82bd45/after.xml",
+      "sha256": "6b8f11770f7863d8f362c4838d7516636ad8f9ae503d9067369fa0b141aa4698",
+      "bytes": 21488
+    },
+    {
+      "path": "actions/1794155401544120000-5e82bd45/before.xml",
+      "sha256": "b0303c0f6f2a2a59ac7e3e48b8d44452642b6412c7b891328bcfb3dec2ad15dc",
+      "bytes": 6712
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.service.ServicePlaybackStoreTest" tests="17" skipped="0" failures="0" errors="0" timestamp="2026-11-08T16:36:03" hostname="MacBook-Air-Dmitrij.local" time="0.013">
+  <properties/>
+  <testcase name="strings enums nested values and non JSON escapes are strict" classname="ru.liturgyguide.service.ServicePlaybackStoreTest" time="0.002"/>
+  <testcase name="legacy Scripture address from another date cannot select an old reading" classname="ru.liturgyguide.service.ServicePlaybackStoreTest" time="0.001"/>
+  <testcase name="codec rejects missing unknown duplicated or extra top level data" classname="ru.liturgyguide.service.ServicePlaybackStoreTest" time="0.001"/>
+  <testcase name="numeric strings fractions exponent notation overflow and nonstandard numbers are not coerced" classname="ru.liturgyguide.service.ServicePlaybackStoreTest" time="0.002"/>
+  <testcase name="manual bookmark lookup still works after migration while migration itself stays blocked" classname="ru.liturgyguide.service.ServicePlaybackStoreTest" time="0.0"/>
+  <testcase name="migration never borrows a track from a different stage and unknown stage is rejected" classname="ru.liturgyguide.service.ServicePlaybackStoreTest" time="0.001"/>
+  <testcase name="bounded format rejects oversized and invalid encoded input" classname="ru.liturgyguide.service.ServicePlaybackStoreTest" time="0.0"/>
+  <testcase name="unreadable preferences are invalid rather than a migration opportunity" classname="ru.liturgyguide.service.ServicePlaybackStoreTest" time="0.001"/>
+  <testcase name="changed content version date and impossible offsets require explicit recovery" classname="ru.liturgyguide.service.ServicePlaybackStoreTest" time="0.001"/>
+  <testcase name="only an absent phrase ID enables the old index and invalid indices use the beginning" classname="ru.liturgyguide.service.ServicePlaybackStoreTest" time="0.001"/>
+  <testcase name="empty stage and missing reading migrate to their own paused first segment" classname="ru.liturgyguide.service.ServicePlaybackStoreTest" time="0.0"/>
+  <testcase name="restore distinguishes absent from every kind of present invalid data" classname="ru.liturgyguide.service.ServicePlaybackStoreTest" time="0.0"/>
+  <testcase name="codec roundtrip keeps exact quarters context and speed but no runtime clock" classname="ru.liturgyguide.service.ServicePlaybackStoreTest" time="0.002"/>
+  <testcase name="equal content cannot restore a different parish date zone or source" classname="ru.liturgyguide.service.ServicePlaybackStoreTest" time="0.0"/>
+  <testcase name="valid restoration is paused with exact position and no monotonic anchor" classname="ru.liturgyguide.service.ServicePlaybackStoreTest" time="0.001"/>
+  <testcase name="present missing or malformed phrase never falls back to the old numeric index" classname="ru.liturgyguide.service.ServicePlaybackStoreTest" time="0.0"/>
+  <testcase name="migration preserves stable phrase but resets old tempo and elapsed without modifying input" classname="ru.liturgyguide.service.ServicePlaybackStoreTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

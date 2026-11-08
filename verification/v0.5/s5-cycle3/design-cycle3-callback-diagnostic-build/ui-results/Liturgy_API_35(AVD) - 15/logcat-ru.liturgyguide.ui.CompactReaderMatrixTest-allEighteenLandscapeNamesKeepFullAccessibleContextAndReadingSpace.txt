@@ -1,0 +1,980 @@
+11-08 19:02:39.236 27924 27938 I TestRunner: started: allEighteenLandscapeNamesKeepFullAccessibleContextAndReadingSpace(ru.liturgyguide.ui.CompactReaderMatrixTest)
+11-08 19:02:39.302 27924 27938 W FileTestStorage: Output properties is not supported.
+11-08 19:02:39.303 27924 27938 I Tracing : Tracer added: class androidx.test.platform.tracing.AndroidXTracer
+11-08 19:02:39.308 27924 27924 D EventInjectionStrategy: Creating injection strategy with input manager.
+11-08 19:02:39.308 27924 27924 W ru.liturgyguide: Accessing hidden method Landroid/hardware/input/InputManager;->getInstance()Landroid/hardware/input/InputManager; (unsupported, reflection, allowed)
+11-08 19:02:39.309 27924 27924 W ru.liturgyguide: Accessing hidden method Landroid/hardware/input/InputManager;->injectInputEvent(Landroid/view/InputEvent;I)Z (unsupported, reflection, allowed)
+11-08 19:02:39.309 27924 27924 W ru.liturgyguide: Accessing hidden field Landroid/hardware/input/InputManager;->INJECT_INPUT_EVENT_MODE_WAIT_FOR_FINISH:I (unsupported, reflection, allowed)
+11-08 19:02:39.319 27924 27924 W ru.liturgyguide: Accessing hidden method Landroid/os/MessageQueue;->next()Landroid/os/Message; (unsupported, reflection, allowed)
+11-08 19:02:39.319 27924 27924 W ru.liturgyguide: Accessing hidden field Landroid/os/MessageQueue;->mMessages:Landroid/os/Message; (unsupported, reflection, allowed)
+11-08 19:02:39.319 27924 27924 W ru.liturgyguide: Accessing hidden method Landroid/os/Message;->recycleUnchecked()V (unsupported, reflection, allowed)
+11-08 19:02:39.320 27924 27938 D IdlingRegistry: Registering idling resources: [androidx.compose.ui.test.EspressoLink@2df9628]
+11-08 19:02:39.343 27924 27938 W Settings: Setting always_finish_activities has moved from android.provider.Settings.System to android.provider.Settings.Global, returning read-only value.
+11-08 19:02:39.363   540  1984 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10291, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 19:02:39.393  1210  1210 W SplitSelectStateCtor: Missing session instanceIds
+11-08 19:02:39.394  1210  1210 D StatsLog: LAUNCHER_SPLIT_SELECTION_EXIT_INTERRUPTED
+11-08 19:02:39.449   772   865 D SplashScreenView: Build android.window.SplashScreenView{55dd18e V.E...... ......ID 0,0-0,0}
+11-08 19:02:39.449   772   865 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-08 19:02:39.449   772   865 D SplashScreenView: Branding: view: android.view.View{9fadaf G.ED..... ......I. 0,0-0,0 #1020503 android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-08 19:02:39.451   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 19:02:39.453  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=1851, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10008000 cmp=ru.liturgyguide/androidx.activity.ComponentActivity }
+11-08 19:02:39.500   442   492 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:39.543  1210  1443 D EGL_emulation: app_time_stats: avg=1258.93ms min=150.63ms max=2367.22ms count=2
+11-08 19:02:39.594 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@aca7317 in: PRE_ON_CREATE
+11-08 19:02:39.597 27924 27924 V ActivityScenario: Activity lifecycle changed event received but ignored because the reported transition was not ON_CREATE while the last known transition was PRE_ON_CREATE
+11-08 19:02:39.630 27924 27924 D CompatChangeReporter: Compat change id reported: 309578419; UID 10291; state: ENABLED
+11-08 19:02:39.649 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@aca7317 in: CREATED
+11-08 19:02:39.650 27924 27924 V ActivityScenario: Update currentActivityStage to CREATED, currentActivity=androidx.activity.ComponentActivity@aca7317
+11-08 19:02:39.653 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@aca7317 in: STARTED
+11-08 19:02:39.653 27924 27924 V ActivityScenario: Update currentActivityStage to STARTED, currentActivity=androidx.activity.ComponentActivity@aca7317
+11-08 19:02:39.660 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@aca7317 in: RESUMED
+11-08 19:02:39.661 27924 27924 V ActivityScenario: Update currentActivityStage to RESUMED, currentActivity=androidx.activity.ComponentActivity@aca7317
+11-08 19:02:39.703 27924 27924 W HWUI    : Unknown dataspace 0
+11-08 19:02:39.745   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:39.745   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:39.753   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:39.753   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:39.782   974  2102 I ChimeraSrvcProxy: NullBinder for android.net.action.RECOMMEND_NETWORKS triggering remote TransactionTooLargeException due to Service without Chimera impl
+11-08 19:02:39.782   974  2102 W .gms.persistent: Large reply transaction of 1056768 bytes, interface descriptor , code 1
+11-08 19:02:39.812  1372  1741 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=57 ]
+11-08 19:02:39.818  1372  2105 I BugleRcsEngine: handleMessage processing message:[NOTIFY_UPTIME_IGNORE_STATE_CHANGED] with [non-null]:RcsEngineImpl reference [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[cc7f0e4f-7073]>Handler" thread_id=65 ]
+11-08 19:02:39.882   386   597 W ServiceManagerCppClient: Permission failure: android.permission.ACCESS_SURFACE_FLINGER from uid=10291 pid=0
+11-08 19:02:39.882   386   597 D PermissionCache: checking android.permission.ACCESS_SURFACE_FLINGER for uid=10291 => denied (842 us)
+11-08 19:02:39.883   386   597 W ServiceManagerCppClient: Permission failure: android.permission.ROTATE_SURFACE_FLINGER from uid=10291 pid=0
+11-08 19:02:39.883   386   597 D PermissionCache: checking android.permission.ROTATE_SURFACE_FLINGER for uid=10291 => denied (658 us)
+11-08 19:02:39.883   386   947 W ServiceManagerCppClient: Permission failure: android.permission.INTERNAL_SYSTEM_WINDOW from uid=10291 pid=27924
+11-08 19:02:39.883   386   947 D PermissionCache: checking android.permission.INTERNAL_SYSTEM_WINDOW for uid=10291 => denied (263 us)
+11-08 19:02:39.886 27924 27940 I EGL_emulation: Opening libGLESv1_CM_emulation.so
+11-08 19:02:39.896   386   597 W ServiceManagerCppClient: Permission failure: android.permission.INTERNAL_SYSTEM_WINDOW from uid=10291 pid=0
+11-08 19:02:39.896   386   597 D PermissionCache: checking android.permission.INTERNAL_SYSTEM_WINDOW for uid=10291 => denied (13511 us)
+11-08 19:02:39.918 27924 27940 I EGL_emulation: Opening libGLESv2_emulation.so
+11-08 19:02:39.929  1210  1443 D EGL_emulation: app_time_stats: avg=90000.64ms min=207.56ms max=179793.70ms count=2
+11-08 19:02:40.015 27924 27940 W HWUI    : Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+11-08 19:02:40.016 27924 27940 W HWUI    : Failed to initialize 101010-2 format, error = EGL_SUCCESS
+11-08 19:02:40.053  1372  2105 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=65 ]
+11-08 19:02:40.054   772   941 D EGL_emulation: app_time_stats: avg=40024.62ms min=40024.62ms max=40024.62ms count=1
+11-08 19:02:40.077  1210  1210 D VRI[NexusLauncherActivity]: visibilityChanged oldVisibility=true newVisibility=false
+11-08 19:02:40.085  1210  1210 D NexusLauncherModelDelegate: notifySmartspaceEvent: SmartspaceTargetEvent{mSmartspaceTarget=null, mSmartspaceActionId='null', mEventType=7}
+11-08 19:02:40.234   540  1637 W ImageReader_JNI: Unable to acquire a buffer item, very likely client tried to acquire more than maxImages buffers
+11-08 19:02:40.285   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 19:02:40.303   540   569 W system_server: Long monitor contention with owner binder:540_1F (1637) at void com.android.server.wm.WindowOrganizerController.finishTransition(android.os.IBinder, android.window.WindowContainerTransaction)(WindowOrganizerController.java:496) waiters=0 in void com.android.server.wm.InputMonitor$UpdateInputWindows.run() for 227ms
+11-08 19:02:40.306   141   141 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+11-08 19:02:40.307 27924 27940 I Gralloc4: mapper 4.x is not supported
+11-08 19:02:40.391   540  1637 W ServiceManagerCppClient: Permission failure: android.permission.ACCESS_SURFACE_FLINGER from uid=10291 pid=0
+11-08 19:02:40.392   540  1637 D PermissionCache: checking android.permission.ACCESS_SURFACE_FLINGER for uid=10291 => denied (862 us)
+11-08 19:02:40.392   540  1637 W ServiceManagerCppClient: Permission failure: android.permission.ROTATE_SURFACE_FLINGER from uid=10291 pid=0
+11-08 19:02:40.393   540  1637 D PermissionCache: checking android.permission.ROTATE_SURFACE_FLINGER for uid=10291 => denied (339 us)
+11-08 19:02:40.393   540  1637 W ServiceManagerCppClient: Permission failure: android.permission.INTERNAL_SYSTEM_WINDOW from uid=10291 pid=0
+11-08 19:02:40.393   540  1637 D PermissionCache: checking android.permission.INTERNAL_SYSTEM_WINDOW for uid=10291 => denied (22 us)
+11-08 19:02:40.395   540   565 W ziparchive: Unable to open '/data/app/~~DMbTHabHX2b9Ton1PL4CMw==/ru.liturgyguide-Z8Z0m2aTD09SH7OJcXpSgA==/base.dm': No such file or directory
+11-08 19:02:40.400  1210  1210 D BaseDepthController: setSurface:
+11-08 19:02:40.400  1210  1210 D BaseDepthController: 	mWaitingOnSurfaceValidity: false
+11-08 19:02:40.400  1210  1210 D BaseDepthController: 	mSurface: null
+11-08 19:02:40.400  1210  1210 D BaseDepthController: mSurface is null and mCurrentBlur is: 0
+11-08 19:02:40.403  1210  1210 D StateManager: goToState - fromState: Normal, toState: Normal, partial trace:
+11-08 19:02:40.403  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StateManager.moveToRestState(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:4)
+11-08 19:02:40.403  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StateManager.moveToRestState(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:1)
+11-08 19:02:40.403  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StatefulActivity.onStop(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:34)
+11-08 19:02:40.403   540   565 I ActivityTaskManager: Displayed ru.liturgyguide/androidx.activity.ComponentActivity for user 0: +1s39ms
+11-08 19:02:40.403 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@aca7317 in: PAUSED
+11-08 19:02:40.404  1210  1210 D StatsLog: LAUNCHER_ONSTOP
+11-08 19:02:40.405 27924 27924 V ActivityScenario: Update currentActivityStage to PAUSED, currentActivity=androidx.activity.ComponentActivity@aca7317
+11-08 19:02:40.422 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@aca7317 in: STOPPED
+11-08 19:02:40.423  1210  1578 D OneSearchSuggestProvider: Shut down the binder channel
+11-08 19:02:40.424  1210  1210 D StatsLog: LAUNCHER_GOOGLE_SEARCH_RESTORE_LIST_SIZE_AFTER_ACTIVITY_RESTART
+11-08 19:02:40.425 27924 27924 V ActivityScenario: Update currentActivityStage to STOPPED, currentActivity=androidx.activity.ComponentActivity@aca7317
+11-08 19:02:40.427 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@aca7317 in: DESTROYED
+11-08 19:02:40.431 27924 27924 V ActivityScenario: Update currentActivityStage to DESTROYED, currentActivity=null
+11-08 19:02:40.437 27924 27924 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@abaae8
+11-08 19:02:40.462   540  1619 W InputManager-JNI: Input channel object '1d68246 ru.liturgyguide/androidx.activity.ComponentActivity (client)' was disposed without first being removed with the input manager!
+11-08 19:02:40.466   974  1457 I FontLog : Received query Noto Color Emoji Compat, URI content://com.google.android.gms.fonts [CONTEXT service_id=132 ]
+11-08 19:02:40.471   974  1457 I FontLog : Query [emojicompat-emoji-font] resolved to {Noto Color Emoji Compat, wdth 100.0, wght 400, ital 0.0, bestEffort false} [CONTEXT service_id=132 ]
+11-08 19:02:40.481   974  1457 I FontLog : Fetch {Noto Color Emoji Compat, wdth 100.0, wght 400, ital 0.0, bestEffort false} end status Status{statusCode=SUCCESS, resolution=null} [CONTEXT service_id=132 ]
+11-08 19:02:40.504   345   418 I netd    : tetherGetStats() -> {[]} <4.81ms>
+11-08 19:02:40.521 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@7348ed7 in: PRE_ON_CREATE
+11-08 19:02:40.521 27924 27924 V ActivityScenario: Activity lifecycle changed event received but ignored because the reported transition was not ON_CREATE while the last known transition was DESTROYED
+11-08 19:02:40.523 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@7348ed7 in: CREATED
+11-08 19:02:40.524 27924 27924 V ActivityScenario: Update currentActivityStage to CREATED, currentActivity=androidx.activity.ComponentActivity@7348ed7
+11-08 19:02:40.525   974  1457 I FontLog : Pulling font file for id = 68, cache size = 5 [CONTEXT service_id=132 ]
+11-08 19:02:40.525 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@7348ed7 in: STARTED
+11-08 19:02:40.526 27924 27924 V ActivityScenario: Update currentActivityStage to STARTED, currentActivity=androidx.activity.ComponentActivity@7348ed7
+11-08 19:02:40.528 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@7348ed7 in: RESUMED
+11-08 19:02:40.528 27924 27924 V ActivityScenario: Update currentActivityStage to RESUMED, currentActivity=androidx.activity.ComponentActivity@7348ed7
+11-08 19:02:40.530   974  1457 I FontLog : Pulling font file for id = 68, cache size = 5 [CONTEXT service_id=132 ]
+11-08 19:02:40.751   540   653 I ImeTracker: ru.liturgyguide:822634: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 19:02:40.751   540   653 I ImeTracker: ru.liturgyguide:822634: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 19:02:40.775   772   855 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@9e9789a
+11-08 19:02:40.775   540  1637 W InputManager-JNI: Input channel object '4cc0722 Splash Screen ru.liturgyguide (client)' was disposed without first being removed with the input manager!
+11-08 19:02:40.776  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 19:02:40.781  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 19:02:40.781  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 19:02:40.782  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 19:02:40.784  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 19:02:40.812   442   492 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:40.962 27924 27928 I ru.liturgyguide: Compiler allocated 5250KB to compile void android.view.ViewRootImpl.performTraversals()
+11-08 19:02:44.244 27924 27952 D ProfileInstaller: Installing profile for ru.liturgyguide
+11-08 19:02:44.386   345   418 I netd    : tetherGetStats() -> {[]} <4.67ms>
+11-08 19:02:45.458  1456  1463 W gle.android.gms: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~DMbTHabHX2b9Ton1PL4CMw==/ru.liturgyguide-Z8Z0m2aTD09SH7OJcXpSgA==/base.apk' with 1 weak references
+11-08 19:02:45.590 27924 27938 W SurfaceComposerClient: Sync transaction timed out waiting for commit callback.
+11-08 19:02:45.615   540   568 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:45.679   772   772 D DisplayRepository: combining enabled=[0], connectedExternalDisplayIds=[], ignored=[]
+11-08 19:02:45.726   540  1619 W ImageReader_JNI: Unable to acquire a buffer item, very likely client tried to acquire more than maxImages buffers
+11-08 19:02:45.765   540   540 W WindowTokenClientController: Can't find attached WindowTokenClient for android.window.WindowTokenClient@ec9f5dc
+11-08 19:02:45.789   540   568 I InputManager-JNI: Viewport [0] to add: local:4619827259835644672, isActive: true
+11-08 19:02:45.792   540   647 I InputReader: Reconfiguring input devices, changes=DISPLAY_INFO
+11-08 19:02:45.793   540   647 I InputReader: Touch device 'virtio_input_multi_touch_2' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+11-08 19:02:45.795   540   647 I InputReader: Touch device 'virtio_input_multi_touch_4' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+11-08 19:02:45.798   540   647 I InputReader: Touch device 'virtio_input_multi_touch_5' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+11-08 19:02:45.798   540   647 I InputReader: Touch device 'virtio_input_multi_touch_6' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+11-08 19:02:45.798   540   647 I InputReader: Touch device 'virtio_input_multi_touch_7' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+11-08 19:02:45.798   540   647 I InputReader: Touch device 'virtio_input_multi_touch_8' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+11-08 19:02:45.798   540   647 I InputReader: Touch device 'virtio_input_multi_touch_10' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+11-08 19:02:45.799   540   647 I InputReader: Touch device 'virtio_input_multi_touch_11' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+11-08 19:02:45.799   540   647 I InputReader: Touch device 'virtio_input_multi_touch_9' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+11-08 19:02:45.799   540   647 I InputReader: Touch device 'virtio_input_multi_touch_3' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+11-08 19:02:45.801   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 19:02:45.803  1271  1271 I AppBase : AppBase.onConfigurationChanged():419 onConfigurationChanged() : NewConfig = {1.0 310mcc260mnc [en_US] ldltr sw411dp w862dp h387dp 420dpi nrml long land finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 2400, 1080) mAppBounds=Rect(136, 0 - 2400, 1017) mMaxBounds=Rect(0, 0 - 2400, 1080) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} as.2 s.1305 fontWeightAdjustment=0}
+11-08 19:02:45.820  1210  1210 D b/254119092: TaskbarManager#mComponentCallbacks.onConfigurationChanged: {1.0 310mcc260mnc [en_US] ldltr sw411dp w914dp h411dp 420dpi nrml long land finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 2400, 1080) mAppBounds=Rect(0, 0 - 2400, 1080) mMaxBounds=Rect(0, 0 - 2400, 1080) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} as.2 s.1285 fontWeightAdjustment=0}
+11-08 19:02:45.820  1210  1210 D b/254119092: mActivity and mContext agree taskbarIsPresent=false
+11-08 19:02:45.820  1210  1210 D b/254119092: ComponentCallbacks#onConfigurationChanged() configDiff={}
+11-08 19:02:45.820  1210  1210 D b/254119092: mActivity and mContext agree taskbarIsPresent=false
+11-08 19:02:45.820  1210  1210 D b/254119092: destroyExistingTaskbar: com.android.launcher3.taskbar.TaskbarActivityContext@4ce60e0
+11-08 19:02:45.820  1210  1210 D b/254119092: mActivity and mContext agree taskbarIsPresent=false
+11-08 19:02:45.821 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@7348ed7 in: PAUSED
+11-08 19:02:45.821 27924 27924 V ActivityScenario: Update currentActivityStage to PAUSED, currentActivity=androidx.activity.ComponentActivity@7348ed7
+11-08 19:02:45.825  1210  1210 D b/254119092: recreateTaskbar: isTaskbarEnabled=true [dp != null (i.e. mUserUnlocked)]=true FLAG_HIDE_NAVBAR_WINDOW=true dp.isTaskbarPresent=false
+11-08 19:02:45.825  1210  1210 D b/254119092: mActivity and mContext agree taskbarIsPresent=false
+11-08 19:02:45.825 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@7348ed7 in: STOPPED
+11-08 19:02:45.825 27924 27924 V ActivityScenario: Update currentActivityStage to STOPPED, currentActivity=androidx.activity.ComponentActivity@7348ed7
+11-08 19:02:45.827 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@7348ed7 in: DESTROYED
+11-08 19:02:45.827 27924 27924 V ActivityScenario: Update currentActivityStage to DESTROYED, currentActivity=null
+11-08 19:02:45.829  1271  1271 W GoogleInputMethodService: GoogleInputMethodService.onConfigurationChanged():1644 onConfigurationChanged() : NewConfig = {1.0 310mcc260mnc [en_US] ldltr sw411dp w914dp h411dp 420dpi nrml long land finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 2400, 1080) mAppBounds=Rect(0, 0 - 2400, 1080) mMaxBounds=Rect(0, 0 - 2400, 1080) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} as.2 s.1285 fontWeightAdjustment=0}
+11-08 19:02:45.830 27924 27924 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@c60dbc7
+11-08 19:02:45.833   386   947 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 19:02:45.833  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onConfigurationChanged():1645 device real metrics: DisplayMetrics{density=2.625, width=2400, height=1080, scaledDensity=2.625, xdpi=420.0, ydpi=420.0}
+11-08 19:02:45.833  1271  1271 I InputMethodEntryManager: InputMethodEntryManager.notifyCurrentInputMethodEntryOnContextChanged():521 notifyCurrentInputMethodEntryOnContextChanged()
+11-08 19:02:45.834  1271  1271 I InputMethodEntryManager: InputMethodEntryManager.notifyCurrentInputMethodEntryOnContextChanged():542 Notify current input method entry changed on context change
+11-08 19:02:45.835  1271  1271 I KeyboardContextProvider: KeyboardContextProvider$KeyboardContextCache.createKeyboardContext():173 createKeyboardContext(): en-US, jgg@bd2d615(com.android.inputmethod.latin.LatinIME@59827d8), {1.0 310mcc260mnc [en_US] ldltr sw411dp w914dp h411dp 420dpi nrml long land finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 2400, 1080) mAppBounds=Rect(0, 0 - 2400, 1080) mMaxBounds=Rect(0, 0 - 2400, 1080) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} as.2 s.1215 fontWeightAdjustment=0}
+11-08 19:02:45.835  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onCurrentInputMethodEntryChanged():3655 onCurrentInputMethodEntryChanged(): imeDefsChanged=false, initializedEntryChanged=false, keyboardContextChanged=true
+11-08 19:02:45.836  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.clearInputMethodServiceData():1613 clearInputMethodServiceData for entryChange
+11-08 19:02:45.849   540   903 W InputManager-JNI: Input channel object 'e993f39 ru.liturgyguide/androidx.activity.ComponentActivity (client)' was disposed without first being removed with the input manager!
+11-08 19:02:45.857   772   772 I NoBackGesture: Config changed: newConfig={1.0 310mcc260mnc [en_US] ldltr sw411dp w914dp h411dp 420dpi nrml long land finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 2400, 1080) mAppBounds=Rect(0, 0 - 2400, 1080) mMaxBounds=Rect(0, 0 - 2400, 1080) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} as.2 s.1314 fontWeightAdjustment=0} lastReportedConfig={1.0 310mcc260mnc [en_US] ldltr sw411dp w411dp h914dp 420dpi nrml long port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2400) mAppBounds=Rect(0, 0 - 1080, 2400) mMaxBounds=Rect(0, 0 - 1080, 2400) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} as.2 s.1279 fontWeightAdjustment=0}
+11-08 19:02:45.858  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.maybeDestroyExistingKeyboardGroupManager():538 Destroy existing keyboard group manager in fvq
+11-08 19:02:45.858  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.createKeyboardGroupManagerListenableFuture():120 Create keyboard group manager listenable future in fvq
+11-08 19:02:45.860  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.maybeDestroyExistingKeyboardGroupManager():538 Destroy existing keyboard group manager in fxu
+11-08 19:02:45.860  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.createKeyboardGroupManagerListenableFuture():120 Create keyboard group manager listenable future in fxu
+11-08 19:02:45.861  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.maybeDestroyExistingKeyboardGroupManager():538 Destroy existing keyboard group manager in eid
+11-08 19:02:45.863  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.createKeyboardGroupManagerListenableFuture():120 Create keyboard group manager listenable future in eid
+11-08 19:02:45.864  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 19:02:45.866  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 19:02:45.867  1271  1271 I KeyboardModeManager: KeyboardModeManager.onCurrentInputMethodEntryChanged():1133 Reload data for context change
+11-08 19:02:45.868  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.initializeInputMethodServiceData():1382 initializeInputMethodServiceData for kct{languageTag=en-US, variant=qwerty, hasLocalizedResources=true, conditionCacheKey=_cache_additional_ime_defs_for_condition_change=false_cache_ime_defs_for_condition_change=false_device=phone_device_size=default_enable_flick_symbols=false_enable_more_candidates_view_for_multilingual=false_enable_number_row=false_enable_preemptive_decode=true_enable_secondary_digits=true_enable_secondary_symbols=false_enable_show_foldable_layout_on_small_tablet=true_expressions=normal_four_or_more_letter_rows=false_keyboard_mode=normal_language=en-US_orientation=portrait_physical_keyboard=nokeys_rtl_layout=false_show_secondary_digits=true_show_suggestions=true_split_with_duplicate_keys=true_variant=qwerty, imeDef.stringId=ime_english_united_states, imeDef.className=com.google.android.apps.inputmethod.libs.latin5.LatinIme, imeDef.languageTag=en-US}
+11-08 19:02:45.869  1271  1271 I StyledKeyboardThemeBuilder: StyledKeyboardThemeBuilder.build():132 Pref: [], themeName: [silk:], darkMode: [false], cacheKey: [overlay_builtin_dynamic_color_light_base.binarypb:dynamic-gm3-light-fffefbff-ff495d92-8adeb286894d7d4cce285b6f16b95faf]
+11-08 19:02:45.870  1271 27955 I KeyboardGroupDefParser: KeyboardGroupDefParser.parseKeyboardGroupDef():83 parseKeyboardGroupDef() 2132214040 -> 0_resource_name_obfuscated : WaitTime = 5 ms : RunTime = 0 ms
+11-08 19:02:45.872  1271  1271 I KeyboardThemeProvider: KeyboardThemeProvider.applyKeyboardTheme():27 Apply keyboard theme: theme_border_stylesheet_noshadow_gsans_pillkey_silkpopup_hover_light_phone_navredesign_400_overlay_builtin_dynamic_color_light_base.binarypb:dynamic-gm3-light-fffefbff-ff495d92-8adeb286894d7d4cce285b6f16b95faf_port
+11-08 19:02:45.877   832   973 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:45.878 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@c130f8e in: PRE_ON_CREATE
+11-08 19:02:45.878  1271 27955 I KeyboardGroupDefParser: KeyboardGroupDefParser.parseKeyboardGroupDef():83 parseKeyboardGroupDef() 2132214039 -> 0_resource_name_obfuscated : WaitTime = 12 ms : RunTime = 0 ms
+11-08 19:02:45.879 27924 27924 V ActivityScenario: Activity lifecycle changed event received but ignored because the reported transition was not ON_CREATE while the last known transition was DESTROYED
+11-08 19:02:45.879   772   772 I NoBackGesture: NavbarController: newConfig={1.0 310mcc260mnc [en_US] ldltr sw411dp w914dp h411dp 420dpi nrml long land finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 2400, 1080) mAppBounds=Rect(0, 0 - 2400, 1080) mMaxBounds=Rect(0, 0 - 2400, 1080) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} as.2 s.1314 fontWeightAdjustment=0} mTaskbarDelegate initialized=true willApplyConfigToNavbars=false navBarCount=0
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: No service published for: ethernet
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: android.os.ServiceManager$ServiceNotFoundException: No service published for: ethernet
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: 	at android.os.ServiceManager.getServiceOrThrow(ServiceManager.java:203)
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: 	at android.app.SystemServiceRegistry$145.createService(SystemServiceRegistry.java:2120)
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: 	at android.app.SystemServiceRegistry$CachedServiceFetcher.getService(SystemServiceRegistry.java:2231)
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: 	at android.app.SystemServiceRegistry.getSystemService(SystemServiceRegistry.java:1812)
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: 	at android.app.ContextImpl.getSystemService(ContextImpl.java:2241)
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: 	at android.content.ContextWrapper.getSystemService(ContextWrapper.java:936)
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: 	at com.android.networkstack.tethering.Tethering.isEthernetSupported(Tethering.java:1579)
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: 	at com.android.networkstack.tethering.Tethering.makeSupportedDownstreams(Tethering.java:2562)
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: 	at com.android.networkstack.tethering.Tethering.updateSupportedDownstreams(Tethering.java:2536)
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: 	at com.android.networkstack.tethering.Tethering.updateConfiguration(Tethering.java:549)
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: 	at com.android.networkstack.tethering.Tethering.-$$Nest$mupdateConfiguration(Tethering.java:0)
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: 	at com.android.networkstack.tethering.Tethering$StateReceiver.onReceive(Tethering.java:1186)
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: 	at android.app.LoadedApk$ReceiverDispatcher$Args.lambda$getRunnable$0(LoadedApk.java:1814)
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: 	at android.app.LoadedApk$ReceiverDispatcher$Args.$r8$lambda$mcNAAl1SQ4MyJPyDg8TJ2x2h0Rk(Unknown Source:0)
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: 	at android.app.LoadedApk$ReceiverDispatcher$Args$$ExternalSyntheticLambda0.run(D8$$SyntheticClass:0)
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: 	at android.os.Handler.handleCallback(Handler.java:959)
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: 	at android.os.Handler.dispatchMessage(Handler.java:100)
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: 	at android.os.Looper.loopOnce(Looper.java:232)
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: 	at android.os.Looper.loop(Looper.java:317)
+11-08 19:02:45.883   832   973 E SystemServiceRegistry: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+11-08 19:02:45.886  1271 27954 I KeyboardGroupDefParser: KeyboardGroupDefParser.parseKeyboardGroupDef():83 parseKeyboardGroupDef() 2132214033 -> 0_resource_name_obfuscated : WaitTime = 4 ms : RunTime = 24 ms
+11-08 19:02:45.888 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@c130f8e in: CREATED
+11-08 19:02:45.889 27924 27924 V ActivityScenario: Update currentActivityStage to CREATED, currentActivity=androidx.activity.ComponentActivity@c130f8e
+11-08 19:02:45.889 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@c130f8e in: STARTED
+11-08 19:02:45.889 27924 27924 V ActivityScenario: Update currentActivityStage to STARTED, currentActivity=androidx.activity.ComponentActivity@c130f8e
+11-08 19:02:45.890 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@c130f8e in: RESUMED
+11-08 19:02:45.890 27924 27924 V ActivityScenario: Update currentActivityStage to RESUMED, currentActivity=androidx.activity.ComponentActivity@c130f8e
+11-08 19:02:45.957  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 19:02:45.957  1210  1210 D StatsLog: LAUNCHER_TRANSIENT_TASKBAR_HIDE
+11-08 19:02:45.963  1271  1271 W NotificationCenter: NotificationCenter$ListenerData.notifyOnExecutor():672 Heavy notify work detected on UI thread: |kcd->kff| takes 128ms
+11-08 19:02:45.963  1271  1271 I SystemSubtypesReportModule: SystemSubtypesReportModule$3.onCurrentInputMethodEntryChanged():136 entry: en-US, source: UNSPECIFIED
+11-08 19:02:45.963  1271  1271 I KeyboardContextProvider: KeyboardContextProvider.setBaseContextAndInvalidKeyboardContextCache():88 setBaseContextAndInvalidKeyboardContextCache(): com.android.inputmethod.latin.LatinIME@59827d8
+11-08 19:02:45.964  1271  1271 I InputMethodEntryManager: InputMethodEntryManager.resetLanguages():2621 resetLanguages(): languages=null, conditionName=orientation
+11-08 19:02:45.964  1271  1271 I ImeDefCache: ImeDefCache.clearCacheForLanguages():387 clearCacheForLanguages(): []
+11-08 19:02:45.964  1271  1271 I AdditionalImeDefCache: AdditionalImeDefCache.clearAdditionalImeDefsForCondition():435 clearAdditionalImeDefsForCondition() clear additional ImeDefs: []
+11-08 19:02:45.964  1271  1271 I InputMethodEntryManager: InputMethodEntryManager.resetLanguages():2634 Clear cache for languages: null, changed=false
+11-08 19:02:45.964  1271  1271 I InputMethodEntryManager: InputMethodEntryManager.startLoadingInputMethodEntrySettings():700 Start loading input method entry settings: [LanguageTagVariantTuple{languageTag=en-US, variant=qwerty}]
+11-08 19:02:45.964  1271  1271 I InputMethodEntryManager: InputMethodEntryManager.updateInputMethodEntrySettingsLoadingTask():787 update loading task with resetImplicitlyEnabledEntries is false
+11-08 19:02:45.964  1271  1271 I InputMethodEntryManager: InputMethodEntryManager$4.onSuccess():806 Success load entries: [LanguageTagVariantTuple{languageTag=en-US, variant=qwerty}], resetImplicitlyEnabledEntries=false, initialized=true
+11-08 19:02:45.965  1271  1271 I SystemSubtypesReportModule: SystemSubtypesReportModule$2.onEnabledInputMethodEntriesChanged():122 1 entries
+11-08 19:02:46.013  1210  1210 D b/254119092: DisplayController#onConfigurationChanged: {1.0 310mcc260mnc [en_US] ldltr sw411dp w914dp h411dp 420dpi nrml long land finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 2400, 1080) mAppBounds=Rect(0, 0 - 2400, 1080) mMaxBounds=Rect(0, 0 - 2400, 1080) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} as.2 s.1285 fontWeightAdjustment=0}
+11-08 19:02:46.017  1271  1271 W NotificationCenter: NotificationCenter$ListenerData.notifyOnExecutor():672 Heavy notify work detected on UI thread: |kck->lrc| takes 52ms
+11-08 19:02:46.021  1271  1271 I InputMethodEntryManager: InputMethodEntryManager.changeCurrentInputMethodEntry():2829 Set current input method entry: source=UNSPECIFIED, entryChanged=false, kct{languageTag=en-US, variant=qwerty, hasLocalizedResources=true, conditionCacheKey=_cache_additional_ime_defs_for_condition_change=false_cache_ime_defs_for_condition_change=false_device=phone_device_size=default_enable_flick_symbols=false_enable_more_candidates_view_for_multilingual=false_enable_number_row=false_enable_preemptive_decode=true_enable_secondary_digits=true_enable_secondary_symbols=false_enable_show_foldable_layout_on_small_tablet=true_expressions=normal_four_or_more_letter_rows=false_keyboard_mode=normal_language=en-US_orientation=landscape_physical_keyboard=nokeys_rtl_layout=false_show_secondary_digits=true_show_suggestions=true_split_with_duplicate_keys=true_variant=qwerty, imeDef.stringId=ime_english_united_states, imeDef.className=com.google.android.apps.inputmethod.libs.latin5.LatinIme, imeDef.languageTag=en-US}
+11-08 19:02:46.021  1271  1271 I InputMethodEntryManager: InputMethodEntryManager.loadAdditionalImeDefsForCurrentEntry():2851 loadAdditionalImeDefsForCurrentEntry(): kct{languageTag=en-US, variant=qwerty, hasLocalizedResources=true, conditionCacheKey=_cache_additional_ime_defs_for_condition_change=false_cache_ime_defs_for_condition_change=false_device=phone_device_size=default_enable_flick_symbols=false_enable_more_candidates_view_for_multilingual=false_enable_number_row=false_enable_preemptive_decode=true_enable_secondary_digits=true_enable_secondary_symbols=false_enable_show_foldable_layout_on_small_tablet=true_expressions=normal_four_or_more_letter_rows=false_keyboard_mode=normal_language=en-US_orientation=landscape_physical_keyboard=nokeys_rtl_layout=false_show_secondary_digits=true_show_suggestions=true_split_with_duplicate_keys=true_variant=qwerty, imeDef.stringId=ime_english_united_states, imeDef.className=com.google.android.apps.inputmethod.libs.latin5.LatinIme, imeDef.languageTag=en-US}
+11-08 19:02:46.022  1271  1271 I InputMethodEntryManager: InputMethodEntryManager$6.onSuccess():2864 Success load additional ImeDefs, entryChanged=false, additionalImeDefsChanged=false, [ktt{stringId=password, language=und-Latn-x-password, languageTag=und-Latn-x-password, processedConditions={variant=qwerty, enable_number_row=false, device=phone}, className=com.google.android.libraries.inputmethod.ime.password.PasswordIme, label=2132018743, keyEventInterpreter=null, inlineComposing=true, autoCapital=true, announceAutoSelectedCandidate=true, statusIcon=0, primeKeyboardType=SOFT, indicatorIcon=0, indicatorLabel=null, displayAppCompletions=false, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=false, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@9b7f8a3, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=false, supportsAccessPoints=false}, ktt{stringId=number, language=und-Latn-x-number, languageTag=und-Latn-x-number, processedConditions={}, className=com.google.android.libraries.inputmethod.ime.DummyIme, label=2132018692, keyEventInterpreter=null, inlineComposing=true, autoCapital=false, announceAutoSelectedCandidate=false, statusIcon=0, primeKeyboardType=SOFT, indicatorIcon=0, indicatorLabel=null, displayAppCompletions=false, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=false, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@228b7a0, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=false, supportsAccessPoints=false}, ktt{stringId=number_password, language=und-Latn-x-number-password, languageTag=und-Latn-x-number-password, processedConditions={}, className=com.google.android.libraries.inputmethod.ime.DummyIme, label=2132018693, keyEventInterpreter=null, inlineComposing=true, autoCapital=false, announceAutoSelectedCandidate=false, statusIcon=0, primeKeyboardType=SOFT, indicatorIcon=0, indicatorLabel=null, displayAppCompletions=false, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=false, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@9091f59, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=false, supportsAccessPoints=false}, ktt{stringId=phone_number, language=und-Latn-x-phone-number, languageTag=und-Latn-x-phone-number, processedConditions={}, className=com.google.android.libraries.inputmethod.ime.DummyIme, label=2132018778, keyEventInterpreter=null, inlineComposing=true, autoCapital=false, announceAutoSelectedCandidate=false, statusIcon=0, primeKeyboardType=SOFT, indicatorIcon=0, indicatorLabel=null, displayAppCompletions=false, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=false, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@845a71e, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=false, supportsAccessPoints=false}, ktt{stringId=date_time, language=und-Latn-x-date-time, languageTag=und-Latn-x-date-time, processedConditions={}, className=com.google.android.libraries.inputmethod.ime.DummyIme, label=2132017511, keyEventInterpreter=null, inlineComposing=true, autoCapital=false, announceAutoSelectedCandidate=false, statusIcon=0, primeKeyboardType=SOFT, indicatorIcon=0, indicatorLabel=null, displayAppCompletions=false, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=false, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@dc77bff, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=false, supportsAccessPoints=false}, ktt{stringId=dummy_hard, language=en, languageTag=en, processedConditions={device=unknown
+11-08 19:02:46.022  1271  1271 I InputMethodEntryManager: }, className=com.google.android.apps.inputmethod.libs.latin5.LatinDummyIme, label=0, keyEventInterpreter=null, inlineComposing=true, autoCapital=false, announceAutoSelectedCandidate=true, statusIcon=0, primeKeyboardType=HARD_QWERTY, indicatorIcon=0, indicatorLabel=null, displayAppCompletions=false, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=false, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@bf1adcc, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=false, supportsAccessPoints=false}, ktt{stringId=password_floating_hard_qwerty, language=und-Latn-x-password, languageTag=und-Latn-x-password, processedConditions={}, className=com.google.android.libraries.inputmethod.ime.DummyIme, label=2132018779, keyEventInterpreter=null, inlineComposing=true, autoCapital=false, announceAutoSelectedCandidate=false, statusIcon=2131231632, primeKeyboardType=HARD_QWERTY, indicatorIcon=0, indicatorLabel=null, displayAppCompletions=false, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=false, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@a35815, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=false, supportsAccessPoints=false}, ktt{stringId=phone_number_floating_hard_qwerty, language=und-Latn-x-phone-number, languageTag=und-Latn-x-phone-number, processedConditions={}, className=com.google.android.libraries.inputmethod.ime.DummyIme, label=2132018779, keyEventInterpreter=null, inlineComposing=true, autoCapital=false, announceAutoSelectedCandidate=false, statusIcon=2131231823, primeKeyboardType=HARD_QWERTY, indicatorIcon=0, indicatorLabel=null, displayAppCompletions=false, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=false, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@fa1172a, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=false, supportsAccessPoints=false}, ktt{stringId=number_floating_hard_qwerty, language=und-Latn-x-number, languageTag=und-Latn-x-number, processedConditions={}, className=com.google.android.libraries.inputmethod.ime.DummyIme, label=2132018779, keyEventInterpreter=null, inlineComposing=true, autoCapital=false, announceAutoSelectedCandidate=false, statusIcon=2131231823, primeKeyboardType=HARD_QWERTY, indicatorIcon=0, indicatorLabel=null, displayAppCompletions=false, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=false, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@121d91b, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=false, supportsAccessPoints=false}, ktt{stringId=date_time_floating_hard_qwerty, language=und-Latn-x-date-time, languageTag=und-Latn-x-date-time, processedConditions={}, className=com.google.android.libraries.inputmethod.ime.DummyIme, label=2132018779, keyEventInterpreter=null, inlineComposing=true, autoCapital=false, announceAutoSelectedCandidate=false, statusIcon=2131231823, primeKeyboardType=HARD_QWERTY, indicatorIcon=0, indicatorLabel=null, displayAppCompletions=false, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=false, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@171dab8, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=false, supportsAccessPoints=false}]
+11-08 19:02:46.022  1271  1271 I InputMethodEntryManager: InputMethodEntryManager.onSuccessLoadingAdditionalImeDefs():2918 Additional ImeDefs have been loaded, maybe notify entry change: false
+11-08 19:02:46.023  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onCurrentInputMethodEntryChanged():3655 onCurrentInputMethodEntryChanged(): imeDefsChanged=false, initializedEntryChanged=false, keyboardContextChanged=false
+11-08 19:02:46.023  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onCurrentInputMethodEntryChanged():3675 Skip the entry change as the input method entry is consider as not changed.
+11-08 19:02:46.023  1271  1271 W GoogleInputMethodService: GoogleInputMethodService.reactivateKeyboard():3830 No need to reactivate keyboard when input view is not started.
+11-08 19:02:46.023  1271  1271 I SystemSubtypesReportModule: SystemSubtypesReportModule$3.onCurrentInputMethodEntryChanged():136 entry: en-US, source: UNSPECIFIED
+11-08 19:02:46.023  1271  1271 W NotificationCenter: NotificationCenter$ListenerData.notifyOnExecutor():672 Heavy notify work detected on UI thread: |lor->mpx| takes 59ms
+11-08 19:02:46.023  1271  1271 I DeviceModeMonitor2: DeviceModeMonitor2.onConfigurationChanged():62
+11-08 19:02:46.023  1271  1271 I DeviceModeMonitor2: DeviceModeMonitor2.calculateAndNotify():101 Device mode 'phone' from display metrics 'DisplayMetrics{density=0.0, width=1080, height=2400, scaledDensity=0.0, xdpi=420.0, ydpi=420.0}' or smallestScreenWidthDp: 411
+11-08 19:02:46.023  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onConfigurationChanged():1665 changedMask : 20000480
+11-08 19:02:46.023  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.clearInputMethodServiceData():1613 clearInputMethodServiceData for configurationChange
+11-08 19:02:46.033  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.discardAllKeyboardViewAndInputView():1818 discardAllKeyboardViewAndInputView()
+11-08 19:02:46.033  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.maybeDestroyExistingKeyboardGroupManager():538 Destroy existing keyboard group manager in fvq
+11-08 19:02:46.033  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.createKeyboardGroupManagerListenableFuture():120 Create keyboard group manager listenable future in fvq
+11-08 19:02:46.033  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.maybeDestroyExistingKeyboardGroupManager():538 Destroy existing keyboard group manager in fxu
+11-08 19:02:46.033  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.createKeyboardGroupManagerListenableFuture():120 Create keyboard group manager listenable future in fxu
+11-08 19:02:46.033  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.maybeDestroyExistingKeyboardGroupManager():538 Destroy existing keyboard group manager in eid
+11-08 19:02:46.033  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.createKeyboardGroupManagerListenableFuture():120 Create keyboard group manager listenable future in eid
+11-08 19:02:46.033  1271  1271 I KeyboardModeManager: KeyboardModeManager.setInputViewKeyboardViewHolderProvider():625 setInputView() : supportsOneHandedMode=false supportsSplitMode=true
+11-08 19:02:46.033  1271  1271 I NormalModeController: NormalModeController.getKeyboardBodyViewHolderPaddingBottom():104 currentPrimeKeyboardType:SOFT systemPaddingBottom:-1
+11-08 19:02:46.033  1271  1271 I KeyboardModeManager: KeyboardModeManager.setInputViewKeyboardViewHolderProvider():613 setInputView() : supportsOneHandedMode=false, supportSplitMode=true
+11-08 19:02:46.034  1271  1271 I WindowMetricsHelper: WindowMetricsHelper.predictAndNotify():115 Window metrics predicted by cache.
+11-08 19:02:46.034  1271  1271 I GoogleInputMethodService: GoogleInputMethodService$10.onWindowMetricsChanged():1226 windowMetrics: bounds() = Rect(136, 74 - 2400, 1080), insets() = Rect(0, 0 - 0, 126)
+11-08 19:02:46.034  1271  1271 I DeviceModeMonitor2: DeviceModeMonitor2.calculateAndNotify():101 Device mode 'phone' from display metrics 'DisplayMetrics{density=0.0, width=2400, height=1080, scaledDensity=0.0, xdpi=420.0, ydpi=420.0}' or smallestScreenWidthDp: 411
+11-08 19:02:46.034  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.initializeInputMethodServiceData():1382 initializeInputMethodServiceData for kct{languageTag=en-US, variant=qwerty, hasLocalizedResources=true, conditionCacheKey=_cache_additional_ime_defs_for_condition_change=false_cache_ime_defs_for_condition_change=false_device=phone_device_size=default_enable_flick_symbols=false_enable_more_candidates_view_for_multilingual=false_enable_number_row=false_enable_preemptive_decode=true_enable_secondary_digits=true_enable_secondary_symbols=false_enable_show_foldable_layout_on_small_tablet=true_expressions=normal_four_or_more_letter_rows=false_keyboard_mode=normal_language=en-US_orientation=landscape_physical_keyboard=nokeys_rtl_layout=false_show_secondary_digits=true_show_suggestions=true_split_with_duplicate_keys=true_variant=qwerty, imeDef.stringId=ime_english_united_states, imeDef.className=com.google.android.apps.inputmethod.libs.latin5.LatinIme, imeDef.languageTag=en-US}
+11-08 19:02:46.035  1271  1271 I StyledKeyboardThemeBuilder: StyledKeyboardThemeBuilder.build():132 Pref: [], themeName: [silk:], darkMode: [false], cacheKey: [overlay_builtin_dynamic_color_light_base.binarypb:dynamic-gm3-light-fffefbff-ff495d92-8adeb286894d7d4cce285b6f16b95faf]
+11-08 19:02:46.035  1271  1271 I KeyboardThemeProvider: KeyboardThemeProvider.applyKeyboardTheme():27 Apply keyboard theme: theme_border_stylesheet_noshadow_gsans_pillkey_silkpopup_hover_light_phone_navredesign_400_overlay_builtin_dynamic_color_light_base.binarypb:dynamic-gm3-light-fffefbff-ff495d92-8adeb286894d7d4cce285b6f16b95faf_land
+11-08 19:02:46.038  1271 27958 I DelightKLPDownloader: DelightKLPDownloader.downloadKLPInternal():185 downloading KLP for en_840
+11-08 19:02:46.038  1271 27958 I ManifestedDataDownloader: ManifestedDataDownloader.download():57 downloading manifest https://www.gstatic.com/android/keyboard/dictionarypack/2024070918/metadata.json-perlang/en-840.json?v=2024071002
+11-08 19:02:46.040  1271 27955 I KeyboardGroupDefParser: KeyboardGroupDefParser.parseKeyboardGroupDef():83 parseKeyboardGroupDef() 2132214033 -> 0_resource_name_obfuscated : WaitTime = 7 ms : RunTime = 0 ms
+11-08 19:02:46.040  1271 27955 I KeyboardGroupDefParser: KeyboardGroupDefParser.parseKeyboardGroupDef():83 parseKeyboardGroupDef() 2132214040 -> 0_resource_name_obfuscated : WaitTime = 8 ms : RunTime = 0 ms
+11-08 19:02:46.042  1271 27954 I KeyboardGroupDefParser: KeyboardGroupDefParser.parseKeyboardGroupDef():83 parseKeyboardGroupDef() 2132214039 -> 0_resource_name_obfuscated : WaitTime = 10 ms : RunTime = 0 ms
+11-08 19:02:46.043  1271  1601 W LatinCommonMetricsProcessor: LatinCommonMetricsProcessor.processInputMethodEntryChanged():2300 The new entry is equal to the old entry
+11-08 19:02:46.046  1271  1626 I SP      : Registering emoticon_content_description.2022081613, url: https://www.gstatic.com/android/keyboard/emoticon_content_desc/202208161305/superpacks_manifest.json, constraints: W:*:*:*, flags: bg, requested: 2022081613, current: 2022081613
+11-08 19:02:46.089 27924 27938 I UiAutomation: Initialized for user 0 on display 0
+11-08 19:02:46.093  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 19:02:46.095   540   653 I ImeTracker: ru.liturgyguide:4c172e80: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 19:02:46.095   540   653 I ImeTracker: ru.liturgyguide:4c172e80: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 19:02:46.096  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, true)
+11-08 19:02:46.096  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 19:02:46.096  1271  1271 W SessionManager: SessionManager.beginSession():53 Try to begin an already begun session [INPUT_SESSION], end it first
+11-08 19:02:46.096  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 19:02:46.098  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension$3.onSuccess():552 KeyboardGroupManager destroyed in fvq.
+11-08 19:02:46.099  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension$3.onSuccess():552 KeyboardGroupManager destroyed in fxu.
+11-08 19:02:46.099  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension$3.onSuccess():552 KeyboardGroupManager destroyed in eid.
+11-08 19:02:46.099  1271  1271 I HandwritingOfflineSuperpacks: HandwritingOfflineSuperpacks.syncInternal():80 no bundled lm for handwriting.
+11-08 19:02:46.099  1271  1271 I DictionarySuperpacksManager: DictionarySuperpacksManager$1.onEnabledInputMethodEntriesChanged():65 onEnabledInputMethodEntriesChanged
+11-08 19:02:46.099  1271  1271 I HandwritingSuperpacks: HandwritingSuperpacks.register():273 register(): version '86', url 'https://dl.google.com/handwriting/models/handwriting_release.superpack_manifest.20231127.json' [ONLINE]
+11-08 19:02:46.099  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension$3.onFailure():560 Failed to load KeyboardGroupManager in fvq.
+11-08 19:02:46.099  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension$3.onFailure():560 Failed to load KeyboardGroupManager in fxu.
+11-08 19:02:46.099  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension$3.onFailure():560 Failed to load KeyboardGroupManager in eid.
+11-08 19:02:46.099  1271  1626 I SP      : Syncing emoticon_content_description (2022081613) with slices: [7a635888cb828dfa2fc744b7b9b50f04], metadata: false
+11-08 19:02:46.099  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:880, header height:108 and isFullscreenMode:false, so the max keyboard body height is:491
+11-08 19:02:46.099  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:880, header height:108 and isFullscreenMode:false, so the max keyboard body height is:491
+11-08 19:02:46.099  1271  1271 I NormalModeController: NormalModeController.getKeyboardBodyViewHolderPaddingBottom():104 currentPrimeKeyboardType:SOFT systemPaddingBottom:-1
+11-08 19:02:46.100  1330  2008 I AiAiEcho: Settings changed for uri: content://settings/secure/accessibility_enabled
+11-08 19:02:46.114   540   540 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:46.114   540   540 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:46.114   540   540 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:46.115   540   540 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:46.115   540   540 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:46.115   540   540 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:46.115   540   540 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:46.115   540   540 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:46.115   540   540 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:46.119  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 19:02:46.122  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 19:02:46.123  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 19:02:46.124  1330  1582 I AiAiEcho: Predicting[0]:  [CONTEXT sampling_count=5 ]
+11-08 19:02:46.124  1330  1582 I AiAiEcho: EchoTargets:
+11-08 19:02:46.124  1330  1582 I AiAiEcho: Filtered by AiAi flag check:
+11-08 19:02:46.124  1330  1582 I AiAiEcho: [CONTEXT ratelimit_period="10 SECONDS" ]
+11-08 19:02:46.124  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 19:02:46.124  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 19:02:46.124  1330  1582 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata:  [CONTEXT ratelimit_period="10 SECONDS" ]
+11-08 19:02:46.125  1330  1582 I AiAiEcho: #remoteViewsTwiddler: feature disabled.
+11-08 19:02:46.125  1330  1582 I AiAiEcho: Predicting[0]:  [CONTEXT sampling_count=5 ]
+11-08 19:02:46.125  1330  1582 I AiAiEcho: EchoTargets:
+11-08 19:02:46.125  1330  1582 I AiAiEcho: Filtered by AiAi flag check:
+11-08 19:02:46.125  1330  1582 I AiAiEcho: [CONTEXT ratelimit_period="10 SECONDS" ]
+11-08 19:02:46.125  1330  1582 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata:  [CONTEXT ratelimit_period="10 SECONDS" ]
+11-08 19:02:46.125  1330  1582 I AiAiEcho: #remoteViewsTwiddler: feature disabled.
+11-08 19:02:46.126  1330  1582 I AiAiEcho: Predicting[0]:  [CONTEXT sampling_count=5 ]
+11-08 19:02:46.131  1330  1582 I AiAiEcho: EchoTargets:
+11-08 19:02:46.131  1330  1582 I AiAiEcho: Filtered by AiAi flag check:
+11-08 19:02:46.131  1330  1582 I AiAiEcho: [CONTEXT ratelimit_period="10 SECONDS" ]
+11-08 19:02:46.131  1330  1582 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata:  [CONTEXT ratelimit_period="10 SECONDS" ]
+11-08 19:02:46.131  1330  1582 I AiAiEcho: #remoteViewsTwiddler: feature disabled.
+11-08 19:02:46.131  1330  1582 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface media_data_manager with targets# 0 (types=[])
+11-08 19:02:46.133  1330  1582 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface home with targets# 0 (types=[])
+11-08 19:02:46.133  1330  1582 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface lockscreen with targets# 0 (types=[])
+11-08 19:02:46.136  1441  1677 I A       : NGA enabled in interactor.
+11-08 19:02:46.158  1441  1641 I A       : NGA enabled in interactor.
+11-08 19:02:46.158 27924 27961 V UiAutomation: Init UiAutomation@c1eadbb[id=272, displayId=0, flags=0]
+11-08 19:02:46.161  1271 27960 I DownloadManager: DownloadManager.downloadInternal():390 Download for __KLP_manifest_delight__en-840 scheduled with params DownloadParams{allowMetered=true, requireCharging=false, foreground=false, immediately=true, priority=0}
+11-08 19:02:46.162  1271 27960 I DownloadManager: DownloadManager.startDownload():484 start download of __KLP_manifest_delight__en-840
+11-08 19:02:46.187  1271  1315 I putmethod.latin: Waiting for a blocking GC ProfileSaver
+11-08 19:02:46.200  1210  1210 D SsBaseTemplateCard: No text view can be set up
+11-08 19:02:46.223   772  1230 W ndroid.systemui: Long monitor contention with owner BroadcastRunning (918) at boolean android.os.MessageQueue.enqueueMessage(android.os.Message, long)(MessageQueue.java:695) waiters=0 in android.os.Message android.os.MessageQueue.next() for 321ms
+11-08 19:02:46.260  1271 27960 I DownloadManager: DownloadManager.downloadInternal():390 Download for __KLP_delight__en-840 scheduled with params DownloadParams{allowMetered=false, requireCharging=false, foreground=false, immediately=false, priority=500}
+11-08 19:02:46.262  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 19:02:46.262  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 19:02:46.262  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 19:02:46.263  1210  1210 I SsBaseTemplateCard: Secondary card pane is null
+11-08 19:02:46.303  1271  1626 I SP      : Registering handwriting_recognition.86, url: https://dl.google.com/handwriting/models/handwriting_release.superpack_manifest.20231127.json, constraints: m:*:*:*, flags: fg, requested: 86, current: 86
+11-08 19:02:46.399   772   772 W PageIndicator: Total number of pages invalid: 0. Assuming 1 page.
+11-08 19:02:46.399   772   772 D SsMediaDataProvider: Forwarding Smartspace updates []
+11-08 19:02:46.399   772   772 D DisplayRepository: combining enabled=[0], connectedExternalDisplayIds=[], ignored=[]
+11-08 19:02:46.420  1271 27959 I HandwritingOnlineSuperpacks: HandwritingOnlineSuperpacks$2.apply():184 syncPackMapping()
+11-08 19:02:46.425   772   772 D DefaultDeviceEntrySection: isUdfpsSupported=false
+11-08 19:02:46.428  1271  1271 I MDDTaskScheduler: MDDTaskScheduler$Worker.startWorkInner():122 work mdd_download_work started
+11-08 19:02:46.428  1271  1271 I DownloadManager: DownloadManager.startDownload():484 start download of __KLP_delight__en-840
+11-08 19:02:46.430   540  1618 D ConnectivityService: requestNetwork for uid/pid:10165/1271 activeRequest: null callbackRequest: 255 [NetworkRequest [ REQUEST id=256, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10165 RequestorUid: 10165 RequestorPkg: com.google.android.inputmethod.latin UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false
+11-08 19:02:46.456   540   681 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=256, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10165 RequestorUid: 10165 RequestorPkg: com.google.android.inputmethod.latin UnderlyingNetworks: Null] ]
+11-08 19:02:46.456   540   681 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=256, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10165 RequestorUid: 10165 RequestorPkg: com.google.android.inputmethod.latin UnderlyingNetworks: Null] ]
+11-08 19:02:46.456   540   681 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=256, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10165 RequestorUid: 10165 RequestorPkg: com.google.android.inputmethod.latin UnderlyingNetworks: Null] ]
+11-08 19:02:46.462  1271 27959 I DelightKLPDownloader: DelightKLPDownloader$2.onSuccess():207 klp en_840 downloaded with version 2024070900
+11-08 19:02:46.463  1271 27964 I WM-WorkerWrapper: Worker result SUCCESS for Work [ id=c1419600-9b94-4975-9a67-a14ae56b8163, tags={ com.google.android.libraries.inputmethod.mdd.MDDTaskScheduler$Worker } ]
+11-08 19:02:46.465   540   688 D ConnectivityService: NetReassign [256 : null → 103] [c 0] [a 21] [i 10]
+11-08 19:02:46.466   540   681 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=256, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10165 RequestorUid: 10165 RequestorPkg: com.google.android.inputmethod.latin UnderlyingNetworks: Null] ]
+11-08 19:02:46.589   345   418 I netd    : tetherGetStats() -> {[]} <0.91ms>
+11-08 19:02:46.593  1271  1626 I SP      : Sync for emoticon_content_description succeeded in 498 ms: no changes
+11-08 19:02:46.593  1271  1626 I SP      : GC for 'emoticon_content_description' (10) with ttl of 0 ms took 0 ms (0/0/0)
+11-08 19:02:46.594  1271  1626 I HandwritingSlicingStrategy: HandwritingSlicingStrategy.getSlices():44 getSlices(): handwriting_recognition.86 useForeground=true
+11-08 19:02:46.595  1271  1626 I HandwritingSlicingStrategy: HandwritingSlicingStrategy.getSlices():103 getSlices(): result {slices=[{handwriting_recognition:pack_mapping_v1_lstm_20231127, m:*:*:*, fg}, {handwriting_recognition:transformer_latin_tflite_20231010_zip, m:*:*:*, fg}, {handwriting_recognition:qrnn_en_us_reco_20231010_fst_20230613_recospec_zip, m:*:*:*, fg}, {handwriting_recognition:transformer_latin_conf_tflite_20231010_zip, m:*:*:*, fg}, {handwriting_recognition:transformer_latin_seg_tflite_20231010_zip, m:*:*:*, fg}, {handwriting_recognition:en_us_20230613_compact_fst_zip, m:*:*:*, fg}, {handwriting_recognition:scribe_latin_20231123_tflite_zip, m:*:*:*, fg}, {handwriting_recognition:scribe_latin_20231123_recospec_zip, m:*:*:*, fg}], last batch=true, sync metadata=false}
+11-08 19:02:46.595  1271  1626 I SP      : Syncing handwriting_recognition (86) with slices: [{pack_mapping_v1_lstm_20231127, m:*:*:*, fg}, {transformer_latin_tflite_20231010_zip, m:*:*:*, fg}, {qrnn_en_us_reco_20231010_fst_20230613_recospec_zip, m:*:*:*, fg}, {transformer_latin_conf_tflite_20231010_zip, m:*:*:*, fg}, {transformer_latin_seg_tflite_20231010_zip, m:*:*:*, fg}, {en_us_20230613_compact_fst_zip, m:*:*:*, fg}, {scribe_latin_20231123_tflite_zip, m:*:*:*, fg}, {scribe_latin_20231123_recospec_zip, m:*:*:*, fg}], metadata: false
+11-08 19:02:46.633  1271  1276 I putmethod.latin: Background concurrent mark compact GC freed 13MB AllocSpace bytes, 24(1032KB) LOS objects, 49% free, 12MB/25MB, paused 424us,25.725ms total 598.529ms
+11-08 19:02:46.634  1271  1315 I putmethod.latin: WaitForGcToComplete blocked ProfileSaver on Background for 446.803ms
+11-08 19:02:46.658  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_tflite_20231010_zip[222]
+11-08 19:02:46.658  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_tflite_zip[222]
+11-08 19:02:46.658  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: qrnn_en_us_reco_20231010_fst_20230613_recospec_zip[222]
+11-08 19:02:46.658  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_conf_tflite_20231010_zip[222]
+11-08 19:02:46.658  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: pack_mapping_v1_lstm_20231127[148]
+11-08 19:02:46.658  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_seg_tflite_20231010_zip[222]
+11-08 19:02:46.658  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_recospec_zip[222]
+11-08 19:02:46.658  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: en_us_20230613_compact_fst_zip[222]
+11-08 19:02:46.658  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_tflite_20231010_zip[222]
+11-08 19:02:46.659  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_tflite_zip[222]
+11-08 19:02:46.659  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: qrnn_en_us_reco_20231010_fst_20230613_recospec_zip[222]
+11-08 19:02:46.659  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_conf_tflite_20231010_zip[222]
+11-08 19:02:46.659  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: pack_mapping_v1_lstm_20231127[148]
+11-08 19:02:46.659  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_seg_tflite_20231010_zip[222]
+11-08 19:02:46.659  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_recospec_zip[222]
+11-08 19:02:46.659  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: en_us_20230613_compact_fst_zip[222]
+11-08 19:02:46.659  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_recospec_zip[222]
+11-08 19:02:46.659  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_tflite_zip[222]
+11-08 19:02:46.659  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: qrnn_en_us_reco_20231010_fst_20230613_recospec_zip[222]
+11-08 19:02:46.659  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_conf_tflite_20231010_zip[222]
+11-08 19:02:46.659  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_seg_tflite_20231010_zip[222]
+11-08 19:02:46.659  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_tflite_20231010_zip[222]
+11-08 19:02:46.662  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: en_us_20230613_compact_fst_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_tflite_20231010_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_tflite_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: qrnn_en_us_reco_20231010_fst_20230613_recospec_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_conf_tflite_20231010_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: pack_mapping_v1_lstm_20231127[148]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_seg_tflite_20231010_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_recospec_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: en_us_20230613_compact_fst_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_tflite_20231010_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_tflite_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: qrnn_en_us_reco_20231010_fst_20230613_recospec_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_conf_tflite_20231010_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: pack_mapping_v1_lstm_20231127[148]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_seg_tflite_20231010_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_recospec_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: en_us_20230613_compact_fst_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_recospec_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_tflite_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: qrnn_en_us_reco_20231010_fst_20230613_recospec_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_conf_tflite_20231010_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_seg_tflite_20231010_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_tflite_20231010_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: en_us_20230613_compact_fst_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_tflite_20231010_zip[222]
+11-08 19:02:46.663  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_tflite_zip[222]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: qrnn_en_us_reco_20231010_fst_20230613_recospec_zip[222]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_conf_tflite_20231010_zip[222]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: pack_mapping_v1_lstm_20231127[148]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_seg_tflite_20231010_zip[222]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_recospec_zip[222]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: en_us_20230613_compact_fst_zip[222]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_tflite_20231010_zip[222]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_tflite_zip[222]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: qrnn_en_us_reco_20231010_fst_20230613_recospec_zip[222]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_conf_tflite_20231010_zip[222]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: pack_mapping_v1_lstm_20231127[148]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_seg_tflite_20231010_zip[222]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_recospec_zip[222]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: en_us_20230613_compact_fst_zip[222]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_recospec_zip[222]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_tflite_zip[222]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: qrnn_en_us_reco_20231010_fst_20230613_recospec_zip[222]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_conf_tflite_20231010_zip[222]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_seg_tflite_20231010_zip[222]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_tflite_20231010_zip[222]
+11-08 19:02:46.664  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: en_us_20230613_compact_fst_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_tflite_20231010_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_tflite_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: qrnn_en_us_reco_20231010_fst_20230613_recospec_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_conf_tflite_20231010_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: pack_mapping_v1_lstm_20231127[148]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_seg_tflite_20231010_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_recospec_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: en_us_20230613_compact_fst_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_tflite_20231010_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_tflite_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: qrnn_en_us_reco_20231010_fst_20230613_recospec_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_conf_tflite_20231010_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: pack_mapping_v1_lstm_20231127[148]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_seg_tflite_20231010_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_recospec_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: en_us_20230613_compact_fst_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_recospec_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_tflite_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: qrnn_en_us_reco_20231010_fst_20230613_recospec_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_conf_tflite_20231010_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_seg_tflite_20231010_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_tflite_20231010_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: en_us_20230613_compact_fst_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_tflite_20231010_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_tflite_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: qrnn_en_us_reco_20231010_fst_20230613_recospec_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_conf_tflite_20231010_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: pack_mapping_v1_lstm_20231127[148]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_seg_tflite_20231010_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_recospec_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: en_us_20230613_compact_fst_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_recospec_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: scribe_latin_20231123_tflite_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: qrnn_en_us_reco_20231010_fst_20230613_recospec_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_conf_tflite_20231010_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_seg_tflite_20231010_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: transformer_latin_tflite_20231010_zip[222]
+11-08 19:02:46.665  1271  1278 W SP      : File ref is being finalized but wasn't closed, file: en_us_20230613_compact_fst_zip[222]
+11-08 19:02:46.777  1271  1626 I SP      : Sync for handwriting_recognition succeeded in 184 ms: no changes
+11-08 19:02:46.777  1271  1626 I SP      : GC for 'handwriting_recognition' (10) with ttl of 0 ms took 0 ms (0/0/0)
+11-08 19:02:46.777  1271 27959 I HandwritingOnlineSuperpacks: HandwritingOnlineSuperpacks.lambda$syncInternal$1():204 syncInternal(): syncing packs
+11-08 19:02:46.777  1271 27959 I HandwritingOnlineSuperpacks: HandwritingOnlineSuperpacks$3.onSyncSuccess():252 syncInternal(): complete {old=[en_us_20230613_compact_fst_zip, pack_mapping_v1_lstm_20231127, qrnn_en_us_reco_20231010_fst_20230613_recospec_zip, scribe_latin_20231123_recospec_zip, scribe_latin_20231123_tflite_zip, transformer_latin_conf_tflite_20231010_zip, transformer_latin_seg_tflite_20231010_zip, transformer_latin_tflite_20231010_zip], new=[en_us_20230613_compact_fst_zip, pack_mapping_v1_lstm_20231127, qrnn_en_us_reco_20231010_fst_20230613_recospec_zip, scribe_latin_20231123_recospec_zip, scribe_latin_20231123_tflite_zip, transformer_latin_conf_tflite_20231010_zip, transformer_latin_seg_tflite_20231010_zip, transformer_latin_tflite_20231010_zip], metadata=false, last batch=true}
+11-08 19:02:46.778  1271 27958 E HandwritingSuperpacksUtil: HandwritingSuperpacksUtil.getPackMappingPackName():40 No pack mapping pack found in []
+11-08 19:02:46.778  1271 27958 I HandwritingSuperpacks: HandwritingSuperpacks.lambda$reloadCache$0():237 updatePackMappingsCache(): pack mapping pack unavailable [OFFLINE]
+11-08 19:02:47.326   540   688 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+11-08 19:02:47.328   540   688 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+11-08 19:02:47.328   540   688 D InetDiagMessage: Destroyed live tcp sockets for uids={10096} in 2ms
+11-08 19:02:48.517 27924 27929 W ru.liturgyguide: Cleared Reference was only reachable from finalizer (only reported once)
+11-08 19:02:48.844 27924 27924 W ru.liturgyguide: Method boolean androidx.compose.runtime.snapshots.SnapshotStateList.conditionalUpdate(boolean, kotlin.jvm.functions.Function1) failed lock verification and will run slower.
+11-08 19:02:48.844 27924 27924 W ru.liturgyguide: Common causes for lock verification issues are non-optimized dex code
+11-08 19:02:48.844 27924 27924 W ru.liturgyguide: and incorrect proguard optimizations.
+11-08 19:02:48.844 27924 27924 W ru.liturgyguide: Method boolean androidx.compose.runtime.snapshots.SnapshotStateList.conditionalUpdate$default(androidx.compose.runtime.snapshots.SnapshotStateList, boolean, kotlin.jvm.functions.Function1, int, java.lang.Object) failed lock verification and will run slower.
+11-08 19:02:48.845 27924 27924 W ru.liturgyguide: Method java.lang.Object androidx.compose.runtime.snapshots.SnapshotStateList.mutate(kotlin.jvm.functions.Function1) failed lock verification and will run slower.
+11-08 19:02:48.845 27924 27924 W ru.liturgyguide: Method void androidx.compose.runtime.snapshots.SnapshotStateList.update(boolean, kotlin.jvm.functions.Function1) failed lock verification and will run slower.
+11-08 19:02:48.845 27924 27924 W ru.liturgyguide: Method void androidx.compose.runtime.snapshots.SnapshotStateList.update$default(androidx.compose.runtime.snapshots.SnapshotStateList, boolean, kotlin.jvm.functions.Function1, int, java.lang.Object) failed lock verification and will run slower.
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix: Stage preparation: Printing with useUnmergedTree = 'false'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix: Node #1 at (l=0.0, t=0.0, r=1680.0, b=945.0)px
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:  |-Node #3 at (l=0.0, t=0.0, r=1680.0, b=945.0)px
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:    IsTraversalGroup = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |-Node #57 at (l=21.0, t=395.0, r=1659.0, b=713.0)px
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | IsTraversalGroup = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |  |-Node #58 at (l=21.0, t=395.0, r=1659.0, b=713.0)px, Tag: 'lyrics_list'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    IsTraversalGroup = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    VerticalScrollAxisRange = 'ScrollAxisRange(value=0.0, maxValue=100.0, reverseScrolling=false)'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    CollectionInfo = 'androidx.compose.ui.semantics.CollectionInfo@1ea592f'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    Actions = [ScrollBy, ScrollByOffset, IndexForKey, ScrollToIndex, GetScrollViewportLength]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |     |-Node #60 at (l=63.0, t=427.0, r=1617.0, b=2608.0)px, Tag: 'stage_wait'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |       IsTraversalGroup = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        |-Node #62 at (l=116.0, t=480.0, r=529.0, b=574.0)px
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        | Text = '[До начала]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        | Actions = [SetTextSubstitution, ShowTextSubstitution, ClearTextSubstitution, GetTextLayoutResult]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        |-Node #63 at (l=116.0, t=616.0, r=1564.0, b=1003.0)px
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        | Text = '[В храме могут читать часы - короткие службы с псалмами и молитвами. В алтаре священник готовит хлеб и вино для литургии; эта подготовка называется проскомидией]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        | Actions = [SetTextSubstitution, ShowTextSubstitution, ClearTextSubstitution, GetTextLayoutResult]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        |-Node #64 at (l=116.0, t=1045.0, r=1564.0, b=1329.0)px
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        | Text = '[Перед началом литургии молятся о живых и умерших. Часть этой молитвы совершается в алтаре и может быть не слышна]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        | Actions = [SetTextSubstitution, ShowTextSubstitution, ClearTextSubstitution, GetTextLayoutResult]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        |-Node #65 at (l=116.0, t=1371.0, r=890.0, b=1452.0)px
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        | Text = '[Как узнать этот момент]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        | Actions = [SetTextSubstitution, ShowTextSubstitution, ClearTextSubstitution, GetTextLayoutResult]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        |-Node #66 at (l=116.0, t=1494.0, r=1564.0, b=1778.0)px
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        | Text = '[Слышно чтение псалмов и молитв. Если вы здесь с самого начала, возглас "Благословено Царство" еще не прозвучал]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        | Actions = [SetTextSubstitution, ShowTextSubstitution, ClearTextSubstitution, GetTextLayoutResult]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        |-Node #67 at (l=116.0, t=1820.0, r=1564.0, b=2207.0)px
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        | Text = '[Устройтесь так, чтобы спокойно участвовать в службе. Если пришли позже, найдите знакомые слова или действия в порядке службы]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        | Actions = [SetTextSubstitution, ShowTextSubstitution, ClearTextSubstitution, GetTextLayoutResult]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        |-Node #68 at (l=116.0, t=2249.0, r=1564.0, b=2381.0)px, Tag: 'wait_next_stage'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        | Focused = 'false'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        | Role = 'Button'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        | Text = '[Перейти дальше вручную]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        | Actions = [OnClick, RequestFocus, SetTextSubstitution, ShowTextSubstitution, ClearTextSubstitution, GetTextLayoutResult]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        | MergeDescendants = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |        |-Node #71 at (l=116.0, t=2423.0, r=1564.0, b=2555.0)px
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |          Focused = 'false'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |          Role = 'Button'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |          Text = '[Уточнить место по службе]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |          Actions = [OnClick, RequestFocus, SetTextSubstitution, ShowTextSubstitution, ClearTextSubstitution, GetTextLayoutResult]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |          MergeDescendants = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |-Node #8 at (l=32.0, t=85.0, r=137.0, b=190.0)px
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | Role = 'Button'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | Focused = 'false'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | ContentDescription = '[К службе]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | Actions = [OnClick, RequestFocus]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | MergeDescendants = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |-Node #10 at (l=147.0, t=74.0, r=1302.0, b=200.0)px, Tag: 'open_map'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | Role = 'Button'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | ContentDescription = '[Порядок службы]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | StateDescription = 'Подготовка к литургии, 1 из 18'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | Focused = 'false'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | Text = '[До начала]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | [Heading]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | Actions = [OnClick, RequestFocus, SetTextSubstitution, ShowTextSubstitution, ClearTextSubstitution, GetTextLayoutResult]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | MergeDescendants = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |-Node #14 at (l=1313.0, t=112.0, r=1522.0, b=163.0)px, Tag: 'approximate_notice'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | Text = '[Примерно]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | Actions = [SetTextSubstitution, ShowTextSubstitution, ClearTextSubstitution, GetTextLayoutResult]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |-Node #16 at (l=1544.0, t=85.0, r=1649.0, b=190.0)px, Tag: 'player_menu'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | Role = 'Button'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | Focused = 'false'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | ContentDescription = '[Действия со службой]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | Actions = [OnClick, RequestFocus]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | MergeDescendants = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |-Node #20 at (l=40.0, t=224.0, r=298.0, b=350.0)px
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | IsTraversalGroup = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |  |-Node #21 at (l=40.0, t=224.0, r=298.0, b=350.0)px, Tag: 'player_original_tab'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    Role = 'Tab'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    Selected = 'false'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    Text = '[Оригинал]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    [Disabled]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    Actions = [OnClick, SetTextSubstitution, ShowTextSubstitution, ClearTextSubstitution, GetTextLayoutResult]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    MergeDescendants = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |-Node #24 at (l=298.0, t=224.0, r=555.0, b=350.0)px
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | IsTraversalGroup = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |  |-Node #25 at (l=298.0, t=224.0, r=555.0, b=350.0)px, Tag: 'player_text_tab'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    Focused = 'false'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    Role = 'Tab'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    Selected = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    Text = '[По-русски]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    Actions = [OnClick, RequestFocus, SetTextSubstitution, ShowTextSubstitution, ClearTextSubstitution, GetTextLayoutResult]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    MergeDescendants = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |-Node #28 at (l=555.0, t=224.0, r=812.0, b=350.0)px
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | IsTraversalGroup = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |  |-Node #29 at (l=555.0, t=224.0, r=812.0, b=350.0)px, Tag: 'player_meaning_tab'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    Focused = 'false'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    Role = 'Tab'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    Selected = 'false'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    Text = '[Смысл]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    Actions = [OnClick, RequestFocus, SetTextSubstitution, ShowTextSubstitution, ClearTextSubstitution, GetTextLayoutResult]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |    MergeDescendants = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |-Node #33 at (l=1351.0, t=224.0, r=1648.0, b=350.0)px, Tag: 'clarify_moment'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | Focused = 'false'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | Role = 'Button'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | Text = '[Уточнить]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | Actions = [OnClick, RequestFocus, SetTextSubstitution, ShowTextSubstitution, ClearTextSubstitution, GetTextLayoutResult]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     | MergeDescendants = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:     |-Node #39 at (l=0.0, t=734.0, r=1680.0, b=945.0)px
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:       IsTraversalGroup = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        |-Node #42 at (l=147.0, t=745.0, r=273.0, b=871.0)px, Tag: 'previous_stage'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | Role = 'Button'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | ContentDescription = '[Предыдущий этап]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | [Disabled]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | Actions = [OnClick]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | MergeDescendants = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        |-Node #44 at (l=399.0, t=745.0, r=525.0, b=871.0)px, Tag: 'previous_line'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | Role = 'Button'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | ContentDescription = '[Предыдущая фраза]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | [Disabled]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | Actions = [OnClick]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | MergeDescendants = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        |-Node #46 at (l=651.0, t=745.0, r=777.0, b=871.0)px, Tag: 'play_lyrics'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | Focused = 'false'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | Role = 'Button'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | StateDescription = 'На паузе'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | ContentDescription = '[Включить плеер]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | Actions = [OnClick, RequestFocus]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | MergeDescendants = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        |-Node #49 at (l=903.0, t=745.0, r=1029.0, b=871.0)px, Tag: 'next_line'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | Role = 'Button'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | ContentDescription = '[Следующая фраза]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | [Disabled]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | Actions = [OnClick]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | MergeDescendants = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        |-Node #51 at (l=1155.0, t=745.0, r=1281.0, b=871.0)px, Tag: 'scroll_options'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | Focused = 'false'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | Role = 'Button'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | Text = '[1×]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | Actions = [OnClick, RequestFocus, SetTextSubstitution, ShowTextSubstitution, ClearTextSubstitution, GetTextLayoutResult]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        | MergeDescendants = 'true'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:        |-Node #54 at (l=1407.0, t=745.0, r=1533.0, b=871.0)px, Tag: 'next_stage'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:          Role = 'Button'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:          Focused = 'false'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:          ContentDescription = '[Следующий этап: Начало]'
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:          Actions = [OnClick, RequestFocus]
+11-08 19:02:49.307 27924 27938 E CompactReaderMatrix:          MergeDescendants = 'true'
+11-08 19:02:49.380   540   688 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+11-08 19:02:49.382   540   688 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+11-08 19:02:49.382   540   688 D InetDiagMessage: Destroyed live tcp sockets for uids={10138} in 8ms
+11-08 19:02:49.394   540   688 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+11-08 19:02:49.395   540   688 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+11-08 19:02:49.395   540   688 D InetDiagMessage: Destroyed live tcp sockets for uids={20138} in 13ms
+11-08 19:02:49.592 27971 27971 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+11-08 19:02:49.592 27971 27971 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+11-08 19:02:49.620   141   141 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+11-08 19:02:49.620 27971 27974 I Gralloc4: mapper 4.x is not supported
+11-08 19:02:49.783   540  1619 I ActivityManager: Broadcasting: Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }
+11-08 19:02:49.792   540  1618 W JobInfo : Job 'com.google.android.providers.media.module/com.android.providers.media.MediaService#-300' has a deadline with no functional constraints. The deadline won't improve job execution latency. Consider removing the deadline.
+11-08 19:02:49.806   540   565 I ActivityManager: Broadcast completed: result=0
+11-08 19:02:49.812  1319  1933 I MediaProvider: Begin Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+11-08 19:02:49.836  1319  1933 I MediaProvider: End Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+11-08 19:02:49.838 27924 27924 E CompactReaderMatrix: Diagnostic semantic action result=true, owner generation=1
+11-08 19:02:49.843 27924 27938 E CompactReaderMatrix: After diagnostic semantic action: Printing with useUnmergedTree = 'false'
+11-08 19:02:49.843 27924 27938 E CompactReaderMatrix: Node #29 at (l=555.0, t=224.0, r=812.0, b=350.0)px, Tag: 'player_meaning_tab'
+11-08 19:02:49.843 27924 27938 E CompactReaderMatrix: Focused = 'false'
+11-08 19:02:49.843 27924 27938 E CompactReaderMatrix: Role = 'Tab'
+11-08 19:02:49.843 27924 27938 E CompactReaderMatrix: Selected = 'false'
+11-08 19:02:49.843 27924 27938 E CompactReaderMatrix: Text = '[Смысл]'
+11-08 19:02:49.843 27924 27938 E CompactReaderMatrix: Actions = [OnClick, RequestFocus, SetTextSubstitution, ShowTextSubstitution, ClearTextSubstitution, GetTextLayoutResult]
+11-08 19:02:49.843 27924 27938 E CompactReaderMatrix: MergeDescendants = 'true'
+11-08 19:02:49.876   540   568 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:49.937   772   772 D DisplayRepository: combining enabled=[0], connectedExternalDisplayIds=[], ignored=[]
+11-08 19:02:49.975   540  1637 W ImageReader_JNI: Unable to acquire a buffer item, very likely client tried to acquire more than maxImages buffers
+11-08 19:02:49.978   540  1637 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:49.984   540   540 W WindowTokenClientController: Can't find attached WindowTokenClient for android.window.WindowTokenClient@ec9f5dc
+11-08 19:02:50.024  1210  1210 D b/254119092: TaskbarManager#mComponentCallbacks.onConfigurationChanged: {1.0 310mcc260mnc [en_US] ldltr sw411dp w411dp h914dp 420dpi nrml long port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2400) mAppBounds=Rect(0, 0 - 1080, 2400) mMaxBounds=Rect(0, 0 - 1080, 2400) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} as.2 s.1318 fontWeightAdjustment=0}
+11-08 19:02:50.024  1210  1210 D b/254119092: mActivity and mContext agree taskbarIsPresent=false
+11-08 19:02:50.025  1210  1210 D b/254119092: ComponentCallbacks#onConfigurationChanged() configDiff={}
+11-08 19:02:50.025  1210  1210 D b/254119092: mActivity and mContext agree taskbarIsPresent=false
+11-08 19:02:50.025  1210  1210 D b/254119092: destroyExistingTaskbar: com.android.launcher3.taskbar.TaskbarActivityContext@f1e4b19
+11-08 19:02:50.025  1210  1210 D b/254119092: mActivity and mContext agree taskbarIsPresent=false
+11-08 19:02:50.027  1210  1210 D b/254119092: recreateTaskbar: isTaskbarEnabled=true [dp != null (i.e. mUserUnlocked)]=true FLAG_HIDE_NAVBAR_WINDOW=true dp.isTaskbarPresent=false
+11-08 19:02:50.027  1210  1210 D b/254119092: mActivity and mContext agree taskbarIsPresent=false
+11-08 19:02:50.042 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@c130f8e in: PAUSED
+11-08 19:02:50.042 27924 27924 V ActivityScenario: Update currentActivityStage to PAUSED, currentActivity=androidx.activity.ComponentActivity@c130f8e
+11-08 19:02:50.045  1271  1271 I AppBase : AppBase.onConfigurationChanged():419 onConfigurationChanged() : NewConfig = {1.0 310mcc260mnc [en_US] ldltr sw411dp w411dp h838dp 420dpi nrml long port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2400) mAppBounds=Rect(0, 136 - 1080, 2337) mMaxBounds=Rect(0, 0 - 1080, 2400) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} as.2 s.1338 fontWeightAdjustment=0}
+11-08 19:02:50.048   540   569 W system_server: Long monitor contention with owner binder:540_1F (1637) at void com.android.server.wm.ActivityClientController.setRequestedOrientation(android.os.IBinder, int)(ActivityClientController.java:832) waiters=2 in void com.android.server.wm.SurfaceAnimator.lambda$getFinishedCallback$1(com.android.server.wm.SurfaceAnimator$OnAnimationFinishedCallback, int, com.android.server.wm.AnimationAdapter) for 169ms
+11-08 19:02:50.051   386   500 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 19:02:50.056   540   568 I InputManager-JNI: Viewport [0] to add: local:4619827259835644672, isActive: true
+11-08 19:02:50.058   540   647 I InputReader: Reconfiguring input devices, changes=DISPLAY_INFO
+11-08 19:02:50.059   540   647 I InputReader: Touch device 'virtio_input_multi_touch_2' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+11-08 19:02:50.059   540   647 I InputReader: Touch device 'virtio_input_multi_touch_4' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+11-08 19:02:50.060   540   647 I InputReader: Touch device 'virtio_input_multi_touch_5' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+11-08 19:02:50.060   540   647 I InputReader: Touch device 'virtio_input_multi_touch_6' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+11-08 19:02:50.060   540   647 I InputReader: Touch device 'virtio_input_multi_touch_7' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+11-08 19:02:50.060   540   647 I InputReader: Touch device 'virtio_input_multi_touch_8' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+11-08 19:02:50.061   540   647 I InputReader: Touch device 'virtio_input_multi_touch_10' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+11-08 19:02:50.061   540   647 I InputReader: Touch device 'virtio_input_multi_touch_11' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+11-08 19:02:50.061   540   647 I InputReader: Touch device 'virtio_input_multi_touch_9' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+11-08 19:02:50.061   540   647 I InputReader: Touch device 'virtio_input_multi_touch_3' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+11-08 19:02:50.066 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@c130f8e in: STOPPED
+11-08 19:02:50.068   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 19:02:50.072  1271  1271 W GoogleInputMethodService: GoogleInputMethodService.onConfigurationChanged():1644 onConfigurationChanged() : NewConfig = {1.0 310mcc260mnc [en_US] ldltr sw411dp w411dp h914dp 420dpi nrml long port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2400) mAppBounds=Rect(0, 0 - 1080, 2400) mMaxBounds=Rect(0, 0 - 1080, 2400) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} as.2 s.1318 fontWeightAdjustment=0}
+11-08 19:02:50.072 27924 27924 V ActivityScenario: Update currentActivityStage to STOPPED, currentActivity=androidx.activity.ComponentActivity@c130f8e
+11-08 19:02:50.073  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onConfigurationChanged():1645 device real metrics: DisplayMetrics{density=2.625, width=1080, height=2400, scaledDensity=2.625, xdpi=420.0, ydpi=420.0}
+11-08 19:02:50.073  1271  1271 I InputMethodEntryManager: InputMethodEntryManager.notifyCurrentInputMethodEntryOnContextChanged():521 notifyCurrentInputMethodEntryOnContextChanged()
+11-08 19:02:50.073  1271  1271 I InputMethodEntryManager: InputMethodEntryManager.notifyCurrentInputMethodEntryOnContextChanged():542 Notify current input method entry changed on context change
+11-08 19:02:50.074  1271  1271 I KeyboardContextProvider: KeyboardContextProvider$KeyboardContextCache.createKeyboardContext():173 createKeyboardContext(): en-US, jgg@46be1ee(com.android.inputmethod.latin.LatinIME@59827d8), {1.0 310mcc260mnc [en_US] ldltr sw411dp w411dp h914dp 420dpi nrml long port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2400) mAppBounds=Rect(0, 0 - 1080, 2400) mMaxBounds=Rect(0, 0 - 1080, 2400) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} as.2 s.32 fontWeightAdjustment=0}
+11-08 19:02:50.074  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onCurrentInputMethodEntryChanged():3655 onCurrentInputMethodEntryChanged(): imeDefsChanged=false, initializedEntryChanged=false, keyboardContextChanged=true
+11-08 19:02:50.075  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.clearInputMethodServiceData():1613 clearInputMethodServiceData for entryChange
+11-08 19:02:50.076  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.maybeDestroyExistingKeyboardGroupManager():538 Destroy existing keyboard group manager in fvq
+11-08 19:02:50.076  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.createKeyboardGroupManagerListenableFuture():120 Create keyboard group manager listenable future in fvq
+11-08 19:02:50.088  1271 27954 I KeyboardGroupDefParser: KeyboardGroupDefParser.parseKeyboardGroupDef():83 parseKeyboardGroupDef() 2132214033 -> 0_resource_name_obfuscated : WaitTime = 8 ms : RunTime = 4 ms
+11-08 19:02:50.088  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.maybeDestroyExistingKeyboardGroupManager():538 Destroy existing keyboard group manager in fxu
+11-08 19:02:50.088  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.createKeyboardGroupManagerListenableFuture():120 Create keyboard group manager listenable future in fxu
+11-08 19:02:50.088  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.maybeDestroyExistingKeyboardGroupManager():538 Destroy existing keyboard group manager in eid
+11-08 19:02:50.088  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.createKeyboardGroupManagerListenableFuture():120 Create keyboard group manager listenable future in eid
+11-08 19:02:50.090  1271 27955 I KeyboardGroupDefParser: KeyboardGroupDefParser.parseKeyboardGroupDef():83 parseKeyboardGroupDef() 2132214040 -> 0_resource_name_obfuscated : WaitTime = 2 ms : RunTime = 0 ms
+11-08 19:02:50.092  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:880, header height:108 and isFullscreenMode:false, so the max keyboard body height is:491
+11-08 19:02:50.093  1271 27955 I KeyboardGroupDefParser: KeyboardGroupDefParser.parseKeyboardGroupDef():83 parseKeyboardGroupDef() 2132214039 -> 0_resource_name_obfuscated : WaitTime = 1 ms : RunTime = 4 ms
+11-08 19:02:50.094  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:880, header height:108 and isFullscreenMode:false, so the max keyboard body height is:491
+11-08 19:02:50.095  1271  1271 I KeyboardModeManager: KeyboardModeManager.onCurrentInputMethodEntryChanged():1133 Reload data for context change
+11-08 19:02:50.097  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.initializeInputMethodServiceData():1382 initializeInputMethodServiceData for kct{languageTag=en-US, variant=qwerty, hasLocalizedResources=true, conditionCacheKey=_cache_additional_ime_defs_for_condition_change=false_cache_ime_defs_for_condition_change=false_device=phone_device_size=default_enable_flick_symbols=false_enable_more_candidates_view_for_multilingual=false_enable_number_row=false_enable_preemptive_decode=true_enable_secondary_digits=true_enable_secondary_symbols=false_enable_show_foldable_layout_on_small_tablet=true_expressions=normal_four_or_more_letter_rows=false_keyboard_mode=normal_language=en-US_orientation=landscape_physical_keyboard=nokeys_rtl_layout=false_show_secondary_digits=true_show_suggestions=true_split_with_duplicate_keys=true_variant=qwerty, imeDef.stringId=ime_english_united_states, imeDef.className=com.google.android.apps.inputmethod.libs.latin5.LatinIme, imeDef.languageTag=en-US}
+11-08 19:02:50.106  1271  1271 I StyledKeyboardThemeBuilder: StyledKeyboardThemeBuilder.build():132 Pref: [], themeName: [silk:], darkMode: [false], cacheKey: [overlay_builtin_dynamic_color_light_base.binarypb:dynamic-gm3-light-fffefbff-ff495d92-8adeb286894d7d4cce285b6f16b95faf]
+11-08 19:02:50.110  1271  1271 I KeyboardThemeProvider: KeyboardThemeProvider.applyKeyboardTheme():27 Apply keyboard theme: theme_border_stylesheet_noshadow_gsans_pillkey_silkpopup_hover_light_phone_navredesign_400_overlay_builtin_dynamic_color_light_base.binarypb:dynamic-gm3-light-fffefbff-ff495d92-8adeb286894d7d4cce285b6f16b95faf_land
+11-08 19:02:50.122  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 19:02:50.122  1271  1271 W NotificationCenter: NotificationCenter$ListenerData.notifyOnExecutor():672 Heavy notify work detected on UI thread: |kcd->kff| takes 48ms
+11-08 19:02:50.125  1271  1271 I SystemSubtypesReportModule: SystemSubtypesReportModule$3.onCurrentInputMethodEntryChanged():136 entry: en-US, source: UNSPECIFIED
+11-08 19:02:50.125  1271  1271 I KeyboardContextProvider: KeyboardContextProvider.setBaseContextAndInvalidKeyboardContextCache():88 setBaseContextAndInvalidKeyboardContextCache(): com.android.inputmethod.latin.LatinIME@59827d8
+11-08 19:02:50.128  1271  1271 I InputMethodEntryManager: InputMethodEntryManager.resetLanguages():2621 resetLanguages(): languages=null, conditionName=orientation
+11-08 19:02:50.128  1271  1271 I ImeDefCache: ImeDefCache.clearCacheForLanguages():387 clearCacheForLanguages(): []
+11-08 19:02:50.128  1271  1271 I AdditionalImeDefCache: AdditionalImeDefCache.clearAdditionalImeDefsForCondition():435 clearAdditionalImeDefsForCondition() clear additional ImeDefs: []
+11-08 19:02:50.128  1271  1271 I InputMethodEntryManager: InputMethodEntryManager.resetLanguages():2634 Clear cache for languages: null, changed=false
+11-08 19:02:50.128  1271  1271 I InputMethodEntryManager: InputMethodEntryManager.startLoadingInputMethodEntrySettings():700 Start loading input method entry settings: [LanguageTagVariantTuple{languageTag=en-US, variant=qwerty}]
+11-08 19:02:50.128  1271  1271 I InputMethodEntryManager: InputMethodEntryManager.updateInputMethodEntrySettingsLoadingTask():787 update loading task with resetImplicitlyEnabledEntries is false
+11-08 19:02:50.128  1271  1271 I InputMethodEntryManager: InputMethodEntryManager$4.onSuccess():806 Success load entries: [LanguageTagVariantTuple{languageTag=en-US, variant=qwerty}], resetImplicitlyEnabledEntries=false, initialized=true
+11-08 19:02:50.129  1271  1271 I SystemSubtypesReportModule: SystemSubtypesReportModule$2.onEnabledInputMethodEntriesChanged():122 1 entries
+11-08 19:02:50.142 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@c130f8e in: DESTROYED
+11-08 19:02:50.142 27924 27924 V ActivityScenario: Update currentActivityStage to DESTROYED, currentActivity=null
+11-08 19:02:50.143 27924 27924 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@abd5943
+11-08 19:02:50.146  1271  1271 I InputMethodEntryManager: InputMethodEntryManager.changeCurrentInputMethodEntry():2829 Set current input method entry: source=UNSPECIFIED, entryChanged=false, kct{languageTag=en-US, variant=qwerty, hasLocalizedResources=true, conditionCacheKey=_cache_additional_ime_defs_for_condition_change=false_cache_ime_defs_for_condition_change=false_device=phone_device_size=default_enable_flick_symbols=false_enable_more_candidates_view_for_multilingual=false_enable_number_row=false_enable_preemptive_decode=true_enable_secondary_digits=true_enable_secondary_symbols=false_enable_show_foldable_layout_on_small_tablet=true_expressions=normal_four_or_more_letter_rows=false_keyboard_mode=normal_language=en-US_orientation=portrait_physical_keyboard=nokeys_rtl_layout=false_show_secondary_digits=true_show_suggestions=true_split_with_duplicate_keys=true_variant=qwerty, imeDef.stringId=ime_english_united_states, imeDef.className=com.google.android.apps.inputmethod.libs.latin5.LatinIme, imeDef.languageTag=en-US}
+11-08 19:02:50.146  1271  1271 I InputMethodEntryManager: InputMethodEntryManager.loadAdditionalImeDefsForCurrentEntry():2851 loadAdditionalImeDefsForCurrentEntry(): kct{languageTag=en-US, variant=qwerty, hasLocalizedResources=true, conditionCacheKey=_cache_additional_ime_defs_for_condition_change=false_cache_ime_defs_for_condition_change=false_device=phone_device_size=default_enable_flick_symbols=false_enable_more_candidates_view_for_multilingual=false_enable_number_row=false_enable_preemptive_decode=true_enable_secondary_digits=true_enable_secondary_symbols=false_enable_show_foldable_layout_on_small_tablet=true_expressions=normal_four_or_more_letter_rows=false_keyboard_mode=normal_language=en-US_orientation=portrait_physical_keyboard=nokeys_rtl_layout=false_show_secondary_digits=true_show_suggestions=true_split_with_duplicate_keys=true_variant=qwerty, imeDef.stringId=ime_english_united_states, imeDef.className=com.google.android.apps.inputmethod.libs.latin5.LatinIme, imeDef.languageTag=en-US}
+11-08 19:02:50.148  1271  1271 I InputMethodEntryManager: InputMethodEntryManager$6.onSuccess():2864 Success load additional ImeDefs, entryChanged=false, additionalImeDefsChanged=false, [ktt{stringId=password, language=und-Latn-x-password, languageTag=und-Latn-x-password, processedConditions={variant=qwerty, enable_number_row=false, device=phone}, className=com.google.android.libraries.inputmethod.ime.password.PasswordIme, label=2132018743, keyEventInterpreter=null, inlineComposing=true, autoCapital=true, announceAutoSelectedCandidate=true, statusIcon=0, primeKeyboardType=SOFT, indicatorIcon=0, indicatorLabel=null, displayAppCompletions=false, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=false, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@9b7f8a3, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=false, supportsAccessPoints=false}, ktt{stringId=number, language=und-Latn-x-number, languageTag=und-Latn-x-number, processedConditions={}, className=com.google.android.libraries.inputmethod.ime.DummyIme, label=2132018692, keyEventInterpreter=null, inlineComposing=true, autoCapital=false, announceAutoSelectedCandidate=false, statusIcon=0, primeKeyboardType=SOFT, indicatorIcon=0, indicatorLabel=null, displayAppCompletions=false, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=false, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@228b7a0, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=false, supportsAccessPoints=false}, ktt{stringId=number_password, language=und-Latn-x-number-password, languageTag=und-Latn-x-number-password, processedConditions={}, className=com.google.android.libraries.inputmethod.ime.DummyIme, label=2132018693, keyEventInterpreter=null, inlineComposing=true, autoCapital=false, announceAutoSelectedCandidate=false, statusIcon=0, primeKeyboardType=SOFT, indicatorIcon=0, indicatorLabel=null, displayAppCompletions=false, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=false, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@9091f59, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=false, supportsAccessPoints=false}, ktt{stringId=phone_number, language=und-Latn-x-phone-number, languageTag=und-Latn-x-phone-number, processedConditions={}, className=com.google.android.libraries.inputmethod.ime.DummyIme, label=2132018778, keyEventInterpreter=null, inlineComposing=true, autoCapital=false, announceAutoSelectedCandidate=false, statusIcon=0, primeKeyboardType=SOFT, indicatorIcon=0, indicatorLabel=null, displayAppCompletions=false, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=false, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@845a71e, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=false, supportsAccessPoints=false}, ktt{stringId=date_time, language=und-Latn-x-date-time, languageTag=und-Latn-x-date-time, processedConditions={}, className=com.google.android.libraries.inputmethod.ime.DummyIme, label=2132017511, keyEventInterpreter=null, inlineComposing=true, autoCapital=false, announceAutoSelectedCandidate=false, statusIcon=0, primeKeyboardType=SOFT, indicatorIcon=0, indicatorLabel=null, displayAppCompletions=false, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=false, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@dc77bff, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=false, supportsAccessPoints=false}, ktt{stringId=dummy_hard, language=en, languageTag=en, processedConditions={device=unknown
+11-08 19:02:50.148  1271  1271 I InputMethodEntryManager: }, className=com.google.android.apps.inputmethod.libs.latin5.LatinDummyIme, label=0, keyEventInterpreter=null, inlineComposing=true, autoCapital=false, announceAutoSelectedCandidate=true, statusIcon=0, primeKeyboardType=HARD_QWERTY, indicatorIcon=0, indicatorLabel=null, displayAppCompletions=false, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=false, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@bf1adcc, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=false, supportsAccessPoints=false}, ktt{stringId=password_floating_hard_qwerty, language=und-Latn-x-password, languageTag=und-Latn-x-password, processedConditions={}, className=com.google.android.libraries.inputmethod.ime.DummyIme, label=2132018779, keyEventInterpreter=null, inlineComposing=true, autoCapital=false, announceAutoSelectedCandidate=false, statusIcon=2131231632, primeKeyboardType=HARD_QWERTY, indicatorIcon=0, indicatorLabel=null, displayAppCompletions=false, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=false, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@a35815, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=false, supportsAccessPoints=false}, ktt{stringId=phone_number_floating_hard_qwerty, language=und-Latn-x-phone-number, languageTag=und-Latn-x-phone-number, processedConditions={}, className=com.google.android.libraries.inputmethod.ime.DummyIme, label=2132018779, keyEventInterpreter=null, inlineComposing=true, autoCapital=false, announceAutoSelectedCandidate=false, statusIcon=2131231823, primeKeyboardType=HARD_QWERTY, indicatorIcon=0, indicatorLabel=null, displayAppCompletions=false, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=false, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@fa1172a, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=false, supportsAccessPoints=false}, ktt{stringId=number_floating_hard_qwerty, language=und-Latn-x-number, languageTag=und-Latn-x-number, processedConditions={}, className=com.google.android.libraries.inputmethod.ime.DummyIme, label=2132018779, keyEventInterpreter=null, inlineComposing=true, autoCapital=false, announceAutoSelectedCandidate=false, statusIcon=2131231823, primeKeyboardType=HARD_QWERTY, indicatorIcon=0, indicatorLabel=null, displayAppCompletions=false, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=false, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@121d91b, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=false, supportsAccessPoints=false}, ktt{stringId=date_time_floating_hard_qwerty, language=und-Latn-x-date-time, languageTag=und-Latn-x-date-time, processedConditions={}, className=com.google.android.libraries.inputmethod.ime.DummyIme, label=2132018779, keyEventInterpreter=null, inlineComposing=true, autoCapital=false, announceAutoSelectedCandidate=false, statusIcon=2131231823, primeKeyboardType=HARD_QWERTY, indicatorIcon=0, indicatorLabel=null, displayAppCompletions=false, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=false, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@171dab8, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=false, supportsAccessPoints=false}]
+11-08 19:02:50.148  1271  1271 I InputMethodEntryManager: InputMethodEntryManager.onSuccessLoadingAdditionalImeDefs():2918 Additional ImeDefs have been loaded, maybe notify entry change: false
+11-08 19:02:50.148  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onCurrentInputMethodEntryChanged():3655 onCurrentInputMethodEntryChanged(): imeDefsChanged=false, initializedEntryChanged=false, keyboardContextChanged=false
+11-08 19:02:50.148  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onCurrentInputMethodEntryChanged():3675 Skip the entry change as the input method entry is consider as not changed.
+11-08 19:02:50.148  1271  1271 W GoogleInputMethodService: GoogleInputMethodService.reactivateKeyboard():3830 No need to reactivate keyboard when input view is not started.
+11-08 19:02:50.148  1271  1271 I SystemSubtypesReportModule: SystemSubtypesReportModule$3.onCurrentInputMethodEntryChanged():136 entry: en-US, source: UNSPECIFIED
+11-08 19:02:50.148  1271  1271 W NotificationCenter: NotificationCenter$ListenerData.notifyOnExecutor():672 Heavy notify work detected on UI thread: |lor->mpx| takes 21ms
+11-08 19:02:50.148  1271  1271 I DeviceModeMonitor2: DeviceModeMonitor2.onConfigurationChanged():62
+11-08 19:02:50.148  1271  1271 I DeviceModeMonitor2: DeviceModeMonitor2.calculateAndNotify():101 Device mode 'phone' from display metrics 'DisplayMetrics{density=0.0, width=2400, height=1080, scaledDensity=0.0, xdpi=420.0, ydpi=420.0}' or smallestScreenWidthDp: 411
+11-08 19:02:50.149  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onConfigurationChanged():1665 changedMask : 20000480
+11-08 19:02:50.149  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.clearInputMethodServiceData():1613 clearInputMethodServiceData for configurationChange
+11-08 19:02:50.149  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.discardAllKeyboardViewAndInputView():1818 discardAllKeyboardViewAndInputView()
+11-08 19:02:50.149  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.maybeDestroyExistingKeyboardGroupManager():538 Destroy existing keyboard group manager in fvq
+11-08 19:02:50.149  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.createKeyboardGroupManagerListenableFuture():120 Create keyboard group manager listenable future in fvq
+11-08 19:02:50.149  1271 27954 I KeyboardGroupDefParser: KeyboardGroupDefParser.parseKeyboardGroupDef():83 parseKeyboardGroupDef() 2132214033 -> 0_resource_name_obfuscated : WaitTime = 0 ms : RunTime = 0 ms
+11-08 19:02:50.149  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.maybeDestroyExistingKeyboardGroupManager():538 Destroy existing keyboard group manager in fxu
+11-08 19:02:50.149  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.createKeyboardGroupManagerListenableFuture():120 Create keyboard group manager listenable future in fxu
+11-08 19:02:50.149  1271 27955 I KeyboardGroupDefParser: KeyboardGroupDefParser.parseKeyboardGroupDef():83 parseKeyboardGroupDef() 2132214040 -> 0_resource_name_obfuscated : WaitTime = 0 ms : RunTime = 0 ms
+11-08 19:02:50.149  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.maybeDestroyExistingKeyboardGroupManager():538 Destroy existing keyboard group manager in eid
+11-08 19:02:50.150  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension.createKeyboardGroupManagerListenableFuture():120 Create keyboard group manager listenable future in eid
+11-08 19:02:50.150  1271 27954 I KeyboardGroupDefParser: KeyboardGroupDefParser.parseKeyboardGroupDef():83 parseKeyboardGroupDef() 2132214039 -> 0_resource_name_obfuscated : WaitTime = 0 ms : RunTime = 0 ms
+11-08 19:02:50.150  1271  1271 I KeyboardModeManager: KeyboardModeManager.setInputViewKeyboardViewHolderProvider():625 setInputView() : supportsOneHandedMode=true supportsSplitMode=true
+11-08 19:02:50.150  1271  1271 I NormalModeController: NormalModeController.getKeyboardBodyViewHolderPaddingBottom():104 currentPrimeKeyboardType:SOFT systemPaddingBottom:-1
+11-08 19:02:50.150  1271  1271 I KeyboardModeManager: KeyboardModeManager.setInputViewKeyboardViewHolderProvider():613 setInputView() : supportsOneHandedMode=true, supportSplitMode=true
+11-08 19:02:50.150  1271  1271 I WindowMetricsHelper: WindowMetricsHelper.predictAndNotify():115 Window metrics predicted by cache.
+11-08 19:02:50.150  1271  1271 I GoogleInputMethodService: GoogleInputMethodService$10.onWindowMetricsChanged():1226 windowMetrics: bounds() = Rect(0, 136 - 1080, 2400), insets() = Rect(0, 0 - 0, 126)
+11-08 19:02:50.150  1271  1271 I DeviceModeMonitor2: DeviceModeMonitor2.calculateAndNotify():101 Device mode 'phone' from display metrics 'DisplayMetrics{density=0.0, width=1080, height=2400, scaledDensity=0.0, xdpi=420.0, ydpi=420.0}' or smallestScreenWidthDp: 411
+11-08 19:02:50.150  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.initializeInputMethodServiceData():1382 initializeInputMethodServiceData for kct{languageTag=en-US, variant=qwerty, hasLocalizedResources=true, conditionCacheKey=_cache_additional_ime_defs_for_condition_change=false_cache_ime_defs_for_condition_change=false_device=phone_device_size=default_enable_flick_symbols=false_enable_more_candidates_view_for_multilingual=false_enable_number_row=false_enable_preemptive_decode=true_enable_secondary_digits=true_enable_secondary_symbols=false_enable_show_foldable_layout_on_small_tablet=true_expressions=normal_four_or_more_letter_rows=false_keyboard_mode=normal_language=en-US_orientation=portrait_physical_keyboard=nokeys_rtl_layout=false_show_secondary_digits=true_show_suggestions=true_split_with_duplicate_keys=true_variant=qwerty, imeDef.stringId=ime_english_united_states, imeDef.className=com.google.android.apps.inputmethod.libs.latin5.LatinIme, imeDef.languageTag=en-US}
+11-08 19:02:50.151  1271  1271 I StyledKeyboardThemeBuilder: StyledKeyboardThemeBuilder.build():132 Pref: [], themeName: [silk:], darkMode: [false], cacheKey: [overlay_builtin_dynamic_color_light_base.binarypb:dynamic-gm3-light-fffefbff-ff495d92-8adeb286894d7d4cce285b6f16b95faf]
+11-08 19:02:50.151  1271  1271 I KeyboardThemeProvider: KeyboardThemeProvider.applyKeyboardTheme():27 Apply keyboard theme: theme_border_stylesheet_noshadow_gsans_pillkey_silkpopup_hover_light_phone_bottom4dp_navredesign_400_overlay_builtin_dynamic_color_light_base.binarypb:dynamic-gm3-light-fffefbff-ff495d92-8adeb286894d7d4cce285b6f16b95faf_port
+11-08 19:02:50.151  1271  1601 W LatinCommonMetricsProcessor: LatinCommonMetricsProcessor.processInputMethodEntryChanged():2300 The new entry is equal to the old entry
+11-08 19:02:50.158  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 19:02:50.165  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, true)
+11-08 19:02:50.165   540  1637 W InputManager-JNI: Input channel object 'd1f7024 ru.liturgyguide/androidx.activity.ComponentActivity (client)' was disposed without first being removed with the input manager!
+11-08 19:02:50.166  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 19:02:50.166  1271  1271 W SessionManager: SessionManager.beginSession():53 Try to begin an already begun session [INPUT_SESSION], end it first
+11-08 19:02:50.167  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 19:02:50.168  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension$3.onSuccess():552 KeyboardGroupManager destroyed in fvq.
+11-08 19:02:50.168  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension$3.onSuccess():552 KeyboardGroupManager destroyed in fxu.
+11-08 19:02:50.168  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension$3.onSuccess():552 KeyboardGroupManager destroyed in eid.
+11-08 19:02:50.169  1271  1271 I HandwritingOfflineSuperpacks: HandwritingOfflineSuperpacks.syncInternal():80 no bundled lm for handwriting.
+11-08 19:02:50.169  1271  1271 I DictionarySuperpacksManager: DictionarySuperpacksManager$1.onEnabledInputMethodEntriesChanged():65 onEnabledInputMethodEntriesChanged
+11-08 19:02:50.170  1271  1271 I HandwritingSuperpacks: HandwritingSuperpacks.register():273 register(): version '86', url 'https://dl.google.com/handwriting/models/handwriting_release.superpack_manifest.20231127.json' [ONLINE]
+11-08 19:02:50.170  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension$3.onFailure():560 Failed to load KeyboardGroupManager in fvq.
+11-08 19:02:50.170  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension$3.onFailure():560 Failed to load KeyboardGroupManager in fxu.
+11-08 19:02:50.170  1271  1271 I AbstractOpenableExtension: AbstractOpenableExtension$3.onFailure():560 Failed to load KeyboardGroupManager in eid.
+11-08 19:02:50.171  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 19:02:50.171  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 19:02:50.172  1271  1271 I NormalModeController: NormalModeController.getKeyboardBodyViewHolderPaddingBottom():104 currentPrimeKeyboardType:SOFT systemPaddingBottom:-1
+11-08 19:02:50.175  1271 27964 I DelightKLPDownloader: DelightKLPDownloader.downloadKLPInternal():185 downloading KLP for en_840
+11-08 19:02:50.175  1271 27964 I ManifestedDataDownloader: ManifestedDataDownloader.download():57 downloading manifest https://www.gstatic.com/android/keyboard/dictionarypack/2024070918/metadata.json-perlang/en-840.json?v=2024071002
+11-08 19:02:50.181   386   504 W TransactionTracing: Could not find layer id 25070
+11-08 19:02:50.181   386   504 W TransactionTracing: Could not find layer id 25070
+11-08 19:02:50.181  1271 27960 I DownloadManager: DownloadManager.downloadInternal():390 Download for __KLP_manifest_delight__en-840 scheduled with params DownloadParams{allowMetered=true, requireCharging=false, foreground=false, immediately=true, priority=0}
+11-08 19:02:50.181  1271 27960 I DownloadManager: DownloadManager.startDownload():484 start download of __KLP_manifest_delight__en-840
+11-08 19:02:50.186  1271  1626 I SP      : Registering emoticon_content_description.2022081613, url: https://www.gstatic.com/android/keyboard/emoticon_content_desc/202208161305/superpacks_manifest.json, constraints: W:*:*:*, flags: bg, requested: 2022081613, current: 2022081613
+11-08 19:02:50.187 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@52843e9 in: PRE_ON_CREATE
+11-08 19:02:50.187 27924 27924 V ActivityScenario: Activity lifecycle changed event received but ignored because the reported transition was not ON_CREATE while the last known transition was DESTROYED
+11-08 19:02:50.190  1271  1626 I SP      : Registering handwriting_recognition.86, url: https://dl.google.com/handwriting/models/handwriting_release.superpack_manifest.20231127.json, constraints: m:*:*:*, flags: fg, requested: 86, current: 86
+11-08 19:02:50.192 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@52843e9 in: CREATED
+11-08 19:02:50.192 27924 27924 V ActivityScenario: Update currentActivityStage to CREATED, currentActivity=androidx.activity.ComponentActivity@52843e9
+11-08 19:02:50.192 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@52843e9 in: STARTED
+11-08 19:02:50.193 27924 27924 V ActivityScenario: Update currentActivityStage to STARTED, currentActivity=androidx.activity.ComponentActivity@52843e9
+11-08 19:02:50.194 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@52843e9 in: RESUMED
+11-08 19:02:50.195 27924 27924 V ActivityScenario: Update currentActivityStage to RESUMED, currentActivity=androidx.activity.ComponentActivity@52843e9
+11-08 19:02:50.195  1271 27963 I HandwritingOnlineSuperpacks: HandwritingOnlineSuperpacks$2.apply():184 syncPackMapping()
+11-08 19:02:50.196  1271  1626 I SP      : Syncing emoticon_content_description (2022081613) with slices: [7a635888cb828dfa2fc744b7b9b50f04], metadata: false
+11-08 19:02:50.197  1271 27960 I DownloadManager: DownloadManager.downloadInternal():390 Download for __KLP_delight__en-840 scheduled with params DownloadParams{allowMetered=false, requireCharging=false, foreground=false, immediately=false, priority=500}
+11-08 19:02:50.230   772   772 I NoBackGesture: Config changed: newConfig={1.0 310mcc260mnc [en_US] ldltr sw411dp w411dp h914dp 420dpi nrml long port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2400) mAppBounds=Rect(0, 0 - 1080, 2400) mMaxBounds=Rect(0, 0 - 1080, 2400) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} as.2 s.1347 fontWeightAdjustment=0} lastReportedConfig={1.0 310mcc260mnc [en_US] ldltr sw411dp w914dp h411dp 420dpi nrml long land finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 2400, 1080) mAppBounds=Rect(0, 0 - 2400, 1080) mMaxBounds=Rect(0, 0 - 2400, 1080) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} as.2 s.1314 fontWeightAdjustment=0}
+11-08 19:02:50.231   772   772 I NoBackGesture: NavbarController: newConfig={1.0 310mcc260mnc [en_US] ldltr sw411dp w411dp h914dp 420dpi nrml long port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2400) mAppBounds=Rect(0, 0 - 1080, 2400) mMaxBounds=Rect(0, 0 - 1080, 2400) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} as.2 s.1347 fontWeightAdjustment=0} mTaskbarDelegate initialized=true willApplyConfigToNavbars=false navBarCount=0
+11-08 19:02:50.299  1210  1210 D StatsLog: LAUNCHER_TRANSIENT_TASKBAR_HIDE
+11-08 19:02:50.315   832   973 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: No service published for: ethernet
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: android.os.ServiceManager$ServiceNotFoundException: No service published for: ethernet
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: 	at android.os.ServiceManager.getServiceOrThrow(ServiceManager.java:203)
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: 	at android.app.SystemServiceRegistry$145.createService(SystemServiceRegistry.java:2120)
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: 	at android.app.SystemServiceRegistry$CachedServiceFetcher.getService(SystemServiceRegistry.java:2231)
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: 	at android.app.SystemServiceRegistry.getSystemService(SystemServiceRegistry.java:1812)
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: 	at android.app.ContextImpl.getSystemService(ContextImpl.java:2241)
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: 	at android.content.ContextWrapper.getSystemService(ContextWrapper.java:936)
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: 	at com.android.networkstack.tethering.Tethering.isEthernetSupported(Tethering.java:1579)
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: 	at com.android.networkstack.tethering.Tethering.makeSupportedDownstreams(Tethering.java:2562)
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: 	at com.android.networkstack.tethering.Tethering.updateSupportedDownstreams(Tethering.java:2536)
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: 	at com.android.networkstack.tethering.Tethering.updateConfiguration(Tethering.java:549)
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: 	at com.android.networkstack.tethering.Tethering.-$$Nest$mupdateConfiguration(Tethering.java:0)
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: 	at com.android.networkstack.tethering.Tethering$StateReceiver.onReceive(Tethering.java:1186)
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: 	at android.app.LoadedApk$ReceiverDispatcher$Args.lambda$getRunnable$0(LoadedApk.java:1814)
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: 	at android.app.LoadedApk$ReceiverDispatcher$Args.$r8$lambda$mcNAAl1SQ4MyJPyDg8TJ2x2h0Rk(Unknown Source:0)
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: 	at android.app.LoadedApk$ReceiverDispatcher$Args$$ExternalSyntheticLambda0.run(D8$$SyntheticClass:0)
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: 	at android.os.Handler.handleCallback(Handler.java:959)
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: 	at android.os.Handler.dispatchMessage(Handler.java:100)
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: 	at android.os.Looper.loopOnce(Looper.java:232)
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: 	at android.os.Looper.loop(Looper.java:317)
+11-08 19:02:50.342   832   973 E SystemServiceRegistry: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+11-08 19:02:50.347  1210  1210 D b/254119092: DisplayController#onConfigurationChanged: {1.0 310mcc260mnc [en_US] ldltr sw411dp w411dp h914dp 420dpi nrml long port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2400) mAppBounds=Rect(0, 0 - 1080, 2400) mMaxBounds=Rect(0, 0 - 1080, 2400) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} as.2 s.1318 fontWeightAdjustment=0}
+11-08 19:02:50.347  1271  1626 I HandwritingSlicingStrategy: HandwritingSlicingStrategy.getSlices():44 getSlices(): handwriting_recognition.86 useForeground=true
+11-08 19:02:50.351  1271  1626 I HandwritingSlicingStrategy: HandwritingSlicingStrategy.getSlices():103 getSlices(): result {slices=[{handwriting_recognition:pack_mapping_v1_lstm_20231127, m:*:*:*, fg}, {handwriting_recognition:transformer_latin_tflite_20231010_zip, m:*:*:*, fg}, {handwriting_recognition:qrnn_en_us_reco_20231010_fst_20230613_recospec_zip, m:*:*:*, fg}, {handwriting_recognition:transformer_latin_conf_tflite_20231010_zip, m:*:*:*, fg}, {handwriting_recognition:transformer_latin_seg_tflite_20231010_zip, m:*:*:*, fg}, {handwriting_recognition:en_us_20230613_compact_fst_zip, m:*:*:*, fg}, {handwriting_recognition:scribe_latin_20231123_tflite_zip, m:*:*:*, fg}, {handwriting_recognition:scribe_latin_20231123_recospec_zip, m:*:*:*, fg}], last batch=true, sync metadata=false}
+11-08 19:02:50.352  1271  1626 I SP      : Syncing handwriting_recognition (86) with slices: [{pack_mapping_v1_lstm_20231127, m:*:*:*, fg}, {transformer_latin_tflite_20231010_zip, m:*:*:*, fg}, {qrnn_en_us_reco_20231010_fst_20230613_recospec_zip, m:*:*:*, fg}, {transformer_latin_conf_tflite_20231010_zip, m:*:*:*, fg}, {transformer_latin_seg_tflite_20231010_zip, m:*:*:*, fg}, {en_us_20230613_compact_fst_zip, m:*:*:*, fg}, {scribe_latin_20231123_tflite_zip, m:*:*:*, fg}, {scribe_latin_20231123_recospec_zip, m:*:*:*, fg}], metadata: false
+11-08 19:02:50.387   540   653 I ImeTracker: ru.liturgyguide:2f9f9fa4: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 19:02:50.388   540   653 I ImeTracker: ru.liturgyguide:2f9f9fa4: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 19:02:50.413  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 19:02:50.415  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 19:02:50.415  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 19:02:50.416  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 19:02:50.416  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 19:02:50.448  1271  1271 W NotificationCenter: NotificationCenter$ListenerData.notifyOnExecutor():672 Heavy notify work detected on UI thread: |kga->jjc| takes 32ms
+11-08 19:02:50.503   540  1637 D ConnectivityService: requestNetwork for uid/pid:10165/1271 activeRequest: null callbackRequest: 257 [NetworkRequest [ REQUEST id=258, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10165 RequestorUid: 10165 RequestorPkg: com.google.android.inputmethod.latin UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false
+11-08 19:02:50.506  1271  1271 I MDDTaskScheduler: MDDTaskScheduler$Worker.startWorkInner():122 work mdd_download_work started
+11-08 19:02:50.507  1271  1271 I DownloadManager: DownloadManager.startDownload():484 start download of __KLP_delight__en-840
+11-08 19:02:50.512  1271 27958 I DelightKLPDownloader: DelightKLPDownloader$2.onSuccess():207 klp en_840 downloaded with version 2024070900
+11-08 19:02:50.512  1271 27958 I WM-WorkerWrapper: Worker result SUCCESS for Work [ id=985aaf8e-f617-4923-a156-a0d5b8ca6ca0, tags={ com.google.android.libraries.inputmethod.mdd.MDDTaskScheduler$Worker } ]
+11-08 19:02:50.520   540   681 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=258, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10165 RequestorUid: 10165 RequestorPkg: com.google.android.inputmethod.latin UnderlyingNetworks: Null] ]
+11-08 19:02:50.529   540   688 D ConnectivityService: NetReassign [258 : null → 103] [c 1] [a 0] [i 20]
+11-08 19:02:50.531   540   681 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=258, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10165 RequestorUid: 10165 RequestorPkg: com.google.android.inputmethod.latin UnderlyingNetworks: Null] ]
+11-08 19:02:50.533   540   681 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=258, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10165 RequestorUid: 10165 RequestorPkg: com.google.android.inputmethod.latin UnderlyingNetworks: Null] ]
+11-08 19:02:50.535   540   681 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=258, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10165 RequestorUid: 10165 RequestorPkg: com.google.android.inputmethod.latin UnderlyingNetworks: Null] ]
+11-08 19:02:50.671  1210  1214 I s.nexuslauncher: NativeAlloc concurrent mark compact GC freed 4214KB AllocSpace bytes, 18(1012KB) LOS objects, 49% free, 7215KB/14MB, paused 1.194ms,8.351ms total 345.260ms
+11-08 19:02:50.697   772   772 D DisplayRepository: combining enabled=[0], connectedExternalDisplayIds=[], ignored=[]
+11-08 19:02:50.722  1271  1626 I SP      : Sync for emoticon_content_description succeeded in 531 ms: no changes
+11-08 19:02:50.722  1271  1626 I SP      : GC for 'emoticon_content_description' (10) with ttl of 0 ms took 0 ms (0/0/0)
+11-08 19:02:50.726  1210  1216 W System  : A resource failed to call release.
+11-08 19:02:50.726  1210  1216 W System  : A resource failed to call release.
+11-08 19:02:50.726  1210  1216 W System  : A resource failed to call release.
+11-08 19:02:50.726  1210  1216 W System  : A resource failed to call release.
+11-08 19:02:50.727  1210  1216 W System  : A resource failed to call release.
+11-08 19:02:50.727  1210  1216 W System  : A resource failed to call release.
+11-08 19:02:50.727  1210  1216 W s.nexuslauncher: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~DMbTHabHX2b9Ton1PL4CMw==/ru.liturgyguide-Z8Z0m2aTD09SH7OJcXpSgA==/base.apk' with 1 weak references
+11-08 19:02:50.735   772   772 D DefaultDeviceEntrySection: isUdfpsSupported=false
+11-08 19:02:50.825   974 27904 I NetworkScheduler.Stats: Task com.google.android.gms/com.google.android.gms.ipa.base.IpaGcmTaskService started execution. cause:9 exec_start_elapsed_seconds: 16433 [CONTEXT service_id=218 ]
+11-08 19:02:50.840   974 27904 I NetworkScheduler.Stats: Task com.google.android.gms/com.google.android.gms.ipa.base.IpaGcmTaskService finished executing. cause:9 result: 1 elapsed_millis: 103 uptime_millis: 103 exec_start_elapsed_seconds: 16433 [CONTEXT service_id=218 ]
+11-08 19:02:50.866  1271  1626 I SP      : Sync for handwriting_recognition succeeded in 519 ms: no changes
+11-08 19:02:50.867  1271  1626 I SP      : GC for 'handwriting_recognition' (10) with ttl of 0 ms took 1 ms (0/1/0)
+11-08 19:02:50.868  1271 27963 I HandwritingOnlineSuperpacks: HandwritingOnlineSuperpacks.lambda$syncInternal$1():204 syncInternal(): syncing packs
+11-08 19:02:50.868  1271 27963 I HandwritingOnlineSuperpacks: HandwritingOnlineSuperpacks$3.onSyncSuccess():252 syncInternal(): complete {old=[en_us_20230613_compact_fst_zip, pack_mapping_v1_lstm_20231127, qrnn_en_us_reco_20231010_fst_20230613_recospec_zip, scribe_latin_20231123_recospec_zip, scribe_latin_20231123_tflite_zip, transformer_latin_conf_tflite_20231010_zip, transformer_latin_seg_tflite_20231010_zip, transformer_latin_tflite_20231010_zip], new=[en_us_20230613_compact_fst_zip, pack_mapping_v1_lstm_20231127, qrnn_en_us_reco_20231010_fst_20230613_recospec_zip, scribe_latin_20231123_recospec_zip, scribe_latin_20231123_tflite_zip, transformer_latin_conf_tflite_20231010_zip, transformer_latin_seg_tflite_20231010_zip, transformer_latin_tflite_20231010_zip], metadata=false, last batch=true}
+11-08 19:02:50.869  1271 27958 E HandwritingSuperpacksUtil: HandwritingSuperpacksUtil.getPackMappingPackName():40 No pack mapping pack found in []
+11-08 19:02:50.869  1271 27958 I HandwritingSuperpacks: HandwritingSuperpacks.lambda$reloadCache$0():237 updatePackMappingsCache(): pack mapping pack unavailable [OFFLINE]
+11-08 19:02:52.618   540  1619 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10292, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 19:02:52.653   540   568 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10292, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 19:02:52.662 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@52843e9 in: PAUSED
+11-08 19:02:52.663 27924 27924 V ActivityScenario: Update currentActivityStage to PAUSED, currentActivity=androidx.activity.ComponentActivity@52843e9
+11-08 19:02:52.670   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 19:02:52.686  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=1852, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10000000 cmp=ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity }
+11-08 19:02:52.704   345   418 I netd    : tetherGetStats() -> {[]} <4.59ms>
+11-08 19:02:52.706   442 26701 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:02:52.706   772   865 D SplashScreenView: Build android.window.SplashScreenView{6d71050 V.E...... ......ID 0,0-0,0}
+11-08 19:02:52.706   772   865 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-08 19:02:52.706   772   865 D SplashScreenView: Branding: view: android.view.View{e6a8249 G.ED..... ......I. 0,0-0,0 #1020503 android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-08 19:02:52.784   346   346 D Zygote  : Forked child process 27985
+11-08 19:02:52.839 27985 27985 I turgyguide.test: Late-enabling -Xcheck:jni
+11-08 19:02:52.888   772   941 D EGL_emulation: app_time_stats: avg=1129.15ms min=103.50ms max=2154.80ms count=2
+11-08 19:02:52.914 27924 27924 D VRI[ComponentActivity]: visibilityChanged oldVisibility=true newVisibility=false
+11-08 19:02:52.916 27985 27985 I turgyguide.test: Using CollectorTypeCMC GC.
+11-08 19:02:52.962   391   429 I adbd    : jdwp connection from 27985
+11-08 19:02:52.987 27985 27985 D nativeloader: Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+11-08 19:02:53.049 27985 27985 D ApplicationLoaders: Returning zygote-cached class loader: /system/framework/android.test.base.jar
+11-08 19:02:53.054 27985 27985 D nativeloader: Configuring clns-7 for other apk /system/framework/android.test.mock.jar. target_sdk_version=35, uses_libraries=ALL, library_path=/data/app/~~3UcDuO_uNmXtjyyk3YA6hg==/ru.liturgyguide.test-iN6D5b1bujlmhrVGgwj2GQ==/lib/arm64, permitted_path=/data:/mnt/expand:/data/user/0/ru.liturgyguide.test
+11-08 19:02:53.055 27985 27985 D ApplicationLoaders: Returning zygote-cached class loader: /system/framework/android.test.base.jar
+11-08 19:02:53.057 27985 27985 D nativeloader: Configuring clns-8 for other apk /system/framework/android.test.runner.jar. target_sdk_version=35, uses_libraries=ALL, library_path=/data/app/~~3UcDuO_uNmXtjyyk3YA6hg==/ru.liturgyguide.test-iN6D5b1bujlmhrVGgwj2GQ==/lib/arm64, permitted_path=/data:/mnt/expand:/data/user/0/ru.liturgyguide.test
+11-08 19:02:53.059 27985 27985 W ziparchive: Unable to open '/data/app/~~3UcDuO_uNmXtjyyk3YA6hg==/ru.liturgyguide.test-iN6D5b1bujlmhrVGgwj2GQ==/base.dm': No such file or directory
+11-08 19:02:53.059 27985 27985 W ziparchive: Unable to open '/data/app/~~3UcDuO_uNmXtjyyk3YA6hg==/ru.liturgyguide.test-iN6D5b1bujlmhrVGgwj2GQ==/base.dm': No such file or directory
+11-08 19:02:53.123 27985 27985 D nativeloader: Configuring clns-9 for other apk /data/app/~~3UcDuO_uNmXtjyyk3YA6hg==/ru.liturgyguide.test-iN6D5b1bujlmhrVGgwj2GQ==/base.apk. target_sdk_version=35, uses_libraries=, library_path=/data/app/~~3UcDuO_uNmXtjyyk3YA6hg==/ru.liturgyguide.test-iN6D5b1bujlmhrVGgwj2GQ==/lib/arm64, permitted_path=/data:/mnt/expand:/data/user/0/ru.liturgyguide.test
+11-08 19:02:53.125 27985 27985 D CompatChangeReporter: Compat change id reported: 202956589; UID 10292; state: ENABLED
+11-08 19:02:53.140 27985 27985 V GraphicsEnvironment: Currently set values for:
+11-08 19:02:53.140 27985 27985 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[]
+11-08 19:02:53.140 27985 27985 V GraphicsEnvironment:   angle_gl_driver_selection_values=[]
+11-08 19:02:53.140 27985 27985 V GraphicsEnvironment: Global.Settings values are invalid: number of packages: 0, number of values: 0
+11-08 19:02:53.140 27985 27985 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+11-08 19:02:53.183 27985 27985 D CompatChangeReporter: Compat change id reported: 279646685; UID 10292; state: ENABLED
+11-08 19:02:53.185 27985 27985 D CompatChangeReporter: Compat change id reported: 309578419; UID 10292; state: ENABLED
+11-08 19:02:53.198 27985 27985 W HWUI    : Unknown dataspace 0
+11-08 19:02:53.203 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@52843e9 in: STOPPED
+11-08 19:02:53.203 27924 27924 V ActivityScenario: Update currentActivityStage to STOPPED, currentActivity=androidx.activity.ComponentActivity@52843e9
+11-08 19:02:53.205 27924 27924 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@52843e9 in: DESTROYED
+11-08 19:02:53.205 27924 27924 V ActivityScenario: Update currentActivityStage to DESTROYED, currentActivity=null
+11-08 19:02:53.206 27924 27924 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@47c11d2
+11-08 19:02:53.209   540  1619 W InputManager-JNI: Input channel object '918db0 ru.liturgyguide/androidx.activity.ComponentActivity (client)' was disposed without first being removed with the input manager!
+11-08 19:02:53.218   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 19:02:53.219  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=1851
+11-08 19:02:53.219  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=1851
+11-08 19:02:53.219  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=776, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10000100 cmp=com.google.android.apps.nexuslauncher/.NexusLauncherActivity }
+11-08 19:02:53.246   386   947 W ServiceManagerCppClient: Permission failure: android.permission.ACCESS_SURFACE_FLINGER from uid=10292 pid=0
+11-08 19:02:53.246   386   947 D PermissionCache: checking android.permission.ACCESS_SURFACE_FLINGER for uid=10292 => denied (116 us)
+11-08 19:02:53.246   386   500 W ServiceManagerCppClient: Permission failure: android.permission.ROTATE_SURFACE_FLINGER from uid=10292 pid=27985
+11-08 19:02:53.246   386   500 D PermissionCache: checking android.permission.ROTATE_SURFACE_FLINGER for uid=10292 => denied (289 us)
+11-08 19:02:53.247   386   947 W ServiceManagerCppClient: Permission failure: android.permission.ROTATE_SURFACE_FLINGER from uid=10292 pid=0
+11-08 19:02:53.247   386   947 D PermissionCache: checking android.permission.ROTATE_SURFACE_FLINGER for uid=10292 => denied (878 us)
+11-08 19:02:53.247   386   500 W ServiceManagerCppClient: Permission failure: android.permission.INTERNAL_SYSTEM_WINDOW from uid=10292 pid=27985
+11-08 19:02:53.247   386   947 W ServiceManagerCppClient: Permission failure: android.permission.INTERNAL_SYSTEM_WINDOW from uid=10292 pid=0
+11-08 19:02:53.247   386   947 D PermissionCache: checking android.permission.INTERNAL_SYSTEM_WINDOW for uid=10292 => denied (195 us)
+11-08 19:02:53.247   386   500 D PermissionCache: checking android.permission.INTERNAL_SYSTEM_WINDOW for uid=10292 => denied (724 us)
+11-08 19:02:53.247 27985 27998 I EGL_emulation: Opening libGLESv1_CM_emulation.so
+11-08 19:02:53.248 27985 27998 I EGL_emulation: Opening libGLESv2_emulation.so
+11-08 19:02:53.268 27924 27938 D IdlingRegistry: Unregistering idling resources: [androidx.compose.ui.test.EspressoLink@2df9628]
+11-08 19:02:53.270 27924 27938 E TestRunner: failed: allEighteenLandscapeNamesKeepFullAccessibleContextAndReadingSpace(ru.liturgyguide.ui.CompactReaderMatrixTest)
+11-08 19:02:53.270 27924 27938 E TestRunner: ----- begin exception -----
+11-08 19:02:53.271 27924 27938 E TestRunner: java.lang.AssertionError: Failed to assert the following: (Selected = 'true')
+11-08 19:02:53.271 27924 27938 E TestRunner: Semantics of the node:
+11-08 19:02:53.271 27924 27938 E TestRunner: Node #29 at (l=555.0, t=224.0, r=812.0, b=350.0)px, Tag: 'player_meaning_tab'
+11-08 19:02:53.271 27924 27938 E TestRunner: Focused = 'false'
+11-08 19:02:53.271 27924 27938 E TestRunner: Role = 'Tab'
+11-08 19:02:53.271 27924 27938 E TestRunner: Selected = 'false'
+11-08 19:02:53.271 27924 27938 E TestRunner: Text = '[Смысл]'
+11-08 19:02:53.271 27924 27938 E TestRunner: Actions = [OnClick, RequestFocus, SetTextSubstitution, ShowTextSubstitution, ClearTextSubstitution, GetTextLayoutResult]
+11-08 19:02:53.271 27924 27938 E TestRunner: MergeDescendants = 'true'
+11-08 19:02:53.271 27924 27938 E TestRunner: Selector used: (TestTag = 'player_meaning_tab')
+11-08 19:02:53.271 27924 27938 E TestRunner:
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.AssertionsKt.assert(Assertions.kt:265)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.AssertionsKt.assert$default(Assertions.kt:255)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.AssertionsKt.assertIsSelected(Assertions.kt:84)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at ru.liturgyguide.ui.CompactReaderMatrixTest.allEighteenLandscapeNamesKeepFullAccessibleContextAndReadingSpace(CompactReaderMatrixTest.kt:71)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at java.lang.reflect.Method.invoke(Native Method)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.rules.ExternalResource$1.evaluate(ExternalResource.java:54)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.junit4.AndroidComposeTestRule$apply$1$evaluate$1.invoke(AndroidComposeTestRule.android.kt:272)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.junit4.AndroidComposeTestRule$apply$1$evaluate$1.invoke(AndroidComposeTestRule.android.kt:271)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.withDisposableContent(ComposeUiTest.android.kt:505)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$runTest$1$1$1$1$1$1.invoke(ComposeUiTest.android.kt:333)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment.withComposeIdlingResource(ComposeUiTest.android.kt:385)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment.access$withComposeIdlingResource(ComposeUiTest.android.kt:219)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$runTest$1$1$1$1$1.invoke(ComposeUiTest.android.kt:332)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment.withWindowRecomposer(ComposeUiTest.android.kt:359)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment.access$withWindowRecomposer(ComposeUiTest.android.kt:219)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$runTest$1$1$1$1.invoke(ComposeUiTest.android.kt:331)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment.withTestCoroutines(ComposeUiTest.android.kt:372)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment.access$withTestCoroutines(ComposeUiTest.android.kt:219)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$runTest$1$1$1.invoke(ComposeUiTest.android.kt:330)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.EspressoLink.withStrategy(EspressoLink.android.kt:66)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$runTest$1$1.invoke(ComposeUiTest.android.kt:329)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.IdlingResourceRegistry.withRegistry(IdlingResourceRegistry.jvm.kt:155)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$runTest$1.invoke(ComposeUiTest.android.kt:328)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.ComposeRootRegistry.withRegistry(ComposeRootRegistry.android.kt:146)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment.runTest(ComposeUiTest.android.kt:327)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.compose.ui.test.junit4.AndroidComposeTestRule$apply$1.evaluate(AndroidComposeTestRule.android.kt:271)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.test.ext.junit.runners.AndroidJUnit4.run(AndroidJUnit4.java:162)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.Suite.runChild(Suite.java:128)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.Suite.runChild(Suite.java:27)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runner.JUnitCore.run(JUnitCore.java:137)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at org.junit.runner.JUnitCore.run(JUnitCore.java:115)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.test.internal.runner.TestExecutor.execute(TestExecutor.java:67)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.test.internal.runner.TestExecutor.execute(TestExecutor.java:58)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at androidx.test.runner.AndroidJUnitRunner.onStart(AndroidJUnitRunner.java:446)
+11-08 19:02:53.271 27924 27938 E TestRunner: 	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2594)
+11-08 19:02:53.271 27924 27938 E TestRunner: ----- end exception -----
+11-08 19:02:53.272 27924 27938 I TestRunner: finished: allEighteenLandscapeNamesKeepFullAccessibleContextAndReadingSpace(ru.liturgyguide.ui.CompactReaderMatrixTest)

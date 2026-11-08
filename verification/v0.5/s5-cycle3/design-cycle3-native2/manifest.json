@@ -1,0 +1,311 @@
+{
+  "schema": 1,
+  "package": "ru.liturgyguide",
+  "build_type": "debug",
+  "conditions": {
+    "data": "explicit local visual fixtures, not live parish data",
+    "clock": "device wall and monotonic clocks, no fake time",
+    "network": "not used in reader corpus",
+    "geometry": "own API35 emulator only"
+  },
+  "cases": [
+    {
+      "id": "epistle-full-header",
+      "mode": "static",
+      "conditions": {
+        "scene": "ordinary portrait 412dp; accepted 9 Nov missing Epistle, app font1.3 dark"
+      },
+      "expected": [
+        {
+          "text": "Прокимен и чтение Апостола"
+        },
+        {
+          "text": "Текста чтения пока нет"
+        },
+        {
+          "text": "По-русски",
+          "ancestor": {
+            "class": "android.view.View",
+            "selected": true
+          }
+        },
+        {
+          "content-desc": "Включить плеер",
+          "ancestor": {
+            "class": "android.view.View",
+            "enabled": false,
+            "clickable": true
+          }
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.0",
+        "timezone": "Europe/Moscow",
+        "density": "Physical density: 420"
+      }
+    },
+    {
+      "id": "narrow-original-dark",
+      "mode": "static",
+      "conditions": {
+        "scene": "320x640dp; font2.0 x app1.3; accepted 8 Nov Creed phrase4; dark"
+      },
+      "expected": [
+        {
+          "text": "Символ веры"
+        },
+        {
+          "text": "Оригинал",
+          "ancestor": {
+            "class": "android.view.View",
+            "selected": true
+          }
+        },
+        {
+          "content-desc": "Включить плеер",
+          "ancestor": {
+            "class": "android.view.View",
+            "enabled": true,
+            "clickable": true
+          }
+        },
+        {
+          "text": "Иже от Отца рожденнаго прежде всех век."
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "2.0",
+        "timezone": "Europe/Moscow",
+        "density": "Physical density: 420"
+      }
+    },
+    {
+      "id": "narrow-russian-light",
+      "mode": "static",
+      "conditions": {
+        "scene": "320x640dp; font2.0 x app1.3; accepted 8 Nov Creed phrase4; light; translated paired phrase"
+      },
+      "expected": [
+        {
+          "text": "Символ веры"
+        },
+        {
+          "text": "По-русски",
+          "ancestor": {
+            "class": "android.view.View",
+            "selected": true
+          }
+        },
+        {
+          "content-desc": "Включить плеер",
+          "ancestor": {
+            "class": "android.view.View",
+            "enabled": true,
+            "clickable": true
+          }
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "2.0",
+        "timezone": "Europe/Moscow",
+        "density": "Physical density: 420"
+      }
+    },
+    {
+      "id": "compact-reading-details",
+      "mode": "static",
+      "conditions": {
+        "scene": "same narrow reader; menu details pauses and reports accepted date; scrollable details"
+      },
+      "expected": [
+        {
+          "text": "Открытое чтение"
+        },
+        {
+          "text": "Тексты на 8 ноября 2026"
+        },
+        {
+          "text": "Этап"
+        },
+        {
+          "text": "Закрыть"
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "2.0",
+        "timezone": "Europe/Moscow",
+        "density": "Physical density: 420"
+      }
+    },
+    {
+      "id": "landscape-original",
+      "mode": "static",
+      "conditions": {
+        "scene": "640x360dp landscape; system1.3 x app1.3 dark; accepted 8 Nov Creed phrase4"
+      },
+      "expected": [
+        {
+          "text": "Оригинал",
+          "ancestor": {
+            "class": "android.view.View",
+            "selected": true
+          }
+        },
+        {
+          "content-desc": "Включить плеер",
+          "ancestor": {
+            "class": "android.view.View",
+            "enabled": true,
+            "clickable": true
+          }
+        },
+        {
+          "text": "Иже от Отца рожденнаго прежде всех век."
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.3",
+        "timezone": "Europe/Moscow",
+        "density": "Physical density: 420"
+      }
+    },
+    {
+      "id": "landscape-meaning",
+      "mode": "static",
+      "conditions": {
+        "scene": "same landscape reading; Meaning switches and pauses"
+      },
+      "expected": [
+        {
+          "text": "Смысл",
+          "ancestor": {
+            "class": "android.view.View",
+            "selected": true
+          }
+        },
+        {
+          "text": "Что происходит"
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.3",
+        "timezone": "Europe/Moscow",
+        "density": "Physical density: 420"
+      }
+    },
+    {
+      "id": "waiting-context",
+      "mode": "static",
+      "conditions": {
+        "scene": "ordinary portrait; native entry to last stage and real Play reaches Wait; manually paused for static review"
+      },
+      "expected": [
+        {
+          "text": "Дальше слушаем службу"
+        },
+        {
+          "content-desc": "Включить плеер",
+          "ancestor": {
+            "class": "android.view.View",
+            "enabled": true,
+            "clickable": true
+          }
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.0",
+        "timezone": "Europe/Moscow",
+        "density": "Physical density: 420"
+      }
+    },
+    {
+      "id": "end-of-order",
+      "mode": "static",
+      "conditions": {
+        "scene": "ordinary portrait; real monotonic Play reaches End and pauses; no fake time"
+      },
+      "expected": [
+        {
+          "text": "Путеводитель завершен"
+        },
+        {
+          "content-desc": "Включить плеер",
+          "ancestor": {
+            "class": "android.view.View",
+            "enabled": false,
+            "clickable": true
+          }
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.0",
+        "timezone": "Europe/Moscow",
+        "density": "Physical density: 420"
+      }
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "run_id": "75355aadc8cc459b9ea051e402344a79",
+  "case_id": "waiting-context",
+  "apk_sha256": "ef1ad12a47130e4ef526fbfb31b968734d9680053d69e3033d4d3a6efd650adb",
+  "selector": {
+    "text": "Сохраненное чтение"
+  },
+  "expected": [
+    {
+      "content-desc": "Действия со службой"
+    }
+  ],
+  "status": "PASS",
+  "coordinates": [
+    540,
+    1718
+  ],
+  "artifacts": [
+    {
+      "path": "actions/1794155920077619000-b3664dc9/after.xml",
+      "sha256": "f85033f79b5871fb1436ad97bbb4a3852a1ba21bd85c23180b3056a5408be9c6",
+      "bytes": 22451
+    },
+    {
+      "path": "actions/1794155920077619000-b3664dc9/before.xml",
+      "sha256": "4fb2ac2b30547d847c9fdbe8fa06e8bcc4680d554a995e322cd9459ec5fdeebe",
+      "bytes": 14952
+    }
+  ]
+}

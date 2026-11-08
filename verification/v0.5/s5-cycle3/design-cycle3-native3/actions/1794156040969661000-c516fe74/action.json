@@ -1,0 +1,30 @@
+{
+  "run_id": "75355aadc8cc459b9ea051e402344a79",
+  "case_id": "compact-reading-details",
+  "apk_sha256": "ef1ad12a47130e4ef526fbfb31b968734d9680053d69e3033d4d3a6efd650adb",
+  "selector": {
+    "text": "Открытое чтение"
+  },
+  "expected": [
+    {
+      "text": "Тексты на 8 ноября 2026"
+    }
+  ],
+  "status": "PASS",
+  "coordinates": [
+    451,
+    305
+  ],
+  "artifacts": [
+    {
+      "path": "actions/1794156040969661000-c516fe74/after.xml",
+      "sha256": "a81c5d2f70bae8d2897281613333557a02a6dfb611897935408ccb7847378a9c",
+      "bytes": 6380
+    },
+    {
+      "path": "actions/1794156040969661000-c516fe74/before.xml",
+      "sha256": "d19dd948e233e8f86f7f9a19157276fea703b5281be3e70991de949eaed1d1ee",
+      "bytes": 4392
+    }
+  ]
+}

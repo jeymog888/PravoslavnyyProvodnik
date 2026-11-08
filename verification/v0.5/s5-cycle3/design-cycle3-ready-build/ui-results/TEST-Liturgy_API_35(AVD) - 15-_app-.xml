@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" tests="15" failures="1" errors="0" skipped="0" time="54.589" timestamp="2026-11-08T16:15:25" hostname="localhost">
+  <properties>
+    <property name="device" value="Liturgy_API_35(AVD) - 15" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="timeoutEmptyResultsAndOldCachedResultsRemainDistinct" classname="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" time="10.08" />
+  <testcase name="longMapNamesAndAddressesReachTheFormAndStorageUnshortened" classname="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" time="2.37" />
+  <testcase name="searchesOnlyAfterAnActionAndSavesOnlyAfterReviewingTheSelectedCityAndTimeZone" classname="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" time="3.814" />
+  <testcase name="leavingTheForegroundCancelsSearchAndReturningDoesNotRestartIt" classname="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" time="1.725">
+    <failure>java.lang.AssertionError: Assert failed: The component is not displayed!
+at androidx.compose.ui.test.AssertionsKt.assertIsDisplayed(Assertions.kt:34)
+at ru.liturgyguide.ui.ChurchDiscoveryScreenTest.leavingTheForegroundCancelsSearchAndReturningDoesNotRestartIt(ChurchDiscoveryScreenTest.kt:153)
+</failure>
+  </testcase>
+  <testcase name="cancellingARequestIgnoresItsLateResultAndLeavesManualNavigationAvailable" classname="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" time="2.577" />
+  <testcase name="filteringAndCancellingImportDoNotSaveAnythingOrStartAnotherNetworkSearch" classname="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" time="4.027" />
+  <testcase name="aSingleTextRetainsItsFullTitleAndTheClarificationAction" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="2.799" />
+  <testcase name="scriptureAndAnEmptyTextStageKeepClarificationWithoutALanguageMenu" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="3.599" />
+  <testcase name="narrowScheduleKeepsBothDayLabelsOnOneLineAndSelectable" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="1.73" />
+  <testcase name="aTallNarrowScreenKeepsReadableActionsWithoutReducingThePrayerSize" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="1.976" />
+  <testcase name="landscapeKeepsTabsOnOneLineAndLeavesSpaceForTheRequestedPrayerSize" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="7.661" />
+  <testcase name="largeTextNavigationLeavesSpaceForChurchAndSettingsWithoutScalingTheirContent" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="2.098" />
+  <testcase name="aTallScreenAtTheHeaderWidthBoundaryKeepsItsReadingArea" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="1.855" />
+  <testcase name="narrowLargeTextKeepsNamesReadableAndCancellationPreservesThePhrase" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="3.786" />
+  <testcase name="ordinaryFooterKeepsSeparateTargetsAtTheNarrowWidthAndFastestSpeed" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="2.971" />
+</testsuite>

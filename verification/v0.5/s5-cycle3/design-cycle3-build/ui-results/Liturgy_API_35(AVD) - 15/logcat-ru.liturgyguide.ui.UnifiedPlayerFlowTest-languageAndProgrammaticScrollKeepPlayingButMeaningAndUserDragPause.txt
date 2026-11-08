@@ -1,0 +1,227 @@
+11-08 18:52:20.111 26577 26592 I TestRunner: started: languageAndProgrammaticScrollKeepPlayingButMeaningAndUserDragPause(ru.liturgyguide.ui.UnifiedPlayerFlowTest)
+11-08 18:52:20.133 26577 26592 D IdlingRegistry: Registering idling resources: [androidx.compose.ui.test.EspressoLink@618ed98]
+11-08 18:52:20.135 26577 26592 W Settings: Setting always_finish_activities has moved from android.provider.Settings.System to android.provider.Settings.Global, returning read-only value.
+11-08 18:52:20.162   540  1634 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10287, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 18:52:20.173   772   865 D SplashScreenView: Build android.window.SplashScreenView{a7ec4c3 V.E...... ......ID 0,0-0,0}
+11-08 18:52:20.173   772   865 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-08 18:52:20.173   772   865 D SplashScreenView: Branding: view: android.view.View{9bf6140 G.ED..... ......I. 0,0-0,0 #1020503 android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-08 18:52:20.195  1210  1210 D SearchTargetUtil: query= size=0
+11-08 18:52:20.198  1210  1210 W SplitSelectStateCtor: Missing session instanceIds
+11-08 18:52:20.198  1210  1210 D StatsLog: LAUNCHER_SPLIT_SELECTION_EXIT_INTERRUPTED
+11-08 18:52:20.202  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=1711, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10008000 cmp=ru.liturgyguide/androidx.activity.ComponentActivity }
+11-08 18:52:20.235   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 18:52:20.256 26577 26577 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@646bedc in: PRE_ON_CREATE
+11-08 18:52:20.256 26577 26577 V ActivityScenario: Activity lifecycle changed event received but ignored because the reported transition was not ON_CREATE while the last known transition was PRE_ON_CREATE
+11-08 18:52:20.272 26577 26577 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@646bedc in: CREATED
+11-08 18:52:20.274 26577 26577 V ActivityScenario: Update currentActivityStage to CREATED, currentActivity=androidx.activity.ComponentActivity@646bedc
+11-08 18:52:20.275 26577 26577 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@646bedc in: STARTED
+11-08 18:52:20.275 26577 26577 V ActivityScenario: Update currentActivityStage to STARTED, currentActivity=androidx.activity.ComponentActivity@646bedc
+11-08 18:52:20.283 26577 26577 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@646bedc in: RESUMED
+11-08 18:52:20.284 26577 26577 V ActivityScenario: Update currentActivityStage to RESUMED, currentActivity=androidx.activity.ComponentActivity@646bedc
+11-08 18:52:20.531  1210  1210 D VRI[NexusLauncherActivity]: visibilityChanged oldVisibility=true newVisibility=false
+11-08 18:52:20.545  1210  1210 D NexusLauncherModelDelegate: notifySmartspaceEvent: SmartspaceTargetEvent{mSmartspaceTarget=null, mSmartspaceActionId='null', mEventType=7}
+11-08 18:52:20.656   540   565 W ziparchive: Unable to open '/data/app/~~rIBsjHDqKvm5PX7lmhsoww==/ru.liturgyguide-ZoPSkPBXR5Vz-Z9p1NtqVA==/base.dm': No such file or directory
+11-08 18:52:20.657   540   565 I ActivityTaskManager: Displayed ru.liturgyguide/androidx.activity.ComponentActivity for user 0: +437ms
+11-08 18:52:20.658  1210  1210 D BaseDepthController: setSurface:
+11-08 18:52:20.658  1210  1210 D BaseDepthController: 	mWaitingOnSurfaceValidity: false
+11-08 18:52:20.658  1210  1210 D BaseDepthController: 	mSurface: null
+11-08 18:52:20.658  1210  1210 D BaseDepthController: mSurface is null and mCurrentBlur is: 0
+11-08 18:52:20.658  1210  1210 D StateManager: goToState - fromState: Normal, toState: Normal, partial trace:
+11-08 18:52:20.658  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StateManager.moveToRestState(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:4)
+11-08 18:52:20.658  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StateManager.moveToRestState(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:1)
+11-08 18:52:20.658  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StatefulActivity.onStop(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:34)
+11-08 18:52:20.658  1210  1210 D StatsLog: LAUNCHER_ONSTOP
+11-08 18:52:20.664  1210  1578 D OneSearchSuggestProvider: Shut down the binder channel
+11-08 18:52:20.666  1210 21950 I IPCThreadState: oneway function results for code 2 on binder at 0xb4000077d4150740 will be dropped but finished with status UNKNOWN_TRANSACTION
+11-08 18:52:20.666  1210  1210 D StatsLog: LAUNCHER_GOOGLE_SEARCH_RESTORE_LIST_SIZE_AFTER_ACTIVITY_RESTART
+11-08 18:52:20.749   772   855 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@a5173ca
+11-08 18:52:20.750   540  1630 W InputManager-JNI: Input channel object 'a4a6ac1 Splash Screen ru.liturgyguide (client)' was disposed without first being removed with the input manager!
+11-08 18:52:20.756   540   653 I ImeTracker: ru.liturgyguide:95ceec26: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 18:52:20.756   540   653 I ImeTracker: ru.liturgyguide:95ceec26: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 18:52:20.932  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 18:52:20.934  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 18:52:20.934  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 18:52:20.934  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 18:52:20.936  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 18:52:20.938  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/app/Drive/Drive.apk' with 1 weak references
+11-08 18:52:20.942  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/app/Maps/Maps.apk' with 1 weak references
+11-08 18:52:20.946  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/app/ModuleMetadataGoogle/ModuleMetadataGoogle.apk' with 1 weak references
+11-08 18:52:20.947  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/overlay/DisplayCutoutEmulationEmu01/DisplayCutoutEmulationEmu01Overlay.apk' with 1 weak references
+11-08 18:52:20.947  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system_ext/priv-app/AvatarPickerGoogle/AvatarPickerGoogle.apk' with 1 weak references
+11-08 18:52:20.948  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/app/MarkupGoogle_v2/MarkupGoogle_v2.apk' with 1 weak references
+11-08 18:52:20.949  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/NetworkStackGoogle/NetworkStackGoogle.apk' with 1 weak references
+11-08 18:52:20.953  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /apex/com.android.rkpd/priv-app/rkpdapp.google@350820300/rkpdapp.google.apk' with 1 weak references
+11-08 18:52:20.956  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/app/GoogleContacts/GoogleContacts.apk' with 1 weak references
+11-08 18:52:20.975 26577 26577 D AutofillManager: Fill dialog is enabled:false, hints=[password, passwordAuto, creditCardNumber, creditCardSecurityCode, creditCardExpirationDate]
+11-08 18:52:20.979  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/Telecom/Telecom.apk' with 1 weak references
+11-08 18:52:20.979  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '/product/overlay/Telecom__sdk_gphone64_arm64__auto_generated_rro_product.apk' with 1 weak references
+11-08 18:52:20.979  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/app/KeyChain/KeyChain.apk' with 1 weak references
+11-08 18:52:20.980  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~giBU8qDQ-EjnrxydmpBEEw==/com.android.chrome-UA2QpxFKMXsIS6VUHTccNQ==/Chrome.apk' with 1 weak references
+11-08 18:52:20.981  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~RTFAO73WKSB2VgXTeuEy9g==/com.google.android.trichromelibrary_636771932-mF6G_j2B9p075jQM2lhAkg==/TrichromeLibrary.apk' with 1 weak references
+11-08 18:52:20.983  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/GooglePackageInstaller/GooglePackageInstaller.apk' with 1 weak references
+11-08 18:52:20.986  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/app/PixelThemesStub/PixelThemesStub.apk' with 1 weak references
+11-08 18:52:20.991  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system_ext/priv-app/GoogleServicesFramework/GoogleServicesFramework.apk' with 1 weak references
+11-08 18:52:20.991  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/TagGoogle/TagGoogle.apk' with 1 weak references
+11-08 18:52:20.991  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/app/GoogleTTS/GoogleTTS.apk' with 1 weak references
+11-08 18:52:20.991  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/CallLogBackup/CallLogBackup.apk' with 1 weak references
+11-08 18:52:20.992  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/priv-app/PartnerSetupPrebuilt/PartnerSetupPrebuilt.apk' with 1 weak references
+11-08 18:52:20.992  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/app/CameraExtensionsProxy/CameraExtensionsProxy.apk' with 1 weak references
+11-08 18:52:20.992  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/app/NexusWallpapersStubPrebuilt2018/NexusWallpapersStubPrebuilt2018.apk' with 1 weak references
+11-08 18:52:20.992  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system_ext/priv-app/NexusLauncherRelease/NexusLauncherRelease.apk' with 1 weak references
+11-08 18:52:20.993  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/app/CarrierDefaultApp/CarrierDefaultApp.apk' with 1 weak references
+11-08 18:52:20.993  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/CredentialManager/CredentialManager.apk' with 1 weak references
+11-08 18:52:20.993  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/overlay/FontNotoSerifSource/FontNotoSerifSourceOverlay.apk' with 1 weak references
+11-08 18:52:20.993  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/DeviceAsWebcam/DeviceAsWebcam.apk' with 1 weak references
+11-08 18:52:20.993  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/ProxyHandler/ProxyHandler.apk' with 1 weak references
+11-08 18:52:20.993  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /apex/com.android.permission/priv-app/GoogleSafetyCenterResources@350820360/GoogleSafetyCenterResources.apk' with 1 weak references
+11-08 18:52:20.994  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/overlay/DisplayCutoutEmulationWaterfall/DisplayCutoutEmulationWaterfallOverlay.apk' with 1 weak references
+11-08 18:52:20.994  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/IntentResolver/IntentResolver.apk' with 1 weak references
+11-08 18:52:20.994  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/overlay/TransparentNavigationBar/TransparentNavigationBarOverlay.apk' with 1 weak references
+11-08 18:52:20.994  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/E2eeContactKeysProvider/E2eeContactKeysProvider.apk' with 1 weak references
+11-08 18:52:20.994  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /apex/com.android.tethering/priv-app/ServiceConnectivityResourcesGoogle@350820300/ServiceConnectivityResourcesGoogle.apk' with 1 weak references
+11-08 18:52:20.994  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '/vendor/overlay/goldfish_overlay_connectivity_google.apk' with 1 weak references
+11-08 18:52:20.994  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system_ext/priv-app/GoogleFeedback/GoogleFeedback.apk' with 1 weak references
+11-08 18:52:21.013  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/app/GooglePrintRecommendationService/GooglePrintRecommendationService.apk' with 1 weak references
+11-08 18:52:21.013  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/app/Photos/Photos.apk' with 1 weak references
+11-08 18:52:21.014  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/app/CalendarGooglePrebuilt/CalendarGooglePrebuilt.apk' with 1 weak references
+11-08 18:52:21.015  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/ManagedProvisioning/ManagedProvisioning.apk' with 1 weak references
+11-08 18:52:21.015  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/SoundPicker/SoundPicker.apk' with 1 weak references
+11-08 18:52:21.015  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/DocumentsUIGoogle/DocumentsUIGoogle.apk' with 1 weak references
+11-08 18:52:21.015  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/app/PrebuiltGoogleTelemetryTvp/PrebuiltGoogleTelemetryTvp.apk' with 1 weak references
+11-08 18:52:21.015  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system_ext/priv-app/MultiDisplayProvider/MultiDisplayProvider.apk' with 1 weak references
+11-08 18:52:21.016  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/DeviceDiagnostics/DeviceDiagnostics.apk' with 1 weak references
+11-08 18:52:21.016  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '/product/overlay/DeviceDiagnostics__sdk_gphone64_arm64__auto_generated_rro_product.apk' with 1 weak references
+11-08 18:52:21.016  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/overlay/NotesRoleEnabled/NotesRoleEnabledOverlay.apk' with 1 weak references
+11-08 18:52:21.016  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/LiveWallpapersPicker/LiveWallpapersPicker.apk' with 1 weak references
+11-08 18:52:21.016  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/app/PrebuiltGoogleAdservicesTvp/PrebuiltGoogleAdservicesTvp.apk' with 1 weak references
+11-08 18:52:21.016  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /apex/com.android.healthfitness/priv-app/HealthConnectControllerGoogle@350820300/HealthConnectControllerGoogle.apk' with 1 weak references
+11-08 18:52:21.016  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~rIBsjHDqKvm5PX7lmhsoww==/ru.liturgyguide-ZoPSkPBXR5Vz-Z9p1NtqVA==/base.apk' with 1 weak references
+11-08 18:52:21.017  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/priv-app/KidsSupervisionStub/KidsSupervisionStub.apk' with 1 weak references
+11-08 18:52:21.017  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system_ext/priv-app/StorageManager/StorageManager.apk' with 1 weak references
+11-08 18:52:21.017  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '/product/overlay/StorageManager__sdk_gphone64_arm64__auto_generated_rro_product.apk' with 1 weak references
+11-08 18:52:21.017  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/app/BookmarkProvider/BookmarkProvider.apk' with 1 weak references
+11-08 18:52:21.017  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system_ext/priv-app/SettingsGoogle/SettingsGoogle.apk' with 1 weak references
+11-08 18:52:21.018   772   941 D EGL_emulation: app_time_stats: avg=258.66ms min=38.33ms max=587.09ms count=4
+11-08 18:52:21.020  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '/product/overlay/SettingsGoogle__sdk_gphone64_arm64__auto_generated_rro_product.apk' with 1 weak references
+11-08 18:52:21.021  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/priv-app/SettingsIntelligenceGooglePrebuilt/SettingsIntelligenceGooglePrebuilt.apk' with 1 weak references
+11-08 18:52:21.021  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /apex/com.android.uwb/priv-app/ServiceUwbResourcesGoogle@350820300/ServiceUwbResourcesGoogle.apk' with 1 weak references
+11-08 18:52:21.021  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /apex/com.android.wifi/priv-app/ServiceWifiResourcesGoogle@350820300/ServiceWifiResourcesGoogle.apk' with 1 weak references
+11-08 18:52:21.022  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system_ext/priv-app/ThemePicker/ThemePicker.apk' with 1 weak references
+11-08 18:52:21.022  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system_ext/priv-app/WallpaperPickerGoogleRelease/WallpaperPickerGoogleRelease.apk' with 1 weak references
+11-08 18:52:21.022  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/priv-app/OdadPrebuilt/OdadPrebuilt.apk' with 1 weak references
+11-08 18:52:21.022  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/TeleService/TeleService.apk' with 1 weak references
+11-08 18:52:21.027  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '/vendor/overlay/TeleService__sdk_gphone64_arm64__auto_generated_rro_vendor.apk' with 1 weak references
+11-08 18:52:21.027  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '/product/overlay/TeleService__sdk_gphone64_arm64__auto_generated_rro_product.apk' with 1 weak references
+11-08 18:52:21.027  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/Shell/Shell.apk' with 1 weak references
+11-08 18:52:21.027  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/BlockedNumberProvider/BlockedNumberProvider.apk' with 1 weak references
+11-08 18:52:21.027  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/UserDictionaryProvider/UserDictionaryProvider.apk' with 1 weak references
+11-08 18:52:21.027  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system_ext/app/EmergencyInfoGoogleNoUi/EmergencyInfoGoogleNoUi.apk' with 1 weak references
+11-08 18:52:21.027  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk' with 1 weak references
+11-08 18:52:21.027  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/FusedLocation/FusedLocation.apk' with 1 weak references
+11-08 18:52:21.028  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system_ext/priv-app/SystemUIGoogle/SystemUIGoogle.apk' with 1 weak references
+11-08 18:52:21.028  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '/vendor/overlay/SystemUIGoogle__sdk_gphone64_arm64__auto_generated_rro_vendor.apk' with 1 weak references
+11-08 18:52:21.028  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '/product/overlay/SystemUIGoogle__sdk_gphone64_arm64__auto_generated_rro_product.apk' with 1 weak references
+11-08 18:52:21.028  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '/product/overlay/SystemUIEmulationPixel7/SystemUIEmulationPixel7Overlay.apk' with 1 weak references
+11-08 18:52:21.028  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/app/YouTubeMusicPrebuilt/YouTubeMusicPrebuilt.apk' with 1 weak references
+11-08 18:52:21.028  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/app/BluetoothMidiService/BluetoothMidiService.apk' with 1 weak references
+11-08 18:52:21.028  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/app/Traceur/Traceur.apk' with 1 weak references
+11-08 18:52:21.028  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /apex/com.android.cellbroadcast/priv-app/GoogleCellBroadcastApp@350820300/GoogleCellBroadcastApp.apk' with 1 weak references
+11-08 18:52:21.029  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /system/priv-app/ContactsProvider/ContactsProvider.apk' with 1 weak references
+11-08 18:52:21.029  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '/product/overlay/ContactsProvider__sdk_gphone64_arm64__auto_generated_rro_product.apk' with 1 weak references
+11-08 18:52:21.029  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/app/LatinIMEGooglePrebuilt/LatinIMEGooglePrebuilt.apk' with 1 weak references
+11-08 18:52:21.029  1297  1310 W .apps.wellbeing: ApkAssets: Deleting an ApkAssets object '<empty> and /product/priv-app/GoogleRestorePrebuilt-v526684/GoogleRestorePrebuilt-v526684.apk' with 1 weak references
+11-08 18:52:21.125 26577 26581 I ru.liturgyguide: Compiler allocated 8448KB to compile void ru.liturgyguide.ui.MainActivityKt.AppNavigation(ru.liturgyguide.di.AppContainer, java.time.Clock, kotlin.jvm.functions.Function0, androidx.compose.runtime.Composer, int, int)
+11-08 18:52:21.171 26577 26581 I ru.liturgyguide: Compiler allocated 8917KB to compile void ru.liturgyguide.ui.MainActivityKt.AppNavigation(ru.liturgyguide.di.AppContainer, java.time.Clock, kotlin.jvm.functions.Function0, androidx.compose.runtime.Composer, int, int)
+11-08 18:52:21.193 26577 26581 I ru.liturgyguide: Compiler allocated 4236KB to compile void ru.liturgyguide.ui.MainActivityKt$AppNavigation$7$1$1$1.invoke(androidx.compose.runtime.Composer, int)
+11-08 18:52:21.306 26577 26582 I ru.liturgyguide: Background concurrent mark compact GC freed 9104KB AllocSpace bytes, 18(720KB) LOS objects, 49% free, 7999KB/15MB, paused 280us,4.762ms total 205.571ms
+11-08 18:52:21.421 26577 26577 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+11-08 18:52:21.421 26577 26577 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+11-08 18:52:21.720 26577 26577 E FrameTracker: force finish cuj, time out: J<IME_INSETS_SHOW_ANIMATION::0@1@ru.liturgyguide>
+11-08 18:52:21.812 26577 26577 E FrameTracker: force finish cuj, time out: J<IME_INSETS_HIDE_ANIMATION::1@1@ru.liturgyguide>
+11-08 18:52:22.319 26577 26594 D EGL_emulation: app_time_stats: avg=137.85ms min=11.94ms max=803.61ms count=13
+11-08 18:52:22.785   772   941 D EGL_emulation: app_time_stats: avg=437.52ms min=1.20ms max=1509.42ms count=4
+11-08 18:52:22.949   540  1630 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10288, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 18:52:22.969   772   865 D SplashScreenView: Build android.window.SplashScreenView{6aea2b8 V.E...... ......ID 0,0-0,0}
+11-08 18:52:22.969   772   865 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-08 18:52:22.969   772   865 D SplashScreenView: Branding: view: android.view.View{3f8891 G.ED..... ......I. 0,0-0,0 #1020503 android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-08 18:52:22.970  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=1712, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10000000 cmp=ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity }
+11-08 18:52:22.976 26577 26577 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@646bedc in: PAUSED
+11-08 18:52:22.977 26577 26577 V ActivityScenario: Update currentActivityStage to PAUSED, currentActivity=androidx.activity.ComponentActivity@646bedc
+11-08 18:52:22.985   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 18:52:23.007   345   419 I netd    : tetherGetStats() -> {[]} <15.38ms>
+11-08 18:52:23.084  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=776, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10000100 cmp=com.google.android.apps.nexuslauncher/.NexusLauncherActivity }
+11-08 18:52:23.100 26616 26633 I EGL_emulation: Opening libGLESv1_CM_emulation.so
+11-08 18:52:23.102 26616 26633 I EGL_emulation: Opening libGLESv2_emulation.so
+11-08 18:52:23.119 26616 26633 W HWUI    : Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+11-08 18:52:23.119 26616 26633 W HWUI    : Failed to initialize 101010-2 format, error = EGL_SUCCESS
+11-08 18:52:23.181  1210  1210 D VRI[NexusLauncherActivity]: visibilityChanged oldVisibility=false newVisibility=true
+11-08 18:52:23.181  1210  1210 D StatsLog: LAUNCHER_ONRESUME
+11-08 18:52:23.185  1210  1210 D NexusLauncherModelDelegate: notifySmartspaceEvent: SmartspaceTargetEvent{mSmartspaceTarget=null, mSmartspaceActionId='null', mEventType=6}
+11-08 18:52:23.197   540  1371 W AppSearchIcing: icing-search-engine.cc:321: Error: 5, Message: Document (com.google.android.googlequicksearchbox$OneSearchZeroStateGoogleSuggestions/default, zp) not found.
+11-08 18:52:23.214  1210  1578 D OneSearchSuggestProvider: AppSearch 0-state cache not available, fallback to AGA
+11-08 18:52:23.214  1210  1578 D OneSearchSuggestProvider: java.util.concurrent.CompletionException: java.util.NoSuchElementException: No value present
+11-08 18:52:23.214  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:308)
+11-08 18:52:23.214  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:323)
+11-08 18:52:23.214  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture$UniAccept.tryFire(CompletableFuture.java:684)
+11-08 18:52:23.214  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:486)
+11-08 18:52:23.214  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2138)
+11-08 18:52:23.214  1210  1578 D OneSearchSuggestProvider: 	at com.google.android.apps.nexuslauncher.allapps.E0.onResult(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:67)
+11-08 18:52:23.214  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1.lambda$onResult$0(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:144)
+11-08 18:52:23.214  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1.$r8$lambda$CEk3q8sDAQVhU3rQwVueB8FAj_M(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:1)
+11-08 18:52:23.214  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1$$ExternalSyntheticLambda0.run(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:22)
+11-08 18:52:23.214  1210  1578 D OneSearchSuggestProvider: 	at android.os.Handler.handleCallback(Handler.java:959)
+11-08 18:52:23.214  1210  1578 D OneSearchSuggestProvider: 	at android.os.Handler.dispatchMessage(Handler.java:100)
+11-08 18:52:23.214  1210  1578 D OneSearchSuggestProvider: 	at android.os.Looper.loopOnce(Looper.java:232)
+11-08 18:52:23.214  1210  1578 D OneSearchSuggestProvider: 	at android.os.Looper.loop(Looper.java:317)
+11-08 18:52:23.214  1210  1578 D OneSearchSuggestProvider: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+11-08 18:52:23.214  1210  1578 D OneSearchSuggestProvider: Caused by: java.util.NoSuchElementException: No value present
+11-08 18:52:23.214  1210  1578 D OneSearchSuggestProvider: 	at java.util.Optional.get(Optional.java:143)
+11-08 18:52:23.214  1210  1578 D OneSearchSuggestProvider: 	at com.google.android.apps.nexuslauncher.allapps.E0.onResult(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:28)
+11-08 18:52:23.214  1210  1578 D OneSearchSuggestProvider: 	... 8 more
+11-08 18:52:23.215  1210  1236 D QuickstepModelDelegate: notifyAppTargetEvent action=1 launchLocation=workspace/0/[-1,-1]/[1,1]
+11-08 18:52:23.217  1210  1578 D OneSearchSuggestProvider: Created the binder channel successfully for end point service =com.google.android.apps.search.googleapp.search.suggest.plugins.onesearch.server.OneSearchSuggestService , mChannel=i1{delegate=f{logId=1829, target=directaddress:///AndroidComponentAddress%5BIntent%20%7B%20act=grpc.io.action.BIND%20cmp=com.google.android.googlequicksearchbox/com.google.android.apps.search.googleapp.search.suggest.plugins.onesearch.server.OneSearchSuggestService%20%7D%5D}} , mOneSearchConnection=l2.Z@7de9a98
+11-08 18:52:23.224  1330  1582 I AiAiEcho: Predicting[0]:  [CONTEXT sampling_count=5 ]
+11-08 18:52:23.224  1330  1582 I AiAiEcho: EchoTargets:
+11-08 18:52:23.224  1330  1582 I AiAiEcho: Filtered by AiAi flag check:
+11-08 18:52:23.224  1330  1582 I AiAiEcho: [CONTEXT ratelimit_period="10 SECONDS" ]
+11-08 18:52:23.225  1330  1582 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata:  [CONTEXT ratelimit_period="10 SECONDS" ]
+11-08 18:52:23.225  1210  1210 D BaseDepthController: setSurface:
+11-08 18:52:23.225  1210  1210 D BaseDepthController: 	mWaitingOnSurfaceValidity: false
+11-08 18:52:23.225  1210  1210 D BaseDepthController: 	mSurface: Surface(name=com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity)/@0x2913254
+11-08 18:52:23.226  1330  1582 I AiAiEcho: #remoteViewsTwiddler: feature disabled.
+11-08 18:52:23.254  1330  1582 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface home with targets# 0 (types=[])
+11-08 18:52:23.260  1441  1441 I A       : (REDACTED) Created gRPC endpoint for service %s
+11-08 18:52:23.310  1210  1210 D SsBaseTemplateCard: No text view can be set up
+11-08 18:52:23.311  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 18:52:23.311  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 18:52:23.311  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 18:52:23.311  1210  1210 I SsBaseTemplateCard: Secondary card pane is null
+11-08 18:52:23.332  1210  1210 D StateManager: createAtomicAnimation - fromState: Background, toState: Normal, partial trace:
+11-08 18:52:23.332  1210  1210 D StateManager: 	at com.android.quickstep.util.WorkspaceRevealAnim.prepareToAnimate(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:22)
+11-08 18:52:23.332  1210  1210 D StateManager: 	at com.android.quickstep.util.WorkspaceRevealAnim.<init>(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:11)
+11-08 18:52:23.332  1210  1210 D StateManager: 	at com.android.launcher3.QuickstepTransitionManager.createWallpaperOpenAnimations(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:735)
+11-08 18:52:23.396  1210  1443 D EGL_emulation: app_time_stats: avg=891.65ms min=126.13ms max=2835.67ms count=4
+11-08 18:52:23.404 26616 26616 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@8af13af
+11-08 18:52:23.436   540  1637 W InputManager-JNI: Input channel object '89df526 ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity (client)' was disposed without first being removed with the input manager!
+11-08 18:52:23.451  1210  1210 D SearchTargetUtil: query= size=0
+11-08 18:52:23.465   540   653 I ImeTracker: com.google.android.apps.nexuslauncher:26ff37b8: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 18:52:23.465   540   653 I ImeTracker: com.google.android.apps.nexuslauncher:26ff37b8: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 18:52:23.467   540  1628 W InputManager-JNI: Input channel object 'a1c5d13 Splash Screen ru.liturgyguide.test (client)' was disposed without first being removed with the input manager!
+11-08 18:52:23.549  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 18:52:23.554 26577 26577 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@646bedc in: STOPPED
+11-08 18:52:23.555 26577 26577 V ActivityScenario: Update currentActivityStage to STOPPED, currentActivity=androidx.activity.ComponentActivity@646bedc
+11-08 18:52:23.573  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 18:52:23.576  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=com.google.android.apps.nexuslauncher, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 18:52:23.595  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 18:52:23.596  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 18:52:23.627   772   855 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@b073264
+11-08 18:52:23.661  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=1712
+11-08 18:52:23.661  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=1712
+11-08 18:52:23.666 26577 26577 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@646bedc in: DESTROYED
+11-08 18:52:23.666 26577 26577 V ActivityScenario: Update currentActivityStage to DESTROYED, currentActivity=null
+11-08 18:52:23.667 26577 26577 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@3889e5e
+11-08 18:52:23.699   540  1628 W InputManager-JNI: Input channel object '7b30bc0 ru.liturgyguide/androidx.activity.ComponentActivity (client)' was disposed without first being removed with the input manager!
+11-08 18:52:23.705  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=1711
+11-08 18:52:23.705  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=1711
+11-08 18:52:23.708 26577 26592 D IdlingRegistry: Unregistering idling resources: [androidx.compose.ui.test.EspressoLink@618ed98]
+11-08 18:52:23.708 26577 26592 I TestRunner: finished: languageAndProgrammaticScrollKeepPlayingButMeaningAndUserDragPause(ru.liturgyguide.ui.UnifiedPlayerFlowTest)

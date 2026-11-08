@@ -19,11 +19,16 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.LocaleList
+import androidx.compose.ui.text.style.Hyphens
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
@@ -31,6 +36,12 @@ import androidx.compose.ui.unit.sp
 import ru.liturgyguide.service.*
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+
+private data class OpenReadingDetails(val reading: ActiveServicePlayback, val restored: Boolean)
+
+private fun TextStyle.readingParagraph() = copy(
+    hyphens = Hyphens.Auto, lineBreak = LineBreak.Paragraph, localeList = LocaleList("ru")
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,15 +53,18 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
     val reading = player.reading ?: return
     val generation = player.generation
     val config = LocalConfiguration.current
-    val fontScale = LocalDensity.current.fontScale
+    val outerDensity = LocalDensity.current
+    val fontScale = outerDensity.fontScale
     val landscape = config.screenHeightDp < 480
     val compact = landscape || (config.screenHeightDp < 720 && fontScale > 1.2f)
     val compactControls = compact || fontScale > 1.5f
-    val separateClarify = !landscape && config.screenWidthDp < 400 && fontScale > 1.5f
+    val clarifyScaleLimit = if (!landscape && config.screenWidthDp < 400 && fontScale > 1.5f) 1.15f else 1.5f
+    val clarifyDensity = Density(outerDensity.density, fontScale.coerceAtMost(clarifyScaleLimit))
     var meaning by rememberSaveable { mutableStateOf(false) }
     var menu by remember { mutableStateOf(false) }
     var tracksOpen by remember { mutableStateOf(false) }
     var tempoOpen by remember { mutableStateOf(false) }
+    var details by remember(generation) { mutableStateOf<OpenReadingDetails?>(null) }
     val supportsOriginal = reading.track?.lines?.any { it.original != null } == true
     val original = preferredOriginal && supportsOriginal
     val selectedTab = if (meaning) 2 else if (original) 0 else 1
@@ -63,10 +77,41 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
     }
     fun clarify() { if (generation == player.generation) onFindStage() }
     fun openTracks() { if (generation == player.generation) { player.pause(generation); tracksOpen = true } }
+    fun openDetails() {
+        if (generation != player.generation) return
+        player.pause(generation)
+        if (generation != player.generation) return
+        player.reading?.let { details = OpenReadingDetails(it, restoredNotice) }
+    }
     fun nextStage() {
         if (generation != player.generation) return
         player.pause(generation)
         if (index < reading.plan.stages.lastIndex) onStageChange(reading.plan.stages[index + 1].id) else onFinish()
+    }
+
+    details?.let { snapshot ->
+        AlertDialog(onDismissRequest = { details = null }, title = { Text("Открытое чтение") },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    val date = snapshot.reading.plan.serviceDate.format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru")))
+                    Text("Тексты на $date", Modifier.testTag("reading_details_date"), style = MaterialTheme.typography.bodyLarge.readingParagraph())
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("Этап", style = MaterialTheme.typography.bodySmall)
+                        Text(snapshot.reading.stage.name, Modifier.testTag("reading_details_stage"), style = MaterialTheme.typography.titleMedium)
+                    }
+                    snapshot.reading.track?.let { track ->
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text("Текст", style = MaterialTheme.typography.bodySmall)
+                            Text(track.title, Modifier.testTag("reading_details_track"), style = MaterialTheme.typography.bodyLarge.readingParagraph())
+                        }
+                    }
+                    Text(when {
+                        snapshot.restored -> "Сохраненное чтение · уточните момент"
+                        snapshot.reading.isApproximate -> "Примерное место · можно уточнить"
+                        else -> "Чтение на паузе"
+                    }, Modifier.testTag("reading_details_status"), style = MaterialTheme.typography.bodyMedium.readingParagraph())
+                }
+            }, confirmButton = { TextButton(onClick = { details = null }, Modifier.testTag("close_reading_details")) { Text("Закрыть") } })
     }
 
     if (tracksOpen) ModalBottomSheet(onDismissRequest = { tracksOpen = false }) {
@@ -109,20 +154,31 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
                 Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = if (compactControls) 0.dp else 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { if (generation == player.generation) { player.pause(generation); onBack() } }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "К службе") }
                     Column(Modifier.weight(1f).heightIn(min = 48.dp).clickable { if (generation == player.generation) { player.pause(generation); onSelectStage() } }
-                        .testTag("open_map").semantics { role = Role.Button; contentDescription = "Порядок службы" }
+                        .testTag("open_map").semantics {
+                            role = Role.Button
+                            contentDescription = "Порядок службы"
+                            stateDescription = "${reading.stage.name}, ${index + 1} из ${reading.plan.stages.size}"
+                        }
                         .padding(horizontal = 8.dp, vertical = 4.dp), verticalArrangement = Arrangement.Center) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(reading.stage.name, Modifier.weight(1f, fill = false).testTag("current_stage_title").semantics { heading() },
-                                style = MaterialTheme.typography.titleMedium, maxLines = if (landscape) 1 else 2, overflow = TextOverflow.Ellipsis)
+                            Text(if (landscape) reading.stage.shortTitle else reading.stage.name,
+                                Modifier.weight(1f, fill = false).testTag("current_stage_title").semantics { heading() },
+                                style = MaterialTheme.typography.titleMedium, maxLines = if (landscape) 1 else Int.MAX_VALUE)
                             Icon(Icons.Default.ExpandMore, null, Modifier.size(18.dp))
                         }
                         if (!compactControls) Text("${index + 1} из ${reading.plan.stages.size} · Порядок", style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    if (!separateClarify) ReaderClarifyButton(::clarify)
+                    if (landscape && (restoredNotice || reading.isApproximate)) PlayerControlScale {
+                        Text("Примерно", Modifier.padding(horizontal = 4.dp)
+                            .testTag(if (restoredNotice) "saved_earlier_notice" else "approximate_notice"),
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
+                    }
                     Box {
                         IconButton(onClick = { menu = true }, Modifier.testTag("player_menu")) { Icon(Icons.Default.MoreHoriz, "Действия со службой") }
                         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                            DropdownMenuItem(text = { Text("Открытое чтение") },
+                                onClick = { menu = false; openDetails() }, modifier = Modifier.testTag("open_reading_details"))
                             DropdownMenuItem(text = { Text(if (dark) "Светлый экран" else "Темный экран") }, onClick = { menu = false; onDarkChange() })
                             DropdownMenuItem(text = { Text("Размер текста и настройки") }, onClick = { menu = false; if (generation == player.generation) { player.pause(generation); onSettings() } })
                             DropdownMenuItem(text = { Text("Тишина на телефоне") }, onClick = { menu = false; if (generation == player.generation) { player.pause(generation); onSoundSettings() } })
@@ -130,25 +186,31 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
                     }
                 }
             }
-            if (!compactControls) NavigationTextScale {
-                val date = reading.plan.serviceDate.format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru")))
-                Text("Тексты на $date", Modifier.padding(horizontal = 24.dp, vertical = 4.dp).testTag("reading_service_date"),
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (restoredNotice || reading.isApproximate) Text(if (restoredNotice) "Сохраненное чтение · уточните момент" else "Примерное место · можно уточнить",
-                    Modifier.fillMaxWidth().clickable(onClick = ::clarify).padding(horizontal = 24.dp, vertical = 4.dp)
-                        .testTag(if (restoredNotice) "saved_earlier_notice" else "approximate_notice"),
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
+            if (!landscape) {
+                if (!compactControls) NavigationTextScale {
+                    val date = reading.plan.serviceDate.format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru")))
+                    Text("Тексты на $date", Modifier.padding(horizontal = 24.dp, vertical = 4.dp).testTag("reading_service_date"),
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if (restoredNotice || reading.isApproximate) PlayerControlScale {
+                    Text(if (compactControls) "Примерно" else if (restoredNotice) "Сохраненное чтение · уточните момент" else "Примерное место · можно уточнить",
+                        Modifier.padding(horizontal = 24.dp, vertical = 2.dp)
+                            .testTag(if (restoredNotice) "saved_earlier_notice" else "approximate_notice"),
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
+                }
             }
             PlayerControlScale {
                 if (landscape) Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    ReaderModes(selectedTab, supportsOriginal, ::selectTab, Modifier.width(300.dp))
-                    ReaderTrackHeader(reading, true, ::openTracks, Modifier.weight(1f))
+                    ReaderModes(selectedTab, supportsOriginal, { value -> selectTab(value) }, Modifier.width(300.dp))
+                    if (reading.track != null) ReaderTrackHeader(reading, true, { openTracks() }, Modifier.weight(1f))
+                    else Spacer(Modifier.weight(1f))
+                    CompositionLocalProvider(LocalDensity provides clarifyDensity) { ReaderClarifyButton({ clarify() }) }
                 } else {
-                    ReaderModes(selectedTab, supportsOriginal, ::selectTab, Modifier.fillMaxWidth().padding(horizontal = 16.dp))
-                    Row(Modifier.fillMaxWidth().padding(horizontal = if (separateClarify) 16.dp else 24.dp), verticalAlignment = Alignment.CenterVertically) {
-                        if (reading.track != null) ReaderTrackHeader(reading, compactControls, ::openTracks, Modifier.weight(1f))
+                    ReaderModes(selectedTab, supportsOriginal, { value -> selectTab(value) }, Modifier.fillMaxWidth().padding(horizontal = 16.dp))
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        if (reading.track != null) ReaderTrackHeader(reading, compactControls, { openTracks() }, Modifier.weight(1f))
                         else Spacer(Modifier.weight(1f))
-                        if (separateClarify) ReaderClarifyButton(::clarify)
+                        CompositionLocalProvider(LocalDensity provides clarifyDensity) { ReaderClarifyButton({ clarify() }) }
                     }
                 }
             }
@@ -156,12 +218,12 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
     }, bottomBar = {
         ReaderFooter(reading, player, generation, textVisible = !meaning, compact = compactControls,
             onPreviousStage = { if (generation == player.generation && index > 0) { player.pause(generation); onStageChange(reading.plan.stages[index - 1].id) } },
-            onNextStage = ::nextStage, onTempo = { if (generation == player.generation) tempoOpen = true })
+            onNextStage = { nextStage() }, onTempo = { if (generation == player.generation) tempoOpen = true })
     }) { padding ->
         if (meaning) ReaderMeaning(reading, missing, Modifier.padding(padding)) { if (generation == player.generation) onOpenSource(it) }
         else Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = RoundedCornerShape(24.dp),
             modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = if (compact) 8.dp else 16.dp, vertical = 8.dp)) {
-            ReaderLyrics(reading, player, generation, original, compact, missing, ::clarify, ::nextStage)
+            ReaderLyrics(reading, player, generation, original, compact, missing, { clarify() }, { nextStage() })
         }
     }
 }
@@ -211,13 +273,14 @@ private fun ReaderTrackHeader(reading: ActiveServicePlayback, compact: Boolean, 
     val content: @Composable RowScope.() -> Unit = {
         Column(Modifier.weight(1f)) {
             Text(label, Modifier.testTag("current_track_title"), style = if (compact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.titleMedium,
-                maxLines = if (compact) 1 else 2, overflow = TextOverflow.Ellipsis)
+                maxLines = 2, overflow = TextOverflow.Ellipsis)
             if (!compact && !repeatsStageTitle) Text(if (track.isScripture) "Чтения дня · ${reading.tracks.count { it.isScripture }}" else kind,
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (reading.tracks.size > 1) Icon(Icons.Default.ExpandMore, null, Modifier.padding(start = 4.dp).size(18.dp))
     }
-    if (reading.tracks.size > 1) TextButton(onClick = onTracks, modifier = modifier.heightIn(min = 48.dp).testTag("choose_track")
+    if (reading.tracks.size > 1) TextButton(onClick = onTracks, shape = RectangleShape,
+        modifier = modifier.heightIn(min = 48.dp).testTag("choose_track")
         .semantics {
             contentDescription = "Выбрать текст: ${track.title}"
             stateDescription = "$position из ${reading.tracks.size}"
@@ -355,6 +418,7 @@ private fun ReaderLyrics(reading: ActiveServicePlayback, player: ServicePlayerSt
                 Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { player.seekLine(requireNotNull(track).id, line.id, generation) }
                     .testTag("lyric_line_$index").semantics { selected = index == current; role = Role.Button },
                 fontSize = textSize.sp, lineHeight = (textSize * 1.4f).sp,
+                style = MaterialTheme.typography.bodyLarge.readingParagraph(),
                 fontWeight = if (index == current) FontWeight.SemiBold else FontWeight.Normal,
                 color = if (index == current) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -387,15 +451,19 @@ private fun ReaderStageProgress(reading: ActiveServicePlayback, player: ServiceP
             }
             else if (end) Text("Это конец порядка в приложении. Ориентируйтесь на происходящее в храме.")
             else {
-                if (reading.track != null) Text("Доступный фрагмент закончился. Переход к следующему этапу будет примерным.", style = MaterialTheme.typography.bodySmall)
-                Text(reading.stage.description, style = MaterialTheme.typography.bodyLarge)
-                Text(reading.stage.meaning, style = MaterialTheme.typography.bodyLarge)
+                if (reading.track != null) Text(
+                    if (reading.stage.id == reading.plan.stages.last().id)
+                        "Доступный фрагмент закончился. Продолжайте слушать заключительные молитвы в храме."
+                    else "Доступный фрагмент закончился. Переход к следующему этапу будет примерным.",
+                    style = MaterialTheme.typography.bodySmall.readingParagraph())
+                Text(reading.stage.description, style = MaterialTheme.typography.bodyLarge.readingParagraph())
+                Text(reading.stage.meaning, style = MaterialTheme.typography.bodyLarge.readingParagraph())
             }
             reading.stage.cue?.let {
                 Text("Как узнать этот момент", style = MaterialTheme.typography.titleMedium)
-                Text(it, style = MaterialTheme.typography.bodyLarge)
+                Text(it, style = MaterialTheme.typography.bodyLarge.readingParagraph())
             }
-            if (!missing && !end && reading.stage.whatToDo.isNotBlank()) Text(reading.stage.whatToDo, style = MaterialTheme.typography.bodyLarge)
+            if (!missing && !end && reading.stage.whatToDo.isNotBlank()) Text(reading.stage.whatToDo, style = MaterialTheme.typography.bodyLarge.readingParagraph())
             if (!missing) OutlinedButton(onClick = onNextStage, modifier = Modifier.fillMaxWidth().testTag("wait_next_stage")) { Text(if (end) "Закончить чтение" else "Перейти дальше вручную") }
             TextButton(onClick = onClarify, modifier = Modifier.fillMaxWidth()) { Text("Уточнить место по службе") }
         }
@@ -411,18 +479,18 @@ private fun ReaderMeaning(reading: ActiveServicePlayback, missing: Boolean, modi
     LazyColumn(modifier.fillMaxSize().testTag("service_content"), state = scroll,
         contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item { MeaningCard("Что происходит") {
-            Text(reading.stage.description, style = MaterialTheme.typography.bodyLarge)
+            Text(reading.stage.description, style = MaterialTheme.typography.bodyLarge.readingParagraph())
             if (missing) DailyReadingUnavailable(meaning = true)
         } }
-        item { MeaningCard("В чем смысл") { Text(reading.stage.meaning, style = MaterialTheme.typography.bodyLarge) } }
-        reading.stage.cue?.let { cue -> item { MeaningCard("Как узнать этот момент") { Text(cue, style = MaterialTheme.typography.bodyLarge) } } }
-        if (reading.stage.whatToDo.isNotBlank()) item { MeaningCard("На что обратить внимание") { Text(reading.stage.whatToDo, style = MaterialTheme.typography.bodyLarge) } }
+        item { MeaningCard("В чем смысл") { Text(reading.stage.meaning, style = MaterialTheme.typography.bodyLarge.readingParagraph()) } }
+        reading.stage.cue?.let { cue -> item { MeaningCard("Как узнать этот момент") { Text(cue, style = MaterialTheme.typography.bodyLarge.readingParagraph()) } } }
+        if (reading.stage.whatToDo.isNotBlank()) item { MeaningCard("На что обратить внимание") { Text(reading.stage.whatToDo, style = MaterialTheme.typography.bodyLarge.readingParagraph()) } }
         if (track != null && track.explanation.isNotBlank()) item {
             MeaningCard(if (track.isScripture) "О чем это чтение" else "Об этом тексте") {
-                Text(track.explanation, Modifier.testTag("track_explanation"), style = MaterialTheme.typography.bodyLarge)
+                Text(track.explanation, Modifier.testTag("track_explanation"), style = MaterialTheme.typography.bodyLarge.readingParagraph())
                 track.contextNote?.let { note ->
                     TextButton(onClick = { showDayNote = !showDayNote }, Modifier.testTag("reading_note_toggle")) { Text("О чтениях этого дня") }
-                    if (showDayNote) Text(note, Modifier.testTag("reading_day_note"), style = MaterialTheme.typography.bodySmall)
+                    if (showDayNote) Text(note, Modifier.testTag("reading_day_note"), style = MaterialTheme.typography.bodySmall.readingParagraph())
                 }
                 track.sourceUrl?.let { url -> TextButton(onClick = { onOpenSource(url) }) { Text("Источник текста") } }
             }
@@ -445,5 +513,5 @@ private fun MeaningCard(title: String, content: @Composable ColumnScope.() -> Un
 private fun DailyReadingUnavailable(meaning: Boolean = false) {
     Text(if (meaning) "Текста чтения на эту дату пока нет. Здесь объясняется этот этап службы"
         else "Чтение на эту дату пока не добавлено. Здесь - только возглас перед чтением", Modifier.testTag("reading_unavailable"),
-        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        style = MaterialTheme.typography.bodySmall.readingParagraph(), color = MaterialTheme.colorScheme.onSurfaceVariant)
 }

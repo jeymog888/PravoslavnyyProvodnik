@@ -1,0 +1,38 @@
+{
+  "run_id": "c6bb21839cd145329d5354fcd67a0966",
+  "case_id": "waiting-context",
+  "apk_sha256": "11d66e15575954c24c53bb9d05ca1f4bfeb8faa434913489fab4820d4c27fad9",
+  "selector": {
+    "text": "Благодарение и завершение"
+  },
+  "expected": [
+    {
+      "text": "Благодарение и завершение"
+    },
+    {
+      "content-desc": "Включить плеер",
+      "ancestor": {
+        "class": "android.view.View",
+        "enabled": true,
+        "clickable": true
+      }
+    }
+  ],
+  "status": "PASS",
+  "coordinates": [
+    540,
+    2140
+  ],
+  "artifacts": [
+    {
+      "path": "actions/1794155389572374000-f1b57223/after.xml",
+      "sha256": "b679634a94fbde4fbcb6b351b7e7c8f21b47b46d543990abeffeedaaac0814ba",
+      "bytes": 22081
+    },
+    {
+      "path": "actions/1794155389572374000-f1b57223/before.xml",
+      "sha256": "c6c878fdfaec58d5c1265b5da6529c4960ebae0cbfff11e7c4581b230dfc4c92",
+      "bytes": 15609
+    }
+  ]
+}

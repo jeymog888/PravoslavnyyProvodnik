@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.service.ReadingContextTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-11-08T16:05:16" hostname="MacBook-Air-Dmitrij.local" time="0.013">
+  <properties/>
+  <testcase name="storage failures return false and do not mutate bookmarks or start a clock" classname="ru.liturgyguide.service.ReadingContextTest" time="0.003"/>
+  <testcase name="suggestion factory checks the original instant against its stated local start before rounding" classname="ru.liturgyguide.service.ReadingContextTest" time="0.002"/>
+  <testcase name="nonstandard JSON and oversized payloads are rejected without throwing" classname="ru.liturgyguide.service.ReadingContextTest" time="0.001"/>
+  <testcase name="wrong preference type and invalid saves preserve unrelated settings" classname="ru.liturgyguide.service.ReadingContextTest" time="0.0"/>
+  <testcase name="restoring after midnight preserves the stored date instead of rebinding it" classname="ru.liturgyguide.service.ReadingContextTest" time="0.001"/>
+  <testcase name="invalid date zone identity and source relationships are rejected" classname="ru.liturgyguide.service.ReadingContextTest" time="0.003"/>
+  <testcase name="manual context captures the parish date rather than UTC or the phone date" classname="ru.liturgyguide.service.ReadingContextTest" time="0.0"/>
+  <testcase name="published start must fall on its stored local date and personal start must use a whole minute" classname="ru.liturgyguide.service.ReadingContextTest" time="0.0"/>
+  <testcase name="a persisted ambiguous DST occurrence cannot bypass the schedule restriction" classname="ru.liturgyguide.service.ReadingContextTest" time="0.001"/>
+  <testcase name="all sources round trip with the accepted date and zone" classname="ru.liturgyguide.service.ReadingContextTest" time="0.001"/>
+  <testcase name="numbers booleans missing duplicate and unknown fields never become a context" classname="ru.liturgyguide.service.ReadingContextTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

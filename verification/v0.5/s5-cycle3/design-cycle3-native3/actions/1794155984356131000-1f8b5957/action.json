@@ -1,0 +1,30 @@
+{
+  "run_id": "75355aadc8cc459b9ea051e402344a79",
+  "case_id": "epistle-full-header",
+  "apk_sha256": "ef1ad12a47130e4ef526fbfb31b968734d9680053d69e3033d4d3a6efd650adb",
+  "selector": {
+    "text": "Сохраненное чтение"
+  },
+  "expected": [
+    {
+      "content-desc": "Действия со службой"
+    }
+  ],
+  "status": "PASS",
+  "coordinates": [
+    540,
+    1445
+  ],
+  "artifacts": [
+    {
+      "path": "actions/1794155984356131000-1f8b5957/after.xml",
+      "sha256": "7e5ae26d2cb7ef26fbb5175215bf5b2313a1cd0cb920fe21f34542ae9030be5b",
+      "bytes": 23055
+    },
+    {
+      "path": "actions/1794155984356131000-1f8b5957/before.xml",
+      "sha256": "91a3476b30020856774df77077d9b9289ff277988b33e2d351892f367f69107e",
+      "bytes": 15354
+    }
+  ]
+}

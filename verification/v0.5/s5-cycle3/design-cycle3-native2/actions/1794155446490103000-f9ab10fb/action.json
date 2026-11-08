@@ -1,0 +1,33 @@
+{
+  "run_id": "c6bb21839cd145329d5354fcd67a0966",
+  "case_id": "end-of-order",
+  "apk_sha256": "11d66e15575954c24c53bb9d05ca1f4bfeb8faa434913489fab4820d4c27fad9",
+  "selector": {
+    "content-desc": "Включить плеер"
+  },
+  "expected": [
+    {
+      "content-desc": "Остановить плеер"
+    },
+    {
+      "text": "1,25×"
+    }
+  ],
+  "status": "PASS",
+  "coordinates": [
+    477,
+    2126
+  ],
+  "artifacts": [
+    {
+      "path": "actions/1794155446490103000-f9ab10fb/after.xml",
+      "sha256": "b559c91b23b4b0db07ca60bad953c7368bbe3d88a866afcec530cbdce5cd6db2",
+      "bytes": 22946
+    },
+    {
+      "path": "actions/1794155446490103000-f9ab10fb/before.xml",
+      "sha256": "b57d7c43169e5174591e0753d0ac230b8a09ba2798ce1037b25cd9cbcec69c43",
+      "bytes": 22938
+    }
+  ]
+}

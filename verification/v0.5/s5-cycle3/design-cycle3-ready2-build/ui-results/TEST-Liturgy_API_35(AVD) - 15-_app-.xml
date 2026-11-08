@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" tests="15" failures="0" errors="0" skipped="0" time="59.558" timestamp="2026-11-08T16:17:42" hostname="localhost">
+  <properties>
+    <property name="device" value="Liturgy_API_35(AVD) - 15" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="timeoutEmptyResultsAndOldCachedResultsRemainDistinct" classname="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" time="6.255" />
+  <testcase name="longMapNamesAndAddressesReachTheFormAndStorageUnshortened" classname="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" time="2.586" />
+  <testcase name="searchesOnlyAfterAnActionAndSavesOnlyAfterReviewingTheSelectedCityAndTimeZone" classname="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" time="4.275" />
+  <testcase name="leavingTheForegroundCancelsSearchAndReturningDoesNotRestartIt" classname="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" time="5.02" />
+  <testcase name="cancellingARequestIgnoresItsLateResultAndLeavesManualNavigationAvailable" classname="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" time="4.128" />
+  <testcase name="filteringAndCancellingImportDoNotSaveAnythingOrStartAnotherNetworkSearch" classname="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" time="6.417" />
+  <testcase name="aSingleTextRetainsItsFullTitleAndTheClarificationAction" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="2.603" />
+  <testcase name="scriptureAndAnEmptyTextStageKeepClarificationWithoutALanguageMenu" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="3.162" />
+  <testcase name="narrowScheduleKeepsBothDayLabelsOnOneLineAndSelectable" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="1.899" />
+  <testcase name="aTallNarrowScreenKeepsReadableActionsWithoutReducingThePrayerSize" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="1.971" />
+  <testcase name="landscapeKeepsTabsOnOneLineAndLeavesSpaceForTheRequestedPrayerSize" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="8.115" />
+  <testcase name="largeTextNavigationLeavesSpaceForChurchAndSettingsWithoutScalingTheirContent" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="2.377" />
+  <testcase name="aTallScreenAtTheHeaderWidthBoundaryKeepsItsReadingArea" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="2.144" />
+  <testcase name="narrowLargeTextKeepsNamesReadableAndCancellationPreservesThePhrase" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="3.572" />
+  <testcase name="ordinaryFooterKeepsSeparateTargetsAtTheNarrowWidthAndFastestSpeed" classname="ru.liturgyguide.ui.ReaderAccessibilityTest" time="3.458" />
+</testsuite>

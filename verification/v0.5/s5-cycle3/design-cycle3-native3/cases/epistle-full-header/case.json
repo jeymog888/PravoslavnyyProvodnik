@@ -1,0 +1,67 @@
+{
+  "run_id": "75355aadc8cc459b9ea051e402344a79",
+  "case_id": "epistle-full-header",
+  "apk_sha256": "ef1ad12a47130e4ef526fbfb31b968734d9680053d69e3033d4d3a6efd650adb",
+  "manifest_sha256": "2c876ed21837df2374be3a2add3fa51f46ac8f2ea11affb128cafec1eb9a05d3",
+  "started_ns": 1794155995176357000,
+  "status": "PASS",
+  "declared_conditions": {
+    "scene": "ordinary portrait 412dp; accepted 9 Nov missing Epistle, app font1.3 dark"
+  },
+  "artifacts": {
+    "before.xml": {
+      "path": "cases/epistle-full-header/before.xml",
+      "sha256": "7e5ae26d2cb7ef26fbb5175215bf5b2313a1cd0cb920fe21f34542ae9030be5b",
+      "bytes": 23055
+    },
+    "screen.png": {
+      "path": "cases/epistle-full-header/screen.png",
+      "sha256": "454b5f5cf5d52acaa064c4e2c986ce444660f45f9663018ade69f7d702610351",
+      "bytes": 225440
+    },
+    "after.xml": {
+      "path": "cases/epistle-full-header/after.xml",
+      "sha256": "7e5ae26d2cb7ef26fbb5175215bf5b2313a1cd0cb920fe21f34542ae9030be5b",
+      "bytes": 23055
+    },
+    "windows.txt": {
+      "path": "cases/epistle-full-header/windows.txt",
+      "sha256": "772049f738d934aa3a4065a968baa56fb5198852b745d1f76f33c27a35f1dfba",
+      "bytes": 44012
+    },
+    "displays.txt": {
+      "path": "cases/epistle-full-header/displays.txt",
+      "sha256": "8b35bdd627488f5a1de2e22fb08e5095333a9fcf368b6ebd12c4da9812829e1a",
+      "bytes": 23022
+    }
+  },
+  "visual_status": "NOT_REVIEWED",
+  "observed": {
+    "serial": "emulator-5554",
+    "sdk": "35",
+    "fingerprint": "google/sdk_gphone64_arm64/emu64a:15/AE3A.240806.043/12960925:userdebug/dev-keys",
+    "wm_size": "Physical size: 1080x2400",
+    "density": "Physical density: 420",
+    "font_scale": "1.0",
+    "locale": "en-US",
+    "timezone": "Europe/Moscow",
+    "device_epoch_seconds": "1794155995",
+    "wifi_setting": "1",
+    "mobile_data_setting": "1",
+    "location_mode": "3",
+    "permissions": {
+      "android.permission.INTERNET": "true",
+      "android.permission.ACCESS_FINE_LOCATION": "false",
+      "android.permission.ACCESS_COARSE_LOCATION": "false",
+      "android.permission.RECORD_AUDIO": "false"
+    },
+    "version_code": "4",
+    "version_name": "0.4.0-guide"
+  },
+  "accessibility_tree_sha256": "bbf2e96abf8e9f5dc8dddc780d4a6b31b91c20522d2594e3ca72e0fd606079c5",
+  "pixels": [
+    1080,
+    2400
+  ],
+  "finished_ns": 1794156001524474000
+}

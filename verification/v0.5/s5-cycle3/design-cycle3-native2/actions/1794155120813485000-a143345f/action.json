@@ -1,0 +1,30 @@
+{
+  "run_id": "c6bb21839cd145329d5354fcd67a0966",
+  "case_id": "narrow-russian-light",
+  "apk_sha256": "11d66e15575954c24c53bb9d05ca1f4bfeb8faa434913489fab4820d4c27fad9",
+  "selector": {
+    "text": "Светлый экран"
+  },
+  "expected": [
+    {
+      "content-desc": "Включить плеер"
+    }
+  ],
+  "status": "PASS",
+  "coordinates": [
+    451,
+    431
+  ],
+  "artifacts": [
+    {
+      "path": "actions/1794155120813485000-a143345f/after.xml",
+      "sha256": "bddf602aed47f5c7051ab91e79efbaf631ca6c98f8a62aa71e2d2d2c5b4481b0",
+      "bytes": 19043
+    },
+    {
+      "path": "actions/1794155120813485000-a143345f/before.xml",
+      "sha256": "d19dd948e233e8f86f7f9a19157276fea703b5281be3e70991de949eaed1d1ee",
+      "bytes": 4392
+    }
+  ]
+}

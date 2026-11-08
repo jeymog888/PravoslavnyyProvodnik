@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.service.PhraseMatcherTest" tests="18" skipped="0" failures="0" errors="0" timestamp="2026-11-08T16:05:15" hostname="MacBook-Air-Dmitrij.local" time="0.005">
+  <properties/>
+  <testcase name="multiple anchors for the same stage remain one suggestion" classname="ru.liturgyguide.service.PhraseMatcherTest" time="0.001"/>
+  <testcase name="punctuation and case do not hide a complete phrase" classname="ru.liturgyguide.service.PhraseMatcherTest" time="0.0"/>
+  <testcase name="shared anchors add no false ambiguity when an independent unique phrase is heard" classname="ru.liturgyguide.service.PhraseMatcherTest" time="0.0"/>
+  <testcase name="fragments and substring words are not sufficient evidence" classname="ru.liturgyguide.service.PhraseMatcherTest" time="0.0"/>
+  <testcase name="distinctive phrase suggests its stage and retains evidence" classname="ru.liturgyguide.service.PhraseMatcherTest" time="0.0"/>
+  <testcase name="different spellings of a shared phrase remain ambiguous for audio" classname="ru.liturgyguide.service.PhraseMatcherTest" time="0.0"/>
+  <testcase name="church accents and historic letters are normalized" classname="ru.liturgyguide.service.PhraseMatcherTest" time="0.0"/>
+  <testcase name="shared phrase alone cannot identify a stage" classname="ru.liturgyguide.service.PhraseMatcherTest" time="0.0"/>
+  <testcase name="unrecognized input never advances the service" classname="ru.liturgyguide.service.PhraseMatcherTest" time="0.0"/>
+  <testcase name="a short but liturgically distinctive phrase is not rejected just for its length" classname="ru.liturgyguide.service.PhraseMatcherTest" time="0.0"/>
+  <testcase name="repeated litany petitions cannot imply the opening even when listed only there" classname="ru.liturgyguide.service.PhraseMatcherTest" time="0.0"/>
+  <testcase name="duplicate content entries do not make one stage ambiguous" classname="ru.liturgyguide.service.PhraseMatcherTest" time="0.001"/>
+  <testcase name="historic terminal hard signs before punctuation do not hide a phrase" classname="ru.liturgyguide.service.PhraseMatcherTest" time="0.0"/>
+  <testcase name="a transcript spanning two stages needs manual correction" classname="ru.liturgyguide.service.PhraseMatcherTest" time="0.0"/>
+  <testcase name="a distinctive later phrase still identifies its stage alongside repeated petitions" classname="ru.liturgyguide.service.PhraseMatcherTest" time="0.0"/>
+  <testcase name="matching keeps word order" classname="ru.liturgyguide.service.PhraseMatcherTest" time="0.001"/>
+  <testcase name="Russian recognition spelling can match a canonical phrase" classname="ru.liturgyguide.service.PhraseMatcherTest" time="0.0"/>
+  <testcase name="ordinary repeated prayers are never treated as distinctive" classname="ru.liturgyguide.service.PhraseMatcherTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

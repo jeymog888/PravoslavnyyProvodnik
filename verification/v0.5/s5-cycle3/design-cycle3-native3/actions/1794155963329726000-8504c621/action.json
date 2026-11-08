@@ -1,0 +1,38 @@
+{
+  "run_id": "75355aadc8cc459b9ea051e402344a79",
+  "case_id": "waiting-context",
+  "apk_sha256": "ef1ad12a47130e4ef526fbfb31b968734d9680053d69e3033d4d3a6efd650adb",
+  "selector": {
+    "content-desc": "Остановить плеер"
+  },
+  "expected": [
+    {
+      "content-desc": "Включить плеер",
+      "ancestor": {
+        "class": "android.view.View",
+        "enabled": true,
+        "clickable": true
+      }
+    },
+    {
+      "text": "Дальше слушаем службу"
+    }
+  ],
+  "status": "PASS",
+  "coordinates": [
+    477,
+    2126
+  ],
+  "artifacts": [
+    {
+      "path": "actions/1794155963329726000-8504c621/after.xml",
+      "sha256": "f319872e1eec1417fb73bb204bc39a53232696e20078d804546559af04212ec8",
+      "bytes": 22951
+    },
+    {
+      "path": "actions/1794155963329726000-8504c621/before.xml",
+      "sha256": "977a279b1853dbc7fc0af2c03c9756875d5c2492fe118557e6b5286c089da6aa",
+      "bytes": 22959
+    }
+  ]
+}

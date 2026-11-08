@@ -245,6 +245,14 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                     }
                 }
             }
+            if (state.busy == null && (state.message != null || state.cities != null || state.churches != null)) item {
+                TextButton(onClick = {
+                    focus.clearFocus(); keyboard?.hide()
+                    scope.launch { scroll.animateScrollToItem(0) }
+                }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("discovery_change_search")) {
+                    Text("Изменить поиск")
+                }
+            }
             state.cities?.let { result ->
                 item {
                     Text(if (result.items.isEmpty()) "Город не найден" else "Выберите город", style = MaterialTheme.typography.titleLarge,

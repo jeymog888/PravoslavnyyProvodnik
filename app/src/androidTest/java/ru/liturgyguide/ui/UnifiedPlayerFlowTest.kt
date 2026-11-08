@@ -281,6 +281,12 @@ class UnifiedPlayerFlowTest {
     fun endStopsThePlayerAndFinishingClearsTheAcceptedReading() {
         launch("dismissal")
         play()
+        advanceBy(60_000) { segment() is PlaybackSegment.Wait }
+        compose.onNodeWithTag("stage_wait").assertIsDisplayed()
+        compose.onNodeWithText("Доступный фрагмент закончился. Продолжайте слушать заключительные молитвы в храме.")
+            .assertIsDisplayed()
+        compose.onNodeWithText("Доступный фрагмент закончился. Переход к следующему этапу будет примерным.")
+            .assertDoesNotExist()
         advanceBy(86_400_000) { segment() is PlaybackSegment.End }
         compose.onNodeWithTag("playback_end").assertIsDisplayed()
         compose.onNodeWithTag("play_lyrics").assertIsNotEnabled()

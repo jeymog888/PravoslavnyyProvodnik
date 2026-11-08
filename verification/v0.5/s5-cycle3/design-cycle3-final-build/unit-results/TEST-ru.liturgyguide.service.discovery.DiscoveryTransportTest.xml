@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.service.discovery.DiscoveryTransportTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-11-08T16:36:04" hostname="MacBook-Air-Dmitrij.local" time="0.148">
+  <properties/>
+  <testcase name="total deadline returns before a stalled read completes" classname="ru.liturgyguide.service.discovery.DiscoveryTransportTest" time="0.117"/>
+  <testcase name="request interval prevents a rapid loop but does not retry automatically" classname="ru.liturgyguide.service.discovery.DiscoveryTransportTest" time="0.002"/>
+  <testcase name="unsafe request URL is rejected before the connection factory" classname="ru.liturgyguide.service.discovery.DiscoveryTransportTest" time="0.002"/>
+  <testcase name="cancellation frees ownership and a late result cannot complete the next request" classname="ru.liturgyguide.service.discovery.DiscoveryTransportTest" time="0.012"/>
+  <testcase name="a simultaneous request is rejected without queueing a second network operation" classname="ru.liturgyguide.service.discovery.DiscoveryTransportTest" time="0.009"/>
+  <testcase name="POST identifies the app and does not follow redirects" classname="ru.liturgyguide.service.discovery.DiscoveryTransportTest" time="0.001"/>
+  <testcase name="known and streaming response lengths are both limited" classname="ru.liturgyguide.service.discovery.DiscoveryTransportTest" time="0.003"/>
+  <testcase name="HTTP error and redirect statuses do not become valid JSON responses" classname="ru.liturgyguide.service.discovery.DiscoveryTransportTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

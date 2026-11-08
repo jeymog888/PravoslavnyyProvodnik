@@ -1,0 +1,933 @@
+{
+  "schema": 1,
+  "kind": "build",
+  "status": "PASS",
+  "started_ns": 1794154585156615000,
+  "finished_ns": 1794154664666902000,
+  "repo": "/Users/dmitriymoguschiy/Documents/Spectrion Projects/Новый-чат-21AE5054/PravoslavnyyProvodnik",
+  "command": [
+    "/Users/dmitriymoguschiy/Documents/Spectrion Projects/Новый-чат-21AE5054/PravoslavnyyProvodnik/gradlew",
+    "--no-daemon",
+    "testDebugUnitTest",
+    "assembleDebug",
+    "connectedDebugAndroidTest",
+    "-Pandroid.testInstrumentationRunnerArguments.class=ru.liturgyguide.ui.ReaderAccessibilityTest,ru.liturgyguide.ui.ChurchDiscoveryScreenTest"
+  ],
+  "exit_code": 0,
+  "source": {
+    "commit": "9baabca02ce7e2f7f33887f5f5a8b00a2a3f1478",
+    "tree": "a07bb580861bf8b6bd17db5d6075b5db7662be62",
+    "dirty": true
+  },
+  "inputs_before": {
+    "sha256": "b3fc42898200e9a35ea7f35e4b694af9f1408167a59b9a65c1d7c86bbe0ffee3",
+    "files": [
+      {
+        "path": "app/build.gradle.kts",
+        "sha256": "11a4f38ce779abda462fd5a2c8f91efacc2dd227a1afe79f2c48b2e5e17723a7"
+      },
+      {
+        "path": "app/proguard-rules.pro",
+        "sha256": "cd8a97cc2ada65b96ea082b21771d12e38d6720c15c6642ab113436653004ded"
+      },
+      {
+        "path": "app/src/main/AndroidManifest.xml",
+        "sha256": "aff3366dc014d7e80de857eb43bcffd792a9a469f9c5bd58a6d576c77929e56e"
+      },
+      {
+        "path": "app/src/main/assets/churches.json",
+        "sha256": "d23563db2e9ccdf65f81e8619fda0a865658a99968ded94caea0baf243ec1521"
+      },
+      {
+        "path": "app/src/main/assets/daily_readings.json",
+        "sha256": "8086bdc710dc080d3a77b75eb90b031d8a586d446aad4d7a379b778229a022ae"
+      },
+      {
+        "path": "app/src/main/assets/liturgy_stages.json",
+        "sha256": "efe2788edc898d489721fda1665b9cd455c031cb2ee8a8994c361177500da101"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/LiturgyGuideApplication.kt",
+        "sha256": "de5e45f0231618b44c1e13aab2a4a527056a80f1893bda243de82e499101f4dd"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/di/AppContainer.kt",
+        "sha256": "35ba3c514abf1a5cbdba5419b7c96c29e28ab9c82a957a2effee1b4fc3841c28"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/model/DailyReadings.kt",
+        "sha256": "59b3690c615a906970946d2aea0e35fc461707291324295fd9854deac280b3d0"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/model/LiturgyStage.kt",
+        "sha256": "b34e321beed07783ad8420b23c516e609c6e3be5a82060055a433863e319665b"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/model/Parish.kt",
+        "sha256": "64bbf3fde31ee53c9fa4466a2c0be40219896025d42877db89ccf1892ce98ee3"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/model/PrayerTrack.kt",
+        "sha256": "eb3d38e7df75505de3a2279e0abb8a37085e8227194cc5c3fe4f3af1e37d70d1"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ChurchDirectoryStore.kt",
+        "sha256": "f880484f669ebdc4f6dfaf8a98443dda9d17eb1f499667070b0a9536a5aaca32"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ChurchLocator.kt",
+        "sha256": "31a4b2114212f762aa6cda6d1eb4d142b8c53e4b2937c1ed7ecdc143448cf9b2"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ChurchSelection.kt",
+        "sha256": "48350f15647a73a8f38ddf1dfcbd604ba4bbec90f402504ebd0e568a84a6873d"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/LiturgicalSpelling.kt",
+        "sha256": "993d0743340bfba62755a234267f1adeb791dab4646e0022beef1e3f736bca3f"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/LocationFixPolicy.kt",
+        "sha256": "9a3e420e5ae488f58af69b0d014b798aa927d1933e8bcbe372278a2463e3ec14"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/LyricPlaybackEngine.kt",
+        "sha256": "012f93fc2f637223431da26ee6aa874d69028496beec2efd541e33a1cc615e75"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ParishRepository.kt",
+        "sha256": "bb2a9d248c09d46563b5fb858920c1bc949888d88ca06eb14b371f3193829b3b"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/PhraseMatcher.kt",
+        "sha256": "29b10ae344110df134239140ba55cbf4c09260200689e1f339e839e7f58e54f1"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/PrayerTextSearch.kt",
+        "sha256": "0630fb71a17e48df947d8e4425e4001826b7a3cf72f47164edcebe71018aca26"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/PrayerTrackFactory.kt",
+        "sha256": "c863bcc17c03d5404977909719651e6093867dd2e3ecf588c9d55a3d2ae55fb0"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ReadingAcceptanceStore.kt",
+        "sha256": "3053f7a0c29c8349bce3958994c6faa0fbf1495aeaaa1887b0244746f18fb2a3"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ReadingContext.kt",
+        "sha256": "39d777aff7ab6f96dbe2b14c0e5cb5026cdacd6d31d2d59dfb21a1307a4175eb"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ReadingContextStore.kt",
+        "sha256": "e7c0312303951a24eed25f0a1f6384dfc855aec2761b4fadd3c0a6c999e4b620"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/SavedChurchDirectory.kt",
+        "sha256": "55fc53b11897acf13fb50cf429ef54f63e5970f0cc6a1a4ee409e444082f17ef"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ServicePlaybackEngine.kt",
+        "sha256": "cc2909d5cebc36f2e040dba840d98f9cc8c1765dcdb1200d55ab5c37018be958"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ServicePlaybackPlan.kt",
+        "sha256": "c5ef19a3be0040535b2030cf7ca061fc208760f20b39aba48c1fd3400923849c"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ServicePlaybackStore.kt",
+        "sha256": "e4f53cbe6e0a5e2f0141d3e175e951b9c5037b594ce3fdc25ba3561e088fa01a"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ServiceSession.kt",
+        "sha256": "f09647b7a7da9f9e3f7613a4a3d6fafc3f360f45edc4e9774e2ce7fac1993596"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/SpeechGuide.kt",
+        "sha256": "fcb68de6c98f7c263116cd5837dce66e3631c39e0d60782a51ea9f82e60801dc"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/StageMatcher.kt",
+        "sha256": "62bc0fcc921cdf6d2d6717055dcca268b4d9a1d0d5a594c1a97dff689693cee4"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/UserServiceStart.kt",
+        "sha256": "9ebd22ebc25879d7a2c51269c4678bbd132dc7de2f9036801a3000793e3817bb"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/UserServiceStartStore.kt",
+        "sha256": "698da957d6cbe738b94c13861fa0caa036819e509849a010b5052f0e3e23fd49"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/discovery/DiscoveryTransport.kt",
+        "sha256": "b43c9f8b610f8850bc64dbe1f1def2ebac9acd3d5299acaf2bf6d209c2e6d977"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/discovery/PlaceDiscovery.kt",
+        "sha256": "31c10019d14288be8dd27f636714cc5782cf6db5e891f15e3eae1a8ee8475fcd"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/ArrivalScreen.kt",
+        "sha256": "16a07ecddcee64b3d95aa965e59d75f86b3897563292f3606025a4c0a72c57b9"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/ChurchDiscoveryScreen.kt",
+        "sha256": "0aac5bfc38de963f26d5a6e3e10934e45a55f2ac93d5639bbf03e0c327261a12"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/ChurchScreen.kt",
+        "sha256": "135857048df0489b2f14cf837391aafcab6e3f88a7e1120b4c1e524142f326b1"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/FeoriaBrand.kt",
+        "sha256": "557b0f31c1c69249d2a4a166e0fdf1d8b9eb09c65e64c7274aabd39c49be2f26"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/GuideComponents.kt",
+        "sha256": "f819f49a1fc18699e36636b6610e07ca01d35d525fd39ea2e4ed1be902a43e54"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/GuideTheme.kt",
+        "sha256": "78533cde23c8b3882ecaad12c198b7dc1f8c80e9450df6518213ff814749a737"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/ListeningCard.kt",
+        "sha256": "9423fbe73c252f1e1a3190d5d50e02c2df8dedd3608b06a81a7e6c1965339d56"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/LocateChurchCard.kt",
+        "sha256": "e630334055c157d1891162fadfb0112844abd7548719aa91753cdc1b46d367e6"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/MainActivity.kt",
+        "sha256": "dc844e2ed855eaf1937dfe4020ad09a7e776e2bad909a2c135e1bde35333dee6"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/MainScreen.kt",
+        "sha256": "b48f70301ce862224b26725bb177cee344954cdd7bd1f9e088896914f1385e75"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/ManualMomentScreen.kt",
+        "sha256": "0a8fc68f96ac79c593b201d65db7487dac63238727765ba8a1d77654c6633d67"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/NavigationComponents.kt",
+        "sha256": "5cdbe2e133f683ed0bcb4eded7cb83247abf233ee0ed799dd6c7af07e6809e61"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/PersonalServiceTimeForm.kt",
+        "sha256": "64305c922ab1839424739e8a06e487bf9a945f806e3aa90318c57ac2d33bbc81"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/PrayerPlayerState.kt",
+        "sha256": "a7518929fe4e6ad08b0ab0e8bd29c6ec2e0b13ef3fd062a3bffd835d25eccaed"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/SavedChurchForm.kt",
+        "sha256": "961faac581bac2d9fb81b5c3194ecd8fdeb0ee24fac752c783f1a14dca7a1d94"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/ServicePlayerState.kt",
+        "sha256": "7e14d1dcca7e4cdc8c6b362e281323dae4c27b449270cdcca13a8f2bd343c554"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/ServiceScreen.kt",
+        "sha256": "e3d89ce12e85b6a2b6128919e3e024312bc49c7ec7edc798e1fb789b16aeb3c2"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/SettingsScreen.kt",
+        "sha256": "874670ff945b2a8341176bd1df03dae24afe58f4148e2e943c07827dc8e781a6"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/StageSelector.kt",
+        "sha256": "13899e03e920ce2e8b0e71f971fa6e6f50f30dc2789f819a3cb7faf669ec897e"
+      },
+      {
+        "path": "app/src/main/res/drawable/ic_launcher_foreground.xml",
+        "sha256": "bb1afe125bae19c0e81220a990718d246da5a66921ea77909b007a97324953b1"
+      },
+      {
+        "path": "app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+        "sha256": "84d943e242fb42ca2b7f8c942c82e8e4575b0b2cf7230291835d3c3d3d21f9cd"
+      },
+      {
+        "path": "app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+        "sha256": "84d943e242fb42ca2b7f8c942c82e8e4575b0b2cf7230291835d3c3d3d21f9cd"
+      },
+      {
+        "path": "app/src/main/res/values/colors.xml",
+        "sha256": "b217de96fd4548ad5e3feeaaec24c8b72917149d7cccd84e2c62c6547d9731e5"
+      },
+      {
+        "path": "app/src/main/res/values/strings.xml",
+        "sha256": "7cb0b5ab1ce99420dbb88720ab52ba3d5abe90a19abf8425c285a9b3c03a5a55"
+      },
+      {
+        "path": "app/src/main/res/values/themes.xml",
+        "sha256": "6cb2945a97a0063a60d5ad3b5fdc5ee44d628c5826ebff15837b869ef88e1006"
+      },
+      {
+        "path": "app/src/main/res/values-night/colors.xml",
+        "sha256": "6e5578aa9129c19bfe91f2a37208e82f4dce700c7b5d28220989590ded1a96e3"
+      },
+      {
+        "path": "build.gradle.kts",
+        "sha256": "409d5d530f24368c3e1efe358d5e7a55848ca26f91aa1f4e5e56dedfd1360219"
+      },
+      {
+        "path": "gradle/wrapper/gradle-wrapper.jar",
+        "sha256": "cb0da6751c2b753a16ac168bb354870ebb1e162e9083f116729cec9c781156b8"
+      },
+      {
+        "path": "gradle/wrapper/gradle-wrapper.properties",
+        "sha256": "102e92ce3b2b252dbbc273381087a083f76bbf2750c0bd63045f0d0780fc37d3"
+      },
+      {
+        "path": "gradle.properties",
+        "sha256": "682639a91f347d72f52a47c6804ab32e50938e18d892fb53d22c90b23a07ea1a"
+      },
+      {
+        "path": "gradlew",
+        "sha256": "fc977a94723af68aaffa4e5d60496fb4aeed1884b6b19e5e2f2fd7612673313d"
+      },
+      {
+        "path": "gradlew.bat",
+        "sha256": "bdecf875b6868cbcbd36a1f85eedf0832f358ff28092c5797ed645f7edce77d9"
+      },
+      {
+        "path": "settings.gradle.kts",
+        "sha256": "d3e61e39b39c616198ba976e786e3186fdf43912f6083b1b1c124481e5116454"
+      },
+      {
+        "path": "external/0/PersonalServiceTimeTest.kt",
+        "sha256": "66151a9df915e57c96096aa7dce7b094e410191672d2eb4c6293e4190dd10b73"
+      },
+      {
+        "path": "external/1/ManualMomentFlowTest.kt",
+        "sha256": "6e7d5762d81a42627a3f76edf4ed02c902067a72d547c93b57db8bf102c32e8e"
+      },
+      {
+        "path": "external/2/MainScheduleOverviewTest.kt",
+        "sha256": "1e036971cacec5b296da70f56255f917e8c19ae485e48f7c14f35ed485447764"
+      },
+      {
+        "path": "external/3/FirstVisitFlowTest.kt",
+        "sha256": "a010d97d539b44e02a4448971b02d676a5bd14ac680492a0c9030da66f4b8bc5"
+      },
+      {
+        "path": "external/4/MainContextTest.kt",
+        "sha256": "a07e4d6c82e3b98a5680ab7e4c9f36e5009a3ab6f20e9dc75a1e1e3fef25b98e"
+      },
+      {
+        "path": "external/5/UnifiedPlayerFlowTest.kt",
+        "sha256": "2833e8f6543e74f8902c0b1537761e0b1f0bdd7a6805e98515928dcc7d7b0db5"
+      },
+      {
+        "path": "external/6/StageSelectorTest.kt",
+        "sha256": "67e97b50728e77b934d2075074f7ad54515bc9d470b63540747072d55a47140e"
+      },
+      {
+        "path": "external/7/SavedChurchFlowTest.kt",
+        "sha256": "48ca42e1bdef36141e85ee27fa8f67ea696bddd073bd166849ffa3b3bbc6cdb9"
+      },
+      {
+        "path": "external/8/GuideNavigationTest.kt",
+        "sha256": "1f0822739dec5789cacf035419f65c65bac786976d9f9751d3f835e42eedcd3e"
+      },
+      {
+        "path": "external/9/ReaderAccessibilityTest.kt",
+        "sha256": "e0ae100da538215cb40f8cab05e4f864e70a19b399501587eff121612e9e9b0c"
+      },
+      {
+        "path": "external/10/DailyReadingSearchTest.kt",
+        "sha256": "9f585ec37b32cc29225bcc81d4feca3331d659e45fea433cd5e8b174ea595d0c"
+      },
+      {
+        "path": "external/11/CompactReaderMatrixTest.kt",
+        "sha256": "08d7a8e567a4887a03e97a7f3dd6b79a35ebcc6ed33f097547edb8dc5d4ee87c"
+      },
+      {
+        "path": "external/12/DiscoveryNavigationTest.kt",
+        "sha256": "a58ef27b22564bf1040d88ecfc3884770c3bd969961a3dcce71c27e3a8a63ef5"
+      },
+      {
+        "path": "external/13/ArrivalFlowTest.kt",
+        "sha256": "53979dbd0e52a0d6413fc227631571ce0555533f5179ce27cd0df5474c4a80be"
+      },
+      {
+        "path": "external/14/SavedReadingTest.kt",
+        "sha256": "2d4b6e03901695c7ca65236142a572a3b7342c5ec3cdd7361475e407423c7e7c"
+      },
+      {
+        "path": "external/15/DateRolloverTest.kt",
+        "sha256": "db6906a72d2c6ccc4edff29f38a5ec2489ae83eae72f3a54ebaadc036216e5bc"
+      },
+      {
+        "path": "external/16/ChurchDiscoveryScreenTest.kt",
+        "sha256": "601829e4fb108e959ab43e18a862b4564a8c202c7220067d7c5a063a88260aef"
+      },
+      {
+        "path": "external/17/HypothesisPrototype.kt",
+        "sha256": "a4618d9d33955cae15e5ab61b79c7f69a112ca9fc4c06ff56884d510d97339ea"
+      },
+      {
+        "path": "external/18/HypothesisPrototypeTest.kt",
+        "sha256": "dbc4ebd1f28861d01e0a4012bb01e0ee6473de95a46dabf58e40256898b4174e"
+      },
+      {
+        "path": "external/19/ServicePlayerStateTest.kt",
+        "sha256": "1bea533218e1261c9f84fdb49caa89044ade1339ed2710ef46ba8a6029fa438c"
+      },
+      {
+        "path": "external/20/ServiceEntryResolverTest.kt",
+        "sha256": "5e97a5dedb5ca4b8ab52c99a79d19d95e7aa2ea9b4dc58a2c20b5eb67fb4562f"
+      },
+      {
+        "path": "external/21/ServicePlaybackPlanTest.kt",
+        "sha256": "24bf57664a880a6956c37a1c9894e1eb30f84c61dffb72df4212ee4e7a7d3e64"
+      },
+      {
+        "path": "external/22/PlaybackAcceptanceStoreTest.kt",
+        "sha256": "2302baeea9325ad0de6e6b551362ed58eead96538f27eb71ba4578d6e8ba9f9c"
+      },
+      {
+        "path": "external/23/StageMatcherTest.kt",
+        "sha256": "922ccca0f7a8e181c55e669c6030786bc0542d330213baa810890adfbe5f2e24"
+      },
+      {
+        "path": "external/24/ReadingAcceptanceStoreTest.kt",
+        "sha256": "7cabd898d12cc616e1508d55dd8d74e60ead67526d444502ad06b7aa550653f0"
+      },
+      {
+        "path": "external/25/ParishRepositoryTest.kt",
+        "sha256": "0bccdc5ff0a5d020dff74cec93b0dc2e2dcfcd7a2fa10ebcb23b692c50a58eaa"
+      },
+      {
+        "path": "external/26/SavedChurchDirectoryTest.kt",
+        "sha256": "3ccc279bedb172814760383d718b64967853e3ba04abfc4a643bcade7516f2ee"
+      },
+      {
+        "path": "external/27/ReadingContextTest.kt",
+        "sha256": "10e51154aa8c180085cea3e67c6382913206e1bb5ce0bcaa9c180233adb2f2b5"
+      },
+      {
+        "path": "external/28/ServicePlaybackStoreTest.kt",
+        "sha256": "c2caebcd9dc05bd7418714b097f06549440da514d3d6599747d00dd009a23e8c"
+      },
+      {
+        "path": "external/29/TestFixtures.kt",
+        "sha256": "443c0df6f2d75dd84f1917b9fef7bc29917d037e7b8b387a0bad89b1722a66b5"
+      },
+      {
+        "path": "external/30/PhraseMatcherTest.kt",
+        "sha256": "83e1ac7c9752b29738731fcf81b50f24f0da3afe6b0676a3f7427b6c251aa6c9"
+      },
+      {
+        "path": "external/31/PrayerTrackFactoryTest.kt",
+        "sha256": "f127a227c5b53831f0fe3f00adbe078e62482af41dd5e89991c0be55badcde75"
+      },
+      {
+        "path": "external/32/ServicePlaybackEngineTest.kt",
+        "sha256": "cbbb3c8206455817d51f8ced98ffa6e6bb524d0f09cdfe29e1d04541b578e7e4"
+      },
+      {
+        "path": "external/33/ChurchSelectionTest.kt",
+        "sha256": "003666bacd1c631bf076a3afbd378d780a694b16657387f9241d1b5797a776f7"
+      },
+      {
+        "path": "external/34/LyricPlaybackEngineTest.kt",
+        "sha256": "c1122ccab98ad57770f7db9352e0b6af3405a560fed06db49033b82e98c1df13"
+      },
+      {
+        "path": "external/35/UserServiceStartTest.kt",
+        "sha256": "a76b0d9c9f959e01a53bd645150818d839293fd5a6df9ccfa214aa1823d89599"
+      },
+      {
+        "path": "external/36/PrayerTextSearchTest.kt",
+        "sha256": "cd6a1cfe9e632940fc2eae8490430eb9448ecefcc47e18d4a74efa03247b9134"
+      },
+      {
+        "path": "external/37/ScheduleOverviewTest.kt",
+        "sha256": "141daf5045689e3c54d5dbdf22d9acff44775140a6e31c56b1ae548894fec74b"
+      },
+      {
+        "path": "external/38/ChurchConfirmationStoreTest.kt",
+        "sha256": "1a4d49b5ff33c7450a3be7a1d3fd6354a547fe7b86ad7913949bd5716b7de83f"
+      },
+      {
+        "path": "external/39/ServiceSessionTest.kt",
+        "sha256": "407b598dfbefe50ed2d90643a637489f9f257eae01318ff173237f1f0e5e60e3"
+      },
+      {
+        "path": "external/40/PlaceDiscoveryTest.kt",
+        "sha256": "37d038c8f6f44c7558d5e10e2f2bfbc743ac0dd9dcf9d9c7f22c814c14ad6255"
+      },
+      {
+        "path": "external/41/DiscoveryTransportTest.kt",
+        "sha256": "535f8f96d78562de4e1935684639671ea28bbc187663af11083d684c9d040b1d"
+      }
+    ]
+  },
+  "inputs_after": {
+    "sha256": "b3fc42898200e9a35ea7f35e4b694af9f1408167a59b9a65c1d7c86bbe0ffee3",
+    "files": [
+      {
+        "path": "app/build.gradle.kts",
+        "sha256": "11a4f38ce779abda462fd5a2c8f91efacc2dd227a1afe79f2c48b2e5e17723a7"
+      },
+      {
+        "path": "app/proguard-rules.pro",
+        "sha256": "cd8a97cc2ada65b96ea082b21771d12e38d6720c15c6642ab113436653004ded"
+      },
+      {
+        "path": "app/src/main/AndroidManifest.xml",
+        "sha256": "aff3366dc014d7e80de857eb43bcffd792a9a469f9c5bd58a6d576c77929e56e"
+      },
+      {
+        "path": "app/src/main/assets/churches.json",
+        "sha256": "d23563db2e9ccdf65f81e8619fda0a865658a99968ded94caea0baf243ec1521"
+      },
+      {
+        "path": "app/src/main/assets/daily_readings.json",
+        "sha256": "8086bdc710dc080d3a77b75eb90b031d8a586d446aad4d7a379b778229a022ae"
+      },
+      {
+        "path": "app/src/main/assets/liturgy_stages.json",
+        "sha256": "efe2788edc898d489721fda1665b9cd455c031cb2ee8a8994c361177500da101"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/LiturgyGuideApplication.kt",
+        "sha256": "de5e45f0231618b44c1e13aab2a4a527056a80f1893bda243de82e499101f4dd"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/di/AppContainer.kt",
+        "sha256": "35ba3c514abf1a5cbdba5419b7c96c29e28ab9c82a957a2effee1b4fc3841c28"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/model/DailyReadings.kt",
+        "sha256": "59b3690c615a906970946d2aea0e35fc461707291324295fd9854deac280b3d0"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/model/LiturgyStage.kt",
+        "sha256": "b34e321beed07783ad8420b23c516e609c6e3be5a82060055a433863e319665b"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/model/Parish.kt",
+        "sha256": "64bbf3fde31ee53c9fa4466a2c0be40219896025d42877db89ccf1892ce98ee3"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/model/PrayerTrack.kt",
+        "sha256": "eb3d38e7df75505de3a2279e0abb8a37085e8227194cc5c3fe4f3af1e37d70d1"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ChurchDirectoryStore.kt",
+        "sha256": "f880484f669ebdc4f6dfaf8a98443dda9d17eb1f499667070b0a9536a5aaca32"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ChurchLocator.kt",
+        "sha256": "31a4b2114212f762aa6cda6d1eb4d142b8c53e4b2937c1ed7ecdc143448cf9b2"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ChurchSelection.kt",
+        "sha256": "48350f15647a73a8f38ddf1dfcbd604ba4bbec90f402504ebd0e568a84a6873d"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/LiturgicalSpelling.kt",
+        "sha256": "993d0743340bfba62755a234267f1adeb791dab4646e0022beef1e3f736bca3f"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/LocationFixPolicy.kt",
+        "sha256": "9a3e420e5ae488f58af69b0d014b798aa927d1933e8bcbe372278a2463e3ec14"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/LyricPlaybackEngine.kt",
+        "sha256": "012f93fc2f637223431da26ee6aa874d69028496beec2efd541e33a1cc615e75"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ParishRepository.kt",
+        "sha256": "bb2a9d248c09d46563b5fb858920c1bc949888d88ca06eb14b371f3193829b3b"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/PhraseMatcher.kt",
+        "sha256": "29b10ae344110df134239140ba55cbf4c09260200689e1f339e839e7f58e54f1"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/PrayerTextSearch.kt",
+        "sha256": "0630fb71a17e48df947d8e4425e4001826b7a3cf72f47164edcebe71018aca26"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/PrayerTrackFactory.kt",
+        "sha256": "c863bcc17c03d5404977909719651e6093867dd2e3ecf588c9d55a3d2ae55fb0"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ReadingAcceptanceStore.kt",
+        "sha256": "3053f7a0c29c8349bce3958994c6faa0fbf1495aeaaa1887b0244746f18fb2a3"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ReadingContext.kt",
+        "sha256": "39d777aff7ab6f96dbe2b14c0e5cb5026cdacd6d31d2d59dfb21a1307a4175eb"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ReadingContextStore.kt",
+        "sha256": "e7c0312303951a24eed25f0a1f6384dfc855aec2761b4fadd3c0a6c999e4b620"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/SavedChurchDirectory.kt",
+        "sha256": "55fc53b11897acf13fb50cf429ef54f63e5970f0cc6a1a4ee409e444082f17ef"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ServicePlaybackEngine.kt",
+        "sha256": "cc2909d5cebc36f2e040dba840d98f9cc8c1765dcdb1200d55ab5c37018be958"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ServicePlaybackPlan.kt",
+        "sha256": "c5ef19a3be0040535b2030cf7ca061fc208760f20b39aba48c1fd3400923849c"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ServicePlaybackStore.kt",
+        "sha256": "e4f53cbe6e0a5e2f0141d3e175e951b9c5037b594ce3fdc25ba3561e088fa01a"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/ServiceSession.kt",
+        "sha256": "f09647b7a7da9f9e3f7613a4a3d6fafc3f360f45edc4e9774e2ce7fac1993596"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/SpeechGuide.kt",
+        "sha256": "fcb68de6c98f7c263116cd5837dce66e3631c39e0d60782a51ea9f82e60801dc"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/StageMatcher.kt",
+        "sha256": "62bc0fcc921cdf6d2d6717055dcca268b4d9a1d0d5a594c1a97dff689693cee4"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/UserServiceStart.kt",
+        "sha256": "9ebd22ebc25879d7a2c51269c4678bbd132dc7de2f9036801a3000793e3817bb"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/UserServiceStartStore.kt",
+        "sha256": "698da957d6cbe738b94c13861fa0caa036819e509849a010b5052f0e3e23fd49"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/discovery/DiscoveryTransport.kt",
+        "sha256": "b43c9f8b610f8850bc64dbe1f1def2ebac9acd3d5299acaf2bf6d209c2e6d977"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/service/discovery/PlaceDiscovery.kt",
+        "sha256": "31c10019d14288be8dd27f636714cc5782cf6db5e891f15e3eae1a8ee8475fcd"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/ArrivalScreen.kt",
+        "sha256": "16a07ecddcee64b3d95aa965e59d75f86b3897563292f3606025a4c0a72c57b9"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/ChurchDiscoveryScreen.kt",
+        "sha256": "0aac5bfc38de963f26d5a6e3e10934e45a55f2ac93d5639bbf03e0c327261a12"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/ChurchScreen.kt",
+        "sha256": "135857048df0489b2f14cf837391aafcab6e3f88a7e1120b4c1e524142f326b1"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/FeoriaBrand.kt",
+        "sha256": "557b0f31c1c69249d2a4a166e0fdf1d8b9eb09c65e64c7274aabd39c49be2f26"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/GuideComponents.kt",
+        "sha256": "f819f49a1fc18699e36636b6610e07ca01d35d525fd39ea2e4ed1be902a43e54"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/GuideTheme.kt",
+        "sha256": "78533cde23c8b3882ecaad12c198b7dc1f8c80e9450df6518213ff814749a737"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/ListeningCard.kt",
+        "sha256": "9423fbe73c252f1e1a3190d5d50e02c2df8dedd3608b06a81a7e6c1965339d56"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/LocateChurchCard.kt",
+        "sha256": "e630334055c157d1891162fadfb0112844abd7548719aa91753cdc1b46d367e6"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/MainActivity.kt",
+        "sha256": "dc844e2ed855eaf1937dfe4020ad09a7e776e2bad909a2c135e1bde35333dee6"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/MainScreen.kt",
+        "sha256": "b48f70301ce862224b26725bb177cee344954cdd7bd1f9e088896914f1385e75"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/ManualMomentScreen.kt",
+        "sha256": "0a8fc68f96ac79c593b201d65db7487dac63238727765ba8a1d77654c6633d67"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/NavigationComponents.kt",
+        "sha256": "5cdbe2e133f683ed0bcb4eded7cb83247abf233ee0ed799dd6c7af07e6809e61"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/PersonalServiceTimeForm.kt",
+        "sha256": "64305c922ab1839424739e8a06e487bf9a945f806e3aa90318c57ac2d33bbc81"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/PrayerPlayerState.kt",
+        "sha256": "a7518929fe4e6ad08b0ab0e8bd29c6ec2e0b13ef3fd062a3bffd835d25eccaed"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/SavedChurchForm.kt",
+        "sha256": "961faac581bac2d9fb81b5c3194ecd8fdeb0ee24fac752c783f1a14dca7a1d94"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/ServicePlayerState.kt",
+        "sha256": "7e14d1dcca7e4cdc8c6b362e281323dae4c27b449270cdcca13a8f2bd343c554"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/ServiceScreen.kt",
+        "sha256": "e3d89ce12e85b6a2b6128919e3e024312bc49c7ec7edc798e1fb789b16aeb3c2"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/SettingsScreen.kt",
+        "sha256": "874670ff945b2a8341176bd1df03dae24afe58f4148e2e943c07827dc8e781a6"
+      },
+      {
+        "path": "app/src/main/java/ru/liturgyguide/ui/StageSelector.kt",
+        "sha256": "13899e03e920ce2e8b0e71f971fa6e6f50f30dc2789f819a3cb7faf669ec897e"
+      },
+      {
+        "path": "app/src/main/res/drawable/ic_launcher_foreground.xml",
+        "sha256": "bb1afe125bae19c0e81220a990718d246da5a66921ea77909b007a97324953b1"
+      },
+      {
+        "path": "app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+        "sha256": "84d943e242fb42ca2b7f8c942c82e8e4575b0b2cf7230291835d3c3d3d21f9cd"
+      },
+      {
+        "path": "app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+        "sha256": "84d943e242fb42ca2b7f8c942c82e8e4575b0b2cf7230291835d3c3d3d21f9cd"
+      },
+      {
+        "path": "app/src/main/res/values/colors.xml",
+        "sha256": "b217de96fd4548ad5e3feeaaec24c8b72917149d7cccd84e2c62c6547d9731e5"
+      },
+      {
+        "path": "app/src/main/res/values/strings.xml",
+        "sha256": "7cb0b5ab1ce99420dbb88720ab52ba3d5abe90a19abf8425c285a9b3c03a5a55"
+      },
+      {
+        "path": "app/src/main/res/values/themes.xml",
+        "sha256": "6cb2945a97a0063a60d5ad3b5fdc5ee44d628c5826ebff15837b869ef88e1006"
+      },
+      {
+        "path": "app/src/main/res/values-night/colors.xml",
+        "sha256": "6e5578aa9129c19bfe91f2a37208e82f4dce700c7b5d28220989590ded1a96e3"
+      },
+      {
+        "path": "build.gradle.kts",
+        "sha256": "409d5d530f24368c3e1efe358d5e7a55848ca26f91aa1f4e5e56dedfd1360219"
+      },
+      {
+        "path": "gradle/wrapper/gradle-wrapper.jar",
+        "sha256": "cb0da6751c2b753a16ac168bb354870ebb1e162e9083f116729cec9c781156b8"
+      },
+      {
+        "path": "gradle/wrapper/gradle-wrapper.properties",
+        "sha256": "102e92ce3b2b252dbbc273381087a083f76bbf2750c0bd63045f0d0780fc37d3"
+      },
+      {
+        "path": "gradle.properties",
+        "sha256": "682639a91f347d72f52a47c6804ab32e50938e18d892fb53d22c90b23a07ea1a"
+      },
+      {
+        "path": "gradlew",
+        "sha256": "fc977a94723af68aaffa4e5d60496fb4aeed1884b6b19e5e2f2fd7612673313d"
+      },
+      {
+        "path": "gradlew.bat",
+        "sha256": "bdecf875b6868cbcbd36a1f85eedf0832f358ff28092c5797ed645f7edce77d9"
+      },
+      {
+        "path": "settings.gradle.kts",
+        "sha256": "d3e61e39b39c616198ba976e786e3186fdf43912f6083b1b1c124481e5116454"
+      },
+      {
+        "path": "external/0/PersonalServiceTimeTest.kt",
+        "sha256": "66151a9df915e57c96096aa7dce7b094e410191672d2eb4c6293e4190dd10b73"
+      },
+      {
+        "path": "external/1/ManualMomentFlowTest.kt",
+        "sha256": "6e7d5762d81a42627a3f76edf4ed02c902067a72d547c93b57db8bf102c32e8e"
+      },
+      {
+        "path": "external/2/MainScheduleOverviewTest.kt",
+        "sha256": "1e036971cacec5b296da70f56255f917e8c19ae485e48f7c14f35ed485447764"
+      },
+      {
+        "path": "external/3/FirstVisitFlowTest.kt",
+        "sha256": "a010d97d539b44e02a4448971b02d676a5bd14ac680492a0c9030da66f4b8bc5"
+      },
+      {
+        "path": "external/4/MainContextTest.kt",
+        "sha256": "a07e4d6c82e3b98a5680ab7e4c9f36e5009a3ab6f20e9dc75a1e1e3fef25b98e"
+      },
+      {
+        "path": "external/5/UnifiedPlayerFlowTest.kt",
+        "sha256": "2833e8f6543e74f8902c0b1537761e0b1f0bdd7a6805e98515928dcc7d7b0db5"
+      },
+      {
+        "path": "external/6/StageSelectorTest.kt",
+        "sha256": "67e97b50728e77b934d2075074f7ad54515bc9d470b63540747072d55a47140e"
+      },
+      {
+        "path": "external/7/SavedChurchFlowTest.kt",
+        "sha256": "48ca42e1bdef36141e85ee27fa8f67ea696bddd073bd166849ffa3b3bbc6cdb9"
+      },
+      {
+        "path": "external/8/GuideNavigationTest.kt",
+        "sha256": "1f0822739dec5789cacf035419f65c65bac786976d9f9751d3f835e42eedcd3e"
+      },
+      {
+        "path": "external/9/ReaderAccessibilityTest.kt",
+        "sha256": "e0ae100da538215cb40f8cab05e4f864e70a19b399501587eff121612e9e9b0c"
+      },
+      {
+        "path": "external/10/DailyReadingSearchTest.kt",
+        "sha256": "9f585ec37b32cc29225bcc81d4feca3331d659e45fea433cd5e8b174ea595d0c"
+      },
+      {
+        "path": "external/11/CompactReaderMatrixTest.kt",
+        "sha256": "08d7a8e567a4887a03e97a7f3dd6b79a35ebcc6ed33f097547edb8dc5d4ee87c"
+      },
+      {
+        "path": "external/12/DiscoveryNavigationTest.kt",
+        "sha256": "a58ef27b22564bf1040d88ecfc3884770c3bd969961a3dcce71c27e3a8a63ef5"
+      },
+      {
+        "path": "external/13/ArrivalFlowTest.kt",
+        "sha256": "53979dbd0e52a0d6413fc227631571ce0555533f5179ce27cd0df5474c4a80be"
+      },
+      {
+        "path": "external/14/SavedReadingTest.kt",
+        "sha256": "2d4b6e03901695c7ca65236142a572a3b7342c5ec3cdd7361475e407423c7e7c"
+      },
+      {
+        "path": "external/15/DateRolloverTest.kt",
+        "sha256": "db6906a72d2c6ccc4edff29f38a5ec2489ae83eae72f3a54ebaadc036216e5bc"
+      },
+      {
+        "path": "external/16/ChurchDiscoveryScreenTest.kt",
+        "sha256": "601829e4fb108e959ab43e18a862b4564a8c202c7220067d7c5a063a88260aef"
+      },
+      {
+        "path": "external/17/HypothesisPrototype.kt",
+        "sha256": "a4618d9d33955cae15e5ab61b79c7f69a112ca9fc4c06ff56884d510d97339ea"
+      },
+      {
+        "path": "external/18/HypothesisPrototypeTest.kt",
+        "sha256": "dbc4ebd1f28861d01e0a4012bb01e0ee6473de95a46dabf58e40256898b4174e"
+      },
+      {
+        "path": "external/19/ServicePlayerStateTest.kt",
+        "sha256": "1bea533218e1261c9f84fdb49caa89044ade1339ed2710ef46ba8a6029fa438c"
+      },
+      {
+        "path": "external/20/ServiceEntryResolverTest.kt",
+        "sha256": "5e97a5dedb5ca4b8ab52c99a79d19d95e7aa2ea9b4dc58a2c20b5eb67fb4562f"
+      },
+      {
+        "path": "external/21/ServicePlaybackPlanTest.kt",
+        "sha256": "24bf57664a880a6956c37a1c9894e1eb30f84c61dffb72df4212ee4e7a7d3e64"
+      },
+      {
+        "path": "external/22/PlaybackAcceptanceStoreTest.kt",
+        "sha256": "2302baeea9325ad0de6e6b551362ed58eead96538f27eb71ba4578d6e8ba9f9c"
+      },
+      {
+        "path": "external/23/StageMatcherTest.kt",
+        "sha256": "922ccca0f7a8e181c55e669c6030786bc0542d330213baa810890adfbe5f2e24"
+      },
+      {
+        "path": "external/24/ReadingAcceptanceStoreTest.kt",
+        "sha256": "7cabd898d12cc616e1508d55dd8d74e60ead67526d444502ad06b7aa550653f0"
+      },
+      {
+        "path": "external/25/ParishRepositoryTest.kt",
+        "sha256": "0bccdc5ff0a5d020dff74cec93b0dc2e2dcfcd7a2fa10ebcb23b692c50a58eaa"
+      },
+      {
+        "path": "external/26/SavedChurchDirectoryTest.kt",
+        "sha256": "3ccc279bedb172814760383d718b64967853e3ba04abfc4a643bcade7516f2ee"
+      },
+      {
+        "path": "external/27/ReadingContextTest.kt",
+        "sha256": "10e51154aa8c180085cea3e67c6382913206e1bb5ce0bcaa9c180233adb2f2b5"
+      },
+      {
+        "path": "external/28/ServicePlaybackStoreTest.kt",
+        "sha256": "c2caebcd9dc05bd7418714b097f06549440da514d3d6599747d00dd009a23e8c"
+      },
+      {
+        "path": "external/29/TestFixtures.kt",
+        "sha256": "443c0df6f2d75dd84f1917b9fef7bc29917d037e7b8b387a0bad89b1722a66b5"
+      },
+      {
+        "path": "external/30/PhraseMatcherTest.kt",
+        "sha256": "83e1ac7c9752b29738731fcf81b50f24f0da3afe6b0676a3f7427b6c251aa6c9"
+      },
+      {
+        "path": "external/31/PrayerTrackFactoryTest.kt",
+        "sha256": "f127a227c5b53831f0fe3f00adbe078e62482af41dd5e89991c0be55badcde75"
+      },
+      {
+        "path": "external/32/ServicePlaybackEngineTest.kt",
+        "sha256": "cbbb3c8206455817d51f8ced98ffa6e6bb524d0f09cdfe29e1d04541b578e7e4"
+      },
+      {
+        "path": "external/33/ChurchSelectionTest.kt",
+        "sha256": "003666bacd1c631bf076a3afbd378d780a694b16657387f9241d1b5797a776f7"
+      },
+      {
+        "path": "external/34/LyricPlaybackEngineTest.kt",
+        "sha256": "c1122ccab98ad57770f7db9352e0b6af3405a560fed06db49033b82e98c1df13"
+      },
+      {
+        "path": "external/35/UserServiceStartTest.kt",
+        "sha256": "a76b0d9c9f959e01a53bd645150818d839293fd5a6df9ccfa214aa1823d89599"
+      },
+      {
+        "path": "external/36/PrayerTextSearchTest.kt",
+        "sha256": "cd6a1cfe9e632940fc2eae8490430eb9448ecefcc47e18d4a74efa03247b9134"
+      },
+      {
+        "path": "external/37/ScheduleOverviewTest.kt",
+        "sha256": "141daf5045689e3c54d5dbdf22d9acff44775140a6e31c56b1ae548894fec74b"
+      },
+      {
+        "path": "external/38/ChurchConfirmationStoreTest.kt",
+        "sha256": "1a4d49b5ff33c7450a3be7a1d3fd6354a547fe7b86ad7913949bd5716b7de83f"
+      },
+      {
+        "path": "external/39/ServiceSessionTest.kt",
+        "sha256": "407b598dfbefe50ed2d90643a637489f9f257eae01318ff173237f1f0e5e60e3"
+      },
+      {
+        "path": "external/40/PlaceDiscoveryTest.kt",
+        "sha256": "37d038c8f6f44c7558d5e10e2f2bfbc743ac0dd9dcf9d9c7f22c814c14ad6255"
+      },
+      {
+        "path": "external/41/DiscoveryTransportTest.kt",
+        "sha256": "535f8f96d78562de4e1935684639671ea28bbc187663af11083d684c9d040b1d"
+      }
+    ]
+  },
+  "error": null,
+  "build_type": "debug",
+  "log_sha256": "3faf5acb7ed38cfb3e98f7840807c3e9b8e2ebe53a9c66d4094633033f237482",
+  "harness_sha256": "caa2c822abb4c5543009aa9130311b5c8f177e34758a7a8fd1efb95b3b0f2625",
+  "apk": {
+    "path": "/Users/dmitriymoguschiy/Documents/Spectrion Projects/Новый-чат-21AE5054/PravoslavnyyProvodnik/app/build/outputs/apk/debug/app-debug.apk",
+    "sha256": "11d66e15575954c24c53bb9d05ca1f4bfeb8faa434913489fab4820d4c27fad9",
+    "package": "ru.liturgyguide",
+    "version_code": "4",
+    "version_name": "0.4.0-guide",
+    "certificate_sha256": "bb0ea3162b2129b7411ed3a15956c6f2065c685574c1caa24fb260e452ef5247",
+    "debuggable": true
+  }
+}

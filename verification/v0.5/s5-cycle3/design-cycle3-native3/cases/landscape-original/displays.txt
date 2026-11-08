@@ -1,0 +1,343 @@
+WINDOW MANAGER DISPLAY CONTENTS (dumpsys window displays)
+  Display: mDisplayId=0 (organized)
+    init=1080x2400 420dpi mMinSizeOfResizeableTaskDp=220 base=945x1680 420dpi cur=1680x945 app=1680x945 rng=945x945-1680x1680
+    deferred=false mLayoutNeeded=true
+  mLastOrientationSource=WindowedMagnification:0:31@129726876
+  deepestLastOrientationSource=ActivityRecord{3179295 u0 ru.liturgyguide/.ui.MainActivity t2133}
+  overrideConfig={1.3 310mcc260mnc [en_US] ldltr sw360dp w640dp h360dp 420dpi nrml long land finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1680, 945) mAppBounds=Rect(0, 0 - 1680, 945) mMaxBounds=Rect(0, 0 - 1680, 945) mDisplayRotation=ROTATION_90 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} as.2 s.2423 fontWeightAdjustment=0}
+  mLayoutSeq=30098
+  mCurrentFocus=Window{205fa94 u0 ru.liturgyguide/ru.liturgyguide.ui.MainActivity}
+  mFocusedApp=ActivityRecord{3179295 u0 ru.liturgyguide/.ui.MainActivity t2133}
+
+  mHoldScreenWindow=null
+  mObscuringWindow=Window{205fa94 u0 ru.liturgyguide/ru.liturgyguide.ui.MainActivity}
+  mLastWakeLockHoldingWindow=null
+  mLastWakeLockObscuringWindow=Window{30ec1b5 u0 com.android.systemui.wallpapers.ImageWallpaper}
+
+  displayId=0
+  mWallpaperTarget=null
+  mLastWallpaperZoomOut=0.0
+  token WallpaperWindowToken{c6234d5 token=android.os.Binder@9a3058c}:
+    canShowWhenLocked=true
+    mWallpaperX=0.0
+    mWallpaperY=0.5
+    mWallpaperXStep=0.33333334
+    mWallpaperYStep=1.0
+    mWallpaperDisplayOffsetX=NA
+    mWallpaperDisplayOffsetY=NA
+
+  mSystemGestureExclusion=SkRegion()
+
+  Display areas in top down Z order:
+    * Leaf:36:36
+    * HideDisplayCutout:32:35
+      * OneHanded:34:35
+        * FullscreenMagnification:34:35
+          * Leaf:34:35
+      * FullscreenMagnification:33:33
+        * Leaf:33:33
+      * OneHanded:32:32
+        * Leaf:32:32
+    * WindowedMagnification:0:31
+      * HideDisplayCutout:26:31
+        * OneHanded:26:31
+          * FullscreenMagnification:29:31
+            * Leaf:29:31
+          * Leaf:28:28
+          * FullscreenMagnification:26:27
+            * Leaf:26:27
+      * Leaf:24:25
+      * HideDisplayCutout:18:23
+        * OneHanded:18:23
+          * FullscreenMagnification:18:23
+            * Leaf:18:23
+      * OneHanded:17:17
+        * FullscreenMagnification:17:17
+          * Leaf:17:17
+      * HideDisplayCutout:16:16
+        * OneHanded:16:16
+          * FullscreenMagnification:16:16
+            * Leaf:16:16
+      * OneHanded:15:15
+        * FullscreenMagnification:15:15
+          * Leaf:15:15
+      * HideDisplayCutout:0:14
+        * OneHanded:0:14
+          * ImePlaceholder:13:14
+            * ImeContainer
+          * FullscreenMagnification:0:12
+            * Leaf:3:12
+            * DefaultTaskDisplayArea (organized)
+            * Leaf:0:1
+
+  Task display areas in top down Z order:
+    TaskDisplayArea DefaultTaskDisplayArea
+      overrideConfig={0.0 ?mcc0mnc ?localeList ?layoutDir ?swdp ?wdp ?hdp ?density ?lsize ?long ?ldr ?wideColorGamut ?orien ?uimode ?night ?touch ?keyb/?/? ?nav/? winConfig={ mBounds=Rect(0, 0 - 0, 0) mAppBounds=null mMaxBounds=Rect(0, 0 - 0, 0) mDisplayRotation=undefined mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=undefined} ?fontWeightAdjustment}
+      mPreferredTopFocusableRootTask=Task{3f0ffaa #2133 type=standard A=10301:ru.liturgyguide}
+      mLastFocusedRootTask=Task{3f0ffaa #2133 type=standard A=10301:ru.liturgyguide}
+      Application tokens in top down Z order:
+      * Task{3f0ffaa #2133 type=standard A=10301:ru.liturgyguide U=0 visible=true visibleRequested=true mode=fullscreen translucent=false sz=1}
+        bounds=[0,0][1680,945]
+        * ActivityRecord{3179295 u0 ru.liturgyguide/.ui.MainActivity t2133}
+      * Task{3a0cf7a #1 type=home U=0 visible=false visibleRequested=false mode=fullscreen translucent=true sz=1}
+        bounds=[0,0][1680,945]
+        * Task{3e1d2a7 #776 type=home I=com.google.android.apps.nexuslauncher/.NexusLauncherActivity U=0 rootTaskId=1 visible=false visibleRequested=false mode=fullscreen translucent=true sz=2}
+          bounds=[0,0][1680,945]
+          * ActivityRecord{d9e0f66 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t776}
+          * TaskFragment{e80e615 mode=multi-window organizerUid=10177 organizerProc=com.google.android.apps.nexuslauncher}
+            bounds=[0,0][1680,945]
+      * Task{53a564 #3 type=undefined U=0 visible=false visibleRequested=false mode=fullscreen translucent=true sz=2}
+        bounds=[0,0][1680,945]
+        * Task{8f11482 #5 type=undefined U=0 rootTaskId=3 visible=false visibleRequested=false mode=multi-window translucent=true sz=0}
+          bounds=[0,2400][1080,3600]
+        * Task{f5a13cd #4 type=undefined U=0 rootTaskId=3 visible=false visibleRequested=false mode=multi-window translucent=true sz=0}
+          bounds=[0,0][1680,945]
+
+  no ScreenRotationAnimation 
+
+  rootHomeTask=Task=1
+
+  PinnedTaskController
+    mIsImeShowing=false
+    mImeHeight=0
+    mMinAspectRatio=0.41841003
+    mMaxAspectRatio=2.39
+
+  DisplayFrames w=1680 h=945 r=1
+
+  DisplayPolicy
+    mCarDockEnablesAccelerometer=true mDeskDockEnablesAccelerometer=true
+    mDockMode=EXTRA_DOCK_STATE_UNDOCKED mLidState=LID_OPEN
+    mAwake=true mScreenOnEarly=true mScreenOnFully=true
+    mKeyguardDrawComplete=true mWindowManagerDrawComplete=true
+    mHdmiPlugged=false
+    mLastBehavior=DEFAULT
+    mShowingDream=false mDreamingLockscreen=false
+    mStatusBar=Window{fbcb5e2 u0 StatusBar}
+    mExpandedPanel=Window{1fdec71 u0 NotificationShade}
+    isKeyguardShowing=false
+    mNavigationBar=Window{1d020c3 u0 Taskbar}
+    mNavBarOpacityMode=2
+    mNavigationBarCanMove=false
+    mNavigationBarPosition=4
+    mLeftGestureHost=Window{1d020c3 u0 Taskbar}
+    mTopGestureHost=Window{fbcb5e2 u0 StatusBar}
+    mRightGestureHost=Window{1d020c3 u0 Taskbar}
+    mBottomGestureHost=Window{1d020c3 u0 Taskbar}
+    mFocusedWindow=Window{205fa94 u0 ru.liturgyguide/ru.liturgyguide.ui.MainActivity}
+    mTopFullscreenOpaqueWindowState=Window{205fa94 u0 ru.liturgyguide/ru.liturgyguide.ui.MainActivity}
+    mSystemBarColorApps={ActivityRecord{3179295 u0 ru.liturgyguide/.ui.MainActivity t2133}}
+    mNavBarColorWindowCandidate=Window{205fa94 u0 ru.liturgyguide/ru.liturgyguide.ui.MainActivity}
+    mNavBarBackgroundWindowCandidate=Window{205fa94 u0 ru.liturgyguide/ru.liturgyguide.ui.MainActivity}
+    mLastStatusBarAppearanceRegions=
+      AppearanceRegion{ bounds=[0,0][1680,945]}
+    mLastLetterboxDetails=
+    mStatusBarBackgroundWindows=
+      Window{205fa94 u0 ru.liturgyguide/ru.liturgyguide.ui.MainActivity}
+    mTopIsFullscreen=false
+    mImeInsetsConsumed=false
+    mForceShowNavigationBarEnabled=false mAllowLockscreenWhenOn=false
+    mRemoteInsetsControllerControlsSystemBars=false
+    mDecorInsetsInfo:
+      ROTATION_0={nonDecorInsets=[0,0][0,0], overrideNonDecorInsets=[0,95][0,63], configInsets=[0,0][0,0], overrideConfigInsets=[0,95][0,63], nonDecorFrame=[0,0][945,1680], overrideNonDecorFrame=[0,95][945,1617], configFrame=[0,0][945,1680], overrideConfigFrame=[0,95][945,1617]}
+      ROTATION_90={nonDecorInsets=[0,0][0,0], overrideNonDecorInsets=[95,0][0,63], configInsets=[0,0][0,0], overrideConfigInsets=[95,74][0,63], nonDecorFrame=[0,0][1680,945], overrideNonDecorFrame=[95,0][1680,882], configFrame=[0,0][1680,945], overrideConfigFrame=[95,74][1680,882]}
+      ROTATION_180={nonDecorInsets=[0,0][0,0], overrideNonDecorInsets=[0,0][0,95], configInsets=[0,0][0,0], overrideConfigInsets=[0,74][0,95], nonDecorFrame=[0,0][945,1680], overrideNonDecorFrame=[0,0][945,1585], configFrame=[0,0][945,1680], overrideConfigFrame=[0,74][945,1585]}
+      ROTATION_270={nonDecorInsets=[0,0][0,0], overrideNonDecorInsets=[0,0][95,63], configInsets=[0,0][0,0], overrideConfigInsets=[0,74][95,63], nonDecorFrame=[0,0][1680,945], overrideNonDecorFrame=[0,0][1585,882], configFrame=[0,0][1680,945], overrideConfigFrame=[0,74][1585,882]}
+    SystemGestures:
+      mDisplayCutoutTouchableRegionSize=32
+      mSwipeStartThreshold=Rect(127, 63 - 63, 63)
+      mSwipeDistanceThreshold=63
+
+  DisplayRotation
+    mCurrentAppOrientation=SCREEN_ORIENTATION_UNSPECIFIED
+    mLastOrientation=-1
+    mRotation=1 mDeferredRotationPauseCount=0
+    mLandscapeRotation=ROTATION_90 mSeascapeRotation=ROTATION_270
+    mPortraitRotation=ROTATION_0 mUpsideDownRotation=ROTATION_180
+    mSupportAutoRotation=true
+    WindowOrientationListener
+      mEnabled=true
+      mCurrentRotation=ROTATION_90
+      mSensorType=null
+      mSensor={Sensor name="Goldfish 3-axis Accelerometer", vendor="The Android Open Source Project", version=1, type=1, maxRange=39.300102, resolution=2.480159E-4, power=3.0, minDelay=10000}
+      mRate=2
+      AccelSensorJudge
+        mProposedRotation=0
+        mPredictedRotation=0
+        mLastFilteredX=0.0
+        mLastFilteredY=9.776321
+        mLastFilteredZ=0.812345
+        mLastFilteredTimestampNanos=18785277315671 (15.169703ms ago)
+        mTiltHistory={last: 5.0}
+        mFlat=false
+        mSwinging=false
+        mAccelerating=false
+        mOverhead=false
+        mTouched=false
+        mTiltToleranceConfig=[[-25, 70], [-25, 65], [-25, 60], [-25, 65]]
+
+    mCarDockRotation=-1 mDeskDockRotation=-1
+    mUserRotationMode=USER_ROTATION_LOCKED mUserRotation=ROTATION_90 mCameraRotationMode=0 mAllowAllRotations=unknown
+    mDemoHdmiRotation=ROTATION_90 mDemoHdmiRotationLock=false mUndockedHdmiRotation=-1
+    mLidOpenRotation=-1
+    mFixedToUserRotation=false
+  FoldController
+    mPauseAutorotationDuringUnfolding=false
+    mShouldDisableRotationSensor=false
+    mShouldIgnoreSensorRotation=false
+    mLastDisplaySwitchTime=0
+    mLastHingeAngleEventTime=0
+    mDeviceState=FOLDED
+
+    RotationHistory
+      11-08 19:27:16.308 ROTATION_90 to ROTATION_0
+        source=ActivityRecord{d9e0f66 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t776} SCREEN_ORIENTATION_NOSENSOR
+        mode=USER_ROTATION_LOCKED user=ROTATION_90 sensor=ROTATION_0
+       halfFoldSavedRotation=-1 mInHalfFoldTransition=false mFoldState=FOLDED
+      DisplayRotationCompatPolicy{ isTreatmentEnabledForDisplay=false }
+       reversionSlots= NOSENSOR true, CAMERA false HALF_FOLD false
+      11-08 19:28:14.961 ROTATION_0 to ROTATION_90
+        source=ActivityRecord{6b8e44f u0 ru.liturgyguide/.ui.MainActivity t2070} SCREEN_ORIENTATION_UNSPECIFIED
+        mode=USER_ROTATION_LOCKED user=ROTATION_90 sensor=ROTATION_0
+       halfFoldSavedRotation=-1 mInHalfFoldTransition=false mFoldState=FOLDED
+      DisplayRotationCompatPolicy{ isTreatmentEnabledForDisplay=false }
+       reversionSlots= NOSENSOR false, CAMERA false HALF_FOLD false
+      11-08 19:29:27.259 ROTATION_90 to ROTATION_0
+        source=ActivityRecord{6b8e44f u0 ru.liturgyguide/.ui.MainActivity t2070} SCREEN_ORIENTATION_UNSPECIFIED
+        mode=USER_ROTATION_LOCKED user=ROTATION_0 sensor=ROTATION_0
+       halfFoldSavedRotation=-1 mInHalfFoldTransition=false mFoldState=FOLDED
+      DisplayRotationCompatPolicy{ isTreatmentEnabledForDisplay=false }
+       reversionSlots= NOSENSOR false, CAMERA false HALF_FOLD false
+      11-08 19:36:54.768 ROTATION_0 to ROTATION_90
+        source=ActivityRecord{8f804b2 u0 ru.liturgyguide/androidx.activity.ComponentActivity t2107} SCREEN_ORIENTATION_LANDSCAPE
+        mode=USER_ROTATION_LOCKED user=ROTATION_0 sensor=ROTATION_0
+       halfFoldSavedRotation=-1 mInHalfFoldTransition=false mFoldState=FOLDED
+      DisplayRotationCompatPolicy{ isTreatmentEnabledForDisplay=false }
+       reversionSlots= NOSENSOR false, CAMERA false HALF_FOLD false
+      11-08 19:37:03.614 ROTATION_90 to ROTATION_0
+        source=ActivityRecord{8f804b2 u0 ru.liturgyguide/androidx.activity.ComponentActivity t2107} SCREEN_ORIENTATION_PORTRAIT
+        mode=USER_ROTATION_LOCKED user=ROTATION_0 sensor=ROTATION_0
+       halfFoldSavedRotation=-1 mInHalfFoldTransition=false mFoldState=FOLDED
+      DisplayRotationCompatPolicy{ isTreatmentEnabledForDisplay=false }
+       reversionSlots= NOSENSOR false, CAMERA false HALF_FOLD false
+      11-08 19:37:17.769 ROTATION_0 to ROTATION_90
+        source=ActivityRecord{3053eec u0 ru.liturgyguide/androidx.activity.ComponentActivity t2119} SCREEN_ORIENTATION_LANDSCAPE
+        mode=USER_ROTATION_LOCKED user=ROTATION_0 sensor=ROTATION_0
+       halfFoldSavedRotation=-1 mInHalfFoldTransition=false mFoldState=FOLDED
+      DisplayRotationCompatPolicy{ isTreatmentEnabledForDisplay=false }
+       reversionSlots= NOSENSOR false, CAMERA false HALF_FOLD false
+      11-08 19:37:21.648 ROTATION_90 to ROTATION_0
+        source=ActivityRecord{3053eec u0 ru.liturgyguide/androidx.activity.ComponentActivity t2119} SCREEN_ORIENTATION_PORTRAIT
+        mode=USER_ROTATION_LOCKED user=ROTATION_0 sensor=ROTATION_0
+       halfFoldSavedRotation=-1 mInHalfFoldTransition=false mFoldState=FOLDED
+      DisplayRotationCompatPolicy{ isTreatmentEnabledForDisplay=false }
+       reversionSlots= NOSENSOR false, CAMERA false HALF_FOLD false
+      11-08 19:41:31.896 ROTATION_0 to ROTATION_90
+        source=ActivityRecord{bf55aca u0 ru.liturgyguide/.ui.MainActivity t2132} SCREEN_ORIENTATION_UNSPECIFIED
+        mode=USER_ROTATION_LOCKED user=ROTATION_90 sensor=ROTATION_0
+       halfFoldSavedRotation=-1 mInHalfFoldTransition=false mFoldState=FOLDED
+      DisplayRotationCompatPolicy{ isTreatmentEnabledForDisplay=false }
+       reversionSlots= NOSENSOR false, CAMERA false HALF_FOLD false
+
+        RotationLockHistory
+          11-08 19:41:45.811: mode=USER_ROTATION_LOCKED, rotation=ROTATION_90, caller=UiAutomationConnection#restoreRotationStateLocked
+          11-08 19:41:48.662: mode=USER_ROTATION_LOCKED, rotation=ROTATION_90, caller=UiAutomationConnection#restoreRotationStateLocked
+          11-08 19:41:51.003: mode=USER_ROTATION_LOCKED, rotation=ROTATION_90, caller=UiAutomationConnection#restoreRotationStateLocked
+          11-08 19:41:52.745: mode=USER_ROTATION_LOCKED, rotation=ROTATION_90, caller=WindowManagerShellCommand#lock
+          11-08 19:41:53.983: mode=USER_ROTATION_LOCKED, rotation=ROTATION_90, caller=UiAutomationConnection#restoreRotationStateLocked
+          11-08 19:41:56.199: mode=USER_ROTATION_LOCKED, rotation=ROTATION_90, caller=UiAutomationConnection#restoreRotationStateLocked
+          11-08 19:41:59.405: mode=USER_ROTATION_LOCKED, rotation=ROTATION_90, caller=UiAutomationConnection#restoreRotationStateLocked
+          11-08 19:42:01.784: mode=USER_ROTATION_LOCKED, rotation=ROTATION_90, caller=UiAutomationConnection#restoreRotationStateLocked
+
+  InputConsumers:
+    name=recents_animation_input_consumer pid=1210 user=UserHandle{0}
+
+  WindowInsetsStateController
+    InsetsState
+      mDisplayFrame=Rect(0, 0 - 1680, 945)
+      mDisplayCutout=DisplayCutout{insets=Rect(95, 0 - 0, 0) waterfall=Insets{left=0, top=0, right=0, bottom=0} boundingRect={Bounds=[Rect(0, 507 - 95, 609), Rect(0, 0 - 0, 0), Rect(0, 0 - 0, 0), Rect(0, 0 - 0, 0)]} cutoutPathParserInfo={CutoutPathParserInfo{displayWidth=945 displayHeight=1680 physicalDisplayWidth=1080 physicalDisplayHeight=2400 density={2.625} cutoutSpec={M 506,68 a 34,34 0 1 0 68,0 34,34 0 1 0 -68,0 Z @left} rotation={1} scale={1.0} physicalPixelDisplaySizeRatio={0.7}}} sideOverrides={}}
+      mRoundedCorners=RoundedCorners{[RoundedCorner{position=TopLeft, radius=33, center=Point(33, 33)}, RoundedCorner{position=TopRight, radius=34, center=Point(1646, 34)}, RoundedCorner{position=BottomRight, radius=34, center=Point(1646, 911)}, RoundedCorner{position=BottomLeft, radius=33, center=Point(33, 912)}]}
+      mRoundedCornerFrame=Rect(0, 0 - 0, 0)
+      mPrivacyIndicatorBounds=PrivacyIndicatorBounds {static bounds=Rect(1427, 0 - 1643, 74) rotation=1}
+      mDisplayShape=DisplayShape{ spec=-1893857183 displayWidth=1080 displayHeight=2400 physicalPixelDisplaySizeRatio=1.0 rotation=1 offsetX=0 offsetY=0 scale=1.0}
+        InsetsSource id=3 type=ime frame=[0,0][0,0] visible=false flags= sideHint=NONE boundingRects=null
+        InsetsSource id=7 type=displayCutout frame=[0,0][95,945] visible=true flags= sideHint=LEFT boundingRects=null
+        InsetsSource id=63eb0000 type=statusBars frame=[0,0][1680,74] visible=true flags= sideHint=TOP boundingRects=null
+        InsetsSource id=63eb0005 type=mandatorySystemGestures frame=[0,0][1680,74] visible=true flags= sideHint=TOP boundingRects=null
+        InsetsSource id=63eb0006 type=tappableElement frame=[0,0][1680,74] visible=true flags= sideHint=TOP boundingRects=null
+        InsetsSource id=6c2f0001 type=navigationBars frame=[0,882][1680,945] visible=true flags=SUPPRESS_SCRIM|ANIMATE_RESIZING sideHint=BOTTOM boundingRects=null
+        InsetsSource id=6c2f0004 type=systemGestures frame=[0,0][78,945] visible=true flags= sideHint=LEFT boundingRects=null
+        InsetsSource id=6c2f0005 type=mandatorySystemGestures frame=[0,861][1680,945] visible=true flags= sideHint=BOTTOM boundingRects=null
+        InsetsSource id=6c2f0006 type=tappableElement frame=[0,0][0,0] visible=true flags= sideHint=NONE boundingRects=null
+        InsetsSource id=6c2f0024 type=systemGestures frame=[1602,0][1680,945] visible=true flags= sideHint=RIGHT boundingRects=null
+    Control map:
+      Window{205fa94 u0 ru.liturgyguide/ru.liturgyguide.ui.MainActivity}:
+        InsetsSourceControl: {3 mType=ime mSurfacePosition=Point(136, 74) mInsetsHint=Insets{left=0, top=0, right=0, bottom=883}}
+        InsetsSourceControl: {63eb0000 mType=statusBars initiallyVisible mSurfacePosition=Point(0, 0) mInsetsHint=Insets{left=0, top=74, right=0, bottom=0}}
+        InsetsSourceControl: {6c2f0001 mType=navigationBars initiallyVisible mSurfacePosition=Point(0, 882) mInsetsHint=Insets{left=0, top=0, right=0, bottom=63}}
+    InsetsSourceProviders:
+      InsetsSourceProvider
+        mSource=InsetsSource id=6c2f0024 type=systemGestures frame=[1602,0][1680,945] visible=true flags= sideHint=RIGHT boundingRects=null
+        mSourceFrame=Rect(1602, 0 - 1680, 945)
+        mIsLeashReadyForDispatching=true mHasPendingPosition=false
+        mWindowContainer=Window{1d020c3 u0 Taskbar}
+      InsetsSourceProvider
+        mSource=InsetsSource id=6c2f0006 type=tappableElement frame=[0,0][0,0] visible=true flags= sideHint=NONE boundingRects=null
+        mSourceFrame=Rect(0, 0 - 0, 0)
+        mOverrideFrames={2011=Rect(0, 882 - 1680, 945), 2031=Rect(0, 0 - 0, 0)}
+        mIsLeashReadyForDispatching=true mHasPendingPosition=false
+        mWindowContainer=Window{1d020c3 u0 Taskbar}
+      InsetsSourceProvider
+        mSource=InsetsSource id=6c2f0005 type=mandatorySystemGestures frame=[0,861][1680,945] visible=true flags= sideHint=BOTTOM boundingRects=null
+        mSourceFrame=Rect(0, 861 - 1680, 945)
+        mOverrideFrames={2011=Rect(0, 882 - 1680, 945), 2031=Rect(0, 861 - 1680, 945)}
+        mIsLeashReadyForDispatching=true mHasPendingPosition=false
+        mWindowContainer=Window{1d020c3 u0 Taskbar}
+      InsetsSourceProvider
+        mSource=InsetsSource id=6c2f0004 type=systemGestures frame=[0,0][78,945] visible=true flags= sideHint=LEFT boundingRects=null
+        mSourceFrame=Rect(0, 0 - 78, 945)
+        mIsLeashReadyForDispatching=true mHasPendingPosition=false
+        mWindowContainer=Window{1d020c3 u0 Taskbar}
+      InsetsSourceProvider
+        mSource=InsetsSource id=6c2f0001 type=navigationBars frame=[0,882][1680,945] visible=true flags=SUPPRESS_SCRIM|ANIMATE_RESIZING sideHint=BOTTOM boundingRects=null
+        mSourceFrame=Rect(0, 882 - 1680, 945)
+        mOverrideFrames={2011=Rect(0, 882 - 1680, 945), 2031=Rect(0, 882 - 1680, 945)}
+        mControl=InsetsSourceControl mId=6c2f0001 mType=navigationBars mLeash=Surface(name=Surface(name=1d020c3 Taskbar)/@0xc35b965 - animation-leash of insets_animation)/@0x842b845 mInitiallyVisible=true mSurfacePosition=Point(0, 882) mInsetsHint=Insets{left=0, top=0, right=0, bottom=63} mSkipAnimationOnce=false
+        mInsetsHint=Insets{left=0, top=0, right=0, bottom=63}
+        mIsLeashReadyForDispatching=true mHasPendingPosition=false
+        mWindowContainer=Window{1d020c3 u0 Taskbar}
+        mAdapter=ControlAdapter mCapturedLeash=Surface(name=Surface(name=1d020c3 Taskbar)/@0xc35b965 - animation-leash of insets_animation)/@0x842b845
+        mControlTarget=Window{205fa94 u0 ru.liturgyguide/ru.liturgyguide.ui.MainActivity}
+      InsetsSourceProvider
+        mSource=InsetsSource id=63eb0006 type=tappableElement frame=[0,0][1680,74] visible=true flags= sideHint=TOP boundingRects=null
+        mSourceFrame=Rect(0, 0 - 1680, 74)
+        mIsLeashReadyForDispatching=true mHasPendingPosition=false
+        mWindowContainer=Window{fbcb5e2 u0 StatusBar}
+      InsetsSourceProvider
+        mSource=InsetsSource id=63eb0005 type=mandatorySystemGestures frame=[0,0][1680,74] visible=true flags= sideHint=TOP boundingRects=null
+        mSourceFrame=Rect(0, 0 - 1680, 74)
+        mIsLeashReadyForDispatching=true mHasPendingPosition=false
+        mWindowContainer=Window{fbcb5e2 u0 StatusBar}
+      InsetsSourceProvider
+        mSource=InsetsSource id=63eb0000 type=statusBars frame=[0,0][1680,74] visible=true flags= sideHint=TOP boundingRects=null
+        mSourceFrame=Rect(0, 0 - 1680, 74)
+        mControl=InsetsSourceControl mId=63eb0000 mType=statusBars mLeash=Surface(name=Surface(name=fbcb5e2 StatusBar)/@0x9eb7dcf - animation-leash of insets_animation)/@0xfbd2ccb mInitiallyVisible=true mSurfacePosition=Point(0, 0) mInsetsHint=Insets{left=0, top=74, right=0, bottom=0} mSkipAnimationOnce=false
+        mInsetsHint=Insets{left=0, top=74, right=0, bottom=0}
+        mIsLeashReadyForDispatching=true mHasPendingPosition=false
+        mWindowContainer=Window{fbcb5e2 u0 StatusBar}
+        mAdapter=ControlAdapter mCapturedLeash=Surface(name=Surface(name=fbcb5e2 StatusBar)/@0x9eb7dcf - animation-leash of insets_animation)/@0xfbd2ccb
+        mControlTarget=Window{205fa94 u0 ru.liturgyguide/ru.liturgyguide.ui.MainActivity}
+      ImeInsetsSourceProvider
+        mSource=InsetsSource id=3 type=ime frame=[0,0][0,0] visible=false flags= sideHint=NONE boundingRects=null
+        mSourceFrame=Rect(136, 954 - 2400, 1080)
+        mControl=InsetsSourceControl mId=3 mType=ime mLeash=Surface(name=Surface(name=5c7c4a0 InputMethod)/@0xc53fc1e - animation-leash of insets_animation)/@0x3db93c1 mInitiallyVisible=false mSurfacePosition=Point(136, 74) mInsetsHint=Insets{left=0, top=0, right=0, bottom=883} mSkipAnimationOnce=false
+        mInsetsHint=Insets{left=0, top=0, right=0, bottom=883} stale
+        mIsLeashReadyForDispatching=true mHasPendingPosition=false
+        mWindowContainer=Window{5c7c4a0 u0 InputMethod}
+        mAdapter=ControlAdapter mCapturedLeash=Surface(name=Surface(name=5c7c4a0 InputMethod)/@0xc53fc1e - animation-leash of insets_animation)/@0x3db93c1
+        mControlTarget=Window{205fa94 u0 ru.liturgyguide/ru.liturgyguide.ui.MainActivity}
+        mImeShowing=false        showImePostLayout not scheduled, mImeRequester=null
+
+  InsetsPolicy
+    status: WINDOW_STATE_SHOWING
+    nav: WINDOW_STATE_SHOWING

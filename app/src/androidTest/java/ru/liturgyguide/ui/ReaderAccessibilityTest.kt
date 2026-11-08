@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.gson.Gson
@@ -220,6 +221,7 @@ class ReaderAccessibilityTest {
             .putString("lyric_track_$stageId", track.id).putInt("lyric_line_${track.id}", phraseIndex)
             .putString("lyric_phrase_${track.id}", track.lines[phraseIndex].id).commit())
         launchApp(width, height, systemFontScale)
+        awaitPlatformReady()
         compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("resume_guide"))
         compose.onNodeWithTag("resume_guide").performScrollTo().performClick()
     }
@@ -329,5 +331,21 @@ class ReaderAccessibilityTest {
     private fun orient(requested: Int, expected: Int) {
         compose.activityRule.scenario.onActivity { it.requestedOrientation = requested }
         compose.waitUntil(timeoutMillis = 10_000) { compose.activity.resources.configuration.orientation == expected }
+        awaitPlatformReady()
+    }
+
+    private fun awaitPlatformReady() {
+        compose.waitUntil(timeoutMillis = 10_000) {
+            var ready = false
+            compose.activityRule.scenario.onActivity { activity ->
+                val decor = activity.window.decorView
+                ready = activity.lifecycle.currentState == Lifecycle.State.RESUMED &&
+                    decor.hasWindowFocus() && decor.width > 0 && decor.height > 0
+            }
+            ready
+        }
+        // Native transitions and layout are not driven by Compose's test clock.
+        InstrumentationRegistry.getInstrumentation().uiAutomation.waitForIdle(200, 5_000)
+        compose.waitForIdle()
     }
 }

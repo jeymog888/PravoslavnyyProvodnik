@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.service.ChurchSelectionTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-11-08T16:05:15" hostname="MacBook-Air-Dmitrij.local" time="0.027">
+  <properties/>
+  <testcase name="valid modern context restores only its known parish" classname="ru.liturgyguide.service.ChurchSelectionTest" time="0.013"/>
+  <testcase name="an explicit known choice wins over reading and legacy addresses" classname="ru.liturgyguide.service.ChurchSelectionTest" time="0.003"/>
+  <testcase name="modern manual reading without parish remains without parish" classname="ru.liturgyguide.service.ChurchSelectionTest" time="0.002"/>
+  <testcase name="fresh installation has no parish and cannot receive a default schedule" classname="ru.liturgyguide.service.ChurchSelectionTest" time="0.002"/>
+  <testcase name="legacy fallback needs positive evidence and never uses first directory item" classname="ru.liturgyguide.service.ChurchSelectionTest" time="0.001"/>
+  <testcase name="corrupt modern context and orphan snapshot prohibit legacy recovery" classname="ru.liturgyguide.service.ChurchSelectionTest" time="0.002"/>
+  <testcase name="present invalid selection never silently falls back" classname="ru.liturgyguide.service.ChurchSelectionTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

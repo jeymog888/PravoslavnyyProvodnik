@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.service.PrayerTrackFactoryTest" tests="15" skipped="0" failures="0" errors="0" timestamp="2026-11-08T16:05:16" hostname="MacBook-Air-Dmitrij.local" time="0.02">
+  <properties/>
+  <testcase name="paired languages share exactly one line identity and source" classname="ru.liturgyguide.service.PrayerTrackFactoryTest" time="0.001"/>
+  <testcase name="empty or broken direct content never creates a blank track" classname="ru.liturgyguide.service.PrayerTrackFactoryTest" time="0.001"/>
+  <testcase name="track identity survives insertion reorder and translation refinement" classname="ru.liturgyguide.service.PrayerTrackFactoryTest" time="0.0"/>
+  <testcase name="duplicate prayers and repeated lines still have unique stable ids" classname="ru.liturgyguide.service.PrayerTrackFactoryTest" time="0.001"/>
+  <testcase name="abbreviations stay attached to their next word near a display boundary" classname="ru.liturgyguide.service.PrayerTrackFactoryTest" time="0.0"/>
+  <testcase name="reference abbreviations do not split a single source verse" classname="ru.liturgyguide.service.PrayerTrackFactoryTest" time="0.0"/>
+  <testcase name="unrelated stage and missing day do not borrow another reading" classname="ru.liturgyguide.service.PrayerTrackFactoryTest" time="0.0"/>
+  <testcase name="packaged prayers and dated readings produce complete usable player tracks" classname="ru.liturgyguide.service.PrayerTrackFactoryTest" time="0.016"/>
+  <testcase name="daily track ids include date and text revision for safe saved positions" classname="ru.liturgyguide.service.PrayerTrackFactoryTest" time="0.0"/>
+  <testcase name="long verses split at readable word boundaries without changing source wording" classname="ru.liturgyguide.service.PrayerTrackFactoryTest" time="0.0"/>
+  <testcase name="selected text meaning context and scripture identity remain available to the screen" classname="ru.liturgyguide.service.PrayerTrackFactoryTest" time="0.001"/>
+  <testcase name="a single long token is kept intact and never causes an endless split" classname="ru.liturgyguide.service.PrayerTrackFactoryTest" time="0.0"/>
+  <testcase name="legacy text remains one aligned block without guessing sentence pairs" classname="ru.liturgyguide.service.PrayerTrackFactoryTest" time="0.0"/>
+  <testcase name="matching daily readings follow the introduction and keep source verse boundaries" classname="ru.liturgyguide.service.PrayerTrackFactoryTest" time="0.0"/>
+  <testcase name="recognizable prayer title takes precedence without changing track identity" classname="ru.liturgyguide.service.PrayerTrackFactoryTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

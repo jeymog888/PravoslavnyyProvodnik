@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.service.UserServiceStartTest" tests="19" skipped="0" failures="0" errors="0" timestamp="2026-11-08T16:36:03" hostname="MacBook-Air-Dmitrij.local" time="0.499">
+  <properties/>
+  <testcase name="lexical guard leaves standard number and structure validation to JsonReader" classname="ru.liturgyguide.service.UserServiceStartTest" time="0.002"/>
+  <testcase name="malformed nonstandard and trailing JSON is rejected" classname="ru.liturgyguide.service.UserServiceStartTest" time="0.0"/>
+  <testcase name="encode rejects invalid duplicate and oversized records without dropping them" classname="ru.liturgyguide.service.UserServiceStartTest" time="0.004"/>
+  <testcase name="syntax calendar and minute fields are strict" classname="ru.liturgyguide.service.UserServiceStartTest" time="0.0"/>
+  <testcase name="full store allows replacing an existing date and rejects a new date" classname="ru.liturgyguide.service.UserServiceStartTest" time="0.11"/>
+  <testcase name="conflicting date duplicates are discarded independently of array order" classname="ru.liturgyguide.service.UserServiceStartTest" time="0.001"/>
+  <testcase name="invalid entries do not erase well formed neighbors" classname="ru.liturgyguide.service.UserServiceStartTest" time="0.0"/>
+  <testcase name="numbers booleans nulls and wrong field names are not coerced to valid strings" classname="ru.liturgyguide.service.UserServiceStartTest" time="0.0"/>
+  <testcase name="saving same date replaces only this parish and date while deletion restores absence" classname="ru.liturgyguide.service.UserServiceStartTest" time="0.001"/>
+  <testcase name="decode caps complete input and array length" classname="ru.liturgyguide.service.UserServiceStartTest" time="0.0"/>
+  <testcase name="parish identity is bounded and cannot be whitespace or control characters" classname="ru.liturgyguide.service.UserServiceStartTest" time="0.0"/>
+  <testcase name="duplicate JSON fields never silently replace the selected start" classname="ru.liturgyguide.service.UserServiceStartTest" time="0.0"/>
+  <testcase name="personal start round trips with exact calendar date and local minute" classname="ru.liturgyguide.service.UserServiceStartTest" time="0.0"/>
+  <testcase name="uppercase or mixed case JSON literals reject the complete malformed payload" classname="ru.liturgyguide.service.UserServiceStartTest" time="0.0"/>
+  <testcase name="rejected identity timezone and DST saves preserve previous explicit start" classname="ru.liturgyguide.service.UserServiceStartTest" time="0.0"/>
+  <testcase name="storage exceptions are reported as failure instead of crashing" classname="ru.liturgyguide.service.UserServiceStartTest" time="0.001"/>
+  <testcase name="nonstandard apostrophe escape is rejected while standard escaped strings round trip" classname="ru.liturgyguide.service.UserServiceStartTest" time="0.0"/>
+  <testcase name="escaped JSON size is checked before writing and survives restart" classname="ru.liturgyguide.service.UserServiceStartTest" time="0.38"/>
+  <testcase name="wrong preference type recovers and unrelated settings stay intact" classname="ru.liturgyguide.service.UserServiceStartTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
