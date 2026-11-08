@@ -1,0 +1,33 @@
+{
+  "status": "ACCEPT_CI_RUN_WITH_LIMITS",
+  "run_id": 42507137388,
+  "head_sha": "9bcbf44b00fc07c76229236501ddb0f637fcb5c1",
+  "attempt": 1,
+  "conclusion": "success",
+  "artifact": {
+    "id": 13628153514,
+    "name": "verification-reports",
+    "size_in_bytes": 4254024,
+    "digest": "sha256:6ffbf0cd8cc8ad2c11cb460139744b715df68c401491cb9d4a0dc8039dce24a0"
+  },
+  "counts": {
+    "unit": {
+      "tests": 335,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "ui": {
+      "tests": 119,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "lint": {
+      "errors": 0,
+      "warnings": 14
+    }
+  },
+  "previous_failure_root_cause": "NOT_ESTABLISHED",
+  "signed_release_verdict": "NOT_EVALUATED"
+}

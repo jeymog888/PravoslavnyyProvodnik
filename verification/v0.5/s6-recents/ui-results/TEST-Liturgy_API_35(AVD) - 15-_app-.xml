@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="ru.liturgyguide.ui.UnifiedPlayerFlowTest" tests="38" failures="0" errors="0" skipped="0" time="138.44" timestamp="2026-11-08T18:10:47" hostname="localhost">
+  <properties>
+    <property name="device" value="Liturgy_API_35(AVD) - 15" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="languageAndProgrammaticScrollKeepPlayingButMeaningAndUserDragPause" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="4.832" />
+  <testcase name="endStopsThePlayerAndFinishingClearsTheAcceptedReading" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="3.159" />
+  <testcase name="oldRunningSessionAndWallClockChangesCannotMoveTheUnifiedReader" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="3.151" />
+  <testcase name="shortenedDuplicateTitleKeepsBothTextsDiscoverableAndRestoresTheSelectedPhrase" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="2.3" />
+  <testcase name="missingDatedReadingsStopHugeTicksAndEachNeedsItsOwnManualContinuation" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="3.25" />
+  <testcase name="onePlayMovesThroughTextsAUsefulWaitAndTheNextStage" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="2.913" />
+  <testcase name="changingSpeedCapturesTheOldMultiplierWithoutMovingToAnotherPhrase" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="3.278" />
+  <testcase name="explicitRestartReplacesOnlyTheCorruptSnapshotEvenWhenContextAndMarkerAreIdentical" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="1.739" />
+  <testcase name="losingResumedStatePausesAndDoesNotConsumeTimeBeforeReturning" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="2.012" />
+  <testcase name="losingTopResumedPausesSynchronouslyEvenWhenLifecycleStaysResumed" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="1.653" />
+  <testcase name="scriptureCannotMasqueradeAsOriginalAndThePreferredLanguageReturnsForPrayer" classname="ru.liturgyguide.ui.UnifiedPlayerFlowTest" time="2.785" />
+  <testcase name="churchHasTodayAndTomorrowAndChangingItStartsAFreshContext" classname="ru.liturgyguide.ui.GuideNavigationTest" time="5.561" />
+  <testcase name="unifiedPlaybackHasNoSeparateStageTimerAndManualSeekPausesIt" classname="ru.liturgyguide.ui.GuideNavigationTest" time="4.35" />
+  <testcase name="startingANewServiceClearsPositionsButKeepsTheLanguagePreference" classname="ru.liturgyguide.ui.GuideNavigationTest" time="4.711" />
+  <testcase name="trackPhraseAndLanguageSurviveRecreationAndReturningHome" classname="ru.liturgyguide.ui.GuideNavigationTest" time="3.521" />
+  <testcase name="orderOpensAtDismissalWithLargestAppText" classname="ru.liturgyguide.ui.GuideNavigationTest" time="3.468" />
+  <testcase name="choosingManualReadingFromTempoOptionsStopsAnActiveScroll" classname="ru.liturgyguide.ui.GuideNavigationTest" time="4.254" />
+  <testcase name="searchingAfterFinishingDoesNotReusePositionsFromThePreviousService" classname="ru.liturgyguide.ui.GuideNavigationTest" time="5.622" />
+  <testcase name="readingCanAdvanceAndReturnWithoutLosingTheStage" classname="ru.liturgyguide.ui.GuideNavigationTest" time="1.985" />
+  <testcase name="selectedParishUsesItsLocalDateAndManualChoiceRemainsAvailable" classname="ru.liturgyguide.ui.GuideNavigationTest" time="3.039" />
+  <testcase name="onePlayerStartsDirectlyAndPausesWithoutASecondStageTimer" classname="ru.liturgyguide.ui.GuideNavigationTest" time="1.984" />
+  <testcase name="serviceOrderIsSeparateFromSearchAndOptionalListening" classname="ru.liturgyguide.ui.GuideNavigationTest" time="2.421" />
+  <testcase name="largeTextAndDarkModePersistAndNavigationRemainsUsable" classname="ru.liturgyguide.ui.GuideNavigationTest" time="2.406" />
+  <testcase name="explanationChangesWithTheSelectedText" classname="ru.liturgyguide.ui.GuideNavigationTest" time="3.884" />
+  <testcase name="landscapeWithLargestAppTextKeepsCurrentPhraseAndControlsVisible" classname="ru.liturgyguide.ui.GuideNavigationTest" time="4.878" />
+  <testcase name="findingAPrayerFromMeaningOpensItsTextAtTheMatchedPhrase" classname="ru.liturgyguide.ui.GuideNavigationTest" time="4.893" />
+  <testcase name="backgroundingAndRecreationKeepTheAcceptedPhrasePaused" classname="ru.liturgyguide.ui.GuideNavigationTest" time="4.432" />
+  <testcase name="spellingVariantsOpenTheSamePairedPhraseFromMainSearch" classname="ru.liturgyguide.ui.GuideNavigationTest" time="10.854" />
+  <testcase name="anUnknownPhraseCanBeClearedToRestoreTheGuide" classname="ru.liturgyguide.ui.GuideNavigationTest" time="2.194" />
+  <testcase name="showingAllStagesAfterUnknownWordsDismissesTheKeyboardAndFocus" classname="ru.liturgyguide.ui.GuideNavigationTest" time="2.488" />
+  <testcase name="meaningAndReadingPositionSurviveOrderHomeAndSettingsNavigation" classname="ru.liturgyguide.ui.GuideNavigationTest" time="4.612" />
+  <testcase name="choosingAnotherPhraseStopsAutomaticScrolling" classname="ru.liturgyguide.ui.GuideNavigationTest" time="3.015" />
+  <testcase name="switchingToMeaningPausesScrollingAndKeepsThePhrase" classname="ru.liturgyguide.ui.GuideNavigationTest" time="4.269" />
+  <testcase name="orderOpensAtTheBeginningFromThePlayer" classname="ru.liturgyguide.ui.GuideNavigationTest" time="2.351" />
+  <testcase name="orderOpensAtCreedAndManualBrowsingReturnsToTheCurrentPhrase" classname="ru.liturgyguide.ui.GuideNavigationTest" time="5.095" />
+  <testcase name="searchingForADailyReadingUsesTodaysTextAndKeepsItsNoteOptional" classname="ru.liturgyguide.ui.GuideNavigationTest" time="3.551" />
+  <testcase name="searchingForCreedOpensTheMatchingTextAndClosesTheKeyboard" classname="ru.liturgyguide.ui.GuideNavigationTest" time="2.145" />
+  <testcase name="heardWordsLeadToTheRelevantExplanation" classname="ru.liturgyguide.ui.GuideNavigationTest" time="3.274" />
+</testsuite>

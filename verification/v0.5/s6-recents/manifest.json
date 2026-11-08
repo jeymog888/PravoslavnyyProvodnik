@@ -1,0 +1,315 @@
+{
+  "schema": 1,
+  "package": "ru.liturgyguide",
+  "build_type": "release",
+  "conditions": {
+    "device": "owned Liturgy_API_35 emulator-5554 only",
+    "clock": "real device wall/monotonic clocks, no injected time",
+    "data": "Existing UI-created QA temple/time/Creed phrase4 from diagnostic run2; installation preserves it. Fresh arrival checked in separate clean run.",
+    "scope": "Reader, dynamic player, lifecycle, offline and permission boundaries only; does not claim fresh arrival"
+  },
+  "cases": [
+    {
+      "id": "creed-original",
+      "mode": "static",
+      "conditions": {
+        "scene": "UI selects Creed phrase4; initial native text checkpoint"
+      },
+      "expected": [
+        {
+          "text": "Символ веры"
+        },
+        {
+          "text": "Оригинал",
+          "ancestor": {
+            "class": "android.view.View",
+            "selected": true
+          }
+        },
+        {
+          "content-desc": "Включить плеер",
+          "ancestor": {
+            "class": "android.view.View",
+            "enabled": true,
+            "clickable": true
+          }
+        },
+        {
+          "text": "Иже от Отца рожденнаго прежде всех век.",
+          "checked": true
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.0",
+        "timezone": "Europe/Moscow",
+        "wm_size": "Physical size: 1080x2400",
+        "density": "Physical density: 420"
+      }
+    },
+    {
+      "id": "creed-meaning",
+      "mode": "static",
+      "conditions": {
+        "scene": "Meaning after real Play; movement/pause oracle in separate native report"
+      },
+      "expected": [
+        {
+          "text": "Символ веры"
+        },
+        {
+          "text": "Смысл",
+          "ancestor": {
+            "class": "android.view.View",
+            "selected": true
+          }
+        },
+        {
+          "text": "Что происходит"
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.0",
+        "timezone": "Europe/Moscow",
+        "wm_size": "Physical size: 1080x2400",
+        "density": "Physical density: 420"
+      }
+    },
+    {
+      "id": "lifecycle-return",
+      "mode": "static",
+      "conditions": {
+        "scene": "After Home/Recents/lock/rotation; position equality and actual transitions separately recorded"
+      },
+      "expected": [
+        {
+          "text": "Символ веры"
+        },
+        {
+          "text": "Оригинал",
+          "ancestor": {
+            "class": "android.view.View",
+            "selected": true
+          }
+        },
+        {
+          "content-desc": "Включить плеер",
+          "ancestor": {
+            "class": "android.view.View",
+            "enabled": true,
+            "clickable": true
+          }
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.0",
+        "timezone": "Europe/Moscow",
+        "wm_size": "Physical size: 1080x2400",
+        "density": "Physical density: 420"
+      }
+    },
+    {
+      "id": "offline-restored",
+      "mode": "static",
+      "conditions": {
+        "scene": "Cold process after force-stop offline; settings/phrase preserved by separate before-after oracle"
+      },
+      "expected": [
+        {
+          "text": "Символ веры"
+        },
+        {
+          "text": "Оригинал",
+          "ancestor": {
+            "class": "android.view.View",
+            "selected": true
+          }
+        },
+        {
+          "content-desc": "Включить плеер",
+          "ancestor": {
+            "class": "android.view.View",
+            "enabled": true,
+            "clickable": true
+          }
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.0",
+        "timezone": "Europe/Moscow",
+        "wm_size": "Physical size: 1080x2400",
+        "density": "Physical density: 420"
+      }
+    },
+    {
+      "id": "offline-search-error",
+      "mode": "static",
+      "conditions": {
+        "scene": "Uncached city search with network disabled gives an error and manual exit, not empty results"
+      },
+      "expected": [
+        {
+          "text": "Сохраненные храмы и тексты службы доступны без сети"
+        },
+        {
+          "text": "К сохраненным храмам"
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.0",
+        "timezone": "Europe/Moscow",
+        "wm_size": "Physical size: 1080x2400",
+        "density": "Physical density: 420"
+      }
+    },
+    {
+      "id": "geo-denied",
+      "mode": "static",
+      "conditions": {
+        "scene": "Real OS location permission denied; raw system dialog and permission facts separately recorded"
+      },
+      "expected": [
+        {
+          "text": "Можно продолжить без геолокации: укажите город или выберите храм вручную"
+        },
+        {
+          "text": "К сохраненным храмам"
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.0",
+        "timezone": "Europe/Moscow",
+        "wm_size": "Physical size: 1080x2400",
+        "density": "Physical density: 420"
+      }
+    },
+    {
+      "id": "geo-off",
+      "mode": "static",
+      "conditions": {
+        "scene": "Location disabled with permissions granted; explicit setup and restoration recorded"
+      },
+      "expected": [
+        {
+          "text": "На телефоне выключено определение местоположения. Можно выбрать храм вручную"
+        },
+        {
+          "text": "К сохраненным храмам"
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.0",
+        "timezone": "Europe/Moscow",
+        "wm_size": "Physical size: 1080x2400",
+        "density": "Physical density: 420"
+      }
+    },
+    {
+      "id": "about-player",
+      "mode": "static",
+      "conditions": {
+        "scene": "Review updated player explanation after source copy fix"
+      },
+      "expected": [
+        {
+          "text": "Как работает текстовый плеер"
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.0",
+        "timezone": "Europe/Moscow",
+        "wm_size": "Physical size: 1080x2400",
+        "density": "Physical density: 420"
+      }
+    },
+    {
+      "id": "about-privacy",
+      "mode": "static",
+      "conditions": {
+        "scene": "Review updated local/network data explanation after source copy fix"
+      },
+      "expected": [
+        {
+          "text": "Ваши данные"
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.0",
+        "timezone": "Europe/Moscow",
+        "wm_size": "Physical size: 1080x2400",
+        "density": "Physical density: 420"
+      }
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.service.ServicePlaybackEngineTest" tests="16" skipped="0" failures="0" errors="0" timestamp="2026-11-08T18:04:47" hostname="MacBook-Air-Dmitrij.local" time="0.012">
+  <properties/>
+  <testcase name="huge monotonic delta and large budgets do not wrap and still respect barriers" classname="ru.liturgyguide.service.ServicePlaybackEngineTest" time="0.001"/>
+  <testcase name="backwards or negative monotonic time pauses without replaying previously counted time" classname="ru.liturgyguide.service.ServicePlaybackEngineTest" time="0.0"/>
+  <testcase name="End is terminal until an explicit seek and speed change never starts paused content" classname="ru.liturgyguide.service.ServicePlaybackEngineTest" time="0.0"/>
+  <testcase name="snapshot captures foreground progress but never stores running or clock state" classname="ru.liturgyguide.service.ServicePlaybackEngineTest" time="0.0"/>
+  <testcase name="manual seeks pause reset only their new offset and keep speed" classname="ru.liturgyguide.service.ServicePlaybackEngineTest" time="0.002"/>
+  <testcase name="large tick cannot jump a missing reading and leftover time is discarded" classname="ru.liturgyguide.service.ServicePlaybackEngineTest" time="0.0"/>
+  <testcase name="repeated play cannot restart a clock anomaly or reset running progress" classname="ru.liturgyguide.service.ServicePlaybackEngineTest" time="0.001"/>
+  <testcase name="speed changes materialize the old multiplier and retain fractional base progress" classname="ru.liturgyguide.service.ServicePlaybackEngineTest" time="0.0"/>
+  <testcase name="exact boundaries advance line wait and stage using one clock" classname="ru.liturgyguide.service.ServicePlaybackEngineTest" time="0.0"/>
+  <testcase name="adjacent missing readings each require explicit acknowledgement" classname="ru.liturgyguide.service.ServicePlaybackEngineTest" time="0.0"/>
+  <testcase name="many tiny ticks equal one large tick at fractional speed" classname="ru.liturgyguide.service.ServicePlaybackEngineTest" time="0.002"/>
+  <testcase name="restore rejects wrong plan version indexes and offsets instead of silently selecting text" classname="ru.liturgyguide.service.ServicePlaybackEngineTest" time="0.001"/>
+  <testcase name="pause captures progress and ignores all background elapsed time" classname="ru.liturgyguide.service.ServicePlaybackEngineTest" time="0.0"/>
+  <testcase name="speed change crossing a boundary honors the old speed and cannot pass missing content" classname="ru.liturgyguide.service.ServicePlaybackEngineTest" time="0.001"/>
+  <testcase name="runtime positions from other plans or illegal barriers fail explicitly" classname="ru.liturgyguide.service.ServicePlaybackEngineTest" time="0.001"/>
+  <testcase name="multiple texts transition without resetting elapsed time or creating a second timer" classname="ru.liturgyguide.service.ServicePlaybackEngineTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

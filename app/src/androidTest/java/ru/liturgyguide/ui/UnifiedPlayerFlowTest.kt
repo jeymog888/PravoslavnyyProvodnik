@@ -184,6 +184,36 @@ class UnifiedPlayerFlowTest {
     }
 
     @Test
+    fun losingTopResumedPausesSynchronouslyEvenWhenLifecycleStaysResumed() {
+        val activityForeground = ActivityForegroundState()
+        compose.runOnUiThread { activityForeground.onTopResumedActivityChanged(true) }
+        launch("creed", trackIndex = 1, lineIndex = 12, activityForeground = activityForeground)
+        play()
+        lateinit var stopped: StoredServicePlayback
+        compose.runOnUiThread {
+            assertEquals(Lifecycle.State.RESUMED, compose.activity.lifecycle.currentState)
+            monotonic.addAndGet(1_234)
+            activityForeground.onTopResumedActivityChanged(false)
+            stopped = saved()
+            assertEquals(4_936L, stopped.snapshot.elapsedQuarterMillis)
+            // No recomposition can observe the loss before this same callback regains the top position.
+            monotonic.addAndGet(86_400_000)
+            activityForeground.onTopResumedActivityChanged(true)
+            assertEquals(Lifecycle.State.RESUMED, compose.activity.lifecycle.currentState)
+            assertEquals(stopped, saved())
+        }
+        compose.waitForIdle()
+        compose.onNodeWithTag("lyric_line_12").assertIsSelected().assertIsDisplayed()
+        assertPaused()
+        assertEquals(stopped, saved())
+        play()
+        compose.runOnUiThread { monotonic.incrementAndGet() }
+        compose.onNodeWithTag("play_lyrics").performClick()
+        assertEquals(4_940L, saved().snapshot.elapsedQuarterMillis)
+        assertPaused()
+    }
+
+    @Test
     fun languageAndProgrammaticScrollKeepPlayingButMeaningAndUserDragPause() {
         launch("creed", trackIndex = 1)
         compose.onNodeWithTag("player_original_tab").performClick().assertIsSelected()
@@ -302,7 +332,7 @@ class UnifiedPlayerFlowTest {
     }
 
     private fun launch(stageId: String, date: String = "2026-11-08", trackIndex: Int = 0, lineIndex: Int = 0,
-        legacyAutoAdvance: Boolean = false): StateRestorationTester {
+        legacyAutoAdvance: Boolean = false, activityForeground: ActivityForegroundState? = null): StateRestorationTester {
         wall.current = Instant.parse("${date}T12:00:00Z")
         val track = tracks(stageId, date)[trackIndex]
         check(preferences.edit().clear().putBoolean("dark", false)
@@ -312,7 +342,7 @@ class UnifiedPlayerFlowTest {
             .putString("lyric_phrase_${track.id}", track.lines[lineIndex].id)
             .putInt("lyric_line_${track.id}", lineIndex).commit())
         val restoration = StateRestorationTester(compose)
-        restoration.setContent { AppNavigation(container, wall, monotonic::get) }
+        restoration.setContent { AppNavigation(container, wall, monotonic::get, activityForeground) }
         compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("resume_guide"))
         compose.onNodeWithTag("resume_guide").performClick()
         assertPaused()

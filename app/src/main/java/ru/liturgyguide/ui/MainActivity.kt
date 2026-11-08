@@ -2,6 +2,7 @@ package ru.liturgyguide.ui
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.provider.Settings
@@ -38,16 +39,26 @@ import kotlinx.coroutines.delay
 private enum class Screen { MAIN, MANUAL, ARRIVAL, SERVICE, STAGE_SELECTOR, SEARCH, SETTINGS, SOURCES, CHURCH, DISCOVERY }
 
 class MainActivity : ComponentActivity() {
+    private val activityForeground = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ActivityForegroundState() else null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        setContent { AppNavigation((application as LiturgyGuideApplication).container) }
+        setContent { AppNavigation((application as LiturgyGuideApplication).container, activityForeground = activityForeground) }
+    }
+
+    override fun onTopResumedActivityChanged(isTopResumedActivity: Boolean) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            super.onTopResumedActivityChanged(isTopResumedActivity)
+            activityForeground?.onTopResumedActivityChanged(isTopResumedActivity)
+        }
     }
 }
 
 @Composable
 fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
-    monotonicMillis: () -> Long = SystemClock::elapsedRealtime) {
+    monotonicMillis: () -> Long = SystemClock::elapsedRealtime,
+    activityForeground: ActivityForegroundState? = null) {
     val context = LocalContext.current
     val screenStateHolder = rememberSaveableStateHolder()
     val preferences = remember { context.getSharedPreferences("guide_preferences", 0) }
@@ -195,13 +206,19 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer); player.pause() }
     }
+    DisposableEffect(player, activityForeground) {
+        val unbind = activityForeground?.bind { player.pause() }
+        onDispose { unbind?.invoke() }
+    }
     val playing = player.reading?.state?.isPlaying == true
-    LaunchedEffect(player, visibleScreen, lifecycleResumed, playing, player.generation) {
-        if (visibleScreen != Screen.SERVICE || !lifecycleResumed) {
+    val topResumed = activityForeground?.isTopResumed != false
+    LaunchedEffect(player, visibleScreen, lifecycleResumed, activityForeground, topResumed, playing, player.generation) {
+        if (visibleScreen != Screen.SERVICE || !lifecycleResumed || !topResumed) {
             player.pause()
         } else if (playing) {
             val generation = player.generation
-            while (player.reading?.state?.isPlaying == true && generation == player.generation) {
+            while (player.reading?.state?.isPlaying == true && generation == player.generation &&
+                lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) && activityForeground?.isTopResumed != false) {
                 player.tick(generation)
                 delay(250L)
             }

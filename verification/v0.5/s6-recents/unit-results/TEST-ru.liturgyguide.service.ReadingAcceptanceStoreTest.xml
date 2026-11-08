@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.service.ReadingAcceptanceStoreTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-11-08T18:04:46" hostname="MacBook-Air-Dmitrij.local" time="0.035">
+  <properties/>
+  <testcase name="a followup write from the old UI cannot mix a new date with the old stage after failure" classname="ru.liturgyguide.service.ReadingAcceptanceStoreTest" time="0.001"/>
+  <testcase name="absent original keys are removed again instead of retaining newly accepted metadata" classname="ru.liturgyguide.service.ReadingAcceptanceStoreTest" time="0.0"/>
+  <testcase name="a correction can retain every bookmark while changing the accepted session" classname="ru.liturgyguide.service.ReadingAcceptanceStoreTest" time="0.001"/>
+  <testcase name="the snapshot owns its string set rather than sharing the preference value" classname="ru.liturgyguide.service.ReadingAcceptanceStoreTest" time="0.0"/>
+  <testcase name="rollback false or exception after its memory write does not retry or report success" classname="ru.liturgyguide.service.ReadingAcceptanceStoreTest" time="0.001"/>
+  <testcase name="without reset rollback does not overwrite bookmarks changed by another preferences writer" classname="ru.liturgyguide.service.ReadingAcceptanceStoreTest" time="0.003"/>
+  <testcase name="an exception after memory mutation gets the same single rollback attempt" classname="ru.liturgyguide.service.ReadingAcceptanceStoreTest" time="0.001"/>
+  <testcase name="unsupported affected values are rejected before writing but unrelated values are not inspected" classname="ru.liturgyguide.service.ReadingAcceptanceStoreTest" time="0.002"/>
+  <testcase name="commit false after mutating Android memory restores old reading and all bookmark types" classname="ru.liturgyguide.service.ReadingAcceptanceStoreTest" time="0.001"/>
+  <testcase name="rollback touches no unrelated setting changed during the failed commit" classname="ru.liturgyguide.service.ReadingAcceptanceStoreTest" time="0.01"/>
+  <testcase name="invalid input or unreadable snapshot returns false without opening an editor" classname="ru.liturgyguide.service.ReadingAcceptanceStoreTest" time="0.005"/>
+  <testcase name="successful acceptance replaces the whole reading in exactly one editor" classname="ru.liturgyguide.service.ReadingAcceptanceStoreTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
