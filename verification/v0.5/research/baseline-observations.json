@@ -1,0 +1,35 @@
+{
+  "baseline_commit": "aa8d2a57d920ede3a5d258df9252f7b861017487",
+  "checked_on": "2026-11-08",
+  "baseline_build": "testDebugUnitTest assembleDebug BUILD SUCCESSFUL; tasks up-to-date, not a fresh full0.5QA",
+  "schedule_defects": [
+    "today-only candidates",
+    "120minute future window",
+    "recent savedreading hides schedule"
+  ],
+  "location_limits": {
+    "packaged_parishes": 2,
+    "distance_radius_m": 500,
+    "accuracy_limit_m": 500
+  },
+  "content": {
+    "stages": 18,
+    "duration_including_preparation_min": 104,
+    "duration_from_beginning_min": 99,
+    "duration_provenance": "editorial, not measured"
+  },
+  "player_defect": "separate wallclock stage and phrase timers, deliberately mutually exclusive; fixedsecondsperline depends on line segmentation",
+  "research_decision": "one foreground monotonic clock, word-weighted textbudget, explicit waiting and missing-reading pause; Astra approval pending",
+  "source_urls": [
+    "https://developer.android.com/reference/android/speech/SpeechRecognizer",
+    "https://developer.android.com/develop/sensors-and-location/location/permissions/runtime",
+    "https://www.stspyridonsheboygan.org/faqs/",
+    "https://www.annunciationtx.com/?page_id=84",
+    "https://www.oca.org/orthodoxy/the-orthodox-faith/worship/the-divine-liturgy/offertory-great-entrance"
+  ],
+  "limitations": [
+    "No real church acoustic evaluation",
+    "No empirical perstage duration distribution",
+    "Only2026-11-08readings packaged"
+  ]
+}
