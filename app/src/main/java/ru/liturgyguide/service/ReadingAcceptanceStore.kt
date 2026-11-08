@@ -12,6 +12,21 @@ import com.google.gson.Gson
 class ReadingAcceptanceStore(private val preferences: SharedPreferences) {
     private val gson = Gson()
 
+    /** Finish or change parish without leaving a snapshot belonging to the previous reading. */
+    @Synchronized
+    fun clearReading(nextChurchId: String? = null): Boolean {
+        if (nextChurchId != null && (nextChurchId.length !in 1..160 || nextChurchId != nextChurchId.trim() ||
+                nextChurchId.any(Char::isISOControl))) return false
+        val changes = linkedMapOf<String, Any?>(
+            ReadingContextStore.CONTEXT_KEY to null,
+            SESSION_KEY to null,
+            STAGE_KEY to null,
+            ServicePlaybackStore.PLAYBACK_KEY to null
+        )
+        if (nextChurchId != null) changes["church_id"] = nextChurchId
+        return commit(changes, resetBookmarks = true)
+    }
+
     @Synchronized
     fun accept(context: ReadingContext, session: ServiceSession, resetBookmarks: Boolean): Boolean {
         val changes = runCatching {

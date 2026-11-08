@@ -2,14 +2,14 @@ package ru.liturgyguide.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -25,168 +25,172 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ru.liturgyguide.model.LiturgyStage
-import ru.liturgyguide.model.ReadingDay
-import ru.liturgyguide.model.PrayerTrack
 import ru.liturgyguide.service.*
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ServiceScreen(stageMatcher: StageMatcher, stageId: String?, onStageChange: (String) -> Unit,
+fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
     onBack: () -> Unit, onSelectStage: () -> Unit, onFindStage: () -> Unit, onSettings: () -> Unit,
-    dark: Boolean, onDarkChange: () -> Unit, onOpenSource: (String) -> Unit, readingDay: ReadingDay?,
-    sessionPosition: SessionPosition?, onToggleFollowing: () -> Unit, onSoundSettings: () -> Unit, onFinish: () -> Unit, serviceDate: String? = null) {
-    val stages = stageMatcher.getAllStages()
-    val stage = stageId?.let(stageMatcher::getStageById) ?: stages.first()
-    val index = stages.indexOf(stage)
+    dark: Boolean, onDarkChange: () -> Unit, onOpenSource: (String) -> Unit,
+    onSoundSettings: () -> Unit, onFinish: () -> Unit, preferredOriginal: Boolean,
+    onOriginalChange: (Boolean) -> Unit, restoredNotice: Boolean = false) {
+    val reading = player.reading ?: return
+    val generation = player.generation
     val config = LocalConfiguration.current
-    val density = LocalDensity.current
-    val fontScale = density.fontScale
+    val fontScale = LocalDensity.current.fontScale
     val landscape = config.screenHeightDp < 480
     val compact = landscape || (config.screenHeightDp < 720 && fontScale > 1.2f)
     val compactControls = compact || fontScale > 1.5f
-    val separateHeaderActions = !landscape && config.screenWidthDp < 400 && fontScale > 1.5f
-    val tracks = remember(stage, readingDay) { PrayerTrackFactory.build(stage, readingDay) }
-    val player = rememberPrayerPlayer(stage.id, tracks)
-    val readingMissing = stage.id in setOf("epistle", "gospel") && tracks.none { it.isScripture }
-    var tab by rememberSaveable { mutableIntStateOf(0) }
+    val separateClarify = !landscape && config.screenWidthDp < 400 && fontScale > 1.5f
+    var meaning by rememberSaveable { mutableStateOf(false) }
     var menu by remember { mutableStateOf(false) }
     var tracksOpen by remember { mutableStateOf(false) }
-    var scrollOptions by remember { mutableStateOf(false) }
-    var stageTimerDialog by remember { mutableStateOf(false) }
-    val isScrolling = player?.position?.isPlaying == true
-    fun playOrPause() {
-        if (player == null) return
-        if (isScrolling) player.pause()
-        else if (!player.instructionsSeen) scrollOptions = true
-        else { if (sessionPosition?.autoAdvanceActive == true) onToggleFollowing(); player.play() }
+    var tempoOpen by remember { mutableStateOf(false) }
+    val supportsOriginal = reading.track?.lines?.any { it.original != null } == true
+    val original = preferredOriginal && supportsOriginal
+    val selectedTab = if (meaning) 2 else if (original) 0 else 1
+    val index = reading.plan.stages.indexOf(reading.stage)
+    val missing = reading.stage.id in setOf("epistle", "gospel") && reading.tracks.none { it.isScripture }
+    fun selectTab(value: Int) {
+        if (generation != player.generation) return
+        if (value == 2) { player.pause(generation); meaning = true }
+        else { meaning = false; onOriginalChange(value == 0) }
     }
-    fun selectTab(value: Int) { if (value != tab) player?.pause(); tab = value }
-    fun clarifyMoment() { player?.pause(); onFindStage() }
+    fun clarify() { if (generation == player.generation) onFindStage() }
+    fun openTracks() { if (generation == player.generation) { player.pause(generation); tracksOpen = true } }
+    fun nextStage() {
+        if (generation != player.generation) return
+        player.pause(generation)
+        if (index < reading.plan.stages.lastIndex) onStageChange(reading.plan.stages[index + 1].id) else onFinish()
+    }
 
-    if (tracksOpen && player != null) ModalBottomSheet(onDismissRequest = { tracksOpen = false }) {
+    if (tracksOpen) ModalBottomSheet(onDismissRequest = { tracksOpen = false }) {
         Text("Тексты этого этапа", Modifier.padding(horizontal = 24.dp, vertical = 12.dp), style = MaterialTheme.typography.headlineMedium)
         LazyColumn(Modifier.fillMaxWidth().testTag("track_list"), contentPadding = PaddingValues(bottom = 32.dp)) {
-            itemsIndexed(tracks, key = { _, track -> track.id }) { i, track ->
-                if (tracks.any { it.isScripture } && (i == 0 || tracks[i - 1].isScripture != track.isScripture)) {
-                    Text(if (track.isScripture) "Чтения дня" else "Перед чтением", Modifier.padding(horizontal = 16.dp, vertical = 12.dp), style = MaterialTheme.typography.titleMedium)
+            itemsIndexed(reading.tracks, key = { _, track -> track.id }) { i, track ->
+                if (reading.tracks.any { it.isScripture } && (i == 0 || reading.tracks[i - 1].isScripture != track.isScripture)) {
+                    Text(if (track.isScripture) "Чтения дня" else "Перед чтением", Modifier.padding(horizontal = 24.dp, vertical = 12.dp), style = MaterialTheme.typography.titleMedium)
                 }
-                ListItem(headlineContent = { Text(track.title) }, supportingContent = { Text((if (player.original && track.lines.any { it.original != null }) "Церковнославянский оригинал" else track.subtitle) + if (track.isExcerpt) " · фрагмент" else "") },
-                    trailingContent = { if (i == player.trackIndex) Icon(Icons.Default.Check, "Выбранный текст") },
-                    modifier = Modifier.clickable { player.selectTrack(i); tracksOpen = false }.testTag("track_$i").semantics { selected = i == player.trackIndex })
+                ListItem(headlineContent = { Text(track.title) }, supportingContent = {
+                    Text(if (track.isScripture) track.subtitle else if (track.isExcerpt) "Фрагмент молитвы" else "Полный текст")
+                }, trailingContent = { if (track.id == reading.track?.id) Icon(Icons.Default.Check, "Выбранный текст") },
+                    modifier = Modifier.clickable { if (player.selectTrack(track.id, generation)) tracksOpen = false }.testTag("track_$i")
+                        .semantics { selected = track.id == reading.track?.id })
             }
         }
     }
-    if (scrollOptions && player != null) AlertDialog(onDismissRequest = { scrollOptions = false },
-        title = { Text("Автопрокрутка") },
+    if (tempoOpen) AlertDialog(onDismissRequest = { tempoOpen = false },
+        title = { Text("Примерный темп") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    LyricPlaybackEngine.TEMPOS.forEach { seconds ->
-                        FilterChip(selected = player.playback.secondsPerLine == seconds, onClick = { player.tempo(seconds) }, label = { Text("$seconds с") }, modifier = Modifier.testTag("tempo_$seconds"))
+                Text("Плеер меняет строки и этапы по расчету. Скорость хора может отличаться. Нажмите нужную строку или кнопку \"Уточнить\", чтобы поправить место.")
+                PlaybackSpeed.entries.forEach { speed ->
+                    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { player.changeSpeed(speed, generation) }
+                        .testTag("tempo_${speed.name.lowercase()}").semantics { selected = reading.state.speed == speed; role = Role.RadioButton },
+                        verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(selected = reading.state.speed == speed, onClick = null)
+                        Spacer(Modifier.width(12.dp))
+                        Text(when (speed) { PlaybackSpeed.SLOW -> "Медленнее · 0,75×"; PlaybackSpeed.NORMAL -> "Обычно · 1×"; PlaybackSpeed.FAST -> "Быстрее · 1,25×" })
                     }
                 }
-                Text("Время на одну фразу", style = MaterialTheme.typography.bodySmall)
-                Text("Фразы сменяются по таймеру, без синхронизации с хором. Нажмите нужную строку, чтобы поправить место.")
-                Text("В конце текста прокрутка остановится", style = MaterialTheme.typography.bodySmall)
+                Text("После доступного фрагмента остается ориентир по происходящему. Если чтения на выбранную дату нет, плеер остановится.", style = MaterialTheme.typography.bodySmall)
             }
-        },
-        confirmButton = { TextButton(onClick = {
-            player.confirmInstructions(); scrollOptions = false
-            if (sessionPosition?.autoAdvanceActive == true) onToggleFollowing()
-            player.play()
-        }, modifier = Modifier.testTag("confirm_scroll")) { Text("Начать прокрутку") } },
-        dismissButton = { TextButton(onClick = { player.pause(); scrollOptions = false }, modifier = Modifier.testTag("manual_reading")) { Text("Читать вручную") } })
-    if (stageTimerDialog) AlertDialog(onDismissRequest = { stageTimerDialog = false },
-        title = { Text("Этапы по времени") },
-        text = { Text("Переходы будут следовать примерной длительности частей службы. Они могут опережать происходящее или отставать. Автопрокрутка отдельных строк при этом выключена.", Modifier.verticalScroll(rememberScrollState())) },
-        confirmButton = { TextButton(onClick = { player?.pause(); stageTimerDialog = false; onToggleFollowing() }) { Text("Включить") } },
-        dismissButton = { TextButton(onClick = { stageTimerDialog = false }) { Text("Менять этапы самому") } })
+        }, confirmButton = { TextButton(onClick = { tempoOpen = false }) { Text("Готово") } },
+        dismissButton = { TextButton(onClick = { player.pause(generation); tempoOpen = false }, modifier = Modifier.testTag("manual_reading")) { Text("Поставить на паузу") } })
 
-    Scaffold(topBar = {
-        // Keep navigation labels usable without changing prayer, explanation or dialog text sizes.
-        NavigationTextScale(enabled = compactControls) {
+    Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = {
         Column(Modifier.statusBarsPadding()) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = if (compactControls) 0.dp else 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "К службе") }
-                Column(Modifier.weight(1f).clickable(onClick = onSelectStage).testTag("open_map").semantics { role = Role.Button; contentDescription = "Порядок службы" }.padding(horizontal = 8.dp, vertical = if (compactControls) 2.dp else 6.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(stage.name, style = MaterialTheme.typography.titleMedium, maxLines = if (landscape) 1 else 2, overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false).testTag("current_stage_title").semantics { heading() })
-                        Icon(Icons.Default.ExpandMore, null, Modifier.padding(start = 4.dp).size(16.dp))
+            NavigationTextScale {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = if (compactControls) 0.dp else 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { if (generation == player.generation) { player.pause(generation); onBack() } }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "К службе") }
+                    Column(Modifier.weight(1f).heightIn(min = 48.dp).clickable { if (generation == player.generation) { player.pause(generation); onSelectStage() } }
+                        .testTag("open_map").semantics { role = Role.Button; contentDescription = "Порядок службы" }
+                        .padding(horizontal = 8.dp, vertical = 4.dp), verticalArrangement = Arrangement.Center) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(reading.stage.name, Modifier.weight(1f, fill = false).testTag("current_stage_title").semantics { heading() },
+                                style = MaterialTheme.typography.titleMedium, maxLines = if (landscape) 1 else 2, overflow = TextOverflow.Ellipsis)
+                            Icon(Icons.Default.ExpandMore, null, Modifier.size(18.dp))
+                        }
+                        if (!compactControls) Text("${index + 1} из ${reading.plan.stages.size} · Порядок службы", style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    if (!compactControls) Text("${index + 1} из ${stages.size} · Порядок службы", style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                if (landscape) ReaderTabs(tab, ::selectTab, true, inline = true)
-                if (!separateHeaderActions) ClarifyMomentButton(::clarifyMoment)
-                Box {
-                    IconButton(onClick = { menu = true }, modifier = Modifier.testTag("player_menu")) { Icon(Icons.Default.MoreHoriz, "Действия со службой") }
-                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                        DropdownMenuItem(text = { Text(if (sessionPosition?.autoAdvanceActive == true) "Остановить переходы этапов" else "Этапы по времени") },
-                            onClick = { menu = false; if (sessionPosition?.autoAdvanceActive == true) onToggleFollowing() else stageTimerDialog = true }, modifier = Modifier.testTag("toggle_follow"))
-                        DropdownMenuItem(text = { Text(if (dark) "Светлый экран" else "Темный экран") }, leadingIcon = { Icon(Icons.Default.Contrast, null) }, onClick = { menu = false; onDarkChange() })
-                        if (player != null) DropdownMenuItem(text = { Text("Темп автопрокрутки") }, onClick = { menu = false; scrollOptions = true }, modifier = Modifier.testTag("menu_scroll_options"))
-                        DropdownMenuItem(text = { Text("Размер текста и настройки") }, leadingIcon = { Icon(Icons.Default.TextFields, null) }, onClick = { menu = false; player?.pause(); onSettings() })
-                        DropdownMenuItem(text = { Text("Тишина на телефоне") }, leadingIcon = { Icon(Icons.Default.NotificationsOff, null) }, onClick = { menu = false; onSoundSettings() })
+                    if (!separateClarify) ReaderClarifyButton(::clarify)
+                    Box {
+                        IconButton(onClick = { menu = true }, Modifier.testTag("player_menu")) { Icon(Icons.Default.MoreHoriz, "Действия со службой") }
+                        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                            DropdownMenuItem(text = { Text(if (dark) "Светлый экран" else "Темный экран") }, onClick = { menu = false; onDarkChange() })
+                            DropdownMenuItem(text = { Text("Размер текста и настройки") }, onClick = { menu = false; if (generation == player.generation) { player.pause(generation); onSettings() } })
+                            DropdownMenuItem(text = { Text("Тишина на телефоне") }, onClick = { menu = false; if (generation == player.generation) { player.pause(generation); onSoundSettings() } })
+                        }
                     }
                 }
             }
-            serviceDate?.let { date ->
-                val label = runCatching { java.time.LocalDate.parse(date).format(java.time.format.DateTimeFormatter
-                    .ofPattern("d MMMM uuuu", java.util.Locale.forLanguageTag("ru"))) }.getOrDefault(date)
-                Text("Тексты на $label", Modifier.padding(horizontal = 24.dp, vertical = 4.dp).testTag("reading_service_date"),
+            if (!compactControls) NavigationTextScale {
+                val date = reading.plan.serviceDate.format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru")))
+                Text("Тексты на $date", Modifier.padding(horizontal = 24.dp, vertical = 4.dp).testTag("reading_service_date"),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            if (sessionPosition?.requiresResume == true) {
-                Text("Сохранено ранее · уточните этап",
-                    Modifier.fillMaxWidth().clickable(onClick = ::clarifyMoment).padding(horizontal = 24.dp, vertical = 6.dp).testTag("saved_earlier_notice"),
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary,
-                    maxLines = if (compactControls) 1 else 2, overflow = TextOverflow.Ellipsis)
-            } else if (sessionPosition?.isApproximate == true) {
-                Text(if (sessionPosition.autoAdvanceActive) "Примерные переходы этапов включены" else "Этап предложен по времени · можно уточнить",
-                    Modifier.fillMaxWidth().clickable(onClick = ::clarifyMoment).padding(horizontal = 24.dp, vertical = 6.dp),
+                if (restoredNotice || reading.isApproximate) Text(if (restoredNotice) "Сохраненное чтение · уточните момент" else "Примерное место · можно уточнить",
+                    Modifier.fillMaxWidth().clickable(onClick = ::clarify).padding(horizontal = 24.dp, vertical = 4.dp)
+                        .testTag(if (restoredNotice) "saved_earlier_notice" else "approximate_notice"),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
             }
-            if (!landscape) ReaderTabs(tab, ::selectTab, compactControls)
-            if (player != null) PlayerTrackHeader(player, compactControls, tab == 0, separateHeaderActions,
-                onClarify = ::clarifyMoment, onTracks = { player.pause(); tracksOpen = true })
-            else if (separateHeaderActions) Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-                horizontalArrangement = Arrangement.End) { ClarifyMomentButton(::clarifyMoment) }
-        }
+            PlayerControlScale {
+                if (landscape) Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    ReaderModes(selectedTab, supportsOriginal, ::selectTab, Modifier.width(300.dp))
+                    ReaderTrackHeader(reading, true, ::openTracks, Modifier.weight(1f))
+                } else {
+                    ReaderModes(selectedTab, supportsOriginal, ::selectTab, Modifier.fillMaxWidth().padding(horizontal = 16.dp))
+                    Row(Modifier.fillMaxWidth().padding(horizontal = if (separateClarify) 16.dp else 24.dp), verticalAlignment = Alignment.CenterVertically) {
+                        if (reading.track != null) ReaderTrackHeader(reading, compactControls, ::openTracks, Modifier.weight(1f))
+                        else Spacer(Modifier.weight(1f))
+                        if (separateClarify) ReaderClarifyButton(::clarify)
+                    }
+                }
+            }
         }
     }, bottomBar = {
-        PlayerFooter(player, tab == 0, compactControls, stages, index, onStageChange, onFinish, ::playOrPause, { scrollOptions = true })
+        ReaderFooter(reading, player, generation, textVisible = !meaning, compact = compactControls,
+            onPreviousStage = { if (generation == player.generation && index > 0) { player.pause(generation); onStageChange(reading.plan.stages[index - 1].id) } },
+            onNextStage = ::nextStage, onTempo = { if (generation == player.generation) tempoOpen = true })
     }) { padding ->
-        if (tab == 1) StageMeaning(stage, player?.track, readingMissing, Modifier.padding(padding), onOpenSource)
-        else if (player != null) PrayerLyrics(player, compact, readingMissing, Modifier.padding(padding))
-        else LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("service_content"), contentPadding = PaddingValues(28.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            item { Text(stage.section, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-            item { Text(stage.description, style = MaterialTheme.typography.headlineMedium) }
-            stage.cue?.let { item { Text(it, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant) } }
-            item { OutlinedButton(onClick = { selectTab(1) }) { Text("Что происходит и почему") } }
+        if (meaning) ReaderMeaning(reading, missing, Modifier.padding(padding)) { if (generation == player.generation) onOpenSource(it) }
+        else Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = if (compact) 8.dp else 16.dp, vertical = 8.dp)) {
+            ReaderLyrics(reading, player, generation, original, compact, missing, ::clarify, ::nextStage)
         }
     }
 }
 
 @Composable
-private fun ClarifyMomentButton(onClick: () -> Unit) {
-    TextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 8.dp),
+private fun ReaderClarifyButton(onClick: () -> Unit) {
+    TextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 6.dp),
         modifier = Modifier.heightIn(min = 48.dp).testTag("clarify_moment")) { Text("Уточнить", maxLines = 1) }
 }
 
+/** Keep short controls usable; the prayer and explanation retain the full requested font scale. */
 @Composable
-private fun ReaderTabs(selected: Int, onSelect: (Int) -> Unit, compact: Boolean, inline: Boolean = false) {
-    Row((if (inline) Modifier.width(180.dp) else Modifier.fillMaxWidth()).padding(horizontal = if (inline) 4.dp else 24.dp, vertical = if (inline) 0.dp else if (compact) 2.dp else 8.dp)
-        .background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(14.dp)).padding(if (compact) 2.dp else 4.dp)) {
-        listOf("Текст", "Смысл").forEachIndexed { index, title ->
-            Surface(color = if (selected == index) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceContainer,
-                shape = RoundedCornerShape(11.dp), modifier = Modifier.weight(1f)) {
-                Box(Modifier.clickable { onSelect(index) }.semantics { role = Role.Tab; this.selected = selected == index }
-                    .testTag(if (index == 0) "player_text_tab" else "player_meaning_tab").heightIn(min = 48.dp).padding(vertical = if (compact) 4.dp else 10.dp), contentAlignment = Alignment.Center) {
-                    Text(title, style = MaterialTheme.typography.labelLarge, color = if (selected == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+private fun PlayerControlScale(content: @Composable () -> Unit) {
+    val density = LocalDensity.current
+    CompositionLocalProvider(LocalDensity provides Density(density.density, density.fontScale.coerceAtMost(1.15f)), content = content)
+}
+
+@Composable
+private fun ReaderModes(selected: Int, originalAvailable: Boolean, onSelect: (Int) -> Unit, modifier: Modifier) {
+    Row(modifier.padding(vertical = 6.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(16.dp)).padding(3.dp)) {
+        listOf("Оригинал", "По-русски", "Смысл").forEachIndexed { index, label ->
+            val enabled = index != 0 || originalAvailable
+            Surface(color = if (selected == index) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceContainerHigh,
+                shape = RoundedCornerShape(13.dp), modifier = Modifier.weight(1f)) {
+                TextButton(onClick = { onSelect(index) }, enabled = enabled, contentPadding = PaddingValues(horizontal = 4.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                        .testTag(listOf("player_original_tab", "player_text_tab", "player_meaning_tab")[index])
+                        .semantics { this.selected = selected == index; role = Role.Tab }) {
+                    Text(label, style = MaterialTheme.typography.bodySmall, fontWeight = if (selected == index) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1)
                 }
             }
         }
@@ -194,168 +198,74 @@ private fun ReaderTabs(selected: Int, onSelect: (Int) -> Unit, compact: Boolean,
 }
 
 @Composable
-private fun StageMeaning(stage: LiturgyStage, track: PrayerTrack?, readingMissing: Boolean, modifier: Modifier, onOpenSource: (String) -> Unit) {
-    val scroll = rememberLazyListState()
-    var showDayNote by rememberSaveable(track?.id) { mutableStateOf(false) }
-    LaunchedEffect(stage.id, track?.id) { scroll.scrollToItem(0) }
-    LazyColumn(modifier.fillMaxSize().testTag("service_content"), state = scroll, contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(28.dp)) {
-        if (readingMissing) item { DailyReadingUnavailable() }
-        if (track != null && track.explanation.isNotBlank()) item {
-            Text(if (track.isScripture) "О чем это чтение" else "Об этом тексте", style = MaterialTheme.typography.titleLarge)
-            Spacer(Modifier.height(8.dp))
-            Text(track.title, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(12.dp))
-            Text(track.explanation, Modifier.testTag("track_explanation"), style = MaterialTheme.typography.bodyLarge)
-            track.contextNote?.let { note ->
-                TextButton(onClick = { showDayNote = !showDayNote }, modifier = Modifier.testTag("reading_note_toggle")) {
-                    Text("О чтениях этого дня")
-                    Icon(if (showDayNote) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null, Modifier.padding(start = 6.dp).size(18.dp))
-                }
-                if (showDayNote) Text(note, Modifier.testTag("reading_day_note"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            track.sourceUrl?.let { url -> TextButton(onClick = { onOpenSource(url) }) { Text("Источник текста") } }
-            Spacer(Modifier.height(16.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+private fun ReaderTrackHeader(reading: ActiveServicePlayback, compact: Boolean, onTracks: () -> Unit, modifier: Modifier) {
+    val track = reading.track ?: return
+    val content: @Composable RowScope.() -> Unit = {
+        Column(Modifier.weight(1f)) {
+            Text(track.title, Modifier.testTag("current_track_title"), style = if (compact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.titleMedium,
+                maxLines = if (compact) 1 else 2, overflow = TextOverflow.Ellipsis)
+            if (!compact) Text(if (track.isScripture) "Чтения дня · ${reading.tracks.count { it.isScripture }}" else if (track.isExcerpt) "Фрагмент молитвы" else "Полный текст",
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        item {
-            Text("Что происходит", style = MaterialTheme.typography.titleLarge)
-            Spacer(Modifier.height(10.dp)); Text(stage.description, style = MaterialTheme.typography.bodyLarge)
-        }
-        item {
-            Text("В чем смысл", style = MaterialTheme.typography.titleLarge)
-            Spacer(Modifier.height(10.dp)); Text(stage.meaning, style = MaterialTheme.typography.bodyLarge)
-        }
-        stage.cue?.let { cue -> item {
-            Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
-                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Как узнать этот момент", style = MaterialTheme.typography.titleMedium)
-                    Text(cue, style = MaterialTheme.typography.bodyLarge)
-                }
-            }
-        } }
-        if (stage.whatToDo.isNotBlank()) item {
-            Text("На что обратить внимание", style = MaterialTheme.typography.titleLarge)
-            Spacer(Modifier.height(10.dp)); Text(stage.whatToDo, style = MaterialTheme.typography.bodyLarge)
-        }
-        stage.sourceUrl?.let { url -> item { TextButton(onClick = { onOpenSource(url) }) { Text(stage.sourceTitle ?: "Источник объяснения") } } }
+        if (reading.tracks.size > 1) Icon(Icons.Default.ExpandMore, "Выбрать текст", Modifier.padding(start = 4.dp).size(18.dp))
     }
+    if (reading.tracks.size > 1) TextButton(onClick = onTracks, modifier = modifier.heightIn(min = 48.dp).testTag("choose_track"),
+        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp), content = content)
+    else Row(modifier.padding(vertical = if (compact) 4.dp else 8.dp), verticalAlignment = Alignment.CenterVertically, content = content)
 }
 
-@Composable
-private fun PlayerTrackHeader(player: PrayerPlayerState, compact: Boolean, showLanguage: Boolean,
-    separateActions: Boolean, onClarify: () -> Unit, onTracks: () -> Unit) {
-    val readingCount = player.tracks.count { it.isScripture }
-    val choiceLabel = if (readingCount > 0) {
-        if (compact) "Чтения · $readingCount" else "Выбрать чтение · $readingCount"
-    } else if (compact) "Тексты · ${player.tracks.size}" else "Выбрать текст · ${player.tracks.size}"
-    Column(Modifier.fillMaxWidth().padding(horizontal = if (compact) 12.dp else 24.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            if (compact) {
-                if (player.tracks.size > 1) TextButton(onClick = onTracks, modifier = Modifier.weight(1f).testTag("choose_track"),
-                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)) {
-                    Text(player.track.title, Modifier.weight(1f).testTag("current_track_title"),
-                        style = MaterialTheme.typography.bodySmall, maxLines = if (separateActions) 2 else 1, overflow = TextOverflow.Ellipsis)
-                    Icon(Icons.Default.ExpandMore, "Выбрать текст", Modifier.size(18.dp))
-                } else Text(player.track.title, Modifier.weight(1f).padding(vertical = 8.dp).testTag("current_track_title"), style = MaterialTheme.typography.bodySmall,
-                    maxLines = if (separateActions) 2 else 1, overflow = TextOverflow.Ellipsis)
-            } else Column(Modifier.weight(1f).padding(vertical = 8.dp)) {
-                Text(player.track.title, modifier = Modifier.testTag("current_track_title"), style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                if (showLanguage) Text((if (player.original && player.supportsOriginal) "Церковнославянский оригинал" else player.track.subtitle) +
-                    if (player.track.isExcerpt) " · фрагмент" else "", style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            if (!separateActions && showLanguage && player.supportsOriginal) PlayerLanguageMenu(player)
-        }
-        if (separateActions) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.End) {
-            if (showLanguage && player.supportsOriginal) PlayerLanguageMenu(player)
-            Spacer(Modifier.weight(1f))
-            ClarifyMomentButton(onClarify)
-        }
-        if (!compact && player.tracks.size > 1) TextButton(onClick = onTracks, modifier = Modifier.testTag("choose_track"),
-            contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp)) {
-            Text(choiceLabel, style = MaterialTheme.typography.bodySmall)
-            Icon(Icons.Default.ExpandMore, null, Modifier.padding(start = 6.dp).size(18.dp))
-        }
-    }
-}
+private fun PlaybackSpeed.label(): String = when (this) { PlaybackSpeed.SLOW -> "0,75×"; PlaybackSpeed.NORMAL -> "1×"; PlaybackSpeed.FAST -> "1,25×" }
 
 @Composable
-private fun PlayerLanguageMenu(player: PrayerPlayerState) {
-    var expanded by remember { mutableStateOf(false) }
-    Box {
-        TextButton(onClick = { expanded = true }, modifier = Modifier.testTag("toggle_original"),
-            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)) {
-            Text(if (player.original) "Оригинал" else "По-русски", style = MaterialTheme.typography.bodySmall, maxLines = 1)
-            Icon(Icons.Default.ExpandMore, "Выбрать язык текста", Modifier.size(18.dp))
-        }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            DropdownMenuItem(text = { Text("Смысл по-русски") }, onClick = { if (player.original) player.toggleOriginal(); expanded = false }, modifier = Modifier.testTag("language_russian"))
-            DropdownMenuItem(text = { Text("Церковнославянский оригинал") }, onClick = { if (!player.original) player.toggleOriginal(); expanded = false }, modifier = Modifier.testTag("language_original"))
-        }
-    }
-}
-
-@Composable
-private fun PlayerFooter(player: PrayerPlayerState?, textVisible: Boolean, compact: Boolean, stages: List<LiturgyStage>, index: Int,
-    onStageChange: (String) -> Unit, onFinish: () -> Unit, onPlay: () -> Unit, onTempo: () -> Unit) {
-    val scrolling = player?.position?.isPlaying == true
-    val nextStage = { if (index < stages.lastIndex) onStageChange(stages[index + 1].id) else onFinish() }
-    Surface(color = MaterialTheme.colorScheme.surface, shadowElevation = 3.dp) {
-        Column(Modifier.navigationBarsPadding().padding(horizontal = if (compact) 8.dp else 16.dp, vertical = if (compact) 2.dp else 8.dp)) {
-            if (compact && textVisible && player != null) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                    if (index > 0) IconButton(onClick = { onStageChange(stages[index - 1].id) }, modifier = Modifier.testTag("previous_stage")) {
+private fun ReaderFooter(reading: ActiveServicePlayback, player: ServicePlayerState, generation: Int, textVisible: Boolean, compact: Boolean,
+    onPreviousStage: () -> Unit, onNextStage: () -> Unit, onTempo: () -> Unit) {
+    val index = reading.plan.stages.indexOf(reading.stage)
+    val hasNext = index < reading.plan.stages.lastIndex
+    val nextTitle = if (hasNext) reading.plan.stages[index + 1].shortTitle else "Закончить чтение"
+    val playable = reading.segment is PlaybackSegment.Text || reading.segment is PlaybackSegment.Wait
+    Surface(color = MaterialTheme.colorScheme.surfaceContainer, tonalElevation = 2.dp) {
+        PlayerControlScale {
+            Column(Modifier.navigationBarsPadding().padding(horizontal = if (compact) 8.dp else 16.dp, vertical = 4.dp)) {
+                if (textVisible) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+                    if (compact) IconButton(onClick = onPreviousStage, enabled = index > 0, modifier = Modifier.testTag("previous_stage")) {
                         Icon(Icons.Default.SkipPrevious, "Предыдущий этап")
-                    } else Spacer(Modifier.size(48.dp))
-                    IconButton(onClick = { player.previous() }, enabled = player.position.lineIndex > 0, modifier = Modifier.testTag("previous_line")) {
-                        Icon(Icons.Default.KeyboardArrowUp, "Предыдущая фраза", Modifier.size(28.dp))
                     }
-                    FilledTonalIconButton(onClick = onPlay, modifier = Modifier.size(48.dp).testTag("play_lyrics").semantics {
-                        stateDescription = (if (scrolling) "Автопрокрутка" else "Вручную") + ", фраза ${player.position.lineIndex + 1} из ${player.track.lines.size}"
-                    }) {
-                        Icon(if (scrolling) Icons.Default.Pause else if (player.position.atEnd) Icons.Default.Replay else Icons.Default.PlayArrow,
-                            if (scrolling) "Остановить прокрутку" else if (player.position.atEnd) "Повторить текст сначала" else "Начать автопрокрутку")
+                    IconButton(onClick = { reading.track?.let { track -> track.lines.getOrNull(reading.lineIndex - 1)?.let { player.seekLine(track.id, it.id, generation) } } }, enabled = reading.track != null && reading.lineIndex > 0,
+                        modifier = Modifier.testTag("previous_line")) { Icon(Icons.Default.KeyboardArrowUp, "Предыдущая фраза", Modifier.size(28.dp)) }
+                    FilledTonalIconButton(onClick = { if (reading.state.isPlaying) player.pause(generation) else player.play(generation) }, enabled = playable,
+                        colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer),
+                        modifier = Modifier.size(if (compact) 48.dp else 56.dp).testTag("play_lyrics").semantics {
+                            stateDescription = if (reading.state.isPlaying) "Примерное движение включено" else "На паузе"
+                        }) {
+                        Icon(if (reading.state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            if (reading.state.isPlaying) "Остановить плеер" else "Включить плеер", Modifier.size(28.dp))
                     }
-                    IconButton(onClick = { player.next() }, enabled = player.position.lineIndex < player.track.lines.lastIndex, modifier = Modifier.testTag("next_line")) {
+                    IconButton(onClick = { reading.track?.let { track -> track.lines.getOrNull(reading.lineIndex + 1)?.let { player.seekLine(track.id, it.id, generation) } } },
+                        enabled = reading.track?.let { reading.lineIndex < it.lines.lastIndex } == true, modifier = Modifier.testTag("next_line")) {
                         Icon(Icons.Default.KeyboardArrowDown, "Следующая фраза", Modifier.size(28.dp))
                     }
-                    IconButton(onClick = nextStage, modifier = Modifier.testTag("next_stage")) {
-                        Icon(if (index < stages.lastIndex) Icons.Default.SkipNext else Icons.Default.Done,
-                            if (index < stages.lastIndex) "Следующий этап: ${stages[index + 1].name}" else "Закончить чтение")
+                    TextButton(onClick = onTempo, contentPadding = PaddingValues(horizontal = 4.dp),
+                        modifier = Modifier.widthIn(min = 48.dp).heightIn(min = 48.dp).testTag("scroll_options")) { Text(reading.state.speed.label(), style = MaterialTheme.typography.bodySmall) }
+                    if (compact) IconButton(onClick = onNextStage, modifier = Modifier.testTag("next_stage")) {
+                        Icon(if (hasNext) Icons.Default.SkipNext else Icons.Default.Done, if (hasNext) "Следующий этап: $nextTitle" else nextTitle)
                     }
                 }
-            } else {
-                if (textVisible && player != null) {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                        IconButton(onClick = { player.previous() }, enabled = player.position.lineIndex > 0, modifier = Modifier.testTag("previous_line")) {
-                            Icon(Icons.Default.KeyboardArrowUp, "Предыдущая фраза", Modifier.size(30.dp))
+                if (!compact && textVisible) Text(when (reading.segment) {
+                    is PlaybackSegment.Text -> "${if (reading.state.isPlaying) "Примерный темп" else "На паузе"} · фраза ${reading.lineIndex + 1} из ${reading.track?.lines?.size ?: 0}"
+                    is PlaybackSegment.Wait -> if (reading.state.isPlaying) "Примерный переход к следующему этапу" else "Переходы на паузе"
+                    is PlaybackSegment.MissingReading -> "Нужен ручной переход"
+                    is PlaybackSegment.End -> "Путеводитель завершен"
+                }, Modifier.align(Alignment.CenterHorizontally).padding(vertical = 4.dp).testTag("line_status"),
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (!compact || !textVisible) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onPreviousStage, enabled = index > 0, modifier = Modifier.testTag("previous_stage")) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Предыдущий этап") }
+                    TextButton(onClick = onNextStage, modifier = Modifier.weight(1f).testTag("next_stage")) {
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            if (hasNext) Text("Следующий этап", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(nextTitle, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         }
-                        FilledTonalIconButton(onClick = onPlay, modifier = Modifier.padding(horizontal = 20.dp).size(52.dp).testTag("play_lyrics")) {
-                            Icon(if (scrolling) Icons.Default.Pause else if (player.position.atEnd) Icons.Default.Replay else Icons.Default.PlayArrow,
-                                if (scrolling) "Остановить прокрутку" else if (player.position.atEnd) "Повторить текст сначала" else "Начать автопрокрутку", Modifier.size(26.dp))
-                        }
-                        IconButton(onClick = { player.next() }, enabled = player.position.lineIndex < player.track.lines.lastIndex, modifier = Modifier.testTag("next_line")) {
-                            Icon(Icons.Default.KeyboardArrowDown, "Следующая фраза", Modifier.size(30.dp))
-                        }
-                        TextButton(onClick = onTempo, modifier = Modifier.testTag("scroll_options")) {
-                            Text(if (scrolling) "${player.playback.secondsPerLine} с" else "Темп", style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-                    Text(if (scrolling) "Автопрокрутка · фраза ${player.position.lineIndex + 1} из ${player.track.lines.size}" else "Фраза ${player.position.lineIndex + 1} из ${player.track.lines.size} · вручную",
-                        Modifier.align(Alignment.CenterHorizontally).padding(bottom = 4.dp).testTag("line_status"),
-                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    if (index > 0) IconButton(onClick = { onStageChange(stages[index - 1].id) }, modifier = Modifier.testTag("previous_stage")) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Предыдущий этап", Modifier.size(20.dp))
-                    }
-                    TextButton(onClick = nextStage, modifier = Modifier.weight(1f).testTag("next_stage")) {
-                        Column(Modifier.weight(1f)) {
-                            if (index < stages.lastIndex && !compact) Text("Следующий этап", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(if (index < stages.lastIndex) stages[index + 1].shortTitle else "Закончить чтение", maxLines = if (compact) 1 else 2, overflow = TextOverflow.Ellipsis)
-                        }
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.padding(start = 8.dp).size(18.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(20.dp))
                     }
                 }
             }
@@ -364,49 +274,125 @@ private fun PlayerFooter(player: PrayerPlayerState?, textVisible: Boolean, compa
 }
 
 @Composable
-private fun PrayerLyrics(player: PrayerPlayerState, compact: Boolean, readingMissing: Boolean, modifier: Modifier) {
+private fun ReaderLyrics(reading: ActiveServicePlayback, player: ServicePlayerState, generation: Int, original: Boolean, compact: Boolean,
+    missing: Boolean, onClarify: () -> Unit, onNextStage: () -> Unit) {
     val scroll = rememberLazyListState()
     val dragged by scroll.interactionSource.collectIsDraggedAsState()
-    val current = player.position.lineIndex
-    val scale = androidx.compose.ui.platform.LocalDensity.current.fontScale
-    val lyricSize = if (compact) maxOf(30f / scale, 20f) else 28f
-    LaunchedEffect(dragged) { if (dragged) player.pause() }
-    LaunchedEffect(player.track.id, current, player.focusRequest) {
+    val track = reading.track
+    val current = reading.lineIndex
+    val textSize = if (compact) maxOf(30f / LocalDensity.current.fontScale, 20f) else 28f
+    val hasIntro = track != null
+    val offset = if (hasIntro) 1 else 0
+    val block = reading.segment !is PlaybackSegment.Text
+    LaunchedEffect(dragged) { if (dragged) player.pause(generation) }
+    LaunchedEffect(track?.id, current, player.focusRequest, original, block) {
         withFrameNanos { }
-        val focusOffset = if (compact) 0 else (scroll.layoutInfo.viewportEndOffset / 5).coerceAtLeast(0)
-        val item = if (readingMissing && current > 0) current + 1 else current
-        scroll.animateScrollToItem(item, scrollOffset = -focusOffset)
+        val target = if (block) (track?.lines?.size ?: 0) + offset else current + offset
+        val inset = if (compact) 0 else (scroll.layoutInfo.viewportEndOffset / 4).coerceAtLeast(0)
+        scroll.animateScrollToItem(target, scrollOffset = -inset)
     }
-    LazyColumn(modifier.fillMaxSize().testTag("lyrics_list"), state = scroll,
-        contentPadding = PaddingValues(horizontal = if (compact) 20.dp else 24.dp, vertical = if (compact) 8.dp else 24.dp),
+    LazyColumn(Modifier.fillMaxSize().testTag("lyrics_list"), state = scroll,
+        contentPadding = PaddingValues(horizontal = if (compact) 16.dp else 24.dp, vertical = if (compact) 12.dp else 24.dp),
         verticalArrangement = Arrangement.spacedBy(if (compact) 20.dp else 28.dp)) {
-        if (readingMissing) item { DailyReadingUnavailable() }
-        itemsIndexed(player.track.lines, key = { _, line -> line.id }) { index, line ->
-            val active = current == index
-            Text(if (player.original && line.original != null) line.original else line.russian,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { player.seek(index) }
-                    .semantics { selected = active; role = Role.Button }.testTag("lyric_line_$index"),
-                fontSize = lyricSize.sp, lineHeight = (lyricSize * (if (compact) 1.35f else 1.4f)).sp,
-                fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
-                color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+        if (hasIntro) item(key = "text_note") {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (missing) DailyReadingUnavailable()
+                else Text(if (track!!.isScripture) "${track.subtitle}. Церковнославянский текст пока не добавлен"
+                    else if (original) "Церковнославянский текст" else "Русское изложение смысла молитвы",
+                    Modifier.testTag(if (track!!.isScripture) "original_unavailable" else "language_note"),
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
-        item {
-            Column(Modifier.padding(top = 12.dp, bottom = if (compact) 32.dp else 96.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(if (player.track.isExcerpt) "Конец фрагмента" else "Конец текста", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (player.trackIndex < player.tracks.lastIndex) {
-                    val next = player.tracks[player.trackIndex + 1]
-                    OutlinedButton(onClick = { player.selectTrack(player.trackIndex + 1) }, modifier = Modifier.testTag("next_track")) {
-                        Text((if (next.isScripture) "Следующее чтение: " else "Следующий текст: ") + next.title)
-                    }
+        itemsIndexed(track?.lines.orEmpty(), key = { _, line -> line.id }) { index, line ->
+            Text(if (original) line.original ?: line.russian else line.russian,
+                Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { player.seekLine(requireNotNull(track).id, line.id, generation) }
+                    .testTag("lyric_line_$index").semantics { selected = index == current; role = Role.Button },
+                fontSize = textSize.sp, lineHeight = (textSize * 1.4f).sp,
+                fontWeight = if (index == current) FontWeight.SemiBold else FontWeight.Normal,
+                color = if (index == current) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        item(key = "stage_continuation") {
+            if (block) ReaderStageProgress(reading, player, generation, onClarify, onNextStage)
+            else Column(Modifier.padding(top = 12.dp, bottom = 48.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(if (track?.isExcerpt == true) "Конец фрагмента" else "Конец текста", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                val trackIndex = reading.tracks.indexOf(track)
+                if (trackIndex >= 0 && trackIndex < reading.tracks.lastIndex) OutlinedButton(onClick = { player.selectTrack(reading.tracks[trackIndex + 1].id, generation) }, Modifier.testTag("next_track")) {
+                    Text("Следующий текст: ${reading.tracks[trackIndex + 1].title}")
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ReaderStageProgress(reading: ActiveServicePlayback, player: ServicePlayerState, generation: Int, onClarify: () -> Unit, onNextStage: () -> Unit) {
+    val missing = reading.segment is PlaybackSegment.MissingReading
+    val end = reading.segment is PlaybackSegment.End
+    Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = MaterialTheme.shapes.medium,
+        modifier = Modifier.fillMaxWidth().testTag(when { missing -> "missing_reading_barrier"; end -> "playback_end"; else -> "stage_wait" })) {
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text(when { missing -> "Чтение нужно пройти вручную"; end -> "Путеводитель завершен"; reading.track == null -> reading.stage.shortTitle; else -> "Дальше слушаем службу" }, style = MaterialTheme.typography.titleLarge)
+            if (missing) {
+                val date = reading.plan.serviceDate.format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru")))
+                Text("Текста на $date пока нет. Плеер остановлен. Когда чтение закончится, продолжите к следующему этапу.")
+            }
+            else if (end) Text("Это конец порядка в приложении. Ориентируйтесь на происходящее в храме.")
+            else {
+                if (reading.track != null) Text("Доступный фрагмент закончился. Переход к следующему этапу будет примерным.", style = MaterialTheme.typography.bodySmall)
+                Text(reading.stage.description, style = MaterialTheme.typography.bodyLarge)
+                Text(reading.stage.meaning, style = MaterialTheme.typography.bodyLarge)
+            }
+            reading.stage.cue?.let {
+                Text("Как узнать этот момент", style = MaterialTheme.typography.titleMedium)
+                Text(it, style = MaterialTheme.typography.bodyLarge)
+            }
+            if (!missing && !end && reading.stage.whatToDo.isNotBlank()) Text(reading.stage.whatToDo, style = MaterialTheme.typography.bodyLarge)
+            if (missing) Button(onClick = { player.continueAfterMissing(generation) }, modifier = Modifier.fillMaxWidth().testTag("continue_missing_reading")) { Text("Чтение закончилось · дальше") }
+            else OutlinedButton(onClick = onNextStage, modifier = Modifier.fillMaxWidth().testTag("wait_next_stage")) { Text(if (end) "Закончить чтение" else "Перейти дальше вручную") }
+            TextButton(onClick = onClarify, modifier = Modifier.fillMaxWidth()) { Text("Уточнить место по службе") }
+        }
+    }
+}
+
+@Composable
+private fun ReaderMeaning(reading: ActiveServicePlayback, missing: Boolean, modifier: Modifier, onOpenSource: (String) -> Unit) {
+    val scroll = rememberLazyListState()
+    val track = reading.track
+    var showDayNote by rememberSaveable(track?.id) { mutableStateOf(false) }
+    LaunchedEffect(reading.stage.id, track?.id) { scroll.scrollToItem(0) }
+    LazyColumn(modifier.fillMaxSize().testTag("service_content"), state = scroll,
+        contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        if (missing) item { MeaningCard("Чтение на выбранную дату") { DailyReadingUnavailable() } }
+        if (track != null && track.explanation.isNotBlank()) item {
+            MeaningCard(if (track.isScripture) "О чем это чтение" else "Об этом тексте") {
+                Text(track.explanation, Modifier.testTag("track_explanation"), style = MaterialTheme.typography.bodyLarge)
+                track.contextNote?.let { note ->
+                    TextButton(onClick = { showDayNote = !showDayNote }, Modifier.testTag("reading_note_toggle")) { Text("О чтениях этого дня") }
+                    if (showDayNote) Text(note, Modifier.testTag("reading_day_note"), style = MaterialTheme.typography.bodySmall)
+                }
+                track.sourceUrl?.let { url -> TextButton(onClick = { onOpenSource(url) }) { Text("Источник текста") } }
+            }
+        }
+        item { MeaningCard("Что происходит") { Text(reading.stage.description, style = MaterialTheme.typography.bodyLarge) } }
+        item { MeaningCard("В чем смысл") { Text(reading.stage.meaning, style = MaterialTheme.typography.bodyLarge) } }
+        reading.stage.cue?.let { cue -> item { MeaningCard("Как узнать этот момент") { Text(cue, style = MaterialTheme.typography.bodyLarge) } } }
+        if (reading.stage.whatToDo.isNotBlank()) item { MeaningCard("На что обратить внимание") { Text(reading.stage.whatToDo, style = MaterialTheme.typography.bodyLarge) } }
+        reading.stage.sourceUrl?.let { url -> item { TextButton(onClick = { onOpenSource(url) }) { Text(reading.stage.sourceTitle ?: "Источник объяснения") } } }
+    }
+}
+
+@Composable
+private fun MeaningCard(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
+        Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(title, style = MaterialTheme.typography.titleLarge)
+            content()
         }
     }
 }
 
 @Composable
 private fun DailyReadingUnavailable() {
-    Text("Чтение на сегодня пока не добавлено. Здесь - только возглас перед чтением",
-        Modifier.testTag("reading_unavailable"), style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Text("Чтение на эту дату пока не добавлено. Здесь - только возглас перед чтением", Modifier.testTag("reading_unavailable"),
+        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }

@@ -85,7 +85,8 @@ class ServicePlayerState(
     }
 
     /** Mandatory pause is never rolled back into playing, including on storage failure. */
-    fun pause(): Boolean {
+    fun pause(expectedGeneration: Int = generation): Boolean {
+        if (expectedGeneration != generation) return false
         val previous = reading ?: return true
         if (!previous.state.isPlaying) return true
         val now = monotonicMillis()
@@ -95,7 +96,8 @@ class ServicePlayerState(
         return write(paused, false, now)
     }
 
-    fun play(): Boolean {
+    fun play(expectedGeneration: Int = generation): Boolean {
+        if (expectedGeneration != generation) return false
         val previous = reading ?: return false
         if (previous.state.isPlaying) return true
         val now = monotonicMillis()
@@ -108,7 +110,8 @@ class ServicePlayerState(
         return true
     }
 
-    fun changeSpeed(speed: PlaybackSpeed): Boolean {
+    fun changeSpeed(speed: PlaybackSpeed, expectedGeneration: Int = generation): Boolean {
+        if (expectedGeneration != generation) return false
         val previous = reading ?: return false
         val now = monotonicMillis()
         val materialized = previous.copy(state = previous.engine.tick(previous.state, now))
@@ -122,20 +125,22 @@ class ServicePlayerState(
         return true
     }
 
-    fun seekStage(stageId: String): Boolean = seek { current ->
-        current.copy(state = current.engine.seekStage(current.state, stageId), isApproximate = false)
+    fun seekStage(stageId: String, expectedGeneration: Int = generation): Boolean {
+        if (expectedGeneration != generation) return false
+        return seek { current -> current.copy(state = current.engine.seekStage(current.state, stageId), isApproximate = false) }
     }
 
-    fun seekLine(index: Int): Boolean {
+    fun seekLine(trackId: String, lineId: String, expectedGeneration: Int = generation): Boolean {
+        if (expectedGeneration != generation) return false
         val current = reading ?: return false
-        val track = current.track ?: return false
-        val line = track.lines.getOrNull(index) ?: return false
-        return seek { paused -> paused.copy(state = paused.engine.seekLine(paused.state, track.id, line.id), isApproximate = false) }
+        if (current.plan.indexOfLine(trackId, lineId) == null) return false
+        return seek { paused -> paused.copy(state = paused.engine.seekLine(paused.state, trackId, lineId), isApproximate = false) }
     }
 
-    fun selectTrack(index: Int): Boolean {
+    fun selectTrack(trackId: String, expectedGeneration: Int = generation): Boolean {
+        if (expectedGeneration != generation) return false
         val current = reading ?: return false
-        val track = current.tracks.getOrNull(index) ?: return false
+        val track = current.plan.track(trackId) ?: return false
         if (track.id == current.track?.id) return pause()
         return seek { paused ->
             val savedId = runCatching { savedPhrase(track) }.getOrNull()
@@ -144,7 +149,8 @@ class ServicePlayerState(
         }
     }
 
-    fun continueAfterMissing(): Boolean {
+    fun continueAfterMissing(expectedGeneration: Int = generation): Boolean {
+        if (expectedGeneration != generation) return false
         if (reading?.segment !is PlaybackSegment.MissingReading) return false
         return seek { current -> current.copy(state = current.engine.continueAfterMissing(current.state), isApproximate = false) }
     }

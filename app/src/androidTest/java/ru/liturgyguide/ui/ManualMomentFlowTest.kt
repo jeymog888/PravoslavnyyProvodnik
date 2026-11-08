@@ -22,6 +22,10 @@ import org.junit.runner.RunWith
 import ru.liturgyguide.di.AppContainer
 import ru.liturgyguide.service.PrayerTrackFactory
 import ru.liturgyguide.service.ServiceSession
+import ru.liturgyguide.service.ServicePlaybackStore
+import ru.liturgyguide.service.StoredServicePlayback
+import ru.liturgyguide.service.StoredServicePlaybackCodec
+import java.util.concurrent.atomic.AtomicLong
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
@@ -36,6 +40,7 @@ class ManualMomentFlowTest {
     private val instant = Instant.parse("2026-12-01T12:00:00Z") // Outside the bundled schedule.
     private val creed = tracks("creed")[1]
     private val other = tracks("communion")[1]
+    private val monotonic = AtomicLong(1_000L)
 
     @Test
     fun allFiveLandmarksWithoutAScheduleOpenTheExpectedTextAndPhraseAfterVerification() {
@@ -77,7 +82,7 @@ class ManualMomentFlowTest {
             assertFalse(preferences.contains("lyric_phrase_old_track"))
             assertManualSession(stageId)
             compose.onNodeWithContentDescription("К службе").performClick()
-            // Let the previous player persist on disposal before taking the next snapshot.
+            // Complete navigation before comparing the next unaccepted draft.
             compose.waitForIdle()
         }
     }
@@ -164,26 +169,24 @@ class ManualMomentFlowTest {
     }
 
     @Test
-    fun activeStageTimerStopsAtTheDisplayedStageAndDoesNotCrossItsBoundaryDuringCorrection() {
-        val duration = requireNotNull(container.getStageMatcher().getStageById("creed")).durationMin * 60_000L
-        seed(session = ServiceSession("creed", instant.toEpochMilli(), autoAdvance = true,
-            elapsedInStageMillis = duration - 1_000L))
-        val clock = AdjustableClock(instant)
-        val restoration = launch(clock)
+    fun activePlayerPausesBeforeThePhraseBoundaryAndCorrectionNeverConsumesBackgroundTime() {
+        seed()
+        val restoration = launch()
         resumeMeaning()
-        // Advance the clock and tap in one UI-thread action, before a navigation tick can run.
+        compose.onNodeWithTag("player_text_tab").performClick()
+        compose.onNodeWithTag("play_lyrics").performClick()
+        // The canonical phrase has six words: its four-second minimum ends at 5000 ms.
         compose.onNodeWithTag("clarify_moment").assertIsDisplayed()
             .performSemanticsAction(SemanticsActions.OnClick) { click ->
-                clock.current = instant.plusSeconds(2)
+                monotonic.set(4_999L)
                 click()
             }
-        val paused = savedSession()
-        assertEquals("creed", paused.anchorStageId)
-        assertEquals(duration - 1_000L, paused.elapsedInStageMillis)
-        assertFalse(paused.autoAdvance)
+        val paused = savedPlayback()
+        assertEquals("creed", savedSession().anchorStageId)
+        assertEquals(15_996L, paused.snapshot.elapsedQuarterMillis)
+        assertFalse(savedSession().autoAdvance)
         compose.onNodeWithText("Автоматические переходы остановлены").assertIsDisplayed()
-        compose.runOnIdle { clock.current = instant.plusSeconds(600) }
-        compose.mainClock.advanceTimeBy(6_000)
+        compose.runOnIdle { monotonic.addAndGet(600_000L) }
         restoration.emulateSavedInstanceStateRestore()
         compose.onNodeWithText("Автоматические переходы остановлены").assertIsDisplayed()
         landmark("communion")
@@ -192,10 +195,10 @@ class ManualMomentFlowTest {
         back()
         back()
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Символ веры")
-        compose.onNodeWithTag("player_meaning_tab").assertIsSelected()
-        compose.onNodeWithTag("player_text_tab").performClick()
+        compose.onNodeWithTag("player_text_tab").assertIsSelected()
         compose.onNodeWithTag("lyric_line_12").assertIsSelected().assertIsDisplayed()
-        assertEquals(paused, savedSession())
+        compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed()
+        assertEquals(paused, savedPlayback())
         assertOtherBookmark()
     }
 
@@ -206,34 +209,41 @@ class ManualMomentFlowTest {
         resumeMeaning()
         compose.onNodeWithTag("player_text_tab").performClick()
         compose.onNodeWithTag("play_lyrics").performClick()
-        compose.onNodeWithContentDescription("Остановить прокрутку").assertIsDisplayed()
-        val session = savedSession()
+        compose.onNodeWithContentDescription("Остановить плеер").assertIsDisplayed()
+        compose.runOnIdle { monotonic.addAndGet(1_234L) }
         clarify()
+        val session = savedSession()
         val stoppedLine = preferences.getInt("lyric_line_${creed.id}", -1)
-        val stoppedOffset = preferences.getLong("lyric_offset_${creed.id}", -1L)
+        val stopped = savedPlayback()
+        assertEquals(4_936L, stopped.snapshot.elapsedQuarterMillis)
         restoration.emulateSavedInstanceStateRestore()
         landmark("communion")
         back()
         back()
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
         compose.onNodeWithTag("lyric_line_$stoppedLine").assertIsSelected().assertIsDisplayed()
-        compose.onNodeWithContentDescription("Начать автопрокрутку").assertIsDisplayed()
-        assertEquals(stoppedOffset, preferences.getLong("lyric_offset_${creed.id}", -1L))
+        compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed()
+        assertEquals(stopped, savedPlayback())
         assertEquals(session, savedSession())
         assertOtherBookmark()
     }
 
     @Test
-    fun savedReadingNoticeUsesCorrectionAndDoesNotRewriteAnInactiveSession() {
+    fun savedReadingNoticeUsesCorrectionAndKeepsTheAcceptedPausedSnapshot() {
         val old = ServiceSession("creed", instant.minusSeconds(8 * 3_600L).toEpochMilli(),
             autoAdvance = true, elapsedInStageMillis = 2_000L, anchorIsApproximate = true)
         seed(session = old)
         launch()
         resumeMeaning()
+        val accepted = savedPlayback()
+        val normalized = savedSession()
+        assertFalse(normalized.autoAdvance)
+        assertEquals("creed", normalized.anchorStageId)
         compose.onNodeWithTag("saved_earlier_notice").performClick()
         compose.onNodeWithTag("manual_content").assertExists()
         compose.onNodeWithText("Автоматические переходы остановлены").assertDoesNotExist()
-        assertEquals(old, savedSession())
+        assertEquals(normalized, savedSession())
+        assertEquals(accepted, savedPlayback())
         searchFromManual()
         back()
         compose.onNodeWithTag("manual_content").assertExists()
@@ -241,7 +251,8 @@ class ManualMomentFlowTest {
         compose.onNodeWithTag("player_meaning_tab").assertIsSelected()
         compose.onNodeWithTag("player_text_tab").performClick()
         compose.onNodeWithTag("lyric_line_12").assertIsSelected()
-        assertEquals(old, savedSession())
+        assertEquals(normalized, savedSession())
+        assertEquals(accepted, savedPlayback())
         assertOtherBookmark()
     }
 
@@ -279,7 +290,7 @@ class ManualMomentFlowTest {
     }
 
     private fun launch(clock: Clock = Clock.fixed(instant, ZoneOffset.UTC)) = StateRestorationTester(compose).also {
-        it.setContent { AppNavigation(container, clock) }
+        it.setContent { AppNavigation(container, clock, monotonic::get) }
     }
 
     private fun seed(session: ServiceSession = ServiceSession("creed", instant.toEpochMilli())) {
@@ -330,6 +341,8 @@ class ManualMomentFlowTest {
     }
     private fun tracks(id: String) = PrayerTrackFactory.build(requireNotNull(container.getStageMatcher().getStageById(id)), null)
     private fun savedSession(): ServiceSession = Gson().fromJson(preferences.getString("session", null), ServiceSession::class.java)
+    private fun savedPlayback(): StoredServicePlayback = requireNotNull(
+        StoredServicePlaybackCodec.decode(preferences.getString(ServicePlaybackStore.PLAYBACK_KEY, null)))
     private fun assertOtherBookmark() {
         assertEquals(other.id, preferences.getString("lyric_track_communion", null))
         assertEquals(4, preferences.getInt("lyric_line_${other.id}", -1))
@@ -344,7 +357,7 @@ class ManualMomentFlowTest {
         assertEquals(0L, session.elapsedInStageMillis)
         assertFalse(session.autoAdvance)
         assertFalse(session.anchorIsApproximate)
-        compose.onNodeWithContentDescription("Начать автопрокрутку").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed()
     }
     private class AdjustableClock(var current: Instant) : Clock() {
         override fun getZone(): ZoneId = ZoneOffset.UTC

@@ -47,8 +47,7 @@ class ReaderAccessibilityTest {
         launchReader("creed", 1, 3, width = 320, height = 640, systemFontScale = 2f)
         assertReadableHeader()
         assertReadingSpaceAndScale(3, 2.6f)
-        compose.onNodeWithTag("toggle_original").assertIsDisplayed().performClick()
-        compose.onNodeWithTag("language_original").performClick()
+        compose.onNodeWithTag("player_original_tab").assertIsDisplayed().performClick()
         compose.onNodeWithTag("lyric_line_3").assertIsSelected()
         assertReadingSpaceAndScale(3, 2.6f)
 
@@ -58,7 +57,7 @@ class ReaderAccessibilityTest {
         compose.onNodeWithTag("manual_content").assertIsDisplayed()
         compose.onNodeWithContentDescription("Назад").performClick()
         compose.onNodeWithTag("player_meaning_tab").assertIsSelected()
-        compose.onNodeWithTag("player_text_tab").performClick()
+        compose.onNodeWithTag("player_original_tab").performClick()
         compose.onNodeWithTag("lyric_line_3").assertIsSelected().assertIsDisplayed()
         assertTrue(preferences.getBoolean("lyric_original", false))
         assertReadableHeader()
@@ -85,7 +84,7 @@ class ReaderAccessibilityTest {
     fun aTallNarrowScreenKeepsReadableActionsWithoutReducingThePrayerSize() {
         launchReader("creed", 1, 3, width = 320, height = 800, systemFontScale = 2f)
         assertReadableHeader()
-        compose.onNodeWithTag("toggle_original").assertIsDisplayed()
+        compose.onNodeWithTag("player_original_tab").assertIsDisplayed().assertIsEnabled()
         assertReadable(compose.onNodeWithText("По-русски", useUnmergedTree = true))
         assertReadingSpaceAndScale(3, 2.6f, 28.sp)
     }
@@ -94,7 +93,7 @@ class ReaderAccessibilityTest {
     fun aTallScreenAtTheHeaderWidthBoundaryKeepsItsReadingArea() {
         launchReader("creed", 1, 3, width = 400, height = 800, systemFontScale = 2f)
         assertReadableHeader()
-        compose.onNodeWithTag("toggle_original").assertIsDisplayed()
+        compose.onNodeWithTag("player_original_tab").assertIsDisplayed().assertIsEnabled()
         assertReadingSpaceAndScale(3, 2.6f, 28.sp)
         compose.onNodeWithTag("next_line").performClick()
         compose.onNodeWithTag("lyric_line_4").assertIsSelected().assertIsDisplayed()
@@ -117,7 +116,8 @@ class ReaderAccessibilityTest {
     fun scriptureAndAnEmptyTextStageKeepClarificationWithoutALanguageMenu() {
         launchReader("gospel", 1, 0, width = 320, height = 640, systemFontScale = 2f)
         assertTrue(tracks("gospel")[1].isScripture)
-        compose.onNodeWithTag("toggle_original").assertDoesNotExist()
+        compose.onNodeWithTag("player_original_tab").assertIsDisplayed().assertIsNotEnabled()
+        compose.onNodeWithTag("player_text_tab").assertIsSelected()
         assertReadableHeader()
         assertReadingSpaceAndScale(0, 2.6f)
         compose.onNodeWithTag("open_map").performClick()
@@ -153,8 +153,8 @@ class ReaderAccessibilityTest {
             assertEquals("The day must not be split into separate letters", 1, textLayout(text).lineCount)
         }
         compose.onNodeWithTag("schedule_today").assertIsNotSelected()
-        compose.onNodeWithTag("church_content").performScrollToNode(hasText("9 ноября, понедельник"))
-        compose.onNodeWithText("9 ноября, понедельник").assertIsDisplayed()
+        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("schedule_date"))
+        compose.onNodeWithTag("schedule_date").assertTextEquals("9 ноября 2026, понедельник").assertIsDisplayed()
     }
 
     @Test
@@ -228,7 +228,7 @@ class ReaderAccessibilityTest {
     private fun assertReadableHeader() {
         assertReadable(compose.onNodeWithTag("current_stage_title", useUnmergedTree = true))
         assertReadable(compose.onNodeWithTag("current_track_title", useUnmergedTree = true))
-        listOf("Текст", "Смысл").forEach {
+        listOf("Оригинал", "По-русски", "Смысл").forEach {
             val node = compose.onNodeWithText(it, useUnmergedTree = true)
             assertReadable(node)
             assertEquals("A short tab label must stay on one line", 1, textLayout(node).lineCount)

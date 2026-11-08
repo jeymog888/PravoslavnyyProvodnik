@@ -13,11 +13,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import ru.liturgyguide.di.AppContainer
-import ru.liturgyguide.service.PrayerTrackFactory
-import ru.liturgyguide.service.ServiceSession
+import ru.liturgyguide.service.*
 import java.time.Instant
 
-/** Launch after seeding preferences, so restore checks exercise a real cold activity. */
+/** Cold Activity launches exercise disk-backed migration and restore, not only rememberSaveable. */
 @RunWith(AndroidJUnit4::class)
 class SavedReadingTest {
     @get:Rule val compose = createEmptyComposeRule()
@@ -26,34 +25,45 @@ class SavedReadingTest {
     private val tracks = PrayerTrackFactory.build(requireNotNull(AppContainer(context).getStageMatcher().getStageById("creed")), null)
 
     @Test
-    fun changingGlobalTempoDoesNotAdvanceARestoredPhraseWhenChangingTexts() {
+    fun legacyTrackBookmarksKeepTheirPhraseButDiscardTheOldTimerOffsets() {
         seed(line = 1, offset = 12_000L, selectedTrack = 0)
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             resumeReading()
             selectTrack(1)
             compose.onNodeWithTag("lyric_line_1").assertIsSelected().assertIsDisplayed()
-            compose.onNodeWithContentDescription("Начать автопрокрутку").assertIsDisplayed()
-            assertEquals(6_000L, preferences.getLong("lyric_offset_${tracks[1].id}", -1L))
-            assertEquals(8, preferences.getInt("lyric_saved_tempo_${tracks[1].id}", -1))
+            compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed()
+            assertEquals(0L, savedPlayback().snapshot.elapsedQuarterMillis)
+            assertEquals(PlaybackSpeed.NORMAL, savedPlayback().snapshot.speed)
+            assertEquals(tracks[1].lines[1].id, preferences.getString("lyric_phrase_${tracks[1].id}", null))
             scenario.recreate()
             compose.onNodeWithTag("lyric_line_1").assertIsSelected()
             selectTrack(0)
             selectTrack(1)
             compose.onNodeWithTag("lyric_line_1").assertIsSelected()
+            assertEquals(0L, savedPlayback().snapshot.elapsedQuarterMillis)
         }
     }
 
     @Test
-    fun aFinishedSavedTextStaysFinishedAfterTempoChangeAndColdLaunch() {
+    fun aLegacyFinishedTextRestoresItsLastPhrasePausedWithoutInventingNewElapsedTime() {
         seed(line = tracks[1].lines.lastIndex, offset = 8_000L, selectedTrack = 1, savedTempo = 8, globalTempo = 16)
+        lateinit var saved: StoredServicePlayback
         ActivityScenario.launch(MainActivity::class.java).use {
             resumeReading()
             compose.onNodeWithTag("lyric_line_${tracks[1].lines.lastIndex}").assertIsSelected()
-            compose.onNodeWithContentDescription("Повторить текст сначала").assertIsDisplayed()
+            compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed()
+            assertEquals(0L, savedPlayback().snapshot.elapsedQuarterMillis)
+            assertEquals(PlaybackSpeed.NORMAL, savedPlayback().snapshot.speed)
             selectTrack(0)
             selectTrack(1)
-            compose.onNodeWithContentDescription("Повторить текст сначала").assertIsDisplayed()
-            assertEquals(16_000L, preferences.getLong("lyric_offset_${tracks[1].id}", -1L))
+            compose.onNodeWithTag("lyric_line_${tracks[1].lines.lastIndex}").assertIsSelected()
+            saved = savedPlayback()
+        }
+        ActivityScenario.launch(MainActivity::class.java).use {
+            resumeReading()
+            compose.onNodeWithTag("lyric_line_${tracks[1].lines.lastIndex}").assertIsSelected()
+            compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed()
+            assertEquals(saved, savedPlayback())
         }
     }
 
@@ -61,12 +71,11 @@ class SavedReadingTest {
     fun anOldSavedReadingIsLabelledPausedAndANewServiceClearsItsPositions() {
         seed(line = 3, offset = 0L, selectedTrack = 1, stale = true)
         ActivityScenario.launch(MainActivity::class.java).use {
-            compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("resume_guide"))
-            compose.onNodeWithTag("resume_guide").assertIsDisplayed().performClick()
+            resumeReading()
             compose.onNodeWithTag("saved_earlier_notice").assertIsDisplayed()
             compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Символ веры")
             compose.onNodeWithTag("lyric_line_3").assertIsSelected()
-            compose.onNodeWithContentDescription("Начать автопрокрутку").assertIsDisplayed()
+            compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed()
             pressBack()
             compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("start_guide"))
             compose.onNodeWithTag("start_guide").performClick()
@@ -78,6 +87,25 @@ class SavedReadingTest {
             compose.onNodeWithTag("lyric_line_0").assertIsSelected()
             val session = Gson().fromJson(preferences.getString("session", null), ServiceSession::class.java)
             assertFalse(session.autoAdvance)
+            assertEquals(0L, savedPlayback().snapshot.elapsedQuarterMillis)
+        }
+    }
+
+    @Test
+    fun aPresentCorruptSnapshotCannotSilentlyReimportLegacyBookmarks() {
+        seed(line = 3, offset = 2_000L, selectedTrack = 1)
+        check(preferences.edit().putString(ServicePlaybackStore.PLAYBACK_KEY, "broken").commit())
+        ActivityScenario.launch(MainActivity::class.java).use {
+            compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("reading_restore_notice"))
+            compose.onNodeWithTag("reading_restore_notice").assertIsDisplayed()
+            compose.onNodeWithTag("resume_guide").assertDoesNotExist()
+            assertEquals("broken", preferences.getString(ServicePlaybackStore.PLAYBACK_KEY, null))
+            assertEquals(tracks[1].lines[3].id, preferences.getString("lyric_phrase_${tracks[1].id}", null))
+            compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("start_guide"))
+            compose.onNodeWithTag("start_guide").performClick()
+            compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Подготовка к литургии")
+            assertNotNull(savedPlayback())
+            assertFalse(preferences.contains("lyric_phrase_${tracks[1].id}"))
         }
     }
 
@@ -92,6 +120,9 @@ class SavedReadingTest {
             .putInt("lyric_line_${track.id}", line).putString("lyric_phrase_${track.id}", track.lines[line].id)
             .putLong("lyric_offset_${track.id}", offset).commit())
     }
+
+    private fun savedPlayback(): StoredServicePlayback = requireNotNull(
+        StoredServicePlaybackCodec.decode(preferences.getString(ServicePlaybackStore.PLAYBACK_KEY, null)))
 
     private fun resumeReading() {
         compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("resume_guide"))

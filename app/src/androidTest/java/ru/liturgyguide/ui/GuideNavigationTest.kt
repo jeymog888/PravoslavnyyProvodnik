@@ -26,8 +26,12 @@ import ru.liturgyguide.LiturgyGuideApplication
 import ru.liturgyguide.service.ParishRepository
 import ru.liturgyguide.service.PrayerTrackFactory
 import ru.liturgyguide.service.ServiceSession
+import ru.liturgyguide.service.ServicePlaybackStore
+import ru.liturgyguide.service.StoredServicePlaybackCodec
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @RunWith(AndroidJUnit4::class)
 class GuideNavigationTest {
@@ -50,7 +54,7 @@ class GuideNavigationTest {
     fun readingCanAdvanceAndReturnWithoutLosingTheStage() {
         tapMain("start_guide")
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Подготовка к литургии")
-        compose.onNodeWithTag("previous_stage").assertDoesNotExist()
+        compose.onNodeWithTag("previous_stage").assertIsNotEnabled()
         compose.onNodeWithTag("next_stage").performClick()
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Начало литургии")
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
@@ -216,28 +220,25 @@ class GuideNavigationTest {
     }
 
     @Test
-    fun timedStageFollowingNeedsConfirmationAndCanBePaused() {
+    fun onePlayerStartsDirectlyAndPausesWithoutASecondStageTimer() {
         tapMain("start_guide")
-        openStageTimer()
-        compose.onNodeWithText("Этапы по времени").assertIsDisplayed()
+        compose.onNodeWithTag("play_lyrics").assertIsEnabled().performClick()
+        compose.onNodeWithContentDescription("Остановить плеер").assertIsDisplayed()
+        compose.onNodeWithText("Автопрокрутка").assertDoesNotExist()
         assertFalse(savedSession().autoAdvance)
-        compose.onNodeWithText("Менять этапы самому").performClick()
-        assertFalse(savedSession().autoAdvance)
-        openStageTimer()
-        compose.onNodeWithText("Включить").performClick()
-        assertTrue(savedSession().autoAdvance)
-        compose.onNodeWithTag("player_menu").performClick()
-        compose.onNodeWithTag("toggle_follow").performClick()
-        assertFalse(savedSession().autoAdvance)
+        assertNotNull(StoredServicePlaybackCodec.decode(preferences.getString(ServicePlaybackStore.PLAYBACK_KEY, null)))
+        compose.onNodeWithTag("play_lyrics").performClick()
+        compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed()
         compose.onNodeWithTag("next_stage").performClick()
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Начало литургии")
+        assertFalse(savedSession().autoAdvance)
     }
 
     @Test
     fun choosingManualReadingFromTempoOptionsStopsAnActiveScroll() {
         openCreed()
         startScrolling()
-        compose.onNodeWithContentDescription("Остановить прокрутку").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Остановить плеер").assertIsDisplayed()
         compose.onNodeWithTag("scroll_options").performClick()
         compose.onNodeWithTag("manual_reading").performClick()
         assertManualReading()
@@ -281,16 +282,19 @@ class GuideNavigationTest {
     }
 
     @Test
-    fun backgroundingStopsTheScrollWithoutAdvancingTheSavedPhrase() {
+    fun backgroundingAndRecreationKeepTheAcceptedPhrasePaused() {
         openCreed()
-        startScrolling(8)
-        compose.activityRule.scenario.moveToState(Lifecycle.State.CREATED)
-        // Longer than one phrase interval proves background time is not played.
-        Thread.sleep(9_000L)
+        startScrolling()
+        compose.activityRule.scenario.moveToState(Lifecycle.State.STARTED)
+        val paused = requireNotNull(StoredServicePlaybackCodec.decode(preferences.getString(ServicePlaybackStore.PLAYBACK_KEY, null)))
+        val pausedTrack = requireNotNull(preferences.getString("lyric_track_creed", null))
+        val pausedLine = preferences.getInt("lyric_line_$pausedTrack", -1)
+        assertTrue(pausedLine >= 0)
         compose.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
-        compose.waitForIdle()
-        compose.onNodeWithTag("lyric_line_0").assertIsSelected().assertIsDisplayed()
+        compose.activityRule.scenario.recreate()
+        compose.onNodeWithTag("lyric_line_$pausedLine").assertIsSelected().assertIsDisplayed()
         assertManualReading()
+        assertEquals(paused, StoredServicePlaybackCodec.decode(preferences.getString(ServicePlaybackStore.PLAYBACK_KEY, null)))
     }
 
     @Test
@@ -312,16 +316,18 @@ class GuideNavigationTest {
     }
 
     @Test
-    fun phraseScrollingAndTimedStageFollowingDoNotRunTogether() {
+    fun unifiedPlaybackHasNoSeparateStageTimerAndManualSeekPausesIt() {
         openCreed()
         startScrolling()
-        openStageTimer()
-        compose.onNodeWithText("Включить").performClick()
-        assertTrue(savedSession().autoAdvance)
-        assertManualReading()
-        compose.onNodeWithTag("play_lyrics").performClick()
-        compose.onNodeWithContentDescription("Остановить прокрутку").assertIsDisplayed()
+        compose.onNodeWithTag("player_menu").performClick()
+        compose.onNodeWithTag("toggle_follow").assertDoesNotExist()
+        compose.onNodeWithText("Этапы по времени").assertDoesNotExist()
+        pressBack()
+        compose.onNodeWithContentDescription("Остановить плеер").assertIsDisplayed()
         assertFalse(savedSession().autoAdvance)
+        compose.onNodeWithTag("next_line").performClick()
+        compose.onNodeWithTag("lyric_line_1").assertIsSelected()
+        assertManualReading()
     }
 
     @Test
@@ -404,8 +410,7 @@ class GuideNavigationTest {
                 compose.onNodeWithTag("lyric_line_${expected.lineIndex}")
                     .assertIsSelected().assertIsDisplayed().assertTextEquals(expected.original)
                 if (expected.stageId == "creed") captureQaScreenshot("s2-search-creed-original")
-                compose.onNodeWithTag("toggle_original").performClick()
-                compose.onNodeWithTag("language_russian").performClick()
+                compose.onNodeWithTag("player_text_tab").performClick()
                 compose.onNodeWithTag("lyric_line_${expected.lineIndex}")
                     .assertIsSelected().assertIsDisplayed().assertTextEquals(expected.russian)
                 if (expected.stageId == "creed") captureQaScreenshot("s2-search-creed-russian")
@@ -473,11 +478,15 @@ class GuideNavigationTest {
         pressBack()
         compose.onNodeWithTag("nav_church").performClick()
         val today = LocalDate.now(ZoneId.of("Europe/Moscow"))
+        val scheduleDateFormat = DateTimeFormatter.ofPattern("d MMMM uuuu, EEEE", Locale.forLanguageTag("ru"))
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("schedule_today"))
         compose.onNodeWithTag("schedule_today").assertIsSelected()
-        compose.onNodeWithText(friendlyDate(today)).assertIsDisplayed()
-        compose.onNodeWithTag("schedule_tomorrow").performClick().assertIsSelected()
-        compose.onNodeWithText(friendlyDate(today.plusDays(1))).assertIsDisplayed()
+        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("schedule_date"))
+        compose.onNodeWithTag("schedule_date").assertTextEquals(today.format(scheduleDateFormat)).assertIsDisplayed()
+        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("schedule_tomorrow"))
+        compose.onNodeWithTag("schedule_tomorrow").assertIsDisplayed().performClick().assertIsSelected()
+        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("schedule_date"))
+        compose.onNodeWithTag("schedule_date").assertTextEquals(today.plusDays(1).format(scheduleDateFormat)).assertIsDisplayed()
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("change_church"))
         compose.onNodeWithTag("change_church").performClick()
         compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("church_vsetsaritsa_nakhabino"))
@@ -580,19 +589,17 @@ class GuideNavigationTest {
     }
 
     private fun selectOriginal() {
-        compose.onNodeWithTag("toggle_original").performClick()
-        compose.onNodeWithTag("language_original").performClick()
+        compose.onNodeWithTag("player_original_tab").performClick()
     }
 
-    private fun startScrolling(tempo: Int = 12) {
+    private fun startScrolling() {
         compose.onNodeWithTag("play_lyrics").performClick()
-        compose.onNodeWithTag("tempo_$tempo").performClick()
-        compose.onNodeWithTag("confirm_scroll").performClick()
+        compose.onNodeWithContentDescription("Остановить плеер").assertIsDisplayed()
     }
 
     private fun assertManualReading() {
-        compose.onNodeWithContentDescription("Начать автопрокрутку").assertIsDisplayed()
-        compose.onNodeWithTag("line_status").assertTextContains("вручную", substring = true)
+        compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed()
+        compose.onNodeWithTag("line_status").assertTextContains("На паузе", substring = true)
     }
 
     private fun assertWholePhraseVisible(index: Int) {
@@ -613,11 +620,6 @@ class GuideNavigationTest {
         listOf("mkdir -p /sdcard/Download/feoria-qa", "screencap -p /sdcard/Download/feoria-qa/$name.png").forEach { command ->
             android.os.ParcelFileDescriptor.AutoCloseInputStream(automation.executeShellCommand(command)).use { it.readBytes() }
         }
-    }
-
-    private fun openStageTimer() {
-        compose.onNodeWithTag("player_menu").performClick()
-        compose.onNodeWithTag("toggle_follow").performClick()
     }
 
     private fun tracksFor(stageId: String) = PrayerTrackFactory.build(requireNotNull(

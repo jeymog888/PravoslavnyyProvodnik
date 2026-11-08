@@ -166,6 +166,71 @@ class PlaybackAcceptanceStoreTest {
         }
     }
 
+    @Test fun `finishing removes every reading key and bookmark but keeps the chosen parish and settings`() {
+        val preferences = seeded().apply { values["church_id"] = "church" }
+        assertTrue(ReadingAcceptanceStore(preferences).clearReading())
+        assertEquals(1, preferences.commitCount)
+        for (key in listOf(ReadingContextStore.CONTEXT_KEY, ServicePlaybackStore.PLAYBACK_KEY, "session", "stage_id"))
+            assertFalse(preferences.values.containsKey(key))
+        assertFalse(preferences.values.keys.any(ReadingAcceptanceStore::isBookmarkKey))
+        assertEquals("church", preferences.values["church_id"])
+        assertGlobals(preferences)
+    }
+
+    @Test fun `changing parish clears the old reading and accepts the new parish in one editor`() {
+        val preferences = seeded().apply { values["church_id"] = "church" }
+        assertTrue(ReadingAcceptanceStore(preferences).clearReading("another-church"))
+        assertEquals(1, preferences.editCount)
+        assertEquals(1, preferences.commitCount)
+        assertEquals("another-church", preferences.values["church_id"])
+        assertFalse(preferences.values.containsKey(ServicePlaybackStore.PLAYBACK_KEY))
+        assertFalse(preferences.values.containsKey(ReadingContextStore.CONTEXT_KEY))
+        assertFalse(preferences.values.keys.any(ReadingAcceptanceStore::isBookmarkKey))
+        assertTrue("church_id" in preferences.committedKeys.single())
+        assertGlobals(preferences)
+    }
+
+    @Test fun `a failed clear restores parish snapshot context and all bookmarks after memory changed`() {
+        val preferences = seeded().apply {
+            values["church_id"] = "church"
+            outcomes += MemoryCommit.FALSE_AFTER_MEMORY
+        }
+        val before = preferences.values.toMap()
+        assertFalse(ReadingAcceptanceStore(preferences).clearReading("another-church"))
+        assertEquals(before, preferences.values)
+        assertEquals(2, preferences.commitCount)
+        val failedMemory = preferences.memoryAfterCommit.first()
+        assertEquals("another-church", failedMemory["church_id"])
+        assertFalse(failedMemory.containsKey(ServicePlaybackStore.PLAYBACK_KEY))
+        assertFalse(failedMemory.keys.any(ReadingAcceptanceStore::isBookmarkKey))
+        assertEquals(preferences.committedKeys[0], preferences.committedKeys[1])
+    }
+
+    @Test fun `clear does not erase unrelated changes on a failed write or retry indefinitely`() {
+        val preferences = seeded().apply {
+            values["church_id"] = "church"
+            outcomes += MemoryCommit.THROW_AFTER_MEMORY
+            outcomes += MemoryCommit.FALSE_AFTER_MEMORY
+            afterMemory = { count -> if (count == 1) values["text_size"] = 1 }
+        }
+        assertFalse(ReadingAcceptanceStore(preferences).clearReading())
+        assertEquals(2, preferences.commitCount)
+        assertEquals(1, preferences.values["text_size"])
+        assertEquals("church", preferences.values["church_id"])
+        assertTrue(preferences.values.containsKey(ServicePlaybackStore.PLAYBACK_KEY))
+        assertEquals("other-phrase", preferences.values["lyric_phrase_other"])
+        assertTrue(preferences.committedKeys.all { "church_id" !in it && "text_size" !in it })
+    }
+
+    @Test fun `invalid replacement parish is rejected before touching a valid reading`() {
+        val preferences = seeded()
+        val before = preferences.values.toMap()
+        for (id in listOf("", " ", " church", "church\n", "c".repeat(161)))
+            assertFalse(ReadingAcceptanceStore(preferences).clearReading(id))
+        assertEquals(0, preferences.editCount)
+        assertEquals(before, preferences.values)
+    }
+
     private fun accept(preferences: AcceptanceMemoryPreferences, reset: Boolean = false): Boolean =
         ReadingAcceptanceStore(preferences).acceptPlayback(plan, context, snapshot, marker, reset, bookmark)
 

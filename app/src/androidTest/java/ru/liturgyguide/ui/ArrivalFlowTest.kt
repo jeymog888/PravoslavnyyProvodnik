@@ -40,7 +40,8 @@ class ArrivalFlowTest {
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Великий вход с Дарами")
         val saved = savedSession()
         assertEquals("great_entrance", saved.anchorStageId)
-        assertEquals(140_000L, saved.elapsedInStageMillis)
+        assertEquals(0L, saved.elapsedInStageMillis)
+        assertEquals(0L, savedPlayback().snapshot.elapsedQuarterMillis)
         assertEquals(clock.instant().toEpochMilli(), saved.anchorEpochMillis)
         assertFalse(saved.autoAdvance)
         assertTrue(saved.anchorIsApproximate)
@@ -49,7 +50,7 @@ class ArrivalFlowTest {
         assertOldPositionsCleared()
         assertGlobals()
         compose.onNodeWithTag("lyric_line_0").assertIsSelected()
-        compose.onNodeWithContentDescription("Начать автопрокрутку").assertExists()
+        compose.onNodeWithContentDescription("Включить плеер").assertExists()
     }
 
     @Test fun anExpiredClickDoesNotReplaceOrClearTheSavedReading() {
@@ -71,7 +72,8 @@ class ArrivalFlowTest {
         compose.runOnIdle { clock.current = Instant.parse("2026-11-08T04:00:01Z") }
         watch("next")
         assertEquals("beginning", savedSession().anchorStageId)
-        assertEquals(1_000L, savedSession().elapsedInStageMillis)
+        assertEquals(0L, savedSession().elapsedInStageMillis)
+        assertEquals(0L, savedPlayback().snapshot.elapsedQuarterMillis)
         assertFalse(savedSession().autoAdvance)
         assertEquals(Instant.parse("2026-11-08T04:00:00Z").toEpochMilli(), savedContext().startEpochMillis)
     }
@@ -149,7 +151,11 @@ class ArrivalFlowTest {
         compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("resume_guide"))
         compose.onNodeWithTag("resume_guide").performClick()
         // Simulate saved SERVICE state produced by the old app, which had no date metadata.
-        compose.runOnIdle { check(preferences.edit().remove(ReadingContextStore.CONTEXT_KEY).commit()) }
+        compose.runOnIdle {
+            check(preferences.edit().remove(ReadingContextStore.CONTEXT_KEY).remove(ServicePlaybackStore.PLAYBACK_KEY)
+                .putString("session", Gson().toJson(ServiceSession("creed", instant.minusSeconds(8 * 3_600).toEpochMilli())))
+                .commit())
+        }
         restoration.emulateSavedInstanceStateRestore()
         compose.onNodeWithTag("reading_service_date").assertTextEquals("Тексты на 7 ноября 2026")
         compose.onNodeWithTag("clarify_moment").performClick()
@@ -215,6 +221,8 @@ class ArrivalFlowTest {
             .putInt("lyric_saved_tempo_old_track", 16).commit())
     }
     private fun savedSession(): ServiceSession = Gson().fromJson(preferences.getString("session", null), ServiceSession::class.java)
+    private fun savedPlayback(): StoredServicePlayback = requireNotNull(
+        StoredServicePlaybackCodec.decode(preferences.getString(ServicePlaybackStore.PLAYBACK_KEY, null)))
     private fun savedContext(): ReadingContext = requireNotNull(ReadingContextStore(preferences).restore())
     private fun assertGlobals() {
         assertTrue(preferences.getBoolean("dark", false))

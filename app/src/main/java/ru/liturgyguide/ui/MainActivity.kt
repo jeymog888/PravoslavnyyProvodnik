@@ -3,6 +3,7 @@ package ru.liturgyguide.ui
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.SystemClock
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -19,30 +20,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.ui.unit.Density
 import androidx.core.view.WindowCompat
 import ru.liturgyguide.LiturgyGuideApplication
 import ru.liturgyguide.di.AppContainer
-import ru.liturgyguide.service.ServiceSession
-import ru.liturgyguide.service.ServiceRelation
-import ru.liturgyguide.service.ServiceSessionEngine
-import ru.liturgyguide.service.ContextSuggestionEngine
-import ru.liturgyguide.service.PrayerTrackFactory
-import ru.liturgyguide.service.PrayerTextSearch
-import ru.liturgyguide.service.ChurchDirectory
-import ru.liturgyguide.service.ChurchDirectoryStore
-import ru.liturgyguide.service.UserServiceStartStore
-import ru.liturgyguide.service.ScheduleOverview
-import ru.liturgyguide.service.ReadingContext
-import ru.liturgyguide.service.ReadingAcceptanceStore
-import ru.liturgyguide.service.ReadingContextFactory
-import ru.liturgyguide.service.ReadingContextStore
-import ru.liturgyguide.service.ServiceEntryResolver
-import ru.liturgyguide.service.ServiceEntryResult
-import ru.liturgyguide.service.ContextSuggestion
+import ru.liturgyguide.service.*
 import java.time.Instant
 import com.google.gson.Gson
+import java.time.Duration
+import java.time.LocalDate
 import java.time.Clock
 import java.time.ZoneId
 import kotlinx.coroutines.delay
@@ -58,7 +46,8 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
+fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
+    monotonicMillis: () -> Long = SystemClock::elapsedRealtime) {
     val context = LocalContext.current
     val screenStateHolder = rememberSaveableStateHolder()
     val preferences = remember { context.getSharedPreferences("guide_preferences", 0) }
@@ -67,8 +56,12 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
     var userStarts by remember { mutableStateOf(startStore.records()) }
     val readingContextStore = remember(preferences) { ReadingContextStore(preferences) }
     val readingAcceptanceStore = remember(preferences) { ReadingAcceptanceStore(preferences) }
+    val playbackStore = remember(preferences) { ServicePlaybackStore(preferences) }
     var readingContext by remember { mutableStateOf(readingContextStore.restore()) }
     var hasReadingMetadata by remember { mutableStateOf(preferences.contains(ReadingContextStore.CONTEXT_KEY)) }
+    var hasPlaybackSnapshot by remember { mutableStateOf(preferences.contains(ServicePlaybackStore.PLAYBACK_KEY)) }
+    var playbackRevision by remember { mutableIntStateOf(0) }
+    var preferredOriginal by rememberSaveable { mutableStateOf(preferences.getBoolean("lyric_original", false)) }
     var savedChurches by remember { mutableStateOf(churchStore.records()) }
     var favoriteChurches by remember { mutableStateOf(churchStore.favorites()) }
     val systemDark = isSystemInDarkTheme()
@@ -100,55 +93,144 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
     val currentDate = now.atZone(ZoneId.of(church?.timezone ?: "Europe/Moscow")).toLocalDate()
     val invalidReadingMetadata = hasReadingMetadata && (readingContext == null || readingContext?.parishId != church?.id)
     val validSession = session?.takeIf { !invalidReadingMetadata && sessionEngine?.isValid(it) == true }
-    val position = validSession?.let { sessionEngine?.position(it, now) }
-    val selectedStage = if (invalidReadingMetadata) null else stages.firstOrNull { it.id == (position?.stageId ?: selectedId) }
-    // Old versions did not store a reading date. Resolve it once from the saved anchor, including
-    // restoration straight into SERVICE, rather than silently attaching an old bookmark to today.
+    // A legacy running timer is an address only. Never advance its saved stage from wall clock.
+    val legacyStage = if (invalidReadingMetadata) null else stages.firstOrNull { it.id == (validSession?.anchorStageId ?: selectedId) }
     val legacyReadingContext = if (!hasReadingMetadata) validSession?.let { saved ->
         runCatching { ReadingContextFactory.manual(church, Instant.ofEpochMilli(saved.anchorEpochMillis)) }.getOrNull()
     } else null
-    val activeReadingContext = (readingContext?.takeIf { !invalidReadingMetadata } ?: legacyReadingContext)
-        ?.takeIf { selectedStage != null }
+    val availableContext = (readingContext?.takeIf { !invalidReadingMetadata } ?: legacyReadingContext)
+    val availablePlan = remember(stages, availableContext?.serviceDate, container) {
+        availableContext?.let { accepted -> runCatching {
+            ServicePlaybackPlan.build(stages, LocalDate.parse(accepted.serviceDate),
+                container.readings?.days?.firstOrNull { it.date == accepted.serviceDate })
+        }.getOrNull() }
+    }
+    val restored = remember(availablePlan, availableContext, hasPlaybackSnapshot, hasReadingMetadata, session, playbackRevision) {
+        if (!hasPlaybackSnapshot) PlaybackRestoreResult.Absent
+        else if (!hasReadingMetadata || invalidReadingMetadata || availablePlan == null || availableContext == null)
+            PlaybackRestoreResult.Invalid(PlaybackRestoreResult.Reason.CONTEXT_MISMATCH)
+        else playbackStore.restore(availablePlan, availableContext)
+    }
+    val invalidRecovery = invalidReadingMetadata || restored is PlaybackRestoreResult.Invalid
+    val restoredReading = (restored as? PlaybackRestoreResult.Valid)?.let { result ->
+        ActiveServicePlayback(requireNotNull(availablePlan), result.stored.context, result.state,
+            isApproximate = validSession?.anchorIsApproximate == true)
+    }
+    val legacyCandidate = remember(availablePlan, availableContext, legacyStage?.id, hasPlaybackSnapshot, invalidRecovery) {
+        if (hasPlaybackSnapshot || invalidRecovery || availablePlan == null || availableContext == null || legacyStage == null) null
+        else runCatching {
+            LegacyPlaybackMigration.resolve(availablePlan, legacyStage.id, preferences.all)?.let { state ->
+                ActiveServicePlayback(availablePlan, availableContext, state,
+                    isApproximate = validSession?.anchorIsApproximate == true || validSession?.autoAdvance == true)
+            }
+        }.getOrNull()
+    }
+    var restoredNotice by rememberSaveable {
+        mutableStateOf(validSession?.let { saved -> runCatching {
+            Duration.between(Instant.ofEpochMilli(saved.anchorEpochMillis), clock.instant()) >= ServiceSessionEngine.STALE_AFTER
+        }.getOrDefault(false) } == true)
+    }
+    val currentClock by rememberUpdatedState(clock)
+    val currentMonotonicMillis by rememberUpdatedState(monotonicMillis)
+    fun savingFailed() {
+        Toast.makeText(context, "Не удалось сохранить место чтения. Проверьте свободное место", Toast.LENGTH_LONG).show()
+    }
+    val playbackWriter by rememberUpdatedState(ServicePlaybackWriter { value, reset, sampled ->
+        val snapshot = value.engine.snapshot(value.state, sampled)
+        val marker = ServiceSession(value.stage.id, currentClock.instant().toEpochMilli(),
+            autoAdvance = false, elapsedInStageMillis = 0, anchorIsApproximate = value.isApproximate)
+        val stored = readingAcceptanceStore.acceptPlayback(value.plan, value.context, snapshot, marker, reset,
+            PlaybackBookmark.at(value.plan, value.state))
+        if (stored) {
+            readingContext = value.context; hasReadingMetadata = true; hasPlaybackSnapshot = true
+            session = marker; selectedId = marker.anchorStageId; restoredNotice = false
+            playbackRevision++
+        } else savingFailed()
+        stored
+    })
+    // This owner is not keyed by stage, date, language, theme or a new acceptance.
+    val player = remember(preferences) {
+        ServicePlayerState(restoredReading, { currentMonotonicMillis() },
+            ServicePlaybackWriter { value, reset, sampled -> playbackWriter.save(value, reset, sampled) },
+            savedPhrase = { track ->
+                val values = preferences.all
+                val phraseKey = "lyric_phrase_${track.id}"
+                if (values.containsKey(phraseKey)) track.lines.firstOrNull { it.id == values[phraseKey] }?.id
+                    ?: track.lines.first().id
+                else (values["lyric_line_${track.id}"] as? Int)?.let { track.lines.getOrNull(it)?.id }
+                    ?: track.lines.first().id
+            })
+    }
+    val selectedStage = if (invalidRecovery) null else player.reading?.stage ?: restoredReading?.stage ?: legacyStage
+    val activeReadingContext = if (invalidRecovery) null else player.reading?.context ?: availableContext?.takeIf { selectedStage != null }
     val readingNeedsExplicitDate = selectedStage != null && activeReadingContext == null
-    val visibleScreen = if (screen == Screen.SERVICE && (invalidReadingMetadata || activeReadingContext == null)) Screen.MAIN else screen
-    LaunchedEffect(visibleScreen, screen) { if (visibleScreen != screen) screen = visibleScreen }
+    val visibleScreen = if (screen == Screen.SERVICE && (invalidRecovery || player.reading == null)) Screen.MAIN else screen
     val readingDate = activeReadingContext?.serviceDate ?: currentDate.toString()
     val readingDay = container.readings?.days?.firstOrNull { it.date == readingDate }
     val searchReadingDay = if (arrivalDraft?.mode == ArrivalMode.NEW_SERVICE)
         container.readings?.days?.firstOrNull { it.date == currentDate.toString() } else readingDay
     val density = LocalDensity.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
+    var lifecycleResumed by remember(lifecycle) { mutableStateOf(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) }
 
     LaunchedEffect(lifecycle, clock) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             while (true) { now = clock.instant(); delay(5_000L) }
         }
     }
-    fun clearReadingPositions() {
-        val editor = preferences.edit()
-        preferences.all.keys.filter(ReadingAcceptanceStore::isBookmarkKey).forEach { editor.remove(it) }
-        editor.apply()
-        screenStateHolder.removeState(Screen.SERVICE.name)
+    DisposableEffect(player, lifecycle) {
+        val observer = LifecycleEventObserver { _, event ->
+            lifecycleResumed = event == Lifecycle.Event.ON_RESUME || lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+            if (event == Lifecycle.Event.ON_PAUSE || event == Lifecycle.Event.ON_STOP || event == Lifecycle.Event.ON_DESTROY) {
+                lifecycleResumed = false
+                player.pause()
+            }
+        }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer); player.pause() }
+    }
+    val playing = player.reading?.state?.isPlaying == true
+    LaunchedEffect(player, visibleScreen, lifecycleResumed, playing, player.generation) {
+        if (visibleScreen != Screen.SERVICE || !lifecycleResumed) {
+            player.pause()
+        } else if (playing) {
+            val generation = player.generation
+            while (player.reading?.state?.isPlaying == true && generation == player.generation) {
+                player.tick(generation)
+                delay(250L)
+            }
+        }
     }
 
-    // Date, stage and bookmark reset form one accepted reading, including after process death.
-    fun beginReading(value: ServiceSession, acceptedContext: ReadingContext, resetBookmarks: Boolean, resetReaderUi: Boolean = true): Boolean {
-        val stored = readingAcceptanceStore.accept(acceptedContext, value, resetBookmarks)
-        if (!stored) {
-            Toast.makeText(context, "Не удалось сохранить место чтения. Проверьте свободное место", Toast.LENGTH_LONG).show()
-            return false
-        }
+    fun navigate(destination: Screen) {
+        player.pause()
+        screen = destination
+    }
+    fun beginReading(value: ActiveServicePlayback, resetBookmarks: Boolean, resetReaderUi: Boolean = true,
+        preserveRestoreNotice: Boolean = false): Boolean {
+        val notice = restoredNotice
+        if (!player.accept(value, resetBookmarks)) return false
         if (resetReaderUi) screenStateHolder.removeState(Screen.SERVICE.name)
-        readingContext = acceptedContext; hasReadingMetadata = true
-        session = value; selectedId = value.anchorStageId; now = clock.instant()
+        if (preserveRestoreNotice) restoredNotice = notice
+        now = clock.instant()
         return true
     }
-
-    fun saveSession(value: ServiceSession): Boolean {
-        val accepted = activeReadingContext ?: ReadingContextFactory.manual(church, clock.instant()) ?: return false
-        return beginReading(value, accepted, resetBookmarks = false, resetReaderUi = false)
-    }
-
+    fun candidate(accepted: ReadingContext, stageId: String, query: String? = null,
+        approximate: Boolean = false, speed: PlaybackSpeed = PlaybackSpeed.NORMAL): ActiveServicePlayback? = runCatching {
+        val plan = player.reading?.takeIf { it.context == accepted }?.plan
+            ?: ServicePlaybackPlan.build(stages, LocalDate.parse(accepted.serviceDate),
+                container.readings?.days?.firstOrNull { it.date == accepted.serviceDate })
+        val engine = ServicePlaybackEngine(plan)
+        var state = engine.start(stageId, speed)
+        if (!query.isNullOrBlank()) {
+            val tracks = plan.tracksByStage.getValue(stageId)
+            PrayerTextSearch.find(tracks, query)?.let { hit ->
+                val track = tracks[hit.trackIndex]
+                state = engine.seekLine(state, track.id, track.lines[hit.lineIndex].id)
+            }
+        }
+        ActiveServicePlayback(plan, accepted, state, approximate)
+    }.getOrNull()
     fun openScheduledService(selected: ContextSuggestion) {
         val parish = church ?: return
         val engine = contextEngine ?: return
@@ -158,93 +240,73 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
             ServiceEntryResult.Expired -> Toast.makeText(context,
                 "Время службы изменилось. Выберите актуальную карточку", Toast.LENGTH_LONG).show()
             is ServiceEntryResult.Available -> {
-                val candidate = result.suggestion
-                val stageId = candidate.approximateStageId?.takeIf { id -> stages.any { it.id == id } }
-                    ?: stages.first().id
-                val value = sessionEngine?.start(stageId, now = actualNow, autoAdvance = false,
-                    approximate = candidate.relation == ServiceRelation.InProgress && candidate.approximateStageId != null,
-                    elapsedInStageMillis = candidate.approximateElapsedInStageMillis) ?: return
-                if (beginReading(value, result.context, resetBookmarks = true)) {
-                    arrivalDraft = null; screen = Screen.SERVICE
+                val suggested = result.suggestion
+                val stageId = suggested.approximateStageId?.takeIf { id -> stages.any { it.id == id } } ?: stages.first().id
+                val value = candidate(result.context, stageId,
+                    approximate = suggested.relation == ServiceRelation.InProgress && suggested.approximateStageId != null) ?: return
+                if (beginReading(value, resetBookmarks = true)) {
+                    arrivalDraft = null; navigate(Screen.SERVICE)
                 }
             }
         }
     }
-
-    fun saveSearchPosition(id: String, query: String?, date: String = readingDate) {
-        if (!query.isNullOrBlank()) {
-            val stage = matcher?.getStageById(id)
-            val day = container.readings?.days?.firstOrNull { it.date == date }
-            val tracks = stage?.let { PrayerTrackFactory.build(it, day) }.orEmpty()
-            PrayerTextSearch.find(tracks, query)?.let { hit ->
-                screenStateHolder.removeState(Screen.SERVICE.name)
-                val track = tracks[hit.trackIndex]
-                preferences.edit().putString("lyric_track_$id", track.id)
-                    .putInt("lyric_line_${track.id}", hit.lineIndex).putString("lyric_phrase_${track.id}", track.lines[hit.lineIndex].id)
-                    .putInt("lyric_saved_tempo_${track.id}", preferences.getInt("lyric_tempo", 12)).putLong("lyric_offset_${track.id}", 0L).apply()
-            }
-        }
-    }
     fun selectStage(id: String, query: String? = null) {
-        val engine = sessionEngine ?: return
-        val actualNow = clock.instant()
-        val existing = validSession
-        val accepted = activeReadingContext ?: ReadingContextFactory.manual(church, actualNow) ?: return
-        val value = existing?.let { engine.correct(it, id, actualNow) } ?: engine.start(id, now = actualNow)
-        if (!beginReading(value, accepted, resetBookmarks = existing == null)) return
-        saveSearchPosition(id, query, accepted.serviceDate)
-        screen = Screen.SERVICE
+        val existing = player.reading
+        val accepted = existing?.context ?: activeReadingContext ?: ReadingContextFactory.manual(church, clock.instant()) ?: return
+        val value = candidate(accepted, id, query, speed = existing?.state?.speed ?: PlaybackSpeed.NORMAL) ?: return
+        if (!beginReading(value, resetBookmarks = selectedStage == null)) return
+        navigate(Screen.SERVICE)
     }
     fun acceptArrival(id: String, query: String? = null, fromSchedule: Boolean) {
         val draft = arrivalDraft ?: return
-        val engine = sessionEngine ?: return
         val actualNow = clock.instant()
         now = actualNow
         if (church?.id != draft.churchId || stages.none { it.id == id }) return
-        // Schedule entry now goes straight through the resolver. Old unaccepted drafts cannot bypass it.
-        if (fromSchedule) { screen = Screen.MAIN; arrivalDraft = null; return }
-        val accepted = if (draft.mode == ArrivalMode.CORRECTION) activeReadingContext
-            ?: ReadingContextFactory.manual(church, actualNow) else ReadingContextFactory.manual(church, actualNow)
+        if (fromSchedule) { navigate(Screen.MAIN); arrivalDraft = null; return }
+        val accepted = if (draft.mode == ArrivalMode.CORRECTION) player.reading?.context ?: activeReadingContext
+            else ReadingContextFactory.manual(church, actualNow)
         if (accepted == null) return
-        val newSession = engine.start(id, now = actualNow, autoAdvance = false)
-        if (!beginReading(newSession, accepted, resetBookmarks = draft.mode == ArrivalMode.NEW_SERVICE)) return
-        saveSearchPosition(id, query, accepted.serviceDate)
+        val value = candidate(accepted, id, query, speed = if (draft.mode == ArrivalMode.CORRECTION)
+            player.reading?.state?.speed ?: PlaybackSpeed.NORMAL else PlaybackSpeed.NORMAL) ?: return
+        if (!beginReading(value, resetBookmarks = draft.mode == ArrivalMode.NEW_SERVICE)) return
         arrivalDraft = null
-        screen = Screen.SERVICE
+        navigate(Screen.SERVICE)
     }
     fun beginArrival(draft: ArrivalDraft, destination: Screen) {
-        // A fresh flow resets its screens; back and recreation preserve the current draft.
         listOf(Screen.MANUAL, Screen.ARRIVAL, Screen.SEARCH).forEach { screenStateHolder.removeState(it.name) }
         arrivalDraft = draft
-        screen = destination
+        navigate(destination)
     }
     fun openManual(mode: ArrivalMode) {
-        val engine = sessionEngine
-        val current = session?.takeIf { engine?.isValid(it) == true }
-        val stopTimer = mode == ArrivalMode.CORRECTION && position?.autoAdvanceActive == true
-        if (stopTimer && engine != null && current != null) {
-            // Freeze the displayed stage, even if the clock crossed its boundary since the last tick.
-            if (!saveSession(engine.pause(current, now = now))) return
-        }
+        val stopped = mode == ArrivalMode.CORRECTION && player.reading?.state?.isPlaying == true
+        player.pause()
         beginArrival(ArrivalDraft(church?.id, church?.shortName ?: "Храм не выбран", mode,
-            ArrivalSource.MANUAL, automationStopped = stopTimer), Screen.MANUAL)
+            ArrivalSource.MANUAL, automationStopped = stopped), Screen.MANUAL)
     }
     fun openOrder(origin: Screen) {
-        // A fresh entry follows the current stage; search/back and recreation keep browsing position.
+        player.pause()
         screenStateHolder.removeState(Screen.STAGE_SELECTOR.name)
         selectorOrigin = origin
-        screen = Screen.STAGE_SELECTOR
+        navigate(Screen.STAGE_SELECTOR)
     }
-    fun chooseChurch(id: String) {
-        if (church?.id != id) {
-            arrivalDraft = null
-            clearReadingPositions()
-            session = null; selectedId = null; readingContext = null; hasReadingMetadata = false
-            preferences.edit().remove("session").remove("stage_id").remove(ReadingContextStore.CONTEXT_KEY).apply()
-        }
-        churchId = id; preferences.edit().putString("church_id", id).apply()
+    fun clearAcceptedReading(nextChurchId: String? = null): Boolean {
+        player.pause()
+        if (!readingAcceptanceStore.clearReading(nextChurchId)) { savingFailed(); return false }
+        player.forgetAccepted()
+        session = null; selectedId = null; readingContext = null
+        hasReadingMetadata = false; hasPlaybackSnapshot = false; restoredNotice = false
+        playbackRevision++
+        screenStateHolder.removeState(Screen.SERVICE.name)
+        arrivalDraft = null
+        return true
     }
-    fun closeDiscovery() { churchPickerRequest++; screen = Screen.CHURCH }
+    fun chooseChurch(id: String): Boolean {
+        if (church?.id == id) return true
+        if (!clearAcceptedReading(id)) return false
+        churchId = id
+        return true
+    }
+    fun closeDiscovery() { churchPickerRequest++; navigate(Screen.CHURCH) }
     fun back() {
         val destination = when (screen) {
             Screen.MANUAL -> if (arrivalDraft?.mode == ArrivalMode.CORRECTION) Screen.SERVICE else Screen.MAIN
@@ -258,21 +320,30 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
             else -> Screen.MAIN
         }
         if (screen == Screen.MANUAL || (screen == Screen.ARRIVAL && destination == Screen.MAIN)) arrivalDraft = null
-        screen = destination
+        navigate(destination)
     }
     fun openExternal(intent: Intent) {
+        player.pause()
         try { context.startActivity(intent) }
         catch (_: android.content.ActivityNotFoundException) {
             Toast.makeText(context, "Не найдено приложение для открытия", Toast.LENGTH_SHORT).show()
         }
     }
+    // A saved SERVICE screen may be a 0.4 restoration. Migrate before rendering a live reader.
+    LaunchedEffect(screen, player.reading == null, invalidRecovery, legacyCandidate, restoredReading) {
+        if (screen == Screen.SERVICE && player.reading == null) {
+            val pending = if (invalidRecovery) null else restoredReading ?: legacyCandidate
+            if (pending == null || !beginReading(pending, resetBookmarks = false, resetReaderUi = false,
+                    preserveRestoreNotice = true)) screen = Screen.MAIN
+        } else if (screen == Screen.SERVICE && invalidRecovery) navigate(Screen.MAIN)
+    }
     BackHandler(enabled = screen != Screen.MAIN) { back() }
 
     val navigationBar: @Composable () -> Unit = {
         GuideBottomBar(selected = when (screen) { Screen.CHURCH -> "church"; Screen.SETTINGS -> "settings"; else -> "home" },
-            onHome = { screen = Screen.MAIN },
-            onChurch = { churchOrigin = Screen.MAIN; screen = Screen.CHURCH },
-            onSettings = { settingsOrigin = Screen.MAIN; screen = Screen.SETTINGS })
+            onHome = { navigate(Screen.MAIN) },
+            onChurch = { churchOrigin = Screen.MAIN; navigate(Screen.CHURCH) },
+            onSettings = { settingsOrigin = Screen.MAIN; navigate(Screen.SETTINGS) })
     }
     GuideTheme(dark = dark) {
         CompositionLocalProvider(LocalDensity provides Density(density.density, density.fontScale * listOf(1f, 1.15f, 1.3f)[textSize])) {
@@ -284,24 +355,34 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
                     Screen.MAIN -> MainScreen(
                         lastStage = selectedStage,
                         currentDate = currentDate,
-                        readingNotice = if (invalidReadingMetadata) "Не удалось восстановить сохраненное чтение. Выберите службу или начните с начала" else null,
+                        readingNotice = if (invalidRecovery) "Не удалось восстановить сохраненное чтение. Выберите службу или начните с начала" else null,
                         savedReadingNote = if (readingNeedsExplicitDate) "Дата не сохранена · откроется на сегодня" else null,
                         church = church,
                         overview = overview,
                         onOpenService = ::openScheduledService,
-                        onChurch = { churchOrigin = Screen.MAIN; screen = Screen.CHURCH },
+                        onChurch = { churchOrigin = Screen.MAIN; navigate(Screen.CHURCH) },
                         onStart = {
-                            val actualNow = clock.instant()
-                            val accepted = ReadingContextFactory.manual(church, actualNow)
-                            val value = sessionEngine?.start(stages.first().id, now = actualNow)
-                            if (accepted != null && value != null && beginReading(value, accepted, resetBookmarks = true)) screen = Screen.SERVICE
+                            val accepted = ReadingContextFactory.manual(church, clock.instant())
+                            val value = accepted?.let { candidate(it, stages.first().id) }
+                            if (value != null && beginReading(value, resetBookmarks = true)) navigate(Screen.SERVICE)
                         },
                         onResume = {
-                            val actualNow = clock.instant()
-                            val accepted = activeReadingContext ?: ReadingContextFactory.manual(church, actualNow)
-                            val value = validSession
-                                ?: selectedStage?.let { stage -> sessionEngine?.start(stage.id, now = actualNow) }
-                            if (accepted != null && value != null && beginReading(value, accepted, resetBookmarks = false, resetReaderUi = false)) screen = Screen.SERVICE
+                            if (!invalidRecovery) {
+                                if (player.reading != null) navigate(Screen.SERVICE)
+                                else {
+                                    // A bookmark without a usable old date is explicitly opened on today.
+                                    val pending = restoredReading ?: legacyCandidate ?: selectedStage?.let { stage ->
+                                        ReadingContextFactory.manual(church, clock.instant())?.let { accepted ->
+                                            candidate(accepted, stage.id)?.let { value ->
+                                                val migrated = LegacyPlaybackMigration.resolve(value.plan, stage.id, preferences.all)
+                                                value.copy(state = migrated ?: value.state)
+                                            }
+                                        }
+                                    }
+                                    if (pending != null && beginReading(pending, resetBookmarks = false,
+                                            resetReaderUi = false, preserveRestoreNotice = true)) navigate(Screen.SERVICE)
+                                }
+                            }
                         },
                         onFindStage = { openManual(ArrivalMode.NEW_SERVICE) },
                         onOrder = { openOrder(Screen.MAIN) },
@@ -313,9 +394,9 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
                                 arrivalDraft = draft.copy(stageId = landmark.stageId, query = landmark.query)
                                 // A newly chosen landmark must show its cue before the accept button.
                                 screenStateHolder.removeState(Screen.ARRIVAL.name)
-                                screen = Screen.ARRIVAL
+                                navigate(Screen.ARRIVAL)
                             },
-                            onSearch = { searchOrigin = Screen.MANUAL; screen = Screen.SEARCH },
+                            onSearch = { searchOrigin = Screen.MANUAL; navigate(Screen.SEARCH) },
                             onBack = ::back)
                     }
                     Screen.ARRIVAL -> arrivalDraft?.let { draft ->
@@ -327,43 +408,36 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
                                 stages.any { it.id == (draft.stageId ?: "preparation") },
                             onAccept = { acceptArrival(draft.stageId ?: "preparation", draft.query,
                                 fromSchedule = draft.source == ArrivalSource.SCHEDULE) },
-                            onSearch = { searchOrigin = Screen.ARRIVAL; screen = Screen.SEARCH },
+                            onSearch = { searchOrigin = Screen.ARRIVAL; navigate(Screen.SEARCH) },
                             onBack = ::back)
                     }
                     Screen.SERVICE -> ServiceScreen(
-                        stageMatcher = matcher,
-                        stageId = selectedStage?.id,
+                        player = player,
                         onStageChange = { selectStage(it) },
-                        onBack = { screen = Screen.MAIN },
+                        onBack = { navigate(Screen.MAIN) },
                         dark = dark,
                         onDarkChange = { dark = !dark; preferences.edit().putBoolean("dark", dark).apply() },
                         onOpenSource = { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(it))) },
-                        readingDay = readingDay,
-                        sessionPosition = position,
-                        serviceDate = readingDate,
-                        onToggleFollowing = {
-                            val engine = sessionEngine
-                            val current = session?.takeIf { engine?.isValid(it) == true }
-                                ?: selectedStage?.let { engine?.start(it.id) }
-                            if (engine != null && current != null) saveSession(if (position?.autoAdvanceActive == true) engine.pause(current) else engine.resume(current))
-                        },
+                        preferredOriginal = preferredOriginal,
+                        onOriginalChange = { preferredOriginal = it; preferences.edit().putBoolean("lyric_original", it).apply() },
+                        restoredNotice = restoredNotice,
                         onSoundSettings = { openExternal(Intent(Settings.ACTION_SOUND_SETTINGS)) },
                         onFinish = {
-                            session = null; selectedId = null; readingContext = null; hasReadingMetadata = false
-                            preferences.edit().remove("session").remove("stage_id").remove(ReadingContextStore.CONTEXT_KEY).apply()
-                            screen = Screen.MAIN
-                            Toast.makeText(context, "Если включали режим тишины, не забудьте проверить его после службы", Toast.LENGTH_LONG).show()
+                            if (clearAcceptedReading()) {
+                                navigate(Screen.MAIN)
+                                Toast.makeText(context, "Если включали режим тишины, не забудьте проверить его после службы", Toast.LENGTH_LONG).show()
+                            }
                         },
                         onSelectStage = { openOrder(Screen.SERVICE) },
                         onFindStage = { openManual(ArrivalMode.CORRECTION) },
-                        onSettings = { settingsOrigin = Screen.SERVICE; screen = Screen.SETTINGS }
+                        onSettings = { settingsOrigin = Screen.SERVICE; navigate(Screen.SETTINGS) }
                     )
                     Screen.STAGE_SELECTOR, Screen.SEARCH -> StageSelector(
                         stageMatcher = matcher,
                         selectedId = if (screen == Screen.SEARCH && searchOrigin in setOf(Screen.MANUAL, Screen.ARRIVAL) && arrivalDraft != null) null else selectedStage?.id,
                         searchMode = screen == Screen.SEARCH,
                         readingDay = searchReadingDay,
-                        onSearch = { searchOrigin = Screen.STAGE_SELECTOR; screen = Screen.SEARCH },
+                        onSearch = { searchOrigin = Screen.STAGE_SELECTOR; navigate(Screen.SEARCH) },
                         onSelect = { id, query ->
                             if (screen == Screen.SEARCH && searchOrigin in setOf(Screen.MANUAL, Screen.ARRIVAL) && arrivalDraft != null)
                                 acceptArrival(id, query, fromSchedule = false)
@@ -376,7 +450,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
                         onDarkChange = { dark = it; preferences.edit().putBoolean("dark", it).apply() },
                         onTextSizeChange = { textSize = it; preferences.edit().putInt("text_size", it).apply() },
                         onSoundSettings = { openExternal(Intent(Settings.ACTION_SOUND_SETTINGS)) },
-                        onSources = { screen = Screen.SOURCES }, onBack = ::back,
+                        onSources = { navigate(Screen.SOURCES) }, onBack = ::back,
                         showBack = settingsOrigin != Screen.MAIN,
                         bottomBar = { if (settingsOrigin == Screen.MAIN) navigationBar() }
                     )
@@ -394,7 +468,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
                             if (saved) savedChurches = churchStore.records()
                             saved
                         },
-                        onDiscover = { screen = Screen.DISCOVERY },
+                        onDiscover = { navigate(Screen.DISCOVERY) },
                         pickerRequest = churchPickerRequest,
                         userStarts = userStarts,
                         onSaveStart = { value ->
@@ -408,7 +482,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
                             removed
                         },
                         currentDate = currentDate,
-                        onSelect = ::chooseChurch,
+                        onSelect = { chooseChurch(it) },
                         onOpenUrl = { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(it))) }, onBack = ::back,
                         showBack = churchOrigin != Screen.MAIN,
                         bottomBar = { if (churchOrigin == Screen.MAIN) navigationBar() }
@@ -418,12 +492,10 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
                         onBack = ::closeDiscovery,
                         onSave = { record ->
                             val saved = churchStore.save(record)
-                            if (saved) {
-                                savedChurches = churchStore.records()
-                                chooseChurch(record.id)
-                                screen = Screen.CHURCH
-                            }
-                            saved
+                            if (saved) savedChurches = churchStore.records()
+                            val selected = saved && chooseChurch(record.id)
+                            if (selected) navigate(Screen.CHURCH)
+                            selected
                         },
                         onOpenUrl = { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(it))) }
                     )

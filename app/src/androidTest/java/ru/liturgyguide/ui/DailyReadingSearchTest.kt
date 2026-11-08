@@ -10,6 +10,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import ru.liturgyguide.di.AppContainer
+import ru.liturgyguide.service.*
+import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicReference
 
 /** Calendar fixtures keep the reading search regression useful after November 8. */
@@ -77,12 +79,17 @@ class DailyReadingSearchTest {
 
     @Test
     fun aMissingDailyReadingIsExplainedInBothTextAndMeaning() {
+        val date = LocalDate.of(2026, 11, 9)
+        val plan = ServicePlaybackPlan.build(container.getStageMatcher().getAllStages(), date, null)
+        val context = ReadingContext(null, date.toString(), "Europe/Moscow", ReadingContextSource.MANUAL)
+        val player = ServicePlayerState(ActiveServicePlayback(plan, context, ServicePlaybackEngine(plan).start("gospel")),
+            monotonicMillis = { 0L }, writer = ServicePlaybackWriter { _, _, _ -> true })
         compose.setContent {
             GuideTheme(dark = false) {
-                ServiceScreen(stageMatcher = container.getStageMatcher(), stageId = "gospel", onStageChange = {},
+                ServiceScreen(player = player, onStageChange = {},
                     onBack = {}, onSelectStage = {}, onFindStage = {}, onSettings = {}, dark = false,
-                    onDarkChange = {}, onOpenSource = {}, readingDay = null, sessionPosition = null,
-                    onToggleFollowing = {}, onSoundSettings = {}, onFinish = {})
+                    onDarkChange = {}, onOpenSource = {}, onSoundSettings = {}, onFinish = {},
+                    preferredOriginal = false, onOriginalChange = {})
             }
         }
         compose.onNodeWithTag("lyrics_list").performScrollToNode(hasTestTag("reading_unavailable"))
