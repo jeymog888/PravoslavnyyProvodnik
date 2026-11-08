@@ -1,0 +1,141 @@
+11-08 19:54:07.015 11003 11018 I TestRunner: started: aNextServiceBecomesCurrentBetweenDisplayAndClickWithoutSwitchingOccurrence(ru.liturgyguide.ui.ArrivalFlowTest)
+11-08 19:54:07.027 11076 11076 D VRI[InstrumentationActivityInvoker$EmptyActivity]: visibilityChanged oldVisibility=true newVisibility=false
+11-08 19:54:07.034   540   653 I ImeTracker: com.google.android.apps.nexuslauncher:b734700f: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 19:54:07.034   540   653 I ImeTracker: com.google.android.apps.nexuslauncher:b734700f: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 19:54:07.144 11076 11076 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@1b6bd48
+11-08 19:54:07.146   540  1185 W InputManager-JNI: Input channel object '7c62db0 ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity (client)' was disposed without first being removed with the input manager!
+11-08 19:54:07.151 11003 11018 D IdlingRegistry: Registering idling resources: [androidx.compose.ui.test.EspressoLink@4a4e077]
+11-08 19:54:07.182  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 19:54:07.193 11003 11018 W Settings: Setting always_finish_activities has moved from android.provider.Settings.System to android.provider.Settings.Global, returning read-only value.
+11-08 19:54:07.205  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=2179
+11-08 19:54:07.205  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=2179
+11-08 19:54:07.212  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 19:54:07.213  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=com.google.android.apps.nexuslauncher, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 19:54:07.215  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 19:54:07.220  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 19:54:07.257  1210  1443 D EGL_emulation: app_time_stats: avg=298.18ms min=131.38ms max=552.63ms count=4
+11-08 19:54:07.262   540  1185 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10303, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 19:54:07.265  1210  1210 D SearchTargetUtil: query= size=0
+11-08 19:54:07.300   772   865 D SplashScreenView: Build android.window.SplashScreenView{3afb52f V.E...... ......ID 0,0-0,0}
+11-08 19:54:07.300   772   865 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-08 19:54:07.300   772   865 D SplashScreenView: Branding: view: android.view.View{c5ea73c G.ED..... ......I. 0,0-0,0 #1020503 android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-08 19:54:07.304  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=2180, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10008000 cmp=ru.liturgyguide/androidx.activity.ComponentActivity }
+11-08 19:54:07.305  1210  1210 W SplitSelectStateCtor: Missing session instanceIds
+11-08 19:54:07.305  1210  1210 D StatsLog: LAUNCHER_SPLIT_SELECTION_EXIT_INTERRUPTED
+11-08 19:54:07.318   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 19:54:07.340 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@7070b8b in: PRE_ON_CREATE
+11-08 19:54:07.343 11003 11003 V ActivityScenario: Activity lifecycle changed event received but ignored because the reported transition was not ON_CREATE while the last known transition was PRE_ON_CREATE
+11-08 19:54:07.346 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@7070b8b in: CREATED
+11-08 19:54:07.346 11003 11003 V ActivityScenario: Update currentActivityStage to CREATED, currentActivity=androidx.activity.ComponentActivity@7070b8b
+11-08 19:54:07.346 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@7070b8b in: STARTED
+11-08 19:54:07.346 11003 11003 V ActivityScenario: Update currentActivityStage to STARTED, currentActivity=androidx.activity.ComponentActivity@7070b8b
+11-08 19:54:07.347 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@7070b8b in: RESUMED
+11-08 19:54:07.348 11003 11003 V ActivityScenario: Update currentActivityStage to RESUMED, currentActivity=androidx.activity.ComponentActivity@7070b8b
+11-08 19:54:07.383   345   418 I netd    : tetherGetStats() -> {[]} <14.07ms>
+11-08 19:54:07.395   442 10823 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:54:07.605   540   555 I system_server: NativeAlloc concurrent mark compact GC freed 6819KB AllocSpace bytes, 6(120KB) LOS objects, 43% free, 31MB/55MB, paused 1.123ms,12.319ms total 1.510s
+11-08 19:54:07.616   540   565 W ziparchive: Unable to open '/data/app/~~dsDWBr4Os_Y3MuvdFu0mdg==/ru.liturgyguide-hXIzSGTjPPe8_5tZdydMtg==/base.dm': No such file or directory
+11-08 19:54:07.618   540   565 I ActivityTaskManager: Displayed ru.liturgyguide/androidx.activity.ComponentActivity for user 0: +348ms
+11-08 19:54:07.728  1210  1210 D VRI[NexusLauncherActivity]: visibilityChanged oldVisibility=true newVisibility=false
+11-08 19:54:07.768   540   653 I ImeTracker: ru.liturgyguide:9e166c1c: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 19:54:07.769   540   653 I ImeTracker: ru.liturgyguide:9e166c1c: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 19:54:07.772  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 19:54:07.772  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 19:54:07.772  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 19:54:07.772  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 19:54:07.772  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 19:54:07.776  1210  1210 D NexusLauncherModelDelegate: notifySmartspaceEvent: SmartspaceTargetEvent{mSmartspaceTarget=null, mSmartspaceActionId='null', mEventType=7}
+11-08 19:54:07.780   772   855 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@10c754b
+11-08 19:54:07.780   540  1185 W InputManager-JNI: Input channel object '21510a3 Splash Screen ru.liturgyguide (client)' was disposed without first being removed with the input manager!
+11-08 19:54:07.788   442 10823 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:54:07.819 11003 11003 D AutofillManager: Fill dialog is enabled:false, hints=[password, passwordAuto, creditCardNumber, creditCardSecurityCode, creditCardExpirationDate]
+11-08 19:54:07.855  1210  1210 D BaseDepthController: setSurface:
+11-08 19:54:07.855  1210  1210 D BaseDepthController: 	mWaitingOnSurfaceValidity: false
+11-08 19:54:07.855  1210  1210 D BaseDepthController: 	mSurface: null
+11-08 19:54:07.856  1210  1210 D BaseDepthController: mSurface is null and mCurrentBlur is: 0
+11-08 19:54:07.858  1210  1210 D StateManager: goToState - fromState: Normal, toState: Normal, partial trace:
+11-08 19:54:07.858  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StateManager.moveToRestState(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:4)
+11-08 19:54:07.858  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StateManager.moveToRestState(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:1)
+11-08 19:54:07.858  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StatefulActivity.onStop(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:34)
+11-08 19:54:07.858  1210  1210 D StatsLog: LAUNCHER_ONSTOP
+11-08 19:54:07.868   772   941 D EGL_emulation: app_time_stats: avg=174.32ms min=14.18ms max=499.50ms count=6
+11-08 19:54:07.875  1210  1210 D StatsLog: LAUNCHER_GOOGLE_SEARCH_RESTORE_LIST_SIZE_AFTER_ACTIVITY_RESTART
+11-08 19:54:07.877  1210  1578 D OneSearchSuggestProvider: Shut down the binder channel
+11-08 19:54:07.889  1210  1224 I IPCThreadState: oneway function results for code 2 on binder at 0xb4000077d4164cc0 will be dropped but finished with status UNKNOWN_TRANSACTION
+11-08 19:54:08.245   540  1185 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10304, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 19:54:08.279 11003 11008 I ru.liturgyguide: Background concurrent mark compact GC freed 9782KB AllocSpace bytes, 25(1004KB) LOS objects, 49% free, 6724KB/13MB, paused 208us,9.056ms total 193.560ms
+11-08 19:54:08.291   772   865 D SplashScreenView: Build android.window.SplashScreenView{c90f1a5 V.E...... ......ID 0,0-0,0}
+11-08 19:54:08.291   772   865 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-08 19:54:08.291   772   865 D SplashScreenView: Branding: view: android.view.View{df5597a G.ED..... ......I. 0,0-0,0 #1020503 android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-08 19:54:08.307  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=2181, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10000000 cmp=ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity }
+11-08 19:54:08.311 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@7070b8b in: PAUSED
+11-08 19:54:08.311 11003 11003 V ActivityScenario: Update currentActivityStage to PAUSED, currentActivity=androidx.activity.ComponentActivity@7070b8b
+11-08 19:54:08.312   442 10823 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:54:08.318   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 19:54:08.389 11076 11105 I EGL_emulation: Opening libGLESv1_CM_emulation.so
+11-08 19:54:08.390 11076 11105 I EGL_emulation: Opening libGLESv2_emulation.so
+11-08 19:54:08.423   345   418 I netd    : tetherGetStats() -> {[]} <0.41ms>
+11-08 19:54:08.424 11076 11105 W HWUI    : Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+11-08 19:54:08.424 11076 11105 W HWUI    : Failed to initialize 101010-2 format, error = EGL_SUCCESS
+11-08 19:54:08.469   369   369 I RanchuHwc: logCompositionFallbackIfChanged: layer 5534 CompositionType fallback from 3 to 1
+11-08 19:54:08.513 11003 11003 D VRI[ComponentActivity]: visibilityChanged oldVisibility=true newVisibility=false
+11-08 19:54:08.540   540   565 W ziparchive: Unable to open '/data/app/~~2FuXyoIivRiSckhlskSh7w==/ru.liturgyguide.test-KKblDRDMX_qY7IAjy0x9EA==/base.dm': No such file or directory
+11-08 19:54:08.542   540   565 I ActivityTaskManager: Displayed ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity for user 0: +303ms
+11-08 19:54:08.551   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 19:54:08.567   442 10823 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:54:08.621  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=776, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10000100 cmp=com.google.android.apps.nexuslauncher/.NexusLauncherActivity }
+11-08 19:54:08.624  1210  1443 D EGL_emulation: app_time_stats: avg=341.87ms min=201.17ms max=463.53ms count=4
+11-08 19:54:08.660  1210  1210 D StatsLog: LAUNCHER_ONRESUME
+11-08 19:54:08.661  1210  1210 D NexusLauncherModelDelegate: notifySmartspaceEvent: SmartspaceTargetEvent{mSmartspaceTarget=null, mSmartspaceActionId='null', mEventType=6}
+11-08 19:54:08.712 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@7070b8b in: STOPPED
+11-08 19:54:08.712 11003 11003 V ActivityScenario: Update currentActivityStage to STOPPED, currentActivity=androidx.activity.ComponentActivity@7070b8b
+11-08 19:54:08.722   772   855 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@a039a34
+11-08 19:54:08.723   540  1635 W InputManager-JNI: Input channel object 'ae2dcf5 Splash Screen ru.liturgyguide.test (client)' was disposed without first being removed with the input manager!
+11-08 19:54:08.731 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@7070b8b in: DESTROYED
+11-08 19:54:08.731 11003 11003 V ActivityScenario: Update currentActivityStage to DESTROYED, currentActivity=null
+11-08 19:54:08.731 11003 11003 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@221410a
+11-08 19:54:08.752  1210  1210 D BaseDepthController: setSurface:
+11-08 19:54:08.752  1210  1210 D BaseDepthController: 	mWaitingOnSurfaceValidity: false
+11-08 19:54:08.752  1210  1210 D BaseDepthController: 	mSurface: Surface(name=com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity)/@0xdbda08f
+11-08 19:54:08.759  1210  1236 D QuickstepModelDelegate: notifyAppTargetEvent action=1 launchLocation=workspace/0/[-1,-1]/[1,1]
+11-08 19:54:08.772  1330  1582 I AiAiEcho: Predicting[0]:  [CONTEXT sampling_count=5 ]
+11-08 19:54:08.772  1330  1582 I AiAiEcho: EchoTargets:
+11-08 19:54:08.772  1330  1582 I AiAiEcho: Filtered by AiAi flag check:
+11-08 19:54:08.772  1330  1582 I AiAiEcho: [CONTEXT ratelimit_period="10 SECONDS" ]
+11-08 19:54:08.772  1330  1582 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata:  [CONTEXT ratelimit_period="10 SECONDS" ]
+11-08 19:54:08.787  1330  1582 I AiAiEcho: #remoteViewsTwiddler: feature disabled.
+11-08 19:54:08.788  1330  1582 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface home with targets# 0 (types=[])
+11-08 19:54:08.797   540  1371 W AppSearchIcing: icing-search-engine.cc:321: Error: 5, Message: Document (com.google.android.googlequicksearchbox$OneSearchZeroStateGoogleSuggestions/default, zp) not found.
+11-08 19:54:08.805  1210  1578 D OneSearchSuggestProvider: AppSearch 0-state cache not available, fallback to AGA
+11-08 19:54:08.805  1210  1578 D OneSearchSuggestProvider: java.util.concurrent.CompletionException: java.util.NoSuchElementException: No value present
+11-08 19:54:08.805  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:308)
+11-08 19:54:08.805  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:323)
+11-08 19:54:08.805  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture$UniAccept.tryFire(CompletableFuture.java:684)
+11-08 19:54:08.805  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:486)
+11-08 19:54:08.805  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2138)
+11-08 19:54:08.805  1210  1578 D OneSearchSuggestProvider: 	at com.google.android.apps.nexuslauncher.allapps.E0.onResult(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:67)
+11-08 19:54:08.805  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1.lambda$onResult$0(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:144)
+11-08 19:54:08.805  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1.$r8$lambda$CEk3q8sDAQVhU3rQwVueB8FAj_M(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:1)
+11-08 19:54:08.805  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1$$ExternalSyntheticLambda0.run(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:22)
+11-08 19:54:08.805  1210  1578 D OneSearchSuggestProvider: 	at android.os.Handler.handleCallback(Handler.java:959)
+11-08 19:54:08.805  1210  1578 D OneSearchSuggestProvider: 	at android.os.Handler.dispatchMessage(Handler.java:100)
+11-08 19:54:08.805  1210  1578 D OneSearchSuggestProvider: 	at android.os.Looper.loopOnce(Looper.java:232)
+11-08 19:54:08.805  1210  1578 D OneSearchSuggestProvider: 	at android.os.Looper.loop(Looper.java:317)
+11-08 19:54:08.805  1210  1578 D OneSearchSuggestProvider: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+11-08 19:54:08.805  1210  1578 D OneSearchSuggestProvider: Caused by: java.util.NoSuchElementException: No value present
+11-08 19:54:08.805  1210  1578 D OneSearchSuggestProvider: 	at java.util.Optional.get(Optional.java:143)
+11-08 19:54:08.805  1210  1578 D OneSearchSuggestProvider: 	at com.google.android.apps.nexuslauncher.allapps.E0.onResult(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:28)
+11-08 19:54:08.805  1210  1578 D OneSearchSuggestProvider: 	... 8 more
+11-08 19:54:08.808  1210  1578 D OneSearchSuggestProvider: Created the binder channel successfully for end point service =com.google.android.apps.search.googleapp.search.suggest.plugins.onesearch.server.OneSearchSuggestService , mChannel=i1{delegate=f{logId=2725, target=directaddress:///AndroidComponentAddress%5BIntent%20%7B%20act=grpc.io.action.BIND%20cmp=com.google.android.googlequicksearchbox/com.google.android.apps.search.googleapp.search.suggest.plugins.onesearch.server.OneSearchSuggestService%20%7D%5D}} , mOneSearchConnection=l2.Z@ab095a9
+11-08 19:54:08.850   540   829 W InputManager-JNI: Input channel object '6dce72b ru.liturgyguide/androidx.activity.ComponentActivity (client)' was disposed without first being removed with the input manager!
+11-08 19:54:08.857  1210  1210 D SsBaseTemplateCard: No text view can be set up
+11-08 19:54:08.862  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 19:54:08.862  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 19:54:08.862  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 19:54:08.862  1210  1210 I SsBaseTemplateCard: Secondary card pane is null
+11-08 19:54:08.965 11003 11018 D IdlingRegistry: Unregistering idling resources: [androidx.compose.ui.test.EspressoLink@4a4e077]
+11-08 19:54:09.000  1210  1210 D StateManager: createAtomicAnimation - fromState: Background, toState: Normal, partial trace:
+11-08 19:54:09.000  1210  1210 D StateManager: 	at com.android.quickstep.util.WorkspaceRevealAnim.prepareToAnimate(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:22)
+11-08 19:54:09.000  1210  1210 D StateManager: 	at com.android.quickstep.util.WorkspaceRevealAnim.<init>(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:11)
+11-08 19:54:09.000  1210  1210 D StateManager: 	at com.android.launcher3.QuickstepTransitionManager.createWallpaperOpenAnimations(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:735)
+11-08 19:54:09.023 11003 11018 I TestRunner: finished: aNextServiceBecomesCurrentBetweenDisplayAndClickWithoutSwitchingOccurrence(ru.liturgyguide.ui.ArrivalFlowTest)

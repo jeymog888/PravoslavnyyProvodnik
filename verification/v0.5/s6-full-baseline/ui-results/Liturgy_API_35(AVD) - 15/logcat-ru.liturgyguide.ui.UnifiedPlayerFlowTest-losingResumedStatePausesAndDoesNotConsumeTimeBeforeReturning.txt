@@ -1,0 +1,101 @@
+11-08 20:00:40.172 11003 11018 I TestRunner: started: losingResumedStatePausesAndDoesNotConsumeTimeBeforeReturning(ru.liturgyguide.ui.UnifiedPlayerFlowTest)
+11-08 20:00:40.176 11003 11018 D IdlingRegistry: Registering idling resources: [androidx.compose.ui.test.EspressoLink@c8dcf5d]
+11-08 20:00:40.179 11003 11018 W Settings: Setting always_finish_activities has moved from android.provider.Settings.System to android.provider.Settings.Global, returning read-only value.
+11-08 20:00:40.194   540   565 W ziparchive: Unable to open '/data/app/~~2FuXyoIivRiSckhlskSh7w==/ru.liturgyguide.test-KKblDRDMX_qY7IAjy0x9EA==/base.dm': No such file or directory
+11-08 20:00:40.196   540   565 I ActivityTaskManager: Displayed ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity for user 0: +230ms
+11-08 20:00:40.198   540   609 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10303, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 20:00:40.225 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@f39e591 in: PRE_ON_CREATE
+11-08 20:00:40.225 11003 11003 V ActivityScenario: Activity lifecycle changed event received but ignored because the reported transition was not ON_CREATE while the last known transition was PRE_ON_CREATE
+11-08 20:00:40.226 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@f39e591 in: CREATED
+11-08 20:00:40.226 11003 11003 V ActivityScenario: Update currentActivityStage to CREATED, currentActivity=androidx.activity.ComponentActivity@f39e591
+11-08 20:00:40.226 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@f39e591 in: STARTED
+11-08 20:00:40.226 11003 11003 V ActivityScenario: Update currentActivityStage to STARTED, currentActivity=androidx.activity.ComponentActivity@f39e591
+11-08 20:00:40.232  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=776, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10000100 cmp=com.google.android.apps.nexuslauncher/.NexusLauncherActivity }
+11-08 20:00:40.232  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=2404, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10008000 cmp=ru.liturgyguide/androidx.activity.ComponentActivity }
+11-08 20:00:40.235 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@f39e591 in: RESUMED
+11-08 20:00:40.235 11003 11003 V ActivityScenario: Update currentActivityStage to RESUMED, currentActivity=androidx.activity.ComponentActivity@f39e591
+11-08 20:00:40.243   772   865 D SplashScreenView: Build android.window.SplashScreenView{6cc7e1c V.E...... ......ID 0,0-0,0}
+11-08 20:00:40.243   772   865 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-08 20:00:40.243   772   865 D SplashScreenView: Branding: view: android.view.View{9266a25 G.ED..... ......I. 0,0-0,0 #1020503 android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-08 20:00:40.251   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 20:00:40.363   540   565 W ziparchive: Unable to open '/data/app/~~dsDWBr4Os_Y3MuvdFu0mdg==/ru.liturgyguide-hXIzSGTjPPe8_5tZdydMtg==/base.dm': No such file or directory
+11-08 20:00:40.388   540   565 I ActivityTaskManager: Displayed ru.liturgyguide/androidx.activity.ComponentActivity for user 0: +119ms
+11-08 20:00:40.402   369   369 I RanchuHwc: logCompositionFallbackIfChanged: layer 6408 CompositionType fallback from 3 to 1
+11-08 20:00:40.410 11076 11076 D VRI[InstrumentationActivityInvoker$EmptyActivity]: visibilityChanged oldVisibility=true newVisibility=false
+11-08 20:00:40.457   540   653 I ImeTracker: ru.liturgyguide:5a3f267a: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 20:00:40.457   540   653 I ImeTracker: ru.liturgyguide:5a3f267a: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 20:00:40.461  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 20:00:40.463  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 20:00:40.464  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 20:00:40.464  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 20:00:40.464  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 20:00:40.508 11076 11076 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@4ecb15f
+11-08 20:00:40.511   540   609 W InputManager-JNI: Input channel object 'f3154e0 ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity (client)' was disposed without first being removed with the input manager!
+11-08 20:00:40.513   442 10823 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 20:00:40.515   772   855 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@1f149c6
+11-08 20:00:40.515   540  1618 W InputManager-JNI: Input channel object 'f5b75ae Splash Screen ru.liturgyguide.test (client)' was disposed without first being removed with the input manager!
+11-08 20:00:40.519   540   609 W InputManager-JNI: Input channel object '836d36c Splash Screen ru.liturgyguide (client)' was disposed without first being removed with the input manager!
+11-08 20:00:40.533   772   855 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@68790c1
+11-08 20:00:40.569  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=2403
+11-08 20:00:40.571  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=2403
+11-08 20:00:40.584 11003 11003 D AutofillManager: Fill dialog is enabled:false, hints=[password, passwordAuto, creditCardNumber, creditCardSecurityCode, creditCardExpirationDate]
+11-08 20:00:40.611   772   941 D EGL_emulation: app_time_stats: avg=226.34ms min=5.96ms max=882.67ms count=8
+11-08 20:00:40.676 11003 11008 I ru.liturgyguide: Background concurrent mark compact GC freed 10MB AllocSpace bytes, 13(424KB) LOS objects, 49% free, 8730KB/17MB, paused 200us,2.712ms total 169.242ms
+11-08 20:00:40.763 11003 11003 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+11-08 20:00:40.763 11003 11003 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+11-08 20:00:41.057   540  1618 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10304, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 20:00:41.084   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 20:00:41.085  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=2405, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10000000 cmp=ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyFloatingActivity }
+11-08 20:00:41.105 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@f39e591 in: PAUSED
+11-08 20:00:41.105 11003 11003 V ActivityScenario: Update currentActivityStage to PAUSED, currentActivity=androidx.activity.ComponentActivity@f39e591
+11-08 20:00:41.135   345   419 I netd    : tetherGetStats() -> {[]} <3.13ms>
+11-08 20:00:41.182 11076 11105 I EGL_emulation: Opening libGLESv1_CM_emulation.so
+11-08 20:00:41.183 11076 11105 I EGL_emulation: Opening libGLESv2_emulation.so
+11-08 20:00:41.201 11076 11105 W HWUI    : Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+11-08 20:00:41.201 11076 11105 W HWUI    : Failed to initialize 101010-2 format, error = EGL_SUCCESS
+11-08 20:00:41.239  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=2404, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10008000 cmp=ru.liturgyguide/androidx.activity.ComponentActivity }
+11-08 20:00:41.242 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@f39e591 in: RESUMED
+11-08 20:00:41.242 11003 11003 V ActivityScenario: Update currentActivityStage to RESUMED, currentActivity=androidx.activity.ComponentActivity@f39e591
+11-08 20:00:41.272 11076 11076 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@2865a47
+11-08 20:00:41.273   540   609 W InputManager-JNI: Input channel object 'da22039 ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyFloatingActivity (client)' was disposed without first being removed with the input manager!
+11-08 20:00:41.275  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=2405
+11-08 20:00:41.275  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=2405
+11-08 20:00:41.309   540   653 I ImeTracker: ru.liturgyguide:e7914f70: onRequestHide at ORIGIN_SERVER reason HIDE_SAME_WINDOW_FOCUSED_WITHOUT_EDITOR fromUser false
+11-08 20:00:41.309   540   653 I ImeTracker: ru.liturgyguide:e7914f70: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 20:00:41.311  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 20:00:41.313  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 20:00:41.313  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 20:00:41.313  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 20:00:41.313  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 20:00:41.564   540   903 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10304, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 20:00:41.589  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=2406, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10000000 cmp=ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity }
+11-08 20:00:41.597   772   865 D SplashScreenView: Build android.window.SplashScreenView{aca5598 V.E...... ......ID 0,0-0,0}
+11-08 20:00:41.597   772   865 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-08 20:00:41.597   772   865 D SplashScreenView: Branding: view: android.view.View{9caf1f1 G.ED..... ......I. 0,0-0,0 #1020503 android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-08 20:00:41.599   442 10823 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 20:00:41.601   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 20:00:41.619 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@f39e591 in: PAUSED
+11-08 20:00:41.621 11003 11003 V ActivityScenario: Update currentActivityStage to PAUSED, currentActivity=androidx.activity.ComponentActivity@f39e591
+11-08 20:00:41.768   369   369 I RanchuHwc: logCompositionFallbackIfChanged: layer 6410 CompositionType fallback from 3 to 1
+11-08 20:00:41.804 11003 11003 D VRI[ComponentActivity]: visibilityChanged oldVisibility=true newVisibility=false
+11-08 20:00:41.828 11076 11105 I EGL_emulation: Opening libGLESv1_CM_emulation.so
+11-08 20:00:41.829 11076 11105 I EGL_emulation: Opening libGLESv2_emulation.so
+11-08 20:00:41.853 11076 11105 W HWUI    : Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+11-08 20:00:41.854 11076 11105 W HWUI    : Failed to initialize 101010-2 format, error = EGL_SUCCESS
+11-08 20:00:41.895   540   565 W ziparchive: Unable to open '/data/app/~~2FuXyoIivRiSckhlskSh7w==/ru.liturgyguide.test-KKblDRDMX_qY7IAjy0x9EA==/base.dm': No such file or directory
+11-08 20:00:41.897  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=776, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10000100 cmp=com.google.android.apps.nexuslauncher/.NexusLauncherActivity }
+11-08 20:00:41.898   540   565 I ActivityTaskManager: Displayed ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity for user 0: +325ms
+11-08 20:00:41.901   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 20:00:41.924  1210  1210 D NexusLauncherModelDelegate: notifySmartspaceEvent: SmartspaceTargetEvent{mSmartspaceTarget=null, mSmartspaceActionId='null', mEventType=6}
+11-08 20:00:41.929 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@f39e591 in: STOPPED
+11-08 20:00:41.930 11003 11003 V ActivityScenario: Update currentActivityStage to STOPPED, currentActivity=androidx.activity.ComponentActivity@f39e591
+11-08 20:00:41.933  1210  1210 D BaseDepthController: setSurface:
+11-08 20:00:41.933  1210  1210 D BaseDepthController: 	mWaitingOnSurfaceValidity: false
+11-08 20:00:41.933  1210  1210 D BaseDepthController: 	mSurface: Surface(name=com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity)/@0xdbda08f
+11-08 20:00:41.964 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@f39e591 in: DESTROYED
+11-08 20:00:41.964 11003 11003 V ActivityScenario: Update currentActivityStage to DESTROYED, currentActivity=null
+11-08 20:00:41.965 11003 11003 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@63d3c0b
+11-08 20:00:41.989   540   609 W InputManager-JNI: Input channel object '18d279 ru.liturgyguide/androidx.activity.ComponentActivity (client)' was disposed without first being removed with the input manager!
+11-08 20:00:42.030  1210  1210 D StatsLog: LAUNCHER_ONRESUME
+11-08 20:00:42.033 11003 11018 D IdlingRegistry: Unregistering idling resources: [androidx.compose.ui.test.EspressoLink@c8dcf5d]
+11-08 20:00:42.035 11003 11018 I TestRunner: finished: losingResumedStatePausesAndDoesNotConsumeTimeBeforeReturning(ru.liturgyguide.ui.UnifiedPlayerFlowTest)

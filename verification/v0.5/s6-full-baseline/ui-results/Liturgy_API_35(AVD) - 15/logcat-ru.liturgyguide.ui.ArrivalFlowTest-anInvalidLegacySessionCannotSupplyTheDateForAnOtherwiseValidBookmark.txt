@@ -1,0 +1,358 @@
+11-08 19:53:37.135 11003 11018 I TestRunner: started: anInvalidLegacySessionCannotSupplyTheDateForAnOtherwiseValidBookmark(ru.liturgyguide.ui.ArrivalFlowTest)
+11-08 19:53:37.218  1210  1210 D BaseDepthController: setSurface:
+11-08 19:53:37.218  1210  1210 D BaseDepthController: 	mWaitingOnSurfaceValidity: false
+11-08 19:53:37.218  1210  1210 D BaseDepthController: 	mSurface: Surface(name=com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity)/@0xdbda08f
+11-08 19:53:37.340   345 11054 I resolv  : res_nsend: used send_dg 176 terrno: 0
+11-08 19:53:37.352   345 11054 I resolv  : doQuery: rcode=0, ancount=8, return value=176
+11-08 19:53:37.406  1210  1210 D StatsLog: LAUNCHER_ONRESUME
+11-08 19:53:37.562 11003 11018 D IdlingRegistry: Registering idling resources: [androidx.compose.ui.test.EspressoLink@38b9630]
+11-08 19:53:37.600   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:37.600   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:37.613  1210  1443 D EGL_emulation: app_time_stats: avg=1890.05ms min=1890.05ms max=1890.05ms count=1
+11-08 19:53:37.621   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:37.646   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:37.647   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:37.647   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:37.653   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:37.665   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:37.665   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:37.665   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:37.665   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:37.613   832  6641 W rkstack.process: Long monitor contention with owner binder:832_3 (845) at boolean android.os.MessageQueue.enqueueMessage(android.os.Message, long)(MessageQueue.java:695) waiters=0 in android.os.Message android.os.MessageQueue.next() for 203ms
+11-08 19:53:37.856 11003 11018 W Settings: Setting always_finish_activities has moved from android.provider.Settings.System to android.provider.Settings.Global, returning read-only value.
+11-08 19:53:37.992   540   903 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10303, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 19:53:38.107  1210  1210 D StateManager: createAtomicAnimation - fromState: Background, toState: Normal, partial trace:
+11-08 19:53:38.107  1210  1210 D StateManager: 	at com.android.quickstep.util.WorkspaceRevealAnim.prepareToAnimate(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:22)
+11-08 19:53:38.107  1210  1210 D StateManager: 	at com.android.quickstep.util.WorkspaceRevealAnim.<init>(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:11)
+11-08 19:53:38.107  1210  1210 D StateManager: 	at com.android.launcher3.QuickstepTransitionManager.createWallpaperOpenAnimations(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:735)
+11-08 19:53:38.121   540  1371 W AppSearchIcing: icing-search-engine.cc:321: Error: 5, Message: Document (com.google.android.googlequicksearchbox$OneSearchZeroStateGoogleSuggestions/default, zp) not found.
+11-08 19:53:38.132   772   941 D EGL_emulation: app_time_stats: avg=1004.17ms min=5.99ms max=2303.21ms count=3
+11-08 19:53:38.283  1210  1578 D OneSearchSuggestProvider: AppSearch 0-state cache not available, fallback to AGA
+11-08 19:53:38.283  1210  1578 D OneSearchSuggestProvider: java.util.concurrent.CompletionException: java.util.NoSuchElementException: No value present
+11-08 19:53:38.283  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:308)
+11-08 19:53:38.283  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:323)
+11-08 19:53:38.283  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture$UniAccept.tryFire(CompletableFuture.java:684)
+11-08 19:53:38.283  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:486)
+11-08 19:53:38.283  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2138)
+11-08 19:53:38.283  1210  1578 D OneSearchSuggestProvider: 	at com.google.android.apps.nexuslauncher.allapps.E0.onResult(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:67)
+11-08 19:53:38.283  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1.lambda$onResult$0(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:144)
+11-08 19:53:38.283  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1.$r8$lambda$CEk3q8sDAQVhU3rQwVueB8FAj_M(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:1)
+11-08 19:53:38.283  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1$$ExternalSyntheticLambda0.run(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:22)
+11-08 19:53:38.283  1210  1578 D OneSearchSuggestProvider: 	at android.os.Handler.handleCallback(Handler.java:959)
+11-08 19:53:38.283  1210  1578 D OneSearchSuggestProvider: 	at android.os.Handler.dispatchMessage(Handler.java:100)
+11-08 19:53:38.283  1210  1578 D OneSearchSuggestProvider: 	at android.os.Looper.loopOnce(Looper.java:232)
+11-08 19:53:38.283  1210  1578 D OneSearchSuggestProvider: 	at android.os.Looper.loop(Looper.java:317)
+11-08 19:53:38.283  1210  1578 D OneSearchSuggestProvider: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+11-08 19:53:38.283  1210  1578 D OneSearchSuggestProvider: Caused by: java.util.NoSuchElementException: No value present
+11-08 19:53:38.283  1210  1578 D OneSearchSuggestProvider: 	at java.util.Optional.get(Optional.java:143)
+11-08 19:53:38.283  1210  1578 D OneSearchSuggestProvider: 	at com.google.android.apps.nexuslauncher.allapps.E0.onResult(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:28)
+11-08 19:53:38.283  1210  1578 D OneSearchSuggestProvider: 	... 8 more
+11-08 19:53:38.350  1210  1578 D OneSearchSuggestProvider: Created the binder channel successfully for end point service =com.google.android.apps.search.googleapp.search.suggest.plugins.onesearch.server.OneSearchSuggestService , mChannel=i1{delegate=f{logId=2697, target=directaddress:///AndroidComponentAddress%5BIntent%20%7B%20act=grpc.io.action.BIND%20cmp=com.google.android.googlequicksearchbox/com.google.android.apps.search.googleapp.search.suggest.plugins.onesearch.server.OneSearchSuggestService%20%7D%5D}} , mOneSearchConnection=l2.Z@d7fba41
+11-08 19:53:38.407   832 11117 D TrafficStats: tagSocket(92) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:38.412   832 11116 D TrafficStats: tagSocket(84) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:38.502  1210  1236 D QuickstepModelDelegate: notifyAppTargetEvent action=1 launchLocation=workspace/0/[-1,-1]/[1,1]
+11-08 19:53:38.507   974   984 I ChimeraSrvcProxy: NullBinder for android.net.action.RECOMMEND_NETWORKS triggering remote TransactionTooLargeException due to Service without Chimera impl
+11-08 19:53:38.507   974   984 W .gms.persistent: Large reply transaction of 1056768 bytes, interface descriptor , code 1
+11-08 19:53:38.508   832 11117 D TrafficStats: tagSocket(92) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:38.509  1372  2105 I BugleRcsEngine: handleMessage processing message:[NOTIFY_UPTIME_IGNORE_STATE_CHANGED] with [non-null]:RcsEngineImpl reference [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[cc7f0e4f-7073]>Handler" thread_id=65 ]
+11-08 19:53:38.514   345 11118 I resolv  : ResNSendHandler::run: 0 / {103 983143 103 983143 1073 1}
+11-08 19:53:38.515   345 11118 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bf8d30
+11-08 19:53:38.523  1372  1741 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=57 ]
+11-08 19:53:38.524   832 11116 D TrafficStats: tagSocket(84) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:38.527   345 11119 I resolv  : ResNSendHandler::run: 0 / {103 983143 103 983143 1073 1}
+11-08 19:53:38.527   345 11119 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bfaaf0
+11-08 19:53:38.531   832   832 D TrafficStats: tagSocket(92) with statsTag=0xffffffff, statsUid=-1
+11-08 19:53:38.538   345 11120 I resolv  : ResNSendHandler::run: 0 / {103 983143 103 983143 1073 1}
+11-08 19:53:38.538   345 11121 I resolv  : ResNSendHandler::run: 0 / {103 983143 103 983143 1073 1}
+11-08 19:53:38.547   832   832 D TrafficStats: tagSocket(92) with statsTag=0xffffffff, statsUid=-1
+11-08 19:53:38.582   345 11121 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:53:38.601   345 11120 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:53:38.608   540   829 W system_server: Long monitor contention with owner binder:540_7 (903) at int com.android.server.wm.ActivityStarter.execute()(ActivityStarter.java:825) waiters=0 in void com.android.server.wm.BLASTSyncEngine$SyncGroup$1CommitCallback.onCommitted(android.view.SurfaceControl$Transaction) for 616ms
+11-08 19:53:38.615   540   568 W system_server: Long monitor contention with owner binder:540_7 (903) at int com.android.server.wm.ActivityStarter.execute()(ActivityStarter.java:825) waiters=1 in void com.android.server.wm.WindowManagerService.reportFocusChanged(android.os.IBinder, android.os.IBinder) for 548ms
+11-08 19:53:38.672   540  1618 W system_server: Long monitor contention with owner binder:540_7 (903) at int com.android.server.wm.ActivityStarter.execute()(ActivityStarter.java:825) waiters=2 in int com.android.server.wm.ActivityTaskManagerService.getLastResumedActivityUserId() for 462ms
+11-08 19:53:38.695   540   569 W system_server: Long monitor contention with owner binder:540_7 (903) at int com.android.server.wm.ActivityStarter.execute()(ActivityStarter.java:825) waiters=4 in void com.android.server.wm.WindowAnimator.lambda$new$1(long) for 508ms
+11-08 19:53:38.762   540   653 W system_server: Long monitor contention with owner binder:540_7 (903) at int com.android.server.wm.ActivityStarter.execute()(ActivityStarter.java:825) waiters=5 in int com.android.server.wm.WindowManagerService$LocalService.hasInputMethodClientFocus(android.os.IBinder, int, int, int) for 280ms
+11-08 19:53:38.820   345   418 I netd    : tetherGetStats() -> {[]} <5.20ms>
+11-08 19:53:38.832   540   653 I ImeTracker: com.google.android.apps.nexuslauncher:752ebee4: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 19:53:38.832   540   653 I ImeTracker: com.google.android.apps.nexuslauncher:752ebee4: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 19:53:38.931  1330  1582 I AiAiEcho: Predicting[0]:  [CONTEXT sampling_count=5 ]
+11-08 19:53:38.931  1330  1582 I AiAiEcho: EchoTargets:
+11-08 19:53:38.931  1330  1582 I AiAiEcho: Filtered by AiAi flag check:
+11-08 19:53:38.931  1330  1582 I AiAiEcho: [CONTEXT ratelimit_period="10 SECONDS" ]
+11-08 19:53:38.931  1330  1582 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata:  [CONTEXT ratelimit_period="10 SECONDS" ]
+11-08 19:53:38.931  1330  1582 I AiAiEcho: #remoteViewsTwiddler: feature disabled.
+11-08 19:53:38.944  1330  1582 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface home with targets# 0 (types=[])
+11-08 19:53:38.945   540  1635 W system_server: Long monitor contention with owner binder:540_7 (903) at int com.android.server.wm.ActivityStarter.execute()(ActivityStarter.java:825) waiters=3 in boolean com.android.server.wm.ActivityClientController.finishActivity(android.os.IBinder, int, android.content.Intent, int) for 677ms
+11-08 19:53:38.955   540  1614 W system_server: Long monitor contention with owner binder:540_7 (903) at int com.android.server.wm.ActivityStarter.execute()(ActivityStarter.java:825) waiters=6 in void com.android.server.wm.WindowOrganizerController.finishTransition(android.os.IBinder, android.window.WindowContainerTransaction) for 459ms
+11-08 19:53:38.984  1210  1210 W SplitSelectStateCtor: Missing session instanceIds
+11-08 19:53:38.984  1210  1210 D StatsLog: LAUNCHER_SPLIT_SELECTION_EXIT_INTERRUPTED
+11-08 19:53:38.996   540   585 W system_server: Long monitor contention with owner binder:540_10 (1615) at int com.android.server.am.ActivityManagerService.bindServiceInstance(android.app.IApplicationThread, android.os.IBinder, android.content.Intent, java.lang.String, android.app.IServiceConnection, long, java.lang.String, boolean, int, java.lang.String, android.app.IApplicationThread, java.lang.String, int)(ActivityManagerService.java:14231) waiters=0 in boolean com.android.server.am.ActivityManagerService$LocalService.isProfileOwner(int) for 190ms
+11-08 19:53:39.021  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 19:53:39.044   540   576 W system_server: Long monitor contention with owner binder:540_10 (1615) at int com.android.server.am.ActivityManagerService.bindServiceInstance(android.app.IApplicationThread, android.os.IBinder, android.content.Intent, java.lang.String, android.app.IServiceConnection, long, java.lang.String, boolean, int, java.lang.String, android.app.IApplicationThread, java.lang.String, int)(ActivityManagerService.java:14231) waiters=1 in void com.android.server.am.BroadcastQueueModernImpl.handleProcessFreezableChanged(com.android.server.am.ProcessRecord) for 414ms
+11-08 19:53:39.045  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 19:53:39.048  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=com.google.android.apps.nexuslauncher, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 19:53:39.056  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 19:53:39.063   772   865 D SplashScreenView: Build android.window.SplashScreenView{4612101 V.E...... ......ID 0,0-0,0}
+11-08 19:53:39.063   772   865 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-08 19:53:39.063   772   865 D SplashScreenView: Branding: view: android.view.View{d2f8ba6 G.ED..... ......I. 0,0-0,0 #1020503 android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-08 19:53:39.064  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 19:53:39.103  1271  1271 W NotificationCenter: NotificationCenter$ListenerData.notifyOnExecutor():672 Heavy notify work detected on UI thread: |kga->jjc| takes 38ms
+11-08 19:53:39.115  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=2168, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10008000 cmp=ru.liturgyguide/androidx.activity.ComponentActivity }
+11-08 19:53:39.119   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 19:53:39.125  1210  1210 D SsBaseTemplateCard: No text view can be set up
+11-08 19:53:39.160  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 19:53:39.160  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 19:53:39.160  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 19:53:39.160  1210  1210 I SsBaseTemplateCard: Secondary card pane is null
+11-08 19:53:39.222 11076 11076 D VRI[InstrumentationActivityInvoker$EmptyActivity]: visibilityChanged oldVisibility=true newVisibility=false
+11-08 19:53:39.387  1210  1443 D EGL_emulation: app_time_stats: avg=359.91ms min=2.70ms max=820.92ms count=5
+11-08 19:53:39.402  1210  1443 D EGL_emulation: app_time_stats: avg=1788.64ms min=1788.64ms max=1788.64ms count=1
+11-08 19:53:39.676   540   568 W system_server: Long monitor contention with owner binder:540_10 (1615) at int com.android.server.am.ActivityManagerService.bindServiceInstance(android.app.IApplicationThread, android.os.IBinder, android.content.Intent, java.lang.String, android.app.IServiceConnection, long, java.lang.String, boolean, int, java.lang.String, android.app.IApplicationThread, java.lang.String, int)(ActivityManagerService.java:14231) waiters=2 in void com.android.server.am.ActivityManagerService$2.onActivityLaunched(long, android.content.ComponentName, int, int) for 924ms
+11-08 19:53:39.684   772   855 I Choreographer: Skipped 31 frames!  The application may be doing too much work on its main thread.
+11-08 19:53:39.894   540  1615 W system_server: Long monitor contention with owner android.display (568) at void com.android.server.am.ProcessRecord.setRunningRemoteAnimation(boolean)(ProcessRecord.java:1658) waiters=0 in void com.android.server.am.ActivityManagerService.setHasTopUi(boolean) for 108ms
+11-08 19:53:39.902   832 11117 D NetworkMonitor/103: PROBE_DNS connectivitycheck.gstatic.com 1283ms OK 142.251.150.120,2001:4860:4826:7800::
+11-08 19:53:40.016   442   493 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:40.135   772   855 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@91fdc35
+11-08 19:53:40.141   540  1618 W InputManager-JNI: Input channel object 'f0ef48f Splash Screen ru.liturgyguide.test (client)' was disposed without first being removed with the input manager!
+11-08 19:53:40.196 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@d43a819 in: PRE_ON_CREATE
+11-08 19:53:40.197 11003 11003 V ActivityScenario: Activity lifecycle changed event received but ignored because the reported transition was not ON_CREATE while the last known transition was PRE_ON_CREATE
+11-08 19:53:40.230  1210  1210 D VRI[NexusLauncherActivity]: visibilityChanged oldVisibility=true newVisibility=false
+11-08 19:53:40.237   540  1615 W system_server: Long monitor contention with owner android.display (568) at void com.android.server.am.ActivityManagerService.trimApplications(boolean, int)(ActivityManagerService.java:17790) waiters=0 in void com.android.server.am.ActivityManagerService.unregisterReceiverTraced(android.content.IIntentReceiver) for 145ms
+11-08 19:53:40.428  1210  1443 D EGL_emulation: app_time_stats: avg=342.89ms min=235.45ms max=481.37ms count=3
+11-08 19:53:40.472  1210  1210 D BaseDepthController: setSurface:
+11-08 19:53:40.472  1210  1210 D BaseDepthController: 	mWaitingOnSurfaceValidity: false
+11-08 19:53:40.472  1210  1210 D BaseDepthController: 	mSurface: null
+11-08 19:53:40.472  1210  1210 D BaseDepthController: mSurface is null and mCurrentBlur is: 0
+11-08 19:53:40.479 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@d43a819 in: CREATED
+11-08 19:53:40.480 11003 11003 V ActivityScenario: Update currentActivityStage to CREATED, currentActivity=androidx.activity.ComponentActivity@d43a819
+11-08 19:53:40.486 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@d43a819 in: STARTED
+11-08 19:53:40.487 11003 11003 V ActivityScenario: Update currentActivityStage to STARTED, currentActivity=androidx.activity.ComponentActivity@d43a819
+11-08 19:53:40.491 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@d43a819 in: RESUMED
+11-08 19:53:40.491 11003 11003 V ActivityScenario: Update currentActivityStage to RESUMED, currentActivity=androidx.activity.ComponentActivity@d43a819
+11-08 19:53:40.498  1210  1210 D StateManager: goToState - fromState: Normal, toState: Normal, partial trace:
+11-08 19:53:40.498  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StateManager.moveToRestState(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:4)
+11-08 19:53:40.498  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StateManager.moveToRestState(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:1)
+11-08 19:53:40.498  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StatefulActivity.onStop(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:34)
+11-08 19:53:40.510  1441  2195 I Ma-Robin-Connectivity: #onAvailable()
+11-08 19:53:40.553  1210  1210 D StatsLog: LAUNCHER_ONSTOP
+11-08 19:53:40.554   345 11124 I resolv  : GetAddrInfoHandler::run: {103 983143 103 983143 1073 1}
+11-08 19:53:40.562   345 11126 I resolv  : res_nmkquery: (QUERY, IN, A)
+11-08 19:53:40.562   345 11126 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bfaaf0
+11-08 19:53:40.563   345 11126 I resolv  : doQuery: rcode=0, ancount=1, return value=63
+11-08 19:53:40.563   345 11125 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+11-08 19:53:40.563   345 11125 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bf8d30
+11-08 19:53:40.563   345 11125 I resolv  : doQuery: rcode=0, ancount=1, return value=75
+11-08 19:53:40.566   832 11117 D TrafficStats: tagSocket(84) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:40.573   772   941 D EGL_emulation: app_time_stats: avg=1220.15ms min=58.25ms max=2382.04ms count=2
+11-08 19:53:40.577 11076 11083 I turgyguide.test: Compiler allocated 5250KB to compile void android.view.ViewRootImpl.performTraversals()
+11-08 19:53:40.600  1210  1210 D StatsLog: LAUNCHER_GOOGLE_SEARCH_RESTORE_LIST_SIZE_AFTER_ACTIVITY_RESTART
+11-08 19:53:40.602  1210  1578 D OneSearchSuggestProvider: Shut down the binder channel
+11-08 19:53:40.617  1210  1210 D NexusLauncherModelDelegate: notifySmartspaceEvent: SmartspaceTargetEvent{mSmartspaceTarget=null, mSmartspaceActionId='null', mEventType=7}
+11-08 19:53:40.710  1210  1210 D NexusLauncherModelDelegate: notifySmartspaceEvent: SmartspaceTargetEvent{mSmartspaceTarget=null, mSmartspaceActionId='null', mEventType=7}
+11-08 19:53:40.743   832 11116 D NetworkMonitor/103: PROBE_DNS www.google.com 1465ms FAIL in type ADDRCONFIG java.net.UnknownHostException
+11-08 19:53:40.802  1441  1441 I A       : (REDACTED) Created gRPC endpoint for service %s
+11-08 19:53:40.812   345   418 I netd    : tetherGetStats() -> {[]} <8.95ms>
+11-08 19:53:40.856 11076 11076 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@6ac92a4
+11-08 19:53:40.963   540  1614 W InputManager-JNI: Input channel object 'ad34bba ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity (client)' was disposed without first being removed with the input manager!
+11-08 19:53:41.006   345 11129 I resolv  : GetAddrInfoHandler::run: {103 983143 103 983143 1073 1}
+11-08 19:53:41.028   540   565 W ziparchive: Unable to open '/data/app/~~dsDWBr4Os_Y3MuvdFu0mdg==/ru.liturgyguide-hXIzSGTjPPe8_5tZdydMtg==/base.dm': No such file or directory
+11-08 19:53:41.054   345 11131 I resolv  : res_nmkquery: (QUERY, IN, A)
+11-08 19:53:41.055   345 11130 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+11-08 19:53:41.076  1330  1330 W ogle.android.as: Long monitor contention with owner binder:1330_3 (1819) at boolean android.os.MessageQueue.enqueueMessage(android.os.Message, long)(MessageQueue.java:695) waiters=0 in android.os.Message android.os.MessageQueue.next() for 333ms
+11-08 19:53:41.105  1271  1626 I SP      : Sync for handwriting_recognition succeeded in 6410 ms: no changes
+11-08 19:53:41.122   345 11130 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:53:41.125   345 11130 I resolv  : doQuery: rcode=0, ancount=0, return value=32
+11-08 19:53:41.128   345 11131 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:53:41.128   345 11131 I resolv  : doQuery: rcode=0, ancount=0, return value=32
+11-08 19:53:41.142  1210  1443 D EGL_emulation: app_time_stats: avg=870.01ms min=757.70ms max=982.31ms count=2
+11-08 19:53:41.143 11076 11076 I Choreographer: Skipped 63 frames!  The application may be doing too much work on its main thread.
+11-08 19:53:41.143  1271  1626 I SP      : GC for 'handwriting_recognition' (10) with ttl of 0 ms took 0 ms (0/0/0)
+11-08 19:53:41.147   832 11116 D NetworkMonitor/103: PROBE_HTTPS https://www.google.com/generate_204 Probe failed with exception java.net.UnknownHostException: Unable to resolve host "www.google.com": No address associated with hostname
+11-08 19:53:41.263   832 11117 D NetworkMonitor/103: PROBE_HTTP http://connectivitycheck.gstatic.com/generate_204 time=1136ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Sun, 08 Nov 2026 16:53:41 GMT], X-Android-Received-Millis=[1794156821262], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1794156821040]}
+11-08 19:53:41.297   540   565 I ActivityTaskManager: Displayed ru.liturgyguide/androidx.activity.ComponentActivity for user 0: +2s988ms
+11-08 19:53:41.305   345   418 I netd    : tetherGetStats() -> {[]} <0.42ms>
+11-08 19:53:41.327  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=2167
+11-08 19:53:41.327  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=2167
+11-08 19:53:41.354  1271 11132 I HandwritingOnlineSuperpacks: HandwritingOnlineSuperpacks.lambda$syncInternal$1():204 syncInternal(): syncing packs
+11-08 19:53:41.359  1271 11133 I HandwritingOnlineSuperpacks: HandwritingOnlineSuperpacks$3.onSyncSuccess():252 syncInternal(): complete {old=[en_us_20230613_compact_fst_zip, pack_mapping_v1_lstm_20231127, qrnn_en_us_reco_20231010_fst_20230613_recospec_zip, scribe_latin_20231123_recospec_zip, scribe_latin_20231123_tflite_zip, transformer_latin_conf_tflite_20231010_zip, transformer_latin_seg_tflite_20231010_zip, transformer_latin_tflite_20231010_zip], new=[en_us_20230613_compact_fst_zip, pack_mapping_v1_lstm_20231127, qrnn_en_us_reco_20231010_fst_20230613_recospec_zip, scribe_latin_20231123_recospec_zip, scribe_latin_20231123_tflite_zip, transformer_latin_conf_tflite_20231010_zip, transformer_latin_seg_tflite_20231010_zip, transformer_latin_tflite_20231010_zip], metadata=false, last batch=true}
+11-08 19:53:41.376   540   653 I ImeTracker: ru.liturgyguide:9a7b1390: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 19:53:41.386   772   855 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@43dcc3d
+11-08 19:53:41.400   540   653 I ImeTracker: ru.liturgyguide:9a7b1390: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 19:53:41.496   540  1614 W InputManager-JNI: Input channel object 'd0d22e6 Splash Screen ru.liturgyguide (client)' was disposed without first being removed with the input manager!
+11-08 19:53:41.497  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 19:53:41.513 11003 11003 D AutofillManager: Fill dialog is enabled:false, hints=[password, passwordAuto, creditCardNumber, creditCardSecurityCode, creditCardExpirationDate]
+11-08 19:53:41.560  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 19:53:41.561  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 19:53:41.569  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 19:53:41.575  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 19:53:41.620  1271  1271 W NotificationCenter: NotificationCenter$ListenerData.notifyOnExecutor():672 Heavy notify work detected on UI thread: |kga->jjc| takes 21ms
+11-08 19:53:41.676   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:41.676   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:41.679   832 11115 D NetworkMonitor/103: PROBE_FALLBACK http://www.google.com/gen_204 Probe failed with exception java.net.UnknownHostException: Unable to resolve host "www.google.com": No address associated with hostname
+11-08 19:53:41.706   832 11115 D NetworkMonitor/103: isCaptivePortal: isSuccessful()=false isPortal()=false RedirectUrl=null isPartialConnectivity()=true Time=3369ms
+11-08 19:53:41.731  1372  2105 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=65 ]
+11-08 19:53:41.750   974   982 I ChimeraSrvcProxy: NullBinder for android.net.action.RECOMMEND_NETWORKS triggering remote TransactionTooLargeException due to Service without Chimera impl
+11-08 19:53:41.750   974   982 W .gms.persistent: Large reply transaction of 1056768 bytes, interface descriptor , code 1
+11-08 19:53:41.895   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:41.896   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:41.896   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:41.896   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:41.896   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:41.915  1271 11059 E HandwritingSuperpacksUtil: HandwritingSuperpacksUtil.getPackMappingPackName():40 No pack mapping pack found in []
+11-08 19:53:41.918   540   688 D ConnectivityService: [103 WIFI] validation failed
+11-08 19:53:41.918  1271 11059 I HandwritingSuperpacks: HandwritingSuperpacks.lambda$reloadCache$0():237 updatePackMappingsCache(): pack mapping pack unavailable [OFFLINE]
+11-08 19:53:41.930  1372  2105 I BugleRcsEngine: handleMessage processing message:[NOTIFY_UPTIME_IGNORE_STATE_CHANGED] with [non-null]:RcsEngineImpl reference [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[cc7f0e4f-7073]>Handler" thread_id=65 ]
+11-08 19:53:41.934  1372  1741 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=57 ]
+11-08 19:53:41.947   876   902 W m.android.phone: Long monitor contention with owner binder:876_C (1148) at boolean android.os.MessageQueue.enqueueMessage(android.os.Message, long)(MessageQueue.java:695) waiters=2 in boolean android.os.MessageQueue.enqueueMessage(android.os.Message, long) for 329ms
+11-08 19:53:41.972  1372  2105 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=65 ]
+11-08 19:53:41.976   772   941 D EGL_emulation: app_time_stats: avg=701.46ms min=240.89ms max=1162.03ms count=2
+11-08 19:53:42.079   540   564 W system_server: Long monitor contention with owner watchdog (571) at void java.lang.Object.wait(long, int)(Object.java:-2) waiters=0 in void com.android.server.Watchdog$HandlerChecker.run() for 298ms
+11-08 19:53:42.107   540  1614 D ConnectivityService: registerNetworkAgent NetworkAgentInfo{network{104}  handle{450082295821}  ni{MOBILE[HSPA] CONNECTING extra: fast.t-mobile.com} created=2026-11-08T16:53:42.064Z Score(Policies :  ; KeepConnected : 0)   lp{{LinkAddresses: [ ] DnsAddresses: [ ] Domains: null MTU: 0 Routes: [ ]}}  nc{[ Transports: CELLULAR Capabilities: MMS&SUPL&IA&XCAP&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&NOT_ROAMING&NOT_CONGESTED&NOT_SUSPENDED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED LinkUpBandwidth>=14Kbps LinkDnBandwidth>=14Kbps Specifier: <TelephonyNetworkSpecifier [mSubId = 1]> SubscriptionIds: {1} UnderlyingNetworks: Null]}  factorySerialNumber=4}
+11-08 19:53:42.167   540   681 E WifiDataStall: onDataConnectionStateChanged unexpected State: 1
+11-08 19:53:42.167   540   681 E MboOceController: onDataConnectionStateChanged unexpected State: 1
+11-08 19:53:42.300 11003 11030 I HWUI    : Davey! duration=962ms; Flags=0, FrameTimelineVsyncId=1187539, IntendedVsync=19483866355750, Vsync=19484299689066, InputEventId=0, HandleInputStart=19484316338624, AnimationStart=19484316340249, PerformTraversalsStart=19484316340582, DrawStart=19484714660041, FrameDeadline=19483883022416, FrameInterval=19484314131415, FrameStartTime=16666666, SyncQueued=19484750450791, SyncStart=19484777937624, IssueDrawCommandsStart=19484778063041, SwapBuffers=19484789314749, FrameCompleted=19484856549791, DequeueBufferDuration=3666, QueueBufferDuration=1246000, GpuCompleted=19484856549791, SwapBuffersCompleted=19484803723041, DisplayPresentTime=503588115920, CommandSubmissionCompleted=19484789314749,
+11-08 19:53:42.328 11003 11003 I Choreographer: Skipped 30 frames!  The application may be doing too much work on its main thread.
+11-08 19:53:42.328   345   418 I netd    : getFwmarkForNetwork(104) -> {MarkMaskParcel{mark: 104, mask: 65535}} <0.05ms>
+11-08 19:53:42.413  1210  1443 D EGL_emulation: app_time_stats: avg=1191.21ms min=1191.21ms max=1191.21ms count=1
+11-08 19:53:42.461   772  2034 W ndroid.systemui: Long monitor contention with owner SysUiBg (910) at boolean android.os.MessageQueue.enqueueMessage(android.os.Message, long)(MessageQueue.java:695) waiters=0 in void android.os.MessageQueue.removeMessages(android.os.Handler, int, java.lang.Object) for 131ms
+11-08 19:53:42.469  5013  5013 W rules.WifiRx: FenceState currentState is not true
+11-08 19:53:42.488   540   688 D ConnectivityService: [104 CELLULAR] EVENT_NETWORK_INFO_CHANGED, going from CONNECTING to CONNECTING
+11-08 19:53:42.512   832 11136 D NetworkMonitor/104: checkAndRenewResourceConfig: update captive portal https urls to [https://www.google.com/generate_204]
+11-08 19:53:42.518   832 11136 D NetworkMonitor/104: checkAndRenewResourceConfig: update captive portal http urls to [http://connectivitycheck.gstatic.com/generate_204]
+11-08 19:53:42.522   772   772 W ndroid.systemui: Long monitor contention with owner SysUiBg (910) at boolean android.os.MessageQueue.enqueueMessage(android.os.Message, long)(MessageQueue.java:695) waiters=1 in android.os.Message android.os.MessageQueue.next() for 123ms
+11-08 19:53:42.648   832 11136 D NetworkMonitor/104: checkAndRenewResourceConfig: update captive portal fallback urls to[http://www.google.com/gen_204, http://play.googleapis.com/generate_204]
+11-08 19:53:42.651   832 11136 D NetworkMonitor: Starting on network 104 with capport HTTPS URL [https://www.google.com/generate_204] and HTTP URL [http://connectivitycheck.gstatic.com/generate_204]
+11-08 19:53:42.706   540   688 D ConnectivityService: Adding iface eth0 to network 104
+11-08 19:53:42.708   345   418 E Netd    : no such netId 104
+11-08 19:53:42.709   345   418 I netd    : networkAddInterface(104, eth0) -> ServiceSpecificException(64, "Machine is not on the network") <0.16ms>
+11-08 19:53:42.807   540  1185 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10304, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 19:53:42.896   345   418 I netd    : tetherGetStats() -> {[]} <3.99ms>
+11-08 19:53:42.961   540   688 W ConnectivityService: Exception adding interface: android.os.ServiceSpecificException: Machine is not on the network (code 64)
+11-08 19:53:42.990   772   865 D SplashScreenView: Build android.window.SplashScreenView{f5d8bf V.E...... ......ID 0,0-0,0}
+11-08 19:53:42.990   772   865 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-08 19:53:42.990   772   865 D SplashScreenView: Branding: view: android.view.View{371ab8c G.ED..... ......I. 0,0-0,0 #1020503 android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-08 19:53:43.054   345   418 I netd    : interfaceSetMtu(eth0, 1500) <90.70ms>
+11-08 19:53:43.055   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 19:53:43.056   345   418 E Netd    : no such netId 104
+11-08 19:53:43.057   345   418 I netd    : networkAddRouteParcel(104, RouteInfoParcel{destination: 10.0.2.0/24, ifName: eth0, nextHop: , mtu: 0}) -> ServiceSpecificException(64, "Machine is not on the network") <0.05ms>
+11-08 19:53:43.058   540   569 W system_server: Long monitor contention with owner binder:540_A (1185) at int com.android.server.wm.ActivityStarter.execute()(ActivityStarter.java:825) waiters=0 in void com.android.server.wm.WindowAnimator.lambda$new$1(long) for 204ms
+11-08 19:53:43.085   540   568 W system_server: Long monitor contention with owner binder:540_A (1185) at int com.android.server.wm.ActivityStarter.execute()(ActivityStarter.java:825) waiters=1 in void com.android.server.wm.RootWindowContainer$RankTaskLayersRunnable.run() for 219ms
+11-08 19:53:43.086   442   493 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:43.088   540  1419 W system_server: Long monitor contention with owner binder:540_A (1185) at int com.android.server.wm.ActivityStarter.execute()(ActivityStarter.java:825) waiters=2 in void com.android.server.wm.TaskPersister.writeTaskIdsFiles() for 165ms
+11-08 19:53:43.097  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=2169, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10000000 cmp=ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity }
+11-08 19:53:43.141 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@d43a819 in: PAUSED
+11-08 19:53:43.141 11003 11003 V ActivityScenario: Update currentActivityStage to PAUSED, currentActivity=androidx.activity.ComponentActivity@d43a819
+11-08 19:53:43.307   540   688 E ConnectivityService: Exception in addRoute for non-gateway: android.os.ServiceSpecificException: Machine is not on the network (code 64)
+11-08 19:53:43.311   345   418 E Netd    : no such netId 104
+11-08 19:53:43.311   345   418 I netd    : networkAddRouteParcel(104, RouteInfoParcel{destination: 0.0.0.0/0, ifName: eth0, nextHop: 10.0.2.2, mtu: 1500}) -> ServiceSpecificException(64, "Machine is not on the network") <0.16ms>
+11-08 19:53:43.311   540   688 E ConnectivityService: Exception in addRoute for gateway: android.os.ServiceSpecificException: Machine is not on the network (code 64)
+11-08 19:53:43.311   540   688 D ConnectivityService: Setting DNS servers for network 104 to [/10.0.2.3]
+11-08 19:53:43.313   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:43.366   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:43.394 11076 11105 I EGL_emulation: Opening libGLESv1_CM_emulation.so
+11-08 19:53:43.398   876   880 W m.android.phone: Suspending all threads took: 298.840ms
+11-08 19:53:43.428 11076 11105 I EGL_emulation: Opening libGLESv2_emulation.so
+11-08 19:53:43.449 11076 11105 W HWUI    : Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+11-08 19:53:43.450   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:43.450   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:43.450   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:43.454 11076 11105 W HWUI    : Failed to initialize 101010-2 format, error = EGL_SUCCESS
+11-08 19:53:43.460   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:43.461   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:43.461   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:43.461   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:43.489   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:43.489   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:43.520   540  1185 W system_server: Long monitor contention with owner binder:540_1E (1636) at void com.android.server.wm.Session.setOnBackInvokedCallbackInfo(android.view.IWindow, android.window.OnBackInvokedCallbackInfo)(Session.java:1027) waiters=1 in void com.android.server.wm.WindowManagerService.finishDrawingWindow(com.android.server.wm.Session, android.view.IWindow, android.view.SurfaceControl$Transaction, int) for 126ms
+11-08 19:53:43.732  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=776, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10000100 cmp=com.google.android.apps.nexuslauncher/.NexusLauncherActivity }
+11-08 19:53:43.738 11003 11003 D VRI[ComponentActivity]: visibilityChanged oldVisibility=true newVisibility=false
+11-08 19:53:43.854   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 19:53:43.857   772   941 D EGL_emulation: app_time_stats: avg=940.13ms min=36.29ms max=1843.98ms count=2
+11-08 19:53:43.950  1210  1210 D NexusLauncherModelDelegate: notifySmartspaceEvent: SmartspaceTargetEvent{mSmartspaceTarget=null, mSmartspaceActionId='null', mEventType=6}
+11-08 19:53:44.032 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@d43a819 in: STOPPED
+11-08 19:53:44.033 11003 11003 V ActivityScenario: Update currentActivityStage to STOPPED, currentActivity=androidx.activity.ComponentActivity@d43a819
+11-08 19:53:44.062  1210  1210 D BaseDepthController: setSurface:
+11-08 19:53:44.062  1210  1210 D BaseDepthController: 	mWaitingOnSurfaceValidity: false
+11-08 19:53:44.062  1210  1210 D BaseDepthController: 	mSurface: Surface(name=com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity)/@0xdbda08f
+11-08 19:53:44.105   345   418 I netd    : tetherGetStats() -> {[]} <2.75ms>
+11-08 19:53:44.148  1210  1210 D StatsLog: LAUNCHER_ONRESUME
+11-08 19:53:44.150  1210  1443 D EGL_emulation: app_time_stats: avg=1736.78ms min=1736.78ms max=1736.78ms count=1
+11-08 19:53:44.219   540  1371 W AppSearchIcing: icing-search-engine.cc:321: Error: 5, Message: Document (com.google.android.googlequicksearchbox$OneSearchZeroStateGoogleSuggestions/default, zp) not found.
+11-08 19:53:44.224  1210  1578 D OneSearchSuggestProvider: AppSearch 0-state cache not available, fallback to AGA
+11-08 19:53:44.224  1210  1578 D OneSearchSuggestProvider: java.util.concurrent.CompletionException: java.util.NoSuchElementException: No value present
+11-08 19:53:44.224  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:308)
+11-08 19:53:44.224  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:323)
+11-08 19:53:44.224  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture$UniAccept.tryFire(CompletableFuture.java:684)
+11-08 19:53:44.224  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:486)
+11-08 19:53:44.224  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2138)
+11-08 19:53:44.224  1210  1578 D OneSearchSuggestProvider: 	at com.google.android.apps.nexuslauncher.allapps.E0.onResult(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:67)
+11-08 19:53:44.224  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1.lambda$onResult$0(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:144)
+11-08 19:53:44.224  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1.$r8$lambda$CEk3q8sDAQVhU3rQwVueB8FAj_M(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:1)
+11-08 19:53:44.224  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1$$ExternalSyntheticLambda0.run(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:22)
+11-08 19:53:44.224  1210  1578 D OneSearchSuggestProvider: 	at android.os.Handler.handleCallback(Handler.java:959)
+11-08 19:53:44.224  1210  1578 D OneSearchSuggestProvider: 	at android.os.Handler.dispatchMessage(Handler.java:100)
+11-08 19:53:44.224  1210  1578 D OneSearchSuggestProvider: 	at android.os.Looper.loopOnce(Looper.java:232)
+11-08 19:53:44.224  1210  1578 D OneSearchSuggestProvider: 	at android.os.Looper.loop(Looper.java:317)
+11-08 19:53:44.224  1210  1578 D OneSearchSuggestProvider: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+11-08 19:53:44.224  1210  1578 D OneSearchSuggestProvider: Caused by: java.util.NoSuchElementException: No value present
+11-08 19:53:44.224  1210  1578 D OneSearchSuggestProvider: 	at java.util.Optional.get(Optional.java:143)
+11-08 19:53:44.224  1210  1578 D OneSearchSuggestProvider: 	at com.google.android.apps.nexuslauncher.allapps.E0.onResult(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:28)
+11-08 19:53:44.224  1210  1578 D OneSearchSuggestProvider: 	... 8 more
+11-08 19:53:44.233   832   838 I rkstack.process: Background concurrent mark compact GC freed 2725KB AllocSpace bytes, 0(0B) LOS objects, 49% free, 2875KB/5750KB, paused 207us,73.444ms total 5.687s
+11-08 19:53:44.250 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@d43a819 in: DESTROYED
+11-08 19:53:44.251 11003 11003 V ActivityScenario: Update currentActivityStage to DESTROYED, currentActivity=null
+11-08 19:53:44.254  1210  1236 D QuickstepModelDelegate: notifyAppTargetEvent action=1 launchLocation=workspace/0/[-1,-1]/[1,1]
+11-08 19:53:44.264  1210  1578 D OneSearchSuggestProvider: Created the binder channel successfully for end point service =com.google.android.apps.search.googleapp.search.suggest.plugins.onesearch.server.OneSearchSuggestService , mChannel=i1{delegate=f{logId=2701, target=directaddress:///AndroidComponentAddress%5BIntent%20%7B%20act=grpc.io.action.BIND%20cmp=com.google.android.googlequicksearchbox/com.google.android.apps.search.googleapp.search.suggest.plugins.onesearch.server.OneSearchSuggestService%20%7D%5D}} , mOneSearchConnection=l2.Z@416ab3d
+11-08 19:53:44.292   832 11143 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:44.296 11003 11003 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@b50bd8e
+11-08 19:53:44.303   832 11143 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:44.307   345 11145 I resolv  : ResNSendHandler::run: 0 / {103 983143 103 983143 1073 1}
+11-08 19:53:44.315   345 11146 I resolv  : ResNSendHandler::run: 0 / {103 983143 103 983143 1073 1}
+11-08 19:53:44.322   345 11145 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:53:44.325   345 11146 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:53:44.329  1210  1210 D StateManager: createAtomicAnimation - fromState: Background, toState: Normal, partial trace:
+11-08 19:53:44.329  1210  1210 D StateManager: 	at com.android.quickstep.util.WorkspaceRevealAnim.prepareToAnimate(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:22)
+11-08 19:53:44.329  1210  1210 D StateManager: 	at com.android.quickstep.util.WorkspaceRevealAnim.<init>(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:11)
+11-08 19:53:44.329  1210  1210 D StateManager: 	at com.android.launcher3.QuickstepTransitionManager.createWallpaperOpenAnimations(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:735)
+11-08 19:53:44.340   832 11143 D NetworkMonitor/103: PROBE_DNS www.google.com 46ms FAIL in type ADDRCONFIG java.net.UnknownHostException
+11-08 19:53:44.344   540   688 D ConnectivityService: [104 CELLULAR] EVENT_NETWORK_INFO_CHANGED, going from CONNECTING to CONNECTED
+11-08 19:53:44.355   345   418 I netd    : networkCreate(NativeNetworkConfig{netId: 104, networkType: PHYSICAL, permission: 0, secure: false, vpnType: -1, excludeLocalRoutes: false}) <6.44ms>
+11-08 19:53:44.409   832 11144 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:44.414   540   653 I ImeTracker: com.google.android.apps.nexuslauncher:f7b8740c: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 19:53:44.414   832 11144 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:44.415   540   653 I ImeTracker: com.google.android.apps.nexuslauncher:f7b8740c: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 19:53:44.417   540   829 W InputManager-JNI: Input channel object '868f7b3 ru.liturgyguide/androidx.activity.ComponentActivity (client)' was disposed without first being removed with the input manager!
+11-08 19:53:44.449   345 11147 I resolv  : ResNSendHandler::run: 0 / {103 983143 103 983143 1073 1}
+11-08 19:53:44.453   345 11148 I resolv  : GetAddrInfoHandler::run: {103 983143 103 983143 1073 1}
+11-08 19:53:44.462  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 19:53:44.467   345 11149 I resolv  : ResNSendHandler::run: 0 / {103 983143 103 983143 1073 1}
+11-08 19:53:44.469   540   680 W system_server: Long monitor contention with owner ConnectivityServiceThread (688) at void android.net.connectivity.com.android.server.net.NetworkStatsService.handleNotifyNetworkStatus(android.net.Network[], android.net.NetworkStateSnapshot[], java.lang.String, android.net.connectivity.com.android.server.net.NetworkStatsEventLogger$PollEvent)(NetworkStatsService.java:2332) waiters=0 in void android.net.connectivity.com.android.server.net.NetworkStatsService.noteUidForeground(int, boolean) for 894ms
+11-08 19:53:44.507  1330  1582 I AiAiEcho: Predicting[0]:  [CONTEXT sampling_count=5 ]
+11-08 19:53:44.508  1330  1582 I AiAiEcho: EchoTargets:
+11-08 19:53:44.508  1330  1582 I AiAiEcho: Filtered by AiAi flag check:
+11-08 19:53:44.508  1330  1582 I AiAiEcho: [CONTEXT ratelimit_period="10 SECONDS" ]
+11-08 19:53:44.508  1330  1582 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata:  [CONTEXT ratelimit_period="10 SECONDS" ]
+11-08 19:53:44.508  1330  1582 I AiAiEcho: #remoteViewsTwiddler: feature disabled.
+11-08 19:53:44.509  1330  1582 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface home with targets# 0 (types=[])
+11-08 19:53:44.579   345   418 I netd    : createNetworkCache(104) <154.70ms>
+11-08 19:53:44.579   345 11147 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bf8d30
+11-08 19:53:44.581  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 19:53:44.590  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=com.google.android.apps.nexuslauncher, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 19:53:44.590   345 11149 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bfaaf0
+11-08 19:53:44.593 11003 11018 D IdlingRegistry: Unregistering idling resources: [androidx.compose.ui.test.EspressoLink@38b9630]
+11-08 19:53:44.593   832   832 D TrafficStats: tagSocket(124) with statsTag=0xffffffff, statsUid=-1
+11-08 19:53:44.604   540   568 W system_server: Long monitor contention with owner android.imms (653) at com.android.internal.inputmethod.InputBindResult com.android.server.inputmethod.InputMethodManagerService.startInputOrWindowGainedFocus(int, com.android.internal.inputmethod.IInputMethodClient, android.os.IBinder, int, int, int, android.view.inputmethod.EditorInfo, com.android.internal.inputmethod.IRemoteInputConnection, com.android.internal.inputmethod.IRemoteAccessibilityInputConnection, int, int, android.window.ImeOnBackInvokedDispatcher)(InputMethodManagerService.java:3846) waiters=1 in void com.android.server.inputmethod.InputMethodManagerService$LocalServiceImpl.reportImeControl(android.os.IBinder) for 155ms
+11-08 19:53:44.622   345 11150 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+11-08 19:53:44.624   345 11151 I resolv  : res_nmkquery: (QUERY, IN, A)
+11-08 19:53:44.659   345 11151 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:53:44.659   345 11151 I resolv  : doQuery: rcode=0, ancount=0, return value=32
+11-08 19:53:44.667  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 19:53:44.703  1210  1210 D SsBaseTemplateCard: No text view can be set up
+11-08 19:53:44.707   345 11150 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:53:44.707   345 11150 I resolv  : doQuery: rcode=0, ancount=0, return value=32
+11-08 19:53:44.708  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 19:53:44.708  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 19:53:44.708  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 19:53:44.712  1210  1210 I SsBaseTemplateCard: Secondary card pane is null
+11-08 19:53:44.712   832 11143 D NetworkMonitor/103: PROBE_HTTPS https://www.google.com/generate_204 Probe failed with exception java.net.UnknownHostException: Unable to resolve host "www.google.com": No address associated with hostname
+11-08 19:53:44.735 11003 11018 I TestRunner: finished: anInvalidLegacySessionCannotSupplyTheDateForAnOtherwiseValidBookmark(ru.liturgyguide.ui.ArrivalFlowTest)

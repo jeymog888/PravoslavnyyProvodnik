@@ -1,0 +1,11 @@
+--- a/app/src/main/java/ru/liturgyguide/service/ChurchSelection.kt
++++ b/app/src/main/java/ru/liturgyguide/service/ChurchSelection.kt
+@@ -19,7 +19,7 @@
+             val context = readingContext?.let(ReadingContextCodec::validated) ?: return null
+             return churches.firstOrNull { it.id == context.parishId }
+         }
+-        if (hasPlaybackSnapshot || !hasLegacyReading) return null
++        if (hasPlaybackSnapshot) return null
+         return churches.firstOrNull { it.id == legacyDefaultId }
+     }
+ }

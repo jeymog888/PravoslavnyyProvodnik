@@ -1,0 +1,12 @@
+--- a/app/src/main/java/ru/liturgyguide/service/ServicePlaybackEngine.kt
++++ b/app/src/main/java/ru/liturgyguide/service/ServicePlaybackEngine.kt
+@@ -65,7 +65,8 @@
+         var offset = state.elapsedQuarterMillis
+         while (true) {
+             val duration = plan.durationQuarterMillis(index)
+-                ?: return state.copy(segmentIndex = index, elapsedQuarterMillis = 0, anchorMonotonicMillis = null)
++                ?: if (plan.segments[index] is PlaybackSegment.MissingReading) 0L
++                else return state.copy(segmentIndex = index, elapsedQuarterMillis = 0, anchorMonotonicMillis = null)
+             val toBoundary = duration - offset
+             if (remaining < toBoundary) return state.copy(segmentIndex = index, elapsedQuarterMillis = offset + remaining,
+                 anchorMonotonicMillis = nowMonotonicMillis)

@@ -1,0 +1,10 @@
+--- a/app/src/main/java/ru/liturgyguide/ui/ServicePlayerState.kt
++++ b/app/src/main/java/ru/liturgyguide/ui/ServicePlayerState.kt
+@@ -71,7 +71,6 @@
+     }
+ 
+     fun tick(expectedGeneration: Int) {
+-        if (expectedGeneration != generation) return
+         val previous = reading ?: return
+         if (!previous.state.isPlaying) return
+         val now = monotonicMillis()

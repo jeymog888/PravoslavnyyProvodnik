@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.service.StageMatcherTest" tests="14" skipped="0" failures="0" errors="0" timestamp="2026-11-08T16:52:42" hostname="MacBook-Air-Dmitrij.local" time="0.035">
+  <properties/>
+  <testcase name="a stale declared total cannot disagree with stage durations" classname="ru.liturgyguide.service.StageMatcherTest" time="0.001"/>
+  <testcase name="model maps both snake case duration fields" classname="ru.liturgyguide.service.StageMatcherTest" time="0.002"/>
+  <testcase name="missing nested text is rejected instead of violating Kotlin nullability" classname="ru.liturgyguide.service.StageMatcherTest" time="0.003"/>
+  <testcase name="invalid and empty guides fail with a load error" classname="ru.liturgyguide.service.StageMatcherTest" time="0.002"/>
+  <testcase name="packaged guide loads all stages and positive snake case durations" classname="ru.liturgyguide.service.StageMatcherTest" time="0.004"/>
+  <testcase name="prayer lines cannot silently disagree with either complete text" classname="ru.liturgyguide.service.StageMatcherTest" time="0.01"/>
+  <testcase name="stage order is normalized and navigation uses stable ids" classname="ru.liturgyguide.service.StageMatcherTest" time="0.001"/>
+  <testcase name="duplicate identity or order cannot create ambiguous navigation" classname="ru.liturgyguide.service.StageMatcherTest" time="0.001"/>
+  <testcase name="explicit empty null or incomplete prayer lines fail at content load" classname="ru.liturgyguide.service.StageMatcherTest" time="0.004"/>
+  <testcase name="optional prayer title is retained but a declared blank title is rejected" classname="ru.liturgyguide.service.StageMatcherTest" time="0.002"/>
+  <testcase name="zero negative and overflowing durations are rejected" classname="ru.liturgyguide.service.StageMatcherTest" time="0.001"/>
+  <testcase name="aligned prayer lines are validated and decoded without losing the legacy text" classname="ru.liturgyguide.service.StageMatcherTest" time="0.0"/>
+  <testcase name="missing required stage fields fail at load instead of in the screen" classname="ru.liturgyguide.service.StageMatcherTest" time="0.003"/>
+  <testcase name="missing or null lines remain compatible with legacy single blocks" classname="ru.liturgyguide.service.StageMatcherTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

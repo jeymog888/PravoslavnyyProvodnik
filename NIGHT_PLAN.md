@@ -172,3 +172,5 @@
 6.1: исправлены две ошибки memory-first commit у личного времени и сохраненных храмов/избранного. Неуспешная запись возвращает прежнее значение только своего ключа, без скрытого принятия данных. Astra и root приняли изменение. 335 unit + 16 UI PASS, failures/errors/skips=0. [Доказательства](verification/v0.5/s6-personal-rollback)
 
 6.2: harness проверяет owner/visibility только по отдельным OS-строкам. Исправлены две подмены через title, 61 Python check PASS, 14 ожидаемых отказов старого parser, root replay36/36. Astra ACCEPT. [Доказательства](verification/v0.5/s6-harness-owner)
+
+6.3: полный baseline01c625a - 335 unit +119 UI без failures/errors/skips, lint0errors/13warnings. Затем исправлены четыре устаревших абзаца справки о плеере, полноте текстов и внешнем поиске. Astra preflight принято. В отдельной копии три намеренные ошибки обнаружены точными assertions; baseline/restored3PASS и хеши исходников совпали. [Полный baseline](verification/v0.5/s6-full-baseline), [отрицательные контроли](verification/v0.5/s6-mutations)

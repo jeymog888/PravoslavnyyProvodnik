@@ -1,0 +1,450 @@
+11-08 19:53:25.800 11003 11018 I TestRunner: started: foreignOrCorruptContextRestoredInServiceRequiresANewExplicitChoice(ru.liturgyguide.ui.ArrivalFlowTest)
+11-08 19:53:26.031 11003 11018 W FileTestStorage: Output properties is not supported.
+11-08 19:53:26.032 11003 11018 I Tracing : Tracer added: class androidx.test.platform.tracing.AndroidXTracer
+11-08 19:53:26.041 11003 11003 D EventInjectionStrategy: Creating injection strategy with input manager.
+11-08 19:53:26.044 11003 11003 W ru.liturgyguide: Accessing hidden method Landroid/hardware/input/InputManager;->getInstance()Landroid/hardware/input/InputManager; (unsupported, reflection, allowed)
+11-08 19:53:26.048 11003 11003 W ru.liturgyguide: Accessing hidden method Landroid/hardware/input/InputManager;->injectInputEvent(Landroid/view/InputEvent;I)Z (unsupported, reflection, allowed)
+11-08 19:53:26.049 11003 11003 W ru.liturgyguide: Accessing hidden field Landroid/hardware/input/InputManager;->INJECT_INPUT_EVENT_MODE_WAIT_FOR_FINISH:I (unsupported, reflection, allowed)
+11-08 19:53:26.055 11003 11003 W ru.liturgyguide: Accessing hidden method Landroid/os/MessageQueue;->next()Landroid/os/Message; (unsupported, reflection, allowed)
+11-08 19:53:26.055 11003 11003 W ru.liturgyguide: Accessing hidden field Landroid/os/MessageQueue;->mMessages:Landroid/os/Message; (unsupported, reflection, allowed)
+11-08 19:53:26.055 11003 11003 W ru.liturgyguide: Accessing hidden method Landroid/os/Message;->recycleUnchecked()V (unsupported, reflection, allowed)
+11-08 19:53:26.056 11003 11018 D IdlingRegistry: Registering idling resources: [androidx.compose.ui.test.EspressoLink@4958221]
+11-08 19:53:26.085 11003 11018 W Settings: Setting always_finish_activities has moved from android.provider.Settings.System to android.provider.Settings.Global, returning read-only value.
+11-08 19:53:26.150   540  1185 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10303, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 19:53:26.272  1210  1210 W SplitSelectStateCtor: Missing session instanceIds
+11-08 19:53:26.279  1210  1210 D StatsLog: LAUNCHER_SPLIT_SELECTION_EXIT_INTERRUPTED
+11-08 19:53:26.321  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=2166, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10008000 cmp=ru.liturgyguide/androidx.activity.ComponentActivity }
+11-08 19:53:26.389   772   865 D SplashScreenView: Build android.window.SplashScreenView{af758ae V.E...... ......ID 0,0-0,0}
+11-08 19:53:26.389   772   865 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-08 19:53:26.389   772   865 D SplashScreenView: Branding: view: android.view.View{ce9f64f G.ED..... ......I. 0,0-0,0 #1020503 android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-08 19:53:26.468   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 19:53:26.665   442 10823 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:26.672 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@78364 in: PRE_ON_CREATE
+11-08 19:53:26.678 11003 11003 V ActivityScenario: Activity lifecycle changed event received but ignored because the reported transition was not ON_CREATE while the last known transition was PRE_ON_CREATE
+11-08 19:53:26.690  1210  1443 D EGL_emulation: app_time_stats: avg=8927.62ms min=8927.62ms max=8927.62ms count=1
+11-08 19:53:26.846 11003 11003 D CompatChangeReporter: Compat change id reported: 309578419; UID 10303; state: ENABLED
+11-08 19:53:26.880   345   419 I netd    : tetherGetStats() -> {[]} <163.88ms>
+11-08 19:53:26.976 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@78364 in: CREATED
+11-08 19:53:26.980 11003 11003 V ActivityScenario: Update currentActivityStage to CREATED, currentActivity=androidx.activity.ComponentActivity@78364
+11-08 19:53:26.989 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@78364 in: STARTED
+11-08 19:53:26.992  1210  1443 D EGL_emulation: app_time_stats: avg=197333.75ms min=185.90ms max=394481.56ms count=2
+11-08 19:53:27.058 11003 11003 V ActivityScenario: Update currentActivityStage to STARTED, currentActivity=androidx.activity.ComponentActivity@78364
+11-08 19:53:27.096  1210  1210 D VRI[NexusLauncherActivity]: visibilityChanged oldVisibility=true newVisibility=false
+11-08 19:53:27.379  1210  1210 D NexusLauncherModelDelegate: notifySmartspaceEvent: SmartspaceTargetEvent{mSmartspaceTarget=null, mSmartspaceActionId='null', mEventType=7}
+11-08 19:53:27.413 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@78364 in: RESUMED
+11-08 19:53:27.414 11003 11003 V ActivityScenario: Update currentActivityStage to RESUMED, currentActivity=androidx.activity.ComponentActivity@78364
+11-08 19:53:27.422   772   941 D EGL_emulation: app_time_stats: avg=22449.36ms min=22449.36ms max=22449.36ms count=1
+11-08 19:53:27.674 11003 11003 W HWUI    : Unknown dataspace 0
+11-08 19:53:27.943   345   419 I netd    : tetherGetStats() -> {[]} <29.55ms>
+11-08 19:53:27.956   386   963 W ServiceManagerCppClient: Permission failure: android.permission.ACCESS_SURFACE_FLINGER from uid=10303 pid=0
+11-08 19:53:27.956   386   963 D PermissionCache: checking android.permission.ACCESS_SURFACE_FLINGER for uid=10303 => denied (786 us)
+11-08 19:53:27.964   386   947 W ServiceManagerCppClient: Permission failure: android.permission.ROTATE_SURFACE_FLINGER from uid=10303 pid=11003
+11-08 19:53:27.964   386   947 D PermissionCache: checking android.permission.ROTATE_SURFACE_FLINGER for uid=10303 => denied (6561 us)
+11-08 19:53:27.965   386   947 W ServiceManagerCppClient: Permission failure: android.permission.INTERNAL_SYSTEM_WINDOW from uid=10303 pid=11003
+11-08 19:53:27.965   386   947 D PermissionCache: checking android.permission.INTERNAL_SYSTEM_WINDOW for uid=10303 => denied (496 us)
+11-08 19:53:27.966   386   963 W ServiceManagerCppClient: Permission failure: android.permission.ROTATE_SURFACE_FLINGER from uid=10303 pid=0
+11-08 19:53:27.966   386   963 D PermissionCache: checking android.permission.ROTATE_SURFACE_FLINGER for uid=10303 => denied (10287 us)
+11-08 19:53:27.970 11003 11021 I EGL_emulation: Opening libGLESv1_CM_emulation.so
+11-08 19:53:28.025 11003 11021 I EGL_emulation: Opening libGLESv2_emulation.so
+11-08 19:53:28.080 11003 11021 W HWUI    : Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+11-08 19:53:28.081 11003 11021 W HWUI    : Failed to initialize 101010-2 format, error = EGL_SUCCESS
+11-08 19:53:28.129   141   141 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+11-08 19:53:28.130 11003 11021 I Gralloc4: mapper 4.x is not supported
+11-08 19:53:28.282   540  1185 W ServiceManagerCppClient: Permission failure: android.permission.ACCESS_SURFACE_FLINGER from uid=10303 pid=0
+11-08 19:53:28.282   540  1185 D PermissionCache: checking android.permission.ACCESS_SURFACE_FLINGER for uid=10303 => denied (298 us)
+11-08 19:53:28.282   540  1185 W ServiceManagerCppClient: Permission failure: android.permission.ROTATE_SURFACE_FLINGER from uid=10303 pid=0
+11-08 19:53:28.282   540  1185 D PermissionCache: checking android.permission.ROTATE_SURFACE_FLINGER for uid=10303 => denied (24 us)
+11-08 19:53:28.283   540  1185 W ServiceManagerCppClient: Permission failure: android.permission.INTERNAL_SYSTEM_WINDOW from uid=10303 pid=0
+11-08 19:53:28.283   540  1185 D PermissionCache: checking android.permission.INTERNAL_SYSTEM_WINDOW for uid=10303 => denied (191 us)
+11-08 19:53:28.333   540   565 W ziparchive: Unable to open '/data/app/~~dsDWBr4Os_Y3MuvdFu0mdg==/ru.liturgyguide-hXIzSGTjPPe8_5tZdydMtg==/base.dm': No such file or directory
+11-08 19:53:28.362   540   565 I ActivityTaskManager: Displayed ru.liturgyguide/androidx.activity.ComponentActivity for user 0: +2s202ms
+11-08 19:53:28.374  1456  1463 W gle.android.gms: ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~dsDWBr4Os_Y3MuvdFu0mdg==/ru.liturgyguide-hXIzSGTjPPe8_5tZdydMtg==/base.apk' with 1 weak references
+11-08 19:53:28.463   540   653 I ImeTracker: ru.liturgyguide:35b9abe9: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 19:53:28.467   540   653 I ImeTracker: ru.liturgyguide:35b9abe9: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 19:53:28.503   772   855 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@d488861
+11-08 19:53:28.506   442 10823 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:28.534   540  1635 W InputManager-JNI: Input channel object '630b0cd Splash Screen ru.liturgyguide (client)' was disposed without first being removed with the input manager!
+11-08 19:53:28.571   974  1938 I FontLog : Received query Noto Color Emoji Compat, URI content://com.google.android.gms.fonts [CONTEXT service_id=132 ]
+11-08 19:53:28.573   974  1938 I FontLog : Query [emojicompat-emoji-font] resolved to {Noto Color Emoji Compat, wdth 100.0, wght 400, ital 0.0, bestEffort false} [CONTEXT service_id=132 ]
+11-08 19:53:28.619   974  1938 I FontLog : Fetch {Noto Color Emoji Compat, wdth 100.0, wght 400, ital 0.0, bestEffort false} end status Status{statusCode=SUCCESS, resolution=null} [CONTEXT service_id=132 ]
+11-08 19:53:28.653   974  1938 I FontLog : Pulling font file for id = 86, cache size = 4 [CONTEXT service_id=132 ]
+11-08 19:53:28.659  1210  1210 D BaseDepthController: setSurface:
+11-08 19:53:28.659  1210  1210 D BaseDepthController: 	mWaitingOnSurfaceValidity: false
+11-08 19:53:28.659  1210  1210 D BaseDepthController: 	mSurface: null
+11-08 19:53:28.660  1210  1210 D BaseDepthController: mSurface is null and mCurrentBlur is: 0
+11-08 19:53:28.667  1210  1210 D StateManager: goToState - fromState: Normal, toState: Normal, partial trace:
+11-08 19:53:28.667  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StateManager.moveToRestState(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:4)
+11-08 19:53:28.667  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StateManager.moveToRestState(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:1)
+11-08 19:53:28.667  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StatefulActivity.onStop(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:34)
+11-08 19:53:28.674  1210  1210 D StatsLog: LAUNCHER_ONSTOP
+11-08 19:53:28.692  1210  1210 D StatsLog: LAUNCHER_GOOGLE_SEARCH_RESTORE_LIST_SIZE_AFTER_ACTIVITY_RESTART
+11-08 19:53:28.720  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 19:53:28.728   772   941 D EGL_emulation: app_time_stats: avg=652.88ms min=87.13ms max=1218.62ms count=2
+11-08 19:53:28.734  1210  1578 D OneSearchSuggestProvider: Shut down the binder channel
+11-08 19:53:28.739  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 19:53:28.740  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 19:53:28.741  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 19:53:28.742  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 19:53:28.785  1271  1271 W NotificationCenter: NotificationCenter$ListenerData.notifyOnExecutor():672 Heavy notify work detected on UI thread: |kga->jjc| takes 35ms
+11-08 19:53:28.807   974  1938 I FontLog : Pulling font file for id = 86, cache size = 4 [CONTEXT service_id=132 ]
+11-08 19:53:28.812   540   688 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+11-08 19:53:28.856   540   688 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+11-08 19:53:28.856   540   688 D InetDiagMessage: Destroyed live tcp sockets for uids={10096} in 47ms
+11-08 19:53:29.290 11003 11007 I ru.liturgyguide: Compiler allocated 5250KB to compile void android.view.ViewRootImpl.performTraversals()
+11-08 19:53:29.337 11003 11003 I Choreographer: Skipped 31 frames!  The application may be doing too much work on its main thread.
+11-08 19:53:29.572 11003 11003 W ru.liturgyguide: Method boolean androidx.compose.runtime.snapshots.SnapshotStateList.conditionalUpdate(boolean, kotlin.jvm.functions.Function1) failed lock verification and will run slower.
+11-08 19:53:29.572 11003 11003 W ru.liturgyguide: Common causes for lock verification issues are non-optimized dex code
+11-08 19:53:29.572 11003 11003 W ru.liturgyguide: and incorrect proguard optimizations.
+11-08 19:53:29.572 11003 11003 W ru.liturgyguide: Method boolean androidx.compose.runtime.snapshots.SnapshotStateList.conditionalUpdate$default(androidx.compose.runtime.snapshots.SnapshotStateList, boolean, kotlin.jvm.functions.Function1, int, java.lang.Object) failed lock verification and will run slower.
+11-08 19:53:29.572 11003 11003 W ru.liturgyguide: Method java.lang.Object androidx.compose.runtime.snapshots.SnapshotStateList.mutate(kotlin.jvm.functions.Function1) failed lock verification and will run slower.
+11-08 19:53:29.573 11003 11003 W ru.liturgyguide: Method void androidx.compose.runtime.snapshots.SnapshotStateList.update(boolean, kotlin.jvm.functions.Function1) failed lock verification and will run slower.
+11-08 19:53:29.573 11003 11003 W ru.liturgyguide: Method void androidx.compose.runtime.snapshots.SnapshotStateList.update$default(androidx.compose.runtime.snapshots.SnapshotStateList, boolean, kotlin.jvm.functions.Function1, int, java.lang.Object) failed lock verification and will run slower.
+11-08 19:53:30.046 11003 11007 I ru.liturgyguide: Compiler allocated 8309KB to compile void ru.liturgyguide.ui.MainActivityKt.AppNavigation(ru.liturgyguide.di.AppContainer, java.time.Clock, kotlin.jvm.functions.Function0, androidx.compose.runtime.Composer, int, int)
+11-08 19:53:30.122 11003 11003 I Choreographer: Skipped 43 frames!  The application may be doing too much work on its main thread.
+11-08 19:53:30.388 11003 11031 I HWUI    : Davey! duration=1495ms; Flags=0, FrameTimelineVsyncId=1186180, IntendedVsync=19471383022916, Vsync=19471899689562, InputEventId=0, HandleInputStart=19471904781493, AnimationStart=19471904783826, PerformTraversalsStart=19471905787409, DrawStart=19472580882701, FrameDeadline=19471399689582, FrameInterval=19471903146743, FrameStartTime=16666666, SyncQueued=19472626384285, SyncStart=19472626781868, IssueDrawCommandsStart=19472627032743, SwapBuffers=19472758191160, FrameCompleted=19472878986952, DequeueBufferDuration=9125, QueueBufferDuration=43231416, GpuCompleted=19472878165743, SwapBuffersCompleted=19472878986952, DisplayPresentTime=0, CommandSubmissionCompleted=19472758191160,
+11-08 19:53:30.467  1210  1443 D EGL_emulation: app_time_stats: avg=1691.96ms min=744.68ms max=2639.23ms count=2
+11-08 19:53:31.306 11003 11003 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+11-08 19:53:31.306 11003 11003 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+11-08 19:53:31.558 11003 11003 I Choreographer: Skipped 40 frames!  The application may be doing too much work on its main thread.
+11-08 19:53:31.682 11003 11034 D ProfileInstaller: Installing profile for ru.liturgyguide
+11-08 19:53:31.690 11003 11021 D EGL_emulation: app_time_stats: avg=1142.13ms min=613.89ms max=2049.63ms count=3
+11-08 19:53:31.746 11003 11031 I HWUI    : Davey! duration=854ms; Flags=0, FrameTimelineVsyncId=1186262, IntendedVsync=19473449689500, Vsync=19474116356140, InputEventId=0, HandleInputStart=19474128236202, AnimationStart=19474128239535, PerformTraversalsStart=19474129318494, DrawStart=19474139912160, FrameDeadline=19473583022828, FrameInterval=19474123516327, FrameStartTime=16666666, SyncQueued=19474223945494, SyncStart=19474224445452, IssueDrawCommandsStart=19474226507119, SwapBuffers=19474245909994, FrameCompleted=19474304916411, DequeueBufferDuration=18833, QueueBufferDuration=6700500, GpuCompleted=19474304916411, SwapBuffersCompleted=19474256849536, DisplayPresentTime=0, CommandSubmissionCompleted=19474245909994,
+11-08 19:53:31.950  1210  1443 D EGL_emulation: app_time_stats: avg=1482.50ms min=1482.50ms max=1482.50ms count=1
+11-08 19:53:32.031 11003 11003 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+11-08 19:53:32.031 11003 11003 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+11-08 19:53:32.121   974 10858 E WakeLock: GCM_HB_ALARM release without a matched acquire!
+11-08 19:53:32.122   974 10858 W WakeLock: GCM_HB_ALARM counter does not exist
+11-08 19:53:32.157   974 10858 I AlarmManager: setExactAndAllowWhileIdle [name: GCM_CONN_ALARM type: 2 triggerAtMillis: 19483516]
+11-08 19:53:32.165   540   688 D ConnectivityService: reportNetworkConnectivity(102, false) by 10144
+11-08 19:53:32.171   974 10858 E WakeLock: GCM_CONN_ALARM release without a matched acquire!
+11-08 19:53:32.171   974 10858 W WakeLock: GCM_CONN_ALARM counter does not exist
+11-08 19:53:32.223   832  6563 D NetworkMonitor/102: Forcing reevaluation for UID 10144. Dns signal count: 0
+11-08 19:53:32.234   832 11036 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:32.244   832 11037 D TrafficStats: tagSocket(132) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:32.248   832 11037 D TrafficStats: tagSocket(132) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:32.248   832 11036 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:32.257   345 11038 I resolv  : ResNSendHandler::run: 0 / {102 983142 102 983142 1073 1}
+11-08 19:53:32.260   345 11039 I resolv  : ResNSendHandler::run: 0 / {102 983142 102 983142 1073 1}
+11-08 19:53:32.263   345 11040 I resolv  : ResNSendHandler::run: 0 / {102 983142 102 983142 1073 1}
+11-08 19:53:32.270   345 11041 I resolv  : ResNSendHandler::run: 0 / {102 983142 102 983142 1073 1}
+11-08 19:53:32.280   345 11041 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:53:32.282   345 11039 I resolv  : res_nsend: used send_dg 75 terrno: 0
+11-08 19:53:32.349   345 11040 I resolv  : res_nsend: used send_dg 63 terrno: 0
+11-08 19:53:32.388   832   832 D TrafficStats: tagSocket(124) with statsTag=0xffffffff, statsUid=-1
+11-08 19:53:32.390   832   832 D TrafficStats: tagSocket(124) with statsTag=0xffffffff, statsUid=-1
+11-08 19:53:32.399   832 11037 D NetworkMonitor/102: PROBE_DNS connectivitycheck.gstatic.com 156ms OK 142.251.150.120,2001:4860:4826:7800::
+11-08 19:53:32.411   345 11038 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:53:32.425   832 11036 D NetworkMonitor/102: PROBE_DNS www.google.com 184ms FAIL in type ADDRCONFIG java.net.UnknownHostException
+11-08 19:53:32.440   345 11042 I resolv  : GetAddrInfoHandler::run: {102 983142 102 983142 1073 1}
+11-08 19:53:32.441   345 11043 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+11-08 19:53:32.441   345 11043 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bfc290
+11-08 19:53:32.441   345 11043 I resolv  : doQuery: rcode=0, ancount=1, return value=75
+11-08 19:53:32.441   345 11044 I resolv  : res_nmkquery: (QUERY, IN, A)
+11-08 19:53:32.441   345 11044 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bfc610
+11-08 19:53:32.441   345 11044 I resolv  : doQuery: rcode=0, ancount=1, return value=63
+11-08 19:53:32.467   832 11037 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:32.474   345 11046 I resolv  : GetAddrInfoHandler::run: {102 983142 102 983142 1073 1}
+11-08 19:53:32.475   345 11047 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+11-08 19:53:32.475   345 11048 I resolv  : res_nmkquery: (QUERY, IN, A)
+11-08 19:53:32.492   345 11047 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:53:32.492   345 11047 I resolv  : doQuery: rcode=0, ancount=0, return value=32
+11-08 19:53:32.500   345 11048 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:53:32.500   345 11048 I resolv  : doQuery: rcode=0, ancount=0, return value=32
+11-08 19:53:32.505   832 11036 D NetworkMonitor/102: PROBE_HTTPS https://www.google.com/generate_204 Probe failed with exception java.net.UnknownHostException: Unable to resolve host "www.google.com": No address associated with hostname
+11-08 19:53:32.646   832 11037 D NetworkMonitor/102: PROBE_HTTP http://connectivitycheck.gstatic.com/generate_204 time=210ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Sun, 08 Nov 2026 16:53:32 GMT], X-Android-Received-Millis=[1794156812646], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1794156812478]}
+11-08 19:53:32.648   345 11049 I resolv  : GetAddrInfoHandler::run: {102 983142 102 983142 1073 1}
+11-08 19:53:32.649   345 11050 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+11-08 19:53:32.649   345 11051 I resolv  : res_nmkquery: (QUERY, IN, A)
+11-08 19:53:32.654   345 11050 I resolv  : res_nsend: used send_dg 261 terrno: 0
+11-08 19:53:32.654   345 11050 I resolv  : doQuery: rcode=0, ancount=8, return value=261
+11-08 19:53:32.658   345 11051 I resolv  : res_nsend: used send_dg 165 terrno: 0
+11-08 19:53:32.658   345 11051 I resolv  : doQuery: rcode=0, ancount=8, return value=165
+11-08 19:53:32.663   832 11035 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:32.717 11003 11021 D EGL_emulation: app_time_stats: avg=341.95ms min=172.23ms max=448.34ms count=3
+11-08 19:53:32.850   540   688 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+11-08 19:53:32.851   540   688 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+11-08 19:53:32.851   540   688 D InetDiagMessage: Destroyed live tcp sockets for uids={10138} in 2ms
+11-08 19:53:32.851   540   688 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+11-08 19:53:32.851   540   688 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+11-08 19:53:32.851   540   688 D InetDiagMessage: Destroyed live tcp sockets for uids={20138} in 0ms
+11-08 19:53:32.878 11003 11007 I ru.liturgyguide: Compiler allocated 4207KB to compile void ru.liturgyguide.ui.MainActivityKt$AppNavigation$7$1$1$1.invoke(androidx.compose.runtime.Composer, int)
+11-08 19:53:32.884   832 11035 D NetworkMonitor/102: PROBE_FALLBACK http://play.googleapis.com/generate_204 time=238ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Sun, 08 Nov 2026 16:53:32 GMT], X-Android-Received-Millis=[1794156812884], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1794156812679]}
+11-08 19:53:32.887   832 11035 D NetworkMonitor/102: isCaptivePortal: isSuccessful()=false isPortal()=false RedirectUrl=null isPartialConnectivity()=true Time=659ms
+11-08 19:53:32.889   540   688 D ConnectivityService: [102 CELLULAR] validation failed
+11-08 19:53:32.889   540   688 I ConnectivityService: Update capabilities for net 102 : -VALIDATED+PARTIAL_CONNECTIVITY
+11-08 19:53:32.889   540   688 I ConnectivityService: Update score for net 102 : -IS_VALIDATED
+11-08 19:53:32.890 11003 11003 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+11-08 19:53:32.890 11003 11003 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+11-08 19:53:32.892   540   688 D ConnectivityService: Switching to new default network for: uid/pid:1000/540 activeRequest: 1 callbackRequest: 1 [NetworkRequest [ REQUEST id=1, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ]] callback flags: 1 order: 2147483647 isUidTracked: false using NetworkAgentInfo{network{103}  handle{445787328525}  ni{WIFI CONNECTED extra: } created=2026-11-08T12:15:18.982Z Score(Policies : TRANSPORT_PRIMARY&EVER_EVALUATED&IS_UNMETERED&EVER_VALIDATED ; KeepConnected : 0)  created 2781658 firstValidated 2781958 partialConnectivity 19391863  lp{{InterfaceName: wlan0 LinkAddresses: [ fe80::a0f2:cf53:fb70:ab4c/64,10.0.2.16/24,fec0::f2d9:df2:dabc:786d/64,fec0::5947:7611:abf2:e3c3/64 ] DnsAddresses: [ /10.0.2.3 ] Domains: null MTU: 0 ServerAddress: /10.0.2.2 TcpBufferSizes: 524288,1048576,2097152,262144,524288,1048576 Routes: [ fe80::/64 -> :: wlan0 mtu 0,::/0 -> fe80::2 wlan0 mtu 0,fec0::/64 -> :: wlan0 mtu 0,10.0.2.0/24 -> 0.0.0.0 wlan0 mtu 0,0.0.0.0/0 -> 10.0.2.2 wlan0 mtu 0 ]}}  nc{[ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&PARTIAL_CONNECTIVITY&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED LinkUpBandwidth>=12000Kbps LinkDnBandwidth>=30000Kbps Specifier: <WifiNetworkAgentSpecifier [WifiConfiguration=, SSID="AndroidWifi", BSSID=02:15:b2:00:00:01, band=1, mMatchLocalOnlySpecifiers=false]> TransportInfo: <SSID: "AndroidWifi", BSSID: 02:15:b2:00:00:01, MAC: 02:15:b2:00:00:00, IP: /10.0.2.16, Security type: 0, Supplicant state: COMPLETED, Wi-Fi standard: legacy, RSSI: -50, Link speed: 18Mbps, Tx Link speed: 18Mbps, Max Supported Tx Link speed: 54Mbps, Rx Link speed: 2Mbps, Max Supported Rx Link speed: 54Mbps, Frequency: 2437MHz, Net ID: 0, Metered hint: false, score: 60, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: 1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none>"AndroidWifi"openMLO Information: , Is TID-To-Link negotiation supported by the AP: false, AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>, Vendor Data: <none>> SignalStrength: -50 OwnerUid: 10171 AdminUids: [10171] SSID: "AndroidWifi" UnderlyingNetworks: Null]}  factorySerialNumber=5}
+11-08 19:53:32.895   345   419 I netd    : networkSetDefault(103) <2.28ms>
+11-08 19:53:32.898   345   419 I netd    : setTcpRWmemorySize(524288 1048576 2097152, 262144 524288 1048576) <0.92ms>
+11-08 19:53:32.936   345   419 I netd    : tetherGetStats() -> {[]} <7.66ms>
+11-08 19:53:32.953   540   688 D ConnectivityService: Switching to new default network for: uid/pid:1000/540 activeRequest: 10 callbackRequest: 10 [NetworkRequest [ TRACK_DEFAULT id=10, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10135 RequestorUid: 1000 RequestorPkg: android UnderlyingNetworks: Null] ], NetworkRequest [ REQUEST id=11, [ Transports: SATELLITE Capabilities: INTERNET&TRUSTED&NOT_VPN&NOT_VCN_MANAGED Uid: 10135 UnderlyingNetworks: Null] ]] callback flags: 0 order: 40 isUidTracked: false using NetworkAgentInfo{network{103}  handle{445787328525}  ni{WIFI CONNECTED extra: } created=2026-11-08T12:15:18.982Z Score(Policies : TRANSPORT_PRIMARY&EVER_EVALUATED&IS_UNMETERED&EVER_VALIDATED ; KeepConnected : 0)  created 2781658 firstValidated 2781958 partialConnectivity 19391863  lp{{InterfaceName: wlan0 LinkAddresses: [ fe80::a0f2:cf53:fb70:ab4c/64,10.0.2.16/24,fec0::f2d9:df2:dabc:786d/64,fec0::5947:7611:abf2:e3c3/64 ] DnsAddresses: [ /10.0.2.3 ] Domains: null MTU: 0 ServerAddress: /10.0.2.2 TcpBufferSizes: 524288,1048576,2097152,262144,524288,1048576 Routes: [ fe80::/64 -> :: wlan0 mtu 0,::/0 -> fe80::2 wlan0 mtu 0,fec0::/64 -> :: wlan0 mtu 0,10.0.2.0/24 -> 0.0.0.0 wlan0 mtu 0,0.0.0.0/0 -> 10.0.2.2 wlan0 mtu 0 ]}}  nc{[ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&PARTIAL_CONNECTIVITY&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED LinkUpBandwidth>=12000Kbps LinkDnBandwidth>=30000Kbps Specifier: <WifiNetworkAgentSpecifier [WifiConfiguration=, SSID="AndroidWifi", BSSID=02:15:b2:00:00:01, band=1, mMatchLocalOnlySpecifiers=false]> TransportInfo: <SSID: "AndroidWifi", BSSID: 02:15:b2:00:00:01, MAC: 02:15:b2:00:00:00, IP: /10.0.2.16, Security type: 0, Supplicant state: COMPLETED, Wi-Fi standard: legacy, RSSI: -50, Link speed: 18Mbps, Tx Link speed: 18Mbps, Max Supported Tx Link speed: 54Mbps, Rx Link speed: 2Mbps, Max Supported Rx Link speed: 54Mbps, Frequency: 2437MHz, Net ID: 0, Metered hint: false, score: 60, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: 1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none>"AndroidWifi"openMLO Information: , Is TID-To-Link negotiation supported by the AP: false, AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>, Vendor Data: <none>> SignalStrength: -50 OwnerUid: 10171 AdminUids: [10171] SSID: "AndroidWifi" UnderlyingNetworks: Null]}  factorySerialNumber=5}
+11-08 19:53:32.959   345   419 I netd    : networkAddUidRangesParcel(NativeUidRangeConfig{netId: 103, uidRanges: [UidRangeParcel{start: 10135, stop: 10135}], subPriority: 40}) <0.40ms>
+11-08 19:53:32.962   345   419 I netd    : networkRemoveUidRangesParcel(NativeUidRangeConfig{netId: 102, uidRanges: [UidRangeParcel{start: 10135, stop: 10135}], subPriority: 40}) <2.46ms>
+11-08 19:53:32.965   832   973 D UpstreamNetworkMonitor: New default Internet network: 103
+11-08 19:53:32.965   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:32.966   345   418 I netd    : bandwidthRemoveInterfaceQuota(eth0) <8.89ms>
+11-08 19:53:32.970   345   418 I netd    : bandwidthSetInterfaceQuota(eth0, 9223372036854775807) <2.11ms>
+11-08 19:53:32.988   345   418 I netd    : bandwidthRemoveInterfaceQuota(eth0) <0.42ms>
+11-08 19:53:32.992   345   418 I netd    : bandwidthSetInterfaceQuota(eth0, 9223372036854775807) <0.42ms>
+11-08 19:53:32.999   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:33.003   540   717 D NetworkTimeUpdateService: New default network 103; checking time.
+11-08 19:53:33.060   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:33.062   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:33.064   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:33.120   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:33.179   345   418 I Netd    : Destroyed 1 sockets for netId 102 permission=1 in 1817us
+11-08 19:53:33.180   540   565 I GnssNetworkConnectivityHandler: Network connection lost. Available networks count: 0
+11-08 19:53:33.181   540   565 I GnssNetworkConnectivityHandler: updateNetworkState, state=CLOSED, connected=false, network=102, capabilityFlags=2, availableNetworkCount: 0
+11-08 19:53:33.197   345   418 I netd    : networkSetPermissionForNetwork(102, 1) <20.39ms>
+11-08 19:53:33.199   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:33.209  1456 10405 V NativeCrypto: Read error: ssl=0xb4000077240f9198: I/O error during system call, Software caused connection abort
+11-08 19:53:33.230   876  1060 D com.android.ons.ONSProfileActivator: Internet connection lost
+11-08 19:53:33.232 11003 11003 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+11-08 19:53:33.232 11003 11003 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+11-08 19:53:33.252   345 11052 I resolv  : GetAddrInfoHandler::run: {103 786535 103 983143 10144 0}
+11-08 19:53:33.254  1456 10810 V NativeCrypto: Write error: ssl=0xb4000077240f9198: I/O error during system call, Broken pipe
+11-08 19:53:33.255  1456 10810 V NativeCrypto: SSL shutdown failed: ssl=0xb4000077240f9198: I/O error during system call, Success
+11-08 19:53:33.256   345 11054 I resolv  : res_nmkquery: (QUERY, IN, A)
+11-08 19:53:33.256   345 11053 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+11-08 19:53:33.264  1210  1443 D EGL_emulation: app_time_stats: avg=656.72ms min=474.87ms max=838.56ms count=2
+11-08 19:53:33.278   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:33.278   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:33.278   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:33.279   540   688 D ConnectivityService: Sending DISCONNECTED broadcast for type 0 [102 CELLULAR] isDefaultNetwork=true
+11-08 19:53:33.299   772   910 W ndroid.systemui: Long monitor contention with owner WifiPickerTracker-WifiRepository (1024) at boolean android.os.MessageQueue.enqueueMessage(android.os.Message, long)(MessageQueue.java:695) waiters=0 in boolean android.os.MessageQueue.enqueueMessage(android.os.Message, long) for 319ms
+11-08 19:53:33.305   540   688 D ConnectivityService: Sending CONNECTED broadcast for type 1 [103 WIFI] isDefaultNetwork=true
+11-08 19:53:33.306   540   688 D ConnectivityService: NetReassign [31 : 102 → 103, 57 : 102 → 103, 6 : 102 → 103, 39 : 102 → 103, 16 : 102 → 103, 24 : 102 → 103, 78 : 102 → 103, 94 : 102 → 103, 18 : 102 → 103, 46 : 102 → 103, 123 : 102 → 103, 67 : 102 → 103, 106 : 102 → 103, 65 : 102 → 103, 55 : 102 → 103, 29 : 102 → 103, 91 : 102 → 103, 20 : 102 → 103, 27 : 102 → 103, 110 : 102 → 103, 128 : 102 → 103, 1 : 102 → 103, 52 : 102 → 103, 50 : 102 → 103, 35 : 102 → 103, 213 : 102 → 103, 121 : 102 → 103, 22 : 102 → 103, 72 : 102 → 103, 108 : 102 → 103, 86 : 102 → 103, 10 : 102 → 103, 84 : 102 → 103, 33 : 102 → 103, 63 : 102 → 103, 134 : 102 → 103, 60 : 102 → 103, 41 : 102 → 103, 32 : 102 → 103, 99 : 102 → 103, 89 : 102 → 103, 75 : 102 → 103] [c 1] [a 416] [i 0]
+11-08 19:53:33.307   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:33.308   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:33.308   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:33.308   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:33.308   540   688 D ConnectivityService: handleNetworkUnvalidated [102 CELLULAR] cap=[ Transports: CELLULAR Capabilities: MMS&SUPL&IA&XCAP&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&NOT_ROAMING&NOT_CONGESTED&NOT_SUSPENDED&PARTIAL_CONNECTIVITY&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED LinkUpBandwidth>=1800Kbps LinkDnBandwidth>=4300Kbps Specifier: <TelephonyNetworkSpecifier [mSubId = 1]> SubscriptionIds: {1} UnderlyingNetworks: Null]
+11-08 19:53:33.320   345 11053 I resolv  : res_nsend: used send_dg 272 terrno: 0
+11-08 19:53:33.320   345 11053 I resolv  : doQuery: rcode=0, ancount=8, return value=272
+11-08 19:53:33.345   772   941 D EGL_emulation: app_time_stats: avg=2277.32ms min=62.47ms max=4492.16ms count=2
+11-08 19:53:33.436  1372  2105 I BugleRcsEngine: handleMessage processing message:[NOTIFY_UPTIME_IGNORE_STATE_CHANGED] with [non-null]:RcsEngineImpl reference [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[cc7f0e4f-7073]>Handler" thread_id=65 ]
+11-08 19:53:33.438  1372  1741 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=57 ]
+11-08 19:53:33.439  1372  1741 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=57 ]
+11-08 19:53:33.731   876   879 W m.android.phone: Missing inline cache for void android.net.NetworkAgent$NetworkAgentHandler.handleMessage(android.os.Message)
+11-08 19:53:34.078  1271 11056 I DeviceStatusMonitor: DeviceStatusMonitor.handleBroadcast():123 onReceive() : Action = android.net.conn.CONNECTIVITY_CHANGE
+11-08 19:53:34.189  1271 11056 I DeviceStatusMonitor: DeviceStatusMonitor.notifyIfNetworkChanged():180 notifyIfNetworkChanged: newState = NON_METERED, airplaneModeOn = false, notifyAnyway = false
+11-08 19:53:34.192  1271 11056 I DeviceStatusMonitor: DeviceStatusMonitor.handleBroadcast():123 onReceive() : Action = android.net.conn.CONNECTIVITY_CHANGE
+11-08 19:53:34.210  1271 11059 I NetworkInfoNotification: NetworkInfoNotification$Listener.onReceive():107 onNetworkAvailable: networkState = NON_METERED, isAirplaneModeOn = false
+11-08 19:53:34.212  1271  1271 I NetworkInfoNotification: NetworkInfoNotification$Listener.onReceive():107 onNetworkAvailable: networkState = NON_METERED, isAirplaneModeOn = false
+11-08 19:53:34.240  1271 11060 I NetworkInfoNotification: NetworkInfoNotification$Listener.onReceive():107 onNetworkAvailable: networkState = NON_METERED, isAirplaneModeOn = false
+11-08 19:53:34.241  1271  1271 W NotificationCenter: NotificationCenter$ListenerData.notifyOnExecutor():672 Heavy notify work detected on UI thread: |lpb->ipy| takes 41ms
+11-08 19:53:34.241  1271  1271 I NetworkInfoNotification: NetworkInfoNotification$Listener.onReceive():107 onNetworkAvailable: networkState = NON_METERED, isAirplaneModeOn = false
+11-08 19:53:34.241  1271  1271 I NetworkInfoNotification: NetworkInfoNotification$Listener.onReceive():107 onNetworkAvailable: networkState = NON_METERED, isAirplaneModeOn = false
+11-08 19:53:34.241  1271  1271 I NetworkInfoNotification: NetworkInfoNotification$Listener.onReceive():107 onNetworkAvailable: networkState = NON_METERED, isAirplaneModeOn = false
+11-08 19:53:34.242  1271  1271 I NetworkInfoNotification: NetworkInfoNotification$Listener.onReceive():107 onNetworkAvailable: networkState = NON_METERED, isAirplaneModeOn = false
+11-08 19:53:34.244  1271  1271 I NetworkInfoNotification: NetworkInfoNotification$Listener.onReceive():107 onNetworkAvailable: networkState = NON_METERED, isAirplaneModeOn = false
+11-08 19:53:34.244  1271  1271 I HandwritingOnlineSuperpacks: HandwritingOnlineSuperpacks$1.onNetworkAvailable():72 onNetworkAvailable
+11-08 19:53:34.246  1271  1271 I HandwritingSuperpacks: HandwritingSuperpacks.register():273 register(): version '86', url 'https://dl.google.com/handwriting/models/handwriting_release.superpack_manifest.20231127.json' [ONLINE]
+11-08 19:53:34.254  1271  1626 I SP      : Registering handwriting_recognition.86, url: https://dl.google.com/handwriting/models/handwriting_release.superpack_manifest.20231127.json, constraints: m:*:*:*, flags: fg, requested: 86, current: 86
+11-08 19:53:34.278  1271 11056 I DeviceStatusMonitor: DeviceStatusMonitor.notifyIfNetworkChanged():180 notifyIfNetworkChanged: newState = NON_METERED, airplaneModeOn = false, notifyAnyway = false
+11-08 19:53:34.285   345   418 I netd    : bandwidthRemoveInterfaceQuota(eth0) <13.40ms>
+11-08 19:53:34.297   345   418 I netd    : bandwidthSetInterfaceQuota(eth0, 9223372036854775807) <2.08ms>
+11-08 19:53:34.307   832 11061 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:34.320   345   418 I netd    : bandwidthRemoveInterfaceQuota(eth0) <1.24ms>
+11-08 19:53:34.322   345   418 I netd    : bandwidthSetInterfaceQuota(eth0, 9223372036854775807) <1.58ms>
+11-08 19:53:34.327   832 11061 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:34.329   832 11058 D TrafficStats: tagSocket(125) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:34.331   832 11058 D TrafficStats: tagSocket(125) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:34.343   345 11063 I resolv  : ResNSendHandler::run: 0 / {102 983142 102 983142 1073 1}
+11-08 19:53:34.345   345 11064 I resolv  : ResNSendHandler::run: 0 / {102 983142 102 983142 1073 1}
+11-08 19:53:34.345   345 11064 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bfc290
+11-08 19:53:34.347   345 11065 I resolv  : ResNSendHandler::run: 0 / {102 983142 102 983142 1073 1}
+11-08 19:53:34.347   345 11065 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bfc610
+11-08 19:53:34.351   345 11063 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:53:34.366   540   688 D ConnectivityService: [102 CELLULAR] EVENT_NETWORK_INFO_CHANGED, going from CONNECTED to DISCONNECTED
+11-08 19:53:34.367   540   688 D ConnectivityService: [102 CELLULAR] disconnected, was satisfying 17
+11-08 19:53:34.367   832   832 D TrafficStats: tagSocket(124) with statsTag=0xffffffff, statsUid=-1
+11-08 19:53:34.373  1372  2105 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=65 ]
+11-08 19:53:34.378   832   832 D TrafficStats: tagSocket(124) with statsTag=0xffffffff, statsUid=-1
+11-08 19:53:34.378   345 11067 I resolv  : ResNSendHandler::run: 0 / {102 983142 102 983142 1073 1}
+11-08 19:53:34.384   345 11067 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:53:34.391   974  2117 I NearbyDiscovery: FastPairHandler: Received action android.net.conn.CONNECTIVITY_CHANGE [CONTEXT service_id=265 ]
+11-08 19:53:34.391   974  2117 I NearbyDiscovery: FastPairHandler: Received action android.net.conn.CONNECTIVITY_CHANGE [CONTEXT service_id=265 ]
+11-08 19:53:34.392   832 11058 D NetworkMonitor/102: PROBE_DNS www.google.com 64ms FAIL in type ADDRCONFIG java.net.UnknownHostException
+11-08 19:53:34.394   832 11061 D NetworkMonitor/102: PROBE_DNS connectivitycheck.gstatic.com 87ms OK 142.251.150.120,2001:4860:4826:7800::
+11-08 19:53:34.401   832 11061 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:34.402   832 11058 D NetworkMonitor/102: PROBE_HTTPS https://www.google.com/generate_204 Probe failed with exception java.net.UnknownHostException: Unable to resolve host "www.google.com": No address associated with hostname
+11-08 19:53:34.406  1372  2105 I BugleRcsEngine: handleMessage processing message:[NOTIFY_UPTIME_IGNORE_STATE_CHANGED] with [non-null]:RcsEngineImpl reference [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[cc7f0e4f-7073]>Handler" thread_id=65 ]
+11-08 19:53:34.433   345   418 I netd    : idletimerRemoveInterface(eth0, 10, 102) <36.25ms>
+11-08 19:53:34.449  1372  2105 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=65 ]
+11-08 19:53:34.465   540  1635 D TelephonyManager: requestModemActivityInfo: Sending result to app: ModemActivityInfo{ mTimestamp=19477029 mSleepTimeMs=0 mIdleTimeMs=19476976 mActivityStatsTechSpecificInfo=[{mRat=UNKNOWN,mFrequencyRange=UNKNOWN,mTxTimeMs[]=[0, 0, 0, 0, 0],mRxTimeMs=0}]}
+11-08 19:53:34.477 11003 11008 I ru.liturgyguide: Background concurrent mark compact GC freed 21MB AllocSpace bytes, 25(1176KB) LOS objects, 49% free, 9421KB/18MB, paused 1.704ms,12.027ms total 1.356s
+11-08 19:53:34.488   345 11072 I resolv  : GetAddrInfoHandler::run: {103 786535 103 983143 10144 0}
+11-08 19:53:34.490  1271 11066 I HandwritingOnlineSuperpacks: HandwritingOnlineSuperpacks$2.apply():184 syncPackMapping()
+11-08 19:53:34.491   345 11074 I resolv  : res_nmkquery: (QUERY, IN, A)
+11-08 19:53:34.492   345 11073 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+11-08 19:53:34.505   345   418 I netd    : tetherGetStats() -> {[]} <3.05ms>
+11-08 19:53:34.508   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:34.510   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:34.511   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:34.520   540   768 D NetworkStatsObservers: Unregistering RequestInfo from pid/uid:540/1000(android) for DataUsageRequest [ requestId=21, networkTemplate=NetworkTemplate: matchRule=MOBILE, matchSubscriberIds=[310260...], matchWifiNetworkKeys=[], metered=YES, defaultNetwork=NO, thresholdInBytes=3147057 ] accessLevel:3
+11-08 19:53:34.522 11003 11021 D EGL_emulation: app_time_stats: avg=451.25ms min=68.52ms max=920.83ms count=4
+11-08 19:53:34.545   345   418 I netd    : wakeupDelInterface(eth0, 441492361229:eth0, -2147483648, -2147483648) <20.68ms>
+11-08 19:53:34.570   345   418 I netd    : setNetworkAllowlist([NativeUidRangeConfig{netId: 103, uidRanges: [UidRangeParcel{start: 0, stop: 99999}], subPriority: 0}]) <0.02ms>
+11-08 19:53:34.572   540   688 D ConnectivityService: NetReassign [no changes] [c 0] [a 1] [i 0]
+11-08 19:53:34.587   345 11073 I resolv  : res_nsend: used send_dg 62 terrno: 0
+11-08 19:53:34.587   345 11073 I resolv  : doQuery: rcode=0, ancount=1, return value=62
+11-08 19:53:34.593   345 11074 I resolv  : res_nsend: used send_dg 50 terrno: 0
+11-08 19:53:34.593   345 11074 I resolv  : doQuery: rcode=0, ancount=1, return value=50
+11-08 19:53:34.593   345   419 I netd    : tetherGetStats() -> {[]} <0.34ms>
+11-08 19:53:34.597   832 11061 D NetworkMonitor/102: PROBE_HTTP http://connectivitycheck.gstatic.com/generate_204 time=197ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Sun, 08 Nov 2026 16:53:34 GMT], X-Android-Received-Millis=[1794156814596], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1794156814406]}
+11-08 19:53:34.605   345   418 I netd    : networkDestroy(102) <32.06ms>
+11-08 19:53:34.650   832 11057 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:34.658   345   418 I resolv  : DNS cache flushed
+11-08 19:53:34.658   345   418 W resolv  : resolv_stats_set_addrs: Network 102 not found for PROTO_DOT
+11-08 19:53:34.661  1271  1626 I HandwritingSlicingStrategy: HandwritingSlicingStrategy.getSlices():44 getSlices(): handwriting_recognition.86 useForeground=true
+11-08 19:53:34.662   345   418 W resolv  : resolv_stats_set_addrs: Network 102 not found for PROTO_DOH
+11-08 19:53:34.665   345   418 I netd    : destroyNetworkCache(102) <48.48ms>
+11-08 19:53:34.669  1271  1626 I HandwritingSlicingStrategy: HandwritingSlicingStrategy.getSlices():103 getSlices(): result {slices=[{handwriting_recognition:pack_mapping_v1_lstm_20231127, m:*:*:*, fg}, {handwriting_recognition:transformer_latin_tflite_20231010_zip, m:*:*:*, fg}, {handwriting_recognition:qrnn_en_us_reco_20231010_fst_20230613_recospec_zip, m:*:*:*, fg}, {handwriting_recognition:transformer_latin_conf_tflite_20231010_zip, m:*:*:*, fg}, {handwriting_recognition:transformer_latin_seg_tflite_20231010_zip, m:*:*:*, fg}, {handwriting_recognition:en_us_20230613_compact_fst_zip, m:*:*:*, fg}, {handwriting_recognition:scribe_latin_20231123_tflite_zip, m:*:*:*, fg}, {handwriting_recognition:scribe_latin_20231123_recospec_zip, m:*:*:*, fg}], last batch=true, sync metadata=false}
+11-08 19:53:34.670   540  1618 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10304, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 19:53:34.675  1271  1626 I SP      : Syncing handwriting_recognition (86) with slices: [{pack_mapping_v1_lstm_20231127, m:*:*:*, fg}, {transformer_latin_tflite_20231010_zip, m:*:*:*, fg}, {qrnn_en_us_reco_20231010_fst_20230613_recospec_zip, m:*:*:*, fg}, {transformer_latin_conf_tflite_20231010_zip, m:*:*:*, fg}, {transformer_latin_seg_tflite_20231010_zip, m:*:*:*, fg}, {en_us_20230613_compact_fst_zip, m:*:*:*, fg}, {scribe_latin_20231123_tflite_zip, m:*:*:*, fg}, {scribe_latin_20231123_recospec_zip, m:*:*:*, fg}], metadata: false
+11-08 19:53:34.704 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@78364 in: PAUSED
+11-08 19:53:34.704 11003 11003 V ActivityScenario: Update currentActivityStage to PAUSED, currentActivity=androidx.activity.ComponentActivity@78364
+11-08 19:53:34.715   832 11057 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:34.717  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=2167, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10000000 cmp=ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity }
+11-08 19:53:34.722   974  5125 D TrafficStats: tagSocket(-1) with statsTag=0x30000407, statsUid=-1
+11-08 19:53:34.722   974  5125 I TrafficStats: tagSocketFd(-1, 805307399, -1) failed with errno-9
+11-08 19:53:34.722   974  5125 D TrafficStats: tagSocket(112) with statsTag=0x30000407, statsUid=-1
+11-08 19:53:34.733   540   568 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10304, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 19:53:34.771   772   865 D SplashScreenView: Build android.window.SplashScreenView{70d6e40 V.E...... ......ID 0,0-0,0}
+11-08 19:53:34.771   772   865 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-08 19:53:34.771   772   865 D SplashScreenView: Branding: view: android.view.View{dcfa179 G.ED..... ......I. 0,0-0,0 #1020503 android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-08 19:53:34.775   832 11057 D NetworkMonitor/102: PROBE_FALLBACK http://play.googleapis.com/generate_204 Probe failed with exception java.net.SocketException: Binding socket to network 102 failed: EPERM (Operation not permitted)
+11-08 19:53:34.788   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 19:53:34.803   345   418 I netd    : tetherGetStats() -> {[]} <0.31ms>
+11-08 19:53:34.820   832 11057 D NetworkMonitor/102: isCaptivePortal: isSuccessful()=false isPortal()=false RedirectUrl=null isPartialConnectivity()=true Time=642ms
+11-08 19:53:34.853   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:34.854   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:34.888   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:34.890   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:34.890   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:34.890   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:34.890   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:34.890   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:34.918  1372  2105 I BugleRcsEngine: handleMessage processing message:[NOTIFY_UPTIME_IGNORE_STATE_CHANGED] with [non-null]:RcsEngineImpl reference [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[cc7f0e4f-7073]>Handler" thread_id=65 ]
+11-08 19:53:34.928  1372  1741 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=57 ]
+11-08 19:53:34.960   346   346 D Zygote  : Forked child process 11076
+11-08 19:53:34.976   540   554 W system_server: Missing inline cache for long com.android.server.connectivity.MultipathPolicyTracker$MultipathTracker.getUserPolicyOpportunisticQuotaBytes()
+11-08 19:53:34.989   772   941 D EGL_emulation: app_time_stats: avg=822.20ms min=141.10ms max=1503.31ms count=2
+11-08 19:53:35.009 11076 11076 I turgyguide.test: Late-enabling -Xcheck:jni
+11-08 19:53:35.044  1372  2105 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=65 ]
+11-08 19:53:35.258   974 10858 D TrafficStats: tagSocket(130) with statsTag=0x30000407, statsUid=-1
+11-08 19:53:35.259 11076 11076 I turgyguide.test: Using CollectorTypeCMC GC.
+11-08 19:53:35.285   391   429 I adbd    : jdwp connection from 11076
+11-08 19:53:35.305 11076 11076 D nativeloader: Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+11-08 19:53:35.326   974  5128 W ctxmgr  : [NetworkStateProducer] No state change for network connection context [CONTEXT service_id=47 ]
+11-08 19:53:35.343   974  2102 I ChimeraSrvcProxy: NullBinder for android.net.action.RECOMMEND_NETWORKS triggering remote TransactionTooLargeException due to Service without Chimera impl
+11-08 19:53:35.343   974  2102 W .gms.persistent: Large reply transaction of 1056768 bytes, interface descriptor , code 1
+11-08 19:53:35.443   974 10858 I AlarmManager: setExactAndAllowWhileIdle [name: GCM_HB_ALARM type: 2 triggerAtMillis: 20158008]
+11-08 19:53:35.499   442 10823 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:53:35.505   369   369 I RanchuHwc: logCompositionFallbackIfChanged: layer 5486 CompositionType fallback from 3 to 1
+11-08 19:53:35.572 11003 11003 D VRI[ComponentActivity]: visibilityChanged oldVisibility=true newVisibility=false
+11-08 19:53:35.615   540  1635 W JobInfo : Job 'com.google.android.settings.intelligence/.modules.routines.impl.RoutinesJobIntentService#1728' has a deadline with no functional constraints. The deadline won't improve job execution latency. Consider removing the deadline.
+11-08 19:53:35.723  1210  1443 D EGL_emulation: app_time_stats: avg=1229.53ms min=972.21ms max=1486.86ms count=2
+11-08 19:53:35.771   974 10858 I AlarmManager: setExactAndAllowWhileIdle [name: GCM_HB_ALARM type: 2 triggerAtMillis: 20158336]
+11-08 19:53:35.777   974 10858 E WakeLock: GCM_CONN_ALARM release without a matched acquire!
+11-08 19:53:35.808 11076 11076 D ApplicationLoaders: Returning zygote-cached class loader: /system/framework/android.test.base.jar
+11-08 19:53:35.812   540   688 D ConnectivityService: reportNetworkConnectivity(103, true) by 10144
+11-08 19:53:35.828 11076 11076 D nativeloader: Configuring clns-7 for other apk /system/framework/android.test.mock.jar. target_sdk_version=35, uses_libraries=ALL, library_path=/data/app/~~2FuXyoIivRiSckhlskSh7w==/ru.liturgyguide.test-KKblDRDMX_qY7IAjy0x9EA==/lib/arm64, permitted_path=/data:/mnt/expand:/data/user/0/ru.liturgyguide.test
+11-08 19:53:35.832 11076 11076 D ApplicationLoaders: Returning zygote-cached class loader: /system/framework/android.test.base.jar
+11-08 19:53:35.835 11076 11076 D nativeloader: Configuring clns-8 for other apk /system/framework/android.test.runner.jar. target_sdk_version=35, uses_libraries=ALL, library_path=/data/app/~~2FuXyoIivRiSckhlskSh7w==/ru.liturgyguide.test-KKblDRDMX_qY7IAjy0x9EA==/lib/arm64, permitted_path=/data:/mnt/expand:/data/user/0/ru.liturgyguide.test
+11-08 19:53:35.840 11076 11076 W ziparchive: Unable to open '/data/app/~~2FuXyoIivRiSckhlskSh7w==/ru.liturgyguide.test-KKblDRDMX_qY7IAjy0x9EA==/base.dm': No such file or directory
+11-08 19:53:35.840 11076 11076 W ziparchive: Unable to open '/data/app/~~2FuXyoIivRiSckhlskSh7w==/ru.liturgyguide.test-KKblDRDMX_qY7IAjy0x9EA==/base.dm': No such file or directory
+11-08 19:53:35.855   974 10858 I AlarmManager: setExactAndAllowWhileIdle [name: GCM_HB_ALARM type: 2 triggerAtMillis: 20158420]
+11-08 19:53:35.860   540   688 D ConnectivityService: reportNetworkConnectivity(103, true) by 10144
+11-08 19:53:35.884   832  6641 D NetworkMonitor/103: Forcing reevaluation for UID 10144. Dns signal count: 0
+11-08 19:53:35.902 11076 11076 D nativeloader: Configuring clns-9 for other apk /data/app/~~2FuXyoIivRiSckhlskSh7w==/ru.liturgyguide.test-KKblDRDMX_qY7IAjy0x9EA==/base.apk. target_sdk_version=35, uses_libraries=, library_path=/data/app/~~2FuXyoIivRiSckhlskSh7w==/ru.liturgyguide.test-KKblDRDMX_qY7IAjy0x9EA==/lib/arm64, permitted_path=/data:/mnt/expand:/data/user/0/ru.liturgyguide.test
+11-08 19:53:35.904 11076 11076 D CompatChangeReporter: Compat change id reported: 202956589; UID 10304; state: ENABLED
+11-08 19:53:35.911   832 11094 D TrafficStats: tagSocket(84) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:35.913   832 11093 D TrafficStats: tagSocket(92) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:35.916   832 11094 D TrafficStats: tagSocket(84) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:35.919   345 11095 I resolv  : ResNSendHandler::run: 0 / {103 983143 103 983143 1073 1}
+11-08 19:53:35.919   345 11095 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bf8d30
+11-08 19:53:35.928   832 11093 D TrafficStats: tagSocket(92) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:35.929   345 11096 I resolv  : ResNSendHandler::run: 0 / {103 983143 103 983143 1073 1}
+11-08 19:53:35.931 11076 11076 V GraphicsEnvironment: Currently set values for:
+11-08 19:53:35.931 11076 11076 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[]
+11-08 19:53:35.931 11076 11076 V GraphicsEnvironment:   angle_gl_driver_selection_values=[]
+11-08 19:53:35.931 11076 11076 V GraphicsEnvironment: Global.Settings values are invalid: number of packages: 0, number of values: 0
+11-08 19:53:35.931 11076 11076 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+11-08 19:53:35.933   345 11097 I resolv  : ResNSendHandler::run: 0 / {103 983143 103 983143 1073 1}
+11-08 19:53:35.935   345 11096 I resolv  : res_nsend: used send_dg 63 terrno: 0
+11-08 19:53:35.940   832   832 D TrafficStats: tagSocket(84) with statsTag=0xffffffff, statsUid=-1
+11-08 19:53:35.944   345 11097 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:53:35.945   345 11098 I resolv  : ResNSendHandler::run: 0 / {103 983143 103 983143 1073 1}
+11-08 19:53:35.947   832   832 D TrafficStats: tagSocket(84) with statsTag=0xffffffff, statsUid=-1
+11-08 19:53:35.950   345 11098 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:53:35.951   832 11093 D NetworkMonitor/103: PROBE_DNS www.google.com 37ms FAIL in type ADDRCONFIG java.net.UnknownHostException
+11-08 19:53:35.964   832 11094 D NetworkMonitor/103: PROBE_DNS connectivitycheck.gstatic.com 53ms OK 142.251.150.120,2001:4860:4826:7800::
+11-08 19:53:35.977   345 11099 I resolv  : GetAddrInfoHandler::run: {103 983143 103 983143 1073 1}
+11-08 19:53:35.982   345 11100 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+11-08 19:53:35.989   345 11101 I resolv  : res_nmkquery: (QUERY, IN, A)
+11-08 19:53:35.989   345 11102 I resolv  : GetAddrInfoHandler::run: {103 983143 103 983143 1073 1}
+11-08 19:53:35.991   345 11100 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:53:35.991   345 11100 I resolv  : doQuery: rcode=0, ancount=0, return value=32
+11-08 19:53:35.991   345 11104 I resolv  : res_nmkquery: (QUERY, IN, A)
+11-08 19:53:35.991   345 11104 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bfaaf0
+11-08 19:53:35.991   345 11104 I resolv  : doQuery: rcode=0, ancount=1, return value=63
+11-08 19:53:35.994   345 11103 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+11-08 19:53:35.994   345 11103 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bf8d30
+11-08 19:53:35.994   345 11103 I resolv  : doQuery: rcode=0, ancount=1, return value=75
+11-08 19:53:36.000   345 11101 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:53:36.001   345 11101 I resolv  : doQuery: rcode=0, ancount=0, return value=32
+11-08 19:53:36.002   832 11094 D TrafficStats: tagSocket(92) with statsTag=0xffffff81, statsUid=-1
+11-08 19:53:36.003   832 11093 D NetworkMonitor/103: PROBE_HTTPS https://www.google.com/generate_204 Probe failed with exception java.net.UnknownHostException: Unable to resolve host "www.google.com": No address associated with hostname
+11-08 19:53:36.072 19946 11070 I BugleDataModel: ActionExecutorImpl: Starting ActionService
+11-08 19:53:36.091 19946 11070 I BugleDataModel: ActionExecutorImpl: ACTION_EXECUTE_QUEUED_CountryCodeDetectorAction
+11-08 19:53:36.104 19946 11068 I BugleDataModel: ExecuteActionRunnable: running action CountryCodeDetectorAction
+11-08 19:53:36.115 19946 11068 I BugleDataModel: ActionExecutorImpl: ACTION_BACKGROUND_QUEUED_CountryCodeDetectorAction
+11-08 19:53:36.145   345   418 I netd    : tetherGetStats() -> {[]} <15.12ms>
+11-08 19:53:36.150 19946 11071 W .apps.messaging: Long monitor contention with owner Blocking Thread #59 (11070) at void atlr.j(com.google.android.apps.messaging.shared.datamodel.action.common.Action, int, long, boolean)(PG:22) waiters=0 in void atlr.d(com.google.android.apps.messaging.shared.datamodel.action.common.ThrottledAction, int, long, long, boolean) for 757ms
+11-08 19:53:36.154 11076 11076 D CompatChangeReporter: Compat change id reported: 279646685; UID 10304; state: ENABLED
+11-08 19:53:36.171 11076 11076 D CompatChangeReporter: Compat change id reported: 309578419; UID 10304; state: ENABLED
+11-08 19:53:36.257 19946 11070 I Bugle   : CountryCodeDetector: updateSmsNetworkCountry from default subscription network country. detected country: us
+11-08 19:53:36.261 19946 11070 I BugleDataModel: ActionExecutorImpl: ACTION_RESPONSE_QUEUED_CountryCodeDetectorAction
+11-08 19:53:36.267 11076 11076 W HWUI    : Unknown dataspace 0
+11-08 19:53:36.274 19946 11071 I BugleDataModel: ActionExecutorImpl: Stopping ActionService
+11-08 19:53:36.355 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@78364 in: STOPPED
+11-08 19:53:36.357 11003 11003 V ActivityScenario: Update currentActivityStage to STOPPED, currentActivity=androidx.activity.ComponentActivity@78364
+11-08 19:53:36.402   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 19:53:36.428  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=776, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10000100 cmp=com.google.android.apps.nexuslauncher/.NexusLauncherActivity }
+11-08 19:53:36.447   386   500 W ServiceManagerCppClient: Permission failure: android.permission.ACCESS_SURFACE_FLINGER from uid=10304 pid=11076
+11-08 19:53:36.447   386   500 D PermissionCache: checking android.permission.ACCESS_SURFACE_FLINGER for uid=10304 => denied (1005 us)
+11-08 19:53:36.448   386   500 W ServiceManagerCppClient: Permission failure: android.permission.ROTATE_SURFACE_FLINGER from uid=10304 pid=11076
+11-08 19:53:36.448   386   500 D PermissionCache: checking android.permission.ROTATE_SURFACE_FLINGER for uid=10304 => denied (831 us)
+11-08 19:53:36.449   386   500 W ServiceManagerCppClient: Permission failure: android.permission.INTERNAL_SYSTEM_WINDOW from uid=10304 pid=11076
+11-08 19:53:36.449   386   500 D PermissionCache: checking android.permission.INTERNAL_SYSTEM_WINDOW for uid=10304 => denied (1142 us)
+11-08 19:53:36.449   386   597 W ServiceManagerCppClient: Permission failure: android.permission.ACCESS_SURFACE_FLINGER from uid=10304 pid=0
+11-08 19:53:36.449   386   597 D PermissionCache: checking android.permission.ACCESS_SURFACE_FLINGER for uid=10304 => denied (4590 us)
+11-08 19:53:36.468 11076 11105 I EGL_emulation: Opening libGLESv1_CM_emulation.so
+11-08 19:53:36.470 11076 11105 I EGL_emulation: Opening libGLESv2_emulation.so
+11-08 19:53:36.610 11076 11105 W HWUI    : Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+11-08 19:53:36.612 11076 11105 W HWUI    : Failed to initialize 101010-2 format, error = EGL_SUCCESS
+11-08 19:53:36.622   832 11094 D NetworkMonitor/103: PROBE_HTTP http://connectivitycheck.gstatic.com/generate_204 time=645ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Sun, 08 Nov 2026 16:53:36 GMT], X-Android-Received-Millis=[1794156816599], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1794156816043]}
+11-08 19:53:36.639   832 11092 D NetworkMonitor/103: PROBE_FALLBACK http://www.google.com/gen_204 Probe failed with exception java.net.UnknownHostException: Unable to resolve host "www.google.com": No address associated with hostname
+11-08 19:53:36.647   832 11092 D NetworkMonitor/103: isCaptivePortal: isSuccessful()=false isPortal()=false RedirectUrl=null isPartialConnectivity()=true Time=739ms
+11-08 19:53:36.659 11003 11003 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@78364 in: DESTROYED
+11-08 19:53:36.661 11003 11003 V ActivityScenario: Update currentActivityStage to DESTROYED, currentActivity=null
+11-08 19:53:36.662   540   688 D ConnectivityService: [103 WIFI] validation failed
+11-08 19:53:36.666 11003 11003 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@62ab7e1
+11-08 19:53:36.666   141   141 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+11-08 19:53:36.668 11076 11105 I Gralloc4: mapper 4.x is not supported
+11-08 19:53:36.694   540  1615 W InputManager-JNI: Input channel object '4b2f200 ru.liturgyguide/androidx.activity.ComponentActivity (client)' was disposed without first being removed with the input manager!
+11-08 19:53:36.788   540  1635 W ServiceManagerCppClient: Permission failure: android.permission.ACCESS_SURFACE_FLINGER from uid=10304 pid=0
+11-08 19:53:36.804   540  1635 D PermissionCache: checking android.permission.ACCESS_SURFACE_FLINGER for uid=10304 => denied (16475 us)
+11-08 19:53:36.804   540  1635 W ServiceManagerCppClient: Permission failure: android.permission.ROTATE_SURFACE_FLINGER from uid=10304 pid=0
+11-08 19:53:36.804   540  1635 D PermissionCache: checking android.permission.ROTATE_SURFACE_FLINGER for uid=10304 => denied (140 us)
+11-08 19:53:36.804   540  1635 W ServiceManagerCppClient: Permission failure: android.permission.INTERNAL_SYSTEM_WINDOW from uid=10304 pid=0
+11-08 19:53:36.804   540  1635 D PermissionCache: checking android.permission.INTERNAL_SYSTEM_WINDOW for uid=10304 => denied (58 us)
+11-08 19:53:36.857  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=2166
+11-08 19:53:36.857  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=2166
+11-08 19:53:36.991  1210  1210 D NexusLauncherModelDelegate: notifySmartspaceEvent: SmartspaceTargetEvent{mSmartspaceTarget=null, mSmartspaceActionId='null', mEventType=6}
+11-08 19:53:36.992 11003 11018 D IdlingRegistry: Unregistering idling resources: [androidx.compose.ui.test.EspressoLink@4958221]
+11-08 19:53:36.998 11003 11018 I TestRunner: finished: foreignOrCorruptContextRestoredInServiceRequiresANewExplicitChoice(ru.liturgyguide.ui.ArrivalFlowTest)

@@ -1,0 +1,180 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.7/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Warning: SDK processing. This version only understands SDK XML versions up to 3 but an SDK XML file of version 4 was encountered. This can happen if you use versions of Android Studio and the command-line tools that were released at different times.
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugResValues
+> Task :app:checkDebugAarMetadata
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :app:parseDebugLocalResources
+> Task :app:mergeDebugResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:javaPreCompileDebug
+> Task :app:javaPreCompileDebugUnitTest
+> Task :app:generateDebugAndroidTestResValues
+> Task :app:extractProguardFiles
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:mergeDebugShaders
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets
+> Task :app:desugarDebugFileDependencies
+> Task :app:compressDebugAssets
+> Task :app:mergeDebugJniLibFolders
+> Task :app:mergeDebugNativeLibs
+> Task :app:checkDebugDuplicateClasses
+> Task :app:validateSigningDebug
+> Task :app:mergeLibDexDebug
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so.
+
+> Task :app:checkDebugAndroidTestAarMetadata
+> Task :app:mapDebugAndroidTestSourceSetPaths
+> Task :app:generateDebugAndroidTestResources
+> Task :app:processDebugAndroidTestManifest
+> Task :app:javaPreCompileDebugAndroidTest
+> Task :app:mergeDebugAndroidTestShaders
+> Task :app:compileDebugAndroidTestShaders NO-SOURCE
+> Task :app:generateDebugAndroidTestAssets UP-TO-DATE
+> Task :app:mergeDebugAndroidTestAssets
+> Task :app:compressDebugAndroidTestAssets
+> Task :app:mergeDebugAndroidTestResources
+> Task :app:desugarDebugAndroidTestFileDependencies
+> Task :app:mergeDebugAndroidTestJniLibFolders
+> Task :app:checkDebugAndroidTestDuplicateClasses
+> Task :app:mergeDebugAndroidTestNativeLibs NO-SOURCE
+> Task :app:processDebugManifestForPackage
+> Task :app:mergeLibDexDebugAndroidTest
+> Task :app:stripDebugAndroidTestDebugSymbols NO-SOURCE
+> Task :app:validateSigningDebugAndroidTest
+> Task :app:writeDebugAndroidTestSigningConfigVersions
+> Task :app:processDebugAndroidTestResources
+> Task :app:processDebugResources
+> Task :app:mergeExtDexDebugAndroidTest
+> Task :app:mergeExtDexDebug
+
+> Task :app:compileDebugKotlin
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/ChurchDiscoveryScreen.kt:124:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/ChurchScreen.kt:239:164 'val Icons.Filled.OpenInNew: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.OpenInNew.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/GuideTheme.kt:60:20 'var statusBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/GuideTheme.kt:61:20 'var navigationBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/ListeningCard.kt:30:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/LocateChurchCard.kt:27:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/MainActivity.kt:179:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/NavigationComponents.kt:21:55 'val Icons.Filled.MenuBook: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.MenuBook.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/PrayerPlayerState.kt:81:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/main/java/ru/liturgyguide/ui/SavedChurchForm.kt:122:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+
+> Task :app:compileDebugJavaWithJavac NO-SOURCE
+> Task :app:processDebugJavaRes
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:generateDebugLintReportModel
+> Task :app:generateDebugAndroidTestLintModel
+> Task :app:generateDebugUnitTestLintModel
+
+> Task :app:compileDebugUnitTestKotlin
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:157:55 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:167:55 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:177:55 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:188:55 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:199:55 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:209:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:210:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:211:31 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:212:31 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:219:34 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:228:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:229:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:230:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:236:34 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:238:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/%D0%9D%D0%BE%D0%B2%D1%8B%D0%B8%CC%86-%D1%87%D0%B0%D1%82-21AE5054/PravoslavnyyProvodnik/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:244:34 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+
+> Task :app:dexBuilderDebug
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes
+> Task :app:testDebugUnitTest
+> Task :app:mergeDebugGlobalSynthetics
+> Task :app:mergeProjectDexDebug
+> Task :app:mergeDebugJavaResource
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :app:assembleDebug
+> Task :app:compileDebugAndroidTestKotlin
+> Task :app:compileDebugAndroidTestJavaWithJavac NO-SOURCE
+> Task :app:dexBuilderDebugAndroidTest
+> Task :app:mergeDebugAndroidTestGlobalSynthetics
+> Task :app:processDebugAndroidTestJavaRes
+> Task :app:mergeProjectDexDebugAndroidTest
+> Task :app:mergeDebugAndroidTestJavaResource
+> Task :app:packageDebugAndroidTest
+> Task :app:createDebugAndroidTestApkListingFileRedirect
+> Task :app:lintAnalyzeDebug
+> Task :app:lintAnalyzeDebugAndroidTest
+> Task :app:lintAnalyzeDebugUnitTest
+> Task :app:connectedDebugAndroidTest
+Starting 119 tests on Liturgy_API_35(AVD) - 15
+
+Liturgy_API_35(AVD) - 15 Tests 0/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 2/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 3/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 6/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 10/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 12/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 15/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 18/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 23/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 25/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 29/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 32/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 36/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 38/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 40/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 42/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 44/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 47/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 51/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 52/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 55/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 58/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 60/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 63/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 67/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 73/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 76/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 80/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 83/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 85/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 87/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 91/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 93/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 97/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 99/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 100/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 104/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 106/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 109/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 112/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 115/119 completed. (0 skipped) (0 failed)
+Liturgy_API_35(AVD) - 15 Tests 119/119 completed. (0 skipped) (0 failed)
+Finished 119 tests on Liturgy_API_35(AVD) - 15
+
+> Task :app:lintReportDebug
+Wrote HTML report to file:///Users/dmitriymoguschiy/Documents/Spectrion%20Projects/Новый-чат-21AE5054/PravoslavnyyProvodnik/app/build/reports/lint-results-debug.html
+
+> Task :app:lintDebug
+
+BUILD SUCCESSFUL in 8m 47s
+77 actionable tasks: 77 executed

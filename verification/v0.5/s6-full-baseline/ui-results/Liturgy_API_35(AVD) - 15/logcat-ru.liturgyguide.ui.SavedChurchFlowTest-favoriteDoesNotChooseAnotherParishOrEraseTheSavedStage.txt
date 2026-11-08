@@ -1,0 +1,627 @@
+11-08 19:59:40.906 11003 11018 I TestRunner: started: favoriteDoesNotChooseAnotherParishOrEraseTheSavedStage(ru.liturgyguide.ui.SavedChurchFlowTest)
+11-08 19:59:40.923 11003 11018 D IdlingRegistry: Registering idling resources: [androidx.compose.ui.test.EspressoLink@6c3e01a]
+11-08 19:59:40.931 11003 11018 W Settings: Setting always_finish_activities has moved from android.provider.Settings.System to android.provider.Settings.Global, returning read-only value.
+11-08 19:59:40.942   540  1630 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10303, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 19:59:41.001  1372  2105 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=65 ]
+11-08 19:59:41.020   455   455 W libgoldfish-rild: Multi-element reporting criteria are not supported with HIDL HAL
+11-08 19:59:41.023   876   876 D MultiSimSettingController: onCarrierConfigChanged phoneId 0 subId 1
+11-08 19:59:41.023  1210  1210 W SplitSelectStateCtor: Missing session instanceIds
+11-08 19:59:41.023  1210  1210 D StatsLog: LAUNCHER_SPLIT_SELECTION_EXIT_INTERRUPTED
+11-08 19:59:41.025   876   876 D MultiSimSettingController: isReadyToReevaluate: subInfoInitialized=true, carrierConfigsLoaded=true, satelliteEnabledOrBeingEnabled=false
+11-08 19:59:41.026   876   876 D MultiSimSettingController: updateDefaults
+11-08 19:59:41.028   876   876 D MultiSimSettingController: isReadyToReevaluate: subInfoInitialized=true, carrierConfigsLoaded=true, satelliteEnabledOrBeingEnabled=false
+11-08 19:59:41.029   876   876 D MultiSimSettingController: updateDefaultValues: change: 0
+11-08 19:59:41.029   876   876 D MultiSimSettingController: isReadyToReevaluate: subInfoInitialized=true, carrierConfigsLoaded=true, satelliteEnabledOrBeingEnabled=false
+11-08 19:59:41.034   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 19:59:41.035  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=2368, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10008000 cmp=ru.liturgyguide/.ui.MainActivity }
+11-08 19:59:41.062   540   576 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10140, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 19:59:41.077   772   865 D SplashScreenView: Build android.window.SplashScreenView{271b6b3 V.E...... ......ID 0,0-0,0}
+11-08 19:59:41.077   772   865 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-08 19:59:41.077   772   865 D SplashScreenView: Branding: view: android.view.View{1878470 G.ED..... ......I. 0,0-0,0 #1020503 android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-08 19:59:41.144   346   346 D Zygote  : Forked child process 12465
+11-08 19:59:41.148   345   419 I netd    : tetherGetStats() -> {[]} <0.79ms>
+11-08 19:59:41.153   540   688 D ConnectivityService: [106 CELLULAR] EVENT_NETWORK_INFO_CHANGED, going from CONNECTING to CONNECTED
+11-08 19:59:41.155   345   419 I netd    : networkCreate(NativeNetworkConfig{netId: 106, networkType: PHYSICAL, permission: 0, secure: false, vpnType: -1, excludeLocalRoutes: false}) <0.29ms>
+11-08 19:59:41.158   345   418 I netd    : createNetworkCache(106) <1.63ms>
+11-08 19:59:41.159 12436 12436 D CarrierDefaultBroadcastReceiver: onReceive intent: android.telephony.action.CARRIER_SIGNAL_RESET
+11-08 19:59:41.160 11003 11003 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@45d89be in: PRE_ON_CREATE
+11-08 19:59:41.160 11003 11003 V ActivityScenario: Activity lifecycle changed event received but ignored because the reported transition was not ON_CREATE while the last known transition was PRE_ON_CREATE
+11-08 19:59:41.162   540   688 D DnsManager: sendDnsConfigurationForNetwork(106, [10.0.2.3], [], 1800, 25, 8, 64, 0, 0, , [], [0], true, [eth0])
+11-08 19:59:41.163   345   419 I resolv  : resolv_set_nameservers: netid = 106, addr = 10.0.2.3
+11-08 19:59:41.164   345   419 I netd    : setResolverConfiguration(ResolverParamsParcel{netId: 106, sampleValiditySeconds: 1800, successThreshold: 25, minSamples: 8, maxSamples: 64, baseTimeoutMsec: 0, retryCount: 0, servers: [10.0.2.3], domains: [], tlsName: , tlsServers: [], tlsFingerprints: [], caCertificate: , tlsConnectTimeoutMs: 0, resolverOptions: (null), transportTypes: [0], meteredNetwork: true, dohParams: (null), interfaceNames: [eth0]}) <0.63ms>
+11-08 19:59:41.164 12465 12465 I viceentitlement: Using CollectorTypeCMC GC.
+11-08 19:59:41.166   540   680 W system_server: Long monitor contention with owner ConnectivityServiceThread (688) at void android.net.connectivity.com.android.server.net.NetworkStatsService.handleNotifyNetworkStatus(android.net.Network[], android.net.NetworkStateSnapshot[], java.lang.String, android.net.connectivity.com.android.server.net.NetworkStatsEventLogger$PollEvent)(NetworkStatsService.java:2332) waiters=1 in void android.net.connectivity.com.android.server.net.NetworkStatsService.noteUidForeground(int, boolean) for 131ms
+11-08 19:59:41.167   345   419 I netd    : setNetworkAllowlist([NativeUidRangeConfig{netId: 106, uidRanges: [UidRangeParcel{start: 0, stop: 99999}], subPriority: 0}, NativeUidRangeConfig{netId: 103, uidRanges: [UidRangeParcel{start: 0, stop: 99999}], subPriority: 0}]) <0.00ms>
+11-08 19:59:41.170   540   688 W DnsManager: updatePrivateDns(106, PrivateDnsConfig{opportunistic:/[], dohName=, dohIps=[], dohPath=, dohPort=-1})
+11-08 19:59:41.170   540   688 D ConnectivityService: Setting DNS servers for network 106 to [/10.0.2.3]
+11-08 19:59:41.171   540   688 D DnsManager: sendDnsConfigurationForNetwork(106, [10.0.2.3], [], 1800, 25, 8, 64, 0, 0, , [10.0.2.3], [0], true, [eth0])
+11-08 19:59:41.172   345   419 I resolv  : setDoh: No suitable DoH server found
+11-08 19:59:41.172   345   419 I netd    : setResolverConfiguration(ResolverParamsParcel{netId: 106, sampleValiditySeconds: 1800, successThreshold: 25, minSamples: 8, maxSamples: 64, baseTimeoutMsec: 0, retryCount: 0, servers: [10.0.2.3], domains: [], tlsName: , tlsServers: [10.0.2.3], tlsFingerprints: [], caCertificate: , tlsConnectTimeoutMs: 0, resolverOptions: (null), transportTypes: [0], meteredNetwork: true, dohParams: (null), interfaceNames: [eth0]}) <0.75ms>
+11-08 19:59:41.175   345 12466 W resolv  : Validating DnsTlsServer {10.0.2.3/} with mark 0xf006a
+11-08 19:59:41.190 11003 11003 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@45d89be in: CREATED
+11-08 19:59:41.190 11003 11003 V ActivityScenario: Update currentActivityStage to CREATED, currentActivity=ru.liturgyguide.ui.MainActivity@45d89be
+11-08 19:59:41.193   540  1044 W system_server: Long monitor contention with owner ConnectivityServiceThread (688) at void android.net.connectivity.com.android.server.net.NetworkStatsService.handleNotifyNetworkStatus(android.net.Network[], android.net.NetworkStateSnapshot[], java.lang.String, android.net.connectivity.com.android.server.net.NetworkStatsEventLogger$PollEvent)(NetworkStatsService.java:2332) waiters=0 in java.lang.String[] android.net.connectivity.com.android.server.net.NetworkStatsService.getAllIfacesSinceBoot(int) for 282ms
+11-08 19:59:41.196 11003 11003 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@45d89be in: STARTED
+11-08 19:59:41.196 11003 11003 V ActivityScenario: Update currentActivityStage to STARTED, currentActivity=ru.liturgyguide.ui.MainActivity@45d89be
+11-08 19:59:41.198 12465 12465 E viceentitlement: Not starting debugger since process cannot load the jdwp agent.
+11-08 19:59:41.208 11003 11003 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@45d89be in: RESUMED
+11-08 19:59:41.208 11003 11003 V ActivityScenario: Update currentActivityStage to RESUMED, currentActivity=ru.liturgyguide.ui.MainActivity@45d89be
+11-08 19:59:41.210   345 12466 I resolv  : Connecting to {10.0.2.3/} with mark 0xf006a
+11-08 19:59:41.211   345 12466 W resolv  : Socket failed to connect, errno=101: Network is unreachable
+11-08 19:59:41.212   345 12466 W resolv  : TCP Handshake failed: 101
+11-08 19:59:41.214   345 12466 W resolv  : query failed
+11-08 19:59:41.214   345 12466 W resolv  : validateDnsTlsServer returned 0 for {10.0.2.3/}
+11-08 19:59:41.215   345 12466 W resolv  : Validation failed
+11-08 19:59:41.218   540   688 D ConnectivityService: Adding iface eth0 to network 106
+11-08 19:59:41.237 12436 12436 D CompatChangeReporter: Compat change id reported: 330583731; UID 10113; state: ENABLED
+11-08 19:59:41.238   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:59:41.240   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:59:41.241   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:59:41.241   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:59:41.242   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:59:41.242   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:59:41.243   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:59:41.243   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:59:41.249   345   419 I netd    : networkAddInterface(106, eth0) <29.27ms>
+11-08 19:59:41.250   876   876 D CarrierKeyDownloadManager [0]: CarrierConfig changed slotIndex = 0 subId = 1 CarrierId = 1 phoneId = 0
+11-08 19:59:41.250   876   876 D CarrierKeyDownloadManager [0]: updateSimOperator, Initialized mMccMncForDownload = 310260
+11-08 19:59:41.251   876   876 D CarrierKeyDownloadManager [0]: Carrier Config changed: slotIndex=0
+11-08 19:59:41.252   345   419 I netd    : wakeupAddInterface(eth0, 458672230413:eth0, -2147483648, -2147483648) <1.94ms>
+11-08 19:59:41.252   345   419 I netd    : interfaceSetMtu(eth0, 1500) <0.12ms>
+11-08 19:59:41.253   345   419 I netd    : networkAddRouteParcel(106, RouteInfoParcel{destination: 10.0.2.0/24, ifName: eth0, nextHop: , mtu: 0}) <0.11ms>
+11-08 19:59:41.253   345   419 I netd    : networkAddRouteParcel(106, RouteInfoParcel{destination: 0.0.0.0/0, ifName: eth0, nextHop: 10.0.2.2, mtu: 1500}) <0.05ms>
+11-08 19:59:41.253 12465 12465 D nativeloader: Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+11-08 19:59:41.259   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:59:41.260   540   688 D ConnectivityService: Setting DNS servers for network 106 to [/10.0.2.3]
+11-08 19:59:41.260   540   688 D DnsManager: sendDnsConfigurationForNetwork(106, [10.0.2.3], [], 1800, 25, 8, 64, 0, 0, , [10.0.2.3], [0], true, [eth0])
+11-08 19:59:41.261   345   419 I resolv  : setDoh: No suitable DoH server found
+11-08 19:59:41.261   345   419 I netd    : setResolverConfiguration(ResolverParamsParcel{netId: 106, sampleValiditySeconds: 1800, successThreshold: 25, minSamples: 8, maxSamples: 64, baseTimeoutMsec: 0, retryCount: 0, servers: [10.0.2.3], domains: [], tlsName: , tlsServers: [10.0.2.3], tlsFingerprints: [], caCertificate: , tlsConnectTimeoutMs: 0, resolverOptions: (null), transportTypes: [0], meteredNetwork: true, dohParams: (null), interfaceNames: [eth0]}) <0.14ms>
+11-08 19:59:41.262   345 12476 W resolv  : Validating DnsTlsServer {10.0.2.3/} with mark 0xf006a
+11-08 19:59:41.263   345 12476 I resolv  : Connecting to {10.0.2.3/} with mark 0xf006a
+11-08 19:59:41.271   345   419 I netd    : tetherGetStats() -> {[]} <0.25ms>
+11-08 19:59:41.271 11003 11003 D AutofillManager: Fill dialog is enabled:false, hints=[password, passwordAuto, creditCardNumber, creditCardSecurityCode, creditCardExpirationDate]
+11-08 19:59:41.272   345 12476 I resolv  :  SSL_connect returned -1 with mark 0xf006a
+11-08 19:59:41.300 12436 12436 D CarrierDefaultBroadcastReceiver: apply carrier action idx: 6
+11-08 19:59:41.327   540  1630 D WifiNl80211Manager: Scan result ready event
+11-08 19:59:41.327   540  1630 D WifiNative: Scan result ready event
+11-08 19:59:41.330   540  1630 I DefaultPermGrantPolicy: Revoking permissions from disabled data services for user:0
+11-08 19:59:41.333   876   876 D ImsNrSaModeHandler: setNrSaDisablePolicy : NrSaDisablePolicy = 0, IsNrSaSupported = true
+11-08 19:59:41.339 12436 12436 D CarrierActionUtils: onCancelAllNotifications
+11-08 19:59:41.340 12436 12436 D CarrierDefaultBroadcastReceiver: apply carrier action idx: 8
+11-08 19:59:41.340 12436 12436 D CarrierActionUtils: onDisableDefaultURLHandler
+11-08 19:59:41.378   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:59:41.378   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:59:41.379   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:59:41.379   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:59:41.379   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:59:41.379   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:59:41.379   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:59:41.379   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:59:41.381   540   576 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:59:41.392 19946 19962 W Bugle   : RestoreReceiver: Intent { act=android.telephony.action.CARRIER_CONFIG_CHANGED flg=0x15000010 cmp=com.google.android.apps.messaging/.shared.receiver.RestoreReceiver (has extras) }
+11-08 19:59:41.394   876   876 I Telephony: Carrier-config changed, checking for phone account updates.
+11-08 19:59:41.403   876   876 D Telephony: TelecomAccountRegistry: handleCarrierConfigChange: subId=1, accountSubId=1
+11-08 19:59:41.404   345   419 I netd    : tetherGetStats() -> {[]} <0.43ms>
+11-08 19:59:41.488 19946 19982 I Bugle   : BroadcastReceiverAsyncWorkTracker: Acknowledging broadcast of com.google.android.apps.messaging.shared.receiver.RestoreReceiver@cee26b8
+11-08 19:59:41.492   345   419 I netd    : idletimerAddInterface(eth0, 10, 106) <42.38ms>
+11-08 19:59:41.499   876   876 D Telephony: isEmergencyPreferredAccount: subId=1, activeData=1
+11-08 19:59:41.499   876   876 D Telephony: isEmergencyPreferredAccount: Device does not require preference.
+11-08 19:59:41.500   876   876 W Telephony: registerMmTelCapabilityCallback: registration failed, no ImsService available. Exception: code: 1
+11-08 19:59:41.501   876   876 I Telephony: isRttCurrentlySupported -- regular acct, hasVoiceAvailability: false
+11-08 19:59:41.501   876   876 I Telephony:  isRttSupported: false
+11-08 19:59:41.501   876   876 I Telephony:  alwaysAllowWhileRoaming: false
+11-08 19:59:41.501   876   876 I Telephony:  isRoaming: false
+11-08 19:59:41.501   876   876 I Telephony:  isOnWfc: false
+11-08 19:59:41.501   345 12476 I resolv  :  SSL_connect returned 1 with mark 0xf006a
+11-08 19:59:41.509   345   419 I netd    : bandwidthSetInterfaceQuota(eth0, 9223372036854775807) <1.04ms>
+11-08 19:59:41.554   345   419 I netd    : networkSetPermissionForNetwork(106, 1) <16.81ms>
+11-08 19:59:41.568   772   941 D EGL_emulation: app_time_stats: avg=968.12ms min=33.80ms max=1902.43ms count=2
+11-08 19:59:41.574   345 12476 I resolv  : Use flags: latencyFactor=3, latencyOffsetMs=100
+11-08 19:59:41.583   540   688 D ConnectivityService: NetReassign [2 : null → 106] [c 0] [a 56] [i 0]
+11-08 19:59:41.584   540   681 I HalDevMgr: bestIfaceCreationProposal is null, requestIface=STA, existingIface=[name=wlan0 type=STA]
+11-08 19:59:41.617 19946 12434 I AsyncTelephonySimStateR: Received intent action: android.telephony.action.CARRIER_CONFIG_CHANGED with extra SIM_STATE: null
+11-08 19:59:41.617 19946 12434 I SimStateSchedulerImpl: Scheduling UPDATE_PHONE_SIMS_STATE. Delay Seconds: 0
+11-08 19:59:41.617 19946 12434 I SimStateSchedulerImpl: Scheduling WORK_TYPE_UPDATE_PHONE_SIMS_STATE using PWQ. Delay Seconds: 0
+11-08 19:59:41.635  1210  1443 D EGL_emulation: app_time_stats: avg=432.15ms min=148.86ms max=1291.59ms count=5
+11-08 19:59:41.638   345 12481 I resolv  : DoT probe for 10.0.2.3 succeeded, took 63.440ms
+11-08 19:59:41.687   345 12480 I resolv  : UDP probe for 10.0.2.3 succeeded, took 112.175ms
+11-08 19:59:41.695   345 12478 I resolv  : Disconnecting {10.0.2.3/}, mark 0xf006a
+11-08 19:59:41.695   345 12476 W resolv  : validateDnsTlsServer returned 1 for {10.0.2.3/}
+11-08 19:59:41.695   345 12476 W resolv  : Validation success
+11-08 19:59:41.756 12465 12465 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+11-08 19:59:41.756 12465 12465 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.sidecar.jar
+11-08 19:59:41.764   832 12483 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:59:41.764   832 12484 D TrafficStats: tagSocket(132) with statsTag=0xffffff81, statsUid=-1
+11-08 19:59:41.775   832 12484 D TrafficStats: tagSocket(132) with statsTag=0xffffff81, statsUid=-1
+11-08 19:59:41.779   832 12483 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:59:41.785   345 12485 I resolv  : ResNSendHandler::run: 0 / {106 983146 106 983146 1073 1}
+11-08 19:59:41.788   345 12486 I resolv  : ResNSendHandler::run: 0 / {106 983146 106 983146 1073 1}
+11-08 19:59:41.817   345 12486 I resolv  : res_nsend: used send_dg 63 terrno: 0
+11-08 19:59:41.847   345 12488 I resolv  : ResNSendHandler::run: 0 / {106 983146 106 983146 1073 1}
+11-08 19:59:41.850   345 12489 I resolv  : ResNSendHandler::run: 0 / {106 983146 106 983146 1073 1}
+11-08 19:59:41.851   345 12488 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:59:41.865   345 12489 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:59:41.889   345 12485 I resolv  : res_nsend: used send_dg 75 terrno: 0
+11-08 19:59:41.903   832   832 D TrafficStats: tagSocket(125) with statsTag=0xffffffff, statsUid=-1
+11-08 19:59:41.914  1210  1443 D EGL_emulation: app_time_stats: avg=1090.70ms min=675.50ms max=1505.91ms count=2
+11-08 19:59:41.915 11003 11003 I Choreographer: Skipped 37 frames!  The application may be doing too much work on its main thread.
+11-08 19:59:41.916 11003 11003 E FrameTracker: force finish cuj, time out: J<IME_INSETS_HIDE_ANIMATION::1@1@ru.liturgyguide>
+11-08 19:59:41.916  1210  1210 D SearchTargetUtil: query= size=0
+11-08 19:59:41.917  1210  1210 D VRI[NexusLauncherActivity]: visibilityChanged oldVisibility=true newVisibility=false
+11-08 19:59:41.940   832   832 D TrafficStats: tagSocket(125) with statsTag=0xffffffff, statsUid=-1
+11-08 19:59:41.942   832 12484 D NetworkMonitor/106: PROBE_DNS connectivitycheck.gstatic.com 177ms OK 142.251.150.120,2001:4860:4826:7800::
+11-08 19:59:41.945  1210  1210 D NexusLauncherModelDelegate: notifySmartspaceEvent: SmartspaceTargetEvent{mSmartspaceTarget=null, mSmartspaceActionId='null', mEventType=7}
+11-08 19:59:41.955   832 12483 D NetworkMonitor/106: PROBE_DNS www.google.com 191ms FAIL in type ADDRCONFIG java.net.UnknownHostException
+11-08 19:59:41.956   540   565 W ziparchive: Unable to open '/data/app/~~dsDWBr4Os_Y3MuvdFu0mdg==/ru.liturgyguide-hXIzSGTjPPe8_5tZdydMtg==/base.dm': No such file or directory
+11-08 19:59:41.958 11003 11439 I HWUI    : Davey! duration=700ms; Flags=1, FrameTimelineVsyncId=1318213, IntendedVsync=19843766341354, Vsync=19843816341352, InputEventId=0, HandleInputStart=19843830066962, AnimationStart=19843830067712, PerformTraversalsStart=19843830068003, DrawStart=19844381542379, FrameDeadline=19843783008020, FrameInterval=19843830062503, FrameStartTime=16666666, SyncQueued=19844430450420, SyncStart=19844446554337, IssueDrawCommandsStart=19844447179212, SwapBuffers=19844451967670, FrameCompleted=19844483375545, DequeueBufferDuration=8875, QueueBufferDuration=8040625, GpuCompleted=19844483375545, SwapBuffersCompleted=19844466446254, DisplayPresentTime=0, CommandSubmissionCompleted=19844451967670,
+11-08 19:59:41.965   345 12490 I resolv  : GetAddrInfoHandler::run: {106 983146 106 983146 1073 1}
+11-08 19:59:41.973   345 12492 I resolv  : res_nmkquery: (QUERY, IN, A)
+11-08 19:59:41.974   345 12491 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+11-08 19:59:41.985   345 12491 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:59:41.986   345 12491 I resolv  : doQuery: rcode=0, ancount=0, return value=32
+11-08 19:59:42.003   345 12492 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:59:42.003   345 12492 I resolv  : doQuery: rcode=0, ancount=0, return value=32
+11-08 19:59:42.007   832 12483 D NetworkMonitor/106: PROBE_HTTPS https://www.google.com/generate_204 Probe failed with exception java.net.UnknownHostException: Unable to resolve host "www.google.com": No address associated with hostname
+11-08 19:59:42.013   772   855 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@bc70b0f
+11-08 19:59:42.013   345 12494 I resolv  : GetAddrInfoHandler::run: {106 983146 106 983146 1073 1}
+11-08 19:59:42.013   345 12495 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+11-08 19:59:42.013   345 12496 I resolv  : res_nmkquery: (QUERY, IN, A)
+11-08 19:59:42.013   345 12495 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bfc990
+11-08 19:59:42.014   345   419 I netd    : tetherGetStats() -> {[]} <4.93ms>
+11-08 19:59:42.014   345 12495 I resolv  : doQuery: rcode=0, ancount=1, return value=75
+11-08 19:59:42.016   345 12496 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bf8630
+11-08 19:59:42.016   345 12496 I resolv  : doQuery: rcode=0, ancount=1, return value=63
+11-08 19:59:42.044   876   880 W m.android.phone: Suspending all threads took: 465.234ms
+11-08 19:59:42.055   540   950 W InputManager-JNI: Input channel object '850c82a Splash Screen ru.liturgyguide (client)' was disposed without first being removed with the input manager!
+11-08 19:59:42.060   540   565 I ActivityTaskManager: Displayed ru.liturgyguide/.ui.MainActivity for user 0: +1s1ms
+11-08 19:59:42.088   832 12484 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:59:42.092   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:59:42.092   540   688 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 19:59:42.099   540   653 I ImeTracker: ru.liturgyguide:da4e147f: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 19:59:42.099   540   653 I ImeTracker: ru.liturgyguide:da4e147f: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 19:59:42.129  1210  1236 W s.nexuslauncher: Long monitor contention with owner main (1210) at boolean android.os.MessageQueue.enqueueMessage(android.os.Message, long)(MessageQueue.java:695) waiters=0 in android.os.Message android.os.MessageQueue.next() for 174ms
+11-08 19:59:42.159  1372  2105 I BugleRcsEngine: handleMessage processing message:[NOTIFY_UPTIME_IGNORE_STATE_CHANGED] with [non-null]:RcsEngineImpl reference [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[cc7f0e4f-7073]>Handler" thread_id=65 ]
+11-08 19:59:42.162  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 19:59:42.172  1372  1741 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=57 ]
+11-08 19:59:42.245  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 19:59:42.282  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 19:59:42.349 19946 19981 I Bugle   : BroadcastReceiverAsyncWorkTracker: Acknowledging broadcast of com.google.android.apps.messaging.shared.simstatetracker.AsyncTelephonySimStateReceiver@7aca7f7
+11-08 19:59:42.352 11003 11003 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+11-08 19:59:42.352 11003 11003 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+11-08 19:59:42.355  1372  2105 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=65 ]
+11-08 19:59:42.376  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 19:59:42.377  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 19:59:42.416  1210  1210 D BaseDepthController: setSurface:
+11-08 19:59:42.416  1210  1210 D BaseDepthController: 	mWaitingOnSurfaceValidity: false
+11-08 19:59:42.416  1210  1210 D BaseDepthController: 	mSurface: null
+11-08 19:59:42.416  1210  1210 D BaseDepthController: mSurface is null and mCurrentBlur is: 0
+11-08 19:59:42.421  1210  1210 D StateManager: goToState - fromState: Normal, toState: Normal, partial trace:
+11-08 19:59:42.421  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StateManager.moveToRestState(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:4)
+11-08 19:59:42.421  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StateManager.moveToRestState(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:1)
+11-08 19:59:42.421  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StatefulActivity.onStop(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:34)
+11-08 19:59:42.422  1210  1210 D StatsLog: LAUNCHER_ONSTOP
+11-08 19:59:42.444  1210  1578 D OneSearchSuggestProvider: Shut down the binder channel
+11-08 19:59:42.444  1210  1210 D StatsLog: LAUNCHER_GOOGLE_SEARCH_RESTORE_LIST_SIZE_AFTER_ACTIVITY_RESTART
+11-08 19:59:42.449  1210 11994 I IPCThreadState: oneway function results for code 2 on binder at 0xb4000077d417b6d0 will be dropped but finished with status UNKNOWN_TRANSACTION
+11-08 19:59:42.452 12465 12465 D nativeloader: InitLlndkLibrariesProduct: libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libRS.so:libandroid_net.so:libapexsupport.so:libbinder_ndk.so:libc.so:libcgrouprc.so:libclang_rt.asan-aarch64-android.so:libclang_rt.hwasan-aarch64-android.so:libcom.android.tethering.connectivity_native.so:libdl.so:libft2.so:liblog.so:libm.so:libmediandk.so:libnativewindow.so:libneuralnetworks.so:libselinux.so:libsync.so:libvendorsupport.so:libvndksupport.so:libvulkan.so
+11-08 19:59:42.470 12465 12465 D nativeloader: Configuring product-clns-7 for unbundled product apk /product/priv-app/ImsServiceEntitlement/ImsServiceEntitlement.apk. target_sdk_version=35, uses_libraries=, library_path=/product/priv-app/ImsServiceEntitlement/lib/arm64:/product/lib64:/system/product/lib64, permitted_path=/data:/mnt/expand:/data/user/0/com.android.imsserviceentitlement:/product/lib64:/system/product/lib64
+11-08 19:59:42.486 11003 11003 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+11-08 19:59:42.486 11003 11003 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+11-08 19:59:42.487   832 12484 D NetworkMonitor/106: PROBE_HTTP http://connectivitycheck.gstatic.com/generate_204 time=475ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Sun, 08 Nov 2026 16:59:42 GMT], X-Android-Received-Millis=[1794157182486], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1794157182287]}
+11-08 19:59:42.512 12465 12465 D nativeloader: InitVndkspLibrariesProduct: VNDK is deprecated with product
+11-08 19:59:42.544   832 12482 D NetworkMonitor/106: PROBE_FALLBACK http://www.google.com/gen_204 Probe failed with exception java.net.UnknownHostException: Unable to resolve host "www.google.com": No address associated with hostname
+11-08 19:59:42.545   832 12482 D NetworkMonitor/106: isCaptivePortal: isSuccessful()=false isPortal()=false RedirectUrl=null isPartialConnectivity()=true Time=913ms
+11-08 19:59:42.563   540   688 I ConnectivityService: Update score for net 106 : +EVER_EVALUATED
+11-08 19:59:42.564   540   688 D ConnectivityService: [106 CELLULAR] validation failed
+11-08 19:59:42.565   540   688 I ConnectivityService: Update capabilities for net 106 : +PARTIAL_CONNECTIVITY
+11-08 19:59:42.588   540   688 D NetworkNotificationManager: showNotification tag=ConnectivityNotification:106 event=PARTIAL_CONNECTIVITY transport=mobile data name=fast.t-mobile.com highPriority=false
+11-08 19:59:42.592   974  2102 I ChimeraSrvcProxy: NullBinder for android.net.action.RECOMMEND_NETWORKS triggering remote TransactionTooLargeException due to Service without Chimera impl
+11-08 19:59:42.592   974  2102 W .gms.persistent: Large reply transaction of 1056768 bytes, interface descriptor , code 1
+11-08 19:59:42.606 12465 12465 D CompatChangeReporter: Compat change id reported: 202956589; UID 10140; state: ENABLED
+11-08 19:59:42.635 12465 12465 V GraphicsEnvironment: Currently set values for:
+11-08 19:59:42.635 12465 12465 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[]
+11-08 19:59:42.635 12465 12465 V GraphicsEnvironment:   angle_gl_driver_selection_values=[]
+11-08 19:59:42.635 12465 12465 V GraphicsEnvironment: Global.Settings values are invalid: number of packages: 0, number of values: 0
+11-08 19:59:42.638 12465 12465 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+11-08 19:59:42.642   876   876 I Telephony: reRegisterPstnPhoneAccount: subId: 1 - no change
+11-08 19:59:42.649   876   876 I ImsResolver: Received Carrier Config Changed for SlotId: 0, SubId: 1, sim state: 5
+11-08 19:59:42.655   540   679 D NetworkStatsObservers: Registering observer for RequestInfo from pid/uid:540/1000(android) for DataUsageRequest [ requestId=29, networkTemplate=NetworkTemplate: matchRule=MOBILE, matchSubscriberIds=[310260...], matchWifiNetworkKeys=[], metered=YES, defaultNetwork=NO, thresholdInBytes=3058905 ] accessLevel:3
+11-08 19:59:42.660   345   419 I netd    : bandwidthRemoveInterfaceQuota(eth0) <2.18ms>
+11-08 19:59:42.662   345   419 I netd    : bandwidthSetInterfaceQuota(eth0, 9223372036854775807) <0.63ms>
+11-08 19:59:42.663 11003 11003 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+11-08 19:59:42.663 11003 11003 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+11-08 19:59:42.665   876  1075 D ImsResolver: updateBoundDeviceServices: called
+11-08 19:59:42.666   876  1075 I ImsResolver: updateBoundServices - carrier package changed: com.google.android.ims -> com.google.android.ims on slot 0, hasConfigChanged=false
+11-08 19:59:42.666   876  1075 I ImsResolver: updateBoundServices - carrier package changed: com.google.android.ims -> com.google.android.ims on slot 0, hasConfigChanged=true
+11-08 19:59:42.667   876  1075 I ImsResolver: updateBoundServices - carrier package changed: com.google.android.ims -> com.google.android.ims on slot 0, hasConfigChanged=true
+11-08 19:59:42.668   876   876 I TelephonyRcsService: updateFeatureControllerSubscription: slotId=0, oldSubId= 1, subId=1, existing feature=false
+11-08 19:59:42.668 12465 12465 W FirebaseApp: Default FirebaseApp failed to initialize because no default options were found. This usually means that com.google.gms:google-services was not applied to your gradle project.
+11-08 19:59:42.668 12465 12465 I FirebaseInitProvider: FirebaseApp initialization unsuccessful
+11-08 19:59:42.683   876  2126 I m.android.phone: IncrementDisableThreadFlip blocked for 61.601ms
+11-08 19:59:42.685   876  1060 I m.android.phone: IncrementDisableThreadFlip blocked for 37.751ms
+11-08 19:59:42.685   876   876 V SimultaneousCallingTracker: Received EVENT 101
+11-08 19:59:42.691   876   876 D SimultaneousCallingTracker: Ignoring updatePhoneMapAndSimultaneousCallSupportMap since device is not DSDA capable.
+11-08 19:59:42.693   876   876 I ImsExternalCallTracker: handleVideoCapabilitiesChanged : isVideoCapable = false
+11-08 19:59:42.693   876   876 D ImsExternalCallTracker: refreshCallPullState
+11-08 19:59:42.693   876   876 I Telephony: handleVideoCapabilitesChanged. Video capability - false
+11-08 19:59:42.693   876   876 D Telephony: isEmergencyPreferredAccount: subId=1, activeData=1
+11-08 19:59:42.693   876   876 D Telephony: isEmergencyPreferredAccount: Device does not require preference.
+11-08 19:59:42.694   876   876 W Telephony: registerMmTelCapabilityCallback: registration failed, no ImsService available. Exception: code: 1
+11-08 19:59:42.694   876   876 I Telephony: isRttCurrentlySupported -- regular acct, hasVoiceAvailability: false
+11-08 19:59:42.694   876   876 I Telephony:  isRttSupported: false
+11-08 19:59:42.694   876   876 I Telephony:  alwaysAllowWhileRoaming: false
+11-08 19:59:42.694   876   876 I Telephony:  isRoaming: false
+11-08 19:59:42.694   876   876 I Telephony:  isOnWfc: false
+11-08 19:59:42.694   876  1149 I m.android.phone: IncrementDisableThreadFlip blocked for 71.507ms
+11-08 19:59:42.717 12465 12465 D CompatChangeReporter: Compat change id reported: 330583731; UID 10140; state: ENABLED
+11-08 19:59:42.770   876   876 I Telephony: TelecomAccountRegistry$AccountEntry: registerPstnPhoneAccount: Registering account=[[ ] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, 1, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: *** SC Restrictions: [ ]] with Telecom. subId=1
+11-08 19:59:42.777   876   880 I m.android.phone: Background concurrent mark compact GC freed 4868KB AllocSpace bytes, 14(500KB) LOS objects, 49% free, 4982KB/9965KB, paused 541.264ms,277.884ms total 2.132s
+11-08 19:59:42.780   876   876 I PhoneInterfaceManager: setVoiceServiceStateOverride: subId=1, phone=Handler (com.android.internal.telephony.GsmCdmaPhone) {9bb2787}, hasService=false, callingPackage=com.android.server.telecom
+11-08 19:59:42.825   345   419 I netd    : tetherGetStats() -> {[]} <3.24ms>
+11-08 19:59:42.828   540   679 W system_server: Long monitor contention with owner NetworkStats (677) at void android.net.connectivity.com.android.server.net.NetworkStatsService.performPoll(int, android.net.connectivity.com.android.server.net.NetworkStatsEventLogger$PollEvent)(NetworkStatsService.java:2590) waiters=0 in void android.net.connectivity.com.android.server.net.NetworkStatsService.advisePersistThreshold(long) for 165ms
+11-08 19:59:42.829   540   680 W system_server: Long monitor contention with owner NetworkStats (677) at void android.net.connectivity.com.android.server.net.NetworkStatsService.performPoll(int, android.net.connectivity.com.android.server.net.NetworkStatsEventLogger$PollEvent)(NetworkStatsService.java:2590) waiters=1 in void android.net.connectivity.com.android.server.net.NetworkStatsService.noteUidForeground(int, boolean) for 125ms
+11-08 19:59:42.829   345   419 I netd    : bandwidthRemoveInterfaceQuota(eth0) <0.49ms>
+11-08 19:59:42.829   345   419 I netd    : bandwidthSetInterfaceQuota(eth0, 9223372036854775807) <0.40ms>
+11-08 19:59:42.834   876   876 W FeatureConnection: getRegistrationTech: ImsRegistration is null
+11-08 19:59:42.834   876   876 I CallNotifier: onCallForwardingIndicatorChanged(): subId=1, visible=N
+11-08 19:59:42.851   876   876 D CallNotifier: updatePhoneStateListeners: update CF notifications.
+11-08 19:59:42.851   876   876 I NotificationMgr: updateCfi: subId= 1, visible=N
+11-08 19:59:42.851   876   876 I NotificationMgr: updateMwi(): subId 1 update to false
+11-08 19:59:42.858   540   679 D NetworkStatsObservers: Registering observer for RequestInfo from pid/uid:540/1000(android) for DataUsageRequest [ requestId=30, networkTemplate=NetworkTemplate: matchRule=MOBILE, matchSubscriberIds=[310260...], matchWifiNetworkKeys=[], metered=YES, defaultNetwork=NO, thresholdInBytes=3048739 ] accessLevel:3
+11-08 19:59:42.863   540   768 D NetworkStatsObservers: Unregistering RequestInfo from pid/uid:540/1000(android) for DataUsageRequest [ requestId=29, networkTemplate=NetworkTemplate: matchRule=MOBILE, matchSubscriberIds=[310260...], matchWifiNetworkKeys=[], metered=YES, defaultNetwork=NO, thresholdInBytes=3058905 ] accessLevel:3
+11-08 19:59:42.896   876   876 D CarrierKeyDownloadManager [0]: Carrier not enabled or invalid values. mKeyAvailability=0 mURL=null
+11-08 19:59:42.896   876   876 D CarrierKeyDownloadManager [0]: Cleaning up existing renewal alarms
+11-08 19:59:42.896   876   876 E CarrierKeyDownloadManager [0]: handleAlarmOrConfigChange ActiveSubscriptionInfoList = 1
+11-08 19:59:42.897   876   876 I CarrierInfoManager: deleting carrier key from db for subId=1
+11-08 19:59:42.942   876   876 D CarrierProvider:   delete.count=0
+11-08 19:59:42.942   876   876 I CarrierInfoManager: Deleting the number of entries = 0   for carrierId = 1
+11-08 19:59:42.942   876   876 D CarrierKeyDownloadManager [0]: Cleaning up download info
+11-08 19:59:42.958   876   876 D TelephonyProvider: subId:1 mccmnc=310260 carrierId=1, match current APN size:  12
+11-08 19:59:42.971   876   876 D TelephonyProvider: No MVNO, MNO and no MCC/MNC match, but we have match/matches with the same carrier id, count: 0
+11-08 19:59:42.971   876   876 D TelephonyProvider: match carrier id APN: 2
+11-08 19:59:42.997   345   419 I netd    : tetherGetStats() -> {[]} <16.32ms>
+11-08 19:59:43.061 11003 11008 I ru.liturgyguide: Background concurrent mark compact GC freed 8311KB AllocSpace bytes, 9(380KB) LOS objects, 49% free, 10MB/20MB, paused 439us,11.387ms total 772.814ms
+11-08 19:59:43.063   455   455 W libgoldfish-rild: Multi-element reporting criteria are not supported with HIDL HAL
+11-08 19:59:43.069   540   653 I ImeTracker: ru.liturgyguide:86012336: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 19:59:43.071   540   653 I ImeTracker: ru.liturgyguide:86012336: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 19:59:43.082   540   679 W system_server: Long monitor contention with owner NetworkStats (677) at void android.net.connectivity.com.android.server.net.NetworkStatsService.performPoll(int, android.net.connectivity.com.android.server.net.NetworkStatsEventLogger$PollEvent)(NetworkStatsService.java:2590) waiters=0 in android.net.NetworkStatsHistory android.net.connectivity.com.android.server.net.NetworkStatsService.internalGetHistoryForNetwork(android.net.NetworkTemplate, int, int, int, int, long, long) for 223ms
+11-08 19:59:43.152  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 19:59:43.172   847  1055 I HeadsetPhoneState: stopListenForPhoneState(), no listener indicates nothing is listening
+11-08 19:59:43.196  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 19:59:43.196  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 19:59:43.197   345   419 I netd    : bandwidthRemoveInterfaceQuota(eth0) <1.50ms>
+11-08 19:59:43.198   345   419 I netd    : bandwidthSetInterfaceQuota(eth0, 9223372036854775807) <0.46ms>
+11-08 19:59:43.199  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 19:59:43.200  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 19:59:43.202   345   419 I netd    : bandwidthRemoveInterfaceQuota(eth0) <1.48ms>
+11-08 19:59:43.232   345   419 I netd    : bandwidthSetInterfaceQuota(eth0, 9223372036854775807) <17.46ms>
+11-08 19:59:43.244   847  1055 W HeadsetPhoneState: startListenForPhoneState, no event to listen
+11-08 19:59:43.337  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 19:59:43.346 11003 11003 D InsetsController: show(ime(), fromIme=false)
+11-08 19:59:43.347 11003 11003 I ImeTracker: ru.liturgyguide:f23e6ede: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT_BY_INSETS_API fromUser false
+11-08 19:59:43.347 11003 11003 D InputMethodManager: showSoftInput() view=androidx.compose.ui.platform.AndroidComposeView{3ea8ac5 VFED..... .F....ID 0,0-1080,2400 aid=1073741825} flags=0 reason=SHOW_SOFT_INPUT_BY_INSETS_API
+11-08 19:59:43.350  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 19:59:43.350  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=8001, inputTypeString=Normal, enableLearning=true, autoCorrection=true, autoComplete=true, imeOptions=2000006, privateImeOptions=null, actionName=DONE, actionLabel=null, initialSelStart=0, initialSelEnd=0, initialCapsMode=0, label=null, fieldId=-1, fieldName=null, extras=Bundle[mParcelledData.dataSize=404], hintText=null, hintLocales=[]}}, false)
+11-08 19:59:43.352  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 19:59:43.352  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: en-US, ime_english_united_states
+11-08 19:59:43.357  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=8001, inputTypeString=Normal, enableLearning=true, autoCorrection=true, autoComplete=true, imeOptions=2000006, privateImeOptions=null, actionName=DONE, actionLabel=null, initialSelStart=0, initialSelEnd=0, initialCapsMode=0, label=null, fieldId=-1, fieldName=null, extras=Bundle[mParcelledData.dataSize=404], hintText=null, hintLocales=[]}}, true)
+11-08 19:59:43.357  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 19:59:43.357  1271  1271 W SessionManager: SessionManager.beginSession():53 Try to begin an already begun session [INPUT_SESSION], end it first
+11-08 19:59:43.358  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: en-US, ime_english_united_states
+11-08 19:59:43.406  1271  1271 W NotificationCenter: NotificationCenter$ListenerData.notifyOnExecutor():672 Heavy notify work detected on UI thread: |kga->jjc| takes 47ms
+11-08 19:59:43.410  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInputView():2098 onStartInputView(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=8001, inputTypeString=Normal, enableLearning=true, autoCorrection=true, autoComplete=true, imeOptions=2000006, privateImeOptions=null, actionName=DONE, actionLabel=null, initialSelStart=0, initialSelEnd=0, initialCapsMode=0, label=null, fieldId=-1, fieldName=null, extras=Bundle[{android.support.text.emoji.emojiCompat_metadataVersion=11, androidx.core.view.inputmethod.EditorInfoCompat.STYLUS_HANDWRITING_ENABLED=true, android.support.text.emoji.emojiCompat_replaceAll=false}], hintText=null, hintLocales=[]}}, false)
+11-08 19:59:43.413  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 19:59:43.413  1271  1271 I StylusEducationPopupDialog: StylusEducationPopupDialog.onStartInputView():59 Schedule to show first time education
+11-08 19:59:43.432   345   419 I netd    : tetherGetStats() -> {[]} <2.02ms>
+11-08 19:59:43.471   540  1615 D FileUtils: Rounded bytes from 2593013760 to 4000000000
+11-08 19:59:43.475 19946 12433 W Bugle   : BuglePhoneNumberUtils: canonicalizeMccMnc: invalid mccmnc. mcc: null, mnc: null
+11-08 19:59:43.485   345 12502 I resolv  : GetAddrInfoHandler::run: {103 786535 103 983143 10144 0}
+11-08 19:59:43.486  2497  3310 D TrafficStats: tagSocket(85) with statsTag=0x1809, statsUid=-1
+11-08 19:59:43.488 11003 11003 I ImeTracker: ru.liturgyguide:3d09b68e: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser false
+11-08 19:59:43.489 11003 11003 D InputMethodManager: showSoftInput() view=androidx.compose.ui.platform.AndroidComposeView{3ea8ac5 VFED..... .F....ID 0,0-1080,2400 aid=1073741825} flags=0 reason=SHOW_SOFT_INPUT
+11-08 19:59:43.501  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.getOemKeyboardHeightRatio():206 systemKeyboardHeightRatio:1.000000.
+11-08 19:59:43.502  1271  1271 I AndroidIME: AbstractIme.onActivate():89 LatinIme.onActivate() : EditorInfo = EditorInfo{packageName=ru.liturgyguide, inputType=8001, inputTypeString=Normal, enableLearning=true, autoCorrection=true, autoComplete=true, imeOptions=2000006, privateImeOptions=null, actionName=DONE, actionLabel=null, initialSelStart=0, initialSelEnd=0, initialCapsMode=0, label=null, fieldId=-1, fieldName=null, extras=Bundle[{android.support.text.emoji.emojiCompat_metadataVersion=11, androidx.core.view.inputmethod.EditorInfoCompat.STYLUS_HANDWRITING_ENABLED=true, android.support.text.emoji.emojiCompat_replaceAll=false}], hintText=null, hintLocales=[]}, IncognitoMode = false, DeviceLocked = false
+11-08 19:59:43.503  1271  1271 I Delight5Facilitator: Delight5Facilitator.initializeForIme():747 initializeForIme() : Locale = [en_US], layout = qwerty
+11-08 19:59:43.508  1271  1271 I VoiceInputHandler: VoiceInputHandler.onActivateIme():99 registering TalkbackStateListener
+11-08 19:59:43.508  1271  1271 I VoiceInputManagerWrapper: VoiceInputManagerWrapper.cancelShutdown():102 cancelShutdown()
+11-08 19:59:43.509  1271  1271 I VoiceInputManagerWrapper: VoiceInputManagerWrapper.syncLanguagePacks():114 syncLanguagePacks()
+11-08 19:59:43.509  1271  3966 I SpeechFactory: SpeechRecognitionFactory.maybeScheduleAutoPackDownloadForFallback():200 maybeScheduleAutoPackDownloadForFallback()
+11-08 19:59:43.509  1271  1271 I LatinIme: LatinIme.updateEnableInlineSuggestionsOnDecoderSideFlags():1174 inline flag updated to:false
+11-08 19:59:43.504  2497  2497 W binder:2497_5: type=1400 audit(0.0:2445): avc:  denied  { read } for  name="u:object_r:system_adbd_prop:s0" dev="tmpfs" ino=309 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:system_adbd_prop:s0 tclass=file permissive=0 app=com.google.android.gms
+11-08 19:59:43.516  2497  2497 W binder:2497_5: type=1400 audit(0.0:2446): avc:  denied  { read } for  name="u:object_r:adbd_prop:s0" dev="tmpfs" ino=54 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:adbd_prop:s0 tclass=file permissive=0 app=com.google.android.gms
+11-08 19:59:43.528  2497  3310 W libc    : Access denied finding property "service.adb.tls.port"
+11-08 19:59:43.531  1271  1271 I InputBundle: InputBundle.consumeEvent():884 Skip consuming an event as keyboard status is 0
+11-08 19:59:43.571  1271  1271 I KeyboardWrapper: KeyboardWrapper.activateKeyboard():575 activateKeyboard(): type=prime, status=0, imeDef=ktt{stringId=ime_english_united_states, language=en-US, languageTag=en-US, processedConditions={enable_number_row=false, device=phone}, className=com.google.android.apps.inputmethod.libs.latin5.LatinIme, label=0, keyEventInterpreter=null, inlineComposing=true, autoCapital=true, announceAutoSelectedCandidate=true, statusIcon=0, primeKeyboardType=SOFT, indicatorIcon=0, indicatorLabel=US, displayAppCompletions=true, extraValues=ktl{}, processors=kvl@b155fd2, unacceptableMetaKeys=4098, languageSpecificSettings=0, asciiCapable=true, alwaysShowSuggestions=false, useAsciiPasswordKeyboard=false, secondaryIme=null, keyboardGroupDef=kut@a4480b0, phenotypeFlagId=0, localizationLanguageTag=null, supportsInlineSuggestion=true, supportsAccessPoints=true}
+11-08 19:59:43.572  1271  1271 I KeyboardManager: KeyboardManager.requestKeyboard():234 Creating keyboard prime, imeId=ime_english_united_states, cacheKey=theme_border_stylesheet_noshadow_gsans_pillkey_silkpopup_hover_light_phone_bottom4dp_navredesign
+11-08 19:59:43.573  1271  1271 I KeyboardWrapper: KeyboardWrapper.onKeyboardReady():239 onKeyboardReady(): type=prime(prime), kb=com.google.android.apps.inputmethod.latin.keyboard.LatinPrimeKeyboard@dac4c53
+11-08 19:59:43.577  1456 12418 I Checkin : [CheckinOperation] Starting Checkin: Default Task Reason : 8 Force : false UserId : 0 Start time : 19846142
+11-08 19:59:43.579  1271  1271 I KeyboardWrapper: KeyboardWrapper.doActivateKeyboard():606 doActivateKeyboard(): prime
+11-08 19:59:43.580  1271  3966 I FallbackOnDeviceRecognitionProvider: FallbackOnDeviceRecognitionProvider.maybeScheduleAutoPackDownload():197 maybeScheduleAutoPackDownload() for language tag en-US
+11-08 19:59:43.596   832 12505 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:59:43.599   832 12504 D TrafficStats: tagSocket(132) with statsTag=0xffffff81, statsUid=-1
+11-08 19:59:43.607   832 12505 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:59:43.607   832 12504 D TrafficStats: tagSocket(125) with statsTag=0xffffff81, statsUid=-1
+11-08 19:59:43.610 19946 12463 W .apps.messaging: Long monitor contention with owner Blocking Thread #64 (12433) at android.os.Bundle bplb.a(int)(PG:151) waiters=0 in void bplb.f() for 824ms
+11-08 19:59:43.613  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 19:59:43.614  1271  1271 W Keyboard: Keyboard.getKeyboardViewHelper():574 null helper is returned: keyboardDef=kuo{processedConditions={enable_more_candidates_view_for_multilingual=false, enable_secondary_symbols=false, variant=qwerty, language=en-US, device=phone, expressions=normal, keyboard_mode=normal, show_secondary_digits=true, enable_preemptive_decode=true, rtl_layout=false}, globalConditions={global_theme_key=theme_border_stylesheet_noshadow_gsans_pillkey_silkpopup_hover_light_phone_bottom4dp_navredesign, global_locale=en_US, global_density_dpi=420, global_orientation=1}, className=.latin.keyboard.LatinPrimeKeyboard, resourceIds=[#0x7f170663, #0x7f1708e0], initialStates=0, keyboardViewDefs=[kvb{direction=null, id=#0x7f0b014d, isScalable=true, layoutId=#0x7f0e039d, type=BODY, touchable=true, defaultShow=true}, kvb{direction=null, id=#0x7f0b014d, isScalable=false, layoutId=#0x7f0e01aa, type=FLOATING_CANDIDATES, touchable=false, defaultShow=false}, kvb{direction=LOCALE, id=#0x7f0b014d, isScalable=false, layoutId=#0x7f0e0591, type=HEADER, touchable=true, defaultShow=true}], persistentStates=0, persistentStatesPrefKey=null, popupBubbleLayoutId=#0x7f0e068d, recentKeyLayoutId=0, recentKeyPopupLayoutId=0, recentKeyType=null, rememberRecentKey=NONE, sessionStates=17592186044419}, type=WIDGET, helpersCreated=[kib@1864b79, kib@9c330be, kib@1e9d51f, null], context.getResources().getConfiguration(): {1.0 310mcc260mnc [en_US] ldltr sw411dp w411dp h914dp 420dpi nrml long port finger -keyb/v/h -nav/h winConfig={ mBounds=Rect(0, 0 - 1080, 2400) mAppBounds=Rect(0, 0 - 1080, 2400) mMaxBounds=Rect(0, 0 - 1080, 2400) mDisplayRotation=ROTATION_0 mWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_0} as.2 s.32 fontWeightAdjustment=0}
+11-08 19:59:43.617   345 12506 I resolv  : ResNSendHandler::run: 0 / {106 983146 106 983146 1073 1}
+11-08 19:59:43.619 19946 12463 W Bugle   : BuglePhoneNumberUtils: canonicalizeMccMnc: invalid mccmnc. mcc: null, mnc: null
+11-08 19:59:43.619  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 19:59:43.621   345 12507 I resolv  : ResNSendHandler::run: 0 / {106 983146 106 983146 1073 1}
+11-08 19:59:43.621   345 12507 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bfc990
+11-08 19:59:43.622   345 12506 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:59:43.625   345 12508 I resolv  : ResNSendHandler::run: 0 / {106 983146 106 983146 1073 1}
+11-08 19:59:43.625   345 12508 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bf8630
+11-08 19:59:43.625   832   832 D TrafficStats: tagSocket(124) with statsTag=0xffffffff, statsUid=-1
+11-08 19:59:43.626   832   832 D TrafficStats: tagSocket(124) with statsTag=0xffffffff, statsUid=-1
+11-08 19:59:43.627   832 12505 D NetworkMonitor/106: PROBE_DNS connectivitycheck.gstatic.com 30ms OK 142.251.150.120,2001:4860:4826:7800::
+11-08 19:59:43.636  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.startInputIfInputViewStarted():3728 startInputIfInputViewStarted(): default prime
+11-08 19:59:43.636   345 12509 I resolv  : ResNSendHandler::run: 0 / {106 983146 106 983146 1073 1}
+11-08 19:59:43.637  1271  1271 I KeyboardModeManager: KeyboardModeManager.setInputViewKeyboardViewHolderProvider():625 setInputView() : supportsOneHandedMode=true supportsSplitMode=true
+11-08 19:59:43.637  1271  1271 I NormalModeController: NormalModeController.getKeyboardBodyViewHolderPaddingBottom():104 currentPrimeKeyboardType:SOFT systemPaddingBottom:-1
+11-08 19:59:43.637  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 19:59:43.637  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 19:59:43.637  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 19:59:43.637  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 19:59:43.638  1271  1271 I NormalModeController: NormalModeController.getKeyboardBodyViewHolderPaddingBottom():104 currentPrimeKeyboardType:SOFT systemPaddingBottom:-1
+11-08 19:59:43.638  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 19:59:43.638  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 19:59:43.638  1271  1271 I KeyboardModeManager: KeyboardModeManager.setInputViewKeyboardViewHolderProvider():613 setInputView() : supportsOneHandedMode=true, supportSplitMode=true
+11-08 19:59:43.641   345 12509 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:59:43.646   832 12504 D NetworkMonitor/106: PROBE_DNS www.google.com 47ms FAIL in type ADDRCONFIG java.net.UnknownHostException
+11-08 19:59:43.649   832 12505 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:59:43.659   832 12504 D NetworkMonitor/106: PROBE_HTTPS https://www.google.com/generate_204 Probe failed with exception java.net.UnknownHostException: Unable to resolve host "www.google.com": No address associated with hostname
+11-08 19:59:43.661  1271  1271 I CrowdsourceExtension: CrowdsourceExtension.checkIfDefaultBrowserIsAllowed():110 Failed to get default browser. The default browser may be deactived.
+11-08 19:59:43.662  1271  1271 I AccessoryInputModeManager: AccessoryInputModeManager.onModeStarted():308 Accessory input mode started: null
+11-08 19:59:43.662  1271  1271 W SupplementaryKeyboardsWrapper: SupplementaryKeyboardsWrapper.deactivateKeyboard():159 keyboard accessory_candidates_consumer is not activated before!
+11-08 19:59:43.663  1271  1271 I VoiceImeExtension: VoiceImeExtension.shouldStartVoiceInputAutomaticallyInCurrentInputBox():415 No private IME option set to start voice input.
+11-08 19:59:43.703 11003 11003 I ViewInteraction: Performing 'close keyboard' action on view view.getRootView() to equal view
+11-08 19:59:43.703 11003 11003 D IdlingRegistry: Registering idling resources: [androidx.test.espresso.action.CloseKeyboardAction$CloseKeyboardIdlingResult@78050eb]
+11-08 19:59:43.731 11003 11003 I ImeTracker: ru.liturgyguide:f16c05bc: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser false
+11-08 19:59:43.771  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 19:59:43.771  1271  1271 I WindowMetricsNotification: WindowMetricsNotification.notifyWithWindow():113
+11-08 19:59:43.771  1271  1271 I WindowMetricsNotification: WindowMetricsNotification.notify():106 WindowMetricsNotification{bounds=Rect(0, 136 - 1080, 2400), insets=Rect(0, 0 - 0, 126), densityDpi=420, smallestScreenWidthDp=411, displayWidth=1080, displayHeight=2400, xdpi=420.0, ydpi=420.0}; DisplayMetrics{density=2.625, width=1080, height=2400, scaledDensity=2.625, xdpi=420.0, ydpi=420.0}
+11-08 19:59:43.884   832 12505 D NetworkMonitor/106: PROBE_HTTP http://connectivitycheck.gstatic.com/generate_204 time=248ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Sun, 08 Nov 2026 16:59:43 GMT], X-Android-Received-Millis=[1794157183878], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1794157183653]}
+11-08 19:59:43.894   832 12503 D NetworkMonitor/106: PROBE_FALLBACK http://www.google.com/gen_204 Probe failed with exception java.net.UnknownHostException: Unable to resolve host "www.google.com": No address associated with hostname
+11-08 19:59:43.895   832 12503 D NetworkMonitor/106: isCaptivePortal: isSuccessful()=false isPortal()=false RedirectUrl=null isPartialConnectivity()=true Time=314ms
+11-08 19:59:43.901   540   688 D ConnectivityService: [106 CELLULAR] validation failed
+11-08 19:59:43.929 11003 11003 D InsetsController: show(ime(), fromIme=true)
+11-08 19:59:43.972 11003 11003 D InsetsController: show(ime(), fromIme=true)
+11-08 19:59:43.972 11003 11003 I ImeTracker: ru.liturgyguide:3d09b68e: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+11-08 19:59:43.985 11003 11003 I ImeTracker: ru.liturgyguide:f23e6ede: onShown
+11-08 19:59:43.994 11003 11021 D EGL_emulation: app_time_stats: avg=147.83ms min=61.79ms max=285.67ms count=8
+11-08 19:59:44.036  1271  1271 W InputContextProxy: InputContextProxy.applyClientDiffInternal():940 Ignore [FetchSuggestions] diff due to stale request: 2511<2512, inputStateId=2390, lastInputStateId=2391
+11-08 19:59:44.036  1271  1271 I GoogleInputMethodService: GoogleInputMethodService$1.onKeyboardViewShown():494 onKeyboardViewShown: keyboardType=prime, keyboardViewType=HEADER keyboardView=com.google.android.libraries.inputmethod.widgets.SoftKeyboardView{e78ef84 V.E...... ........ 0,0-1080,116}
+11-08 19:59:44.036  1271  1271 I GoogleInputMethodService: GoogleInputMethodService$1.onKeyboardViewShown():494 onKeyboardViewShown: keyboardType=prime, keyboardViewType=BODY keyboardView=com.google.android.libraries.inputmethod.widgets.SoftKeyboardView{9ebc044 V.E...... ........ 0,0-1080,641}
+11-08 19:59:44.037  1271  1271 I NewLanguagePromptExtension: NewLanguagePromptExtension$1.onKeyboardViewShown():115 Not show new language banner: no new languages.
+11-08 19:59:44.037  1271  1271 I WindowMetricsNotification: WindowMetricsNotification.notifyWithWindow():113
+11-08 19:59:44.037  1271  1271 I WindowMetricsNotification: WindowMetricsNotification.notify():106 WindowMetricsNotification{bounds=Rect(0, 136 - 1080, 2400), insets=Rect(0, 0 - 0, 126), densityDpi=420, smallestScreenWidthDp=411, displayWidth=1080, displayHeight=2400, xdpi=420.0, ydpi=420.0}; DisplayMetrics{density=2.625, width=1080, height=2400, scaledDensity=2.625, xdpi=420.0, ydpi=420.0}
+11-08 19:59:44.037  1271  1271 I WindowMetricsNotification: WindowMetricsNotification.notifyWithWindow():113
+11-08 19:59:44.037  1271  1271 I WindowMetricsNotification: WindowMetricsNotification.notify():106 WindowMetricsNotification{bounds=Rect(0, 136 - 1080, 2400), insets=Rect(0, 0 - 0, 126), densityDpi=420, smallestScreenWidthDp=411, displayWidth=1080, displayHeight=2400, xdpi=420.0, ydpi=420.0}; DisplayMetrics{density=2.625, width=1080, height=2400, scaledDensity=2.625, xdpi=420.0, ydpi=420.0}
+11-08 19:59:44.037  1271  1271 I NormalModeController: NormalModeController.getKeyboardBodyViewHolderPaddingBottom():104 currentPrimeKeyboardType:SOFT systemPaddingBottom:-1
+11-08 19:59:44.047  1271  1271 I StylusEducationPopupDialog: StylusEducationPopupDialog.showFirstTimeEducation():79 First time education not shown for null
+11-08 19:59:44.048  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInputView():2393
+11-08 19:59:44.099  1271  1739 I Delight5Decoder: Delight5DecoderWrapper.setKeyboardLayout():511 setKeyboardLayout()
+11-08 19:59:44.118 11003 11003 D InsetsController: hide(ime(), fromIme=true)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: InputConnectionWrapper.waitForInputConnectionFutureInternal():1773 Failed to get the input connection call's result.
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: java.util.concurrent.TimeoutException: Waited 100 milliseconds (plus 153208 nanoseconds delay) for pxi@3630055[status=PENDING, info=[task=[running=[RUNNING ON ICWrapper-1], fch@1ff3a6a]]]
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at pug.get(PG:52)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at kbd.g(PG:9)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at kbd.f(PG:20)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at kbd.t(PG:27)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at kef.e(PG:15)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at kfm.A(PG:21)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at joy.A(PG:3)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at fto.g(PG:9)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at jov.a(PG:3)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at joy.af(PG:15)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at joy.I(PG:49)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at jos.k(PG:30)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at dia.q(PG:11)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at kfm.onFinishInputView(PG:75)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at android.inputmethodservice.InputMethodService.finishViews(InputMethodService.java:3245)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at android.inputmethodservice.InputMethodService.hideWindow(InputMethodService.java:3284)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at android.inputmethodservice.InputMethodService$InputMethodImpl.hideSoftInput(InputMethodService.java:967)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at kfl.hideSoftInput(PG:67)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at android.inputmethodservice.InputMethodService$InputMethodImpl.hideSoftInputWithToken(InputMethodService.java:927)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at android.inputmethodservice.IInputMethodWrapper.executeMessage(IInputMethodWrapper.java:247)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at com.android.internal.os.HandlerCaller$MyHandler.handleMessage(HandlerCaller.java:44)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at android.os.Handler.dispatchMessage(Handler.java:107)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at android.os.Looper.loopOnce(Looper.java:232)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at android.os.Looper.loop(Looper.java:317)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at android.app.ActivityThread.main(ActivityThread.java:8705)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at java.lang.reflect.Method.invoke(Native Method)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:580)
+11-08 19:59:44.149  1271  1271 E InputConnectionWrapper: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:886)
+11-08 19:59:44.149  1271  1271 W InputConnectionWrapper: InputConnectionWrapper.recordDuration():1694 IPC IC_REQUEST_CURSOR_UPDATES took 101 ms
+11-08 19:59:44.150  1271  1271 W TooltipLifecycleManager: TooltipLifecycleManager.dismissTooltips():152 Tooltip with id spell_check_add_to_dictionary not found in tooltipManager.
+11-08 19:59:44.161  1456 12418 I CheckinUtil: Classify the device as Phone. [CONTEXT service_id=130 ]
+11-08 19:59:44.151  1271  1271 I InputBundle: InputBundle.consumeEvent():884 Skip consuming an event as keyboard status is 0
+11-08 19:59:44.177  1271  1271 I VoiceInputHandler: VoiceInputHandler.onDeactivateIme():115 unregistering TalkbackStateListener
+11-08 19:59:44.177  1271  1271 I VoiceInputManagerWrapper: VoiceInputManagerWrapper.shutdown():124 shutdown()
+11-08 19:59:44.178  1271  1271 I AndroidIME: AbstractIme.onDeactivate():202 LatinIme.onDeactivate()
+11-08 19:59:44.180  1271  1601 W ModuleManager: ModuleManager.loadModule():473 Module mgc is not available
+11-08 19:59:44.193 11003 11003 I ImeTracker: ru.liturgyguide:8ef9b87b: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT_ON_ANIMATION_STATE_CHANGED fromUser false
+11-08 19:59:44.195 11003 11003 I ImeTracker: ru.liturgyguide:f16c05bc: onHidden
+11-08 19:59:44.196  1271  1271 I KeyboardHeightUtil: KeyboardHeightUtil.calculateMaxKeyboardBodyHeight():45 leave 281 height for app when ime window height:2138, header height:116 and isFullscreenMode:false, so the max keyboard body height is:1741
+11-08 19:59:44.198   540   653 I ImeTracker: ru.liturgyguide:8ef9b87b: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 19:59:44.404 11003 11003 W FrameTracker: Missed SF frame:UNKNOWN: 66, 1319039, 0, CUJ=J<IME_INSETS_SHOW_ANIMATION::0@1@ru.liturgyguide>
+11-08 19:59:44.424  1271  1271 W InputContextProxy: InputContextProxy.applyClientDiffInternal():940 Ignore [FetchSuggestions] diff due to stale request: 2513<2514, inputStateId=2392, lastInputStateId=2393
+11-08 19:59:44.424  1271  1271 I WindowMetricsNotification: WindowMetricsNotification.notifyWithWindow():113
+11-08 19:59:44.424  1271  1271 I WindowMetricsNotification: WindowMetricsNotification.notify():106 WindowMetricsNotification{bounds=Rect(0, 136 - 1080, 2400), insets=Rect(0, 0 - 0, 126), densityDpi=420, smallestScreenWidthDp=411, displayWidth=1080, displayHeight=2400, xdpi=420.0, ydpi=420.0}; DisplayMetrics{density=2.625, width=1080, height=2400, scaledDensity=2.625, xdpi=420.0, ydpi=420.0}
+11-08 19:59:44.508 19946 12433 D MddListenableWorkerFactory: createWorker for class: com.google.android.apps.messaging.shared.datamodel.workqueue.WorkQueueWorkerShim
+11-08 19:59:44.561  1456 12418 I Checkin : [AndroidCheckinProtoModule] Checkin reason type: 8 attempt count: 1.
+11-08 19:59:44.604 19946 12432 I SimStateUpdateHandler: Handling SimStateUpdate. Request for 3 work type received.
+11-08 19:59:44.612 19946 12432 I SimStateUpdateHandler: Handling update phone SIM state.
+11-08 19:59:44.614 19946 12432 I BugleSimStateTracker: Updating PhoneSimState
+11-08 19:59:44.618 11003 11003 D IdlingRegistry: Unregistering idling resources: [androidx.test.espresso.action.CloseKeyboardAction$CloseKeyboardIdlingResult@78050eb]
+11-08 19:59:44.634 19946 12432 I BugleSimStateTracker: Is carrier config for identified carrier: true
+11-08 19:59:44.638 19946 12432 I BugleSimStateTracker: default call SIM: redacted-pii:sim_id[chars:20,last3:897], default sms SIM redacted-pii:sim_id[chars:20,last3:897]. default data SIM redacted-pii:sim_id[chars:20,last3:897].
+11-08 19:59:44.655 19946 12432 I BugleSimStateTracker: Looking up Fi through package names.
+11-08 19:59:44.670   540   609 D FileUtils: Rounded bytes from 2593013760 to 4000000000
+11-08 19:59:44.688 19946 12432 I BugleSimStateTracker: allNewlyBuiltSimSubscriptionInfos (simId, loggableGuid): [(redacted-pii:sim_id[chars:20,last3:897], d4bc9b3d-adf7-4dd0-b87b-0c71af52eb41)]
+11-08 19:59:44.688 19946 12432 I BugleSimStateTracker: Storing updatedSimSubscriptionInfos: [(redacted-pii:sim_id[chars:20,last3:897], d4bc9b3d-adf7-4dd0-b87b-0c71af52eb41)]
+11-08 19:59:44.716 19946 12432 I WM-WorkerWrapper: Worker result SUCCESS for Work [ id=3174d29c-2e14-44d3-895e-f12f818c2fd0, tags={ com.google.android.apps.messaging.shared.datamodel.workqueue.WorkQueueWorkerShim,sim_state_update_queue-WORK_TYPE_UPDATE_PHONE_SIMS_STATE } ]
+11-08 19:59:44.858 11003 11003 I ActivityThread: Schedule relaunch activity: ru.liturgyguide.ui.MainActivity
+11-08 19:59:44.903 11003 11003 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@45d89be in: PAUSED
+11-08 19:59:44.904 11003 11003 V ActivityScenario: Update currentActivityStage to PAUSED, currentActivity=ru.liturgyguide.ui.MainActivity@45d89be
+11-08 19:59:44.906 11003 11003 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@45d89be in: STOPPED
+11-08 19:59:44.922 11003 11003 V ActivityScenario: Update currentActivityStage to STOPPED, currentActivity=ru.liturgyguide.ui.MainActivity@45d89be
+11-08 19:59:44.966 11003 11003 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@fd1963a
+11-08 19:59:44.972   540  1630 W InputManager-JNI: Input channel object 'a224d48 ru.liturgyguide/ru.liturgyguide.ui.MainActivity (client)' was disposed without first being removed with the input manager!
+11-08 19:59:44.979 11003 11003 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@45d89be in: DESTROYED
+11-08 19:59:44.979 11003 11003 V ActivityScenario: Update currentActivityStage to DESTROYED, currentActivity=null
+11-08 19:59:44.982 11003 11003 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@ba0053
+11-08 19:59:45.019 11003 11003 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@da0e584 in: PRE_ON_CREATE
+11-08 19:59:45.019 11003 11003 V ActivityScenario: Activity lifecycle changed event received but ignored because the reported transition was not ON_CREATE while the last known transition was DESTROYED
+11-08 19:59:45.026 11003 11003 D AutofillManager: Fill dialog is enabled:false, hints=[password, passwordAuto, creditCardNumber, creditCardSecurityCode, creditCardExpirationDate]
+11-08 19:59:45.064 11003 11003 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+11-08 19:59:45.064 11003 11003 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+11-08 19:59:45.074 11003 11003 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@da0e584 in: CREATED
+11-08 19:59:45.075 11003 11003 V ActivityScenario: Update currentActivityStage to CREATED, currentActivity=ru.liturgyguide.ui.MainActivity@da0e584
+11-08 19:59:45.076 11003 11003 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@da0e584 in: STARTED
+11-08 19:59:45.076 11003 11003 V ActivityScenario: Update currentActivityStage to STARTED, currentActivity=ru.liturgyguide.ui.MainActivity@da0e584
+11-08 19:59:45.077 11003 11003 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+11-08 19:59:45.077 11003 11003 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+11-08 19:59:45.079 11003 11003 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@da0e584 in: RESUMED
+11-08 19:59:45.079 11003 11003 V ActivityScenario: Update currentActivityStage to RESUMED, currentActivity=ru.liturgyguide.ui.MainActivity@da0e584
+11-08 19:59:45.080 11003 11003 I ImeTracker: ru.liturgyguide:f63a99b4: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser false
+11-08 19:59:45.080 11003 11003 I ImeTracker: ru.liturgyguide:f63a99b4: onFailed at PHASE_CLIENT_VIEW_SERVED
+11-08 19:59:45.131 11003 11021 D EGL_emulation: app_time_stats: avg=400.86ms min=79.72ms max=2083.50ms count=8
+11-08 19:59:45.132 11003 11003 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+11-08 19:59:45.132 11003 11003 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+11-08 19:59:45.175   345 12513 I resolv  : GetAddrInfoHandler::run: {103 786535 103 983143 10144 0}
+11-08 19:59:45.178   345 12514 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+11-08 19:59:45.178   345 12515 I resolv  : res_nmkquery: (QUERY, IN, A)
+11-08 19:59:45.268 19946 19950 I .apps.messaging: Compiler allocated 4994KB to compile java.lang.Object aflc.l()
+11-08 19:59:45.282   345 12514 I resolv  : res_nsend: used send_dg 264 terrno: 0
+11-08 19:59:45.282   345 12515 I resolv  : res_nsend: used send_dg 168 terrno: 0
+11-08 19:59:45.283   345 12515 I resolv  : doQuery: rcode=0, ancount=8, return value=168
+11-08 19:59:45.283   345 12514 I resolv  : doQuery: rcode=0, ancount=8, return value=264
+11-08 19:59:45.323  1456 12418 D TrafficStats: tagSocket(82) with statsTag=0x30000408, statsUid=-1
+11-08 19:59:45.437   540   653 I ImeTracker: ru.liturgyguide:2c6f5b45: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 19:59:45.437   540   653 I ImeTracker: ru.liturgyguide:2c6f5b45: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 19:59:45.439  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 19:59:45.446  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 19:59:45.446  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 19:59:45.448  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 19:59:45.451  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 19:59:45.577  1456 12418 W Conscrypt: Could not set socket write timeout: java.net.SocketException: Socket closed
+11-08 19:59:45.634  1456 12418 W Conscrypt: 	at com.google.android.gms.org.conscrypt.Platform.setSocketWriteTimeout(:com.google.android.gms@242335038@24.23.35 (190400-646585959):204)
+11-08 19:59:45.635  1456 12418 W Conscrypt: 	at com.google.android.gms.org.conscrypt.ConscryptFileDescriptorSocket.setSoWriteTimeout(:com.google.android.gms@242335038@24.23.35 (190400-646585959):4)
+11-08 19:59:45.738 11003 11003 I ViewInteraction: Performing 'send keyCode: 4, metaState: 0 key event' action on view view.getRootView() to equal view
+11-08 19:59:45.761  1271  1271 I StylusModule: StylusModule.onUpdateToolType():770 Update tool type = 0
+11-08 19:59:45.897  1456 12418 W Conscrypt: Could not set socket write timeout: java.net.SocketException: Socket closed
+11-08 19:59:45.897  1456 12418 W Conscrypt: 	at com.google.android.gms.org.conscrypt.Platform.setSocketWriteTimeout(:com.google.android.gms@242335038@24.23.35 (190400-646585959):204)
+11-08 19:59:45.897  1456 12418 W Conscrypt: 	at com.google.android.gms.org.conscrypt.ConscryptFileDescriptorSocket.setSoWriteTimeout(:com.google.android.gms@242335038@24.23.35 (190400-646585959):4)
+11-08 19:59:45.908   832 12520 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:59:45.911   832 12519 D TrafficStats: tagSocket(125) with statsTag=0xffffff81, statsUid=-1
+11-08 19:59:45.912   832 12520 D TrafficStats: tagSocket(124) with statsTag=0xffffff81, statsUid=-1
+11-08 19:59:45.912   832 12519 D TrafficStats: tagSocket(132) with statsTag=0xffffff81, statsUid=-1
+11-08 19:59:45.916   345 12521 I resolv  : ResNSendHandler::run: 0 / {106 983146 106 983146 1073 1}
+11-08 19:59:45.916   345 12522 I resolv  : ResNSendHandler::run: 0 / {106 983146 106 983146 1073 1}
+11-08 19:59:45.916   345 12521 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bfc990
+11-08 19:59:45.917   345 12523 I resolv  : ResNSendHandler::run: 0 / {106 983146 106 983146 1073 1}
+11-08 19:59:45.918   345 12524 I resolv  : ResNSendHandler::run: 0 / {106 983146 106 983146 1073 1}
+11-08 19:59:45.918   345 12524 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bf8630
+11-08 19:59:45.918   832   832 D TrafficStats: tagSocket(125) with statsTag=0xffffffff, statsUid=-1
+11-08 19:59:45.919   832   832 D TrafficStats: tagSocket(125) with statsTag=0xffffffff, statsUid=-1
+11-08 19:59:45.920   345 12522 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:59:45.921   345 12523 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:59:45.922   832 12519 D NetworkMonitor/106: PROBE_DNS www.google.com 12ms FAIL in type ADDRCONFIG java.net.UnknownHostException
+11-08 19:59:45.922   832 12520 D NetworkMonitor/106: PROBE_DNS connectivitycheck.gstatic.com 14ms OK 142.251.150.120,2001:4860:4826:7800::
+11-08 19:59:45.924   345 12525 I resolv  : GetAddrInfoHandler::run: {106 983146 106 983146 1073 1}
+11-08 19:59:45.924   345 12526 I resolv  : GetAddrInfoHandler::run: {106 983146 106 983146 1073 1}
+11-08 19:59:45.925   345 12528 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+11-08 19:59:45.925   345 12528 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bfc990
+11-08 19:59:45.925   345 12528 I resolv  : doQuery: rcode=0, ancount=1, return value=75
+11-08 19:59:45.925   345 12527 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+11-08 19:59:45.925   345 12530 I resolv  : res_nmkquery: (QUERY, IN, A)
+11-08 19:59:45.925   345 12530 I resolv  : resolv_cache_lookup: FOUND IN CACHE entry=0xb4000073f4bf8630
+11-08 19:59:45.925   345 12530 I resolv  : doQuery: rcode=0, ancount=1, return value=63
+11-08 19:59:45.926   345 12529 I resolv  : res_nmkquery: (QUERY, IN, A)
+11-08 19:59:45.926   832 12520 D TrafficStats: tagSocket(125) with statsTag=0xffffff81, statsUid=-1
+11-08 19:59:45.929   540   555 I system_server: NativeAlloc concurrent mark compact GC freed 11MB AllocSpace bytes, 13(292KB) LOS objects, 44% free, 30MB/54MB, paused 623us,7.605ms total 903.661ms
+11-08 19:59:45.929   345 12527 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:59:45.930   345 12527 I resolv  : doQuery: rcode=0, ancount=0, return value=32
+11-08 19:59:45.934   345 12529 I resolv  : res_nsend: used send_dg 32 terrno: 0
+11-08 19:59:45.934   345 12529 I resolv  : doQuery: rcode=0, ancount=0, return value=32
+11-08 19:59:45.935   832 12519 D NetworkMonitor/106: PROBE_HTTPS https://www.google.com/generate_204 Probe failed with exception java.net.UnknownHostException: Unable to resolve host "www.google.com": No address associated with hostname
+11-08 19:59:45.954 11003 11003 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@44d49b9
+11-08 19:59:45.959   540  1612 W InputManager-JNI: Input channel object '2fd1526 ru.liturgyguide/ru.liturgyguide.ui.MainActivity (client)' was disposed without first being removed with the input manager!
+11-08 19:59:45.995 11003 11003 I KeyEventActionBase: Back was pressed but there was no Activity stage transition in 150ms. Pressing back may trigger an activity stage transition if the activity is finished as a result. However, the activity may handle the back behavior in any number of other ways internally as well, such as popping the fragment back stack, dismissing a dialog, otherwise manually transacting fragments, etc.
+11-08 19:59:46.017   540  1612 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10304, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 19:59:46.035   540   653 I ImeTracker: ru.liturgyguide:b1064578: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 19:59:46.040  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=2369, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10000000 cmp=ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity }
+11-08 19:59:46.041   540   653 I ImeTracker: ru.liturgyguide:b1064578: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 19:59:46.042 11003 11003 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@da0e584 in: PAUSED
+11-08 19:59:46.042  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 19:59:46.043 11003 11003 V ActivityScenario: Update currentActivityStage to PAUSED, currentActivity=ru.liturgyguide.ui.MainActivity@da0e584
+11-08 19:59:46.044  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 19:59:46.044  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 19:59:46.045  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 19:59:46.045  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 19:59:46.084   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 19:59:46.087   345   419 I netd    : tetherGetStats() -> {[]} <3.15ms>
+11-08 19:59:46.115 11076 11105 I EGL_emulation: Opening libGLESv1_CM_emulation.so
+11-08 19:59:46.117   772   865 D SplashScreenView: Build android.window.SplashScreenView{b429a01 V.E...... ......ID 0,0-0,0}
+11-08 19:59:46.117   772   865 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-08 19:59:46.117   772   865 D SplashScreenView: Branding: view: android.view.View{40e10a6 G.ED..... ......I. 0,0-0,0 #1020503 android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-08 19:59:46.120 11076 11105 I EGL_emulation: Opening libGLESv2_emulation.so
+11-08 19:59:46.137  1456 12418 I Checkin : [CheckinRequestProcessor] updateCheckinIdTokenFileFromResponse, Reading existing AID
+11-08 19:59:46.139  1456 12418 I Checkin : [CheckinRequestProcessor] Default Task : Checkin Succeeded: https://android.googleapis.com/checkin (fragment #1).
+11-08 19:59:46.149   832 12520 D NetworkMonitor/106: PROBE_HTTP http://connectivitycheck.gstatic.com/generate_204 time=225ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Sun, 08 Nov 2026 16:59:46 GMT], X-Android-Received-Millis=[1794157186149], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1794157185928]}
+11-08 19:59:46.153 11076 11105 W HWUI    : Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+11-08 19:59:46.164 11076 11105 W HWUI    : Failed to initialize 101010-2 format, error = EGL_SUCCESS
+11-08 19:59:46.177   832 12518 D NetworkMonitor/106: PROBE_FALLBACK http://www.google.com/gen_204 Probe failed with exception java.net.UnknownHostException: Unable to resolve host "www.google.com": No address associated with hostname
+11-08 19:59:46.178   832 12518 D NetworkMonitor/106: isCaptivePortal: isSuccessful()=false isPortal()=false RedirectUrl=null isPartialConnectivity()=true Time=271ms
+11-08 19:59:46.183  1456 12418 I Checkin : [CheckinOperation] Checkin Operation finished with result: SUCCESS finish time: 19848748.
+11-08 19:59:46.217   540   688 D ConnectivityService: [106 CELLULAR] validation failed
+11-08 19:59:46.235  1456 12418 I AccountSeedingPrefetchI: AccountSeedingPrefetchInit intent operation started. [CONTEXT service_id=42 ]
+11-08 19:59:46.315   974 12099 I AlarmManager: setExactAndAllowWhileIdle [name: GCM_CONN_ALARM type: 2 triggerAtMillis: 19850128]
+11-08 19:59:46.381 11003 11003 D VRI[MainActivity]: visibilityChanged oldVisibility=true newVisibility=false
+11-08 19:59:46.408  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=776, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10000100 cmp=com.google.android.apps.nexuslauncher/.NexusLauncherActivity }
+11-08 19:59:46.418   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 19:59:46.434   540   565 W ziparchive: Unable to open '/data/app/~~2FuXyoIivRiSckhlskSh7w==/ru.liturgyguide.test-KKblDRDMX_qY7IAjy0x9EA==/base.dm': No such file or directory
+11-08 19:59:46.437   540   565 I ActivityTaskManager: Displayed ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity for user 0: +394ms
+11-08 19:59:46.448  1210  1210 D NexusLauncherModelDelegate: notifySmartspaceEvent: SmartspaceTargetEvent{mSmartspaceTarget=null, mSmartspaceActionId='null', mEventType=6}
+11-08 19:59:46.464  1210  1210 D BaseDepthController: setSurface:
+11-08 19:59:46.464  1210  1210 D BaseDepthController: 	mWaitingOnSurfaceValidity: false
+11-08 19:59:46.464  1210  1210 D BaseDepthController: 	mSurface: Surface(name=com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity)/@0xdbda08f
+11-08 19:59:46.571  1210  1210 D StatsLog: LAUNCHER_ONRESUME
+11-08 19:59:46.573   540   688 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+11-08 19:59:46.575   540   688 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+11-08 19:59:46.575   540   688 D InetDiagMessage: Destroyed live tcp sockets for uids={10113} in 3ms
+11-08 19:59:46.575 11003 11003 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@da0e584 in: STOPPED
+11-08 19:59:46.576   540   688 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+11-08 19:59:46.576   540   688 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+11-08 19:59:46.576   540   688 D InetDiagMessage: Destroyed live tcp sockets for uids={20113} in 2ms
+11-08 19:59:46.578 11003 11003 V ActivityScenario: Update currentActivityStage to STOPPED, currentActivity=ru.liturgyguide.ui.MainActivity@da0e584
+11-08 19:59:46.583  1210  1236 D QuickstepModelDelegate: notifyAppTargetEvent action=1 launchLocation=workspace/0/[-1,-1]/[1,1]
+11-08 19:59:46.603 11003 11003 D LifecycleMonitor: Lifecycle status change: ru.liturgyguide.ui.MainActivity@da0e584 in: DESTROYED
+11-08 19:59:46.603 11003 11003 V ActivityScenario: Update currentActivityStage to DESTROYED, currentActivity=null
+11-08 19:59:46.607 11003 11018 D IdlingRegistry: Unregistering idling resources: [androidx.compose.ui.test.EspressoLink@6c3e01a]
+11-08 19:59:46.608   540  1630 W InputManager-JNI: Input channel object '1a018f7 ru.liturgyguide/ru.liturgyguide.ui.MainActivity (client)' was disposed without first being removed with the input manager!
+11-08 19:59:46.611 11003 11003 E FrameTracker: force finish cuj, time out: J<IME_INSETS_HIDE_ANIMATION::1@1@ru.liturgyguide>
+11-08 19:59:46.615   540  1371 W AppSearchIcing: icing-search-engine.cc:321: Error: 5, Message: Document (com.google.android.googlequicksearchbox$OneSearchZeroStateGoogleSuggestions/default, zp) not found.
+11-08 19:59:46.618  1210  1578 D OneSearchSuggestProvider: AppSearch 0-state cache not available, fallback to AGA
+11-08 19:59:46.618  1210  1578 D OneSearchSuggestProvider: java.util.concurrent.CompletionException: java.util.NoSuchElementException: No value present
+11-08 19:59:46.618  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:308)
+11-08 19:59:46.618  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:323)
+11-08 19:59:46.618  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture$UniAccept.tryFire(CompletableFuture.java:684)
+11-08 19:59:46.618  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:486)
+11-08 19:59:46.618  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2138)
+11-08 19:59:46.618  1210  1578 D OneSearchSuggestProvider: 	at com.google.android.apps.nexuslauncher.allapps.E0.onResult(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:67)
+11-08 19:59:46.618  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1.lambda$onResult$0(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:144)
+11-08 19:59:46.618  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1.$r8$lambda$CEk3q8sDAQVhU3rQwVueB8FAj_M(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:1)
+11-08 19:59:46.618  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1$$ExternalSyntheticLambda0.run(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:22)
+11-08 19:59:46.618  1210  1578 D OneSearchSuggestProvider: 	at android.os.Handler.handleCallback(Handler.java:959)
+11-08 19:59:46.618  1210  1578 D OneSearchSuggestProvider: 	at android.os.Handler.dispatchMessage(Handler.java:100)
+11-08 19:59:46.618  1210  1578 D OneSearchSuggestProvider: 	at android.os.Looper.loopOnce(Looper.java:232)
+11-08 19:59:46.618  1210  1578 D OneSearchSuggestProvider: 	at android.os.Looper.loop(Looper.java:317)
+11-08 19:59:46.618  1210  1578 D OneSearchSuggestProvider: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+11-08 19:59:46.618  1210  1578 D OneSearchSuggestProvider: Caused by: java.util.NoSuchElementException: No value present
+11-08 19:59:46.618  1210  1578 D OneSearchSuggestProvider: 	at java.util.Optional.get(Optional.java:143)
+11-08 19:59:46.618  1210  1578 D OneSearchSuggestProvider: 	at com.google.android.apps.nexuslauncher.allapps.E0.onResult(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:28)
+11-08 19:59:46.618  1210  1578 D OneSearchSuggestProvider: 	... 8 more
+11-08 19:59:46.625 11003 11018 I TestRunner: finished: favoriteDoesNotChooseAnotherParishOrEraseTheSavedStage(ru.liturgyguide.ui.SavedChurchFlowTest)

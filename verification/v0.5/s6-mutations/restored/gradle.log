@@ -1,0 +1,64 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.7/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Warning: SDK processing. This version only understands SDK XML versions up to 3 but an SDK XML file of version 4 was encountered. This can happen if you use versions of Android Studio and the command-line tools that were released at different times.
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugResValues
+> Task :app:checkDebugAarMetadata
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :app:parseDebugLocalResources
+> Task :app:mergeDebugResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:processDebugManifestForPackage
+> Task :app:javaPreCompileDebugUnitTest
+> Task :app:javaPreCompileDebug
+> Task :app:processDebugResources
+
+> Task :app:compileDebugKotlin
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/main/java/ru/liturgyguide/ui/ChurchDiscoveryScreen.kt:124:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/main/java/ru/liturgyguide/ui/ChurchScreen.kt:239:164 'val Icons.Filled.OpenInNew: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.OpenInNew.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/main/java/ru/liturgyguide/ui/GuideTheme.kt:60:20 'var statusBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/main/java/ru/liturgyguide/ui/GuideTheme.kt:61:20 'var navigationBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/main/java/ru/liturgyguide/ui/ListeningCard.kt:30:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/main/java/ru/liturgyguide/ui/LocateChurchCard.kt:27:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/main/java/ru/liturgyguide/ui/MainActivity.kt:179:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/main/java/ru/liturgyguide/ui/NavigationComponents.kt:21:55 'val Icons.Filled.MenuBook: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.MenuBook.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/main/java/ru/liturgyguide/ui/PrayerPlayerState.kt:81:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/main/java/ru/liturgyguide/ui/SavedChurchForm.kt:122:21 'val LocalLifecycleOwner: ProvidableCompositionLocal<LifecycleOwner>' is deprecated. Moved to lifecycle-runtime-compose library in androidx.lifecycle.compose package.
+
+> Task :app:compileDebugJavaWithJavac NO-SOURCE
+> Task :app:processDebugJavaRes
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:bundleDebugClassesToCompileJar
+
+> Task :app:compileDebugUnitTestKotlin
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:157:55 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:167:55 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:177:55 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:188:55 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:199:55 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:209:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:210:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:211:31 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:212:31 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:219:34 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:228:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:229:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:230:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:236:34 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:238:28 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+w: file:///private/tmp/feoria-v05-mutations-mmka1k8t/project/app/src/test/java/ru/liturgyguide/service/ServiceSessionTest.kt:244:34 'fun suggest(parish: Parish, now: Instant = ...): ContextSuggestion?' is deprecated. Use overview to keep current and next services visible independently.
+
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes
+> Task :app:testDebugUnitTest
+
+BUILD SUCCESSFUL in 18s
+22 actionable tasks: 22 executed
