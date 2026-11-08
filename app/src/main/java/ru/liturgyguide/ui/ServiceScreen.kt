@@ -475,6 +475,11 @@ private fun ReaderMeaning(reading: ActiveServicePlayback, missing: Boolean, modi
     val scroll = rememberLazyListState()
     val track = reading.track
     var showDayNote by rememberSaveable(track?.id) { mutableStateOf(false) }
+    val source = explanationSource(reading.stage.sourceUrl, reading.stage.sourceTitle)
+    // The saved-state key includes the source identity, including after activity restoration.
+    var sourceExpanded by key(reading.stage.id, reading.stage.sourceUrl) {
+        rememberSaveable { mutableStateOf(false) }
+    }
     LaunchedEffect(reading.stage.id, track?.id) { scroll.scrollToItem(0) }
     LazyColumn(modifier.fillMaxSize().testTag("service_content"), state = scroll,
         contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -495,7 +500,37 @@ private fun ReaderMeaning(reading: ActiveServicePlayback, missing: Boolean, modi
                 track.sourceUrl?.let { url -> TextButton(onClick = { onOpenSource(url) }) { Text("Источник текста") } }
             }
         }
-        reading.stage.sourceUrl?.let { url -> item { TextButton(onClick = { onOpenSource(url) }) { Text(reading.stage.sourceTitle ?: "Источник объяснения") } } }
+        source?.let { publication ->
+            item(key = "explanation_source_toggle") {
+                TextButton(onClick = { sourceExpanded = !sourceExpanded },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                        .testTag("explanation_source_toggle")
+                        .semantics { stateDescription = if (sourceExpanded) "Развернуто" else "Свернуто" }) {
+                    Text("Источник пояснения", Modifier.weight(1f))
+                    Spacer(Modifier.width(12.dp))
+                    Icon(if (sourceExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null)
+                }
+            }
+            if (sourceExpanded) item(key = "explanation_source_details") {
+                Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Публикация, использованная при подготовке пояснения",
+                        style = MaterialTheme.typography.bodySmall.readingParagraph(),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(publication.title, Modifier.testTag("explanation_source_title"),
+                        style = MaterialTheme.typography.bodyLarge.readingParagraph())
+                    publication.siteLabel?.let { label ->
+                        Text(label, Modifier.testTag("explanation_source_site"),
+                            style = MaterialTheme.typography.bodyMedium.readingParagraph(),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    TextButton(onClick = { onOpenSource(publication.url) },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("explanation_source_open")) {
+                        Text("Открыть публикацию")
+                    }
+                }
+            }
+        }
     }
 }
 
