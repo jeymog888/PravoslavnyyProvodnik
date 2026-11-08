@@ -45,32 +45,32 @@ class DateRolloverTest {
         }
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("schedule_today"))
         compose.onNodeWithTag("schedule_today").assertIsSelected()
-        assertScheduleText("29 ноября, воскресенье")
+        assertScheduleText("29 ноября 2026, воскресенье")
         assertScheduleText("07:00")
         assertScheduleText("09:30")
 
         compose.runOnIdle { currentDate.value = LocalDate.of(2026, 11, 30) }
 
         compose.onNodeWithTag("schedule_today").assertIsSelected()
-        assertScheduleText("30 ноября, понедельник")
+        assertScheduleText("30 ноября 2026, понедельник")
         assertScheduleText("08:00")
         compose.onNodeWithText("07:00").assertDoesNotExist()
         compose.onNodeWithText("09:30").assertDoesNotExist()
 
         chooseScheduleDay("schedule_tomorrow")
-        assertScheduleText("1 декабря, вторник")
+        assertScheduleText("1 декабря 2026, вторник")
         assertNoConfirmedSchedule()
 
         compose.runOnIdle { currentDate.value = LocalDate.of(2026, 12, 1) }
 
         compose.onNodeWithTag("schedule_tomorrow").assertIsSelected()
         compose.onNodeWithTag("schedule_today").assertIsNotSelected()
-        assertScheduleText("2 декабря, среда")
-        compose.onNodeWithText("1 декабря, вторник").assertDoesNotExist()
+        assertScheduleText("2 декабря 2026, среда")
+        compose.onNodeWithText("1 декабря 2026, вторник").assertDoesNotExist()
         assertNoConfirmedSchedule()
 
         chooseScheduleDay("schedule_today")
-        assertScheduleText("1 декабря, вторник")
+        assertScheduleText("1 декабря 2026, вторник")
         assertNoConfirmedSchedule()
     }
 
@@ -85,7 +85,7 @@ class DateRolloverTest {
     }
 
     private fun assertNoConfirmedSchedule() {
-        assertScheduleText("На этот день нет подтвержденного расписания в приложении")
+        assertScheduleText("На этот день нет опубликованного расписания в приложении")
         compose.onNodeWithText("07:00").assertDoesNotExist()
         compose.onNodeWithText("08:00").assertDoesNotExist()
         compose.onNodeWithText("09:30").assertDoesNotExist()

@@ -6,8 +6,6 @@ import ru.liturgyguide.model.ParishService
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
 import java.time.ZoneId
 
 /** Serializable session anchor. No wall-clock-only time or audio is persisted. */
@@ -127,7 +125,18 @@ data class ContextSuggestion(
     val relation: ServiceRelation,
     val startInstant: Instant,
     val approximateStageId: String? = null,
-    val approximateElapsedInStageMillis: Long = 0
+    val approximateElapsedInStageMillis: Long = 0,
+    val source: ServiceStartSource = ServiceStartSource.PUBLISHED,
+    val parishId: String = "",
+    val timezone: String = "UTC",
+    /** Exhausting an editorial guide is not evidence that the service has ended. */
+    val estimatedGuideExhausted: Boolean = false
+)
+
+/** Both choices remain visible independently, even if the current estimate exhausted its guide. */
+data class ScheduleOverview(
+    val currentHypothesis: ContextSuggestion? = null,
+    val nextKnownService: ContextSuggestion? = null
 )
 
 /** Schedule produces a hypothesis; it never starts a session or opens the microphone. */
@@ -140,52 +149,74 @@ class ContextSuggestionEngine(
     // identifiable beginning, suggest the service without inventing a stage.
     private val beginningStageId = stages.firstOrNull { it.id == "beginning" }?.id
 
-    fun suggest(parish: Parish, now: Instant = clock.instant()): ContextSuggestion? {
-        val zone = runCatching { ZoneId.of(parish.timezone) }.getOrNull() ?: return null
-        val today = now.atZone(zone).toLocalDate()
-        val from = runCatching { LocalDate.parse(parish.scheduleValidFrom) }.getOrNull() ?: return null
-        val until = runCatching { LocalDate.parse(parish.scheduleValidUntil) }.getOrNull() ?: return null
-        if (today.isBefore(from) || today.isAfter(until)) return null
-
-        val candidates = parish.schedule.mapNotNull { service ->
-            if (service.kind != "liturgy") return@mapNotNull null
-            val start = runCatching {
-                val date = LocalDate.parse(service.date)
-                if (date != today) return@mapNotNull null
-                val local = date.atTime(LocalTime.parse(service.time))
-                // Avoid guessing which occurrence was intended during a daylight
-                // saving clock change, or moving a nonexistent time forward.
-                val offsets = zone.rules.getValidOffsets(local)
-                if (offsets.size != 1) return@mapNotNull null
-                local.atOffset(offsets.single()).toInstant()
-            }.getOrNull() ?: return@mapNotNull null
-            service to start
-        }
-
-        val inProgress = candidates.filter { (_, start) ->
-            !start.isAfter(now) && Duration.between(start, now) <= MAX_STARTED_AGE
-        }.maxByOrNull { it.second }
-        val upcoming = candidates.filter { (_, start) ->
-            start.isAfter(now) && Duration.between(now, start) <= MAX_UPCOMING_DISTANCE
-        }.minByOrNull { it.second }?.let { (service, start) ->
-            ContextSuggestion(service, ServiceRelation.Upcoming, start)
-        }
-        if (inProgress != null) {
-            val (service, start) = inProgress
-            val estimate = beginningStageId?.let { beginning ->
-                sessionEngine.position(sessionEngine.start(beginning, autoAdvance = true,
-                    now = start, approximate = true), now)
+    fun overview(
+        parish: Parish,
+        now: Instant = clock.instant(),
+        userStarts: List<UserServiceStart> = emptyList()
+    ): ScheduleOverview {
+        val zone = runCatching { ZoneId.of(parish.timezone) }.getOrNull() ?: return ScheduleOverview()
+        // Only a valid personal start suppresses the published suggestion for this exact date.
+        // The original parish.schedule is never mutated, including other liturgies that day.
+        val personal = UserServiceStartCodec.unambiguous(userStarts)
+            .mapNotNull { UserServiceStartCodec.validatedFor(it, parish) }
+        val personalDates = personal.map { it.date }.toSet()
+        val from = ScheduleTime.date(parish.scheduleValidFrom)
+        val until = ScheduleTime.date(parish.scheduleValidUntil)
+        val published = if (from == null || until == null || until.isBefore(from)) emptyList() else
+            parish.schedule.mapNotNull { service ->
+                if (service.kind != "liturgy" || service.date in personalDates || service.title.isBlank()) return@mapNotNull null
+                val date = ScheduleTime.date(service.date) ?: return@mapNotNull null
+                // Check each occurrence's date, not today's date: the next publication may begin tomorrow.
+                if (date.isBefore(from) || date.isAfter(until)) return@mapNotNull null
+                occurrence(service, zone, ServiceStartSource.PUBLISHED)
             }
-            // A prior service may run longer than the guide. When its estimated
-            // timeline is exhausted, prefer a nearby upcoming liturgy rather
-            // than placing someone arriving for it at the previous dismissal.
-            // This is a ranking rule, not evidence that the earlier service ended.
-            if (estimate?.atEndOfGuide == true && upcoming != null) return upcoming
-            return ContextSuggestion(service, ServiceRelation.InProgress, start,
-                estimate?.stageId, estimate?.elapsedInStageMillis ?: 0)
+        val candidates = published + personal.mapNotNull { record ->
+            occurrence(ParishService(record.date, record.time, "Литургия", "liturgy"), zone, ServiceStartSource.USER)
         }
+        // Tie-break deterministically when the source repeats a start with different titles.
+        val ordered = candidates.sortedWith(compareBy<Occurrence> { it.start }.thenBy { it.service.title })
+            .distinctBy { it.start }
+        val current = ordered.lastOrNull { !it.start.isAfter(now) && Duration.between(it.start, now) <= MAX_STARTED_AGE }
+        val next = ordered.firstOrNull { it.start.isAfter(now) }
+        return ScheduleOverview(
+            currentHypothesis = current?.let { candidate ->
+                val estimate = beginningStageId?.let { beginning ->
+                    sessionEngine.position(sessionEngine.start(beginning, autoAdvance = true,
+                        now = candidate.start, approximate = true), now)
+                }
+                ContextSuggestion(candidate.service, ServiceRelation.InProgress, candidate.start,
+                    estimate?.stageId, estimate?.elapsedInStageMillis ?: 0,
+                    candidate.source, parish.id, zone.id, estimate?.atEndOfGuide == true)
+            },
+            nextKnownService = next?.let {
+                ContextSuggestion(it.service, ServiceRelation.Upcoming, it.start,
+                    source = it.source, parishId = parish.id, timezone = zone.id)
+            }
+        )
+    }
 
-        return upcoming
+    /** Compatibility only: new screens must show both overview choices and bind clicks to one of them. */
+    @Deprecated("Use overview to keep current and next services visible independently")
+    fun suggest(parish: Parish, now: Instant = clock.instant()): ContextSuggestion? {
+        val overview = overview(parish, now)
+        val today = runCatching { now.atZone(ZoneId.of(parish.timezone)).toLocalDate() }.getOrNull() ?: return null
+        val current = overview.currentHypothesis?.takeIf { it.service.date == today.toString() }
+        val next = overview.nextKnownService?.takeIf {
+            it.service.date == today.toString() && Duration.between(now, it.startInstant) <= MAX_UPCOMING_DISTANCE
+        }
+        return if (current?.estimatedGuideExhausted == true && next != null) next else current ?: next
+    }
+
+    private data class Occurrence(val service: ParishService, val start: Instant, val source: ServiceStartSource)
+
+    private fun occurrence(service: ParishService, zone: ZoneId, source: ServiceStartSource): Occurrence? {
+        val date = ScheduleTime.date(service.date) ?: return null
+        val time = when (source) {
+            ServiceStartSource.PUBLISHED -> ScheduleTime.publishedTime(service.time)
+            ServiceStartSource.USER -> ScheduleTime.manualTime(service.time)
+        } ?: return null
+        val start = ScheduleTime.instant(date, time, zone) ?: return null
+        return Occurrence(service, start, source)
     }
 
     companion object {

@@ -32,6 +32,7 @@ import ru.liturgyguide.service.PrayerTrackFactory
 import ru.liturgyguide.service.PrayerTextSearch
 import ru.liturgyguide.service.ChurchDirectory
 import ru.liturgyguide.service.ChurchDirectoryStore
+import ru.liturgyguide.service.UserServiceStartStore
 import com.google.gson.Gson
 import java.time.Clock
 import java.time.ZoneId
@@ -53,6 +54,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
     val screenStateHolder = rememberSaveableStateHolder()
     val preferences = remember { context.getSharedPreferences("guide_preferences", 0) }
     val churchStore = remember(preferences) { ChurchDirectoryStore(preferences) }
+    val startStore = remember(preferences) { UserServiceStartStore(preferences) }
+    var userStarts by remember { mutableStateOf(startStore.records()) }
     var savedChurches by remember { mutableStateOf(churchStore.records()) }
     var favoriteChurches by remember { mutableStateOf(churchStore.favorites()) }
     val systemDark = isSystemInDarkTheme()
@@ -329,6 +332,17 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
                         },
                         onDiscover = { screen = Screen.DISCOVERY },
                         pickerRequest = churchPickerRequest,
+                        userStarts = userStarts,
+                        onSaveStart = { value ->
+                            val saved = church?.let { startStore.save(value, it) } == true
+                            if (saved) userStarts = startStore.records()
+                            saved
+                        },
+                        onRemoveStart = { date ->
+                            val removed = church?.let { startStore.remove(it.id, date) } == true
+                            if (removed) userStarts = startStore.records()
+                            removed
+                        },
                         currentDate = currentDate,
                         onSelect = ::chooseChurch,
                         onOpenUrl = { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(it))) }, onBack = ::back,
