@@ -18,11 +18,44 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 /** No retry, changed expectation or new Espresso handler: rethrow the original failure. */
-internal fun withCiFailureDiagnostics(source: String, block: () -> Unit): Unit = try {
+internal fun withCiFailureDiagnostics(
+    source: String,
+    additionalEvidence: ((File, Long, CiEvidencePhase) -> Unit)? = null,
+    block: () -> Unit
+): Unit = try {
     block()
 } catch (failure: Throwable) {
-    CiFailureDiagnostics.capture(source, failure)
+    CiFailureDiagnostics.capture(source, failure, additionalEvidence)
     throw failure
+}
+
+internal enum class CiEvidencePhase { BEFORE_SCREENSHOT, AFTER_SCREENSHOT }
+
+/** Reads only on the worker. A timed-out worker cannot write a late artifact after cleanup. */
+internal fun writeCiFailureEvidence(directory: File, name: String, deadline: Long, read: () -> String) {
+    val started = SystemClock.uptimeMillis()
+    val record = JSONObject().put("file", name).put("startedUptimeMillis", started)
+        .put("wallTimeMillis", System.currentTimeMillis())
+        .put("limits", "Post-failure read; separate observations are not atomic")
+    val budget = minOf(3_000L, deadline - started)
+    if (budget <= 0) {
+        record.put("outcome", "BUDGET_EXHAUSTED")
+    } else {
+        val task = FutureTask<String> { read() }
+        Thread(task, "feoria-ci-additional-evidence").apply { isDaemon = true; start() }
+        try {
+            val data = task.get(budget, TimeUnit.MILLISECONDS)
+            File(directory, name).writeText(data)
+            record.put("outcome", "RECORDED").put("characters", data.length)
+        } catch (failure: Throwable) {
+            record.put("outcome", "ERROR").put("error", failure.stackTraceToString())
+        } finally {
+            task.cancel(true)
+        }
+    }
+    record.put("finishedUptimeMillis", SystemClock.uptimeMillis())
+    runCatching { File(directory, "$name.capture.json").writeText(record.toString(2)) }
+        .onFailure { Log.e("FeoriaCiDiagnostics", "Could not record additional evidence: $name", it) }
 }
 
 internal fun closeSoftKeyboardWithCiDiagnostics() =
@@ -35,10 +68,11 @@ internal fun pressBackWithCiDiagnostics() =
 private object CiFailureDiagnostics {
     private val captured = AtomicBoolean(false)
 
-    fun capture(source: String, original: Throwable) {
+    fun capture(source: String, original: Throwable, additionalEvidence: ((File, Long, CiEvidencePhase) -> Unit)?) {
         try {
             val arguments = InstrumentationRegistry.getArguments()
             if (arguments.getString("feoriaCiDiagnostics") != "true" || !captured.compareAndSet(false, true)) return
+            val deadline = SystemClock.uptimeMillis() + 30_000L
             val run = requireNotNull(arguments.getString("feoriaCiDiagnosticsRun"))
             require(run.matches(Regex("[A-Za-z0-9_-]{1,100}")))
             val instrumentation = InstrumentationRegistry.getInstrumentation()
@@ -61,13 +95,23 @@ private object CiFailureDiagnostics {
                 .put("isInteractive", power.isInteractive).put("isKeyguardLocked", keyguard.isKeyguardLocked)
                 .put("isDeviceLocked", keyguard.isDeviceLocked).put("verdict", "DIAGNOSTIC_ONLY")
             File(directory, "failure-context.json").writeText(record.toString(2))
-            val deadline = SystemClock.uptimeMillis() + 30_000L
             val commands = JSONArray()
-            // Focus owner first, before the failed test's finally block or ActivityScenario.close.
+            val additional = JSONArray()
+            fun collectAdditional(phase: CiEvidencePhase) {
+                if (additionalEvidence == null) return
+                val part = JSONObject().put("phase", phase.name).put("startedUptimeMillis", SystemClock.uptimeMillis())
+                runCatching { additionalEvidence(directory, deadline, phase) }
+                    .onSuccess { part.put("outcome", "FINISHED") }
+                    .onFailure { part.put("outcome", "ERROR").put("error", it.stackTraceToString()) }
+                additional.put(part.put("finishedUptimeMillis", SystemClock.uptimeMillis()))
+            }
+            collectAdditional(CiEvidencePhase.BEFORE_SCREENSHOT)
+            commands.put(read(directory, "screen.png", "screencap -p", deadline))
+            collectAdditional(CiEvidencePhase.AFTER_SCREENSHOT)
+            // No retries or UI mutations; every read shares the same pre-cleanup deadline.
             val reads = listOf(
                 "windows.txt" to "dumpsys -t 2 window windows",
                 "displays.txt" to "dumpsys -t 2 window displays",
-                "screen.png" to "screencap -p",
                 "power.txt" to "dumpsys -t 2 power",
                 "policy.txt" to "dumpsys -t 2 window policy",
                 "activity.txt" to "dumpsys -t 2 activity activities",
@@ -80,6 +124,7 @@ private object CiFailureDiagnostics {
                 commands.put(read(directory, name, command, deadline))
             }
             record.put("finishedUptimeMillis", SystemClock.uptimeMillis()).put("commands", commands)
+                .put("additionalEvidence", additional)
             File(directory, "capture.json").writeText(record.toString(2))
             Log.e("FeoriaCiDiagnostics", "First failure evidence: ${directory.absolutePath}")
         } catch (diagnosticFailure: Throwable) {

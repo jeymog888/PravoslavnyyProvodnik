@@ -1,5 +1,7 @@
 package ru.liturgyguide.ui
 
+import android.graphics.Rect
+import android.os.SystemClock
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.activity.ComponentActivity
@@ -12,6 +14,8 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -78,20 +82,71 @@ class ChurchDiscoveryScreenTest {
                 else success(listOf(kazan), DiscoveryProvider.PHOTON) }
         }
         var returned = false
+        var phase = "launch"
         try {
-            launch(fake, onBack = { returned = true })
-            search("Первый")
-            scrollTo("discovery_cancel").assertIsDisplayed().assertIsEnabled().performClick()
-            compose.onNodeWithTag("discovery_message").assertTextEquals("Поиск остановлен. Можно попробовать снова или выбрать храм вручную")
-            compose.onNodeWithTag("discovery_loading").assertDoesNotExist()
-            search("Казань")
-            scrollTo("discovery_city_osm:relation:1").assertIsDisplayed()
-            compose.runOnIdle { oldResult.complete(success(listOf(namesake), DiscoveryProvider.PHOTON)) }
-            compose.waitForIdle()
-            compose.onNodeWithTag("discovery_city_osm:node:2").assertDoesNotExist()
-            scrollTo("discovery_city_osm:relation:1").assertIsDisplayed()
-            compose.onNodeWithTag("discovery_manual").performClick()
-            compose.runOnIdle { assertTrue(returned) }
+            withCiFailureDiagnostics("discovery.cancelLateResult", additionalEvidence = { directory, deadline, evidencePhase ->
+                when (evidencePhase) {
+                    CiEvidencePhase.BEFORE_SCREENSHOT -> {
+                        writeCiFailureEvidence(directory, "discovery-context.json", deadline) {
+                            JSONObject().put("phase", phase).put("targetTag", "discovery_city_osm:relation:1")
+                                .put("queries", JSONArray(fake.queries.toList()))
+                                .put("centers", JSONArray(fake.centers.toList().map {
+                                    JSONObject().put("latitude", it.latitude).put("longitude", it.longitude)
+                                }))
+                                .put("oldResultCompleted", oldResult.isCompleted).put("oldResultCancelled", oldResult.isCancelled)
+                                .put("wallTimeMillis", System.currentTimeMillis()).put("uptimeMillis", SystemClock.uptimeMillis())
+                                .toString(2)
+                        }
+                        writeCiFailureEvidence(directory, "discovery-platform.json", deadline) {
+                            var sample: JSONObject? = null
+                            compose.activityRule.scenario.onActivity { activity ->
+                                val decor = activity.window.decorView
+                                val insets = ViewCompat.getRootWindowInsets(decor)
+                                val frame = Rect().also(decor::getWindowVisibleDisplayFrame)
+                                sample = JSONObject().put("wallTimeMillis", System.currentTimeMillis())
+                                    .put("uptimeMillis", SystemClock.uptimeMillis()).put("windowFocus", decor.hasWindowFocus())
+                                    .put("lifecycle", activity.lifecycle.currentState.name)
+                                    .put("imeVisible", insets?.isVisible(WindowInsetsCompat.Type.ime()) ?: JSONObject.NULL)
+                                    .put("imeBottom", insets?.getInsets(WindowInsetsCompat.Type.ime())?.bottom ?: JSONObject.NULL)
+                                    .put("decorWidth", decor.width).put("decorHeight", decor.height)
+                                    .put("visibleFrame", frame.toShortString())
+                            }
+                            requireNotNull(sample).toString(2)
+                        }
+                    }
+                    CiEvidencePhase.AFTER_SCREENSHOT -> {
+                        writeCiFailureEvidence(directory, "discovery-merged-tree.txt", deadline) {
+                            "Post-failure tree; printToString may synchronize Compose before reading.\n" +
+                                compose.onRoot().printToString()
+                        }
+                        writeCiFailureEvidence(directory, "discovery-unmerged-tree.txt", deadline) {
+                            "Post-failure tree; printToString may synchronize Compose before reading.\n" +
+                                compose.onRoot(useUnmergedTree = true).printToString()
+                        }
+                    }
+                }
+            }) {
+                launch(fake, onBack = { returned = true })
+                phase = "first-search"
+                search("Первый")
+                phase = "cancel-first-search"
+                scrollTo("discovery_cancel").assertIsDisplayed().assertIsEnabled().performClick()
+                compose.onNodeWithTag("discovery_message").assertTextEquals("Поиск остановлен. Можно попробовать снова или выбрать храм вручную")
+                compose.onNodeWithTag("discovery_loading").assertDoesNotExist()
+                phase = "second-search"
+                search("Казань")
+                phase = "first-kazan-check"
+                scrollTo("discovery_city_osm:relation:1").assertIsDisplayed()
+                phase = "complete-old-response"
+                compose.runOnIdle { oldResult.complete(success(listOf(namesake), DiscoveryProvider.PHOTON)) }
+                phase = "second-kazan-check"
+                compose.waitForIdle()
+                compose.onNodeWithTag("discovery_city_osm:node:2").assertDoesNotExist()
+                scrollTo("discovery_city_osm:relation:1").assertIsDisplayed()
+                phase = "manual-navigation"
+                compose.onNodeWithTag("discovery_manual").performClick()
+                compose.runOnIdle { assertTrue(returned) }
+            }
         } finally {
             oldResult.cancel()
         }

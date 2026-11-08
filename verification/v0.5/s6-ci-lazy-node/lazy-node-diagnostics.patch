@@ -1,0 +1,201 @@
+--- a/app/src/androidTest/java/ru/liturgyguide/ui/ChurchDiscoveryScreenTest.kt
++++ b/app/src/androidTest/java/ru/liturgyguide/ui/ChurchDiscoveryScreenTest.kt
+@@ -1,5 +1,7 @@
+ package ru.liturgyguide.ui
+ 
++import android.graphics.Rect
++import android.os.SystemClock
+ import androidx.core.view.ViewCompat
+ import androidx.core.view.WindowInsetsCompat
+ import androidx.activity.ComponentActivity
+@@ -12,6 +14,8 @@
+ import kotlinx.coroutines.NonCancellable
+ import kotlinx.coroutines.awaitCancellation
+ import kotlinx.coroutines.withContext
++import org.json.JSONArray
++import org.json.JSONObject
+ import org.junit.Assert.*
+ import org.junit.Rule
+ import org.junit.Test
+@@ -78,20 +82,71 @@
+                 else success(listOf(kazan), DiscoveryProvider.PHOTON) }
+         }
+         var returned = false
++        var phase = "launch"
+         try {
+-            launch(fake, onBack = { returned = true })
+-            search("Первый")
+-            scrollTo("discovery_cancel").assertIsDisplayed().assertIsEnabled().performClick()
+-            compose.onNodeWithTag("discovery_message").assertTextEquals("Поиск остановлен. Можно попробовать снова или выбрать храм вручную")
+-            compose.onNodeWithTag("discovery_loading").assertDoesNotExist()
+-            search("Казань")
+-            scrollTo("discovery_city_osm:relation:1").assertIsDisplayed()
+-            compose.runOnIdle { oldResult.complete(success(listOf(namesake), DiscoveryProvider.PHOTON)) }
+-            compose.waitForIdle()
+-            compose.onNodeWithTag("discovery_city_osm:node:2").assertDoesNotExist()
+-            scrollTo("discovery_city_osm:relation:1").assertIsDisplayed()
+-            compose.onNodeWithTag("discovery_manual").performClick()
+-            compose.runOnIdle { assertTrue(returned) }
++            withCiFailureDiagnostics("discovery.cancelLateResult", additionalEvidence = { directory, deadline, evidencePhase ->
++                when (evidencePhase) {
++                    CiEvidencePhase.BEFORE_SCREENSHOT -> {
++                        writeCiFailureEvidence(directory, "discovery-context.json", deadline) {
++                            JSONObject().put("phase", phase).put("targetTag", "discovery_city_osm:relation:1")
++                                .put("queries", JSONArray(fake.queries.toList()))
++                                .put("centers", JSONArray(fake.centers.toList().map {
++                                    JSONObject().put("latitude", it.latitude).put("longitude", it.longitude)
++                                }))
++                                .put("oldResultCompleted", oldResult.isCompleted).put("oldResultCancelled", oldResult.isCancelled)
++                                .put("wallTimeMillis", System.currentTimeMillis()).put("uptimeMillis", SystemClock.uptimeMillis())
++                                .toString(2)
++                        }
++                        writeCiFailureEvidence(directory, "discovery-platform.json", deadline) {
++                            var sample: JSONObject? = null
++                            compose.activityRule.scenario.onActivity { activity ->
++                                val decor = activity.window.decorView
++                                val insets = ViewCompat.getRootWindowInsets(decor)
++                                val frame = Rect().also(decor::getWindowVisibleDisplayFrame)
++                                sample = JSONObject().put("wallTimeMillis", System.currentTimeMillis())
++                                    .put("uptimeMillis", SystemClock.uptimeMillis()).put("windowFocus", decor.hasWindowFocus())
++                                    .put("lifecycle", activity.lifecycle.currentState.name)
++                                    .put("imeVisible", insets?.isVisible(WindowInsetsCompat.Type.ime()) ?: JSONObject.NULL)
++                                    .put("imeBottom", insets?.getInsets(WindowInsetsCompat.Type.ime())?.bottom ?: JSONObject.NULL)
++                                    .put("decorWidth", decor.width).put("decorHeight", decor.height)
++                                    .put("visibleFrame", frame.toShortString())
++                            }
++                            requireNotNull(sample).toString(2)
++                        }
++                    }
++                    CiEvidencePhase.AFTER_SCREENSHOT -> {
++                        writeCiFailureEvidence(directory, "discovery-merged-tree.txt", deadline) {
++                            "Post-failure tree; printToString may synchronize Compose before reading.\n" +
++                                compose.onRoot().printToString()
++                        }
++                        writeCiFailureEvidence(directory, "discovery-unmerged-tree.txt", deadline) {
++                            "Post-failure tree; printToString may synchronize Compose before reading.\n" +
++                                compose.onRoot(useUnmergedTree = true).printToString()
++                        }
++                    }
++                }
++            }) {
++                launch(fake, onBack = { returned = true })
++                phase = "first-search"
++                search("Первый")
++                phase = "cancel-first-search"
++                scrollTo("discovery_cancel").assertIsDisplayed().assertIsEnabled().performClick()
++                compose.onNodeWithTag("discovery_message").assertTextEquals("Поиск остановлен. Можно попробовать снова или выбрать храм вручную")
++                compose.onNodeWithTag("discovery_loading").assertDoesNotExist()
++                phase = "second-search"
++                search("Казань")
++                phase = "first-kazan-check"
++                scrollTo("discovery_city_osm:relation:1").assertIsDisplayed()
++                phase = "complete-old-response"
++                compose.runOnIdle { oldResult.complete(success(listOf(namesake), DiscoveryProvider.PHOTON)) }
++                phase = "second-kazan-check"
++                compose.waitForIdle()
++                compose.onNodeWithTag("discovery_city_osm:node:2").assertDoesNotExist()
++                scrollTo("discovery_city_osm:relation:1").assertIsDisplayed()
++                phase = "manual-navigation"
++                compose.onNodeWithTag("discovery_manual").performClick()
++                compose.runOnIdle { assertTrue(returned) }
++            }
+         } finally {
+             oldResult.cancel()
+         }
+--- a/app/src/androidTest/java/ru/liturgyguide/ui/CiFailureDiagnostics.kt
++++ b/app/src/androidTest/java/ru/liturgyguide/ui/CiFailureDiagnostics.kt
+@@ -18,11 +18,44 @@
+ import java.util.concurrent.atomic.AtomicReference
+ 
+ /** No retry, changed expectation or new Espresso handler: rethrow the original failure. */
+-internal fun withCiFailureDiagnostics(source: String, block: () -> Unit): Unit = try {
++internal fun withCiFailureDiagnostics(
++    source: String,
++    additionalEvidence: ((File, Long, CiEvidencePhase) -> Unit)? = null,
++    block: () -> Unit
++): Unit = try {
+     block()
+ } catch (failure: Throwable) {
+-    CiFailureDiagnostics.capture(source, failure)
++    CiFailureDiagnostics.capture(source, failure, additionalEvidence)
+     throw failure
++}
++
++internal enum class CiEvidencePhase { BEFORE_SCREENSHOT, AFTER_SCREENSHOT }
++
++/** Reads only on the worker. A timed-out worker cannot write a late artifact after cleanup. */
++internal fun writeCiFailureEvidence(directory: File, name: String, deadline: Long, read: () -> String) {
++    val started = SystemClock.uptimeMillis()
++    val record = JSONObject().put("file", name).put("startedUptimeMillis", started)
++        .put("wallTimeMillis", System.currentTimeMillis())
++        .put("limits", "Post-failure read; separate observations are not atomic")
++    val budget = minOf(3_000L, deadline - started)
++    if (budget <= 0) {
++        record.put("outcome", "BUDGET_EXHAUSTED")
++    } else {
++        val task = FutureTask<String> { read() }
++        Thread(task, "feoria-ci-additional-evidence").apply { isDaemon = true; start() }
++        try {
++            val data = task.get(budget, TimeUnit.MILLISECONDS)
++            File(directory, name).writeText(data)
++            record.put("outcome", "RECORDED").put("characters", data.length)
++        } catch (failure: Throwable) {
++            record.put("outcome", "ERROR").put("error", failure.stackTraceToString())
++        } finally {
++            task.cancel(true)
++        }
++    }
++    record.put("finishedUptimeMillis", SystemClock.uptimeMillis())
++    runCatching { File(directory, "$name.capture.json").writeText(record.toString(2)) }
++        .onFailure { Log.e("FeoriaCiDiagnostics", "Could not record additional evidence: $name", it) }
+ }
+ 
+ internal fun closeSoftKeyboardWithCiDiagnostics() =
+@@ -35,10 +68,11 @@
+ private object CiFailureDiagnostics {
+     private val captured = AtomicBoolean(false)
+ 
+-    fun capture(source: String, original: Throwable) {
++    fun capture(source: String, original: Throwable, additionalEvidence: ((File, Long, CiEvidencePhase) -> Unit)?) {
+         try {
+             val arguments = InstrumentationRegistry.getArguments()
+             if (arguments.getString("feoriaCiDiagnostics") != "true" || !captured.compareAndSet(false, true)) return
++            val deadline = SystemClock.uptimeMillis() + 30_000L
+             val run = requireNotNull(arguments.getString("feoriaCiDiagnosticsRun"))
+             require(run.matches(Regex("[A-Za-z0-9_-]{1,100}")))
+             val instrumentation = InstrumentationRegistry.getInstrumentation()
+@@ -61,13 +95,23 @@
+                 .put("isInteractive", power.isInteractive).put("isKeyguardLocked", keyguard.isKeyguardLocked)
+                 .put("isDeviceLocked", keyguard.isDeviceLocked).put("verdict", "DIAGNOSTIC_ONLY")
+             File(directory, "failure-context.json").writeText(record.toString(2))
+-            val deadline = SystemClock.uptimeMillis() + 30_000L
+             val commands = JSONArray()
+-            // Focus owner first, before the failed test's finally block or ActivityScenario.close.
++            val additional = JSONArray()
++            fun collectAdditional(phase: CiEvidencePhase) {
++                if (additionalEvidence == null) return
++                val part = JSONObject().put("phase", phase.name).put("startedUptimeMillis", SystemClock.uptimeMillis())
++                runCatching { additionalEvidence(directory, deadline, phase) }
++                    .onSuccess { part.put("outcome", "FINISHED") }
++                    .onFailure { part.put("outcome", "ERROR").put("error", it.stackTraceToString()) }
++                additional.put(part.put("finishedUptimeMillis", SystemClock.uptimeMillis()))
++            }
++            collectAdditional(CiEvidencePhase.BEFORE_SCREENSHOT)
++            commands.put(read(directory, "screen.png", "screencap -p", deadline))
++            collectAdditional(CiEvidencePhase.AFTER_SCREENSHOT)
++            // No retries or UI mutations; every read shares the same pre-cleanup deadline.
+             val reads = listOf(
+                 "windows.txt" to "dumpsys -t 2 window windows",
+                 "displays.txt" to "dumpsys -t 2 window displays",
+-                "screen.png" to "screencap -p",
+                 "power.txt" to "dumpsys -t 2 power",
+                 "policy.txt" to "dumpsys -t 2 window policy",
+                 "activity.txt" to "dumpsys -t 2 activity activities",
+@@ -80,6 +124,7 @@
+                 commands.put(read(directory, name, command, deadline))
+             }
+             record.put("finishedUptimeMillis", SystemClock.uptimeMillis()).put("commands", commands)
++                .put("additionalEvidence", additional)
+             File(directory, "capture.json").writeText(record.toString(2))
+             Log.e("FeoriaCiDiagnostics", "First failure evidence: ${directory.absolutePath}")
+         } catch (diagnosticFailure: Throwable) {

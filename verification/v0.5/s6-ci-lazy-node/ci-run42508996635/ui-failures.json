@@ -1,0 +1,7 @@
+[
+  {
+    "class": "ru.liturgyguide.ui.ChurchDiscoveryScreenTest",
+    "test": "cancellingARequestIgnoresItsLateResultAndLeavesManualNavigationAvailable",
+    "error": "java.lang.AssertionError: Action performScrollTo() failed.\nReason: Expected exactly '1' node but could not find any node that satisfies: (TestTag = 'discovery_city_osm:relation:1')\n\nat androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow(SemanticsNodeInteraction.kt:178)\nat androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow$default(SemanticsNodeInteraction.kt:150)\nat androidx.compose.ui.test.SemanticsNodeInteraction.fetchSemanticsNode(SemanticsNodeInteraction.kt:84)\nat androidx.compose.ui.test.ActionsKt.performScrollTo(Actions.kt:76)\nat ru.liturgyguide.ui.ChurchDiscoveryScreenTest.scrollTo(ChurchDiscoveryScreenTest.kt:237)\nat ru.liturgyguide.ui.ChurchDiscoveryScreenTest.cancellingARequestIgnoresItsLateResultAndLeavesManualNavigationAvailable(ChurchDiscoveryScreenTest.kt:88)\n"
+  }
+]

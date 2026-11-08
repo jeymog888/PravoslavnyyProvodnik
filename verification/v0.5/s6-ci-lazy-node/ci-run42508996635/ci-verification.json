@@ -1,0 +1,37 @@
+{
+  "status": "FAIL",
+  "run_id": 42508996635,
+  "head_sha": "57e48a5f9af879e196ac17ee517fcee0108d0800",
+  "attempt": 1,
+  "conclusion": "failure",
+  "artifact": {
+    "id": 13629117251,
+    "name": "verification-reports",
+    "size_in_bytes": 4023297,
+    "digest": "sha256:2705da93a7212df39a706a5ab5b581ecf26f75a273a4827cf2aa68a72fefa6c8"
+  },
+  "counts": {
+    "unit": {
+      "tests": 336,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "ui": {
+      "tests": 120,
+      "passed": 119,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    },
+    "lint": {
+      "errors": 0,
+      "warnings": 14
+    }
+  },
+  "failure": "ChurchDiscoveryScreenTest.cancellingARequestIgnoresItsLateResultAndLeavesManualNavigationAvailable:88 -> scrollTo:237; missing composed result node before oldResult.complete",
+  "first_failure_packet": "NOT_CAPTURED: scroll assertion outside existing wrapper scope",
+  "observed_late_ime_show": true,
+  "causal_root_cause": "NOT_ESTABLISHED",
+  "rerun_performed": false
+}
