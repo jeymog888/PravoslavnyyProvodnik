@@ -146,3 +146,5 @@ python3 scripts/harness/feoria_harness.py finish --run /private/tmp/feoria-run-u
 `review` - запись отдельного ручного решения о конкретном PNG, не автоматический visual judge. `REJECT`, отсутствие обязательного review, missing/skipped/failed case, UNKNOWN обязательного условия, дубликат, пустой/измененный/старый артефакт или failed action запрещают общий PASS. `finish` создает `gate.json` только при принятом полном manifest
 
 Для последовательных сценариев можно импортировать функции `Adb`, `begin_run`, `tap`, `capture_case`, `review_case`, `aggregate`. Один владелец устройства и одна сборка одновременно. Функции не перехватывают сторонние raw adb действия и не утверждают, что незафиксированные шаги проверены
+
+Focus принадлежит приложению только если точный `(window token, user, title)` найден в inventory с владельцем package и `isOnScreen=true`. Это поддерживает собственные Compose popup с названием `Pop-Up Window`, не ослабляя отказ для чужих, неизвестных или неоднозначных окон. `mFocusedApp` и похожее название окна не заменяют проверку владельца

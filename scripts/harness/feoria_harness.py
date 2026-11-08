@@ -234,27 +234,40 @@ def bounds(node, size):
 
 
 def parse_windows(windows, displays, package, allowed_windows=()):
-    focus = re.findall(r"mCurrentFocus=Window\{[^\n}]*\s([A-Za-z][\w.]*)/[^\n}]*\}", displays + "\n" + windows)
-    require(focus and set(focus) == {package}, "unexpected/unknown foreground package")
+    # Popup titles need not contain a package. Resolve the focused window's exact identity
+    # through the OS inventory instead of trusting the title or a background focused app.
+    raw_focus = re.findall(r"mCurrentFocus=([^\n]+)", displays + "\n" + windows)
+    focus = [re.fullmatch(r"Window\{(\S+) u(\d+) (.+?)\}", value.strip()) for value in raw_focus]
+    require(focus and all(focus), "unexpected/unknown foreground package")
+    identities = {match.groups() for match in focus}
+    require(len(identities) == 1, "ambiguous foreground window")
+    focused = next(iter(identities))
     current_size = re.findall(r"\bcur=(\d+)x(\d+)\b", displays)
     require(len(current_size) == 1, "display geometry is ambiguous or unavailable")
     size = tuple(map(int, current_size[0]))
     allow = SAFE_DECOR | {(w["package"], w["title"]) for w in allowed_windows}
     blocks = re.split(r"(?=^  Window #\d+ Window\{)", windows, flags=re.M)[1:]
     require(blocks, "window inventory unavailable")
-    visible = []
+    inventory = {}
+    tokens = set()
     for block in blocks:
-        title = re.search(r"^  Window #\d+ Window\{\S+ u\d+ (.+?)\}:", block)
+        header = re.search(r"^  Window #\d+ Window\{(\S+) u(\d+) (.+?)\}:", block)
         owner = re.search(r"\bpackage=([\w.]+)\b", block)
-        require(title and owner, "unknown window inventory format")
+        require(header and owner, "unknown window inventory format")
+        identity = header.groups()
+        require(identity[:2] not in tokens, "ambiguous window inventory identity")
+        tokens.add(identity[:2])
         onscreen = re.search(r"\bisOnScreen=(true|false)\b", block)
         require(onscreen, "window visibility unavailable")
-        if onscreen[1] != "true":
+        inventory[identity] = (owner[1], onscreen[1] == "true")
+    require(inventory.get(focused) == (package, True), "unexpected/unknown foreground package")
+    visible = []
+    for (_, _, title), (owner, onscreen) in inventory.items():
+        if not onscreen:
             continue
-        identity = (owner[1], title[1])
-        require(owner[1] == package or identity in allow, f"unexpected visible overlay: {identity}")
+        identity = (owner, title)
+        require(owner == package or identity in allow, f"unexpected visible overlay: {identity}")
         visible.append(identity)
-    require(any(p == package for p, _ in visible), "expected application window is not visible")
     return size, sorted(visible)
 
 

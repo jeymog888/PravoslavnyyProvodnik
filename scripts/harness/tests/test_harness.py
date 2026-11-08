@@ -140,6 +140,37 @@ class SelectorTests(unittest.TestCase):
         with self.assertRaisesRegex(h.GateError, "foreground"):
             view(displays=DISPLAY.replace(P, "com.example.other"))
 
+    def test_owned_popup_foreground_is_resolved_by_exact_inventory_identity(self):
+        popup = f"  Window #1 Window{{def u0 Pop-Up Window}}:\n package={P}\n isOnScreen=true\n"
+        display = DISPLAY.replace(f"abc u0 {P}/.MainActivity", "def u0 Pop-Up Window")
+        self.assertEqual(view(windows=WINDOW + popup, displays=display).target({"text": "Play"}), (50, 30))
+
+    def test_foreign_popup_cannot_borrow_application_focus(self):
+        popup = "  Window #1 Window{def u0 Pop-Up Window}:\n package=com.example.other\n isOnScreen=true\n"
+        display = DISPLAY.replace(f"abc u0 {P}/.MainActivity", "def u0 Pop-Up Window") + f"mFocusedApp={P}/.MainActivity\n"
+        with self.assertRaisesRegex(h.GateError, "foreground"):
+            view(windows=WINDOW + popup, displays=display)
+
+    def test_focus_title_cannot_override_foreign_owner(self):
+        with self.assertRaisesRegex(h.GateError, "foreground"):
+            view(windows=WINDOW.replace(f"package={P}", "package=com.example.other"))
+
+    def test_null_missing_and_conflicting_focus_are_rejected(self):
+        for display in (DISPLAY.replace(f"Window{{abc u0 {P}/.MainActivity}}", "null"),
+                        DISPLAY.replace(f"abc u0 {P}/.MainActivity", "def u0 Pop-Up Window"),
+                        DISPLAY + "mCurrentFocus=Window{def u0 Pop-Up Window}\n"):
+            with self.subTest(display=display), self.assertRaisesRegex(h.GateError, "foreground"):
+                view(displays=display)
+
+    def test_hidden_focused_window_is_rejected(self):
+        with self.assertRaisesRegex(h.GateError, "foreground"):
+            view(windows=WINDOW.replace("isOnScreen=true", "isOnScreen=false"))
+
+    def test_duplicate_window_token_is_rejected_even_with_a_different_title(self):
+        duplicate = WINDOW.replace("Window #0", "Window #1").replace(f"{P}/.MainActivity", "Pop-Up Window")
+        with self.assertRaisesRegex(h.GateError, "ambiguous window inventory"):
+            view(windows=WINDOW + duplicate)
+
     def test_unexpected_visible_overlay_rejected(self):
         extra = "  Window #1 Window{def u0 MaliciousOverlay}:\n package=com.example.other\n isOnScreen=true\n"
         with self.assertRaisesRegex(h.GateError, "overlay"):
