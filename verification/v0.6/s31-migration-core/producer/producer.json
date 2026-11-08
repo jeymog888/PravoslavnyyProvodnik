@@ -1,0 +1,57 @@
+{
+  "note": "Fresh reproduction recording exact producer commands and dependency hashes; repository unchanged",
+  "inputs": [
+    {
+      "path": "/private/tmp/feoria-v06-golden-preflight/reproduction-r1/Probe.java",
+      "sha256": "5d9f3643ea9633fd82962e19ad4c00b791b4a68d974de8a3ff24c6eb913118e6"
+    },
+    {
+      "path": "/private/tmp/feoria-v06-golden-preflight/reproduction-r1/classes.jar",
+      "sha256": "e221c4fb04e9ef6ea5c19eb65df166acd67503023400ea99fd76e8d8db0d27bf"
+    },
+    {
+      "path": "/private/tmp/feoria-v06-golden-preflight/reproduction-r1/liturgy_stages.json",
+      "sha256": "efe2788edc898d489721fda1665b9cd455c031cb2ee8a8994c361177500da101"
+    },
+    {
+      "path": "/private/tmp/feoria-v06-golden-preflight/reproduction-r1/daily_readings.json",
+      "sha256": "8086bdc710dc080d3a77b75eb90b031d8a586d446aad4d7a379b778229a022ae"
+    },
+    {
+      "path": "/private/tmp/liturgy-android-toolchain/gradle-home/caches/modules-2/files-2.1/com.google.code.gson/gson/2.10.1/b3add478d4382b78ea20b1671390a858002feb6c/gson-2.10.1.jar",
+      "sha256": "4241c14a7727c34feea6507ec801318a3d4a90f070e4525681079fb94ee4c593"
+    },
+    {
+      "path": "/private/tmp/liturgy-android-toolchain/gradle-home/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.1.20/aa8ca79cd50578314f6d1180c47cbe14c0fee567/kotlin-stdlib-2.1.20.jar",
+      "sha256": "1bcc74e8ce84e2c25eaafde10f1248349cce3062b6e36978cbeec610db1e930a"
+    }
+  ],
+  "commands": [
+    {
+      "args": [
+        "/private/tmp/liturgy-android-toolchain/jdk-17.0.21+9/Contents/Home/bin/javac",
+        "-cp",
+        "/private/tmp/feoria-v06-golden-preflight/reproduction-r1/classes.jar:/private/tmp/liturgy-android-toolchain/gradle-home/caches/modules-2/files-2.1/com.google.code.gson/gson/2.10.1/b3add478d4382b78ea20b1671390a858002feb6c/gson-2.10.1.jar:/private/tmp/liturgy-android-toolchain/gradle-home/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.1.20/aa8ca79cd50578314f6d1180c47cbe14c0fee567/kotlin-stdlib-2.1.20.jar",
+        "/private/tmp/feoria-v06-golden-preflight/reproduction-r1/Probe.java"
+      ],
+      "exitCode": 0,
+      "stdoutSha": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "args": [
+        "/private/tmp/liturgy-android-toolchain/jdk-17.0.21+9/Contents/Home/bin/java",
+        "-cp",
+        "/private/tmp/feoria-v06-golden-preflight/reproduction-r1/classes.jar:/private/tmp/liturgy-android-toolchain/gradle-home/caches/modules-2/files-2.1/com.google.code.gson/gson/2.10.1/b3add478d4382b78ea20b1671390a858002feb6c/gson-2.10.1.jar:/private/tmp/liturgy-android-toolchain/gradle-home/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.1.20/aa8ca79cd50578314f6d1180c47cbe14c0fee567/kotlin-stdlib-2.1.20.jar:/private/tmp/feoria-v06-golden-preflight/reproduction-r1",
+        "Probe",
+        "/private/tmp/feoria-v06-golden-preflight/reproduction-r1"
+      ],
+      "exitCode": 0,
+      "stdoutSha": "9d09ba205fda51f68497377852d474f0a6240cfff5ddb30e8389caba72c1f918",
+      "stderrSha": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "status": "PASS",
+  "matchesOriginalGolden": true,
+  "plansSha256": "304a414fd98232948de0d88000b4077c9316dc62b2a0d9df792632047637d369"
+}
