@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="ru.liturgyguide.ui.PersonalServiceTimeTest" tests="55" failures="1" errors="0" skipped="0" time="201.019" timestamp="2026-11-08T14:11:16" hostname="localhost">
+  <properties>
+    <property name="device" value="Liturgy_API_35(AVD) - 15" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="failedStorageKeepsTheDraftAndCancelDoesNotTryAgain" classname="ru.liturgyguide.ui.PersonalServiceTimeTest" time="6.166" />
+  <testcase name="impossibleDateAndOutOfRangeTimeRemainEditableWithoutSaving" classname="ru.liturgyguide.ui.PersonalServiceTimeTest" time="7.453" />
+  <testcase name="removalTargetsOnlyTheSelectedDateAndReportsFailure" classname="ru.liturgyguide.ui.PersonalServiceTimeTest" time="4.094" />
+  <testcase name="anAbsoluteDateAndDraftSurviveRestorationAndSaveWithTheParishContext" classname="ru.liturgyguide.ui.PersonalServiceTimeTest" time="5.517" />
+  <testcase name="changingTheDateLoadsOnlyThatDatesSavedTime" classname="ru.liturgyguide.ui.PersonalServiceTimeTest" time="4.273" />
+  <testcase name="daylightSavingGapAndRepeatedHourAreNotSilentlyCorrected" classname="ru.liturgyguide.ui.PersonalServiceTimeTest" time="6.034" />
+  <testcase name="publishedAndPersonalStartsStaySeparateAndRemovingPersonalRestoresTheEmptyState" classname="ru.liturgyguide.ui.PersonalServiceTimeTest" time="3.121" />
+  <testcase name="corruptModernMetadataNeverAssignsTheLegacyDefault" classname="ru.liturgyguide.ui.FirstVisitFlowTest" time="1.781" />
+  <testcase name="firstVisitOpensThePickerDirectlyAndManualReadingKeepsNoParishAfterRestore" classname="ru.liturgyguide.ui.FirstVisitFlowTest" time="3.243" />
+  <testcase name="confirmingRecoveredLegacyParishPreservesTheReadingAndPersistsTheChoice" classname="ru.liturgyguide.ui.FirstVisitFlowTest" time="2.594" />
+  <testcase name="newTempleWithoutScheduleLeadsThroughPersonalTimeToTheExactService" classname="ru.liturgyguide.ui.FirstVisitFlowTest" time="6.477" />
+  <testcase name="aFailedChoiceKeepsThePickerOpenAndCanBeRetried" classname="ru.liturgyguide.ui.FirstVisitFlowTest" time="1.758" />
+  <testcase name="retryAfterDirectorySaveAndFailedSelectionReusesTheSameRecord" classname="ru.liturgyguide.ui.FirstVisitFlowTest" time="5.767">
+    <failure>java.lang.AssertionError: Failed to assert the following: (Text + EditableText contains 'Храм в поездке' (ignoreCase: false))
+Semantics of the node:
+Node #2329 at (l=63.0, t=409.0, r=1017.0, b=583.0)px, Tag: 'new_church_name'
+EditableText = ''
+TextSelectionRange = 'TextRange(0, 0)'
+IsEditable = 'true'
+ImeAction = 'Default'
+Focused = 'false'
+Text = '[Название храма]'
+Actions = [GetTextLayoutResult, SetText, InsertTextAtCursor, SetSelection, PerformImeAction, OnClick, OnLongClick, PasteText, RequestFocus, SetTextSubstitution, ShowTextSubstitution, ClearTextSubstitution]
+MergeDescendants = 'true'
+Has 10 siblings
+Selector used: (TestTag = 'new_church_name')
+
+at androidx.compose.ui.test.AssertionsKt.assert(Assertions.kt:265)
+at androidx.compose.ui.test.AssertionsKt.assert$default(Assertions.kt:255)
+at androidx.compose.ui.test.AssertionsKt.assertTextContains(Assertions.kt:209)
+at androidx.compose.ui.test.AssertionsKt.assertTextContains$default(Assertions.kt:204)
+at ru.liturgyguide.ui.FirstVisitFlowTest.retryAfterDirectorySaveAndFailedSelectionReusesTheSameRecord(FirstVisitFlowTest.kt:156)
+</failure>
+  </testcase>
+  <testcase name="mainDateUpdatesWhileTheScreenStaysOpen" classname="ru.liturgyguide.ui.DateRolloverTest" time="1.739" />
+  <testcase name="scheduleKeepsTodayAndTomorrowRelativeAcrossTheMonthBoundary" classname="ru.liturgyguide.ui.DateRolloverTest" time="1.957" />
+  <testcase name="churchHasTodayAndTomorrowAndChangingItStartsAFreshContext" classname="ru.liturgyguide.ui.GuideNavigationTest" time="5.091" />
+  <testcase name="unifiedPlaybackHasNoSeparateStageTimerAndManualSeekPausesIt" classname="ru.liturgyguide.ui.GuideNavigationTest" time="3.825" />
+  <testcase name="startingANewServiceClearsPositionsButKeepsTheLanguagePreference" classname="ru.liturgyguide.ui.GuideNavigationTest" time="5.829" />
+  <testcase name="trackPhraseAndLanguageSurviveRecreationAndReturningHome" classname="ru.liturgyguide.ui.GuideNavigationTest" time="4.656" />
+  <testcase name="orderOpensAtDismissalWithLargestAppText" classname="ru.liturgyguide.ui.GuideNavigationTest" time="2.458" />
+  <testcase name="choosingManualReadingFromTempoOptionsStopsAnActiveScroll" classname="ru.liturgyguide.ui.GuideNavigationTest" time="3.912" />
+  <testcase name="searchingAfterFinishingDoesNotReusePositionsFromThePreviousService" classname="ru.liturgyguide.ui.GuideNavigationTest" time="4.724" />
+  <testcase name="readingCanAdvanceAndReturnWithoutLosingTheStage" classname="ru.liturgyguide.ui.GuideNavigationTest" time="2.126" />
+  <testcase name="selectedParishUsesItsLocalDateAndManualChoiceRemainsAvailable" classname="ru.liturgyguide.ui.GuideNavigationTest" time="3.988" />
+  <testcase name="onePlayerStartsDirectlyAndPausesWithoutASecondStageTimer" classname="ru.liturgyguide.ui.GuideNavigationTest" time="2.191" />
+  <testcase name="serviceOrderIsSeparateFromSearchAndOptionalListening" classname="ru.liturgyguide.ui.GuideNavigationTest" time="1.792" />
+  <testcase name="largeTextAndDarkModePersistAndNavigationRemainsUsable" classname="ru.liturgyguide.ui.GuideNavigationTest" time="2.24" />
+  <testcase name="explanationChangesWithTheSelectedText" classname="ru.liturgyguide.ui.GuideNavigationTest" time="4.257" />
+  <testcase name="landscapeWithLargestAppTextKeepsCurrentPhraseAndControlsVisible" classname="ru.liturgyguide.ui.GuideNavigationTest" time="5.913" />
+  <testcase name="findingAPrayerFromMeaningOpensItsTextAtTheMatchedPhrase" classname="ru.liturgyguide.ui.GuideNavigationTest" time="4.762" />
+  <testcase name="backgroundingAndRecreationKeepTheAcceptedPhrasePaused" classname="ru.liturgyguide.ui.GuideNavigationTest" time="3.487" />
+  <testcase name="spellingVariantsOpenTheSamePairedPhraseFromMainSearch" classname="ru.liturgyguide.ui.GuideNavigationTest" time="10.301" />
+  <testcase name="anUnknownPhraseCanBeClearedToRestoreTheGuide" classname="ru.liturgyguide.ui.GuideNavigationTest" time="2.444" />
+  <testcase name="showingAllStagesAfterUnknownWordsDismissesTheKeyboardAndFocus" classname="ru.liturgyguide.ui.GuideNavigationTest" time="2.531" />
+  <testcase name="meaningAndReadingPositionSurviveOrderHomeAndSettingsNavigation" classname="ru.liturgyguide.ui.GuideNavigationTest" time="4.267" />
+  <testcase name="choosingAnotherPhraseStopsAutomaticScrolling" classname="ru.liturgyguide.ui.GuideNavigationTest" time="3.34" />
+  <testcase name="switchingToMeaningPausesScrollingAndKeepsThePhrase" classname="ru.liturgyguide.ui.GuideNavigationTest" time="4.565" />
+  <testcase name="orderOpensAtTheBeginningFromThePlayer" classname="ru.liturgyguide.ui.GuideNavigationTest" time="1.937" />
+  <testcase name="orderOpensAtCreedAndManualBrowsingReturnsToTheCurrentPhrase" classname="ru.liturgyguide.ui.GuideNavigationTest" time="5.103" />
+  <testcase name="searchingForADailyReadingUsesTodaysTextAndKeepsItsNoteOptional" classname="ru.liturgyguide.ui.GuideNavigationTest" time="3.58" />
+  <testcase name="searchingForCreedOpensTheMatchingTextAndClosesTheKeyboard" classname="ru.liturgyguide.ui.GuideNavigationTest" time="1.736" />
+  <testcase name="heardWordsLeadToTheRelevantExplanation" classname="ru.liturgyguide.ui.GuideNavigationTest" time="3.058" />
+  <testcase name="cancellingANewTempleAndAnEmptySearchKeepTheCurrentParish" classname="ru.liturgyguide.ui.SavedChurchFlowTest" time="4.598" />
+  <testcase name="aTempleInAnotherCityAndItsTimeZoneSurviveRecreation" classname="ru.liturgyguide.ui.SavedChurchFlowTest" time="4.584" />
+  <testcase name="favoriteDoesNotChooseAnotherParishOrEraseTheSavedStage" classname="ru.liturgyguide.ui.SavedChurchFlowTest" time="4.817" />
+  <testcase name="foreignOrCorruptContextRestoredInServiceRequiresANewExplicitChoice" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="1.482" />
+  <testcase name="anInvalidLegacySessionCannotSupplyTheDateForAnOtherwiseValidBookmark" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="1.427" />
+  <testcase name="explicitlyStartingAgainUsesTodayInsteadOfThePreviouslyOpenedFutureDate" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="2.83" />
+  <testcase name="watchingRecalculatesTheStageAtTheClickAndOpensTextPaused" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="1.596" />
+  <testcase name="aPersonalStartOpensItsOwnEstimateAndIsRecordedAsPersonal" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="1.56" />
+  <testcase name="resumingALegacyBookmarkPinsItsOriginalAnchorDateWithoutClearingThePhrase" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="1.673" />
+  <testcase name="anExpiredClickDoesNotReplaceOrClearTheSavedReading" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="1.665" />
+  <testcase name="aNextServiceBecomesCurrentBetweenDisplayAndClickWithoutSwitchingOccurrence" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="2.174" />
+  <testcase name="restorationStraightIntoLegacyServicePinsTheAnchorDateBeforeAnyCorrection" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="2.007" />
+  <testcase name="tomorrowsReadingKeepsItsDateAcrossCorrectionMidnightAndRestoration" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="1.976" />
+</testsuite>

@@ -12,11 +12,17 @@ import com.google.gson.Gson
 class ReadingAcceptanceStore(private val preferences: SharedPreferences) {
     private val gson = Gson()
 
+    /** Explicitly confirm a recovered parish without changing its reading or bookmarks. */
+    @Synchronized
+    fun confirmChurch(id: String): Boolean {
+        if (!validChurchId(id)) return false
+        return commit(mapOf("church_id" to id), resetBookmarks = false)
+    }
+
     /** Finish or change parish without leaving a snapshot belonging to the previous reading. */
     @Synchronized
     fun clearReading(nextChurchId: String? = null): Boolean {
-        if (nextChurchId != null && (nextChurchId.length !in 1..160 || nextChurchId != nextChurchId.trim() ||
-                nextChurchId.any(Char::isISOControl))) return false
+        if (nextChurchId != null && !validChurchId(nextChurchId)) return false
         val changes = linkedMapOf<String, Any?>(
             ReadingContextStore.CONTEXT_KEY to null,
             SESSION_KEY to null,
@@ -149,6 +155,8 @@ class ReadingAcceptanceStore(private val preferences: SharedPreferences) {
     }
 
     companion object {
+        private fun validChurchId(id: String): Boolean = id.length in 1..160 &&
+            id == id.trim() && id.none(Char::isISOControl)
         const val SESSION_KEY = "session"
         const val STAGE_KEY = "stage_id"
         private val bookmarkPrefixes = listOf("lyric_track_", "lyric_line_", "lyric_offset_", "lyric_phrase_", "lyric_saved_tempo_")

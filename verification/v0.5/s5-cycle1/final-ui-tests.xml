@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="ru.liturgyguide.ui.FirstVisitFlowTest" tests="9" failures="0" errors="0" skipped="0" time="40.634" timestamp="2026-11-08T14:16:39" hostname="localhost">
+  <properties>
+    <property name="device" value="Liturgy_API_35(AVD) - 15" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="corruptModernMetadataNeverAssignsTheLegacyDefault" classname="ru.liturgyguide.ui.FirstVisitFlowTest" time="2.483" />
+  <testcase name="firstVisitOpensThePickerDirectlyAndManualReadingKeepsNoParishAfterRestore" classname="ru.liturgyguide.ui.FirstVisitFlowTest" time="3.848" />
+  <testcase name="confirmingRecoveredLegacyParishPreservesTheReadingAndPersistsTheChoice" classname="ru.liturgyguide.ui.FirstVisitFlowTest" time="2.468" />
+  <testcase name="newTempleWithoutScheduleLeadsThroughPersonalTimeToTheExactService" classname="ru.liturgyguide.ui.FirstVisitFlowTest" time="7.424" />
+  <testcase name="aFailedChoiceKeepsThePickerOpenAndCanBeRetried" classname="ru.liturgyguide.ui.FirstVisitFlowTest" time="2.341" />
+  <testcase name="retryAfterDirectorySaveAndFailedSelectionReusesTheSameRecord" classname="ru.liturgyguide.ui.FirstVisitFlowTest" time="7.969" />
+  <testcase name="cancellingANewTempleAndAnEmptySearchKeepTheCurrentParish" classname="ru.liturgyguide.ui.SavedChurchFlowTest" time="4.376" />
+  <testcase name="aTempleInAnotherCityAndItsTimeZoneSurviveRecreation" classname="ru.liturgyguide.ui.SavedChurchFlowTest" time="4.204" />
+  <testcase name="favoriteDoesNotChooseAnotherParishOrEraseTheSavedStage" classname="ru.liturgyguide.ui.SavedChurchFlowTest" time="4.47" />
+</testsuite>

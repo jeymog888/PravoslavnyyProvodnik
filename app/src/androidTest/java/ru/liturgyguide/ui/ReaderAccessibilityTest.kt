@@ -140,7 +140,7 @@ class ReaderAccessibilityTest {
                 GuideTheme(dark = true) {
                     Box(Modifier.size(320.dp, 640.dp)) {
                         ChurchScreen(parishes.directory.churches, parishes.selected(null).id,
-                            LocalDate.of(2026, 11, 8), onSelect = {}, onOpenUrl = {}, onBack = {})
+                            LocalDate.of(2026, 11, 8), onSelect = { true }, onOpenUrl = {}, onBack = {})
                     }
                 }
             }
@@ -159,7 +159,8 @@ class ReaderAccessibilityTest {
 
     @Test
     fun largeTextNavigationLeavesSpaceForChurchAndSettingsWithoutScalingTheirContent() {
-        check(preferences.edit().clear().putBoolean("dark", true).putInt("text_size", 2).commit())
+        check(preferences.edit().clear().putString("church_id", "elisavetinsky_opalikha")
+            .putBoolean("dark", true).putInt("text_size", 2).commit())
         launchApp(width = 320, height = 640, systemFontScale = 2f)
         assertNavigationLabels()
         compose.onNodeWithTag("nav_church").performClick()

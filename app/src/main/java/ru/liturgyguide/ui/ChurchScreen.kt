@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -29,13 +30,14 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: LocalDate, onSelect: (String) -> Unit,
+fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: LocalDate, onSelect: (String) -> Boolean,
     onOpenUrl: (String) -> Unit, onBack: () -> Unit, showBack: Boolean = true, bottomBar: @Composable () -> Unit = {},
     favorites: Set<String> = emptySet(), onToggleFavorite: (String) -> Unit = {},
     onAddChurch: ((SavedChurchRecord) -> Boolean)? = null, onDiscover: (() -> Unit)? = null,
     pickerRequest: Int = 0, userStarts: List<UserServiceStart> = emptyList(),
-    onSaveStart: ((UserServiceStart) -> Boolean)? = null, onRemoveStart: ((LocalDate) -> Boolean)? = null) {
-    val church = churches.firstOrNull { it.id == selectedId } ?: churches.firstOrNull()
+    onSaveStart: ((UserServiceStart) -> Boolean)? = null, onRemoveStart: ((LocalDate) -> Boolean)? = null,
+    personalTimeRequest: Int = 0, onGoToService: (() -> Unit)? = null) {
+    val church = churches.firstOrNull { it.id == selectedId }
     var picker by rememberSaveable { mutableStateOf(false) }
     var adding by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
@@ -44,25 +46,49 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     var editingDate by rememberSaveable(church?.id) { mutableStateOf<String?>(null) }
     val formDate = editingDate?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
     var handledPickerRequest by rememberSaveable { mutableIntStateOf(0) }
+    var handledTimeRequest by rememberSaveable { mutableIntStateOf(0) }
+    var selectionFailed by remember { mutableStateOf(false) }
+    // The draft belongs to this screen, even while the sheet uses a separate dialog registry.
+    // There is at most one draft, and every explicit close/new attempt removes it.
+    val churchDraft = rememberSaveableStateHolder()
+    fun selectChurch(id: String): Boolean {
+        if (!onSelect(id)) { selectionFailed = true; return false }
+        churchDraft.removeState("new_church")
+        selectionFailed = false; adding = false; picker = false; locate = false; dayOffset = 0; query = ""
+        return true
+    }
     LaunchedEffect(pickerRequest) {
         if (pickerRequest != handledPickerRequest) {
             handledPickerRequest = pickerRequest
             picker = true
         }
     }
+    LaunchedEffect(personalTimeRequest) {
+        if (personalTimeRequest != handledTimeRequest) {
+            handledTimeRequest = personalTimeRequest
+            if (church != null && onSaveStart != null) {
+                churchDraft.removeState("new_church")
+                picker = false; adding = false; locate = false; dayOffset = 0
+                editingDate = currentDate.toString()
+            }
+        }
+    }
     val matches = remember(churches, query, favorites) { ChurchDirectory.search(churches, query, favorites) }
-    if (picker) ModalBottomSheet(onDismissRequest = { picker = false; adding = false; locate = false },
+    if (picker) ModalBottomSheet(onDismissRequest = {
+        churchDraft.removeState("new_church"); picker = false; adding = false; locate = false
+    },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-        if (adding && onAddChurch != null) SavedChurchForm(
-            onCancel = { adding = false },
-            onSave = { record ->
-                if (onAddChurch(record)) {
-                    onSelect(record.id); adding = false; picker = false; locate = false; dayOffset = 0; query = ""
-                    true
-                } else false
-            })
+        if (adding && onAddChurch != null) churchDraft.SaveableStateProvider("new_church") {
+            SavedChurchForm(
+                onCancel = { churchDraft.removeState("new_church"); adding = false },
+                onSave = { record -> onAddChurch(record) && selectChurch(record.id) })
+        }
         else LazyColumn(Modifier.fillMaxWidth().imePadding().testTag("church_picker"), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item { Text("Выберите храм", style = MaterialTheme.typography.headlineMedium) }
+            if (selectionFailed) item {
+                Text("Не удалось выбрать храм. Попробуйте еще раз", color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.testTag("church_selection_error"))
+            }
             if (onDiscover != null) item {
                 Button(onClick = { picker = false; locate = false; onDiscover() },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("discover_churches")) {
@@ -78,7 +104,8 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                     modifier = Modifier.fillMaxWidth().testTag("church_search"))
             }
             if (onAddChurch != null) item {
-                OutlinedButton(onClick = { locate = false; adding = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("add_church")) {
+                OutlinedButton(onClick = { churchDraft.removeState("new_church"); locate = false; adding = true },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("add_church")) {
                     Icon(Icons.Default.Add, null, Modifier.size(20.dp)); Spacer(Modifier.width(8.dp)); Text("Добавить свой храм")
                 }
             }
@@ -86,7 +113,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                 TextButton(onClick = { locate = !locate }, modifier = Modifier.testTag("church_locate")) {
                     Icon(Icons.Default.MyLocation, null, Modifier.size(20.dp)); Spacer(Modifier.width(8.dp)); Text("Сохраненные храмы рядом")
                 }
-                if (locate) LocateChurchCard(churches) { id -> onSelect(id); picker = false; locate = false; dayOffset = 0 }
+                if (locate) LocateChurchCard(churches) { id -> selectChurch(id) }
             }
             if (matches.isEmpty()) item {
                 Text("Среди добавленных храмов ничего не найдено", style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("church_search_empty"))
@@ -97,7 +124,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                     Text(if (option.id in favorites) "Избранные" else "Добавленные храмы", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 8.dp))
                 }
                 Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
-                    Row(Modifier.fillMaxWidth().clickable { onSelect(option.id); picker = false; locate = false; dayOffset = 0 }
+                    Row(Modifier.fillMaxWidth().clickable { selectChurch(option.id) }
                         .testTag("church_${option.id}").semantics { role = Role.RadioButton; selected = option.id == selectedId }
                         .padding(start = 16.dp, top = 12.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -197,6 +224,10 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                                 if (onSaveStart != null) OutlinedButton(onClick = { editingDate = date.toString() },
                                     modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("edit_personal_time")) {
                                     Text(if (personalStart == null) "Указать время" else "Изменить мое время")
+                                }
+                                if (personalStart != null && onGoToService != null) Button(onClick = onGoToService,
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("personal_time_to_service")) {
+                                    Text("К службе")
                                 }
                             }
                         }

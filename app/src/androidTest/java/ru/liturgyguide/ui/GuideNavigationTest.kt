@@ -331,7 +331,8 @@ class GuideNavigationTest {
     }
 
     @Test
-    fun defaultParishUsesItsLocalDateAndManualChoiceRemainsAvailable() {
+    fun selectedParishUsesItsLocalDateAndManualChoiceRemainsAvailable() {
+        chooseDefaultParish()
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val repository = ParishRepository(context.assets.open("churches.json").bufferedReader().use { it.readText() })
         val parish = repository.selected(null)
@@ -473,6 +474,7 @@ class GuideNavigationTest {
 
     @Test
     fun churchHasTodayAndTomorrowAndChangingItStartsAFreshContext() {
+        chooseDefaultParish()
         openCreed()
         compose.onNodeWithTag("next_line").performClick()
         pressBack()
@@ -629,4 +631,11 @@ class GuideNavigationTest {
     private fun savedSession(): ServiceSession = requireNotNull(
         Gson().fromJson(preferences.getString("session", null), ServiceSession::class.java)
     )
+    private fun chooseDefaultParish() {
+        compose.onNodeWithTag("open_church").performClick()
+        compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("church_elisavetinsky_opalikha"))
+        compose.onNodeWithTag("church_elisavetinsky_opalikha").performClick()
+        compose.onNodeWithTag("nav_home").performClick()
+    }
+
 }

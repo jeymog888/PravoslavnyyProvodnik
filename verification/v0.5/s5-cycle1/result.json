@@ -1,0 +1,27 @@
+{
+  "unit_tests": 325,
+  "first_ui": {
+    "tests": 55,
+    "passed": 54,
+    "failures": 1
+  },
+  "final_targeted_ui": {
+    "tests": 9,
+    "passed": 9,
+    "failures": 0
+  },
+  "review": "Astra ACCEPT + root code and native screenshots",
+  "native_apk_sha256": "aaa4ca9cc1597aa9790650fc1c540e9917db39af9cc092133944f4f54cb61f03",
+  "native_checks": [
+    "fresh no parish and no schedule",
+    "direct picker",
+    "custom draft rotation portrait-landscape-portrait",
+    "save custom church without schedule",
+    "previous tomorrow -> Main -> time form today",
+    "invalid25:00 retained with error",
+    "18:00 saved -> explicit Main -> exact service card",
+    "watch accepted dated USER reading paused",
+    "force-stop cold start retains parish/time/reading; resume paused"
+  ],
+  "restoration_caveat": "StateRestorationTester omitted dialog state before explicit screen-owned holder; real native rotation preserved fields both before and after. No native rotation data loss claimed."
+}

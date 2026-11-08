@@ -169,6 +169,7 @@ class ArrivalFlowTest {
 
     @Test fun foreignOrCorruptContextRestoredInServiceRequiresANewExplicitChoice() {
         seed()
+        check(preferences.edit().putString("church_id", parish.id).commit())
         val restoration = launch(AdjustableClock(instant))
         watch("current")
         val wrong = ReadingContext("another-parish", "2026-11-08", "Europe/Moscow", ReadingContextSource.MANUAL)

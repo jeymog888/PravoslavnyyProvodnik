@@ -23,7 +23,8 @@ import java.util.Locale
 @Composable
 fun MainScreen(lastStage: LiturgyStage?, currentDate: LocalDate, onStart: () -> Unit, onResume: () -> Unit, onFindStage: () -> Unit,
     church: Parish?, onChurch: () -> Unit, overview: ScheduleOverview,
-    onOpenService: ((ContextSuggestion) -> Unit)? = null, onOrder: () -> Unit, bottomBar: @Composable () -> Unit, readingNotice: String? = null, savedReadingNote: String? = null) {
+    onOpenService: ((ContextSuggestion) -> Unit)? = null, onOrder: () -> Unit, bottomBar: @Composable () -> Unit,
+    readingNotice: String? = null, savedReadingNote: String? = null, onPersonalTime: (() -> Unit)? = null) {
     Scaffold(containerColor = MaterialTheme.colorScheme.background, bottomBar = bottomBar) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("main_content"),
             contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(28.dp)) {
@@ -65,6 +66,10 @@ fun MainScreen(lastStage: LiturgyStage?, currentDate: LocalDate, onStart: () -> 
                         Text(if (church == null) "Так можно увидеть известное время службы. Тексты доступны и без выбора храма"
                             else "Уточните начало в храме или найдите текущий момент по словам службы",
                             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (church != null && onPersonalTime != null) OutlinedButton(onClick = onPersonalTime,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("set_service_time")) {
+                            Text("Указать начало литургии")
+                        }
                     }
                 }
             }

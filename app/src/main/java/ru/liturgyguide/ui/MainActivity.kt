@@ -74,8 +74,10 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     var settingsOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
     var churchOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
     var churchPickerRequest by rememberSaveable { mutableIntStateOf(0) }
+    var personalTimeRequest by rememberSaveable { mutableIntStateOf(0) }
     var arrivalDraft by rememberSaveable(stateSaver = ArrivalDraft.Saver) { mutableStateOf<ArrivalDraft?>(null) }
-    var churchId by rememberSaveable { mutableStateOf(preferences.getString("church_id", null)) }
+    var hasChurchSelection by rememberSaveable { mutableStateOf(preferences.contains("church_id")) }
+    var churchId by rememberSaveable { mutableStateOf(runCatching { preferences.getString("church_id", null) }.getOrNull()) }
     var session by remember {
         mutableStateOf(runCatching { Gson().fromJson(preferences.getString("session", null), ServiceSession::class.java) }.getOrNull())
     }
@@ -87,12 +89,16 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     val sessionEngine = remember(stages, clock) { if (stages.isEmpty()) null else ServiceSessionEngine(stages, clock) }
     val parishes = container.parishes.getOrNull()
     val churches = remember(parishes, savedChurches) { ChurchDirectory.merge(parishes?.directory?.churches.orEmpty(), savedChurches) }
-    val church = churches.firstOrNull { it.id == churchId } ?: parishes?.selected(null) ?: churches.firstOrNull()
+    val validatedSession = session?.takeIf { runCatching { sessionEngine?.isValid(it) == true }.getOrDefault(false) }
+    val church = ChurchSelection.resolve(churches, hasChurchSelection, churchId,
+        hasReadingMetadata, readingContext, hasPlaybackSnapshot,
+        hasLegacyReading = validatedSession != null || stages.any { it.id == selectedId },
+        legacyDefaultId = parishes?.directory?.defaultChurchId)
     val contextEngine = remember(stages, clock) { if (stages.isEmpty()) null else ContextSuggestionEngine(stages, clock) }
     val overview = church?.let { contextEngine?.overview(it, now, userStarts) } ?: ScheduleOverview()
     val currentDate = now.atZone(ZoneId.of(church?.timezone ?: "Europe/Moscow")).toLocalDate()
     val invalidReadingMetadata = hasReadingMetadata && (readingContext == null || readingContext?.parishId != church?.id)
-    val validSession = session?.takeIf { !invalidReadingMetadata && sessionEngine?.isValid(it) == true }
+    val validSession = validatedSession?.takeIf { !invalidReadingMetadata }
     // A legacy running timer is an address only. Never advance its saved stage from wall clock.
     val legacyStage = if (invalidReadingMetadata) null else stages.firstOrNull { it.id == (validSession?.anchorStageId ?: selectedId) }
     val legacyReadingContext = if (!hasReadingMetadata) validSession?.let { saved ->
@@ -301,10 +307,26 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         return true
     }
     fun chooseChurch(id: String): Boolean {
-        if (church?.id == id) return true
+        if (church?.id == id) {
+            if (hasChurchSelection && churchId == id) return true
+            if (!readingAcceptanceStore.confirmChurch(id)) { savingFailed(); return false }
+            churchId = id; hasChurchSelection = true
+            return true
+        }
         if (!clearAcceptedReading(id)) return false
-        churchId = id
+        churchId = id; hasChurchSelection = true
         return true
+    }
+    fun openChurch() {
+        churchOrigin = Screen.MAIN
+        if (church == null) churchPickerRequest++
+        navigate(Screen.CHURCH)
+    }
+    fun openPersonalTime() {
+        if (church == null) { openChurch(); return }
+        churchOrigin = Screen.MAIN
+        personalTimeRequest++
+        navigate(Screen.CHURCH)
     }
     fun closeDiscovery() { churchPickerRequest++; navigate(Screen.CHURCH) }
     fun back() {
@@ -342,7 +364,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     val navigationBar: @Composable () -> Unit = {
         GuideBottomBar(selected = when (screen) { Screen.CHURCH -> "church"; Screen.SETTINGS -> "settings"; else -> "home" },
             onHome = { navigate(Screen.MAIN) },
-            onChurch = { churchOrigin = Screen.MAIN; navigate(Screen.CHURCH) },
+            onChurch = ::openChurch,
             onSettings = { settingsOrigin = Screen.MAIN; navigate(Screen.SETTINGS) })
     }
     GuideTheme(dark = dark) {
@@ -360,7 +382,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         church = church,
                         overview = overview,
                         onOpenService = ::openScheduledService,
-                        onChurch = { churchOrigin = Screen.MAIN; navigate(Screen.CHURCH) },
+                        onChurch = ::openChurch,
+                        onPersonalTime = ::openPersonalTime,
                         onStart = {
                             val accepted = ReadingContextFactory.manual(church, clock.instant())
                             val value = accepted?.let { candidate(it, stages.first().id) }
@@ -470,6 +493,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         },
                         onDiscover = { navigate(Screen.DISCOVERY) },
                         pickerRequest = churchPickerRequest,
+                        personalTimeRequest = personalTimeRequest,
+                        onGoToService = { navigate(Screen.MAIN) },
                         userStarts = userStarts,
                         onSaveStart = { value ->
                             val saved = church?.let { startStore.save(value, it) } == true

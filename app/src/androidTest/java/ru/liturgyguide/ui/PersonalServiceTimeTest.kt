@@ -132,7 +132,7 @@ class PersonalServiceTimeTest {
     @Test fun publishedAndPersonalStartsStaySeparateAndRemovingPersonalRestoresTheEmptyState() {
         val starts = mutableStateOf(listOf(UserServiceStart(parish.id, today.toString(), "10:00")))
         compose.setContent { GuideTheme(false) { ChurchScreen(listOf(parish), parish.id, today,
-            onSelect = {}, onOpenUrl = {}, onBack = {}, userStarts = starts.value,
+            onSelect = { true }, onOpenUrl = {}, onBack = {}, userStarts = starts.value,
             onSaveStart = { value -> starts.value = listOf(value); true },
             onRemoveStart = { date -> starts.value = starts.value.filterNot { it.date == date.toString() }; true }) } }
         compose.onNodeWithTag("church_content").performScrollToNode(hasText("Опубликованное расписание"))

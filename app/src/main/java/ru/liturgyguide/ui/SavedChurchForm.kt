@@ -26,6 +26,7 @@ import ru.liturgyguide.service.SavedChurchOrigin
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 private val russianZones = listOf(
     "Europe/Kaliningrad" to "Калининград", "Europe/Moscow" to "Москва", "Europe/Samara" to "Самара",
@@ -36,6 +37,8 @@ private val russianZones = listOf(
 
 @Composable
 internal fun SavedChurchForm(onCancel: () -> Unit, onSave: (SavedChurchRecord) -> Boolean, initialRecord: SavedChurchRecord? = null) {
+    // A failed selection can follow a successful directory save. Retrying must update that same record.
+    val draftId = rememberSaveable(initialRecord?.id) { initialRecord?.id ?: "custom:${UUID.randomUUID()}" }
     var name by rememberSaveable(initialRecord?.id) { mutableStateOf(initialRecord?.name.orEmpty()) }
     var city by rememberSaveable(initialRecord?.id) { mutableStateOf(initialRecord?.city.orEmpty()) }
     var address by rememberSaveable(initialRecord?.id) { mutableStateOf(initialRecord?.address.orEmpty()) }
@@ -99,7 +102,9 @@ internal fun SavedChurchForm(onCancel: () -> Unit, onSave: (SavedChurchRecord) -
                 cityRequired && city.isBlank() -> error = "Укажите город или населенный пункт"
                 zone == null -> error = "Проверьте часовой пояс или выберите его из списка"
                 else -> {
-                    val record = if (initialRecord == null) runCatching { SavedChurchRecord.create(name, city, address, timezone, latitude, longitude, accuracy) }.getOrNull()
+                    val record = if (initialRecord == null) runCatching {
+                        SavedChurchRecord.create(name, city, address, timezone, latitude, longitude, accuracy).copy(id = draftId)
+                    }.getOrNull()
                     else SavedChurchCodec.validated(initialRecord.copy(name = name, city = city, address = address, timezone = timezone,
                         latitude = latitude, longitude = longitude, locationAccuracyMeters = accuracy))
                     if (record == null) error = "Проверьте название и город: уберите переносы строк и необычные символы"
