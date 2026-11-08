@@ -174,3 +174,5 @@
 6.2: harness проверяет owner/visibility только по отдельным OS-строкам. Исправлены две подмены через title, 61 Python check PASS, 14 ожидаемых отказов старого parser, root replay36/36. Astra ACCEPT. [Доказательства](verification/v0.5/s6-harness-owner)
 
 6.3: полный baseline01c625a - 335 unit +119 UI без failures/errors/skips, lint0errors/13warnings. Затем исправлены четыре устаревших абзаца справки о плеере, полноте текстов и внешнем поиске. Astra preflight принято. В отдельной копии три намеренные ошибки обнаружены точными assertions; baseline/restored3PASS и хеши исходников совпали. [Полный baseline](verification/v0.5/s6-full-baseline), [отрицательные контроли](verification/v0.5/s6-mutations)
+
+6.4: CI явно разрешает программную клавиатуру перед UI-suite, как в проверенном локальном окружении. Проверки реального появления/закрытия клавиатуры не изменены. Astra ACCEPT. Это фиксация условия, не заявление об исправлении уже воспроизведенного падения CI. [Обоснование](verification/v0.5/s6-ci-ime)
