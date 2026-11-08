@@ -120,7 +120,11 @@ class UrlConnectionDiscoveryTransport(
                     current.readTimeout = remainingMillis()
                     val status = current.responseCode
                     if (status != HttpURLConnection.HTTP_OK) {
-                        fail(if (status == 429) DiscoveryFailure.RATE_LIMITED else DiscoveryFailure.UNAVAILABLE)
+                        fail(when (status) {
+                            429 -> DiscoveryFailure.RATE_LIMITED
+                            in 500..599 -> DiscoveryFailure.SERVER_UNAVAILABLE
+                            else -> DiscoveryFailure.UNAVAILABLE
+                        })
                         return@submit
                     }
                     if (current.contentLengthLong > responseLimitBytes) {

@@ -1,0 +1,186 @@
+{
+  "uniqueScenarios": 45,
+  "limits": "Latest result per scenario across recorded iterations, not 45 tests rerun on the final APK. Final 12dp-only runtime spacing change has live visual coverage. Full final release suite remains stage 6.",
+  "scenarios": {
+    "ru.liturgyguide.ui.ChurchDiscoveryScreenTest#timeoutEmptyResultsAndOldCachedResultsRemainDistinct": {
+      "run": "s22-search-r4",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchDiscoveryScreenTest#nameSearchFindsAMonasteryWithoutChoosingACityAndRequiresTimeZoneReview": {
+      "run": "s22-search-r4",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchDiscoveryScreenTest#longMapNamesAndAddressesReachTheFormAndStorageUnshortened": {
+      "run": "s22-search-r4",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchDiscoveryScreenTest#searchesOnlyAfterAnActionAndSavesOnlyAfterReviewingTheSelectedCityAndTimeZone": {
+      "run": "s22-search-r4",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchDiscoveryScreenTest#unavailableNearbySearchOffersNameSearchWithoutStartingAHiddenRequest": {
+      "run": "s22-search-r4",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchDiscoveryScreenTest#leavingTheForegroundCancelsSearchAndReturningDoesNotRestartIt": {
+      "run": "s22-search-r4",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchDiscoveryScreenTest#cancellingARequestIgnoresItsLateResultAndLeavesManualNavigationAvailable": {
+      "run": "s22-search-r4",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchDiscoveryScreenTest#cancelledNameSearchCannotReplaceANewerResult": {
+      "run": "s22-search-r4",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchDiscoveryScreenTest#filteringAndCancellingImportDoNotSaveAnythingOrStartAnotherNetworkSearch": {
+      "run": "s22-search-r4",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchDiscoveryScreenTest#serverFailureRetainsTheNameAndOnlyRetriesAfterAnExplicitAction": {
+      "run": "s22-search-r4",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.PersonalServiceTimeTest#failedStorageKeepsTheDraftAndCancelDoesNotTryAgain": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.PersonalServiceTimeTest#impossibleDateAndOutOfRangeTimeRemainEditableWithoutSaving": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.PersonalServiceTimeTest#removalTargetsOnlyTheSelectedDateAndReportsFailure": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.PersonalServiceTimeTest#anAbsoluteDateAndDraftSurviveRestorationAndSaveWithTheParishContext": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.PersonalServiceTimeTest#changingTheDateLoadsOnlyThatDatesSavedTime": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.PersonalServiceTimeTest#daylightSavingGapAndRepeatedHourAreNotSilentlyCorrected": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.PersonalServiceTimeTest#publishedAndPersonalStartsStaySeparateAndRemovingPersonalRestoresTheEmptyState": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#corruptModernMetadataNeverAssignsTheLegacyDefault": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#firstVisitOpensThePickerDirectlyAndManualReadingKeepsNoParishAfterRestore": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#confirmingRecoveredLegacyParishPreservesTheReadingAndPersistsTheChoice": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#newTempleWithoutScheduleLeadsThroughPersonalTimeToTheExactService": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#aFailedChoiceKeepsThePickerOpenAndCanBeRetried": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#retryAfterDirectorySaveAndFailedSelectionReusesTheSameRecord": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.DateRolloverTest#mainDateUpdatesWhileTheScreenStaysOpen": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.DateRolloverTest#scheduleKeepsTodayAndTomorrowRelativeAcrossTheMonthBoundary": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchChangeConfirmationTest#filteredChoiceAndBackKeepEverySavedValueUntilExplicitConfirmation": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchChangeConfirmationTest#aLongChurchNameAtLargeTextKeepsBothConfirmationActionsReachable": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchChangeConfirmationTest#invalidMetadataWithoutAResolvedChurchStillRequiresConfirmation": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchChangeConfirmationTest#failedAtomicConfirmationKeepsTheReadingAndAllowsRetry": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchChangeConfirmationTest#firstChoiceWithoutReadingCompletesWithoutConfirmation": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchChangeConfirmationTest#aCapturedConfirmationCannotClearAChangedReadingOrAnAlreadyCancelledChoice": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchChangeConfirmationTest#recreationDropsPendingAndRejectsItsOldConfirmation": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchChangeConfirmationTest#choosingTheSameChurchKeepsTheReadingWithoutConfirmation": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#aSingleTextRetainsItsFullTitleAndTheClarificationAction": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#scriptureAndAnEmptyTextStageKeepClarificationWithoutALanguageMenu": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#narrowScheduleKeepsBothDayLabelsOnOneLineAndSelectable": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#aTallNarrowScreenKeepsReadableActionsWithoutReducingThePrayerSize": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#landscapeKeepsTabsOnOneLineAndLeavesSpaceForTheRequestedPrayerSize": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#largeTextNavigationLeavesSpaceForChurchAndSettingsWithoutScalingTheirContent": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#aTallScreenAtTheHeaderWidthBoundaryKeepsItsReadingArea": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#narrowLargeTextKeepsNamesReadableAndCancellationPreservesThePhrase": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#ordinaryFooterKeepsSeparateTargetsAtTheNarrowWidthAndFastestSpeed": {
+      "run": "s22-search-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.DiscoveryNavigationTest#pickerNameSurvivesBackAndRecreationAndReentryAlwaysSearchesNames": {
+      "run": "s22-search-r5",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.DiscoveryNavigationTest#nameDiscoveryReturnsToSavedPickerAndOnlyConfirmationReplacesTheParish": {
+      "run": "s22-search-r5",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.DiscoveryNavigationTest#aMappedTempleWithoutACityTagCanBeSavedWithItsKnownCoordinates": {
+      "run": "s22-search-r5",
+      "status": "PASS"
+    }
+  }
+}

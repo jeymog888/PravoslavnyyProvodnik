@@ -85,6 +85,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     var settingsOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
     var churchOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
     var churchPickerRequest by rememberSaveable { mutableIntStateOf(0) }
+    var churchSearchQuery by rememberSaveable { mutableStateOf("") }
+    var churchSearchMode by rememberSaveable { mutableStateOf(ChurchSearchMode.NAME) }
     var personalTimeRequest by rememberSaveable { mutableIntStateOf(0) }
     var arrivalDraft by rememberSaveable(stateSaver = ArrivalDraft.Saver) { mutableStateOf<ArrivalDraft?>(null) }
     var hasChurchSelection by rememberSaveable { mutableStateOf(preferences.contains("church_id")) }
@@ -371,6 +373,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     }
     fun closeDiscovery() { churchPickerRequest++; navigate(Screen.CHURCH) }
     fun back() {
+        // Both root and screen Back callbacks must reopen the saved picker.
+        if (screen == Screen.DISCOVERY) { closeDiscovery(); return }
         val destination = when (screen) {
             Screen.MANUAL -> if (arrivalDraft?.mode == ArrivalMode.CORRECTION) Screen.SERVICE else Screen.MAIN
             Screen.ARRIVAL -> if (arrivalDraft?.source == ArrivalSource.MANUAL) Screen.MANUAL else Screen.MAIN
@@ -379,7 +383,6 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
             Screen.SETTINGS -> settingsOrigin
             Screen.SOURCES -> Screen.SETTINGS
             Screen.CHURCH -> churchOrigin
-            Screen.DISCOVERY -> Screen.CHURCH
             else -> Screen.MAIN
         }
         if (screen == Screen.MANUAL || (screen == Screen.ARRIVAL && destination == Screen.MAIN)) arrivalDraft = null
@@ -532,7 +535,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                             if (saved) savedChurches = churchStore.records()
                             saved
                         },
-                        onDiscover = { navigate(Screen.DISCOVERY) },
+                        onDiscover = { churchSearchMode = ChurchSearchMode.NAME; navigate(Screen.DISCOVERY) },
+                        searchQuery = churchSearchQuery, onSearchQueryChange = { churchSearchQuery = it },
                         pickerRequest = churchPickerRequest,
                         personalTimeRequest = personalTimeRequest,
                         onGoToService = { navigate(Screen.MAIN) },
@@ -556,12 +560,14 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                     )
                     Screen.DISCOVERY -> ChurchDiscoveryScreen(
                         discovery = container.placeDiscovery,
+                        query = churchSearchQuery, onQueryChange = { churchSearchQuery = it },
+                        mode = churchSearchMode, onModeChange = { churchSearchMode = it },
                         onBack = ::closeDiscovery,
                         onSave = { record, onSelected ->
                             val saved = churchStore.save(record)
                             if (saved) savedChurches = churchStore.records()
                             if (!saved) ChurchSelectionResult.FAILED
-                            else chooseChurch(record.id) { onSelected(); navigate(Screen.CHURCH) }
+                            else chooseChurch(record.id) { onSelected(); churchSearchQuery = ""; navigate(Screen.CHURCH) }
                         },
                         onSelectionCancelled = ::cancelChurchSelection,
                         onOpenUrl = { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(it))) }

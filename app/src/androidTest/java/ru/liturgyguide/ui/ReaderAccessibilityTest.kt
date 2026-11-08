@@ -166,7 +166,7 @@ class ReaderAccessibilityTest {
                 GuideTheme(dark = true) {
                     Box(Modifier.size(320.dp, 640.dp)) {
                         ChurchScreen(parishes.directory.churches, parishes.selected(null).id,
-                            LocalDate.of(2026, 11, 8), onSelect = { _, selected -> selected(); ChurchSelectionResult.SELECTED }, onOpenUrl = {}, onBack = {})
+                            LocalDate.of(2026, 11, 8), searchQuery = "", onSearchQueryChange = {}, onSelect = { _, selected -> selected(); ChurchSelectionResult.SELECTED }, onOpenUrl = {}, onBack = {})
                     }
                 }
             }

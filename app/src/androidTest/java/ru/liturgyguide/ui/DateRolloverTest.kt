@@ -43,7 +43,7 @@ class DateRolloverTest {
         compose.setContent {
             GuideTheme(dark = false) {
                 ChurchScreen(churches = parishes.directory.churches, selectedId = parishes.selected(null).id,
-                    currentDate = currentDate.value, onSelect = { _, selected -> selected(); ChurchSelectionResult.SELECTED }, onOpenUrl = {}, onBack = {})
+                    currentDate = currentDate.value, searchQuery = "", onSearchQueryChange = {}, onSelect = { _, selected -> selected(); ChurchSelectionResult.SELECTED }, onOpenUrl = {}, onBack = {})
             }
         }
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("schedule_today"))

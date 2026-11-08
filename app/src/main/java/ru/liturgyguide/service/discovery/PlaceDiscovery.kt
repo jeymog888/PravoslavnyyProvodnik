@@ -49,11 +49,17 @@ data class DiscoveredChurch(
     val city: String,
     val website: String?,
     val isChapel: Boolean,
-    val sourceUrl: String
+    val sourceUrl: String,
+    val kind: DiscoveredPlaceKind = if (isChapel) DiscoveredPlaceKind.CHAPEL else DiscoveredPlaceKind.WORSHIP_PLACE,
+    val region: String = "",
+    val country: String = ""
 )
 
+/** A map category is not a denomination or a published service schedule. */
+enum class DiscoveredPlaceKind { CHURCH, CHAPEL, MONASTERY, WORSHIP_PLACE }
+
 enum class DiscoveryCacheStatus { FRESH_NETWORK, FRESH_CACHE, STALE_CACHE }
-enum class DiscoveryFailure { INVALID_QUERY, UNAVAILABLE, TIMEOUT, TOO_LARGE, INVALID_RESPONSE, RATE_LIMITED, BUSY }
+enum class DiscoveryFailure { INVALID_QUERY, UNAVAILABLE, SERVER_UNAVAILABLE, TIMEOUT, TOO_LARGE, INVALID_RESPONSE, RATE_LIMITED, BUSY }
 enum class DiscoveryProvider { PHOTON, VK_MAPS }
 
 sealed interface DiscoveryResult<out T> {
@@ -72,11 +78,12 @@ sealed interface DiscoveryResult<out T> {
 }
 
 interface PlaceDiscovery {
+    suspend fun searchPlaces(query: String): DiscoveryResult<DiscoveredChurch>
     suspend fun searchCities(query: String): DiscoveryResult<DiscoveryCity>
     suspend fun findChurches(center: GeoPoint, radiusMeters: Int = 3_000): DiscoveryResult<DiscoveredChurch>
 }
 
-/** Two fixed slots are used by the client; the store must not turn query keys into location history. */
+/** Fixed slots are used by the client; the store must not turn query keys into location history. */
 interface DiscoveryCacheStore {
     fun read(slot: String): String?
     fun write(slot: String, value: String)
@@ -106,6 +113,16 @@ class DefaultPlaceDiscovery(
     private val endpoints: DiscoveryEndpoints = DiscoveryEndpoints(),
     private val clock: Clock = Clock.systemUTC()
 ) : PlaceDiscovery {
+    override suspend fun searchPlaces(query: String): DiscoveryResult<DiscoveredChurch> = withContext(Dispatchers.IO) {
+        val cleaned = query.trim().replace(Regex("\\s+"), " ")
+        if (cleaned.length !in 2..MAX_QUERY_LENGTH || cleaned.any { it.isISOControl() }) {
+            return@withContext DiscoveryResult.Failure(DiscoveryFailure.INVALID_QUERY)
+        }
+        val url = endpoints.cities + "?q=" + encode(cleaned) + "&limit=$MAX_PLACES&lang=default" +
+            "&include=osm.amenity.place_of_worship,osm.amenity.monastery"
+        search("places", url, DiscoveryRequest(url), DiscoveryProvider.PHOTON, parser = DiscoveryJson::places)
+    }
+
     override suspend fun searchCities(query: String): DiscoveryResult<DiscoveryCity> = withContext(Dispatchers.IO) {
         val cleaned = query.trim().replace(Regex("\\s+"), " ")
         if (cleaned.length !in 2..MAX_QUERY_LENGTH || cleaned.any { it.isISOControl() }) {
@@ -199,6 +216,7 @@ class DefaultPlaceDiscovery(
     companion object {
         const val MAX_QUERY_LENGTH = 120
         const val MAX_CITIES = 5
+        const val MAX_PLACES = 10
         const val MAX_CHURCHES = 60
         const val MAX_RESPONSE_BYTES = 1_048_576
         const val MIN_RADIUS_METERS = 500
@@ -217,7 +235,7 @@ class DefaultPlaceDiscovery(
             val lon = String.format(Locale.ROOT, "%.2f", center.longitude)
             val denominations = DiscoveryJson.DENOMINATIONS.joinToString("|")
             return """[out:json][timeout:15][maxsize:8388608];
-                |nwr(around:$radiusMeters,$lat,$lon)["amenity"="place_of_worship"]["religion"="christian"]
+                |nwr(around:$radiusMeters,$lat,$lon)["amenity"~"^(place_of_worship|monastery)${'$'}"]["religion"="christian"]
                 |["denomination"~"(^|;)($denominations)(;|${'$'})"];
                 |out center tags $MAX_CHURCHES;""".trimMargin()
         }
@@ -227,6 +245,37 @@ class DefaultPlaceDiscovery(
 /** Responses are untrusted data. Unknown fields (including service_times) never become a schedule. */
 internal object DiscoveryJson {
     val DENOMINATIONS = listOf("orthodox", "russian_orthodox", "greek_orthodox", "serbian_orthodox", "georgian_orthodox")
+    fun places(body: String): List<DiscoveredChurch> = parse {
+        val root = JsonParser.parseString(body).asJsonObject
+        require(root.string("type") == "FeatureCollection")
+        val features = root.getAsJsonArray("features") ?: error("Missing features")
+        features.take(DefaultPlaceDiscovery.MAX_PLACES).mapNotNull { element -> runCatching {
+            val feature = element.asJsonObject
+            if (feature.string("type") != "Feature") return@runCatching null
+            val props = feature.getAsJsonObject("properties") ?: return@runCatching null
+            if (props.string("osm_key") != "amenity") return@runCatching null
+            val kind = when (props.string("osm_value")) {
+                "monastery" -> DiscoveredPlaceKind.MONASTERY
+                "place_of_worship" -> DiscoveredPlaceKind.WORSHIP_PLACE
+                else -> return@runCatching null
+            }
+            val geometry = feature.getAsJsonObject("geometry") ?: return@runCatching null
+            if (geometry.string("type") != "Point") return@runCatching null
+            val coordinates = geometry.getAsJsonArray("coordinates") ?: return@runCatching null
+            if (coordinates.size() != 2 || coordinates.any { !it.isJsonPrimitive || !it.asJsonPrimitive.isNumber }) return@runCatching null
+            val center = GeoPoint(coordinates[1].asDouble, coordinates[0].asDouble)
+            if (!center.isValid) return@runCatching null
+            val name = props.string("name", 300).takeIf { it.isNotBlank() } ?: return@runCatching null
+            val type = when (props.string("osm_type")) { "N" -> "node"; "W" -> "way"; "R" -> "relation"; else -> return@runCatching null }
+            val id = props.positiveId() ?: return@runCatching null
+            val address = listOf(props.string("street", 200), props.string("housenumber", 30)).filter(String::isNotBlank).joinToString(", ")
+            DiscoveredChurch("osm:$type:$id", name, center, address, props.string("city", 200),
+                website = null, isChapel = false, sourceUrl = "https://www.openstreetmap.org/$type/$id", kind = kind,
+                region = listOf(props.string("state", 200), props.string("county", 200)).filter(String::isNotBlank).distinct().joinToString(", "),
+                country = props.string("country", 200))
+        }.getOrNull() }.distinctBy { it.id }
+    }
+
     fun cities(body: String): List<DiscoveryCity> = parse {
         val root = JsonParser.parseString(body).asJsonObject
         require(root.string("type") == "FeatureCollection")
@@ -260,7 +309,7 @@ internal object DiscoveryJson {
             val type = value.string("type").takeIf { it in setOf("node", "way", "relation") } ?: return@runCatching null
             val id = value.positiveId("id") ?: return@runCatching null
             val tags = value.getAsJsonObject("tags") ?: return@runCatching null
-            if (tags.string("amenity") != "place_of_worship" || tags.string("religion") != "christian" ||
+            if (tags.string("amenity") !in setOf("place_of_worship", "monastery") || tags.string("religion") != "christian" ||
                 tags.string("denomination").split(';').map(String::trim).none { it in DENOMINATIONS } ||
                 tags.string("tower:type") == "bell_tower") return@runCatching null
             val name = tags.string("name:ru", 300).ifBlank { tags.string("name", 300) }.takeIf { it.isNotBlank() } ?: return@runCatching null
@@ -271,9 +320,13 @@ internal object DiscoveryJson {
             val street = listOf(tags.string("addr:street", 200), tags.string("addr:housenumber", 30)).filter { it.isNotBlank() }.joinToString(", ")
             val address = listOf(city, street).filter { it.isNotBlank() }.joinToString(", ")
             val website = listOf(tags.string("website", 2048), tags.string("contact:website", 2048)).firstNotNullOfOrNull(::safeWebsite)
-            DiscoveredChurch("osm:$type:$id", name, location, address, city, website,
-                tags.string("building") == "chapel" || tags.string("place_of_worship") == "chapel" || name.startsWith("часовня", ignoreCase = true),
-                "https://www.openstreetmap.org/$type/$id")
+            val chapel = tags.string("building") == "chapel" || tags.string("place_of_worship") == "chapel" || name.startsWith("часовня", ignoreCase = true)
+            DiscoveredChurch("osm:$type:$id", name, location, address, city, website, chapel,
+                "https://www.openstreetmap.org/$type/$id", kind = when {
+                    tags.string("amenity") == "monastery" -> DiscoveredPlaceKind.MONASTERY
+                    chapel -> DiscoveredPlaceKind.CHAPEL
+                    else -> DiscoveredPlaceKind.CHURCH
+                })
         }.getOrNull() }.distinctBy { it.id }.sortedBy { center.distanceMeters(it.center) }
     }
 

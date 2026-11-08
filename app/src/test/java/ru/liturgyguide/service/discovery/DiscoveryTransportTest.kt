@@ -132,9 +132,18 @@ class DiscoveryTransportTest {
     }
 
     @Test fun `HTTP error and redirect statuses do not become valid JSON responses`() = runBlocking {
-        for ((status, expected) in listOf(429 to DiscoveryFailure.RATE_LIMITED, 302 to DiscoveryFailure.UNAVAILABLE, 503 to DiscoveryFailure.UNAVAILABLE)) {
-            val transport = UrlConnectionDiscoveryTransport(connectionFactory = { Connection(status = status) })
+        for ((status, expected) in listOf(429 to DiscoveryFailure.RATE_LIMITED, 302 to DiscoveryFailure.UNAVAILABLE,
+            403 to DiscoveryFailure.UNAVAILABLE, 500 to DiscoveryFailure.SERVER_UNAVAILABLE,
+            503 to DiscoveryFailure.SERVER_UNAVAILABLE, 504 to DiscoveryFailure.SERVER_UNAVAILABLE)) {
+            var attempts = 0
+            val transport = UrlConnectionDiscoveryTransport(connectionFactory = { attempts++; Connection(status = status) })
             assertFailure(expected) { transport.fetch(DiscoveryRequest("https://example.com/test")) }
+            assertEquals("An HTTP failure must not start a hidden retry: $status", 1, attempts)
         }
+    }
+
+    @Test fun `connection failure is not reported as a responding server failure`() = runBlocking {
+        val transport = UrlConnectionDiscoveryTransport(connectionFactory = { throw java.io.IOException("Connection refused") })
+        assertFailure(DiscoveryFailure.UNAVAILABLE) { transport.fetch(DiscoveryRequest("https://example.com/test")) }
     }
 }

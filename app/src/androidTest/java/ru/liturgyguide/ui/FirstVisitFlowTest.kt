@@ -131,7 +131,7 @@ class FirstVisitFlowTest {
     @Test fun aFailedChoiceKeepsThePickerOpenAndCanBeRetried() {
         var accept = false
         compose.setContent { GuideTheme(false) { ChurchScreen(listOf(parish), null, LocalDate.of(2026, 11, 8),
-            onSelect = { _, selected -> if (accept) { selected(); ChurchSelectionResult.SELECTED } else ChurchSelectionResult.FAILED }, onOpenUrl = {}, onBack = {}, pickerRequest = 1) } }
+            searchQuery = "", onSearchQueryChange = {}, onSelect = { _, selected -> if (accept) { selected(); ChurchSelectionResult.SELECTED } else ChurchSelectionResult.FAILED }, onOpenUrl = {}, onBack = {}, pickerRequest = 1) } }
         compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("church_${parish.id}"))
         compose.onNodeWithTag("church_${parish.id}").performClick()
         compose.onNodeWithTag("church_picker").assertIsDisplayed()
@@ -147,7 +147,7 @@ class FirstVisitFlowTest {
         var choices = 0
         val restoration = StateRestorationTester(compose)
         restoration.setContent { GuideTheme(false) { ChurchScreen(emptyList(), null, LocalDate.of(2026, 11, 8),
-            onSelect = { _, selected -> if (++choices > 1) { selected(); ChurchSelectionResult.SELECTED } else ChurchSelectionResult.FAILED }, onOpenUrl = {}, onBack = {}, pickerRequest = 1,
+            searchQuery = "", onSearchQueryChange = {}, onSelect = { _, selected -> if (++choices > 1) { selected(); ChurchSelectionResult.SELECTED } else ChurchSelectionResult.FAILED }, onOpenUrl = {}, onBack = {}, pickerRequest = 1,
             onAddChurch = { records[it.id] = it; true }) } }
         compose.onNodeWithTag("add_church").performClick()
         replace("new_church_name", "Храм в поездке")

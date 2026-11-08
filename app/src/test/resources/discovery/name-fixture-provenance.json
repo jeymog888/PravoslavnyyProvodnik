@@ -1,0 +1,82 @@
+[
+  {
+    "file": "name-sretensky.json",
+    "sha256": "ca0a389efc753f3f08a0ea42d1f57a3585c69e5781f12343aeb198aa2d6a71f1",
+    "source_probe": "photon-categories-sretensky",
+    "request": {
+      "started_utc": "2026-11-08T21:18:11.510919+00:00",
+      "url": "https://photon.komoot.io/api/?q=%D0%A1%D1%80%D0%B5%D1%82%D0%B5%D0%BD%D1%81%D0%BA%D0%B8%D0%B9+%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D1%8B%D1%80%D1%8C+%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0&limit=10&lang=default&include=osm.amenity.place_of_worship%2Cosm.amenity.monastery",
+      "user_agent": "Feoria/0.6-research (+https://github.com/jeymog888/PravoslavnyyProvodnik)",
+      "elapsed_seconds": 0.397,
+      "exit_code": 0,
+      "http_status": 200,
+      "provider": "Photon public instance / OpenStreetMap"
+    },
+    "scope": "Unmodified real GeoJSON body; reverse probes exercise shared result parser only, not a new nearby product endpoint",
+    "raw_probe_archive": "verification/v0.6/feedback-research/search-probes.tar.gz"
+  },
+  {
+    "file": "name-petersburg.json",
+    "sha256": "deeec15fd0e93d30630530ad3beaba25dc90bf8684944fc1f79464ab877a397c",
+    "source_probe": "photon-filtered-kazan-cathedral",
+    "request": {
+      "started_utc": "2026-11-08T21:15:39.099375+00:00",
+      "url": "https://photon.komoot.io/api/?q=%D0%9A%D0%B0%D0%B7%D0%B0%D0%BD%D1%81%D0%BA%D0%B8%D0%B9+%D1%81%D0%BE%D0%B1%D0%BE%D1%80+%D0%A1%D0%B0%D0%BD%D0%BA%D1%82-%D0%9F%D0%B5%D1%82%D0%B5%D1%80%D0%B1%D1%83%D1%80%D0%B3&limit=10&lang=default&osm_tag=amenity%3Aplace_of_worship&osm_tag=amenity%3Amonastery",
+      "user_agent": "Feoria/0.6-research (+https://github.com/jeymog888/PravoslavnyyProvodnik)",
+      "elapsed_seconds": 0.392,
+      "exit_code": 0,
+      "http_status": 200,
+      "provider": "Photon public instance / OpenStreetMap"
+    },
+    "scope": "Unmodified real GeoJSON body; reverse probes exercise shared result parser only, not a new nearby product endpoint",
+    "raw_probe_archive": "verification/v0.6/feedback-research/search-probes.tar.gz"
+  },
+  {
+    "file": "name-namesakes.json",
+    "sha256": "a0272799560f5b97eec633ba067c5b491a944e688b8457cfba9c1da58f9ce1b2",
+    "source_probe": "photon-filtered-sretensky",
+    "request": {
+      "started_utc": "2026-11-08T21:15:36.004449+00:00",
+      "url": "https://photon.komoot.io/api/?q=%D0%A1%D1%80%D0%B5%D1%82%D0%B5%D0%BD%D1%81%D0%BA%D0%B8%D0%B9&limit=10&lang=default&osm_tag=amenity%3Aplace_of_worship&osm_tag=amenity%3Amonastery",
+      "user_agent": "Feoria/0.6-research (+https://github.com/jeymog888/PravoslavnyyProvodnik)",
+      "elapsed_seconds": 0.464,
+      "exit_code": 0,
+      "http_status": 200,
+      "provider": "Photon public instance / OpenStreetMap"
+    },
+    "scope": "Unmodified real GeoJSON body; reverse probes exercise shared result parser only, not a new nearby product endpoint",
+    "raw_probe_archive": "verification/v0.6/feedback-research/search-probes.tar.gz"
+  },
+  {
+    "file": "name-parser-mixed-kazan.json",
+    "sha256": "c8c019d35a462d95995ff535f8f944abc655d02d90040c65682309a2cb441e3f",
+    "source_probe": "photon-reverse-kazan",
+    "request": {
+      "started_utc": "2026-11-08T21:18:10.027222+00:00",
+      "url": "https://photon.komoot.io/reverse?lat=55.8&lon=49.11&radius=3&limit=20&lang=default&osm_tag=amenity%3Aplace_of_worship&osm_tag=amenity%3Amonastery",
+      "user_agent": "Feoria/0.6-research (+https://github.com/jeymog888/PravoslavnyyProvodnik)",
+      "elapsed_seconds": 0.377,
+      "exit_code": 0,
+      "http_status": 200,
+      "provider": "Photon public instance / OpenStreetMap"
+    },
+    "scope": "Unmodified real GeoJSON body; reverse probes exercise shared result parser only, not a new nearby product endpoint",
+    "raw_probe_archive": "verification/v0.6/feedback-research/search-probes.tar.gz"
+  },
+  {
+    "file": "name-parser-monastery-complex.json",
+    "sha256": "8225d1c40832c8066ca51b9394825b5f24b92738556a9b4ec943a944213c69f3",
+    "source_probe": "photon-reverse-sretensky",
+    "request": {
+      "started_utc": "2026-11-08T21:18:08.574455+00:00",
+      "url": "https://photon.komoot.io/reverse?lat=55.77&lon=37.63&radius=3&limit=20&lang=default&osm_tag=amenity%3Aplace_of_worship&osm_tag=amenity%3Amonastery",
+      "user_agent": "Feoria/0.6-research (+https://github.com/jeymog888/PravoslavnyyProvodnik)",
+      "elapsed_seconds": 0.348,
+      "exit_code": 0,
+      "http_status": 200,
+      "provider": "Photon public instance / OpenStreetMap"
+    },
+    "scope": "Unmodified real GeoJSON body; reverse probes exercise shared result parser only, not a new nearby product endpoint",
+    "raw_probe_archive": "verification/v0.6/feedback-research/search-probes.tar.gz"
+  }
+]

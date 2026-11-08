@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
@@ -17,6 +18,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.Role
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import ru.liturgyguide.service.ChurchLocator
@@ -50,20 +53,34 @@ internal fun SavedChurchForm(onCancel: () -> Unit, onSave: (SavedChurchRecord) -
     var longitude by rememberSaveable(initialRecord?.id) { mutableStateOf(initialRecord?.longitude) }
     var accuracy by rememberSaveable(initialRecord?.id) { mutableStateOf(initialRecord?.locationAccuracyMeters) }
     var error by rememberSaveable(initialRecord?.id) { mutableStateOf<String?>(null) }
+    val imported = initialRecord?.origin == SavedChurchOrigin.OPEN_STREET_MAP
+    var editDetails by rememberSaveable(initialRecord?.id) { mutableStateOf(!imported) }
+    var zoneConfirmed by rememberSaveable(initialRecord?.id) { mutableStateOf(!imported) }
     val zone = runCatching { ZoneId.of(timezone.trim()) }.getOrNull()
     val cityRequired = initialRecord?.origin != SavedChurchOrigin.OPEN_STREET_MAP
 
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).imePadding().padding(horizontal = 24.dp)
         .padding(bottom = 32.dp).testTag("add_church_form"), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(if (initialRecord == null) "Добавить свой храм" else "Сохранить храм", style = MaterialTheme.typography.headlineMedium)
-        Text("Он сохранится на этом телефоне. Расписание можно будет уточнить отдельно", style = MaterialTheme.typography.bodyMedium,
+        Text(if (imported) "Проверьте место" else "Добавить свой храм", style = MaterialTheme.typography.headlineMedium)
+        Text("Место сохранится на этом телефоне. Расписание нужно уточнить отдельно", style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
-        OutlinedTextField(name, { if (it.length <= SavedChurchCodec.MAX_NAME_LENGTH) name = it; error = null }, label = { Text("Название храма") },
-            modifier = Modifier.fillMaxWidth().testTag("new_church_name"), singleLine = true)
-        OutlinedTextField(city, { if (it.length <= SavedChurchCodec.MAX_CITY_LENGTH) city = it; error = null }, label = { Text(if (cityRequired) "Город или населенный пункт" else "Город, если знаете") },
-            modifier = Modifier.fillMaxWidth().testTag("new_church_city"), singleLine = true)
-        OutlinedTextField(address, { if (it.length <= SavedChurchCodec.MAX_ADDRESS_LENGTH) address = it; error = null }, label = { Text("Адрес, если знаете") },
-            modifier = Modifier.fillMaxWidth().testTag("new_church_address"), singleLine = true)
+        if (imported && !editDetails) {
+            Text(name, style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("import_church_name"))
+            listOf(city, address).filter(String::isNotBlank).distinct().joinToString(" · ").takeIf(String::isNotBlank)?.let {
+                Text(it, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.testTag("import_church_address"))
+            }
+            TextButton(onClick = { editDetails = true }, modifier = Modifier.heightIn(min = 48.dp).testTag("edit_import_details")) {
+                Text("Изменить название или адрес")
+            }
+        }
+        if (editDetails) {
+            OutlinedTextField(name, { if (it.length <= SavedChurchCodec.MAX_NAME_LENGTH) name = it; error = null }, label = { Text("Название храма") },
+                modifier = Modifier.fillMaxWidth().testTag("new_church_name"), singleLine = true)
+            OutlinedTextField(city, { if (it.length <= SavedChurchCodec.MAX_CITY_LENGTH) city = it; error = null }, label = { Text(if (cityRequired) "Город или населенный пункт" else "Город, если знаете") },
+                modifier = Modifier.fillMaxWidth().testTag("new_church_city"), singleLine = true)
+            OutlinedTextField(address, { if (it.length <= SavedChurchCodec.MAX_ADDRESS_LENGTH) address = it; error = null }, label = { Text("Адрес, если знаете") },
+                modifier = Modifier.fillMaxWidth().testTag("new_church_address"), singleLine = true)
+        }
         Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = MaterialTheme.shapes.medium) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Время в храме", style = MaterialTheme.typography.titleMedium)
@@ -76,13 +93,13 @@ internal fun SavedChurchForm(onCancel: () -> Unit, onSave: (SavedChurchRecord) -
                     }
                     DropdownMenu(expanded = zoneMenu, onDismissRequest = { zoneMenu = false }, modifier = Modifier.heightIn(max = 320.dp)) {
                         russianZones.forEach { (id, label) ->
-                            DropdownMenuItem(text = { Text(label) }, onClick = { timezone = id; otherZone = false; zoneMenu = false; error = null },
+                            DropdownMenuItem(text = { Text(label) }, onClick = { timezone = id; otherZone = false; zoneMenu = false; error = null; zoneConfirmed = true },
                                 modifier = Modifier.testTag("zone_$id"))
                         }
                         DropdownMenuItem(text = { Text("Другой часовой пояс") }, onClick = { otherZone = true; zoneMenu = false })
                     }
                 }
-                if (otherZone) OutlinedTextField(timezone, { timezone = it.take(80); error = null },
+                if (otherZone) OutlinedTextField(timezone, { timezone = it.take(80); error = null; zoneConfirmed = false },
                     label = { Text("Например, Europe/Paris") }, singleLine = true,
                     isError = zone == null, modifier = Modifier.fillMaxWidth().testTag("new_church_timezone"))
                 if (zone != null) {
@@ -90,6 +107,13 @@ internal fun SavedChurchForm(onCancel: () -> Unit, onSave: (SavedChurchRecord) -
                     val offset = local.offset.id.let { if (it == "Z") "+00:00" else it }
                     Text("Сейчас ${local.format(DateTimeFormatter.ofPattern("HH:mm"))} · UTC$offset", Modifier.testTag("church_timezone_preview"),
                         style = MaterialTheme.typography.bodySmall)
+                }
+                if (imported) Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                    .toggleable(value = zoneConfirmed, role = Role.Checkbox, onValueChange = { zoneConfirmed = it; error = null })
+                    .testTag("confirm_import_timezone"), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Checkbox(checked = zoneConfirmed, onCheckedChange = null)
+                    Text("Часовой пояс указан верно", Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
                 }
             }
         }
@@ -102,6 +126,7 @@ internal fun SavedChurchForm(onCancel: () -> Unit, onSave: (SavedChurchRecord) -
                 name.isBlank() -> error = "Введите название храма"
                 cityRequired && city.isBlank() -> error = "Укажите город или населенный пункт"
                 zone == null -> error = "Проверьте часовой пояс или выберите его из списка"
+                imported && !zoneConfirmed -> error = "Проверьте и подтвердите часовой пояс этого места"
                 else -> {
                     val record = if (initialRecord == null) runCatching {
                         SavedChurchRecord.create(name, city, address, timezone, latitude, longitude, accuracy).copy(id = draftId)
@@ -116,7 +141,7 @@ internal fun SavedChurchForm(onCancel: () -> Unit, onSave: (SavedChurchRecord) -
                     }
                 }
             }
-        }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("save_new_church")) { Text("Сохранить и выбрать") }
+        }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("save_new_church")) { Text(if (imported) "Выбрать этот храм" else "Сохранить и выбрать") }
         TextButton(onClick = onCancel, modifier = Modifier.fillMaxWidth().testTag("cancel_new_church")) { Text("Отмена") }
     }
 }

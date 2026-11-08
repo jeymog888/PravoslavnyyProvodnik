@@ -7,6 +7,8 @@ import android.os.SystemClock
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.activity.ComponentActivity
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.Lifecycle
@@ -35,6 +37,101 @@ class ChurchDiscoveryScreenTest {
         "улица Баумана, 5", "", "https://example.com/", false, "https://www.openstreetmap.org/way/42")
     private val fetchedAt = 1_794_096_000_000L
 
+    @Test fun nameSearchFindsAMonasteryWithoutChoosingACityAndRequiresTimeZoneReview() {
+        val monastery = church.copy(id = "osm:relation:3325777", name = "Сретенский монастырь", city = "Москва",
+            address = "улица Большая Лубянка", kind = DiscoveredPlaceKind.MONASTERY,
+            sourceUrl = "https://www.openstreetmap.org/relation/3325777")
+        val fake = FakeDiscovery().apply { nameResult = { success(listOf(monastery), DiscoveryProvider.PHOTON) } }
+        var saved: SavedChurchRecord? = null
+        launch(fake, onSave = { saved = it; true }, initialMode = ChurchSearchMode.NAME)
+        scrollTo("discovery_query").performTextInput("Сретенский монастырь Москва")
+        compose.runOnIdle { assertTrue(fake.nameQueries.isEmpty()); assertTrue(fake.queries.isEmpty()); assertTrue(fake.centers.isEmpty()) }
+        waitForVisibleKeyboard()
+        compose.onNodeWithTag("discovery_query").performImeAction()
+        waitForHiddenKeyboard()
+        scrollTo("discovery_church_${monastery.id}").assertIsDisplayed()
+        compose.onNodeWithTag("discovery_area").assertDoesNotExist()
+        scrollTo("discovery_name_notice").assertTextContains("разных вероисповеданий", substring = true)
+        scrollTo("discovery_church_${monastery.id}").performClick()
+        compose.onNodeWithTag("import_church_name").assertTextEquals(monastery.name)
+        compose.onNodeWithTag("church_timezone_preview").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("save_new_church").performScrollTo().performClick()
+        compose.onNodeWithTag("new_church_error").assertTextContains("подтвердите часовой пояс", substring = true)
+        compose.runOnIdle { assertNull(saved) }
+        compose.onNodeWithTag("confirm_import_timezone").performScrollTo().performClick()
+        compose.onNodeWithTag("save_new_church").performScrollTo().performClick()
+        compose.runOnIdle {
+            assertEquals(listOf("Сретенский монастырь Москва"), fake.nameQueries)
+            assertTrue(fake.queries.isEmpty()); assertTrue(fake.centers.isEmpty())
+            assertEquals(monastery.id, saved?.id)
+            assertEquals(monastery.sourceUrl, saved?.sourceUrl)
+            assertTrue(requireNotNull(saved).asParish().schedule.isEmpty())
+        }
+    }
+
+    @Test fun serverFailureRetainsTheNameAndOnlyRetriesAfterAnExplicitAction() {
+        var attempt = 0
+        val fake = FakeDiscovery().apply { nameResult = {
+            if (attempt++ == 0) DiscoveryResult.Failure(DiscoveryFailure.SERVER_UNAVAILABLE)
+            else success(listOf(church), DiscoveryProvider.PHOTON)
+        } }
+        launch(fake, initialMode = ChurchSearchMode.NAME)
+        search("Никольский храм Казань")
+        scrollTo("discovery_message").assertTextContains("Сервис поиска временно недоступен", substring = true)
+        compose.onNodeWithTag("discovery_empty").assertDoesNotExist()
+        compose.runOnIdle { assertEquals(1, fake.nameQueries.size) }
+        scrollTo("discovery_retry").performClick()
+        scrollTo("discovery_church_${church.id}").assertIsDisplayed()
+        scrollTo("discovery_change_search").performClick()
+        compose.onNodeWithTag("discovery_query").assertTextContains("Никольский храм Казань")
+        compose.onNodeWithTag("discovery_mode_name").assertIsSelected()
+        compose.runOnIdle {
+            assertEquals(listOf("Никольский храм Казань", "Никольский храм Казань"), fake.nameQueries)
+            assertTrue(fake.queries.isEmpty()); assertTrue(fake.centers.isEmpty())
+        }
+    }
+
+    @Test fun cancelledNameSearchCannotReplaceANewerResult() {
+        val old = CompletableDeferred<DiscoveryResult<DiscoveredChurch>>()
+        val first = church.copy(id = "osm:way:1", name = "Первый храм")
+        val fake = FakeDiscovery().apply { nameResult = { query ->
+            if (query == "Первый") withContext(NonCancellable) { old.await() }
+            else success(listOf(church), DiscoveryProvider.PHOTON)
+        } }
+        try {
+            launch(fake, initialMode = ChurchSearchMode.NAME)
+            search("Первый")
+            scrollTo("discovery_cancel").performClick()
+            search("Никольский храм")
+            scrollTo("discovery_church_${church.id}").assertIsDisplayed()
+            compose.runOnIdle { old.complete(success(listOf(first), DiscoveryProvider.PHOTON)) }
+            compose.waitForIdle()
+            compose.onNodeWithTag("discovery_church_${first.id}").assertDoesNotExist()
+            scrollTo("discovery_church_${church.id}").assertIsDisplayed()
+        } finally { old.cancel() }
+    }
+
+    @Test fun unavailableNearbySearchOffersNameSearchWithoutStartingAHiddenRequest() {
+        val fake = FakeDiscovery().apply { churchResult = { DiscoveryResult.Failure(DiscoveryFailure.SERVER_UNAVAILABLE) } }
+        launch(fake)
+        searchAndChooseKazan()
+        scrollTo("discovery_message").assertTextContains("Сервис поиска временно недоступен", substring = true)
+        scrollTo("discovery_search_name").performClick()
+        compose.onNodeWithTag("discovery_mode_name").assertIsSelected()
+        compose.onNodeWithTag("discovery_query").assertTextContains("Казань")
+        compose.runOnIdle {
+            assertTrue(fake.nameQueries.isEmpty())
+            assertEquals(listOf("Казань"), fake.queries)
+            assertEquals(listOf(kazan.center), fake.centers)
+        }
+        search("Никольский храм Казань")
+        scrollTo("discovery_church_${church.id}").assertIsDisplayed()
+        compose.runOnIdle {
+            assertEquals(listOf("Никольский храм Казань"), fake.nameQueries)
+            assertEquals(1, fake.queries.size); assertEquals(1, fake.centers.size)
+        }
+    }
+
     @Test
     fun searchesOnlyAfterAnActionAndSavesOnlyAfterReviewingTheSelectedCityAndTimeZone() {
         val fake = FakeDiscovery()
@@ -44,17 +141,18 @@ class ChurchDiscoveryScreenTest {
         launch(fake, onSave = { saved += it; allowSave })
         compose.runOnIdle { assertTrue(fake.queries.isEmpty()); assertTrue(fake.centers.isEmpty()) }
         compose.onNodeWithTag("discovery_privacy").assertExists()
-        compose.onNodeWithTag("discovery_city_query").performTextInput("Казань")
+        compose.onNodeWithTag("discovery_query").performTextInput("Казань")
         compose.runOnIdle { assertTrue(fake.queries.isEmpty()) }
         waitForVisibleKeyboard()
-        compose.onNodeWithTag("discovery_city_query").performImeAction()
+        compose.onNodeWithTag("discovery_query").performImeAction()
         waitForHiddenKeyboard()
         returnToSearchWithoutRequest(fake)
-        compose.onNodeWithTag("discovery_city_query").assertTextContains("Казань")
+        compose.onNodeWithTag("discovery_query").assertTextContains("Казань")
         scrollTo("discovery_city_osm:node:2").performClick()
         compose.runOnIdle { assertEquals(listOf(namesake.center), fake.centers); assertTrue(saved.isEmpty()) }
         scrollTo("discovery_church_osm:way:42").performClick()
         compose.runOnIdle { assertTrue(saved.isEmpty()) }
+        compose.onNodeWithTag("edit_import_details").performScrollTo().performClick()
         compose.onNodeWithTag("new_church_city").assertTextContains("Казань")
         compose.onNodeWithTag("pin_new_church").assertDoesNotExist()
         compose.onNodeWithTag("church_timezone_picker").performScrollTo().performClick()
@@ -162,8 +260,10 @@ class ChurchDiscoveryScreenTest {
         launch(fake, onSave = { saved = it; true })
         searchAndChooseKazan()
         scrollTo("discovery_church_${full.id}").performClick()
+        compose.onNodeWithTag("edit_import_details").performScrollTo().performClick()
         compose.onNodeWithTag("new_church_name").assertTextContains(full.name)
         compose.onNodeWithTag("new_church_address").performScrollTo().assertTextContains(full.address)
+        compose.onNodeWithTag("confirm_import_timezone").performScrollTo().performClick()
         compose.onNodeWithTag("save_new_church").performScrollTo().performClick()
         compose.runOnIdle {
             assertEquals(full.name, saved?.name)
@@ -238,15 +338,20 @@ class ChurchDiscoveryScreenTest {
         compose.runOnIdle { assertFalse(saved); assertEquals(1, fake.queries.size); assertEquals(1, fake.centers.size) }
     }
 
-    private fun launch(fake: FakeDiscovery, onBack: () -> Unit = {}, onSave: (SavedChurchRecord) -> Boolean = { true }) {
-        compose.setContent { GuideTheme(dark = false) { ChurchDiscoveryScreen(fake, onBack, { record, selected ->
-            if (onSave(record)) { selected(); ChurchSelectionResult.SELECTED } else ChurchSelectionResult.FAILED
-        }, {}) } }
+    private fun launch(fake: FakeDiscovery, onBack: () -> Unit = {}, onSave: (SavedChurchRecord) -> Boolean = { true },
+        initialMode: ChurchSearchMode = ChurchSearchMode.CITY) {
+        compose.setContent {
+            var query by rememberSaveable { mutableStateOf("") }
+            var mode by rememberSaveable { mutableStateOf(initialMode) }
+            GuideTheme(dark = false) { ChurchDiscoveryScreen(fake, onBack, { record, selected ->
+                if (onSave(record)) { selected(); ChurchSelectionResult.SELECTED } else ChurchSelectionResult.FAILED
+            }, {}, query = query, onQueryChange = { query = it }, mode = mode, onModeChange = { mode = it }) }
+        }
     }
     private fun search(query: String) {
-        scrollTo("discovery_city_query").performTextReplacement(query)
+        scrollTo("discovery_query").performTextReplacement(query)
         waitForVisibleKeyboard()
-        compose.onNodeWithTag("discovery_city_query").performImeAction()
+        compose.onNodeWithTag("discovery_query").performImeAction()
         waitForHiddenKeyboard()
     }
     private fun searchAndChooseKazan() {
@@ -257,7 +362,7 @@ class ChurchDiscoveryScreenTest {
         val queries = fake.queries.toList()
         val centers = fake.centers.toList()
         scrollTo("discovery_change_search").assertIsDisplayed().performClick()
-        compose.onNodeWithTag("discovery_city_query").assertIsDisplayed()
+        compose.onNodeWithTag("discovery_query").assertIsDisplayed()
         compose.runOnIdle {
             assertEquals(queries, fake.queries)
             assertEquals(centers, fake.centers)
@@ -288,7 +393,7 @@ class ChurchDiscoveryScreenTest {
         }
         InstrumentationRegistry.getInstrumentation().uiAutomation.waitForIdle(200, 5_000)
         compose.waitForIdle()
-        compose.onNodeWithTag("discovery_city_query").assertIsNotFocused()
+        compose.onNodeWithTag("discovery_query").assertIsNotFocused()
     }
 
     private fun scrollTo(tag: String): SemanticsNodeInteraction {
@@ -302,9 +407,15 @@ class ChurchDiscoveryScreenTest {
 
     private inner class FakeDiscovery : PlaceDiscovery {
         val queries = mutableListOf<String>()
+        val nameQueries = mutableListOf<String>()
         val centers = mutableListOf<GeoPoint>()
         var cityResult: suspend (String) -> DiscoveryResult<DiscoveryCity> = { success(listOf(kazan), DiscoveryProvider.PHOTON) }
         var churchResult: suspend (GeoPoint) -> DiscoveryResult<DiscoveredChurch> = { success(listOf(church), DiscoveryProvider.VK_MAPS) }
+        var nameResult: suspend (String) -> DiscoveryResult<DiscoveredChurch> = { success(listOf(church), DiscoveryProvider.PHOTON) }
+        override suspend fun searchPlaces(query: String): DiscoveryResult<DiscoveredChurch> {
+            nameQueries += query
+            return nameResult(query)
+        }
         override suspend fun searchCities(query: String): DiscoveryResult<DiscoveryCity> {
             queries += query
             return cityResult(query)

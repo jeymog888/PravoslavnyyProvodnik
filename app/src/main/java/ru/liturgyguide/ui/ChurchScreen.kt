@@ -39,11 +39,11 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     pickerRequest: Int = 0, userStarts: List<UserServiceStart> = emptyList(),
     onSaveStart: ((UserServiceStart) -> Boolean)? = null, onRemoveStart: ((LocalDate) -> Boolean)? = null,
     personalTimeRequest: Int = 0, onGoToService: (() -> Unit)? = null,
-    onSelectionCancelled: () -> Unit = {}) {
+    onSelectionCancelled: () -> Unit = {}, searchQuery: String, onSearchQueryChange: (String) -> Unit) {
     val church = churches.firstOrNull { it.id == selectedId }
     var picker by rememberSaveable { mutableStateOf(false) }
     var adding by rememberSaveable { mutableStateOf(false) }
-    var query by rememberSaveable { mutableStateOf("") }
+    val query = searchQuery
     var locate by remember { mutableStateOf(false) }
     var dayOffset by rememberSaveable { mutableIntStateOf(0) }
     var editingDate by rememberSaveable(church?.id) { mutableStateOf<String?>(null) }
@@ -57,7 +57,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     fun selectChurch(id: String): ChurchSelectionResult {
         val result = onSelect(id) {
             churchDraft.removeState("new_church")
-            selectionFailed = false; adding = false; picker = false; locate = false; dayOffset = 0; query = ""
+            selectionFailed = false; adding = false; picker = false; locate = false; dayOffset = 0; onSearchQueryChange("")
         }
         selectionFailed = result == ChurchSelectionResult.FAILED || result == ChurchSelectionResult.STALE
         return result
@@ -99,19 +99,21 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                 Text("Не удалось выбрать храм. Попробуйте еще раз", color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.testTag("church_selection_error"))
             }
+            item {
+                OutlinedTextField(query, { onSearchQueryChange(it.take(120)) }, singleLine = true,
+                    label = { Text("Название храма или монастыря") },
+                    supportingText = { Text("Сохраненные совпадения появятся ниже") },
+                    trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { onSearchQueryChange("") }) { Icon(Icons.Default.Close, "Очистить поиск храмов") } },
+                    modifier = Modifier.fillMaxWidth().testTag("church_search"))
+            }
             if (onDiscover != null) item {
                 Button(onClick = { picker = false; locate = false; onDiscover() },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("discover_churches")) {
-                    Icon(Icons.Default.Explore, null, Modifier.size(20.dp)); Spacer(Modifier.width(8.dp))
-                    Text("Найти рядом или в другом городе")
+                    Icon(Icons.Default.Search, null, Modifier.size(20.dp)); Spacer(Modifier.width(8.dp))
+                    Text("Найти в сети")
                 }
-            }
-            item {
-                OutlinedTextField(query, { query = it.take(160) }, singleLine = true,
-                    label = { Text("Город или название храма") },
-                    supportingText = { Text("Среди добавленных храмов") },
-                    trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { query = "" }) { Icon(Icons.Default.Close, "Очистить поиск храмов") } },
-                    modifier = Modifier.fillMaxWidth().testTag("church_search"))
+                Text("По названию, городу или рядом с вами", Modifier.padding(top = 8.dp),
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (onAddChurch != null) item {
                 OutlinedButton(onClick = { churchDraft.removeState("new_church"); locate = false; adding = true },
@@ -127,7 +129,11 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
             }
             if (matches.isEmpty()) item {
                 Text("Среди добавленных храмов ничего не найдено", style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("church_search_empty"))
-                Text("Проверьте название или добавьте свой храм", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(when {
+                    onDiscover != null -> "Нажмите \"Найти в сети\" или добавьте храм вручную"
+                    onAddChurch != null -> "Попробуйте другое название или добавьте храм вручную"
+                    else -> "Попробуйте другое название"
+                }, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             itemsIndexed(matches, key = { _, item -> item.id }) { index, option ->
                 if (index == 0 || (matches[index - 1].id in favorites) != (option.id in favorites)) {

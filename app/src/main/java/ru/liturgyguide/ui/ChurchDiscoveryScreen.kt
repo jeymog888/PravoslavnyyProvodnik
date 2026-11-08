@@ -49,6 +49,8 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.ceil
 
+enum class ChurchSearchMode { NAME, CITY }
+
 /** Owns one foreground request. A request generation also rejects non-cooperative late callbacks. */
 @Stable
 private class ChurchDiscoveryState(private val discovery: PlaceDiscovery, private val scope: CoroutineScope) {
@@ -62,12 +64,15 @@ private class ChurchDiscoveryState(private val discovery: PlaceDiscovery, privat
     var resultVersion by mutableIntStateOf(0); private set
     private var generation = 0
     private var job: Job? = null
+    private var lastAttempt: (() -> Unit)? = null
+    val canRetry: Boolean get() = lastAttempt != null
+    fun retry() { lastAttempt?.invoke() }
 
     fun cancel(message: String? = null, clearResults: Boolean = false) {
         generation++
         job?.cancel(); job = null; busy = null
         this.message = message
-        if (clearResults) { cities = null; churches = null; areaLabel = ""; cityName = "" }
+        if (clearResults) { cities = null; churches = null; areaLabel = ""; cityName = ""; lastAttempt = null }
     }
     fun current(token: Int) = token == generation
     private fun begin(label: String): Int {
@@ -86,6 +91,7 @@ private class ChurchDiscoveryState(private val discovery: PlaceDiscovery, privat
     }
     fun searchCities(query: String) {
         val token = begin("Ищем город")
+        lastAttempt = { searchCities(query) }
         job = scope.launch {
             try {
                 val response = discovery.searchCities(query)
@@ -99,8 +105,26 @@ private class ChurchDiscoveryState(private val discovery: PlaceDiscovery, privat
             finally { if (current(token)) { busy = null; resultVersion++ } }
         }
     }
+    fun searchPlaces(query: String) {
+        val token = begin("Ищем по названию")
+        lastAttempt = { searchPlaces(query) }
+        areaLabel = "Найденные места"
+        job = scope.launch {
+            try {
+                val response = discovery.searchPlaces(query)
+                if (!current(token)) return@launch
+                when (response) {
+                    is DiscoveryResult.Success -> churches = response
+                    is DiscoveryResult.Failure -> message = discoveryError(response.reason)
+                }
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { if (current(token)) message = discoveryError(DiscoveryFailure.UNAVAILABLE) }
+            finally { if (current(token)) { busy = null; resultVersion++ } }
+        }
+    }
     fun searchChurches(center: GeoPoint, label: String, city: String, radius: Int = 3_000, approximate: Boolean = false) {
         val token = begin("Ищем храмы")
+        lastAttempt = { searchChurches(center, label, city, radius, approximate) }
         areaLabel = label; cityName = city; approximateLocation = approximate
         job = scope.launch {
             try {
@@ -121,7 +145,8 @@ private class ChurchDiscoveryState(private val discovery: PlaceDiscovery, privat
 @Composable
 fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
     onSave: (SavedChurchRecord, onSelected: () -> Unit) -> ChurchSelectionResult, onOpenUrl: (String) -> Unit,
-    onSelectionCancelled: () -> Unit = {}) {
+    onSelectionCancelled: () -> Unit = {}, query: String, onQueryChange: (String) -> Unit,
+    mode: ChurchSearchMode, onModeChange: (ChurchSearchMode) -> Unit) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val scope = rememberCoroutineScope()
@@ -130,7 +155,6 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
     val focus = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
     val scroll = rememberLazyListState()
-    var query by rememberSaveable { mutableStateOf("") }
     var nameFilter by rememberSaveable { mutableStateOf("") }
     var pendingPermission by remember { mutableStateOf<Int?>(null) }
     var importJson by rememberSaveable { mutableStateOf<String?>(null) }
@@ -147,9 +171,9 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
         locator.locate locationResult@{ location, error ->
             if (!state.current(token)) return@locationResult
             when {
-                location == null -> state.locationFailed(token, error ?: "Не удалось определить место. Укажите город или выберите храм вручную")
+                location == null -> state.locationFailed(token, error ?: "Не удалось определить место. Найдите храм по названию или добавьте вручную")
                 location.accuracy > 5_000f -> state.locationFailed(token,
-                    "Местоположение слишком приблизительное для поиска рядом. Укажите город или разрешите точное местоположение в настройках телефона")
+                    "Местоположение слишком приблизительное для поиска рядом. Найдите храм по названию или разрешите точное местоположение в настройках телефона")
                 else -> {
                     nameFilter = ""
                     val radius = maxOf(3_000, ceil(location.accuracy / 1_000.0).toInt() * 1_000).coerceAtMost(5_000)
@@ -164,13 +188,17 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
         pendingPermission = null
         if (token != null && state.current(token)) {
             if (result.values.any { it }) locate(token)
-            else state.locationFailed(token, "Можно продолжить без геолокации: укажите город или выберите храм вручную")
+            else state.locationFailed(token, "Можно продолжить без геолокации: найдите храм по названию или добавьте вручную")
         }
     }
-    fun submitCity() {
+    fun submitSearch() {
         if (query.trim().length < 2 || state.busy != null) return
         locator.stop(); pendingPermission = null; focus.clearFocus(); keyboard?.hide(); nameFilter = ""
-        state.searchCities(query)
+        if (mode == ChurchSearchMode.NAME) state.searchPlaces(query) else state.searchCities(query)
+    }
+    fun changeMode(value: ChurchSearchMode) {
+        if (value != mode) { cancelSearch(clear = true); nameFilter = ""; onModeChange(value) }
+        scope.launch { scroll.animateScrollToItem(0) }
     }
     DisposableEffect(state, locator, lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
@@ -208,19 +236,29 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
             item {
                 Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
                     Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("Рядом или в другом городе", style = MaterialTheme.typography.titleLarge)
-                        Text("Город отправится в Photon, а район поиска - в VK Maps. Сервисы используют данные OpenStreetMap",
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(selected = mode == ChurchSearchMode.NAME, onClick = { changeMode(ChurchSearchMode.NAME) },
+                                label = { Text("По названию") }, modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("discovery_mode_name"))
+                            FilterChip(selected = mode == ChurchSearchMode.CITY, onClick = { changeMode(ChurchSearchMode.CITY) },
+                                label = { Text("По городу") }, modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("discovery_mode_city"))
+                        }
+                        Text(if (mode == ChurchSearchMode.NAME) "Введите название и город, если знаете" else "Выберите город, чтобы посмотреть храмы в его центре",
+                            style = MaterialTheme.typography.bodyMedium)
+                        Text("Название отправится в Photon. Для поиска рядом район отправится в VK Maps. Данные - OpenStreetMap",
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.testTag("discovery_privacy"))
                         OutlinedTextField(query, { value ->
-                            if (value != query) { cancelSearch(clear = true); query = value.take(DefaultPlaceDiscovery.MAX_QUERY_LENGTH); nameFilter = "" }
-                        }, label = { Text("Город или населенный пункт") }, singleLine = true,
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { submitCity() }),
-                            trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { cancelSearch(clear = true); query = "" }) {
-                                Icon(Icons.Default.Close, "Очистить название города")
-                            } }, modifier = Modifier.fillMaxWidth().testTag("discovery_city_query"))
-                        Button(onClick = ::submitCity, enabled = query.trim().length >= 2 && state.busy == null,
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("discovery_find_city")) { Text("Найти город") }
+                            if (value != query) { cancelSearch(clear = true); onQueryChange(value.take(DefaultPlaceDiscovery.MAX_QUERY_LENGTH)); nameFilter = "" }
+                        }, label = { Text(if (mode == ChurchSearchMode.NAME) "Название храма или монастыря" else "Город или населенный пункт") },
+                            placeholder = { if (mode == ChurchSearchMode.NAME) Text("Сретенский монастырь, Москва") }, singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { submitSearch() }),
+                            trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { cancelSearch(clear = true); onQueryChange("") }) {
+                                Icon(Icons.Default.Close, "Очистить поисковый запрос")
+                            } }, modifier = Modifier.fillMaxWidth().testTag("discovery_query"))
+                        Button(onClick = ::submitSearch, enabled = query.trim().length >= 2 && state.busy == null,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("discovery_submit")) {
+                            Text(if (mode == ChurchSearchMode.NAME) "Найти" else "Найти город")
+                        }
                         OutlinedButton(onClick = {
                             focus.clearFocus(); keyboard?.hide(); nameFilter = ""; pendingPermission = null; locator.stop()
                             val token = state.beginLocation()
@@ -246,6 +284,12 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(message, modifier = Modifier.testTag("discovery_message"), style = MaterialTheme.typography.bodyLarge)
                             Text("Сохраненные храмы и тексты службы доступны без сети", style = MaterialTheme.typography.bodySmall)
+                            if (state.canRetry) OutlinedButton(onClick = { state.retry() }, modifier = Modifier.heightIn(min = 48.dp).testTag("discovery_retry")) {
+                                Text("Повторить поиск")
+                            }
+                            TextButton(onClick = { changeMode(ChurchSearchMode.NAME) }, modifier = Modifier.heightIn(min = 48.dp).testTag("discovery_search_name")) {
+                                Text("Найти по названию")
+                            }
                         }
                     }
                 }
@@ -274,6 +318,7 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                 }
             }
             state.churches?.let { result ->
+                val byName = result.provider == DiscoveryProvider.PHOTON && result.queryCenter == null
                 val filtered = result.items.filter { church ->
                     val needle = nameFilter.trim().lowercase(Locale.ROOT).replace('ё', 'е')
                     (church.name + " " + church.address).lowercase(Locale.ROOT).replace('ё', 'е').contains(needle)
@@ -281,26 +326,34 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                 item {
                     Text(state.areaLabel, style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
                     Spacer(Modifier.height(8.dp))
-                    val radius = (result.radiusMeters ?: 3_000) / 1_000
-                    Text("В радиусе $radius км от выбранного центра. Выдача может быть неполной", style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.testTag("discovery_area"))
-                    if (state.approximateLocation) Text("Местоположение приблизительное. Сверьте адрес храма", style = MaterialTheme.typography.bodySmall)
+                    if (byName) Text("Проверьте название и адрес. Поиск по карте может находить места разных вероисповеданий",
+                        style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("discovery_name_notice"))
+                    else {
+                        val radius = (result.radiusMeters ?: 3_000) / 1_000
+                        Text("В радиусе $radius км от выбранного центра. Выдача может быть неполной", style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.testTag("discovery_area"))
+                        if (state.approximateLocation) Text("Местоположение приблизительное. Сверьте адрес храма", style = MaterialTheme.typography.bodySmall)
+                    }
                     CacheNotice(result.cacheStatus, result.fetchedAtEpochMillis)
                     Spacer(Modifier.height(12.dp))
                     Text("Расписание нужно уточнить отдельно", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    if (result.items.isNotEmpty()) {
+                    if (!byName && result.items.isNotEmpty()) {
                         Spacer(Modifier.height(12.dp))
                         OutlinedTextField(nameFilter, { nameFilter = it.take(160) }, label = { Text("Название среди найденных") }, singleLine = true,
                             modifier = Modifier.fillMaxWidth().testTag("discovery_name_filter"))
                     }
                 }
                 if (filtered.isEmpty()) item {
-                    Text(if (result.items.isEmpty()) "В этом районе храмы не найдены" else "Нет храма с таким названием в найденном списке",
+                    Text(if (result.items.isEmpty()) {
+                        if (byName) "По этому названию ничего не найдено" else "В этом районе храмы не найдены"
+                    } else "Нет храма с таким названием в найденном списке",
                         style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("discovery_empty"))
                     Text("Данные карты могут быть неполными. Можно проверить карты или добавить свой храм", style = MaterialTheme.typography.bodyMedium)
                 }
                 items(filtered, key = { it.id }) { church ->
-                    DiscoveryRow(church.name, listOf(if (church.isChapel) "Часовня" else "Храм", church.address).filter(String::isNotBlank).joinToString(" · "),
+                    val location = listOf(church.city.takeUnless { it.isNotBlank() && church.address.startsWith(it) }.orEmpty(),
+                        church.region, church.country, church.address).filter(String::isNotBlank).distinct().joinToString(" · ")
+                    DiscoveryRow(church.name, listOf(church.kind.label(), location).filter(String::isNotBlank).joinToString(" · "),
                         "discovery_church_${church.id}") {
                         focus.clearFocus(); keyboard?.hide()
                         val record = church.toSavedChurch(state.cityName)
@@ -312,7 +365,11 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
             item {
                 Text(DefaultPlaceDiscovery.ATTRIBUTION, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 TextButton(onClick = { onOpenUrl(DefaultPlaceDiscovery.COPYRIGHT_URL) }, modifier = Modifier.testTag("discovery_attribution")) { Text("Об источнике данных") }
-                TextButton(onClick = { onOpenUrl("geo:0,0?q=" + Uri.encode("православный храм " + query.trim())) },
+                TextButton(onClick = {
+                    val mapQuery = if (mode == ChurchSearchMode.NAME && query.isNotBlank()) query.trim()
+                        else "православный храм " + query.trim()
+                    onOpenUrl("geo:0,0?q=" + Uri.encode(mapQuery))
+                },
                     modifier = Modifier.testTag("discovery_maps")) { Text("Открыть поиск в картах") }
             }
         }
@@ -348,9 +405,18 @@ private fun DiscoveredChurch.toSavedChurch(fallbackCity: String): SavedChurchRec
 }
 
 private fun discoveryError(reason: DiscoveryFailure): String = when (reason) {
-    DiscoveryFailure.INVALID_QUERY -> "Проверьте название города: нужно хотя бы две буквы"
+    DiscoveryFailure.INVALID_QUERY -> "Проверьте поисковый запрос: нужно хотя бы два символа"
     DiscoveryFailure.TIMEOUT -> "Сервис не успел ответить. Попробуйте еще раз или выберите храм вручную"
-    DiscoveryFailure.RATE_LIMITED, DiscoveryFailure.BUSY -> "Поиск сейчас занят. Попробуйте чуть позже"
+    DiscoveryFailure.RATE_LIMITED -> "Поиск временно ограничен. Попробуйте чуть позже"
+    DiscoveryFailure.BUSY -> "Поиск уже выполняется. Можно отменить его и попробовать снова"
     DiscoveryFailure.TOO_LARGE, DiscoveryFailure.INVALID_RESPONSE -> "Не удалось прочитать данные карты. Можно выбрать храм вручную"
-    DiscoveryFailure.UNAVAILABLE -> "Поиск в сети недоступен. Проверьте подключение или выберите храм вручную"
+    DiscoveryFailure.SERVER_UNAVAILABLE -> "Сервис поиска временно недоступен. Попробуйте еще раз или добавьте храм вручную"
+    DiscoveryFailure.UNAVAILABLE -> "Не удалось связаться с сервисом поиска. Проверьте подключение или добавьте храм вручную"
+}
+
+private fun DiscoveredPlaceKind.label(): String = when (this) {
+    DiscoveredPlaceKind.MONASTERY -> "Монастырь"
+    DiscoveredPlaceKind.CHAPEL -> "Часовня"
+    DiscoveredPlaceKind.CHURCH -> "Храм"
+    DiscoveredPlaceKind.WORSHIP_PLACE -> "Место богослужения"
 }
