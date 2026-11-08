@@ -1,0 +1,21 @@
+{
+  "unit_tests": 146,
+  "ui_tests": 11,
+  "unit_failures": 0,
+  "ui_failures": 0,
+  "astra_review": "ACCEPT after full-name preservation fix",
+  "live_city_search": "Kazan -> Казань, Татарстан",
+  "live_city_church_search": true,
+  "live_nearby_search": true,
+  "emulator_mock_point": {
+    "latitude": 55.79,
+    "longitude": 49.1
+  },
+  "saved_live_result": "Петропавловский собор",
+  "cold_restore_offline": true,
+  "cached_city_and_churches_offline": true,
+  "network_restored": true,
+  "physical_phone_used": false,
+  "live_provider_limit": "First church request failed; explicit manual retry succeeded. Separate host request observed HTTP504. No automatic retry added.",
+  "live_contract_fix": "Photon lang=ru returned400; lang=default verified200 and local names in Android. All unit tests rerun after this fix; 11 UI tests passed before this parameter-only change."
+}

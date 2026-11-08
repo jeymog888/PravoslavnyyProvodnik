@@ -5,9 +5,22 @@ import ru.liturgyguide.service.StageMatcher
 import ru.liturgyguide.service.ParishRepository
 import com.google.gson.Gson
 import ru.liturgyguide.model.DailyReadings
+import ru.liturgyguide.service.discovery.DefaultPlaceDiscovery
+import ru.liturgyguide.service.discovery.DiscoveryCacheStore
+import ru.liturgyguide.service.discovery.PlaceDiscovery
 
-class AppContainer(context: Context) {
+class AppContainer(context: Context, private val discoveryOverride: PlaceDiscovery? = null) {
     private val appContext = context.applicationContext
+    val placeDiscovery: PlaceDiscovery by lazy {
+        discoveryOverride ?: DefaultPlaceDiscovery(cache = object : DiscoveryCacheStore {
+            private val cache = appContext.getSharedPreferences("place_discovery_cache", Context.MODE_PRIVATE)
+            override fun read(slot: String): String? = if (slot in setOf("cities", "churches"))
+                runCatching { cache.getString(slot, null) }.getOrNull() else null
+            override fun write(slot: String, value: String) {
+                if (slot in setOf("cities", "churches")) cache.edit().putString(slot, value).apply()
+            }
+        })
+    }
     private var stageMatcherResult: Result<StageMatcher>? = null
     val parishes: Result<ParishRepository> by lazy {
         runCatching {

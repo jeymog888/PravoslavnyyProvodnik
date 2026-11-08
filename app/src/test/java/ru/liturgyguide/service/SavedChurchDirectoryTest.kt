@@ -53,6 +53,14 @@ class SavedChurchDirectoryTest {
         assertNull(SavedChurchCodec.validated(record.copy(sourceUrl = "https://example.com/way/123")))
     }
 
+    @Test fun `complete map names and addresses survive storage without silent truncation`() {
+        val record = church().copy(name = "Н".repeat(300), city = "Г".repeat(200), address = "А".repeat(512))
+        assertEquals(record, SavedChurchCodec.decode(SavedChurchCodec.encode(listOf(record))).single())
+        assertNull(SavedChurchCodec.validated(record.copy(name = record.name + "н")))
+        assertNull(SavedChurchCodec.validated(record.copy(city = record.city + "г")))
+        assertNull(SavedChurchCodec.validated(record.copy(address = record.address + "а")))
+    }
+
     @Test fun `city name and address search is case tolerant and favorites do not select anything`() {
         val a = church("Фёдоровский храм", "Санкт-Петербург").copy(address = "Миргородская улица")
         val b = church("Никольский храм", "Казань")

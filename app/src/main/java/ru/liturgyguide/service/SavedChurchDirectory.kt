@@ -51,6 +51,9 @@ private data class SavedChurchDto(
 )
 
 object SavedChurchCodec {
+    const val MAX_NAME_LENGTH = 300
+    const val MAX_CITY_LENGTH = 200
+    const val MAX_ADDRESS_LENGTH = 512
     const val MAX_RECORDS = 100
     const val MAX_JSON_CHARS = 262_144
     private val gson = Gson()
@@ -58,7 +61,7 @@ object SavedChurchCodec {
     fun validated(record: SavedChurchRecord): SavedChurchRecord? = runCatching {
         val clean = record.copy(name = record.name.trim(), city = record.city.trim(), address = record.address.trim(),
             timezone = record.timezone.trim(), website = record.website.trim(), sourceUrl = record.sourceUrl.trim())
-        require(clean.name.length in 1..160 && clean.city.length <= 100 && clean.address.length <= 240)
+        require(clean.name.length in 1..MAX_NAME_LENGTH && clean.city.length <= MAX_CITY_LENGTH && clean.address.length <= MAX_ADDRESS_LENGTH)
         require(clean.origin != SavedChurchOrigin.USER || clean.city.isNotBlank())
         require(listOf(clean.name, clean.city, clean.address).none { value -> value.any(Char::isISOControl) })
         ZoneId.of(clean.timezone)

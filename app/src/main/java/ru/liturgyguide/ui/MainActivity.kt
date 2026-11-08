@@ -37,7 +37,7 @@ import java.time.Clock
 import java.time.ZoneId
 import kotlinx.coroutines.delay
 
-private enum class Screen { MAIN, MANUAL, ARRIVAL, SERVICE, STAGE_SELECTOR, SEARCH, SETTINGS, SOURCES, CHURCH }
+private enum class Screen { MAIN, MANUAL, ARRIVAL, SERVICE, STAGE_SELECTOR, SEARCH, SETTINGS, SOURCES, CHURCH, DISCOVERY }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,6 +64,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
     var searchOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
     var settingsOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
     var churchOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
+    var churchPickerRequest by rememberSaveable { mutableIntStateOf(0) }
     var arrivalDraft by rememberSaveable(stateSaver = ArrivalDraft.Saver) { mutableStateOf<ArrivalDraft?>(null) }
     var churchId by rememberSaveable { mutableStateOf(preferences.getString("church_id", null)) }
     var session by remember {
@@ -170,6 +171,16 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
         selectorOrigin = origin
         screen = Screen.STAGE_SELECTOR
     }
+    fun chooseChurch(id: String) {
+        if (church?.id != id) {
+            arrivalDraft = null
+            clearReadingPositions()
+            session = null; selectedId = null
+            preferences.edit().remove("session").remove("stage_id").apply()
+        }
+        churchId = id; preferences.edit().putString("church_id", id).apply()
+    }
+    fun closeDiscovery() { churchPickerRequest++; screen = Screen.CHURCH }
     fun back() {
         val destination = when (screen) {
             Screen.MANUAL -> if (arrivalDraft?.mode == ArrivalMode.CORRECTION) Screen.SERVICE else Screen.MAIN
@@ -179,6 +190,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
             Screen.SETTINGS -> settingsOrigin
             Screen.SOURCES -> Screen.SETTINGS
             Screen.CHURCH -> churchOrigin
+            Screen.DISCOVERY -> Screen.CHURCH
             else -> Screen.MAIN
         }
         if (screen == Screen.MANUAL || (screen == Screen.ARRIVAL && destination == Screen.MAIN)) arrivalDraft = null
@@ -315,19 +327,27 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
                             if (saved) savedChurches = churchStore.records()
                             saved
                         },
+                        onDiscover = { screen = Screen.DISCOVERY },
+                        pickerRequest = churchPickerRequest,
                         currentDate = currentDate,
-                        onSelect = {
-                            if (church?.id != it) {
-                                arrivalDraft = null
-                                clearReadingPositions()
-                                session = null; selectedId = null
-                                preferences.edit().remove("session").remove("stage_id").apply()
-                            }
-                            churchId = it; preferences.edit().putString("church_id", it).apply()
-                        },
+                        onSelect = ::chooseChurch,
                         onOpenUrl = { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(it))) }, onBack = ::back,
                         showBack = churchOrigin != Screen.MAIN,
                         bottomBar = { if (churchOrigin == Screen.MAIN) navigationBar() }
+                    )
+                    Screen.DISCOVERY -> ChurchDiscoveryScreen(
+                        discovery = container.placeDiscovery,
+                        onBack = ::closeDiscovery,
+                        onSave = { record ->
+                            val saved = churchStore.save(record)
+                            if (saved) {
+                                savedChurches = churchStore.records()
+                                chooseChurch(record.id)
+                                screen = Screen.CHURCH
+                            }
+                            saved
+                        },
+                        onOpenUrl = { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(it))) }
                     )
                 }
                 }

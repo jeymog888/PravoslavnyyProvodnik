@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" tests="11" failures="0" errors="0" skipped="0" time="47.216" timestamp="2026-11-08T12:01:02" hostname="localhost">
+  <properties>
+    <property name="device" value="Liturgy_API_35(AVD) - 15" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="timeoutEmptyResultsAndOldCachedResultsRemainDistinct" classname="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" time="6.462" />
+  <testcase name="longMapNamesAndAddressesReachTheFormAndStorageUnshortened" classname="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" time="3.373" />
+  <testcase name="searchesOnlyAfterAnActionAndSavesOnlyAfterReviewingTheSelectedCityAndTimeZone" classname="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" time="4.247" />
+  <testcase name="leavingTheForegroundCancelsSearchAndReturningDoesNotRestartIt" classname="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" time="3.828" />
+  <testcase name="cancellingARequestIgnoresItsLateResultAndLeavesManualNavigationAvailable" classname="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" time="2.787" />
+  <testcase name="filteringAndCancellingImportDoNotSaveAnythingOrStartAnotherNetworkSearch" classname="ru.liturgyguide.ui.ChurchDiscoveryScreenTest" time="4.832" />
+  <testcase name="cancellingANewTempleAndAnEmptySearchKeepTheCurrentParish" classname="ru.liturgyguide.ui.SavedChurchFlowTest" time="4.933" />
+  <testcase name="aTempleInAnotherCityAndItsTimeZoneSurviveRecreation" classname="ru.liturgyguide.ui.SavedChurchFlowTest" time="4.24" />
+  <testcase name="favoriteDoesNotChooseAnotherParishOrEraseTheSavedStage" classname="ru.liturgyguide.ui.SavedChurchFlowTest" time="4.848" />
+  <testcase name="aMappedTempleWithoutACityTagCanBeSavedWithItsKnownCoordinates" classname="ru.liturgyguide.ui.DiscoveryNavigationTest" time="1.029" />
+  <testcase name="discoveryReturnsToSavedPickerAndOnlyConfirmationReplacesTheParish" classname="ru.liturgyguide.ui.DiscoveryNavigationTest" time="4.713" />
+</testsuite>

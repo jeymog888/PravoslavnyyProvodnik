@@ -47,17 +47,18 @@ internal fun SavedChurchForm(onCancel: () -> Unit, onSave: (SavedChurchRecord) -
     var accuracy by rememberSaveable(initialRecord?.id) { mutableStateOf(initialRecord?.locationAccuracyMeters) }
     var error by rememberSaveable(initialRecord?.id) { mutableStateOf<String?>(null) }
     val zone = runCatching { ZoneId.of(timezone.trim()) }.getOrNull()
+    val cityRequired = initialRecord?.origin != SavedChurchOrigin.OPEN_STREET_MAP
 
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).imePadding().padding(horizontal = 24.dp)
         .padding(bottom = 32.dp).testTag("add_church_form"), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(if (initialRecord == null) "Добавить свой храм" else "Сохранить храм", style = MaterialTheme.typography.headlineMedium)
         Text("Он сохранится на этом телефоне. Расписание можно будет уточнить отдельно", style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
-        OutlinedTextField(name, { if (it.length <= 160) name = it; error = null }, label = { Text("Название храма") },
+        OutlinedTextField(name, { if (it.length <= SavedChurchCodec.MAX_NAME_LENGTH) name = it; error = null }, label = { Text("Название храма") },
             modifier = Modifier.fillMaxWidth().testTag("new_church_name"), singleLine = true)
-        OutlinedTextField(city, { if (it.length <= 100) city = it; error = null }, label = { Text("Город или населенный пункт") },
+        OutlinedTextField(city, { if (it.length <= SavedChurchCodec.MAX_CITY_LENGTH) city = it; error = null }, label = { Text(if (cityRequired) "Город или населенный пункт" else "Город, если знаете") },
             modifier = Modifier.fillMaxWidth().testTag("new_church_city"), singleLine = true)
-        OutlinedTextField(address, { if (it.length <= 240) address = it; error = null }, label = { Text("Адрес, если знаете") },
+        OutlinedTextField(address, { if (it.length <= SavedChurchCodec.MAX_ADDRESS_LENGTH) address = it; error = null }, label = { Text("Адрес, если знаете") },
             modifier = Modifier.fillMaxWidth().testTag("new_church_address"), singleLine = true)
         Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = MaterialTheme.shapes.medium) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -95,7 +96,7 @@ internal fun SavedChurchForm(onCancel: () -> Unit, onSave: (SavedChurchRecord) -
         Button(onClick = {
             when {
                 name.isBlank() -> error = "Введите название храма"
-                city.isBlank() -> error = "Укажите город или населенный пункт"
+                cityRequired && city.isBlank() -> error = "Укажите город или населенный пункт"
                 zone == null -> error = "Проверьте часовой пояс или выберите его из списка"
                 else -> {
                     val record = if (initialRecord == null) runCatching { SavedChurchRecord.create(name, city, address, timezone, latitude, longitude, accuracy) }.getOrNull()

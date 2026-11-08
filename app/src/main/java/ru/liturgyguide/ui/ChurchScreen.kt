@@ -30,13 +30,21 @@ import java.util.Locale
 fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: LocalDate, onSelect: (String) -> Unit,
     onOpenUrl: (String) -> Unit, onBack: () -> Unit, showBack: Boolean = true, bottomBar: @Composable () -> Unit = {},
     favorites: Set<String> = emptySet(), onToggleFavorite: (String) -> Unit = {},
-    onAddChurch: ((SavedChurchRecord) -> Boolean)? = null) {
+    onAddChurch: ((SavedChurchRecord) -> Boolean)? = null, onDiscover: (() -> Unit)? = null,
+    pickerRequest: Int = 0) {
     val church = churches.firstOrNull { it.id == selectedId } ?: churches.firstOrNull()
     var picker by rememberSaveable { mutableStateOf(false) }
     var adding by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
     var locate by remember { mutableStateOf(false) }
     var dayOffset by rememberSaveable { mutableIntStateOf(0) }
+    var handledPickerRequest by rememberSaveable { mutableIntStateOf(0) }
+    LaunchedEffect(pickerRequest) {
+        if (pickerRequest != handledPickerRequest) {
+            handledPickerRequest = pickerRequest
+            picker = true
+        }
+    }
     val matches = remember(churches, query, favorites) { ChurchDirectory.search(churches, query, favorites) }
     if (picker) ModalBottomSheet(onDismissRequest = { picker = false; adding = false; locate = false },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
@@ -50,6 +58,13 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
             })
         else LazyColumn(Modifier.fillMaxWidth().imePadding().testTag("church_picker"), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item { Text("Выберите храм", style = MaterialTheme.typography.headlineMedium) }
+            if (onDiscover != null) item {
+                Button(onClick = { picker = false; locate = false; onDiscover() },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("discover_churches")) {
+                    Icon(Icons.Default.Explore, null, Modifier.size(20.dp)); Spacer(Modifier.width(8.dp))
+                    Text("Найти рядом или в другом городе")
+                }
+            }
             item {
                 OutlinedTextField(query, { query = it.take(160) }, singleLine = true,
                     label = { Text("Город или название храма") },
@@ -64,7 +79,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
             }
             item {
                 TextButton(onClick = { locate = !locate }, modifier = Modifier.testTag("church_locate")) {
-                    Icon(Icons.Default.MyLocation, null, Modifier.size(20.dp)); Spacer(Modifier.width(8.dp)); Text("Подсказать по местоположению")
+                    Icon(Icons.Default.MyLocation, null, Modifier.size(20.dp)); Spacer(Modifier.width(8.dp)); Text("Сохраненные храмы рядом")
                 }
                 if (locate) LocateChurchCard(churches) { id -> onSelect(id); picker = false; locate = false; dayOffset = 0 }
             }
