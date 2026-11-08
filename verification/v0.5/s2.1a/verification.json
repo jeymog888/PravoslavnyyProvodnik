@@ -1,0 +1,31 @@
+{
+  "unit": {
+    "tests": 10,
+    "failures": 0,
+    "errors": 0
+  },
+  "ui": [
+    {
+      "name": "ru.liturgyguide.ui.SavedChurchFlowTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "18.971",
+      "timestamp": "2026-11-08T11:47:03",
+      "hostname": "localhost"
+    }
+  ],
+  "native_checks": 5,
+  "review": "Astra ACCEPT; root independently reviewed code and actual screenshots",
+  "defects_fixed": [
+    "oversized JSON save would erase visible list on reload",
+    "wrong preference value types",
+    "coarse-only pin had no route to precise access",
+    "pin accepted stale location",
+    "personal parish empty schedule parsing",
+    "light surfaces blended",
+    "form state could retain earlier record coordinates"
+  ],
+  "scope": "saved/custom/favorite/location only; external discovery is next independent iteration"
+}

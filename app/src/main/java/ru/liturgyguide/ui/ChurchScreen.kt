@@ -3,7 +3,7 @@ package ru.liturgyguide.ui
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -13,6 +13,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.role
+import ru.liturgyguide.service.ChurchDirectory
+import ru.liturgyguide.service.SavedChurchCodec
+import ru.liturgyguide.service.SavedChurchRecord
 import ru.liturgyguide.model.Parish
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -21,40 +28,95 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: LocalDate, onSelect: (String) -> Unit,
-    onOpenUrl: (String) -> Unit, onBack: () -> Unit, showBack: Boolean = true, bottomBar: @Composable () -> Unit = {}) {
+    onOpenUrl: (String) -> Unit, onBack: () -> Unit, showBack: Boolean = true, bottomBar: @Composable () -> Unit = {},
+    favorites: Set<String> = emptySet(), onToggleFavorite: (String) -> Unit = {},
+    onAddChurch: ((SavedChurchRecord) -> Boolean)? = null) {
     val church = churches.firstOrNull { it.id == selectedId } ?: churches.firstOrNull()
     var picker by rememberSaveable { mutableStateOf(false) }
+    var adding by rememberSaveable { mutableStateOf(false) }
+    var query by rememberSaveable { mutableStateOf("") }
     var locate by remember { mutableStateOf(false) }
     var dayOffset by rememberSaveable { mutableIntStateOf(0) }
-    if (picker) ModalBottomSheet(onDismissRequest = { picker = false; locate = false }) {
-        LazyColumn(Modifier.fillMaxWidth().testTag("church_picker"), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    val matches = remember(churches, query, favorites) { ChurchDirectory.search(churches, query, favorites) }
+    if (picker) ModalBottomSheet(onDismissRequest = { picker = false; adding = false; locate = false },
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        if (adding && onAddChurch != null) SavedChurchForm(
+            onCancel = { adding = false },
+            onSave = { record ->
+                if (onAddChurch(record)) {
+                    onSelect(record.id); adding = false; picker = false; locate = false; dayOffset = 0; query = ""
+                    true
+                } else false
+            })
+        else LazyColumn(Modifier.fillMaxWidth().imePadding().testTag("church_picker"), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item { Text("Выберите храм", style = MaterialTheme.typography.headlineMedium) }
+            item {
+                OutlinedTextField(query, { query = it.take(160) }, singleLine = true,
+                    label = { Text("Город или название храма") },
+                    supportingText = { Text("Среди добавленных храмов") },
+                    trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { query = "" }) { Icon(Icons.Default.Close, "Очистить поиск храмов") } },
+                    modifier = Modifier.fillMaxWidth().testTag("church_search"))
+            }
+            if (onAddChurch != null) item {
+                OutlinedButton(onClick = { locate = false; adding = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("add_church")) {
+                    Icon(Icons.Default.Add, null, Modifier.size(20.dp)); Spacer(Modifier.width(8.dp)); Text("Добавить свой храм")
+                }
+            }
             item {
                 TextButton(onClick = { locate = !locate }, modifier = Modifier.testTag("church_locate")) {
                     Icon(Icons.Default.MyLocation, null, Modifier.size(20.dp)); Spacer(Modifier.width(8.dp)); Text("Подсказать по местоположению")
                 }
                 if (locate) LocateChurchCard(churches) { id -> onSelect(id); picker = false; locate = false; dayOffset = 0 }
             }
-            items(churches, key = { it.id }) { option ->
-                ListItem(headlineContent = { Text(option.shortName) }, supportingContent = { Text(option.address) },
-                    trailingContent = { RadioButton(selected = option.id == selectedId, onClick = null) },
-                    modifier = Modifier.clickable { onSelect(option.id); picker = false; locate = false; dayOffset = 0 }.testTag("church_${option.id}"))
+            if (matches.isEmpty()) item {
+                Text("Среди добавленных храмов ничего не найдено", style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("church_search_empty"))
+                Text("Проверьте название или добавьте свой храм", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            itemsIndexed(matches, key = { _, item -> item.id }) { index, option ->
+                if (index == 0 || (matches[index - 1].id in favorites) != (option.id in favorites)) {
+                    Text(if (option.id in favorites) "Избранные" else "Добавленные храмы", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 8.dp))
+                }
+                Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
+                    Row(Modifier.fillMaxWidth().clickable { onSelect(option.id); picker = false; locate = false; dayOffset = 0 }
+                        .testTag("church_${option.id}").semantics { role = Role.RadioButton; selected = option.id == selectedId }
+                        .padding(start = 16.dp, top = 12.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(option.shortName, style = MaterialTheme.typography.titleMedium)
+                            Text(listOf(option.city, option.address).filter(String::isNotBlank).distinct().joinToString(" · "),
+                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            if (option.id == selectedId) Text("Выбран", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                        }
+                        IconButton(onClick = { onToggleFavorite(option.id) }, modifier = Modifier.testTag("favorite_${option.id}")) {
+                            Icon(if (option.id in favorites) Icons.Default.Star else Icons.Default.StarBorder,
+                                if (option.id in favorites) "Убрать из избранного: ${option.shortName}" else "В избранное: ${option.shortName}",
+                                tint = if (option.id in favorites) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
             }
         }
     }
-    Scaffold(topBar = { Column(Modifier.statusBarsPadding()) {
+    Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = { Column(Modifier.statusBarsPadding()) {
         if (showBack) PageHeader("Мой храм", onBack)
         else NavigationTextScale {
             Text("Мой храм", Modifier.padding(horizontal = 24.dp, vertical = 16.dp).testTag("church_title"), style = MaterialTheme.typography.headlineLarge)
         }
     } }, bottomBar = bottomBar) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("church_content"), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(28.dp)) {
-            if (church == null) item { Text("Список храмов недоступен", style = MaterialTheme.typography.titleLarge) }
+            if (church == null) item {
+                Text("Выберите или добавьте храм", style = MaterialTheme.typography.titleLarge)
+                Button(onClick = { picker = true }, modifier = Modifier.testTag("change_church")) { Text("Выбрать храм") }
+            }
             else {
                 item {
                     Text(church.name, style = MaterialTheme.typography.headlineMedium)
                     Spacer(Modifier.height(12.dp))
-                    Text(church.address, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(listOf(church.city, church.address).filter(String::isNotBlank).distinct().joinToString(" · "), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (church.id.startsWith("custom:") || church.id.startsWith("osm:")) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(if (church.id.startsWith("custom:")) "Добавлен вами" else "Данные OpenStreetMap", style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                     TextButton(onClick = { picker = true }, modifier = Modifier.testTag("change_church"), contentPadding = PaddingValues(vertical = 10.dp)) { Text("Выбрать другой храм") }
                 }
                 item {
@@ -78,16 +140,16 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                                 }
                             }
                         }
-                        Text("Указано время начала утренних литургий. Возможны изменения; вечерние службы уточняйте на сайте прихода.",
+                        Text(if (church.schedule.isEmpty()) "Здесь нет опубликованного расписания. Время службы можно уточнить в храме" else "Указано время начала утренних литургий. Возможны изменения; вечерние службы уточняйте на сайте прихода.",
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
-                item {
+                if (SavedChurchCodec.isSafeWebsite(church.website) || church.phone.isNotBlank()) item {
                     Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
                         Column {
-                            GuideActionRow("Сайт прихода", "Актуальное расписание и объявления", Icons.Default.OpenInNew, { onOpenUrl(church.website) })
-                            HorizontalDivider(Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                            GuideActionRow("Позвонить в храм", church.phone, Icons.Default.Phone, { onOpenUrl("tel:" + church.phone.filter { it.isDigit() || it == '+' }) })
+                            if (SavedChurchCodec.isSafeWebsite(church.website)) GuideActionRow("Сайт прихода", "Актуальное расписание и объявления", Icons.Default.OpenInNew, { onOpenUrl(church.website) })
+                            if (SavedChurchCodec.isSafeWebsite(church.website) && church.phone.isNotBlank()) HorizontalDivider(Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                            if (church.phone.isNotBlank()) GuideActionRow("Позвонить в храм", church.phone, Icons.Default.Phone, { onOpenUrl("tel:" + church.phone.filter { it.isDigit() || it == '+' }) })
                         }
                     }
                 }

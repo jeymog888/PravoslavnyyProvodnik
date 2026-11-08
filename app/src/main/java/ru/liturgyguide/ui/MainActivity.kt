@@ -30,6 +30,8 @@ import ru.liturgyguide.service.ServiceSessionEngine
 import ru.liturgyguide.service.ContextSuggestionEngine
 import ru.liturgyguide.service.PrayerTrackFactory
 import ru.liturgyguide.service.PrayerTextSearch
+import ru.liturgyguide.service.ChurchDirectory
+import ru.liturgyguide.service.ChurchDirectoryStore
 import com.google.gson.Gson
 import java.time.Clock
 import java.time.ZoneId
@@ -50,6 +52,9 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
     val context = LocalContext.current
     val screenStateHolder = rememberSaveableStateHolder()
     val preferences = remember { context.getSharedPreferences("guide_preferences", 0) }
+    val churchStore = remember(preferences) { ChurchDirectoryStore(preferences) }
+    var savedChurches by remember { mutableStateOf(churchStore.records()) }
+    var favoriteChurches by remember { mutableStateOf(churchStore.favorites()) }
     val systemDark = isSystemInDarkTheme()
     var dark by rememberSaveable { mutableStateOf(preferences.getBoolean("dark", systemDark)) }
     var textSize by rememberSaveable { mutableIntStateOf(preferences.getInt("text_size", 0).coerceIn(0, 2)) }
@@ -73,7 +78,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
     val position = session?.takeIf { sessionEngine?.isValid(it) == true }?.let { sessionEngine?.position(it, now) }
     val selectedStage = stages.firstOrNull { it.id == (position?.stageId ?: selectedId) }
     val parishes = container.parishes.getOrNull()
-    val church = parishes?.selected(churchId)
+    val churches = remember(parishes, savedChurches) { ChurchDirectory.merge(parishes?.directory?.churches.orEmpty(), savedChurches) }
+    val church = churches.firstOrNull { it.id == churchId } ?: parishes?.selected(null) ?: churches.firstOrNull()
     val contextEngine = remember(stages, clock) { if (stages.isEmpty()) null else ContextSuggestionEngine(stages, clock) }
     val suggestion = church?.let { contextEngine?.suggest(it, now) }
     val currentDate = now.atZone(ZoneId.of(church?.timezone ?: "Europe/Moscow")).toLocalDate()
@@ -301,7 +307,14 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
                         onBack = ::back
                     )
                     Screen.CHURCH -> ChurchScreen(
-                        churches = parishes?.directory?.churches.orEmpty(), selectedId = church?.id,
+                        churches = churches, selectedId = church?.id,
+                        favorites = favoriteChurches,
+                        onToggleFavorite = { id -> favoriteChurches = churchStore.toggleFavorite(id, churches.map { it.id }.toSet()) },
+                        onAddChurch = { record ->
+                            val saved = churchStore.save(record)
+                            if (saved) savedChurches = churchStore.records()
+                            saved
+                        },
                         currentDate = currentDate,
                         onSelect = {
                             if (church?.id != it) {
