@@ -1,0 +1,126 @@
+{
+  "uniqueScenarios": 30,
+  "latestResults": {
+    "ru.liturgyguide.ui.FirstVisitFlowTest#leavingFirstHomeEntryThenOpeningTheChurchTabDoesNotReturnHomeOnSelection": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#corruptModernMetadataNeverAssignsTheLegacyDefault": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#firstChoiceFromHomeSurvivesRecreationAndReturnsToTheExactService": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#firstVisitOpensThePickerDirectlyAndManualReadingKeepsNoParishAfterRestore": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#confirmingRecoveredLegacyParishPreservesTheReadingAndPersistsTheChoice": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#newTempleWithoutScheduleLeadsThroughPersonalTimeToTheExactService": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#aFailedChoiceKeepsThePickerOpenAndCanBeRetried": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#firstChoiceFromTheChurchTabStaysOnTheChurchPage": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#retryAfterDirectorySaveAndFailedSelectionReusesTheSameRecord": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#dismissingThePickerKeepsTheFirstHomeEntryUntilAChoiceSucceeds": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchChangeConfirmationTest#filteredChoiceAndBackKeepEverySavedValueUntilExplicitConfirmation": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchChangeConfirmationTest#aLongChurchNameAtLargeTextKeepsBothConfirmationActionsReachable": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchChangeConfirmationTest#invalidMetadataWithoutAResolvedChurchStillRequiresConfirmation": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchChangeConfirmationTest#failedAtomicConfirmationKeepsTheReadingAndAllowsRetry": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchChangeConfirmationTest#firstHomeChoiceReturnsOnlyAfterACommittedRetry": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchChangeConfirmationTest#firstChoiceWithoutReadingCompletesWithoutConfirmation": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchChangeConfirmationTest#aCapturedConfirmationCannotClearAChangedReadingOrAnAlreadyCancelledChoice": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchChangeConfirmationTest#recreationDropsPendingAndRejectsItsOldConfirmation": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ChurchChangeConfirmationTest#choosingTheSameChurchKeepsTheReadingWithoutConfirmation": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.MainScheduleOverviewTest#publishedFractionalSecondsAreNotSilentlyRounded": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.MainScheduleOverviewTest#evenARecentSavedReadingNeverMasksCurrentOrNextService": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.MainScheduleOverviewTest#eachServiceButtonRetainsItsExactOccurrence": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.MainScheduleOverviewTest#unknownScheduleKeepsManualReadingAndTempleSelectionAvailable": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.MainScheduleOverviewTest#unknownScheduleStillFindsTheCurrentMomentWithoutPersonalTimeEditing": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.MainScheduleOverviewTest#aFuturePersonalStartShowsItsYearAndTheParishTimeZone": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.MainScheduleOverviewTest#informationOnlyCardsRemainVisibleWhenOpeningIsUnavailable": {
+      "run": "s23-home-entry-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.DiscoveryNavigationTest#pickerNameSurvivesBackAndRecreationAndReentryAlwaysSearchesNames": {
+      "run": "s23-home-entry-r3",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.DiscoveryNavigationTest#nameDiscoveryReturnsToSavedPickerAndOnlyConfirmationReplacesTheParish": {
+      "run": "s23-home-entry-r3",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.DiscoveryNavigationTest#aMappedTempleWithoutACityTagCanBeSavedWithItsKnownCoordinates": {
+      "run": "s23-home-entry-r3",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.DiscoveryNavigationTest#firstHomeImportSurvivesDiscoveryBackAndRecreationAndReturnsHomeAfterSaving": {
+      "run": "s23-home-entry-r3",
+      "status": "PASS"
+    }
+  },
+  "note": "30 distinct scenarios across r1 and r3; not 30 rerun in r3. r1 failure retained, r2 diagnostic same-flow retry passed, r3 four methods with explicit IME boundaries passed"
+}

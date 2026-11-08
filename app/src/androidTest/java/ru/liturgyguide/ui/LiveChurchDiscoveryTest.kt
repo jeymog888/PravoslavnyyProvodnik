@@ -62,7 +62,8 @@ class LiveChurchDiscoveryTest {
                 compose.onNodeWithTag("open_church").performClick()
                 // With clean preferences, the first Home entry opens the picker directly.
                 compose.onNodeWithTag("church_picker").assertIsDisplayed()
-                searchAndSave("sretensky", "Сретенский монастырь Москва", "osm:relation:3325777", "Сретенский монастырь", "Москва")
+                searchAndSave("sretensky", "Сретенский монастырь Москва", "osm:relation:3325777", "Сретенский монастырь", "Москва",
+                    returnsHome = true)
 
                 compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("change_church"))
                 compose.onNodeWithTag("change_church").performClick()
@@ -85,7 +86,8 @@ class LiveChurchDiscoveryTest {
         // The root agent runs this via am instrument, without connected-test uninstall cleanup.
     }
 
-    private fun searchAndSave(label: String, query: String, id: String, name: String, city: String) {
+    private fun searchAndSave(label: String, query: String, id: String, name: String, city: String,
+        returnsHome: Boolean = false) {
         compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("church_search"))
         compose.onNodeWithTag("church_search").performTextReplacement(query)
         closeSoftKeyboardWithCiDiagnostics()
@@ -146,6 +148,19 @@ class LiveChurchDiscoveryTest {
         capture("$label-review")
         compose.onNodeWithTag("save_new_church").performScrollTo().performClick()
         compose.onNodeWithTag("church_change_confirmation").assertDoesNotExist()
+        if (returnsHome) {
+            compose.onNodeWithTag("main_content").assertIsDisplayed()
+            compose.onNodeWithTag("church_content").assertDoesNotExist()
+            compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("open_church"))
+            compose.onNodeWithTag("open_church").assertTextContains(name)
+            compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("find_stage"))
+            compose.onAllNodesWithTag("find_stage").assertCountEquals(1)
+            compose.onNodeWithTag("find_stage").assertIsDisplayed()
+            capture("$label-home")
+            // The first Home selection returns to the service entry. Open the directory
+            // intentionally before checking the saved parish or starting another search.
+            compose.onNodeWithTag("nav_church").performClick()
+        }
         compose.onNodeWithTag("church_content").assertIsDisplayed()
         compose.onNodeWithText(name).assertIsDisplayed()
         val record = ChurchDirectoryStore(preferences).records().single { it.id == id }

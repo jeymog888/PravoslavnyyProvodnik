@@ -37,6 +37,7 @@ import java.time.ZoneId
 import kotlinx.coroutines.delay
 
 private enum class Screen { MAIN, MANUAL, ARRIVAL, SERVICE, STAGE_SELECTOR, SEARCH, SETTINGS, SOURCES, CHURCH, DISCOVERY }
+private enum class ChurchSelectionOrigin { FIRST_HOME, DIRECTORY }
 
 class MainActivity : ComponentActivity() {
     private val activityForeground = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ActivityForegroundState() else null
@@ -84,6 +85,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     var searchOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
     var settingsOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
     var churchOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
+    var churchSelectionOrigin by rememberSaveable { mutableStateOf(ChurchSelectionOrigin.DIRECTORY) }
     var churchPickerRequest by rememberSaveable { mutableIntStateOf(0) }
     var churchSearchQuery by rememberSaveable { mutableStateOf("") }
     var churchSearchMode by rememberSaveable { mutableStateOf(ChurchSearchMode.NAME) }
@@ -240,6 +242,9 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
 
     fun navigate(destination: Screen) {
         cancelChurchSelection()
+        if (destination != Screen.CHURCH && destination != Screen.DISCOVERY) {
+            churchSelectionOrigin = ChurchSelectionOrigin.DIRECTORY
+        }
         player.pause()
         screen = destination
     }
@@ -355,19 +360,32 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         parishes?.directory?.churches.orEmpty(), churchStore.records()).map { it.id }.toSet()
     fun chooseChurch(id: String, onSelected: () -> Unit): ChurchSelectionResult {
         val snapshot = churchChoiceSnapshot() ?: return ChurchSelectionResult.FAILED
-        val result = churchSelectionGuard.request(id, snapshot, availableChurchIds(), ::commitChurchChoice, onSelected)
+        val completionScreen = when {
+            churchSelectionOrigin == ChurchSelectionOrigin.FIRST_HOME -> Screen.MAIN
+            screen == Screen.DISCOVERY -> Screen.CHURCH
+            else -> null
+        }
+        val result = churchSelectionGuard.request(id, snapshot, availableChurchIds(), ::commitChurchChoice) {
+            // Clean up the child's picker or form before leaving its saved screen state.
+            onSelected()
+            churchSelectionOrigin = ChurchSelectionOrigin.DIRECTORY
+            completionScreen?.let(::navigate)
+        }
         pendingChurchSelection = churchSelectionGuard.pending
         churchSelectionFailed = false
         return result
     }
-    fun openChurch() {
+    fun openChurch(fromHome: Boolean) {
         churchOrigin = Screen.MAIN
+        churchSelectionOrigin = if (fromHome && church == null) ChurchSelectionOrigin.FIRST_HOME
+            else ChurchSelectionOrigin.DIRECTORY
         if (church == null) churchPickerRequest++
         navigate(Screen.CHURCH)
     }
     fun openPersonalTime() {
-        if (church == null) { openChurch(); return }
+        if (church == null) { openChurch(fromHome = true); return }
         churchOrigin = Screen.MAIN
+        churchSelectionOrigin = ChurchSelectionOrigin.DIRECTORY
         personalTimeRequest++
         navigate(Screen.CHURCH)
     }
@@ -408,7 +426,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     val navigationBar: @Composable () -> Unit = {
         GuideBottomBar(selected = when (screen) { Screen.CHURCH -> "church"; Screen.SETTINGS -> "settings"; else -> "home" },
             onHome = { navigate(Screen.MAIN) },
-            onChurch = ::openChurch,
+            onChurch = { openChurch(fromHome = false) },
             onSettings = { settingsOrigin = Screen.MAIN; navigate(Screen.SETTINGS) })
     }
     GuideTheme(dark = dark) {
@@ -426,7 +444,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         church = church,
                         overview = overview,
                         onOpenService = ::openScheduledService,
-                        onChurch = ::openChurch,
+                        onChurch = { openChurch(fromHome = true) },
                         onPersonalTime = ::openPersonalTime,
                         onStart = {
                             val accepted = ReadingContextFactory.manual(church, clock.instant())
@@ -567,7 +585,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                             val saved = churchStore.save(record)
                             if (saved) savedChurches = churchStore.records()
                             if (!saved) ChurchSelectionResult.FAILED
-                            else chooseChurch(record.id) { onSelected(); churchSearchQuery = ""; navigate(Screen.CHURCH) }
+                            else chooseChurch(record.id) { onSelected(); churchSearchQuery = "" }
                         },
                         onSelectionCancelled = ::cancelChurchSelection,
                         onOpenUrl = { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(it))) }

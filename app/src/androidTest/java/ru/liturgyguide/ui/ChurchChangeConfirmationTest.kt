@@ -77,6 +77,31 @@ class ChurchChangeConfirmationTest {
         choose(firstId, expectConfirmation = false)
         compose.onNodeWithTag("church_picker").assertDoesNotExist()
         compose.onNodeWithTag("church_change_confirmation").assertDoesNotExist()
+        compose.onNodeWithTag("main_content").assertIsDisplayed()
+        compose.onNodeWithTag("church_content").assertDoesNotExist()
+        assertEquals(firstId, preferences.getString("church_id", null))
+    }
+
+    @Test fun firstHomeChoiceReturnsOnlyAfterACommittedRetry() {
+        check(preferences.edit().clear().putBoolean("dark", false).commit())
+        val before = preferences.all.toMap()
+        val failing = FailNextCommitPreferences(preferences)
+        val restoration = launch(failing)
+        compose.onNodeWithTag("open_church").performClick()
+        compose.runOnIdle { failing.failNextCommit = true }
+        choose(firstId, expectConfirmation = false)
+        compose.onNodeWithTag("church_picker").assertIsDisplayed()
+        compose.onNodeWithTag("main_content").assertDoesNotExist()
+        compose.onNodeWithTag("church_${firstId}").assertIsNotSelected()
+        compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("church_selection_error"))
+        compose.onNodeWithTag("church_selection_error").assertIsDisplayed()
+        assertUnchanged(before)
+        restoration.emulateSavedInstanceStateRestore()
+        compose.onNodeWithTag("church_picker").assertIsDisplayed()
+        compose.onNodeWithTag("main_content").assertDoesNotExist()
+        choose(firstId, expectConfirmation = false)
+        compose.onNodeWithTag("church_picker").assertDoesNotExist()
+        compose.onNodeWithTag("main_content").assertIsDisplayed()
         assertEquals(firstId, preferences.getString("church_id", null))
     }
 
@@ -105,6 +130,21 @@ class ChurchChangeConfirmationTest {
         compose.onNodeWithTag("cancel_church_change").performClick()
         assertUnchanged(before)
         assertFalse(preferences.contains("church_id"))
+        compose.onNodeWithTag("church_picker").assertIsDisplayed()
+        compose.onNodeWithTag("main_content").assertDoesNotExist()
+        choose(firstId)
+        compose.onNodeWithTag("main_content").assertDoesNotExist()
+        assertUnchanged(before)
+        compose.onNodeWithTag("confirm_church_change").performClick()
+        compose.onNodeWithTag("church_picker").assertDoesNotExist()
+        compose.onNodeWithTag("church_change_confirmation").assertDoesNotExist()
+        compose.onNodeWithTag("main_content").assertIsDisplayed()
+        assertEquals(firstId, preferences.getString("church_id", null))
+        assertFalse(preferences.contains(ReadingContextStore.CONTEXT_KEY))
+        assertFalse(preferences.contains(ServicePlaybackStore.PLAYBACK_KEY))
+        assertFalse(preferences.contains("stage_id"))
+        assertFalse(preferences.contains("session"))
+        assertFalse(preferences.all.keys.any(ReadingAcceptanceStore::isBookmarkKey))
     }
 
     @Test fun failedAtomicConfirmationKeepsTheReadingAndAllowsRetry() {

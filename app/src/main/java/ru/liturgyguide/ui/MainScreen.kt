@@ -25,6 +25,7 @@ fun MainScreen(lastStage: LiturgyStage?, currentDate: LocalDate, onStart: () -> 
     church: Parish?, onChurch: () -> Unit, overview: ScheduleOverview,
     onOpenService: ((ContextSuggestion) -> Unit)? = null, onOrder: () -> Unit, bottomBar: @Composable () -> Unit,
     readingNotice: String? = null, savedReadingNote: String? = null, onPersonalTime: (() -> Unit)? = null) {
+    val unknownSchedule = church != null && overview.currentHypothesis == null && overview.nextKnownService == null
     Scaffold(containerColor = MaterialTheme.colorScheme.background, bottomBar = bottomBar) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("main_content"),
             contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(28.dp)) {
@@ -74,14 +75,18 @@ fun MainScreen(lastStage: LiturgyStage?, currentDate: LocalDate, onStart: () -> 
                 ServiceSuggestionCard(next, currentDate, isCurrent = false,
                     primaryAction = overview.currentHypothesis == null, onOpenService = onOpenService)
             } }
-            if (church != null && overview.currentHypothesis == null && overview.nextKnownService == null) item {
+            if (unknownSchedule) item {
                 Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
                     Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text("Нет данных о ближайшей литургии",
                             style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("schedule_unknown"))
-                        Text("Уточните начало в храме или найдите текущий момент по словам службы",
+                        Text("Найдите текущую часть службы по словам молитвы или тому, что происходит в храме",
                             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        if (onPersonalTime != null) Button(onClick = onPersonalTime,
+                        Button(onClick = onFindStage,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("find_stage")) {
+                            Text("Найти текущий момент")
+                        }
+                        if (onPersonalTime != null) TextButton(onClick = onPersonalTime,
                             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("set_service_time")) {
                             Text("Указать начало литургии")
                         }
@@ -96,8 +101,10 @@ fun MainScreen(lastStage: LiturgyStage?, currentDate: LocalDate, onStart: () -> 
             item {
                 Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
                     Column {
-                        GuideActionRow("Найти текущий момент", "По ориентиру или словам молитвы", Icons.Default.Search, onFindStage, "find_stage")
-                        HorizontalDivider(Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                        if (!unknownSchedule) {
+                            GuideActionRow("Найти текущий момент", "По ориентиру или словам молитвы", Icons.Default.Search, onFindStage, "find_stage")
+                            HorizontalDivider(Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                        }
                         GuideActionRow("Порядок службы", "Части и этапы литургии", Icons.Default.FormatListNumbered, onOrder, "open_order")
                     }
                 }

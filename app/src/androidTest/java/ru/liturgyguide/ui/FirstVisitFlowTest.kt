@@ -57,6 +57,83 @@ class FirstVisitFlowTest {
         assertFalse(preferences.contains("church_id"))
     }
 
+    @Test fun firstChoiceFromHomeSurvivesRecreationAndReturnsToTheExactService() {
+        clear()
+        val restoration = launch()
+        compose.onNodeWithTag("open_church").performClick()
+        compose.onNodeWithTag("church_picker").assertIsDisplayed()
+        restoration.emulateSavedInstanceStateRestore()
+        compose.onNodeWithTag("church_picker").assertIsDisplayed()
+        chooseParish()
+        compose.onNodeWithTag("church_picker").assertDoesNotExist()
+        compose.onNodeWithTag("main_content").assertIsDisplayed()
+        compose.onNodeWithTag("open_church").assertTextContains(parish.shortName)
+        compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("service_start_next"))
+        compose.onNodeWithTag("service_start_next").assertTextEquals("8 ноября · 09:30")
+        assertEquals(parish.id, preferences.getString("church_id", null))
+        assertFalse(preferences.contains(ReadingContextStore.CONTEXT_KEY))
+        mainClick("watch_next")
+        val reading = requireNotNull(ReadingContextStore(preferences).restore())
+        assertEquals(parish.id, reading.parishId)
+        assertEquals("2026-11-08", reading.serviceDate)
+        assertEquals(Instant.parse("2026-11-08T06:30:00Z").toEpochMilli(), reading.startEpochMillis)
+        compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Подготовка к литургии")
+    }
+
+    @Test fun firstChoiceFromTheChurchTabStaysOnTheChurchPage() {
+        clear()
+        launch()
+        compose.onNodeWithTag("nav_church").performClick()
+        compose.onNodeWithTag("church_picker").assertIsDisplayed()
+        chooseParish()
+        compose.onNodeWithTag("church_picker").assertDoesNotExist()
+        compose.onNodeWithTag("main_content").assertDoesNotExist()
+        compose.onNodeWithTag("church_content").assertIsDisplayed()
+        compose.onNodeWithText(parish.name).assertIsDisplayed()
+        assertEquals(parish.id, preferences.getString("church_id", null))
+        // Once a church is selected, opening its Home card is ordinary directory navigation.
+        compose.onNodeWithTag("nav_home").performClick()
+        compose.onNodeWithTag("open_church").performClick()
+        compose.onNodeWithTag("change_church").performClick()
+        val other = container.parishes.getOrThrow().directory.churches.first { it.id != parish.id }
+        compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("church_${other.id}"))
+        compose.onNodeWithTag("church_${other.id}").performClick()
+        compose.onNodeWithTag("main_content").assertDoesNotExist()
+        compose.onNodeWithTag("church_content").assertIsDisplayed()
+        compose.onNodeWithText(other.name).assertIsDisplayed()
+        assertEquals(other.id, preferences.getString("church_id", null))
+    }
+
+    @Test fun dismissingThePickerKeepsTheFirstHomeEntryUntilAChoiceSucceeds() {
+        clear()
+        val before = preferences.all.toMap()
+        val restoration = launch()
+        compose.onNodeWithTag("open_church").performClick()
+        pressBack()
+        compose.onNodeWithTag("church_picker").assertDoesNotExist()
+        compose.onNodeWithTag("church_content").assertIsDisplayed()
+        compose.onNodeWithTag("main_content").assertDoesNotExist()
+        compose.runOnIdle { assertEquals(before, preferences.all) }
+        restoration.emulateSavedInstanceStateRestore()
+        compose.onNodeWithTag("change_church").performClick()
+        chooseParish()
+        compose.onNodeWithTag("main_content").assertIsDisplayed()
+        assertEquals(parish.id, preferences.getString("church_id", null))
+    }
+
+    @Test fun leavingFirstHomeEntryThenOpeningTheChurchTabDoesNotReturnHomeOnSelection() {
+        clear()
+        launch()
+        compose.onNodeWithTag("open_church").performClick()
+        pressBack()
+        compose.onNodeWithTag("open_settings").performClick()
+        compose.onNodeWithTag("nav_church").performClick()
+        chooseParish()
+        compose.onNodeWithTag("main_content").assertDoesNotExist()
+        compose.onNodeWithTag("church_content").assertIsDisplayed()
+        assertEquals(parish.id, preferences.getString("church_id", null))
+    }
+
     @Test fun newTempleWithoutScheduleLeadsThroughPersonalTimeToTheExactService() {
         clear()
         launch()
@@ -71,6 +148,11 @@ class FirstVisitFlowTest {
         val saved = ChurchDirectoryStore(preferences).records().single()
         assertEquals(saved.id, preferences.getString("church_id", null))
         assertTrue(saved.asParish().schedule.isEmpty())
+        compose.onNodeWithTag("main_content").assertIsDisplayed()
+        compose.onNodeWithTag("open_church").assertTextContains(saved.name)
+        compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("schedule_unknown"))
+        compose.onNodeWithTag("schedule_unknown").assertTextEquals("Нет данных о ближайшей литургии")
+        compose.onNodeWithTag("nav_church").performClick()
         // A previous look at tomorrow must not change the date of the Main screen's action.
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("schedule_tomorrow"))
         compose.onNodeWithTag("schedule_tomorrow").performClick()
@@ -173,6 +255,11 @@ class FirstVisitFlowTest {
         assertEquals(2, records.size)
         assertEquals("Храм в поездке", records[first]?.name)
         assertEquals("Второй храм", records.values.single { it.id != first }.name)
+    }
+
+    private fun chooseParish() {
+        compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("church_${parish.id}"))
+        compose.onNodeWithTag("church_${parish.id}").performClick()
     }
 
     private fun clear() { check(preferences.edit().clear().putBoolean("dark", false).commit()) }

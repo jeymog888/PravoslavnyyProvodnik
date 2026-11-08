@@ -87,20 +87,40 @@ class MainScheduleOverviewTest {
     }
 
     @Test fun unknownScheduleKeepsManualReadingAndTempleSelectionAvailable() {
-        var chosen = 0; var found = 0; var ordered = 0; var started = 0
+        var chosen = 0; var found = 0; var ordered = 0; var started = 0; var timed = 0
         compose.setContent { GuideTheme(false) { MainScreen(null, today, onStart = { started++ }, onResume = {},
             onFindStage = { found++ }, church = parish, onChurch = { chosen++ },
-            onOrder = { ordered++ },
+            onOrder = { ordered++ }, onPersonalTime = { timed++ },
             bottomBar = {}, overview = ScheduleOverview(), onOpenService = { fail("Unknown service cannot be opened") }) } }
         scrollTo("open_church"); compose.onNodeWithTag("open_church").performClick()
         scrollTo("schedule_unknown")
         compose.onNodeWithTag("schedule_unknown").assertTextEquals("Нет данных о ближайшей литургии")
-        scrollTo("find_stage"); compose.onNodeWithTag("find_stage").performClick()
-        scrollTo("open_order"); compose.onNodeWithTag("open_order").performClick()
+        scrollTo("find_stage")
+        compose.onAllNodesWithTag("find_stage").assertCountEquals(1)
+        compose.onNodeWithTag("find_stage").assertTextEquals("Найти текущий момент").performClick()
+        scrollTo("set_service_time")
+        compose.onNodeWithTag("set_service_time").assertTextEquals("Указать начало литургии").performClick()
+        assertTrue("Finding the current moment must precede the secondary time action",
+            compose.onNodeWithTag("find_stage").getUnclippedBoundsInRoot().bottom <=
+                compose.onNodeWithTag("set_service_time").getUnclippedBoundsInRoot().top)
+        scrollTo("open_order")
+        compose.onNodeWithTag("open_order").performClick()
         scrollTo("start_guide"); compose.onNodeWithTag("start_guide").performClick()
-        compose.runOnIdle { assertEquals(listOf(1, 1, 1, 1), listOf(chosen, found, ordered, started)) }
+        compose.runOnIdle { assertEquals(listOf(1, 1, 1, 1, 1), listOf(chosen, found, ordered, started, timed)) }
         compose.onNodeWithTag("watch_current").assertDoesNotExist()
         compose.onNodeWithTag("watch_next").assertDoesNotExist()
+    }
+
+    @Test fun unknownScheduleStillFindsTheCurrentMomentWithoutPersonalTimeEditing() {
+        var found = 0
+        compose.setContent { GuideTheme(false) { MainScreen(null, today, onStart = {}, onResume = {},
+            onFindStage = { found++ }, church = parish, onChurch = {}, onOrder = {},
+            bottomBar = {}, overview = ScheduleOverview()) } }
+        scrollTo("find_stage")
+        compose.onAllNodesWithTag("find_stage").assertCountEquals(1)
+        compose.onNodeWithTag("find_stage").assertTextEquals("Найти текущий момент").performClick()
+        compose.onNodeWithTag("set_service_time").assertDoesNotExist()
+        compose.runOnIdle { assertEquals(1, found) }
     }
 
     @Test fun informationOnlyCardsRemainVisibleWhenOpeningIsUnavailable() {
