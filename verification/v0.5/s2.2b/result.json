@@ -1,0 +1,17 @@
+{
+  "astra_review": "ACCEPT; P3 fractional-second formatting fixed by root",
+  "ui_before_format_fix": {
+    "tests": 12,
+    "failures": 0,
+    "includes": "MainScheduleOverview, MainContext, ArrivalFlow"
+  },
+  "ui_after_fix": {
+    "tests": 6,
+    "failures": 0,
+    "includes": "MainScheduleOverview with exact fractional second regression"
+  },
+  "build": "assembleDebug successful",
+  "native_current_user_start_and_next_published_visible": true,
+  "root_visual_review": true,
+  "temporary_entry": "Existing explicit time-confirmation entry retained until direct action in S2.3"
+}

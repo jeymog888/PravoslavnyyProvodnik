@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="ru.liturgyguide.ui.MainContextTest" tests="12" failures="0" errors="0" skipped="0" time="30.596" timestamp="2026-11-08T12:28:31" hostname="localhost">
+  <properties>
+    <property name="device" value="Liturgy_API_35(AVD) - 15" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="anOldReadingKeepsTheCurrentServicePrimaryAndCanStillBeOpened" classname="ru.liturgyguide.ui.MainContextTest" time="2.839" />
+  <testcase name="evenARecentSavedReadingNeverMasksCurrentOrNextService" classname="ru.liturgyguide.ui.MainScheduleOverviewTest" time="1.607" />
+  <testcase name="eachServiceButtonRetainsItsExactOccurrence" classname="ru.liturgyguide.ui.MainScheduleOverviewTest" time="2.373" />
+  <testcase name="unknownScheduleKeepsManualReadingAndTempleSelectionAvailable" classname="ru.liturgyguide.ui.MainScheduleOverviewTest" time="2.172" />
+  <testcase name="informationOnlyCardsRemainVisibleUntilDirectOpeningIsConnected" classname="ru.liturgyguide.ui.MainScheduleOverviewTest" time="0.949" />
+  <testcase name="aFuturePersonalStartShowsItsYearAndTheParishTimeZone" classname="ru.liturgyguide.ui.MainScheduleOverviewTest" time="2.301" />
+  <testcase name="newArrivalDoesNotReuseTheCancelledSearchQueryListeningOrScroll" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="4.901" />
+  <testcase name="upcomingServiceOffersPreparationWithoutClaimingACurrentStage" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="1.971" />
+  <testcase name="previewSearchBackAndCancelPreserveSavedReadingAndSettingsThroughRestoration" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="2.744" />
+  <testcase name="acceptingScheduleUsesTheSnapshotAndClearsOnlyOldReadingPositions" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="1.499" />
+  <testcase name="dateChangeRejectsTheOldEstimateButStillAllowsAManualChoice" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="3.151" />
+  <testcase name="alternativeSearchStartsANewManualServiceAtTheFoundTrackAndPhrase" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="2.485" />
+</testsuite>

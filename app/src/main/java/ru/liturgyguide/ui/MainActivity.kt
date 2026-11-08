@@ -33,6 +33,7 @@ import ru.liturgyguide.service.PrayerTextSearch
 import ru.liturgyguide.service.ChurchDirectory
 import ru.liturgyguide.service.ChurchDirectoryStore
 import ru.liturgyguide.service.UserServiceStartStore
+import ru.liturgyguide.service.ScheduleOverview
 import com.google.gson.Gson
 import java.time.Clock
 import java.time.ZoneId
@@ -85,7 +86,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
     val churches = remember(parishes, savedChurches) { ChurchDirectory.merge(parishes?.directory?.churches.orEmpty(), savedChurches) }
     val church = churches.firstOrNull { it.id == churchId } ?: parishes?.selected(null) ?: churches.firstOrNull()
     val contextEngine = remember(stages, clock) { if (stages.isEmpty()) null else ContextSuggestionEngine(stages, clock) }
-    val suggestion = church?.let { contextEngine?.suggest(it, now) }
+    val overview = church?.let { contextEngine?.overview(it, now, userStarts) } ?: ScheduleOverview()
+    val suggestion = overview.currentHypothesis ?: overview.nextKnownService
     val currentDate = now.atZone(ZoneId.of(church?.timezone ?: "Europe/Moscow")).toLocalDate()
     val readingDate = currentDate.toString()
     val readingDay = container.readings?.days?.firstOrNull { it.date == readingDate }
@@ -226,6 +228,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC()) {
                         savedEarlier = position?.requiresResume ?: (selectedStage != null),
                         church = church,
                         suggestion = suggestion,
+                        overview = overview,
                         onJoinService = {
                             if (church != null && suggestion != null) {
                                 beginArrival(ArrivalDraft(church.id, church.shortName,
