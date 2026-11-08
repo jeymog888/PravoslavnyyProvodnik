@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-11-08T13:17:51" hostname="MacBook-Air-Dmitrij.local" time="0.031">
+  <properties/>
+  <testcase name="commit false rolls back existing new snapshot and touched bookmarks after Android memory changed" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.013"/>
+  <testcase name="failed first migration removes the newly created key and preserves every legacy value" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.003"/>
+  <testcase name="reset removes old bookmarks but keeps the newly accepted current bookmark and snapshot" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.003"/>
+  <testcase name="Wait and End retain the last text bookmark without pretending to be a running marker" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.002"/>
+  <testcase name="failed legacy acceptance restores the new snapshot together with the old marker" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.001"/>
+  <testcase name="legacy acceptance removes an existing new snapshot in the same transaction" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.001"/>
+  <testcase name="wrong stage running marker and old stage offset cannot be accepted" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.001"/>
+  <testcase name="rollback preserves a malformed old new-format key exactly instead of enabling remigration" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.003"/>
+  <testcase name="acceptance stores snapshot context paused marker and current bookmark in one editor" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.001"/>
+  <testcase name="double write failure stays failed with one rollback and preserves unrelated concurrent writes" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.001"/>
+  <testcase name="wrong plan date invalid snapshot and foreign bookmark fail before opening editor" classname="ru.liturgyguide.service.PlaybackAcceptanceStoreTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -14,13 +14,66 @@ class ReadingAcceptanceStore(private val preferences: SharedPreferences) {
 
     @Synchronized
     fun accept(context: ReadingContext, session: ServiceSession, resetBookmarks: Boolean): Boolean {
-        val encoded = runCatching {
+        val changes = runCatching {
             require(session.anchorStageId.isNotBlank() && session.elapsedInStageMillis >= 0)
-            ReadingContextCodec.encode(context) to gson.toJson(session)
+            linkedMapOf<String, Any?>(
+                ReadingContextStore.CONTEXT_KEY to ReadingContextCodec.encode(context),
+                SESSION_KEY to gson.toJson(session),
+                STAGE_KEY to session.anchorStageId
+            ).apply {
+                // A legacy caller cannot leave a new-format position tied to a different entry.
+                // Keep the old call's affected-key set unchanged when there is no new snapshot.
+                if (preferences.contains(ServicePlaybackStore.PLAYBACK_KEY)) put(ServicePlaybackStore.PLAYBACK_KEY, null)
+            }
         }.getOrNull() ?: return false
+        return commit(changes, resetBookmarks)
+    }
+
+    /**
+     * Accept a captured (already materialized) snapshot and its paused compatibility marker.
+     * No monotonic clock is read here: the controller chooses one timestamp for its whole action.
+     */
+    @Synchronized
+    fun acceptPlayback(
+        plan: ServicePlaybackPlan,
+        context: ReadingContext,
+        snapshot: ServicePlaybackSnapshot,
+        marker: ServiceSession,
+        resetBookmarks: Boolean,
+        bookmark: PlaybackBookmark? = null
+    ): Boolean {
+        val changes = runCatching {
+            require(context.serviceDate == plan.serviceDate.toString())
+            val state = requireNotNull(ServicePlaybackEngine(plan).restore(snapshot))
+            require(!marker.autoAdvance && marker.elapsedInStageMillis == 0L)
+            require(marker.anchorStageId == plan.stageAt(state.segmentIndex).id)
+            linkedMapOf<String, Any?>(
+                ReadingContextStore.CONTEXT_KEY to ReadingContextCodec.encode(context),
+                SESSION_KEY to gson.toJson(marker),
+                STAGE_KEY to marker.anchorStageId,
+                ServicePlaybackStore.PLAYBACK_KEY to StoredServicePlaybackCodec.encode(StoredServicePlayback(context, snapshot))
+            ).apply {
+                if (bookmark != null) {
+                    // The bookmark mirrors the visible text, including retained text in Wait/Missing.
+                    require(bookmark == PlaybackBookmark.at(plan, state))
+                    val track = requireNotNull(plan.track(bookmark.trackId))
+                    val lineIndex = track.lines.indexOfFirst { it.id == bookmark.lineId }
+                    require(lineIndex >= 0)
+                    put("lyric_track_${bookmark.stageId}", bookmark.trackId)
+                    put("lyric_line_${bookmark.trackId}", lineIndex)
+                    put("lyric_phrase_${bookmark.trackId}", bookmark.lineId)
+                    put("lyric_offset_${bookmark.trackId}", 0L)
+                    put("lyric_saved_tempo_${bookmark.trackId}", null)
+                }
+            }
+        }.getOrNull() ?: return false
+        return commit(changes, resetBookmarks)
+    }
+
+    private fun commit(changes: Map<String, Any?>, resetBookmarks: Boolean): Boolean {
         val snapshot = runCatching {
             val all = preferences.all
-            val affected = mutableSetOf(ReadingContextStore.CONTEXT_KEY, SESSION_KEY, STAGE_KEY)
+            val affected = changes.keys.toMutableSet()
             if (resetBookmarks) affected += all.keys.filter(::isBookmarkKey)
             affected.associateWith { key ->
                 if (all.containsKey(key)) Previous.Present(copyPreferenceValue(all[key])) else Previous.Absent
@@ -29,10 +82,11 @@ class ReadingAcceptanceStore(private val preferences: SharedPreferences) {
 
         val accepted = runCatching {
             val editor = preferences.edit()
-                .putString(ReadingContextStore.CONTEXT_KEY, encoded.first)
-                .putString(SESSION_KEY, encoded.second)
-                .putString(STAGE_KEY, session.anchorStageId)
+            // Reset before updates: a new reading's initial bookmark must survive its own reset.
             if (resetBookmarks) snapshot.keys.filter(::isBookmarkKey).forEach { editor.remove(it) }
+            changes.forEach { (key, value) ->
+                if (value == null) editor.remove(key) else restoreValue(editor, key, value)
+            }
             editor.commit()
         }.getOrDefault(false)
         if (accepted) return true

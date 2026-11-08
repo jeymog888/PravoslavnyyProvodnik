@@ -198,10 +198,10 @@ class ReadingAcceptanceStoreTest {
     }
 }
 
-private enum class MemoryCommit { SUCCESS, FALSE_AFTER_MEMORY, THROW_AFTER_MEMORY }
+internal enum class MemoryCommit { SUCCESS, FALSE_AFTER_MEMORY, THROW_AFTER_MEMORY }
 
 /** Models Android's relevant ordering: mutate the in-memory map first, then report disk outcome. */
-private class AcceptanceMemoryPreferences : SharedPreferences {
+internal class AcceptanceMemoryPreferences : SharedPreferences {
     val values = mutableMapOf<String, Any?>()
     val outcomes = java.util.ArrayDeque<MemoryCommit>()
     val committedKeys = mutableListOf<Set<String>>()

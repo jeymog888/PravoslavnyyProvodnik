@@ -47,3 +47,9 @@ MissingReading блокирует обычный Play и любой большо
 - 320 dp с крупным шрифтом, 400 dp, landscape, обе темы; текст и управление остаются доступны
 
 Источники жизненного цикла: https://developer.android.com/reference/android/os/SystemClock и https://developer.android.com/reference/kotlin/androidx/lifecycle/package-summary
+
+## Реализованный владелец состояния
+
+ServicePlayerState живет на уровне AppNavigation. Он получает монотонные часы и синхронный writer, но сам не создает корутин или lifecycle observers. ActiveServicePlayback хранит принятый plan/context/state и признак приблизительной позиции. accept сначала ставит старое чтение на паузу, затем принимает новую запись; tick проверяет in-memory generation. forgetAccepted вызывается только после успешного удаления сохранения и сам ничего не записывает
+
+Writer получает единственный timestamp действия, строит snapshot и согласованный paused marker. Для ручного выбора трека внедряется адрес сохраненной phrase. При ошибке записи pause остается обязательной; смена скорости и tick фиксируют паузу на материализованной позиции, не продолжают движение скрыто
