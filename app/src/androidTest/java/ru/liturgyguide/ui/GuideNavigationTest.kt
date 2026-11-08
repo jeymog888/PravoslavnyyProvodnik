@@ -496,7 +496,14 @@ class GuideNavigationTest {
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("change_church"))
         compose.onNodeWithTag("change_church").performClick()
         compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("church_vsetsaritsa_nakhabino"))
+        val beforeChoice = preferences.all.toMap()
         compose.onNodeWithTag("church_vsetsaritsa_nakhabino").performClick()
+        compose.runOnIdle { assertEquals(beforeChoice, preferences.all) }
+        compose.onNodeWithTag("church_change_confirmation").assertIsDisplayed()
+        compose.onNodeWithTag("cancel_church_change").performClick()
+        compose.runOnIdle { assertEquals(beforeChoice, preferences.all) }
+        compose.onNodeWithTag("church_vsetsaritsa_nakhabino").performClick()
+        compose.onNodeWithTag("confirm_church_change").performClick()
         assertEquals("vsetsaritsa_nakhabino", preferences.getString("church_id", null))
         assertNull(preferences.getString("stage_id", null))
         assertNull(preferences.getString("session", null))

@@ -19,6 +19,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.role
 import ru.liturgyguide.service.ChurchDirectory
+import ru.liturgyguide.service.ChurchSelectionResult
 import ru.liturgyguide.service.SavedChurchCodec
 import ru.liturgyguide.service.SavedChurchRecord
 import ru.liturgyguide.service.UserServiceStart
@@ -30,13 +31,15 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: LocalDate, onSelect: (String) -> Boolean,
+fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: LocalDate,
+    onSelect: (String, onSelected: () -> Unit) -> ChurchSelectionResult,
     onOpenUrl: (String) -> Unit, onBack: () -> Unit, showBack: Boolean = true, bottomBar: @Composable () -> Unit = {},
     favorites: Set<String> = emptySet(), onToggleFavorite: (String) -> Unit = {},
     onAddChurch: ((SavedChurchRecord) -> Boolean)? = null, onDiscover: (() -> Unit)? = null,
     pickerRequest: Int = 0, userStarts: List<UserServiceStart> = emptyList(),
     onSaveStart: ((UserServiceStart) -> Boolean)? = null, onRemoveStart: ((LocalDate) -> Boolean)? = null,
-    personalTimeRequest: Int = 0, onGoToService: (() -> Unit)? = null) {
+    personalTimeRequest: Int = 0, onGoToService: (() -> Unit)? = null,
+    onSelectionCancelled: () -> Unit = {}) {
     val church = churches.firstOrNull { it.id == selectedId }
     var picker by rememberSaveable { mutableStateOf(false) }
     var adding by rememberSaveable { mutableStateOf(false) }
@@ -51,11 +54,17 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     // The draft belongs to this screen, even while the sheet uses a separate dialog registry.
     // There is at most one draft, and every explicit close/new attempt removes it.
     val churchDraft = rememberSaveableStateHolder()
-    fun selectChurch(id: String): Boolean {
-        if (!onSelect(id)) { selectionFailed = true; return false }
-        churchDraft.removeState("new_church")
-        selectionFailed = false; adding = false; picker = false; locate = false; dayOffset = 0; query = ""
-        return true
+    fun selectChurch(id: String): ChurchSelectionResult {
+        val result = onSelect(id) {
+            churchDraft.removeState("new_church")
+            selectionFailed = false; adding = false; picker = false; locate = false; dayOffset = 0; query = ""
+        }
+        selectionFailed = result == ChurchSelectionResult.FAILED || result == ChurchSelectionResult.STALE
+        return result
+    }
+    val currentCancel by rememberUpdatedState(onSelectionCancelled)
+    DisposableEffect(Unit) {
+        onDispose { currentCancel() }
     }
     LaunchedEffect(pickerRequest) {
         if (pickerRequest != handledPickerRequest) {
@@ -75,13 +84,14 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     }
     val matches = remember(churches, query, favorites) { ChurchDirectory.search(churches, query, favorites) }
     if (picker) ModalBottomSheet(onDismissRequest = {
+        onSelectionCancelled()
         churchDraft.removeState("new_church"); picker = false; adding = false; locate = false
     },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         if (adding && onAddChurch != null) churchDraft.SaveableStateProvider("new_church") {
             SavedChurchForm(
-                onCancel = { churchDraft.removeState("new_church"); adding = false },
-                onSave = { record -> onAddChurch(record) && selectChurch(record.id) })
+                onCancel = { onSelectionCancelled(); churchDraft.removeState("new_church"); adding = false },
+                onSave = { record -> if (onAddChurch(record)) selectChurch(record.id) else ChurchSelectionResult.FAILED })
         }
         else LazyColumn(Modifier.fillMaxWidth().imePadding().testTag("church_picker"), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item { Text("Выберите храм", style = MaterialTheme.typography.headlineMedium) }

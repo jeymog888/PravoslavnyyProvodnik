@@ -1,0 +1,25 @@
+{
+  "requested_tasks": [
+    "assembleDebug",
+    "testDebugUnitTest",
+    "connectedDebugAndroidTest",
+    "-Pandroid.testInstrumentationRunnerArguments.class=ru.liturgyguide.ui.ChurchChangeConfirmationTest,ru.liturgyguide.ui.SavedChurchFlowTest,ru.liturgyguide.ui.DiscoveryNavigationTest,ru.liturgyguide.ui.ChurchDiscoveryScreenTest,ru.liturgyguide.ui.FirstVisitFlowTest,ru.liturgyguide.ui.GuideNavigationTest#churchHasTodayAndTomorrowAndChangingItStartsAFreshContext,ru.liturgyguide.ui.DateRolloverTest#scheduleKeepsTodayAndTomorrowRelativeAcrossTheMonthBoundary,ru.liturgyguide.ui.PersonalServiceTimeTest#publishedAndPersonalStartsStaySeparateAndRemovingPersonalRestoresTheEmptyState,ru.liturgyguide.ui.ReaderAccessibilityTest#narrowScheduleKeepsBothDayLabelsOnOneLineAndSelectable",
+    "-Pandroid.testInstrumentationRunnerArguments.feoriaCiDiagnostics=true",
+    "-Pandroid.testInstrumentationRunnerArguments.feoriaCiDiagnosticsRun=v06-s21-r9"
+  ],
+  "results": {
+    "unit": {
+      "tests": 354,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "ui": {
+      "tests": 29,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "limits": "Result XML copied only for requested test task; inspect Gradle log for executed versus up-to-date"
+}

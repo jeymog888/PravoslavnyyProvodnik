@@ -38,6 +38,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import ru.liturgyguide.service.ChurchLocator
+import ru.liturgyguide.service.ChurchSelectionResult
 import ru.liturgyguide.service.SavedChurchCodec
 import ru.liturgyguide.service.SavedChurchOrigin
 import ru.liturgyguide.service.SavedChurchRecord
@@ -119,7 +120,8 @@ private class ChurchDiscoveryState(private val discovery: PlaceDiscovery, privat
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
-    onSave: (SavedChurchRecord) -> Boolean, onOpenUrl: (String) -> Unit) {
+    onSave: (SavedChurchRecord, onSelected: () -> Unit) -> ChurchSelectionResult, onOpenUrl: (String) -> Unit,
+    onSelectionCancelled: () -> Unit = {}) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val scope = rememberCoroutineScope()
@@ -138,7 +140,8 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
         pendingPermission = null; locator.stop()
         state.cancel(if (clear) null else "Поиск остановлен. Можно попробовать снова или выбрать храм вручную", clear)
     }
-    fun leave() { cancelSearch(); onBack() }
+    fun cancelImport() { onSelectionCancelled(); importJson = null }
+    fun leave() { onSelectionCancelled(); cancelSearch(); onBack() }
     fun locate(token: Int) {
         if (!state.current(token)) return
         locator.locate locationResult@{ location, error ->
@@ -179,15 +182,17 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
         lifecycle.addObserver(observer)
         onDispose { pendingPermission = null; locator.stop(); state.cancel(); lifecycle.removeObserver(observer) }
     }
-    BackHandler { if (importRecord != null) importJson = null else leave() }
+    val currentCancel by rememberUpdatedState(onSelectionCancelled)
+    DisposableEffect(Unit) { onDispose { currentCancel() } }
+    BackHandler { if (importRecord != null) cancelImport() else leave() }
     LaunchedEffect(state.resultVersion) {
         if (state.resultVersion > 0) scroll.animateScrollToItem(1)
     }
 
-    if (importRecord != null) ModalBottomSheet(onDismissRequest = { importJson = null },
+    if (importRecord != null) ModalBottomSheet(onDismissRequest = ::cancelImport,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-        SavedChurchForm(initialRecord = importRecord, onCancel = { importJson = null }, onSave = { record ->
-            if (onSave(record)) { importJson = null; true } else false
+        SavedChurchForm(initialRecord = importRecord, onCancel = ::cancelImport, onSave = { record ->
+            onSave(record) { importJson = null }
         })
     }
     Scaffold(containerColor = MaterialTheme.colorScheme.background,

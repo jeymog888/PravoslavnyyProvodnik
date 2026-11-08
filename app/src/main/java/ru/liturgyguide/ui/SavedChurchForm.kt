@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import ru.liturgyguide.service.ChurchLocator
+import ru.liturgyguide.service.ChurchSelectionResult
 import ru.liturgyguide.service.SavedChurchRecord
 import ru.liturgyguide.service.SavedChurchCodec
 import ru.liturgyguide.service.SavedChurchOrigin
@@ -36,7 +37,7 @@ private val russianZones = listOf(
 )
 
 @Composable
-internal fun SavedChurchForm(onCancel: () -> Unit, onSave: (SavedChurchRecord) -> Boolean, initialRecord: SavedChurchRecord? = null) {
+internal fun SavedChurchForm(onCancel: () -> Unit, onSave: (SavedChurchRecord) -> ChurchSelectionResult, initialRecord: SavedChurchRecord? = null) {
     // A failed selection can follow a successful directory save. Retrying must update that same record.
     val draftId = rememberSaveable(initialRecord?.id) { initialRecord?.id ?: "custom:${UUID.randomUUID()}" }
     var name by rememberSaveable(initialRecord?.id) { mutableStateOf(initialRecord?.name.orEmpty()) }
@@ -108,7 +109,11 @@ internal fun SavedChurchForm(onCancel: () -> Unit, onSave: (SavedChurchRecord) -
                     else SavedChurchCodec.validated(initialRecord.copy(name = name, city = city, address = address, timezone = timezone,
                         latitude = latitude, longitude = longitude, locationAccuracyMeters = accuracy))
                     if (record == null) error = "Проверьте название и город: уберите переносы строк и необычные символы"
-                    else if (!onSave(record)) error = "Не удалось сохранить храм. Проверьте свободное место; можно хранить до 100 своих храмов"
+                    else error = when (onSave(record)) {
+                        ChurchSelectionResult.SELECTED, ChurchSelectionResult.PENDING -> null
+                        ChurchSelectionResult.FAILED -> "Не удалось сохранить или выбрать храм. Проверьте свободное место; можно хранить до 100 своих храмов"
+                        ChurchSelectionResult.STALE -> "Чтение или список храмов изменились. Выберите храм еще раз"
+                    }
                 }
             }
         }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("save_new_church")) { Text("Сохранить и выбрать") }

@@ -1,5 +1,7 @@
 package ru.liturgyguide.ui
 
+import ru.liturgyguide.service.ChurchSelectionResult
+
 import android.content.Context
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.StateRestorationTester
@@ -64,7 +66,17 @@ class DiscoveryNavigationTest {
         compose.onNodeWithTag("cancel_new_church").performScrollTo().performClick()
         compose.onNodeWithTag("discovery_content").performScrollToNode(hasTestTag("discovery_church_${church.id}"))
         compose.onNodeWithTag("discovery_church_${church.id}").performClick()
+        val beforeSave = preferences.all.toMap()
         compose.onNodeWithTag("save_new_church").performScrollTo().performClick()
+        val beforeChoice = preferences.all.toMap()
+        assertEquals(beforeSave, beforeChoice - ChurchDirectoryStore.RECORDS_KEY)
+        compose.onNodeWithTag("church_change_confirmation").assertIsDisplayed()
+        compose.onNodeWithTag("new_church_error").assertDoesNotExist()
+        compose.onNodeWithTag("cancel_church_change").performClick()
+        compose.runOnIdle { assertEquals(beforeChoice, preferences.all) }
+        compose.onNodeWithTag("add_church_form").assertIsDisplayed()
+        compose.onNodeWithTag("save_new_church").performScrollTo().performClick()
+        compose.onNodeWithTag("confirm_church_change").performClick()
         compose.onNodeWithTag("church_picker").assertDoesNotExist()
         compose.onNodeWithTag("church_content").assertIsDisplayed()
         compose.onNodeWithText("Новый храм").assertIsDisplayed()
@@ -86,7 +98,7 @@ class DiscoveryNavigationTest {
         val record = SavedChurchRecord(church.id, church.name, "", "", "Europe/Moscow",
             church.center.latitude, church.center.longitude, origin = SavedChurchOrigin.OPEN_STREET_MAP,
             sourceUrl = church.sourceUrl)
-        compose.setContent { GuideTheme(false) { SavedChurchForm(onCancel = {}, onSave = { saved = it; true }, initialRecord = record) } }
+        compose.setContent { GuideTheme(false) { SavedChurchForm(onCancel = {}, onSave = { saved = it; ChurchSelectionResult.SELECTED }, initialRecord = record) } }
         compose.onNodeWithTag("new_church_city").assertTextContains("Город, если знаете")
         compose.onNodeWithTag("save_new_church").performScrollTo().performClick()
         compose.runOnIdle {

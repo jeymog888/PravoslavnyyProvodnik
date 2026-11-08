@@ -1,5 +1,7 @@
 package ru.liturgyguide.ui
 
+import ru.liturgyguide.service.ChurchSelectionResult
+
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.*
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -132,7 +134,7 @@ class PersonalServiceTimeTest {
     @Test fun publishedAndPersonalStartsStaySeparateAndRemovingPersonalRestoresTheEmptyState() {
         val starts = mutableStateOf(listOf(UserServiceStart(parish.id, today.toString(), "10:00")))
         compose.setContent { GuideTheme(false) { ChurchScreen(listOf(parish), parish.id, today,
-            onSelect = { true }, onOpenUrl = {}, onBack = {}, userStarts = starts.value,
+            onSelect = { _, selected -> selected(); ChurchSelectionResult.SELECTED }, onOpenUrl = {}, onBack = {}, userStarts = starts.value,
             onSaveStart = { value -> starts.value = listOf(value); true },
             onRemoveStart = { date -> starts.value = starts.value.filterNot { it.date == date.toString() }; true }) } }
         compose.onNodeWithTag("church_content").performScrollToNode(hasText("Опубликованное расписание"))

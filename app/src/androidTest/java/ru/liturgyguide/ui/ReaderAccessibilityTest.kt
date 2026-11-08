@@ -1,5 +1,7 @@
 package ru.liturgyguide.ui
 
+import ru.liturgyguide.service.ChurchSelectionResult
+
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
@@ -164,7 +166,7 @@ class ReaderAccessibilityTest {
                 GuideTheme(dark = true) {
                     Box(Modifier.size(320.dp, 640.dp)) {
                         ChurchScreen(parishes.directory.churches, parishes.selected(null).id,
-                            LocalDate.of(2026, 11, 8), onSelect = { true }, onOpenUrl = {}, onBack = {})
+                            LocalDate.of(2026, 11, 8), onSelect = { _, selected -> selected(); ChurchSelectionResult.SELECTED }, onOpenUrl = {}, onBack = {})
                     }
                 }
             }

@@ -1,5 +1,7 @@
 package ru.liturgyguide.ui
 
+import ru.liturgyguide.service.ChurchSelectionResult
+
 import android.graphics.Rect
 import android.os.SystemClock
 import androidx.core.view.ViewCompat
@@ -237,7 +239,9 @@ class ChurchDiscoveryScreenTest {
     }
 
     private fun launch(fake: FakeDiscovery, onBack: () -> Unit = {}, onSave: (SavedChurchRecord) -> Boolean = { true }) {
-        compose.setContent { GuideTheme(dark = false) { ChurchDiscoveryScreen(fake, onBack, onSave, {}) } }
+        compose.setContent { GuideTheme(dark = false) { ChurchDiscoveryScreen(fake, onBack, { record, selected ->
+            if (onSave(record)) { selected(); ChurchSelectionResult.SELECTED } else ChurchSelectionResult.FAILED
+        }, {}) } }
     }
     private fun search(query: String) {
         scrollTo("discovery_city_query").performTextReplacement(query)

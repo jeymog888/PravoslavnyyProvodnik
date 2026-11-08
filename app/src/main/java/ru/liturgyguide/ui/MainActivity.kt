@@ -78,7 +78,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     val systemDark = isSystemInDarkTheme()
     var dark by rememberSaveable { mutableStateOf(preferences.getBoolean("dark", systemDark)) }
     var textSize by rememberSaveable { mutableIntStateOf(preferences.getInt("text_size", 0).coerceIn(0, 2)) }
-    var selectedId by rememberSaveable { mutableStateOf(preferences.getString("stage_id", null)) }
+    var selectedId by rememberSaveable { mutableStateOf(runCatching { preferences.getString("stage_id", null) }.getOrNull()) }
     var screen by rememberSaveable { mutableStateOf(Screen.MAIN) }
     var selectorOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
     var searchOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
@@ -178,6 +178,17 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                     ?: track.lines.first().id
             })
     }
+    val churchSelectionGuard = remember(preferences, player) { ChurchSelectionGuard() }
+    var pendingChurchSelection by remember { mutableStateOf<ChurchSelectionGuard.Pending?>(null) }
+    var churchSelectionFailed by remember { mutableStateOf(false) }
+    fun cancelChurchSelection() {
+        churchSelectionGuard.cancel()
+        pendingChurchSelection = null
+        churchSelectionFailed = false
+    }
+    DisposableEffect(churchSelectionGuard) {
+        onDispose { churchSelectionGuard.close() }
+    }
     val selectedStage = if (invalidRecovery) null else player.reading?.stage ?: restoredReading?.stage ?: legacyStage
     val activeReadingContext = if (invalidRecovery) null else player.reading?.context ?: availableContext?.takeIf { selectedStage != null }
     val readingNeedsExplicitDate = selectedStage != null && activeReadingContext == null
@@ -226,6 +237,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     }
 
     fun navigate(destination: Screen) {
+        cancelChurchSelection()
         player.pause()
         screen = destination
     }
@@ -323,8 +335,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         arrivalDraft = null
         return true
     }
-    fun chooseChurch(id: String): Boolean {
-        if (church?.id == id) {
+    fun commitChurchChoice(id: String, preserveReading: Boolean): Boolean {
+        if (preserveReading) {
             if (hasChurchSelection && churchId == id) return true
             if (!readingAcceptanceStore.confirmChurch(id)) { savingFailed(); return false }
             churchId = id; hasChurchSelection = true
@@ -333,6 +345,18 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         if (!clearAcceptedReading(id)) return false
         churchId = id; hasChurchSelection = true
         return true
+    }
+    fun churchChoiceSnapshot(): ChurchSelectionSnapshot? = runCatching {
+        ChurchSelectionSnapshot.capture(church?.id, player.generation, player.reading != null, preferences.all)
+    }.getOrNull()
+    fun availableChurchIds(): Set<String> = ChurchDirectory.merge(
+        parishes?.directory?.churches.orEmpty(), churchStore.records()).map { it.id }.toSet()
+    fun chooseChurch(id: String, onSelected: () -> Unit): ChurchSelectionResult {
+        val snapshot = churchChoiceSnapshot() ?: return ChurchSelectionResult.FAILED
+        val result = churchSelectionGuard.request(id, snapshot, availableChurchIds(), ::commitChurchChoice, onSelected)
+        pendingChurchSelection = churchSelectionGuard.pending
+        churchSelectionFailed = false
+        return result
     }
     fun openChurch() {
         churchOrigin = Screen.MAIN
@@ -524,7 +548,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                             removed
                         },
                         currentDate = currentDate,
-                        onSelect = { chooseChurch(it) },
+                        onSelect = ::chooseChurch,
+                        onSelectionCancelled = ::cancelChurchSelection,
                         onOpenUrl = { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(it))) }, onBack = ::back,
                         showBack = churchOrigin != Screen.MAIN,
                         bottomBar = { if (churchOrigin == Screen.MAIN) navigationBar() }
@@ -532,17 +557,34 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                     Screen.DISCOVERY -> ChurchDiscoveryScreen(
                         discovery = container.placeDiscovery,
                         onBack = ::closeDiscovery,
-                        onSave = { record ->
+                        onSave = { record, onSelected ->
                             val saved = churchStore.save(record)
                             if (saved) savedChurches = churchStore.records()
-                            val selected = saved && chooseChurch(record.id)
-                            if (selected) navigate(Screen.CHURCH)
-                            selected
+                            if (!saved) ChurchSelectionResult.FAILED
+                            else chooseChurch(record.id) { onSelected(); navigate(Screen.CHURCH) }
                         },
+                        onSelectionCancelled = ::cancelChurchSelection,
                         onOpenUrl = { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(it))) }
                     )
                 }
                 }
+            }
+            pendingChurchSelection?.let { pending ->
+                ChurchChangeDialog(
+                    message = if (churchSelectionFailed)
+                        "Не удалось выбрать храм. Сохраненное чтение осталось на месте. Попробуйте еще раз"
+                    else "Место чтения и закладки будут сброшены\n\nНовый храм: ${churches.firstOrNull { it.id == pending.targetId }?.shortName ?: "Выбранный храм"}",
+                    onDismiss = ::cancelChurchSelection,
+                    onConfirm = {
+                        val snapshot = churchChoiceSnapshot()
+                        val result = if (snapshot == null) ChurchSelectionResult.FAILED
+                            else churchSelectionGuard.confirm(pending, snapshot, availableChurchIds())
+                        pendingChurchSelection = churchSelectionGuard.pending
+                        churchSelectionFailed = result == ChurchSelectionResult.FAILED
+                        if (result == ChurchSelectionResult.STALE) Toast.makeText(context,
+                            "Чтение или список храмов изменились. Выберите храм еще раз", Toast.LENGTH_LONG).show()
+                    }
+                )
             }
         }
     }

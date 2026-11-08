@@ -1,5 +1,7 @@
 package ru.liturgyguide.ui
 
+import ru.liturgyguide.service.ChurchSelectionResult
+
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -41,7 +43,7 @@ class DateRolloverTest {
         compose.setContent {
             GuideTheme(dark = false) {
                 ChurchScreen(churches = parishes.directory.churches, selectedId = parishes.selected(null).id,
-                    currentDate = currentDate.value, onSelect = { true }, onOpenUrl = {}, onBack = {})
+                    currentDate = currentDate.value, onSelect = { _, selected -> selected(); ChurchSelectionResult.SELECTED }, onOpenUrl = {}, onBack = {})
             }
         }
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("schedule_today"))
