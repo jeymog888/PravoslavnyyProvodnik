@@ -1,0 +1,33 @@
+{
+  "checked_at_utc": "2026-11-08T01:09:02.364918+00:00",
+  "root_read_unit_and_ui_xml": true,
+  "unit_tests": 111,
+  "ui_tests": 64,
+  "failures": 0,
+  "errors": 0,
+  "skips": 0,
+  "source_hashes_verified": 67,
+  "root_verified_release_checksum": true,
+  "root_reviewed_code_and_docs": true,
+  "independent_astra_code_and_docs_review": "accepted, no confirmed actionable P1/P2",
+  "root_viewed_upgrade_and_landscape_screenshots": true,
+  "signed_upgrade": "../final-upgrade/install-result.json",
+  "release_smoke": "../final-upgrade/smoke-result.json",
+  "landscape_arrival": "../final-landscape/results.json",
+  "source_freeze": "No production changes after versionCode4/versionName0.4.0-guide and Settings0.4 before full QA",
+  "ci_and_publication": "pending: execute after RELEASE commit without changing its files; record actual results in Feoria-0.4.0-delivery.json attached to the release",
+  "text_evidence_normalization": [
+    {
+      "file": "release.log",
+      "original_sha256": "a77542780cd0417d2703f28c09aa1910e7857da00c5ea776ba6755abd32406d9",
+      "published_sha256": "e9d11826012f2ab38b6fead0bfb6509365359f6896e72baa2a65c01f95bfc92c",
+      "change": "LF line endings and trailing whitespace only; original retained under app/build; XML semantics unchanged"
+    },
+    {
+      "file": "ui/results.xml",
+      "original_sha256": "59f18ee41b1e9aa659819cf8af13fb8133bef330c570be020001b020571c61f5",
+      "published_sha256": "762d0b029a857b894882131778d3afec4a9f73ed1fd83f154b4078ad4b20ead3",
+      "change": "LF line endings and trailing whitespace only; original retained under app/build; XML semantics unchanged"
+    }
+  ]
+}

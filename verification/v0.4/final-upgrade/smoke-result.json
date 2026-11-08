@@ -1,0 +1,31 @@
+{
+  "passed": true,
+  "checks": [
+    "restored noninitial phrase and original language after update",
+    "retained dark mode, text size, church, stage, track, phrase",
+    "next phrase",
+    "Meaning/Text",
+    "Clarify cancel preserves Meaning",
+    "cold resume preserves next phrase, language and settings"
+  ],
+  "expected_before": {
+    "dark": "true",
+    "text_size": "1",
+    "church_id": "vsetsaritsa_nakhabino",
+    "stage_id": "cherubic_hymn",
+    "lyric_original": "true",
+    "lyric_track_cherubic_hymn": "cherubic_hymn:prayer:a13a9fa0b8935df001c5f791",
+    "lyric_line_cherubic_hymn:prayer:a13a9fa0b8935df001c5f791": "1",
+    "lyric_phrase_cherubic_hymn:prayer:a13a9fa0b8935df001c5f791": "cherubic_hymn:prayer:a13a9fa0b8935df001c5f791:7c4aa84521253408bedc0c0d"
+  },
+  "retained_after_cold_resume": {
+    "dark": "true",
+    "text_size": "1",
+    "church_id": "vsetsaritsa_nakhabino",
+    "stage_id": "cherubic_hymn",
+    "lyric_original": "true",
+    "lyric_track_cherubic_hymn": "cherubic_hymn:prayer:a13a9fa0b8935df001c5f791",
+    "lyric_line_cherubic_hymn:prayer:a13a9fa0b8935df001c5f791": "2",
+    "lyric_phrase_cherubic_hymn:prayer:a13a9fa0b8935df001c5f791": "cherubic_hymn:prayer:a13a9fa0b8935df001c5f791:cc502cb6cd857801c7b89288"
+  }
+}

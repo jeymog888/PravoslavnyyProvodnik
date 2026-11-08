@@ -1,0 +1,123 @@
+{
+  "head": "d9c52cc9c4f6c8fdda90d4f5b9a3706424eb7892",
+  "checked_at_utc": "2026-11-08T01:05:21.870895+00:00",
+  "result": "PASS",
+  "version": {
+    "applicationId": "ru.liturgyguide",
+    "versionCode": 4,
+    "versionName": "0.4.0-guide",
+    "settings_label": "Феория · 0.4"
+  },
+  "counts": {
+    "unit": {
+      "tests": 111,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "ui": {
+      "tests": 64,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "total_tests": 175,
+    "lint_errors": 0,
+    "lint_warnings": 13,
+    "new_lint_warnings": 0
+  },
+  "attempts": {
+    "quality_build": 1,
+    "full_connected_ui": 1,
+    "signed_release_build": 1,
+    "repeats": 0
+  },
+  "commands": {
+    "quality": "./gradlew --console=plain --rerun-tasks testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest",
+    "ui": "./gradlew --console=plain connectedDebugAndroidTest",
+    "signed_release": "python3 /private/tmp/feoria-release-v04.py",
+    "release_gradle": "./gradlew --console=plain --no-daemon assembleRelease"
+  },
+  "environment": {
+    "JAVA_HOME": "/private/tmp/liturgy-android-toolchain/jdk-17.0.21+9/Contents/Home",
+    "GRADLE_USER_HOME": "/private/tmp/liturgy-android-toolchain/gradle-home",
+    "ANDROID_HOME": "/private/tmp/liturgy-android-toolchain/sdk",
+    "ANDROID_USER_HOME": "/private/tmp/liturgy-android-toolchain/android-user",
+    "ANDROID_AVD_HOME": "/private/tmp/liturgy-android-toolchain/android-user/avd",
+    "ANDROID_SERIAL": "emulator-5554"
+  },
+  "evidence": {
+    "quality_log": "app/build/verification/v0.4/final-qa/quality-build.log",
+    "unit_xml_directory": "app/build/verification/v0.4/final-qa/unit/results",
+    "unit_reports": "app/build/verification/v0.4/final-qa/unit/reports",
+    "ui_xml": "app/build/verification/v0.4/final-qa/connected-attempt-1/results/debug/TEST-Liturgy_API_35(AVD) - 15-_app-.xml",
+    "ui_reports": "app/build/verification/v0.4/final-qa/connected-attempt-1/reports",
+    "ui_log": "app/build/verification/v0.4/final-qa/connected-attempt-1.log",
+    "source_test_inventory": "app/build/verification/v0.4/final-qa/source-test-inventory.json",
+    "lint_reports": "app/build/verification/v0.4/final-qa/lint",
+    "lint_baseline_comparison": "app/build/verification/v0.4/final-qa/lint/baseline-comparison.json",
+    "release_log": "app/build/verification/v0.4/final-qa/release.log",
+    "release_metadata": "app/build/verification/v0.4/final-qa/release/metadata.json",
+    "release_signature": "app/build/verification/v0.4/final-qa/release/signature.log"
+  },
+  "hashes": {
+    "sources_before": "app/build/verification/v0.4/final-qa/source-hashes-before.json",
+    "sources_after": "app/build/verification/v0.4/final-qa/source-hashes-after.json",
+    "source_and_build_files_checked": 67,
+    "all_sources_unchanged": true,
+    "includes_app_gradle_version_and_Settings": true,
+    "apks_before_ui": "app/build/verification/v0.4/final-qa/apk-hashes-before-ui.json",
+    "apks_final": "app/build/verification/v0.4/final-qa/apk-hashes-final.json",
+    "debug_and_test_apks_unchanged": true,
+    "v03_apk_and_script_preservation": "app/build/verification/v0.4/final-qa/v03-preservation-hashes.json"
+  },
+  "signed_release": {
+    "apk": "app/build/outputs/apk/release/app-release.apk",
+    "sha256": "6f0177583126e884b9a0be743f30a58f1c486bf5f2e423eadcb0eaa4d9cb1632",
+    "bytes": 10989558,
+    "debuggable": false,
+    "signature_verified": true,
+    "signer_certificate_sha256": "bb0ea3162b2129b7411ed3a15956c6f2065c685574c1caa24fb260e452ef5247",
+    "same_signer_as_v03": true,
+    "metadata_version_verified": true,
+    "existing_keystore_path": ".local/android/debug.keystore",
+    "signing_injected_by_environment_not_repository": true,
+    "release_script": "/private/tmp/feoria-release-v04.py",
+    "release_script_sha256": "9b06372a62daa580deaa2fd77917dce405016021bfae630b0fd97876b66792b3",
+    "v03_apk_and_script_preserved": true,
+    "installed_by_qa": false,
+    "published": false
+  },
+  "lint": {
+    "severity_counts": {
+      "Warning": 13
+    },
+    "issue_ids": {
+      "RedundantLabel": 1,
+      "GradleDependency": 8,
+      "DataExtractionRules": 1,
+      "ObsoleteSdkInt": 1,
+      "MonochromeLauncherIcon": 2
+    },
+    "identical_to_v03_baseline": true
+  },
+  "audit": {
+    "unit_and_ui_xml_cases_match_source_inventory_exactly": true,
+    "ui_filters_used": false,
+    "source_or_assertion_changes_by_qa": false,
+    "docs_touched_by_qa": false,
+    "commits_by_qa": false
+  },
+  "defects": [],
+  "ui_handoff": {
+    "device": "emulator-5554",
+    "command": "/private/tmp/liturgy-android-toolchain/sdk/platform-tools/adb -s emulator-5554 install -r app/build/outputs/apk/debug/app-debug.apk",
+    "exit_code": 0,
+    "result": "Success",
+    "log": "app/build/verification/v0.4/final-qa/install-debug-handoff.log",
+    "same_tested_debug_apk": true,
+    "emulator_left_running": true,
+    "handed_to": "root",
+    "signed_release_upgrade": "root-owned, pending independent 0.3 -> 0.4 verification"
+  }
+}

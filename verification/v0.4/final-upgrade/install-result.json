@@ -1,0 +1,23 @@
+{
+  "recorded_at_utc": "2026-11-08T01:06:37.914062+00:00",
+  "install_result": "Initial install succeeded. Verification resumed before first launch; installation not repeated.",
+  "before_package": [
+    "appId=10254",
+    "versionCode=3 minSdk=26 targetSdk=35",
+    "versionName=0.3.0-guide",
+    "lastUpdateTime=2026-11-08 04:04:55",
+    "firstInstallTime=2026-11-08 04:04:55"
+  ],
+  "after_package": [
+    "appId=10254",
+    "versionCode=4 minSdk=26 targetSdk=35",
+    "versionName=0.4.0-guide",
+    "lastUpdateTime=2026-11-08 04:05:55",
+    "firstInstallTime=2026-11-08 04:04:55"
+  ],
+  "preferences_identical_before_first_launch": true,
+  "installation_identity_preserved": true,
+  "apk_sha256": "6f0177583126e884b9a0be743f30a58f1c486bf5f2e423eadcb0eaa4d9cb1632",
+  "apk_bytes": 10989558,
+  "harness_note": "Initial assertion expected userId, but this Android 15 dumpsys exposes appId. Corrected field and verified the same already installed APK before its first launch; preferences, appId and firstInstallTime unchanged."
+}
