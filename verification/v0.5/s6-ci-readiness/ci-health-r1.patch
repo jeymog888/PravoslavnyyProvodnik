@@ -1,0 +1,534 @@
+diff --git a/.github/workflows/build.yml b/.github/workflows/build.yml
+--- a/.github/workflows/build.yml
++++ b/.github/workflows/build.yml
+@@ -61,7 +61,7 @@
+           # IME tests observe a visible software keyboard before verifying dismissal.
+           script: |
+             adb -s emulator-5554 shell settings put secure show_ime_with_hard_keyboard 1
+-            python3 scripts/ci/run_android_ui_tests.py --serial emulator-5554 --run-id "${{ github.run_id }}-${{ github.run_attempt }}" --out app/build/ci-diagnostics -- ./gradlew --no-daemon connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.feoriaCiDiagnostics=true -Pandroid.testInstrumentationRunnerArguments.feoriaCiDiagnosticsRun=${{ github.run_id }}-${{ github.run_attempt }}
++            python3 scripts/ci/run_android_ui_tests.py --recover-known-launcher-anr --serial emulator-5554 --run-id "${{ github.run_id }}-${{ github.run_attempt }}" --out app/build/ci-diagnostics -- ./gradlew --no-daemon connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.feoriaCiDiagnostics=true -Pandroid.testInstrumentationRunnerArguments.feoriaCiDiagnosticsRun=${{ github.run_id }}-${{ github.run_attempt }}
+ 
+       - name: Upload APK
+         uses: actions/upload-artifact@v4
+diff --git a/app/src/androidTest/java/ru/liturgyguide/ui/CiFailureDiagnostics.kt b/app/src/androidTest/java/ru/liturgyguide/ui/CiFailureDiagnostics.kt
+--- a/app/src/androidTest/java/ru/liturgyguide/ui/CiFailureDiagnostics.kt
++++ b/app/src/androidTest/java/ru/liturgyguide/ui/CiFailureDiagnostics.kt
+@@ -73,10 +73,12 @@
+             val arguments = InstrumentationRegistry.getArguments()
+             if (arguments.getString("feoriaCiDiagnostics") != "true" || !captured.compareAndSet(false, true)) return
+             val deadline = SystemClock.uptimeMillis() + 30_000L
++            val readDeadline = deadline - 3_000L // Reserve export time within the existing 30-second budget
+             val run = requireNotNull(arguments.getString("feoriaCiDiagnosticsRun"))
+             require(run.matches(Regex("[A-Za-z0-9_-]{1,100}")))
+             val instrumentation = InstrumentationRegistry.getInstrumentation()
+             val context = instrumentation.targetContext
++            require(context.packageName == "ru.liturgyguide")
+             val directory = File(requireNotNull(context.getExternalFilesDir("ci-diagnostics")),
+                 "$run/first-failure-${System.currentTimeMillis()}")
+             check(directory.mkdirs())
+@@ -100,13 +102,13 @@
+             fun collectAdditional(phase: CiEvidencePhase) {
+                 if (additionalEvidence == null) return
+                 val part = JSONObject().put("phase", phase.name).put("startedUptimeMillis", SystemClock.uptimeMillis())
+-                runCatching { additionalEvidence(directory, deadline, phase) }
++                runCatching { additionalEvidence(directory, readDeadline, phase) }
+                     .onSuccess { part.put("outcome", "FINISHED") }
+                     .onFailure { part.put("outcome", "ERROR").put("error", it.stackTraceToString()) }
+                 additional.put(part.put("finishedUptimeMillis", SystemClock.uptimeMillis()))
+             }
+             collectAdditional(CiEvidencePhase.BEFORE_SCREENSHOT)
+-            commands.put(read(directory, "screen.png", "screencap -p", deadline))
++            commands.put(read(directory, "screen.png", "screencap -p", readDeadline))
+             collectAdditional(CiEvidencePhase.AFTER_SCREENSHOT)
+             // No retries or UI mutations; every read shares the same pre-cleanup deadline.
+             val reads = listOf(
+@@ -121,16 +123,49 @@
+                 "show-ime.txt" to "settings get secure show_ime_with_hard_keyboard"
+             )
+             reads.forEach { (name, command) ->
+-                commands.put(read(directory, name, command, deadline))
++                commands.put(read(directory, name, command, readDeadline))
+             }
+             record.put("finishedUptimeMillis", SystemClock.uptimeMillis()).put("commands", commands)
+                 .put("additionalEvidence", additional)
+             File(directory, "capture.json").writeText(record.toString(2))
+             Log.e("FeoriaCiDiagnostics", "First failure evidence: ${directory.absolutePath}")
++            mirror(directory, run, deadline)
+         } catch (diagnosticFailure: Throwable) {
+             // A collection problem must not replace the failure that triggered this packet.
+             Log.e("FeoriaCiDiagnostics", "Could not finish first failure evidence", diagnosticFailure)
+         }
++    }
++
++    private fun mirror(directory: File, run: String, deadline: Long) {
++        // All shell inputs are validated paths we created, never a test label or Throwable.
++        require(run.matches(Regex("[A-Za-z0-9_-]{1,100}")))
++        require(directory.name.matches(Regex("first-failure-[0-9]+")))
++        val source = directory.absolutePath
++        require(source.matches(Regex("/storage/emulated/[0-9]+/Android/data/ru\\.liturgyguide/files/ci-diagnostics/$run/${directory.name}")))
++        val parent = "/data/local/tmp/feoria-ci-diagnostics/$run"
++        val destination = "$parent/${directory.name}"
++        val script = File(directory, "mirror.sh")
++        // A script file avoids passing shell quotes through executeShellCommand's command tokenizer.
++        script.writeText("""
++            #!/system/bin/sh
++            (
++                test -d "$parent" && test ! -e "$destination" &&
++                cp -R "$source" "$destination" &&
++                printf 'COMPLETE\n' > "$destination/.complete"
++                result=${'$'}?
++                printf 'MIRROR_EXIT=%s\n' "${'$'}result"
++                exit "${'$'}result"
++            ) > "$parent/${directory.name}.export.txt" 2>&1
++            result=${'$'}?
++            cat "$parent/${directory.name}.export.txt"
++            exit "${'$'}result"
++        """.trimIndent() + "\n")
++        val export = read(directory, "mirror-output.txt", "timeout 2 sh ${script.absolutePath}", deadline)
++        val complete = File(directory, "mirror-output.txt").takeIf { it.isFile }?.readText()
++            ?.lineSequence()?.any { it == "MIRROR_EXIT=0" } == true
++        export.put("complete", complete).put("destination", destination)
++        File(directory, "mirror-result.json").writeText(export.toString(2))
++        Log.e("FeoriaCiDiagnostics", "First failure mirror complete=$complete destination=$destination")
+     }
+ 
+     private fun read(directory: File, name: String, command: String, deadline: Long): JSONObject {
+diff --git a/scripts/ci/run_android_ui_tests.py b/scripts/ci/run_android_ui_tests.py
+--- a/scripts/ci/run_android_ui_tests.py
++++ b/scripts/ci/run_android_ui_tests.py
+@@ -1,5 +1,5 @@
+ #!/usr/bin/env python3
+-"""Read-only environment evidence around one UI-suite; keep its original exit code."""
++"""Gate one CI UI-suite on observed emulator readiness and preserve failure evidence."""
+ import argparse
+ import json
+ from pathlib import Path
+@@ -8,15 +8,145 @@
+ import sys
+ import time
+ 
+-
+-def main():
++HOME_PACKAGE = "com.google.android.apps.nexuslauncher"
++HOME_COMPONENT = HOME_PACKAGE + "/.NexusLauncherActivity"
++HOME_TITLES = {HOME_COMPONENT, HOME_PACKAGE + "/" + HOME_PACKAGE + ".NexusLauncherActivity"}
++ANR_TITLE = "Application Not Responding: " + HOME_PACKAGE
++DECOR = {("com.android.systemui", name) for name in (
++    "StatusBar", "NavigationBar0", "NavigationBar", "ScreenDecorOverlay", "ScreenDecorOverlayBottom",
++    "com.android.systemui.wallpapers.ImageWallpaper")}
++DECOR.add((HOME_PACKAGE, "Taskbar"))
++HEALTH_READS = (
++    ("boot", ("getprop", "sys.boot_completed")),
++    ("qemu", ("getprop", "ro.kernel.qemu")),
++    ("home", ("cmd", "package", "resolve-activity", "--brief", "-a", "android.intent.action.MAIN", "-c", "android.intent.category.HOME")),
++    ("power", ("dumpsys", "-t", "2", "power")),
++    ("windows", ("dumpsys", "-t", "2", "window", "windows")),
++    ("displays", ("dumpsys", "-t", "2", "window", "displays")),
++    ("policy", ("dumpsys", "-t", "2", "window", "policy")),
++)
++
++
++def readiness(data):
++    """API 35 CI-image format only. Missing/ambiguous evidence never grants readiness."""
++    try:
++        def unique(pattern, text):
++            values = re.findall(pattern, text, re.M)
++            if len(values) != 1:
++                raise ValueError("missing/ambiguous field: " + pattern)
++            return values[0]
++
++        if any(not isinstance(data.get(key), str) for key, _ in HEALTH_READS):
++            raise ValueError("health read failed")
++        home_lines = data["home"].strip().splitlines()
++        home = home_lines[-1] if home_lines else ""
++        if len(home_lines) > 2 or (len(home_lines) == 2 and not re.fullmatch(
++                r"priority=-?\d+ preferredOrder=-?\d+ match=0x[0-9a-f]+ specificIndex=-?\d+ isDefault=(?:true|false)", home_lines[0].strip())):
++            raise ValueError("unknown HOME resolver format")
++        if home != HOME_COMPONENT:
++            return {"verdict": "NOT_READY", "reason": "HOME resolver is not the known CI launcher"}
++        if data["boot"].strip() != "1" or data["qemu"].strip() != "1":
++            return {"verdict": "NOT_READY", "reason": "boot/emulator identity not ready"}
++        power = data["power"]
++        if (unique(r"^\s*mWakefulness=(\w+)\s*$", power) != "Awake" or
++                unique(r"^\s*mWakefulnessChanging=(true|false)\s*$", power) != "false" or
++                unique(r"^\s*mHalInteractiveModeEnabled=(true|false)\s*$", power) != "true"):
++            return {"verdict": "NOT_READY", "reason": "screen is not stably awake and interactive"}
++        keyguard = unique(r"^    KeyguardServiceDelegate\n((?:      .*\n)+)", data["policy"])
++        if unique(r"^      showing=(true|false)\s*$", keyguard) != "false":
++            return {"verdict": "NOT_READY", "reason": "keyguard showing"}
++        focus_lines = re.findall(r"^\s*mCurrentFocus=(.+)$", data["windows"] + "\n" + data["displays"], re.M)
++        focus = [re.fullmatch(r"Window\{(\S+) u(\d+) (.+)\}", value.strip()) for value in focus_lines]
++        if not focus or not all(focus) or len({match.groups() for match in focus}) != 1:
++            raise ValueError("missing/ambiguous current focus")
++        identity = focus[0].groups()
++        blocks = re.split(r"(?=^  Window #\d+ Window\{)", data["windows"], flags=re.M)[1:]
++        if not blocks:
++            raise ValueError("missing window inventory")
++        inventory = {}
++        for block in blocks:
++            header = unique(r"^  Window #\d+ Window\{(\S+) u(\d+) (.+)\}:$", block)
++            if header[:2] in inventory:
++                raise ValueError("duplicate window identity")
++            owner_line = unique(r"^[ \t]+mOwnerUid=[^\r\n]*$", block)
++            owner = re.fullmatch(r"[ \t]+mOwnerUid=(\d+) showForAllUsers=(?:true|false) package=([\w.]+) appop=\S+[ \t]*", owner_line)
++            visible_line = unique(r"^[ \t]+isOnScreen=[^\r\n]*$", block)
++            visible_match = re.fullmatch(r"[ \t]+isOnScreen=(true|false)[ \t]*", visible_line)
++            if owner is None or visible_match is None:
++                raise ValueError("unknown window owner/visibility format")
++            owner = owner.groups()
++            visible = visible_match[1] == "true"
++            inventory[header[:2]] = (header[2], owner[0], owner[1], visible)
++        focused = inventory.get(identity[:2])
++        if focused is None or focused[0] != identity[2] or not focused[3]:
++            raise ValueError("focus absent/not visible in inventory")
++        known_anr = focused[:3] == (ANR_TITLE, "1000", "android")
++        for title, uid, package, visible in inventory.values():
++            if not visible:
++                continue
++            allowed = (package, title) in DECOR or (package == HOME_PACKAGE and title in HOME_TITLES)
++            if known_anr and (title, uid, package) == (ANR_TITLE, "1000", "android"):
++                allowed = True
++            if not allowed:
++                return {"verdict": "NOT_READY", "reason": "unexpected visible window", "window": [package, title]}
++        if known_anr:
++            return {"verdict": "KNOWN_LAUNCHER_ANR", "reason": "visible focused Android-owned launcher ANR", "home": home}
++        if focused[2] == HOME_PACKAGE and focused[0] in HOME_TITLES:
++            return {"verdict": "READY", "reason": "awake unlocked normal HOME with known visible windows", "home": home}
++        return {"verdict": "NOT_READY", "reason": "normal HOME does not own focus"}
++    except (ValueError, IndexError, TypeError) as error:
++        return {"verdict": "UNKNOWN", "reason": str(error)}
++
++
++def prepare(args, read, snapshot, result, clock=time.monotonic):
++    # Original evidence is immutable and captured before the only optional recovery.
++    original = snapshot("preflight")
++    state = readiness(original)
++    result["readiness"] = [{"phase": "preflight", **state}]
++    deadline = clock() + 20
++    if state["verdict"] == "KNOWN_LAUNCHER_ANR" and args.recover_known_launcher_anr and args.serial == "emulator-5554" and original.get("screen_recorded") is True:
++        result["recovery_count"] = 1
++        for name, command in (
++                ("restart-launcher-stop", ("am", "force-stop", HOME_PACKAGE)),
++                ("restart-launcher-start", ("am", "start", "-W", "-a", "android.intent.action.MAIN", "-c", "android.intent.category.HOME", "-n", HOME_COMPONENT))):
++            if read(name, "shell", *command, timeout=5, deadline=deadline) is None:
++                result["environment_error"] = "launcher preparation command failed"
++                return False
++        post = readiness(snapshot("post-recovery", health_only=True, with_screen=True, deadline=deadline))
++        result["readiness"].append({"phase": "post-recovery", **post})
++        if post["verdict"] != "READY":
++            result["environment_error"] = "launcher restart did not produce observed readiness"
++            return False
++    elif state["verdict"] != "READY":
++        result["environment_error"] = "original preflight is not ready; no authorized known recovery"
++        return False
++    # Two fresh independent observations; no UI test retry or post-start recovery.
++    consecutive = 0
++    for index in range(1, 5):
++        if clock() >= deadline:
++            break
++        state = readiness(snapshot("readiness-" + str(index), health_only=True, deadline=deadline))
++        result["readiness"].append({"phase": "readiness-" + str(index), **state})
++        if state["verdict"] == "READY":
++            consecutive += 1
++            if consecutive == 2:
++                return True
++        else:
++            result["environment_error"] = "post-preparation environment is not ready"
++            return False
++    result["environment_error"] = "readiness preparation budget exhausted"
++    return False
++
++
++def main(argv=None):
+     parser = argparse.ArgumentParser(description=__doc__)
+     parser.add_argument("--adb", default="adb")
+     parser.add_argument("--serial", required=True)
+     parser.add_argument("--run-id", required=True)
+     parser.add_argument("--out", required=True, type=Path)
++    parser.add_argument("--recover-known-launcher-anr", action="store_true")
+     parser.add_argument("command", nargs=argparse.REMAINDER)
+-    args = parser.parse_args()
++    args = parser.parse_args(argv)
+     if not args.serial or args.serial.startswith("-") or not re.fullmatch(r"[A-Za-z0-9_-]{1,100}", args.run_id):
+         parser.error("explicit serial and safe run-id are required")
+     command = args.command[1:] if args.command[:1] == ["--"] else args.command
+@@ -25,40 +155,48 @@
+     args.out.mkdir(parents=True, exist_ok=False)
+     journal = []
+ 
+-    def read(name, *adb_args, timeout=5):
++    def read(name, *adb_args, timeout=5, deadline=None):
+         record = {"name": name, "argv": [args.adb, "-s", args.serial, *adb_args],
+                   "started_ns": time.time_ns(), "started_monotonic_ns": time.monotonic_ns()}
++        data = None
+         try:
+-            result = subprocess.run(record["argv"], capture_output=True, timeout=timeout)
+-            (args.out / (name + ".stdout")).write_bytes(result.stdout)
+-            (args.out / (name + ".stderr")).write_bytes(result.stderr)
+-            record.update(exit_code=result.returncode, stdout_bytes=len(result.stdout), stderr_bytes=len(result.stderr))
+-        except (OSError, subprocess.TimeoutExpired) as error:
++            if deadline is not None:
++                timeout = min(timeout, deadline - time.monotonic())
++            if timeout <= 0:
++                raise TimeoutError("preparation deadline exhausted")
++            completed = subprocess.run(record["argv"], capture_output=True, timeout=timeout)
++            (args.out / (name + ".stdout")).write_bytes(completed.stdout)
++            (args.out / (name + ".stderr")).write_bytes(completed.stderr)
++            record.update(exit_code=completed.returncode, stdout_bytes=len(completed.stdout), stderr_bytes=len(completed.stderr))
++            if completed.returncode == 0:
++                data = completed.stdout.decode(errors="replace")
++        except (OSError, subprocess.TimeoutExpired, TimeoutError) as error:
+             record["error"] = str(error)
+         record["finished_monotonic_ns"] = time.monotonic_ns()
+         journal.append(record)
+         (args.out / "commands.json").write_text(json.dumps(journal, indent=2) + "\n")
+-
+-    def snapshot(phase):
+-        # Observe without waking/unlocking/changing timeouts or retrying the test.
+-        for name, tail in (
+-            ("sdk", ("getprop", "ro.build.version.sdk")),
+-            ("fingerprint", ("getprop", "ro.build.fingerprint")),
+-            ("screen-off-timeout", ("settings", "get", "system", "screen_off_timeout")),
+-            ("stay-on", ("settings", "get", "global", "stay_on_while_plugged_in")),
+-            ("show-ime", ("settings", "get", "secure", "show_ime_with_hard_keyboard")),
+-            ("power", ("dumpsys", "-t", "2", "power")),
+-            ("windows", ("dumpsys", "-t", "2", "window", "windows")),
+-            ("displays", ("dumpsys", "-t", "2", "window", "displays")),
+-            ("policy", ("dumpsys", "-t", "2", "window", "policy")),
+-            ("activity", ("dumpsys", "-t", "2", "activity", "activities")),
+-            ("input-method", ("dumpsys", "-t", "2", "input_method")),
+-        ):
+-            read(phase + "-" + name, "shell", *tail)
+-        read(phase + "-screen.png", "exec-out", "screencap", "-p")
+-        source = args.out / (phase + "-screen.png.stdout")
+-        if source.exists() and source.read_bytes().startswith(b"\x89PNG\r\n\x1a\n"):
+-            source.rename(args.out / (phase + "-screen.png"))
++        return data
++
++    def snapshot(phase, health_only=False, with_screen=False, deadline=None):
++        data = {name: read(phase + "-" + name, "shell", *tail, deadline=deadline) for name, tail in HEALTH_READS}
++        if not health_only:
++            for name, tail in (
++                ("sdk", ("getprop", "ro.build.version.sdk")),
++                ("fingerprint", ("getprop", "ro.build.fingerprint")),
++                ("screen-off-timeout", ("settings", "get", "system", "screen_off_timeout")),
++                ("stay-on", ("settings", "get", "global", "stay_on_while_plugged_in")),
++                ("show-ime", ("settings", "get", "secure", "show_ime_with_hard_keyboard")),
++                ("activity", ("dumpsys", "-t", "2", "activity", "activities")),
++                ("input-method", ("dumpsys", "-t", "2", "input_method")),
++            ):
++                read(phase + "-" + name, "shell", *tail, deadline=deadline)
++        if not health_only or with_screen:
++            read(phase + "-screen.png", "exec-out", "screencap", "-p", deadline=deadline)
++            source = args.out / (phase + "-screen.png.stdout")
++            if source.exists() and source.read_bytes().startswith(b"\x89PNG\r\n\x1a\n"):
++                source.rename(args.out / (phase + "-screen.png"))
++                data["screen_recorded"] = True
++        return data
+ 
+     def best_effort(label, operation):
+         try:
+@@ -66,18 +204,30 @@
+         except Exception as error:
+             print(f"CI diagnostics {label} failed: {error}", file=sys.stderr, flush=True)
+ 
+-    best_effort("preflight", lambda: snapshot("preflight"))
+     result = {"serial": args.serial, "run_id": args.run_id, "command": command,
+-              "started_ns": time.time_ns(), "diagnostics": "observations only, not a readiness PASS or a root-cause fix"}
+-    exit_code = 2
++              "started_ns": time.time_ns(), "tests_started": False, "test_exit_code": None,
++              "recovery_count": 0, "environment": "NOT_READY"}
++    exit_code = 3
++    mirror = "/data/local/tmp/feoria-ci-diagnostics/" + args.run_id
+     try:
+-        exit_code = subprocess.run(command).returncode
+-        result["test_exit_code"] = exit_code
+-    except OSError as error:
+-        result["launch_error"] = str(error)
++        if prepare(args, read, snapshot, result):
++            # mkdir without -p for this run prevents reusing/overwriting another run's evidence.
++            created = read("prepare-mirror", "shell", "mkdir -p /data/local/tmp/feoria-ci-diagnostics && mkdir " + mirror)
++            if created is None:
++                result["environment_error"] = "could not create a unique shell-owned evidence directory"
++            else:
++                result["environment"] = "READY"
++                result["test_command_attempted"] = True
++                exit_code = subprocess.run(command).returncode
++                result["tests_started"] = True
++                result["test_exit_code"] = exit_code
++    except Exception as error:
++        result["wrapper_error"] = str(error)
+     finally:
+-        # This must run inside emulator-runner's script, before it kills the emulator.
++        # Before emulator-runner stops the device; late diagnostics cannot replace the test exit.
+         best_effort("after-suite", lambda: snapshot("after-suite"))
++        best_effort("pull-first-failure-mirror", lambda: read("pull-first-failure-mirror", "pull", mirror,
++             str(args.out / "first-failure-mirror"), timeout=20))
+         best_effort("pull-first-failure", lambda: read("pull-first-failure", "pull",
+              "/sdcard/Android/data/ru.liturgyguide/files/ci-diagnostics/" + args.run_id,
+              str(args.out / "first-failure"), timeout=20))
+diff --git a/scripts/ci/test_run_android_ui_tests.py b/scripts/ci/test_run_android_ui_tests.py
+new file mode 100644
+--- /dev/null
++++ b/scripts/ci/test_run_android_ui_tests.py
+@@ -0,0 +1,160 @@
++#!/usr/bin/env python3
++"""Host-only negative controls. No adb/emulator/Gradle is executed."""
++import copy
++import importlib.util
++import json
++from pathlib import Path
++import subprocess
++import tempfile
++import unittest
++from unittest.mock import patch
++
++spec = importlib.util.spec_from_file_location("ci", Path(__file__).with_name("run_android_ui_tests.py"))
++ci = importlib.util.module_from_spec(spec)
++spec.loader.exec_module(ci)
++
++
++def window(token, title, owner, uid=10179, visible=True):
++    return (f"  Window #0 Window{{{token} u0 {title}}}:\n"
++            f"    mOwnerUid={uid} showForAllUsers=false package={owner} appop=NONE\n"
++            f"    isOnScreen={str(visible).lower()}\n")
++
++
++def fixture(anr=False):
++    title = ci.HOME_PACKAGE + "/" + ci.HOME_PACKAGE + ".NexusLauncherActivity"
++    data = {"boot": "1", "qemu": "1", "home": ci.HOME_COMPONENT,
++            "power": "  mWakefulness=Awake\n  mWakefulnessChanging=false\n  mHalInteractiveModeEnabled=true\n",
++            "policy": "    KeyguardServiceDelegate\n      showing=false\n      inputRestricted=false\n",
++            "windows": window("home", title, ci.HOME_PACKAGE),
++            "displays": f"  mCurrentFocus=Window{{home u0 {title}}}\n"}
++    if anr:
++        data["windows"] += window("anr", ci.ANR_TITLE, "android", 1000)
++        data["displays"] = f"  mCurrentFocus=Window{{anr u0 {ci.ANR_TITLE}}}\n"
++    return data
++
++
++class ParserChecks(unittest.TestCase):
++    def test_ready(self):
++        self.assertEqual(ci.readiness(fixture())["verdict"], "READY")
++
++    def test_known_anr(self):
++        self.assertEqual(ci.readiness(fixture(True))["verdict"], "KNOWN_LAUNCHER_ANR")
++
++    def test_missing_any_required_read_fails(self):
++        for key, _ in ci.HEALTH_READS:
++            data = fixture(); data[key] = None
++            self.assertEqual(ci.readiness(data)["verdict"], "UNKNOWN", key)
++
++    def test_ambiguous_or_null_focus(self):
++        for focus in ["  mCurrentFocus=null\n", fixture()["displays"] + "  mCurrentFocus=Window{other u0 other}\n"]:
++            data = fixture(); data["displays"] = focus
++            self.assertEqual(ci.readiness(data)["verdict"], "UNKNOWN")
++
++    def test_hidden_or_wrong_owner_anr_never_recovers(self):
++        for value in ["android.fake", ci.HOME_PACKAGE]:
++            data = fixture(True); data["windows"] = data["windows"].replace("package=android ", "package=" + value + " ")
++            self.assertNotEqual(ci.readiness(data)["verdict"], "KNOWN_LAUNCHER_ANR")
++        data = fixture(True); data["windows"] = data["windows"].replace("mOwnerUid=1000 ", "mOwnerUid=1001 ")
++        self.assertNotEqual(ci.readiness(data)["verdict"], "KNOWN_LAUNCHER_ANR")
++        data = fixture(True); data["windows"] = data["windows"].rsplit("isOnScreen=true", 1)[0] + "isOnScreen=false\n"
++        self.assertEqual(ci.readiness(data)["verdict"], "UNKNOWN")
++
++    def test_other_anr_overlay_and_owner_unknown(self):
++        for title in ["Application Not Responding: ru.liturgyguide", "Application Error: " + ci.HOME_PACKAGE, "Permission dialog"]:
++            data = fixture(True)
++            for key in ["windows", "displays"]: data[key] = data[key].replace(ci.ANR_TITLE, title)
++            self.assertEqual(ci.readiness(data)["verdict"], "NOT_READY")
++        data = fixture(); data["windows"] += window("overlay", "Overlay", "com.example")
++        self.assertEqual(ci.readiness(data)["verdict"], "NOT_READY")
++
++    def test_sleep_keyguard_and_bad_resolver_fail(self):
++        for key, value in [("boot", "0"), ("qemu", "0"), ("home", "com.other/.Home"),
++                           ("power", fixture()["power"].replace("Awake", "Asleep")),
++                           ("policy", fixture()["policy"].replace("showing=false", "showing=true"))]:
++            data = fixture(); data[key] = value
++            self.assertNotEqual(ci.readiness(data)["verdict"], "READY", key)
++
++    def test_unknown_visibility_or_duplicate_inventory_fails(self):
++        for windows in [fixture()["windows"].replace("isOnScreen=true", "isOnScreen=unknown"), fixture()["windows"] * 2,
++                        fixture()["windows"] + "    isOnScreen=unknown\n",
++                        fixture()["windows"] + "    mOwnerUid=unexpected-format\n"]:
++            data = fixture(); data["windows"] = windows
++            self.assertEqual(ci.readiness(data)["verdict"], "UNKNOWN")
++
++
++class WrapperChecks(unittest.TestCase):
++    def run_fake(self, states, exit_code=0, recovery=True, failed_command=None, serial="emulator-5554", png=True):
++        calls = []
++        health_index = -1
++        state = None
++        health_tails = {tail: name for name, tail in ci.HEALTH_READS}
++        def fake_run(argv, **kwargs):
++            nonlocal health_index, state
++            calls.append(argv)
++            if argv == ["test-suite"]:
++                return subprocess.CompletedProcess(argv, exit_code)
++            self.assertEqual(argv[:3], ["fake-adb", "-s", serial])
++            tail = tuple(argv[4:]) if argv[3] == "shell" else ()
++            if tail == ci.HEALTH_READS[0][1]:
++                health_index += 1
++                state = states[min(health_index, len(states) - 1)]
++            if tail in health_tails:
++                output = state[health_tails[tail]].encode()
++            elif argv[3:] == ["exec-out", "screencap", "-p"]:
++                output = b"\x89PNG\r\n\x1a\nfixture" if png else b"not a png"
++            else:
++                output = b""
++            return subprocess.CompletedProcess(argv, 1 if failed_command and failed_command in " ".join(argv) else 0, output, b"")
++        with tempfile.TemporaryDirectory() as temp:
++            out = Path(temp) / "evidence"
++            argv = ["--adb", "fake-adb", "--serial", serial, "--run-id", "123-1", "--out", str(out)]
++            if recovery: argv.append("--recover-known-launcher-anr")
++            with patch.object(ci.subprocess, "run", fake_run):
++                code = ci.main(argv + ["--", "test-suite"])
++            result = json.loads((out / "suite-result.json").read_text())
++            journal = json.loads((out / "commands.json").read_text())
++            self.assertTrue(journal)
++            self.assertTrue(any(x[3:4] == ["pull"] for x in calls))
++            return code, result, calls
++
++    def test_ready_launches_once_and_keeps_nonzero_exit(self):
++        code, result, calls = self.run_fake([fixture()], exit_code=17)
++        self.assertEqual(code, 17); self.assertEqual(result["test_exit_code"], 17)
++        self.assertEqual(calls.count(["test-suite"]), 1); self.assertEqual(result["recovery_count"], 0)
++
++    def test_known_anr_restarts_once_then_launches_once(self):
++        code, result, calls = self.run_fake([fixture(True), fixture()])
++        self.assertEqual(code, 0); self.assertEqual(result["recovery_count"], 1)
++        self.assertEqual(sum("force-stop" in x for x in calls), 1)
++        self.assertEqual(calls.count(["test-suite"]), 1)
++
++    def test_repeated_anr_does_not_launch_or_restart_twice(self):
++        code, result, calls = self.run_fake([fixture(True)])
++        self.assertEqual(code, 3); self.assertFalse(result["tests_started"])
++        self.assertIsNone(result["test_exit_code"]); self.assertEqual(sum("force-stop" in x for x in calls), 1)
++        self.assertNotIn(["test-suite"], calls)
++
++    def test_unknown_anr_no_recovery_or_suite(self):
++        data = fixture(True)
++        for key in ["windows", "displays"]: data[key] = data[key].replace(ci.ANR_TITLE, "Application Not Responding: ru.liturgyguide")
++        _, result, calls = self.run_fake([data])
++        self.assertEqual(result["recovery_count"], 0); self.assertNotIn(["test-suite"], calls)
++
++    def test_recovery_needs_opt_in_device_and_original_png(self):
++        for kwargs in [{"recovery": False}, {"serial": "emulator-5556"}, {"png": False}]:
++            _, result, calls = self.run_fake([fixture(True), fixture()], **kwargs)
++            self.assertEqual(result["recovery_count"], 0); self.assertNotIn(["test-suite"], calls)
++
++    def test_failed_restart_or_existing_mirror_prevents_suite(self):
++        for failed in ["force-stop", "am start", "mkdir"]:
++            _, result, calls = self.run_fake([fixture(True), fixture()], failed_command=failed)
++            self.assertFalse(result["tests_started"]); self.assertNotIn(["test-suite"], calls)
++
++    def test_readiness_lost_before_second_read_prevents_suite(self):
++        _, result, calls = self.run_fake([fixture(), fixture(), fixture(True)])
++        self.assertFalse(result["tests_started"]); self.assertEqual(result["recovery_count"], 0)
++        self.assertNotIn(["test-suite"], calls)
++
++
++if __name__ == "__main__":
++    unittest.main()

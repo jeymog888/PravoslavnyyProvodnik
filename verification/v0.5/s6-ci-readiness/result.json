@@ -1,0 +1,24 @@
+{
+  "patch": "/private/tmp/feoria-ci-health-v05/ci-health.patch",
+  "sha256": "96715d745f9b0ad4e89e94d9a426481f537575c182bd415c1f9d1203e8b70dda",
+  "files": [
+    ".github/workflows/build.yml",
+    "app/src/androidTest/java/ru/liturgyguide/ui/CiFailureDiagnostics.kt",
+    "scripts/ci/run_android_ui_tests.py",
+    "scripts/ci/test_run_android_ui_tests.py"
+  ],
+  "host_tests": 19,
+  "real_window_fixtures": 4,
+  "real_boot_transition_controls": 4,
+  "missing_metadata_controls": 6,
+  "shell_mirror_controls": 3,
+  "repo_changed": false,
+  "adb_invoked": false,
+  "gradle_invoked": false,
+  "needs": [
+    "root review of BOOT_TRANSITION delta",
+    "independent Astra review of delta",
+    "androidTest compile by root",
+    "one exact-commit CI with artifact review"
+  ]
+}

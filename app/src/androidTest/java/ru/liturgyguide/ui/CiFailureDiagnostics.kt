@@ -73,10 +73,12 @@ private object CiFailureDiagnostics {
             val arguments = InstrumentationRegistry.getArguments()
             if (arguments.getString("feoriaCiDiagnostics") != "true" || !captured.compareAndSet(false, true)) return
             val deadline = SystemClock.uptimeMillis() + 30_000L
+            val readDeadline = deadline - 3_000L // Reserve export time within the existing 30-second budget
             val run = requireNotNull(arguments.getString("feoriaCiDiagnosticsRun"))
             require(run.matches(Regex("[A-Za-z0-9_-]{1,100}")))
             val instrumentation = InstrumentationRegistry.getInstrumentation()
             val context = instrumentation.targetContext
+            require(context.packageName == "ru.liturgyguide")
             val directory = File(requireNotNull(context.getExternalFilesDir("ci-diagnostics")),
                 "$run/first-failure-${System.currentTimeMillis()}")
             check(directory.mkdirs())
@@ -100,13 +102,13 @@ private object CiFailureDiagnostics {
             fun collectAdditional(phase: CiEvidencePhase) {
                 if (additionalEvidence == null) return
                 val part = JSONObject().put("phase", phase.name).put("startedUptimeMillis", SystemClock.uptimeMillis())
-                runCatching { additionalEvidence(directory, deadline, phase) }
+                runCatching { additionalEvidence(directory, readDeadline, phase) }
                     .onSuccess { part.put("outcome", "FINISHED") }
                     .onFailure { part.put("outcome", "ERROR").put("error", it.stackTraceToString()) }
                 additional.put(part.put("finishedUptimeMillis", SystemClock.uptimeMillis()))
             }
             collectAdditional(CiEvidencePhase.BEFORE_SCREENSHOT)
-            commands.put(read(directory, "screen.png", "screencap -p", deadline))
+            commands.put(read(directory, "screen.png", "screencap -p", readDeadline))
             collectAdditional(CiEvidencePhase.AFTER_SCREENSHOT)
             // No retries or UI mutations; every read shares the same pre-cleanup deadline.
             val reads = listOf(
@@ -121,16 +123,49 @@ private object CiFailureDiagnostics {
                 "show-ime.txt" to "settings get secure show_ime_with_hard_keyboard"
             )
             reads.forEach { (name, command) ->
-                commands.put(read(directory, name, command, deadline))
+                commands.put(read(directory, name, command, readDeadline))
             }
             record.put("finishedUptimeMillis", SystemClock.uptimeMillis()).put("commands", commands)
                 .put("additionalEvidence", additional)
             File(directory, "capture.json").writeText(record.toString(2))
             Log.e("FeoriaCiDiagnostics", "First failure evidence: ${directory.absolutePath}")
+            mirror(directory, run, deadline)
         } catch (diagnosticFailure: Throwable) {
             // A collection problem must not replace the failure that triggered this packet.
             Log.e("FeoriaCiDiagnostics", "Could not finish first failure evidence", diagnosticFailure)
         }
+    }
+
+    private fun mirror(directory: File, run: String, deadline: Long) {
+        // All shell inputs are validated paths we created, never a test label or Throwable.
+        require(run.matches(Regex("[A-Za-z0-9_-]{1,100}")))
+        require(directory.name.matches(Regex("first-failure-[0-9]+")))
+        val source = directory.absolutePath
+        require(source.matches(Regex("/storage/emulated/[0-9]+/Android/data/ru\\.liturgyguide/files/ci-diagnostics/$run/${directory.name}")))
+        val parent = "/data/local/tmp/feoria-ci-diagnostics/$run"
+        val destination = "$parent/${directory.name}"
+        val script = File(directory, "mirror.sh")
+        // A script file avoids passing shell quotes through executeShellCommand's command tokenizer.
+        script.writeText("""
+            #!/system/bin/sh
+            (
+                test -d "$parent" && test ! -e "$destination" &&
+                cp -R "$source" "$destination" &&
+                printf 'COMPLETE\n' > "$destination/.complete"
+                result=${'$'}?
+                printf 'MIRROR_EXIT=%s\n' "${'$'}result"
+                exit "${'$'}result"
+            ) > "$parent/${directory.name}.export.txt" 2>&1
+            result=${'$'}?
+            cat "$parent/${directory.name}.export.txt"
+            exit "${'$'}result"
+        """.trimIndent() + "\n")
+        val export = read(directory, "mirror-output.txt", "timeout 2 sh ${script.absolutePath}", deadline)
+        val complete = File(directory, "mirror-output.txt").takeIf { it.isFile }?.readText()
+            ?.lineSequence()?.any { it == "MIRROR_EXIT=0" } == true
+        export.put("complete", complete).put("destination", destination)
+        File(directory, "mirror-result.json").writeText(export.toString(2))
+        Log.e("FeoriaCiDiagnostics", "First failure mirror complete=$complete destination=$destination")
     }
 
     private fun read(directory: File, name: String, command: String, deadline: Long): JSONObject {

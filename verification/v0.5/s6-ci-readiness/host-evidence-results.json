@@ -1,0 +1,131 @@
+{
+  "real_window_fixture_checks": [
+    {
+      "phase": "preflight",
+      "result": {
+        "verdict": "KNOWN_LAUNCHER_ANR",
+        "reason": "visible focused Android-owned launcher ANR",
+        "home": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity"
+      },
+      "sha256": {
+        "windows": "2be6e5fcb96cbb42b296d3d745bbabf02df9a6842ce3180d9b7f98993dcf48ee",
+        "displays": "7dfdc4af5636a2ba60ab9a7b817dd98bcc94e57d1a1bf55ab9acd4a878f2e08a",
+        "power": "e68e8b91cd815152d950145f85658e2d161b27ed7c250ef0ff4173daffb2987a",
+        "policy": "bd5ffe4d759cd78fa39ccdcdfa024d825b951ee8961488fe7902b16abc26a713"
+      },
+      "synthetic_metadata": [
+        "boot",
+        "qemu",
+        "home"
+      ]
+    },
+    {
+      "phase": "after-suite",
+      "result": {
+        "verdict": "KNOWN_LAUNCHER_ANR",
+        "reason": "visible focused Android-owned launcher ANR",
+        "home": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity"
+      },
+      "sha256": {
+        "windows": "6eb14c1f56cd8c68a4da3cb496d3d4449a6b9a0a7c9c68d2bebba43d55cb0204",
+        "displays": "8ebfc052d1a843c4c6368488f07ebf420dfd36365604cf32627d29b494466f65",
+        "power": "765da41198591b6cd8e8058b05c66759286ac8c0767817a7c5a86cd0253bb053",
+        "policy": "f0cfc7070200c8c043644daa874a4e727c7063729c4ae95df75c40918d911f65"
+      },
+      "synthetic_metadata": [
+        "boot",
+        "qemu",
+        "home"
+      ]
+    },
+    {
+      "phase": "green-preflight",
+      "result": {
+        "verdict": "BOOT_TRANSITION",
+        "reason": "visible focused Settings FallbackHome; not normal HOME",
+        "home": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity"
+      },
+      "sha256": {
+        "windows": "6bca93017d93039121da8f4ce6dc02a8ca6d651c0043e9504ffd9be6b017413d",
+        "displays": "39c0bc6ab66f30f7bd7431f747b5c65d24f5456f1868aad54e0b455f502f2af7",
+        "power": "bb25e45d8398a96838960854d53c47e54d933a591bddc3282f4d3e37d66aa59d",
+        "policy": "ff8f90a9e8b3515089d090b8db7f5ca3fa71b4462cf9dde11e9d07dbaf6903cb"
+      },
+      "synthetic_metadata": [
+        "boot",
+        "qemu",
+        "home"
+      ]
+    },
+    {
+      "phase": "green-after-suite",
+      "result": {
+        "verdict": "READY",
+        "reason": "awake unlocked normal HOME with known visible windows",
+        "home": "com.google.android.apps.nexuslauncher/.NexusLauncherActivity"
+      },
+      "sha256": {
+        "windows": "f3a3ac6433532be75cf7f5b4e4500feb67ef153be746ef669693faf4b77316a2",
+        "displays": "4a1b7d008b0b24b36cdc460f1421e0240ad1423fc7a5036531ee60ce8bb85ffe",
+        "power": "d6739b8ce40242cf11e855d4e6e0d7ff0bb7e384fd9c17b475d7b6c45bd0bfbb",
+        "policy": "ff8f90a9e8b3515089d090b8db7f5ca3fa71b4462cf9dde11e9d07dbaf6903cb"
+      },
+      "synthetic_metadata": [
+        "boot",
+        "qemu",
+        "home"
+      ]
+    }
+  ],
+  "shell_mirror_checks": [
+    {
+      "case": "success",
+      "exit_code": 0,
+      "complete_marker": true,
+      "export_log_retained": true,
+      "status": "PASS"
+    },
+    {
+      "case": "collision",
+      "exit_code": 1,
+      "complete_marker": false,
+      "export_log_retained": true,
+      "status": "PASS"
+    },
+    {
+      "case": "copy-failure",
+      "exit_code": 1,
+      "complete_marker": false,
+      "export_log_retained": true,
+      "status": "PASS"
+    }
+  ],
+  "limits": "Host controls only; no Android shell, adb, Gradle, or instrumentation executed",
+  "real_boot_transition_controls": [
+    {
+      "case": "real-green-preflight-to-real-green-after-suite",
+      "status": "PASS",
+      "test_calls": 1,
+      "recovery_count": 0
+    },
+    {
+      "case": "real-green-FallbackHome-stuck",
+      "status": "PASS",
+      "test_calls": 0,
+      "recovery_count": 0,
+      "reason": "readiness preparation budget exhausted"
+    },
+    {
+      "case": "real-green-FallbackHome-to-ANR",
+      "status": "PASS",
+      "test_calls": 0,
+      "recovery_count": 0
+    },
+    {
+      "case": "real-green-FallbackHome-to-UNKNOWN",
+      "status": "PASS",
+      "test_calls": 0,
+      "recovery_count": 0
+    }
+  ]
+}
