@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="ru.liturgyguide.ui.MainContextTest" tests="27" failures="0" errors="0" skipped="0" time="60.442" timestamp="2026-11-08T12:50:23" hostname="localhost">
+  <properties>
+    <property name="device" value="Liturgy_API_35(AVD) - 15" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="anOldReadingKeepsTheCurrentServicePrimaryAndCanStillBeOpened" classname="ru.liturgyguide.ui.MainContextTest" time="3.116" />
+  <testcase name="mainDateUpdatesWhileTheScreenStaysOpen" classname="ru.liturgyguide.ui.DateRolloverTest" time="2.332" />
+  <testcase name="scheduleKeepsTodayAndTomorrowRelativeAcrossTheMonthBoundary" classname="ru.liturgyguide.ui.DateRolloverTest" time="1.824" />
+  <testcase name="publishedFractionalSecondsAreNotSilentlyRounded" classname="ru.liturgyguide.ui.MainScheduleOverviewTest" time="1.597" />
+  <testcase name="evenARecentSavedReadingNeverMasksCurrentOrNextService" classname="ru.liturgyguide.ui.MainScheduleOverviewTest" time="2.016" />
+  <testcase name="eachServiceButtonRetainsItsExactOccurrence" classname="ru.liturgyguide.ui.MainScheduleOverviewTest" time="1.767" />
+  <testcase name="unknownScheduleKeepsManualReadingAndTempleSelectionAvailable" classname="ru.liturgyguide.ui.MainScheduleOverviewTest" time="1.72" />
+  <testcase name="aFuturePersonalStartShowsItsYearAndTheParishTimeZone" classname="ru.liturgyguide.ui.MainScheduleOverviewTest" time="1.44" />
+  <testcase name="informationOnlyCardsRemainVisibleWhenOpeningIsUnavailable" classname="ru.liturgyguide.ui.MainScheduleOverviewTest" time="1.876" />
+  <testcase name="foreignOrCorruptContextRestoredInServiceRequiresANewExplicitChoice" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="1.904" />
+  <testcase name="explicitlyStartingAgainUsesTodayInsteadOfThePreviouslyOpenedFutureDate" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="1.694" />
+  <testcase name="watchingRecalculatesTheStageAtTheClickAndOpensTextPaused" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="1.706" />
+  <testcase name="aPersonalStartOpensItsOwnEstimateAndIsRecordedAsPersonal" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="1.581" />
+  <testcase name="resumingALegacyBookmarkPinsItsOriginalAnchorDateWithoutClearingThePhrase" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="2.01" />
+  <testcase name="anExpiredClickDoesNotReplaceOrClearTheSavedReading" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="1.449" />
+  <testcase name="aNextServiceBecomesCurrentBetweenDisplayAndClickWithoutSwitchingOccurrence" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="1.925" />
+  <testcase name="restorationStraightIntoLegacyServicePinsTheAnchorDateBeforeAnyCorrection" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="2.123" />
+  <testcase name="tomorrowsReadingKeepsItsDateAcrossCorrectionMidnightAndRestoration" classname="ru.liturgyguide.ui.ArrivalFlowTest" time="2.261" />
+  <testcase name="correctionSearchAcceptsTheMatchingPhraseAndPreservesOtherBookmarks" classname="ru.liturgyguide.ui.ManualMomentFlowTest" time="3.333" />
+  <testcase name="savedReadingNoticeUsesCorrectionAndDoesNotRewriteAnInactiveSession" classname="ru.liturgyguide.ui.ManualMomentFlowTest" time="1.938" />
+  <testcase name="allFiveLandmarksWithoutAScheduleOpenTheExpectedTextAndPhraseAfterVerification" classname="ru.liturgyguide.ui.ManualMomentFlowTest" time="3.087" />
+  <testcase name="acceptingACorrectionOpensTextAtTheLandmarkAndPreservesOtherBookmarks" classname="ru.liturgyguide.ui.ManualMomentFlowTest" time="1.819" />
+  <testcase name="correctionCancelRestoresMeaningAndANonInitialPhraseAcrossAllThreeScreens" classname="ru.liturgyguide.ui.ManualMomentFlowTest" time="3.291" />
+  <testcase name="choosingAnotherLandmarkShowsItsNewCueBeforeConfirmation" classname="ru.liturgyguide.ui.ManualMomentFlowTest" time="1.7" />
+  <testcase name="activeStageTimerStopsAtTheDisplayedStageAndDoesNotCrossItsBoundaryDuringCorrection" classname="ru.liturgyguide.ui.ManualMomentFlowTest" time="2.566" />
+  <testcase name="aFreshManualEntryResetsSearchListeningAndScrollButBackPreservesThem" classname="ru.liturgyguide.ui.ManualMomentFlowTest" time="3.916" />
+  <testcase name="correctionStopsPhraseScrollingAndCancelKeepsThePausedPhrase" classname="ru.liturgyguide.ui.ManualMomentFlowTest" time="2.655" />
+</testsuite>

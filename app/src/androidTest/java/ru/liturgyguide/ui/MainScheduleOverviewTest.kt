@@ -32,9 +32,8 @@ class MainScheduleOverviewTest {
 
     @Test fun eachServiceButtonRetainsItsExactOccurrence() {
         val opened = mutableListOf<ContextSuggestion>()
-        var legacyJoins = 0
         compose.setContent { GuideTheme(false) { MainScreen(null, today, onStart = {}, onResume = {}, onFindStage = {},
-            church = parish, onChurch = {}, suggestion = next, onJoinService = { legacyJoins++ }, onOrder = {}, bottomBar = {},
+            church = parish, onChurch = {}, onOrder = {}, bottomBar = {},
             overview = ScheduleOverview(current, next), onOpenService = { opened += it }) } }
         scrollTo("service_status_current")
         compose.onNodeWithTag("service_status_current").assertTextEquals("Возможно, уже идет")
@@ -45,7 +44,6 @@ class MainScheduleOverviewTest {
         compose.runOnIdle {
             assertEquals(2, opened.size)
             assertSame(current, opened[0]); assertSame(next, opened[1])
-            assertEquals(0, legacyJoins)
         }
         compose.onNodeWithTag("join_service").assertDoesNotExist()
     }
@@ -54,9 +52,9 @@ class MainScheduleOverviewTest {
         val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext)
         val stage = requireNotNull(container.getStageMatcher().getStageById("creed"))
         var resumed = 0
-        compose.setContent { GuideTheme(false) { MainScreen(stage, today, savedEarlier = false,
+        compose.setContent { GuideTheme(false) { MainScreen(stage, today,
             onStart = {}, onResume = { resumed++ }, onFindStage = {}, church = parish, onChurch = {},
-            suggestion = current, onJoinService = {}, onOrder = {}, bottomBar = {},
+            onOrder = {}, bottomBar = {},
             overview = ScheduleOverview(current, next), onOpenService = {}) } }
         scrollTo("service_card_current")
         compose.onNodeWithText("Ранняя литургия").assertIsDisplayed()
@@ -75,8 +73,8 @@ class MainScheduleOverviewTest {
             ServiceRelation.Upcoming, Instant.parse("2026-12-31T14:30:00Z"), source = ServiceStartSource.USER,
             parishId = trip.id, timezone = trip.timezone)
         compose.setContent { GuideTheme(false) { MainScreen(null, LocalDate.of(2026, 12, 31),
-            onStart = {}, onResume = {}, onFindStage = {}, church = trip, onChurch = {}, suggestion = null,
-            onJoinService = {}, onOrder = {}, bottomBar = {}, overview = ScheduleOverview(nextKnownService = personal),
+            onStart = {}, onResume = {}, onFindStage = {}, church = trip, onChurch = {},
+            onOrder = {}, bottomBar = {}, overview = ScheduleOverview(nextKnownService = personal),
             onOpenService = {}) } }
         scrollTo("service_start_next")
         compose.onNodeWithTag("service_start_next").assertTextEquals("1 января 2027 · 00:30")
@@ -91,8 +89,8 @@ class MainScheduleOverviewTest {
     @Test fun unknownScheduleKeepsManualReadingAndTempleSelectionAvailable() {
         var chosen = 0; var found = 0; var ordered = 0; var started = 0
         compose.setContent { GuideTheme(false) { MainScreen(null, today, onStart = { started++ }, onResume = {},
-            onFindStage = { found++ }, church = parish, onChurch = { chosen++ }, suggestion = current,
-            onJoinService = { fail("Legacy suggestion must not leak into an empty overview") }, onOrder = { ordered++ },
+            onFindStage = { found++ }, church = parish, onChurch = { chosen++ },
+            onOrder = { ordered++ },
             bottomBar = {}, overview = ScheduleOverview(), onOpenService = { fail("Unknown service cannot be opened") }) } }
         scrollTo("open_church"); compose.onNodeWithTag("open_church").performClick()
         scrollTo("schedule_unknown")
@@ -105,10 +103,10 @@ class MainScheduleOverviewTest {
         compose.onNodeWithTag("watch_next").assertDoesNotExist()
     }
 
-    @Test fun informationOnlyCardsRemainVisibleUntilDirectOpeningIsConnected() {
+    @Test fun informationOnlyCardsRemainVisibleWhenOpeningIsUnavailable() {
         val exhausted = current.copy(estimatedGuideExhausted = true)
         compose.setContent { GuideTheme(false) { MainScreen(null, today, onStart = {}, onResume = {}, onFindStage = {},
-            church = parish, onChurch = {}, suggestion = null, onJoinService = {}, onOrder = {}, bottomBar = {},
+            church = parish, onChurch = {}, onOrder = {}, bottomBar = {},
             overview = ScheduleOverview(exhausted, next)) } }
         scrollTo("service_card_current")
         compose.onNodeWithTag("service_status_current").assertTextEquals("Возможно, уже идет")
@@ -122,7 +120,7 @@ class MainScheduleOverviewTest {
         val precise = next.copy(service = next.service.copy(time = "10:00:15.500"),
             startInstant = Instant.parse("2026-11-08T07:00:15.500Z"))
         compose.setContent { GuideTheme(false) { MainScreen(null, today, onStart = {}, onResume = {}, onFindStage = {},
-            church = parish, onChurch = {}, suggestion = null, onJoinService = {}, onOrder = {}, bottomBar = {},
+            church = parish, onChurch = {}, onOrder = {}, bottomBar = {},
             overview = ScheduleOverview(nextKnownService = precise)) } }
         scrollTo("service_start_next")
         compose.onNodeWithTag("service_start_next").assertTextEquals("8 ноября · 10:00:15.5")

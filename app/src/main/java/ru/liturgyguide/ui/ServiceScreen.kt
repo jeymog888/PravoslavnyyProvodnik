@@ -37,7 +37,7 @@ import ru.liturgyguide.service.*
 fun ServiceScreen(stageMatcher: StageMatcher, stageId: String?, onStageChange: (String) -> Unit,
     onBack: () -> Unit, onSelectStage: () -> Unit, onFindStage: () -> Unit, onSettings: () -> Unit,
     dark: Boolean, onDarkChange: () -> Unit, onOpenSource: (String) -> Unit, readingDay: ReadingDay?,
-    sessionPosition: SessionPosition?, onToggleFollowing: () -> Unit, onSoundSettings: () -> Unit, onFinish: () -> Unit) {
+    sessionPosition: SessionPosition?, onToggleFollowing: () -> Unit, onSoundSettings: () -> Unit, onFinish: () -> Unit, serviceDate: String? = null) {
     val stages = stageMatcher.getAllStages()
     val stage = stageId?.let(stageMatcher::getStageById) ?: stages.first()
     val index = stages.indexOf(stage)
@@ -133,6 +133,12 @@ fun ServiceScreen(stageMatcher: StageMatcher, stageId: String?, onStageChange: (
                         DropdownMenuItem(text = { Text("Тишина на телефоне") }, leadingIcon = { Icon(Icons.Default.NotificationsOff, null) }, onClick = { menu = false; onSoundSettings() })
                     }
                 }
+            }
+            serviceDate?.let { date ->
+                val label = runCatching { java.time.LocalDate.parse(date).format(java.time.format.DateTimeFormatter
+                    .ofPattern("d MMMM uuuu", java.util.Locale.forLanguageTag("ru"))) }.getOrDefault(date)
+                Text("Тексты на $label", Modifier.padding(horizontal = 24.dp, vertical = 4.dp).testTag("reading_service_date"),
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (sessionPosition?.requiresResume == true) {
                 Text("Сохранено ранее · уточните этап",

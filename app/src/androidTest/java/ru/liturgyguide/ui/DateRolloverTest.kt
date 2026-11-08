@@ -9,6 +9,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import ru.liturgyguide.di.AppContainer
+import ru.liturgyguide.service.ScheduleOverview
 import java.time.LocalDate
 
 @RunWith(AndroidJUnit4::class)
@@ -23,7 +24,7 @@ class DateRolloverTest {
             GuideTheme(dark = false) {
                 MainScreen(lastStage = null, currentDate = currentDate.value,
                     onStart = {}, onResume = {}, onFindStage = {}, church = parishes.selected(null),
-                    onChurch = {}, suggestion = null, onJoinService = {}, onOrder = {}, bottomBar = {})
+                    onChurch = {}, overview = ScheduleOverview(), onOrder = {}, bottomBar = {})
             }
         }
         compose.onNodeWithText("8 ноября, воскресенье").assertIsDisplayed()
