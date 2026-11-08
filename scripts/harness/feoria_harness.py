@@ -252,13 +252,19 @@ def parse_windows(windows, displays, package, allowed_windows=()):
     tokens = set()
     for block in blocks:
         header = re.search(r"^  Window #\d+ Window\{(\S+) u(\d+) (.+?)\}:", block)
-        owner = re.search(r"\bpackage=([\w.]+)\b", block)
-        require(header and owner, "unknown window inventory format")
+        owner_lines = re.findall(r"^[ \t]+mOwnerUid=[^\r\n]*", block, flags=re.M)
+        require(header and len(owner_lines) == 1, "unknown or ambiguous window owner format")
+        owner = re.fullmatch(
+            r"[ \t]+mOwnerUid=\d+[ \t]+showForAllUsers=(?:true|false)[ \t]+"
+            r"package=([\w.]+)[ \t]+appop=\S+[ \t]*", owner_lines[0])
+        require(owner, "unknown window owner format")
         identity = header.groups()
         require(identity[:2] not in tokens, "ambiguous window inventory identity")
         tokens.add(identity[:2])
-        onscreen = re.search(r"\bisOnScreen=(true|false)\b", block)
-        require(onscreen, "window visibility unavailable")
+        onscreen_lines = re.findall(r"^[ \t]+isOnScreen=[^\r\n]*", block, flags=re.M)
+        require(len(onscreen_lines) == 1, "window visibility unavailable or ambiguous")
+        onscreen = re.fullmatch(r"[ \t]+isOnScreen=(true|false)[ \t]*", onscreen_lines[0])
+        require(onscreen, "unknown window visibility format")
         inventory[identity] = (owner[1], onscreen[1] == "true")
     require(inventory.get(focused) == (package, True), "unexpected/unknown foreground package")
     visible = []

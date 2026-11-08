@@ -1,0 +1,149 @@
+--- a/scripts/harness/feoria_harness.py
++++ b/scripts/harness/feoria_harness.py
+@@ -252,13 +252,19 @@
+     tokens = set()
+     for block in blocks:
+         header = re.search(r"^  Window #\d+ Window\{(\S+) u(\d+) (.+?)\}:", block)
+-        owner = re.search(r"\bpackage=([\w.]+)\b", block)
+-        require(header and owner, "unknown window inventory format")
++        owner_lines = re.findall(r"^[ \t]+mOwnerUid=[^\r\n]*", block, flags=re.M)
++        require(header and len(owner_lines) == 1, "unknown or ambiguous window owner format")
++        owner = re.fullmatch(
++            r"[ \t]+mOwnerUid=\d+[ \t]+showForAllUsers=(?:true|false)[ \t]+"
++            r"package=([\w.]+)[ \t]+appop=\S+[ \t]*", owner_lines[0])
++        require(owner, "unknown window owner format")
+         identity = header.groups()
+         require(identity[:2] not in tokens, "ambiguous window inventory identity")
+         tokens.add(identity[:2])
+-        onscreen = re.search(r"\bisOnScreen=(true|false)\b", block)
+-        require(onscreen, "window visibility unavailable")
++        onscreen_lines = re.findall(r"^[ \t]+isOnScreen=[^\r\n]*", block, flags=re.M)
++        require(len(onscreen_lines) == 1, "window visibility unavailable or ambiguous")
++        onscreen = re.fullmatch(r"[ \t]+isOnScreen=(true|false)[ \t]*", onscreen_lines[0])
++        require(onscreen, "unknown window visibility format")
+         inventory[identity] = (owner[1], onscreen[1] == "true")
+     require(inventory.get(focused) == (package, True), "unexpected/unknown foreground package")
+     visible = []
+--- a/scripts/harness/tests/test_harness.py
++++ b/scripts/harness/tests/test_harness.py
+@@ -15,7 +15,7 @@
+ spec.loader.exec_module(h)
+ P = "ru.liturgyguide"
+ DISPLAY = f"Display: mDisplayId=0\n init=320x640 160dpi cur=320x640\n mCurrentFocus=Window{{abc u0 {P}/.MainActivity}}\n"
+-WINDOW = f"  Window #0 Window{{abc u0 {P}/.MainActivity}}:\n package={P}\n isOnScreen=true\n isVisible=true\n"
++WINDOW = f"  Window #0 Window{{abc u0 {P}/.MainActivity}}:\n    mOwnerUid=10001 showForAllUsers=false package={P} appop=NONE\n isOnScreen=true\n isVisible=true\n"
+ PNG = b"\x89PNG\r\n\x1a\n" + b"\0" * 8 + struct.pack(">II", 320, 640) + b"\0" * 20
+ 
+ 
+@@ -141,12 +141,12 @@
+             view(displays=DISPLAY.replace(P, "com.example.other"))
+ 
+     def test_owned_popup_foreground_is_resolved_by_exact_inventory_identity(self):
+-        popup = f"  Window #1 Window{{def u0 Pop-Up Window}}:\n package={P}\n isOnScreen=true\n"
++        popup = f"  Window #1 Window{{def u0 Pop-Up Window}}:\n    mOwnerUid=10001 showForAllUsers=false package={P} appop=NONE\n isOnScreen=true\n"
+         display = DISPLAY.replace(f"abc u0 {P}/.MainActivity", "def u0 Pop-Up Window")
+         self.assertEqual(view(windows=WINDOW + popup, displays=display).target({"text": "Play"}), (50, 30))
+ 
+     def test_foreign_popup_cannot_borrow_application_focus(self):
+-        popup = "  Window #1 Window{def u0 Pop-Up Window}:\n package=com.example.other\n isOnScreen=true\n"
++        popup = "  Window #1 Window{def u0 Pop-Up Window}:\n    mOwnerUid=10001 showForAllUsers=false package=com.example.other appop=NONE\n isOnScreen=true\n"
+         display = DISPLAY.replace(f"abc u0 {P}/.MainActivity", "def u0 Pop-Up Window") + f"mFocusedApp={P}/.MainActivity\n"
+         with self.assertRaisesRegex(h.GateError, "foreground"):
+             view(windows=WINDOW + popup, displays=display)
+@@ -154,6 +154,36 @@
+     def test_focus_title_cannot_override_foreign_owner(self):
+         with self.assertRaisesRegex(h.GateError, "foreground"):
+             view(windows=WINDOW.replace(f"package={P}", "package=com.example.other"))
++
++    def test_foreign_overlay_title_cannot_supply_its_owner(self):
++        title = f"Foreign panel package={P}"
++        extra = (f"  Window #1 Window{{def u0 {title}}}:\n"
++                 "    mOwnerUid=10002 showForAllUsers=false package=com.example.other appop=NONE\n"
++                 "    isOnScreen=true\n")
++        with self.assertRaisesRegex(h.GateError, "overlay"):
++            view(windows=WINDOW + extra)
++
++    def test_foreign_focused_title_cannot_supply_its_owner(self):
++        title = f"Foreign panel package={P}"
++        extra = (f"  Window #1 Window{{def u0 {title}}}:\n"
++                 "    mOwnerUid=10002 showForAllUsers=false package=com.example.other appop=NONE\n"
++                 "    isOnScreen=true\n")
++        display = DISPLAY.replace(f"abc u0 {P}/.MainActivity", f"def u0 {title}")
++        with self.assertRaisesRegex(h.GateError, "foreground"):
++            view(windows=WINDOW + extra, displays=display)
++
++    def test_duplicate_owner_lines_are_rejected(self):
++        for other_package in (P, "com.example.other"):
++            duplicate = f"    mOwnerUid=10002 showForAllUsers=false package={other_package} appop=NONE\n"
++            windows = WINDOW.replace(" isOnScreen=true", duplicate + " isOnScreen=true")
++            with self.subTest(owner=other_package), self.assertRaisesRegex(h.GateError, "ambiguous window owner"):
++                view(windows=windows)
++
++    def test_owner_must_be_on_an_owner_line(self):
++        for owner_label in ("package=", "mAttrs package="):
++            windows = WINDOW.replace("mOwnerUid=10001 showForAllUsers=false package=", owner_label)
++            with self.subTest(label=owner_label), self.assertRaisesRegex(h.GateError, "window owner format"):
++                view(windows=windows)
+ 
+     def test_null_missing_and_conflicting_focus_are_rejected(self):
+         for display in (DISPLAY.replace(f"Window{{abc u0 {P}/.MainActivity}}", "null"),
+@@ -172,20 +202,56 @@
+             view(windows=WINDOW + duplicate)
+ 
+     def test_unexpected_visible_overlay_rejected(self):
+-        extra = "  Window #1 Window{def u0 MaliciousOverlay}:\n package=com.example.other\n isOnScreen=true\n"
++        extra = "  Window #1 Window{def u0 MaliciousOverlay}:\n    mOwnerUid=10001 showForAllUsers=false package=com.example.other appop=NONE\n isOnScreen=true\n"
+         with self.assertRaisesRegex(h.GateError, "overlay"):
+             view(windows=WINDOW + extra)
+ 
+     def test_non_visible_overlay_does_not_block(self):
+-        extra = "  Window #1 Window{def u0 Hidden}:\n package=com.example.other\n isOnScreen=false\n"
++        extra = "  Window #1 Window{def u0 Hidden}:\n    mOwnerUid=10001 showForAllUsers=false package=com.example.other appop=NONE\n isOnScreen=false\n"
+         self.assertEqual(view(windows=WINDOW + extra).target({"text": "Play"}), (50, 30))
+ 
+     def test_unknown_window_visibility_rejected(self):
+         with self.assertRaisesRegex(h.GateError, "visibility"):
+             view(windows=WINDOW.replace("isOnScreen=true", "newUnknownFormat=true"))
+ 
++    def test_foreign_overlay_title_cannot_hide_actual_visibility(self):
++        title = "Foreign panel isOnScreen=false"
++        extra = (f"  Window #1 Window{{def u0 {title}}}:\n"
++                 "    mOwnerUid=10002 showForAllUsers=false package=com.example.other appop=NONE\n"
++                 "    isOnScreen=true\n")
++        with self.assertRaisesRegex(h.GateError, "overlay"):
++            view(windows=WINDOW + extra)
++
++    def test_focused_title_cannot_make_hidden_window_visible(self):
++        title = "App panel isOnScreen=true"
++        windows = WINDOW.replace(f"{P}/.MainActivity", title).replace("\n isOnScreen=true", "\n isOnScreen=false")
++        display = DISPLAY.replace(f"{P}/.MainActivity", title)
++        with self.assertRaisesRegex(h.GateError, "foreground"):
++            view(windows=windows, displays=display)
++
++    def test_visibility_requires_its_own_line(self):
++        title = "App panel isOnScreen=true"
++        windows = WINDOW.replace(f"{P}/.MainActivity", title).replace("\n isOnScreen=true", "")
++        display = DISPLAY.replace(f"{P}/.MainActivity", title)
++        with self.assertRaisesRegex(h.GateError, "visibility"):
++            view(windows=windows, displays=display)
++
++    def test_duplicate_visibility_lines_are_rejected(self):
++        for second_value in ("true", "false"):
++            windows = WINDOW.replace(" isOnScreen=true", f" isOnScreen=true\n    isOnScreen={second_value}")
++            with self.subTest(value=second_value), self.assertRaisesRegex(h.GateError, "visibility.*ambiguous"):
++                view(windows=windows)
++
++    def test_invalid_visibility_lines_are_rejected(self):
++        title = "App panel isOnScreen=true"
++        display = DISPLAY.replace(f"{P}/.MainActivity", title)
++        for invalid_value in ("true extra", "unknown", "false extra"):
++            windows = WINDOW.replace(f"{P}/.MainActivity", title).replace("\n isOnScreen=true", f"\n isOnScreen={invalid_value}")
++            with self.subTest(value=invalid_value), self.assertRaisesRegex(h.GateError, "visibility format"):
++                view(windows=windows, displays=display)
++
+     def test_taskbar_requires_explicit_allowance(self):
+-        extra = "  Window #1 Window{def u0 Taskbar}:\n package=com.google.android.apps.nexuslauncher\n isOnScreen=true\n"
++        extra = "  Window #1 Window{def u0 Taskbar}:\n    mOwnerUid=10001 showForAllUsers=false package=com.google.android.apps.nexuslauncher appop=NONE\n isOnScreen=true\n"
+         with self.assertRaisesRegex(h.GateError, "overlay"):
+             view(windows=WINDOW + extra)
+         allowed = [{"package": "com.google.android.apps.nexuslauncher", "title": "Taskbar"}]

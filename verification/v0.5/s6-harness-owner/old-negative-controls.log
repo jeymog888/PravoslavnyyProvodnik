@@ -1,0 +1,122 @@
+test_foreign_overlay_title_cannot_supply_its_owner (candidate_tests.SelectorTests) ... FAIL
+test_foreign_focused_title_cannot_supply_its_owner (candidate_tests.SelectorTests) ... FAIL
+test_duplicate_owner_lines_are_rejected (candidate_tests.SelectorTests) ... test_owner_must_be_on_an_owner_line (candidate_tests.SelectorTests) ... test_foreign_overlay_title_cannot_hide_actual_visibility (candidate_tests.SelectorTests) ... FAIL
+test_focused_title_cannot_make_hidden_window_visible (candidate_tests.SelectorTests) ... FAIL
+test_visibility_requires_its_own_line (candidate_tests.SelectorTests) ... FAIL
+test_duplicate_visibility_lines_are_rejected (candidate_tests.SelectorTests) ... test_invalid_visibility_lines_are_rejected (candidate_tests.SelectorTests) ... 
+======================================================================
+FAIL: test_foreign_overlay_title_cannot_supply_its_owner (candidate_tests.SelectorTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/feoria-harness-owner-candidate/scripts/harness/tests/test_harness.py", line 164, in test_foreign_overlay_title_cannot_supply_its_owner
+    view(windows=WINDOW + extra)
+AssertionError: GateError not raised
+
+======================================================================
+FAIL: test_foreign_focused_title_cannot_supply_its_owner (candidate_tests.SelectorTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/feoria-harness-owner-candidate/scripts/harness/tests/test_harness.py", line 173, in test_foreign_focused_title_cannot_supply_its_owner
+    view(windows=WINDOW + extra, displays=display)
+AssertionError: GateError not raised
+
+======================================================================
+FAIL: test_duplicate_owner_lines_are_rejected (candidate_tests.SelectorTests) (owner='ru.liturgyguide')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/feoria-harness-owner-candidate/scripts/harness/tests/test_harness.py", line 180, in test_duplicate_owner_lines_are_rejected
+    view(windows=windows)
+AssertionError: GateError not raised
+
+======================================================================
+FAIL: test_duplicate_owner_lines_are_rejected (candidate_tests.SelectorTests) (owner='com.example.other')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/feoria-harness-owner-candidate/scripts/harness/tests/test_harness.py", line 180, in test_duplicate_owner_lines_are_rejected
+    view(windows=windows)
+AssertionError: GateError not raised
+
+======================================================================
+FAIL: test_owner_must_be_on_an_owner_line (candidate_tests.SelectorTests) (label='package=')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/feoria-harness-owner-candidate/scripts/harness/tests/test_harness.py", line 186, in test_owner_must_be_on_an_owner_line
+    view(windows=windows)
+AssertionError: GateError not raised
+
+======================================================================
+FAIL: test_owner_must_be_on_an_owner_line (candidate_tests.SelectorTests) (label='mAttrs package=')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/feoria-harness-owner-candidate/scripts/harness/tests/test_harness.py", line 186, in test_owner_must_be_on_an_owner_line
+    view(windows=windows)
+AssertionError: GateError not raised
+
+======================================================================
+FAIL: test_foreign_overlay_title_cannot_hide_actual_visibility (candidate_tests.SelectorTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/feoria-harness-owner-candidate/scripts/harness/tests/test_harness.py", line 223, in test_foreign_overlay_title_cannot_hide_actual_visibility
+    view(windows=WINDOW + extra)
+AssertionError: GateError not raised
+
+======================================================================
+FAIL: test_focused_title_cannot_make_hidden_window_visible (candidate_tests.SelectorTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/feoria-harness-owner-candidate/scripts/harness/tests/test_harness.py", line 230, in test_focused_title_cannot_make_hidden_window_visible
+    view(windows=windows, displays=display)
+AssertionError: GateError not raised
+
+======================================================================
+FAIL: test_visibility_requires_its_own_line (candidate_tests.SelectorTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/feoria-harness-owner-candidate/scripts/harness/tests/test_harness.py", line 237, in test_visibility_requires_its_own_line
+    view(windows=windows, displays=display)
+AssertionError: GateError not raised
+
+======================================================================
+FAIL: test_duplicate_visibility_lines_are_rejected (candidate_tests.SelectorTests) (value='true')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/feoria-harness-owner-candidate/scripts/harness/tests/test_harness.py", line 243, in test_duplicate_visibility_lines_are_rejected
+    view(windows=windows)
+AssertionError: GateError not raised
+
+======================================================================
+FAIL: test_duplicate_visibility_lines_are_rejected (candidate_tests.SelectorTests) (value='false')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/feoria-harness-owner-candidate/scripts/harness/tests/test_harness.py", line 243, in test_duplicate_visibility_lines_are_rejected
+    view(windows=windows)
+AssertionError: GateError not raised
+
+======================================================================
+FAIL: test_invalid_visibility_lines_are_rejected (candidate_tests.SelectorTests) (value='true extra')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/feoria-harness-owner-candidate/scripts/harness/tests/test_harness.py", line 251, in test_invalid_visibility_lines_are_rejected
+    view(windows=windows, displays=display)
+AssertionError: GateError not raised
+
+======================================================================
+FAIL: test_invalid_visibility_lines_are_rejected (candidate_tests.SelectorTests) (value='unknown')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/feoria-harness-owner-candidate/scripts/harness/tests/test_harness.py", line 251, in test_invalid_visibility_lines_are_rejected
+    view(windows=windows, displays=display)
+AssertionError: GateError not raised
+
+======================================================================
+FAIL: test_invalid_visibility_lines_are_rejected (candidate_tests.SelectorTests) (value='false extra')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/feoria-harness-owner-candidate/scripts/harness/tests/test_harness.py", line 251, in test_invalid_visibility_lines_are_rejected
+    view(windows=windows, displays=display)
+AssertionError: GateError not raised
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.003s
+
+FAILED (failures=14)
