@@ -93,13 +93,29 @@ class ManualMomentFlowTest {
 
     @Test
     fun choosingAnotherLandmarkShowsItsNewCueBeforeConfirmation() {
+        var beforeFindClick = "Not reached"
+        withCiFailureDiagnostics("ManualMomentFlowTest.changingLandmark", additionalEvidence = { directory, deadline, phase ->
+            if (phase == CiEvidencePhase.AFTER_SCREENSHOT) {
+                writeCiFailureEvidence(directory, "before-find-click.txt", deadline) { beforeFindClick }
+                writeCiFailureEvidence(directory, "compose-roots.txt", deadline) {
+                    compose.onAllNodes(isRoot(), useUnmergedTree = true).fetchSemanticsNodes().indices.joinToString("\n\n") { index ->
+                        compose.onAllNodes(isRoot(), useUnmergedTree = true)[index].printToString(maxDepth = 100)
+                    }
+                }
+            }
+        }) {
         seed()
         compose.setContent {
             Box(Modifier.size(width = 320.dp, height = 320.dp)) {
                 AppNavigation(container, Clock.fixed(instant, ZoneOffset.UTC))
             }
         }
-        findFromMain()
+        compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("find_stage"))
+        compose.onNodeWithTag("find_stage").performScrollTo().assertIsDisplayed()
+        beforeFindClick = compose.onAllNodes(isRoot(), useUnmergedTree = true).fetchSemanticsNodes().indices.joinToString("\n\n") { index ->
+                        compose.onAllNodes(isRoot(), useUnmergedTree = true)[index].printToString(maxDepth = 100)
+                    }
+        compose.onNodeWithTag("find_stage").performClick()
         landmark("little_entrance")
         compose.onNodeWithTag("arrival_content").performScrollToNode(hasTestTag("arrival_search"))
         compose.onNodeWithTag("arrival_stage").assertIsNotDisplayed()
@@ -107,6 +123,7 @@ class ManualMomentFlowTest {
         landmark("communion")
         compose.onNodeWithTag("arrival_stage").assertIsDisplayed().assertTextEquals("Причащение верующих")
         compose.onNodeWithText("Чашу выносят со словами \"Со страхом Божиим и верою приступите\"").assertIsDisplayed()
+        }
     }
 
     @Test

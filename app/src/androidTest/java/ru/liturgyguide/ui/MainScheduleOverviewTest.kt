@@ -125,15 +125,46 @@ class MainScheduleOverviewTest {
 
     @Test fun informationOnlyCardsRemainVisibleWhenOpeningIsUnavailable() {
         val exhausted = current.copy(estimatedGuideExhausted = true)
-        compose.setContent { GuideTheme(false) { MainScreen(null, today, onStart = {}, onResume = {}, onFindStage = {},
+        var found = 0
+        compose.setContent { GuideTheme(false) { MainScreen(null, today, onStart = {}, onResume = {}, onFindStage = { found++ },
             church = parish, onChurch = {}, onOrder = {}, bottomBar = {},
             overview = ScheduleOverview(exhausted, next)) } }
         scrollTo("service_card_current")
-        compose.onNodeWithTag("service_status_current").assertTextEquals("Возможно, уже идет")
+        compose.onNodeWithTag("service_status_current").assertTextEquals("Нужно уточнить момент")
         compose.onNodeWithTag("watch_current").assertDoesNotExist()
         scrollTo("service_card_next")
         compose.onNodeWithTag("service_start_next").assertTextEquals("8 ноября · 10:00")
         compose.onNodeWithTag("watch_next").assertDoesNotExist()
+        scrollTo("find_stage")
+        compose.onNodeWithTag("find_stage").assertIsDisplayed().performClick()
+        compose.runOnIdle { assertEquals(1, found) }
+    }
+
+    @Test fun exhaustedEstimateKeepsBothOccurrencesAndHasOneScopedFindAction() {
+        val exhausted = current.copy(estimatedGuideExhausted = true)
+        val opened = mutableListOf<ContextSuggestion>()
+        compose.setContent { GuideTheme(false) { MainScreen(null, today, onStart = {}, onResume = {},
+            onFindStage = { fail("The generic today action must not replace the chosen occurrence") },
+            church = parish, onChurch = {}, onOrder = {}, bottomBar = {},
+            overview = ScheduleOverview(exhausted, next), onOpenService = { opened += it }) } }
+        scrollTo("service_status_current")
+        compose.onNodeWithTag("service_status_current").assertTextEquals("Нужно уточнить момент")
+        scrollTo("estimate_exhausted_current")
+        compose.onNodeWithTag("estimate_exhausted_current").assertTextContains("Служба может продолжаться", substring = true)
+        scrollTo("watch_current")
+        compose.onNodeWithTag("watch_current").assertTextEquals("Найти текущий момент").performClick()
+        scrollTo("service_start_next")
+        compose.onNodeWithTag("service_start_next").assertTextEquals("8 ноября · 10:00")
+        scrollTo("watch_next")
+        compose.onNodeWithTag("watch_next").assertTextContains("Смотреть службу").performClick()
+        // Materialize the lower action group before checking that no generic duplicate exists.
+        scrollTo("open_order")
+        compose.onNodeWithTag("find_stage").assertDoesNotExist()
+        compose.runOnIdle {
+            assertEquals(2, opened.size)
+            assertSame(exhausted, opened[0])
+            assertSame(next, opened[1])
+        }
     }
 
     @Test fun publishedFractionalSecondsAreNotSilentlyRounded() {

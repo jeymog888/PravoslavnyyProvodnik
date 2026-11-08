@@ -4,46 +4,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import ru.liturgyguide.model.LiturgyStage
-
-internal enum class ArrivalMode { NEW_SERVICE, CORRECTION }
-internal enum class ArrivalSource { SCHEDULE, MANUAL }
-
-/** An unaccepted choice. Corrections pause active timers before creating this snapshot. */
-internal data class ArrivalDraft(
-    val churchId: String?,
-    val churchName: String,
-    val mode: ArrivalMode,
-    val source: ArrivalSource,
-    val serviceDate: String = "",
-    val serviceTime: String = "",
-    val upcoming: Boolean = false,
-    val stageId: String? = null,
-    val elapsedInStageMillis: Long = 0L,
-    val query: String? = null,
-    val automationStopped: Boolean = false
-) {
-    companion object {
-        val Saver = listSaver<ArrivalDraft?, Any>(
-            save = { draft ->
-                draft?.let { listOf(it.churchId.orEmpty(), it.churchName, it.mode.name, it.source.name,
-                    it.serviceDate, it.serviceTime, it.upcoming, it.stageId.orEmpty(), it.elapsedInStageMillis,
-                    it.query.orEmpty(), it.automationStopped) }.orEmpty()
-            },
-            restore = { values ->
-                if (values.isEmpty()) null else ArrivalDraft((values[0] as String).ifEmpty { null }, values[1] as String,
-                    ArrivalMode.valueOf(values[2] as String), ArrivalSource.valueOf(values[3] as String),
-                    values[4] as String, values[5] as String, values[6] as Boolean,
-                    (values[7] as String).ifEmpty { null }, values[8] as Long,
-                    (values[9] as String).ifEmpty { null }, values[10] as Boolean)
-            }
-        )
-    }
-}
 
 @Composable
 internal fun ArrivalScreen(draft: ArrivalDraft, stage: LiturgyStage?, preparationCue: String?, canAccept: Boolean,
@@ -57,6 +21,11 @@ internal fun ArrivalScreen(draft: ArrivalDraft, stage: LiturgyStage?, preparatio
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(draft.churchName, style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    draft.pendingServiceLabel()?.let { label ->
+                        Text(label, style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.testTag("pending_service_context"))
+                    }
                     if (draft.source == ArrivalSource.SCHEDULE) {
                         Text("Начало по расписанию в ${draft.serviceTime}", style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)

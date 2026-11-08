@@ -36,6 +36,11 @@ internal fun ManualMomentScreen(draft: ArrivalDraft, onLandmark: (ManualLandmark
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(draft.churchName, style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    draft.pendingServiceLabel()?.let { label ->
+                        Text(label, style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.testTag("pending_service_context"))
+                    }
                     if (draft.automationStopped) {
                         Text("Автоматические переходы остановлены", style = MaterialTheme.typography.bodyMedium)
                     }

@@ -26,6 +26,7 @@ fun MainScreen(lastStage: LiturgyStage?, currentDate: LocalDate, onStart: () -> 
     onOpenService: ((ContextSuggestion) -> Unit)? = null, onOrder: () -> Unit, bottomBar: @Composable () -> Unit,
     readingNotice: String? = null, savedReadingNote: String? = null, onPersonalTime: (() -> Unit)? = null) {
     val unknownSchedule = church != null && overview.currentHypothesis == null && overview.nextKnownService == null
+    val hasScopedMomentAction = overview.currentHypothesis?.estimatedGuideExhausted == true && onOpenService != null
     Scaffold(containerColor = MaterialTheme.colorScheme.background, bottomBar = bottomBar) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("main_content"),
             contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(28.dp)) {
@@ -101,7 +102,7 @@ fun MainScreen(lastStage: LiturgyStage?, currentDate: LocalDate, onStart: () -> 
             item {
                 Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
                     Column {
-                        if (!unknownSchedule) {
+                        if (!unknownSchedule && !hasScopedMomentAction) {
                             GuideActionRow("Найти текущий момент", "По ориентиру или словам молитвы", Icons.Default.Search, onFindStage, "find_stage")
                             HorizontalDivider(Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.outlineVariant)
                         }
@@ -125,6 +126,7 @@ fun MainScreen(lastStage: LiturgyStage?, currentDate: LocalDate, onStart: () -> 
 private fun ServiceSuggestionCard(suggestion: ContextSuggestion, currentDate: LocalDate, isCurrent: Boolean,
     primaryAction: Boolean, onOpenService: ((ContextSuggestion) -> Unit)?) {
     val key = if (isCurrent) "current" else "next"
+    val exhausted = isCurrent && suggestion.estimatedGuideExhausted
     val local = runCatching { suggestion.startInstant.atZone(ZoneId.of(suggestion.timezone)) }.getOrNull()
     val date = local?.toLocalDate() ?: runCatching { LocalDate.parse(suggestion.service.date) }.getOrNull()
     val dateLabel = date?.let { value -> value.format(DateTimeFormatter.ofPattern(
@@ -144,7 +146,7 @@ private fun ServiceSuggestionCard(suggestion: ContextSuggestion, currentDate: Lo
         shape = MaterialTheme.shapes.large, modifier = Modifier.testTag("service_card_$key")) {
         Column(Modifier.fillMaxWidth().padding(if (secondary) 20.dp else 24.dp),
             verticalArrangement = Arrangement.spacedBy(if (secondary) 12.dp else 16.dp)) {
-            Text(if (isCurrent) "Возможно, уже идет" else if (suggestion.source == ServiceStartSource.USER)
+            Text(if (exhausted) "Нужно уточнить момент" else if (isCurrent) "Возможно, уже идет" else if (suggestion.source == ServiceStartSource.USER)
                 "Следующая по вашему времени" else "Следующая по расписанию",
                 style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.testTag("service_status_$key"))
@@ -158,9 +160,14 @@ private fun ServiceSuggestionCard(suggestion: ContextSuggestion, currentDate: Lo
             }
             Text(sourceLabel, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag("service_source_$key"))
+            if (exhausted) Text("Расчет по времени больше не подсказывает текущую часть. Служба может продолжаться - найдите момент по словам или действиям в храме",
+                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.testTag("estimate_exhausted_$key"))
             if (onOpenService != null) {
                 if (primaryAction) Button(onClick = { onOpenService(suggestion) },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("watch_$key")) { Text("Смотреть службу") }
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("watch_$key")) {
+                    Text(if (exhausted) "Найти текущий момент" else "Смотреть службу")
+                }
                 else TextButton(onClick = { onOpenService(suggestion) },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("watch_$key")) {
                     Text("Смотреть службу")

@@ -91,6 +91,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     var churchSearchMode by rememberSaveable { mutableStateOf(ChurchSearchMode.NAME) }
     var personalTimeRequest by rememberSaveable { mutableIntStateOf(0) }
     var arrivalDraft by rememberSaveable(stateSaver = ArrivalDraft.Saver) { mutableStateOf<ArrivalDraft?>(null) }
+    var arrivalRecoveryNotice by rememberSaveable { mutableStateOf(false) }
     var hasChurchSelection by rememberSaveable { mutableStateOf(preferences.contains("church_id")) }
     var churchId by rememberSaveable { mutableStateOf(runCatching { preferences.getString("church_id", null) }.getOrNull()) }
     var session by remember {
@@ -196,11 +197,22 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     val selectedStage = if (invalidRecovery) null else player.reading?.stage ?: restoredReading?.stage ?: legacyStage
     val activeReadingContext = if (invalidRecovery) null else player.reading?.context ?: availableContext?.takeIf { selectedStage != null }
     val readingNeedsExplicitDate = selectedStage != null && activeReadingContext == null
-    val visibleScreen = if (screen == Screen.SERVICE && (invalidRecovery || player.reading == null)) Screen.MAIN else screen
+    val scopedSearch = screen == Screen.SEARCH && searchOrigin in setOf(Screen.MANUAL, Screen.ARRIVAL)
+    val validArrivalDraft = arrivalDraft?.takeIf { it.isValidFor(church) }
+    val invalidArrival = (screen == Screen.MANUAL || screen == Screen.ARRIVAL || scopedSearch) && validArrivalDraft == null
+    val visibleScreen = if (invalidArrival || (screen == Screen.SERVICE && (invalidRecovery || player.reading == null)))
+        Screen.MAIN else screen
     val readingDate = activeReadingContext?.serviceDate ?: currentDate.toString()
     val readingDay = container.readings?.days?.firstOrNull { it.date == readingDate }
-    val searchReadingDay = if (arrivalDraft?.mode == ArrivalMode.NEW_SERVICE)
-        container.readings?.days?.firstOrNull { it.date == currentDate.toString() } else readingDay
+    val searchReadingDay = when {
+        invalidArrival -> null
+        validArrivalDraft?.pendingServiceContext != null -> container.readings?.days?.firstOrNull {
+            it.date == validArrivalDraft.pendingServiceContext.serviceDate
+        }
+        validArrivalDraft?.mode == ArrivalMode.NEW_SERVICE ->
+            container.readings?.days?.firstOrNull { it.date == currentDate.toString() }
+        else -> readingDay
+    }
     val density = LocalDensity.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     var lifecycleResumed by remember(lifecycle) { mutableStateOf(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) }
@@ -252,6 +264,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         preserveRestoreNotice: Boolean = false): Boolean {
         val notice = restoredNotice
         if (!player.accept(value, resetBookmarks)) return false
+        arrivalRecoveryNotice = false
         if (resetReaderUi) screenStateHolder.removeState(Screen.SERVICE.name)
         if (preserveRestoreNotice) restoredNotice = notice
         now = clock.instant()
@@ -273,6 +286,21 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         }
         ActiveServicePlayback(plan, accepted, state, approximate)
     }.getOrNull()
+    fun recoverArrival() {
+        arrivalDraft = null
+        searchOrigin = Screen.MAIN
+        arrivalRecoveryNotice = true
+        navigate(Screen.MAIN)
+    }
+    fun isCurrentArrival(draft: ArrivalDraft, origin: Screen): Boolean =
+        screen == origin && arrivalDraft === draft && draft.isValidFor(church)
+    fun beginArrival(draft: ArrivalDraft, destination: Screen) {
+        if (!draft.isValidFor(church)) { recoverArrival(); return }
+        listOf(Screen.MANUAL, Screen.ARRIVAL, Screen.SEARCH).forEach { screenStateHolder.removeState(it.name) }
+        arrivalRecoveryNotice = false
+        arrivalDraft = draft
+        navigate(destination)
+    }
     fun openScheduledService(selected: ContextSuggestion) {
         val parish = church ?: return
         val engine = contextEngine ?: return
@@ -283,6 +311,11 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                 "Время службы изменилось. Выберите актуальную карточку", Toast.LENGTH_LONG).show()
             is ServiceEntryResult.Available -> {
                 val suggested = result.suggestion
+                if (suggested.estimatedGuideExhausted) {
+                    beginArrival(ArrivalDraft(parish.id, parish.shortName, ArrivalMode.NEW_SERVICE,
+                        ArrivalSource.MANUAL, pendingServiceContext = result.context), Screen.MANUAL)
+                    return
+                }
                 val stageId = suggested.approximateStageId?.takeIf { id -> stages.any { it.id == id } } ?: stages.first().id
                 val value = candidate(result.context, stageId,
                     approximate = suggested.relation == ServiceRelation.InProgress && suggested.approximateStageId != null) ?: return
@@ -300,24 +333,20 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         navigate(Screen.SERVICE)
     }
     fun acceptArrival(id: String, query: String? = null, fromSchedule: Boolean) {
-        val draft = arrivalDraft ?: return
+        val draft = arrivalDraft?.takeIf { it.isValidFor(church) }
+        if (draft == null) { recoverArrival(); return }
         val actualNow = clock.instant()
         now = actualNow
-        if (church?.id != draft.churchId || stages.none { it.id == id }) return
+        if (stages.none { it.id == id }) return
         if (fromSchedule) { navigate(Screen.MAIN); arrivalDraft = null; return }
-        val accepted = if (draft.mode == ArrivalMode.CORRECTION) player.reading?.context ?: activeReadingContext
-            else ReadingContextFactory.manual(church, actualNow)
+        val accepted = draft.pendingServiceContext ?: if (draft.mode == ArrivalMode.CORRECTION)
+            player.reading?.context ?: activeReadingContext else ReadingContextFactory.manual(church, actualNow)
         if (accepted == null) return
         val value = candidate(accepted, id, query, speed = if (draft.mode == ArrivalMode.CORRECTION)
             player.reading?.state?.speed ?: PlaybackSpeed.NORMAL else PlaybackSpeed.NORMAL) ?: return
         if (!beginReading(value, resetBookmarks = draft.mode == ArrivalMode.NEW_SERVICE)) return
         arrivalDraft = null
         navigate(Screen.SERVICE)
-    }
-    fun beginArrival(draft: ArrivalDraft, destination: Screen) {
-        listOf(Screen.MANUAL, Screen.ARRIVAL, Screen.SEARCH).forEach { screenStateHolder.removeState(it.name) }
-        arrivalDraft = draft
-        navigate(destination)
     }
     fun openManual(mode: ArrivalMode) {
         val stopped = mode == ArrivalMode.CORRECTION && player.reading?.state?.isPlaying == true
@@ -391,6 +420,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     }
     fun closeDiscovery() { churchPickerRequest++; navigate(Screen.CHURCH) }
     fun back() {
+        if (invalidArrival) { recoverArrival(); return }
         // Both root and screen Back callbacks must reopen the saved picker.
         if (screen == Screen.DISCOVERY) { closeDiscovery(); return }
         val destination = when (screen) {
@@ -412,6 +442,11 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         catch (_: android.content.ActivityNotFoundException) {
             Toast.makeText(context, "Не найдено приложение для открытия", Toast.LENGTH_SHORT).show()
         }
+    }
+    LaunchedEffect(invalidArrival) {
+        // Never render a scoped search without its draft: its selection cannot fall through
+        // to the old accepted reading or silently acquire today's date.
+        if (invalidArrival) recoverArrival()
     }
     // A saved SERVICE screen may be a 0.4 restoration. Migrate before rendering a live reader.
     LaunchedEffect(screen, player.reading == null, invalidRecovery, legacyCandidate, restoredReading) {
@@ -439,7 +474,11 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                     Screen.MAIN -> MainScreen(
                         lastStage = selectedStage,
                         currentDate = currentDate,
-                        readingNotice = if (invalidRecovery) "Не удалось восстановить сохраненное чтение. Выберите службу или начните с начала" else null,
+                        readingNotice = when {
+                            invalidArrival || arrivalRecoveryNotice -> "Не удалось восстановить выбранную службу. Выберите ее заново"
+                            invalidRecovery -> "Не удалось восстановить сохраненное чтение. Выберите службу или начните с начала"
+                            else -> null
+                        },
                         savedReadingNote = if (readingNeedsExplicitDate) "Дата не сохранена · откроется на сегодня" else null,
                         church = church,
                         overview = overview,
@@ -473,27 +512,38 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         onOrder = { openOrder(Screen.MAIN) },
                         bottomBar = navigationBar
                     )
-                    Screen.MANUAL -> arrivalDraft?.let { draft ->
+                    Screen.MANUAL -> validArrivalDraft?.let { draft ->
                         ManualMomentScreen(draft = draft,
-                            onLandmark = { landmark ->
+                            onLandmark = landmark@{ landmark ->
+                                if (!isCurrentArrival(draft, Screen.MANUAL)) return@landmark
                                 arrivalDraft = draft.copy(stageId = landmark.stageId, query = landmark.query)
                                 // A newly chosen landmark must show its cue before the accept button.
                                 screenStateHolder.removeState(Screen.ARRIVAL.name)
                                 navigate(Screen.ARRIVAL)
                             },
-                            onSearch = { searchOrigin = Screen.MANUAL; navigate(Screen.SEARCH) },
+                            onSearch = {
+                                if (isCurrentArrival(draft, Screen.MANUAL)) {
+                                    searchOrigin = Screen.MANUAL; navigate(Screen.SEARCH)
+                                }
+                            },
                             onBack = ::back)
                     }
-                    Screen.ARRIVAL -> arrivalDraft?.let { draft ->
+                    Screen.ARRIVAL -> validArrivalDraft?.let { draft ->
                         val stage = stages.firstOrNull { it.id == draft.stageId }
                         ArrivalScreen(draft = draft, stage = stage,
                             preparationCue = stages.firstOrNull { it.id == "preparation" }?.cue,
-                            canAccept = church?.id == draft.churchId &&
+                            canAccept = draft.isValidFor(church) &&
                                 (draft.source != ArrivalSource.SCHEDULE || draft.serviceDate == readingDate) &&
                                 stages.any { it.id == (draft.stageId ?: "preparation") },
-                            onAccept = { acceptArrival(draft.stageId ?: "preparation", draft.query,
-                                fromSchedule = draft.source == ArrivalSource.SCHEDULE) },
-                            onSearch = { searchOrigin = Screen.ARRIVAL; navigate(Screen.SEARCH) },
+                            onAccept = {
+                                if (isCurrentArrival(draft, Screen.ARRIVAL)) acceptArrival(draft.stageId ?: "preparation", draft.query,
+                                    fromSchedule = draft.source == ArrivalSource.SCHEDULE)
+                            },
+                            onSearch = {
+                                if (isCurrentArrival(draft, Screen.ARRIVAL)) {
+                                    searchOrigin = Screen.ARRIVAL; navigate(Screen.SEARCH)
+                                }
+                            },
                             onBack = ::back)
                     }
                     Screen.SERVICE -> ServiceScreen(
@@ -519,14 +569,17 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                     )
                     Screen.STAGE_SELECTOR, Screen.SEARCH -> StageSelector(
                         stageMatcher = matcher,
-                        selectedId = if (screen == Screen.SEARCH && searchOrigin in setOf(Screen.MANUAL, Screen.ARRIVAL) && arrivalDraft != null) null else selectedStage?.id,
+                        selectedId = if (scopedSearch) null else selectedStage?.id,
                         searchMode = screen == Screen.SEARCH,
                         readingDay = searchReadingDay,
                         onSearch = { searchOrigin = Screen.STAGE_SELECTOR; navigate(Screen.SEARCH) },
-                        onSelect = { id, query ->
-                            if (screen == Screen.SEARCH && searchOrigin in setOf(Screen.MANUAL, Screen.ARRIVAL) && arrivalDraft != null)
+                        onSelect = select@{ id, query ->
+                            if (scopedSearch) {
+                                // A callback from the discarded scoped search never becomes an
+                                // ordinary selector for the previous accepted reading.
+                                if (validArrivalDraft == null || !isCurrentArrival(validArrivalDraft, Screen.SEARCH)) return@select
                                 acceptArrival(id, query, fromSchedule = false)
-                            else selectStage(id, query)
+                            } else selectStage(id, query)
                         },
                         onBack = ::back
                     )

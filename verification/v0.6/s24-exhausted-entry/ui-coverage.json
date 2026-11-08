@@ -1,0 +1,141 @@
+{
+  "uniqueScenarios": 34,
+  "latestResults": {
+    "ru.liturgyguide.ui.ExhaustedServiceEntryTest#staleCallbacksCannotReplaceTheDraftForANewerAcceptedService": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExhaustedServiceEntryTest#aLandmarkAfterMidnightPreservesTheOccurrenceAndRetriesAnAtomicWrite": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExhaustedServiceEntryTest#midnightDuringTheDraftDoesNotRebindItsDateAndBackDoesNotAccept": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExhaustedServiceEntryTest#lostOrCorruptDraftsReturnSafelyFromManualArrivalAndBothScopedSearchOrigins": {
+      "run": "s24-exhausted-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExhaustedServiceEntryTest#significantPublishedSecondsAreShownOnBothManualScreens": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExhaustedServiceEntryTest#anEstimateThatBecomesExhaustedBeforeTheTapUsesTheFreshResolverResult": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExhaustedServiceEntryTest#aSearchAfterMidnightRestoresAndFindsTheChosenDaysScripture": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.MainScheduleOverviewTest#exhaustedEstimateKeepsBothOccurrencesAndHasOneScopedFindAction": {
+      "run": "s24-exhausted-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.MainScheduleOverviewTest#publishedFractionalSecondsAreNotSilentlyRounded": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.MainScheduleOverviewTest#evenARecentSavedReadingNeverMasksCurrentOrNextService": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.MainScheduleOverviewTest#eachServiceButtonRetainsItsExactOccurrence": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.MainScheduleOverviewTest#unknownScheduleKeepsManualReadingAndTempleSelectionAvailable": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.MainScheduleOverviewTest#unknownScheduleStillFindsTheCurrentMomentWithoutPersonalTimeEditing": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.MainScheduleOverviewTest#aFuturePersonalStartShowsItsYearAndTheParishTimeZone": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.MainScheduleOverviewTest#informationOnlyCardsRemainVisibleWhenOpeningIsUnavailable": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#foreignOrCorruptContextRestoredInServiceRequiresANewExplicitChoice": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#anInvalidLegacySessionCannotSupplyTheDateForAnOtherwiseValidBookmark": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#explicitlyStartingAgainUsesTodayInsteadOfThePreviouslyOpenedFutureDate": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#watchingRecalculatesTheStageAtTheClickAndOpensTextPaused": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#aPersonalStartOpensItsOwnEstimateAndIsRecordedAsPersonal": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#resumingALegacyBookmarkPinsItsOriginalAnchorDateWithoutClearingThePhrase": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#anExpiredClickDoesNotReplaceOrClearTheSavedReading": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#aNextServiceBecomesCurrentBetweenDisplayAndClickWithoutSwitchingOccurrence": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#restorationStraightIntoLegacyServicePinsTheAnchorDateBeforeAnyCorrection": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#tomorrowsReadingKeepsItsDateAcrossCorrectionMidnightAndRestoration": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#correctionSearchAcceptsTheMatchingPhraseAndPreservesOtherBookmarks": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#allFiveLandmarksWithoutAScheduleOpenTheExpectedTextAndPhraseAfterVerification": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#acceptingACorrectionOpensTextAtTheLandmarkAndPreservesOtherBookmarks": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#activePlayerPausesBeforeThePhraseBoundaryAndCorrectionNeverConsumesBackgroundTime": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#correctionCancelRestoresMeaningAndANonInitialPhraseAcrossAllThreeScreens": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#choosingAnotherLandmarkShowsItsNewCueBeforeConfirmation": {
+      "run": "s24-exhausted-r3",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#savedReadingNoticeUsesCorrectionAndKeepsTheAcceptedPausedSnapshot": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#aFreshManualEntryResetsSearchListeningAndScrollButBackPreservesThem": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#correctionStopsPhraseScrollingAndCancelKeepsThePausedPhrase": {
+      "run": "s24-exhausted-r1",
+      "status": "PASS"
+    }
+  }
+}
