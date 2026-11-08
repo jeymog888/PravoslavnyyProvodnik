@@ -1,0 +1,30 @@
+{
+  "run_id": "6593c319342c4ade9ecc6ec345cf7e5f",
+  "case_id": "missing-reading",
+  "apk_sha256": "619bfeae2ee4220420cee3fd3ace70eef7fd6c1905c5d0dc2516e18a823e42ab",
+  "selector": {
+    "text": "Сохранить время"
+  },
+  "expected": [
+    {
+      "text": "18:00 · Литургия"
+    }
+  ],
+  "status": "PASS",
+  "coordinates": [
+    540,
+    2016
+  ],
+  "artifacts": [
+    {
+      "path": "actions/1794150802397472000-f3699ef5/after.xml",
+      "sha256": "a60fd1d044cd92b2137f072789ea83ad71675b71ffa404e3d9da4bb137f3775c",
+      "bytes": 15173
+    },
+    {
+      "path": "actions/1794150802397472000-f3699ef5/before.xml",
+      "sha256": "583ea6349da7c179ca81caad8687e6499c4394db73833de728f96696b589a347",
+      "bytes": 12994
+    }
+  ]
+}

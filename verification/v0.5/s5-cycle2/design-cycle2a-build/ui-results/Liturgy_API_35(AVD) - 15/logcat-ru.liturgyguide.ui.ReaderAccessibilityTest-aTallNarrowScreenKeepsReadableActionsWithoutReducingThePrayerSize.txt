@@ -1,0 +1,265 @@
+11-08 18:27:47.422 21359 21373 I TestRunner: started: aTallNarrowScreenKeepsReadableActionsWithoutReducingThePrayerSize(ru.liturgyguide.ui.ReaderAccessibilityTest)
+11-08 18:27:47.446 21359 21373 D IdlingRegistry: Registering idling resources: [androidx.compose.ui.test.EspressoLink@6630424]
+11-08 18:27:47.448 19946 21862 D MddListenableWorkerFactory: createWorker for class: com.google.android.apps.messaging.rcsprovisioning.RcsProvisioningListenableWorker
+11-08 18:27:47.451 21359 21373 W Settings: Setting always_finish_activities has moved from android.provider.Settings.System to android.provider.Settings.Global, returning read-only value.
+11-08 18:27:47.486   540   565 W ziparchive: Unable to open '/data/app/~~giBWGcGGDDSCLBxP_aRE-w==/ru.liturgyguide.test-39hwU-87vw546_FxRJ79BA==/base.dm': No such file or directory
+11-08 18:27:47.486  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=776, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10000100 cmp=com.google.android.apps.nexuslauncher/.NexusLauncherActivity }
+11-08 18:27:47.487   540   565 I ActivityTaskManager: Displayed ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity for user 0: +344ms
+11-08 18:27:47.510  1210  1210 D StatsLog: LAUNCHER_ONRESUME
+11-08 18:27:47.518   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 18:27:47.528  1210  1210 D NexusLauncherModelDelegate: notifySmartspaceEvent: SmartspaceTargetEvent{mSmartspaceTarget=null, mSmartspaceActionId='null', mEventType=6}
+11-08 18:27:47.543   540  1371 W AppSearchIcing: icing-search-engine.cc:321: Error: 5, Message: Document (com.google.android.googlequicksearchbox$OneSearchZeroStateGoogleSuggestions/default, zp) not found.
+11-08 18:27:47.546  1210  1578 D OneSearchSuggestProvider: AppSearch 0-state cache not available, fallback to AGA
+11-08 18:27:47.546  1210  1578 D OneSearchSuggestProvider: java.util.concurrent.CompletionException: java.util.NoSuchElementException: No value present
+11-08 18:27:47.546  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:308)
+11-08 18:27:47.546  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:323)
+11-08 18:27:47.546  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture$UniAccept.tryFire(CompletableFuture.java:684)
+11-08 18:27:47.546  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:486)
+11-08 18:27:47.546  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2138)
+11-08 18:27:47.546  1210  1578 D OneSearchSuggestProvider: 	at com.google.android.apps.nexuslauncher.allapps.E0.onResult(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:67)
+11-08 18:27:47.546  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1.lambda$onResult$0(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:144)
+11-08 18:27:47.546  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1.$r8$lambda$CEk3q8sDAQVhU3rQwVueB8FAj_M(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:1)
+11-08 18:27:47.546  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1$$ExternalSyntheticLambda0.run(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:22)
+11-08 18:27:47.546  1210  1578 D OneSearchSuggestProvider: 	at android.os.Handler.handleCallback(Handler.java:959)
+11-08 18:27:47.546  1210  1578 D OneSearchSuggestProvider: 	at android.os.Handler.dispatchMessage(Handler.java:100)
+11-08 18:27:47.546  1210  1578 D OneSearchSuggestProvider: 	at android.os.Looper.loopOnce(Looper.java:232)
+11-08 18:27:47.546  1210  1578 D OneSearchSuggestProvider: 	at android.os.Looper.loop(Looper.java:317)
+11-08 18:27:47.546  1210  1578 D OneSearchSuggestProvider: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+11-08 18:27:47.546  1210  1578 D OneSearchSuggestProvider: Caused by: java.util.NoSuchElementException: No value present
+11-08 18:27:47.546  1210  1578 D OneSearchSuggestProvider: 	at java.util.Optional.get(Optional.java:143)
+11-08 18:27:47.546  1210  1578 D OneSearchSuggestProvider: 	at com.google.android.apps.nexuslauncher.allapps.E0.onResult(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:28)
+11-08 18:27:47.546  1210  1578 D OneSearchSuggestProvider: 	... 8 more
+11-08 18:27:47.556  1210  1578 D OneSearchSuggestProvider: Created the binder channel successfully for end point service =com.google.android.apps.search.googleapp.search.suggest.plugins.onesearch.server.OneSearchSuggestService , mChannel=i1{delegate=f{logId=1197, target=directaddress:///AndroidComponentAddress%5BIntent%20%7B%20act=grpc.io.action.BIND%20cmp=com.google.android.googlequicksearchbox/com.google.android.apps.search.googleapp.search.suggest.plugins.onesearch.server.OneSearchSuggestService%20%7D%5D}} , mOneSearchConnection=l2.Z@a858642
+11-08 18:27:47.558   540  1185 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10281, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 18:27:47.561  1210  1236 D QuickstepModelDelegate: notifyAppTargetEvent action=1 launchLocation=workspace/0/[-1,-1]/[1,1]
+11-08 18:27:47.566   772   865 D SplashScreenView: Build android.window.SplashScreenView{a88e0ab V.E...... ......ID 0,0-0,0}
+11-08 18:27:47.566   772   865 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-08 18:27:47.566   772   865 D SplashScreenView: Branding: view: android.view.View{ffdf308 G.ED..... ......I. 0,0-0,0 #1020503 android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-08 18:27:47.598  1330  1582 I AiAiEcho: Predicting[0]:  [CONTEXT sampling_count=5 ]
+11-08 18:27:47.598  1330  1582 I AiAiEcho: EchoTargets:
+11-08 18:27:47.598  1330  1582 I AiAiEcho: Filtered by AiAi flag check:
+11-08 18:27:47.598  1330  1582 I AiAiEcho: [CONTEXT ratelimit_period="10 SECONDS" ]
+11-08 18:27:47.598  1330  1582 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata:  [CONTEXT ratelimit_period="10 SECONDS" ]
+11-08 18:27:47.598  1330  1582 I AiAiEcho: #remoteViewsTwiddler: feature disabled.
+11-08 18:27:47.599  1330  1582 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface home with targets# 0 (types=[])
+11-08 18:27:47.608  1441  1441 I A       : (REDACTED) Created gRPC endpoint for service %s
+11-08 18:27:47.610  1210  1210 D BaseDepthController: setSurface:
+11-08 18:27:47.610  1210  1210 D BaseDepthController: 	mWaitingOnSurfaceValidity: false
+11-08 18:27:47.610  1210  1210 D BaseDepthController: 	mSurface: Surface(name=com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity)/@0x2913254
+11-08 18:27:47.612 19946 19946 I BugleRcsWorker: [seqId=0][workId=8ffaed50-5f16-4ab9-8796-04e760f6ae9c] RCS provisioning task has started
+11-08 18:27:47.712  1210  1210 W SplitSelectStateCtor: Missing session instanceIds
+11-08 18:27:47.712  1210  1210 D StatsLog: LAUNCHER_SPLIT_SELECTION_EXIT_INTERRUPTED
+11-08 18:27:47.727  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=1396, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10008000 cmp=ru.liturgyguide/androidx.activity.ComponentActivity }
+11-08 18:27:47.727  1210  1210 D SsBaseTemplateCard: No text view can be set up
+11-08 18:27:47.728  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 18:27:47.729  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 18:27:47.729  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 18:27:47.729  1210  1210 I SsBaseTemplateCard: Secondary card pane is null
+11-08 18:27:47.808 21359 21359 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@6934fa8 in: PRE_ON_CREATE
+11-08 18:27:47.808 21359 21359 V ActivityScenario: Activity lifecycle changed event received but ignored because the reported transition was not ON_CREATE while the last known transition was PRE_ON_CREATE
+11-08 18:27:47.820 21359 21359 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@6934fa8 in: CREATED
+11-08 18:27:47.820 21359 21359 V ActivityScenario: Update currentActivityStage to CREATED, currentActivity=androidx.activity.ComponentActivity@6934fa8
+11-08 18:27:47.821 21359 21359 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@6934fa8 in: STARTED
+11-08 18:27:47.821 21359 21359 V ActivityScenario: Update currentActivityStage to STARTED, currentActivity=androidx.activity.ComponentActivity@6934fa8
+11-08 18:27:47.847 21359 21359 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@6934fa8 in: RESUMED
+11-08 18:27:47.847 21359 21359 V ActivityScenario: Update currentActivityStage to RESUMED, currentActivity=androidx.activity.ComponentActivity@6934fa8
+11-08 18:27:47.867 21388 21388 D VRI[InstrumentationActivityInvoker$EmptyActivity]: visibilityChanged oldVisibility=true newVisibility=false
+11-08 18:27:47.891   442  2223 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 18:27:47.891   772   855 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@82e6b66
+11-08 18:27:47.892   540  1625 W InputManager-JNI: Input channel object '6993764 Splash Screen ru.liturgyguide.test (client)' was disposed without first being removed with the input manager!
+11-08 18:27:47.898  1210  1210 D SearchTargetUtil: query= size=0
+11-08 18:27:47.901 19946 21864 I BugleRcsWorker: [seqId=0][workId=8ffaed50-5f16-4ab9-8796-04e760f6ae9c] Starting StateMachine, trigger is STATE_MACHINE_REPLAY
+11-08 18:27:47.903 19946 21864 I BugleRcsEngine: start PEv2, trigger is STATE_MACHINE_REPLAY, workerId is 8ffaed50-5f16-4ab9-8796-04e760f6ae9c [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=92 ]
+11-08 18:27:47.927 19946 21864 I BugleRcsEngine: Created new RcsProvisioningProtoDataStorage for sim redacted-pii:sim_id[chars:20,last3:897] [CONTEXT thread_id=92 ]
+11-08 18:27:47.947 19946 21864 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=92 ]
+11-08 18:27:47.947 19946 21864 I BugleRcsEngine: start [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=92 ]
+11-08 18:27:47.948 19946 21872 I BugleRcsEngine: Enter EnabledState [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:47.948   540   565 W ziparchive: Unable to open '/data/app/~~obKRc5eqNa-EsOmZFeJ0zA==/ru.liturgyguide-0e4wK4gJksHcXxGNwHVExA==/base.dm': No such file or directory
+11-08 18:27:47.965  1210  1210 D BaseDepthController: setSurface:
+11-08 18:27:47.965  1210  1210 D BaseDepthController: 	mWaitingOnSurfaceValidity: false
+11-08 18:27:47.965  1210  1210 D BaseDepthController: 	mSurface: null
+11-08 18:27:47.965  1210  1210 D BaseDepthController: mSurface is null and mCurrentBlur is: 0
+11-08 18:27:47.965  1210  1210 D StateManager: goToState - fromState: Normal, toState: Normal, partial trace:
+11-08 18:27:47.965  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StateManager.moveToRestState(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:4)
+11-08 18:27:47.965  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StateManager.moveToRestState(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:1)
+11-08 18:27:47.965  1210  1210 D StateManager: 	at com.android.launcher3.statemanager.StatefulActivity.onStop(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:34)
+11-08 18:27:47.966  1210  1210 D StatsLog: LAUNCHER_ONSTOP
+11-08 18:27:47.972 19946 21872 W BugleRcsEngine: Unable to send diagnostic log [CONTEXT thread_id=96 ]
+11-08 18:27:47.978 19946 21872 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=96 ]
+11-08 18:27:47.979 19946 21872 I BugleRcsEngine: transitionViaMessage, srcState=EnabledState, destState = CheckPreconditionsState [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:47.979 19946 21872 I BugleRcsEngine: Sending ProvisioningEvent to Bugle [Update provisioning status (11)], redacted-pii:[chars:85] [CONTEXT thread_id=96 ]
+11-08 18:27:47.979 19946 21872 I BugleRcsEngine: Broadcasting provisioning intent com.google.android.ims.provisioning.engine.provisioningEventAction to Bugle with extras redacted-pii:[chars:243] from source PROVISIONING_EVENT [CONTEXT log_prefix="EngineBroadcaster" thread_id=96 ]
+11-08 18:27:47.991  1210  1578 D OneSearchSuggestProvider: Shut down the binder channel
+11-08 18:27:47.992  1210  2067 I IPCThreadState: oneway function results for code 2 on binder at 0xb4000077d4159530 will be dropped but finished with status UNKNOWN_TRANSACTION
+11-08 18:27:48.006 21359 21359 E FrameTracker: force finish cuj, time out: J<IME_INSETS_HIDE_ANIMATION::1@1@ru.liturgyguide>
+11-08 18:27:48.007   540   653 I ImeTracker: ru.liturgyguide:e10e7e21: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 18:27:48.007   540   653 I ImeTracker: ru.liturgyguide:e10e7e21: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 18:27:48.008  1210  1210 D StatsLog: LAUNCHER_GOOGLE_SEARCH_RESTORE_LIST_SIZE_AFTER_ACTIVITY_RESTART
+11-08 18:27:48.011   772   855 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@ef2dc87
+11-08 18:27:48.011   540  1630 W InputManager-JNI: Input channel object 'dce48b7 Splash Screen ru.liturgyguide (client)' was disposed without first being removed with the input manager!
+11-08 18:27:48.012  1210  1210 D NexusLauncherModelDelegate: notifySmartspaceEvent: SmartspaceTargetEvent{mSmartspaceTarget=null, mSmartspaceActionId='null', mEventType=7}
+11-08 18:27:48.014  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3157
+11-08 18:27:48.019  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 0, locked = false
+11-08 18:27:48.020  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=ru.liturgyguide, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+11-08 18:27:48.024  1210  1210 D NexusLauncherModelDelegate: notifySmartspaceEvent: SmartspaceTargetEvent{mSmartspaceTarget=null, mSmartspaceActionId='null', mEventType=7}
+11-08 18:27:48.027 19946 21872 I BugleRcsEngine: EnabledState: Transition to check preconditions [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.027 19946 21872 I BugleRcsEngine: transitionTo: destState=CheckPreconditionsState [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.027 19946 21872 I BugleRcsEngine: onTransitionRequested EnabledState [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.027 19946 21872 I BugleRcsEngine: Enter CheckPreconditionsState [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.029 21388 21388 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@b62f754
+11-08 18:27:48.031   540   565 I ActivityTaskManager: Displayed ru.liturgyguide/androidx.activity.ComponentActivity for user 0: +374ms
+11-08 18:27:48.058   540  1625 W InputManager-JNI: Input channel object '5463583 ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity (client)' was disposed without first being removed with the input manager!
+11-08 18:27:48.063  1271  1271 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2248 repeatCheckTimes = 1, locked = false
+11-08 18:27:48.066 19946 21871 I BugleRcsProvisioning: RcsProvisioningEventReceiver: Received ProvisioningEvent: Update provisioning status
+11-08 18:27:48.067  1271  1271 I AndroidIME: InputBundleManager.loadActiveInputBundleId():450 loadActiveInputBundleId: und-Latn-x-password, password
+11-08 18:27:48.070  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=1395
+11-08 18:27:48.070  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=1395
+11-08 18:27:48.084 19946 21872 W BugleRcsEngine: Unable to send diagnostic log [CONTEXT thread_id=96 ]
+11-08 18:27:48.085 19946 21872 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=96 ]
+11-08 18:27:48.085 19946 21872 W BugleRcsProvisioning: Failed to get RCS configuration from the cached provider, configuration is empty.
+11-08 18:27:48.085 19946 21872 W BugleRcsProvisioning: dncp: FULL
+11-08 18:27:48.085 19946 21872 W BugleRcsProvisioning: 	at afzl.c(PG:130)
+11-08 18:27:48.085 19946 21872 W BugleRcsProvisioning: 	at afzl.f(PG:13)
+11-08 18:27:48.085 19946 21872 W BugleRcsProvisioning: 	at afwq.a(PG:9)
+11-08 18:27:48.085 19946 21872 W BugleRcsProvisioning: 	at cjrj.ao(PG:3)
+11-08 18:27:48.085 19946 21872 W BugleRcsProvisioning: 	at cjpj.r(PG:3)
+11-08 18:27:48.085 19946 21872 W BugleRcsProvisioning: 	at cjpj.b(PG:591)
+11-08 18:27:48.085 19946 21872 W BugleRcsProvisioning: 	at cirx.h(PG:17)
+11-08 18:27:48.085 19946 21872 W BugleRcsProvisioning: 	at cirx.handleMessage(PG:311)
+11-08 18:27:48.085 19946 21872 W BugleRcsProvisioning: 	at android.os.Handler.dispatchMessage(Handler.java:107)
+11-08 18:27:48.085 19946 21872 W BugleRcsProvisioning: 	at android.os.Looper.loopOnce(Looper.java:232)
+11-08 18:27:48.085 19946 21872 W BugleRcsProvisioning: 	at android.os.Looper.loop(Looper.java:317)
+11-08 18:27:48.085 19946 21872 W BugleRcsProvisioning: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+11-08 18:27:48.086 19946 21872 I BugleRcsEngine: Battery optimization is not required. [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.086 19946 21872 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=96 ]
+11-08 18:27:48.086 19946 21872 I BugleRcsEngine: transitionViaMessage, srcState=CheckPreconditionsState, destState = ReadyState [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.087 19946 21872 I BugleRcsEngine: CheckPreconditionsState: Transition to ready [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.087 19946 21872 I BugleRcsEngine: transitionTo: destState=ReadyState [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.087 19946 21872 I BugleRcsEngine: onTransitionRequested CheckPreconditionsState [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.087 19946 21872 I BugleRcsEngine: Exit CheckPreconditionsState [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.087 19946 21872 I BugleRcsEngine: Exit EnabledState [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.087 19946 21872 W BugleRcsEngine: Unable to send diagnostic log [CONTEXT thread_id=96 ]
+11-08 18:27:48.087 19946 21872 I BugleRcsEngine: Enter InProgressState [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.103 19946 21872 W BugleRcsEngine: Unable to send diagnostic log [CONTEXT thread_id=96 ]
+11-08 18:27:48.109 19946 21872 I BugleRcsEngine: Enter ReadyState [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.127 21359 21359 D AutofillManager: Fill dialog is enabled:false, hints=[password, passwordAuto, creditCardNumber, creditCardSecurityCode, creditCardExpirationDate]
+11-08 18:27:48.147 19946 19982 I Bugle   : BroadcastReceiverAsyncWorkTracker: Acknowledging broadcast of com.google.android.apps.messaging.shared.receiver.RcsProvisioningEventReceiver@50b5e72
+11-08 18:27:48.155 19946 21872 W BugleRcsEngine: Unable to send diagnostic log [CONTEXT thread_id=96 ]
+11-08 18:27:48.171 19946 21872 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=96 ]
+11-08 18:27:48.235 19946 21872 I BugleRcsEngine: transitionViaMessage, srcState=ReadyState, destState = RequestWithImsiState [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.235 19946 21872 I BugleRcsEngine: ReadyState: Transition to request with imsi [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.235 19946 21872 I BugleRcsEngine: transitionTo: destState=RequestWithImsiState [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.235 19946 21872 I BugleRcsEngine: onTransitionRequested ReadyState [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.236 19946 21872 I BugleRcsEngine: Exit ReadyState [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.236 19946 21872 W BugleRcsEngine: Unable to send diagnostic log [CONTEXT thread_id=96 ]
+11-08 18:27:48.236 19946 21872 I BugleRcsEngine: Enter RequestWithImsiState [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.246 19946 21872 W BugleRcsEngine: Unable to send diagnostic log [CONTEXT thread_id=96 ]
+11-08 18:27:48.258 19946 21862 W BugleRcsEngine: Unable to send diagnostic log [CONTEXT thread_id=91 ]
+11-08 18:27:48.268 19946 21872 I BugleRcsEngine: Using config server URL from biuf [CONTEXT log_prefix="ProvisioningServerUtil" thread_id=96 ]
+11-08 18:27:48.269 19946 21872 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=96 ]
+11-08 18:27:48.282 19946 21862 W BugleRcsEngine: Unable to send diagnostic log [CONTEXT thread_id=91 ]
+11-08 18:27:48.295 19946 21871 W BugleRcsEngine: Unable to send diagnostic log [CONTEXT thread_id=95 ]
+11-08 18:27:48.302 19946 21872 I BugleRcsEngine: No RCS Configuration was found in Bugle for simID: redacted-pii:sim_id[chars:20,last3:897] [CONTEXT log_prefix="ProvisioningEngineDataRetriever" thread_id=96 ]
+11-08 18:27:48.310 19946 21872 W BugleRcsEngine: Could not retrieve MSISDN from configuration. Configuration is empty. [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.313 19946 21872 W BugleRcsEngine: Skipping adding Tachyon identity key to request. Null/empty RCS msisdn from configuration for sim ID: redacted-pii:sim_id[chars:20,last3:897]. [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:48.698 21359 21359 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+11-08 18:27:48.698 21359 21359 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+11-08 18:27:48.912   540  1625 V GrammaticalInflectionUtils: AttributionSource: AttributionSource { uid = 10282, packageName = null, attributionTag = null, token = android.os.Binder@8ae4648, deviceId = 0, next = null } does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+11-08 18:27:48.944   772   865 D SplashScreenView: Build android.window.SplashScreenView{28da980 V.E...... ......ID 0,0-0,0}
+11-08 18:27:48.944   772   865 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-08 18:27:48.944   772   865 D SplashScreenView: Branding: view: android.view.View{8f65bb9 G.ED..... ......I. 0,0-0,0 #1020503 android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-08 18:27:48.946   442  2223 W IPCThreadState: Sending oneway calls to frozen process.
+11-08 18:27:48.981   345   418 I netd    : tetherGetStats() -> {[]} <9.51ms>
+11-08 18:27:48.982  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=1397, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10000000 cmp=ru.liturgyguide.test/androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity }
+11-08 18:27:49.003   386   947 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 18:27:49.010 21359 21359 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@6934fa8 in: PAUSED
+11-08 18:27:49.011 21359 21359 V ActivityScenario: Update currentActivityStage to PAUSED, currentActivity=androidx.activity.ComponentActivity@6934fa8
+11-08 18:27:49.040   540  1185 D FileUtils: Rounded bytes from 2593013760 to 4000000000
+11-08 18:27:49.084   345 21880 I resolv  : GetAddrInfoHandler::run: {103 786535 103 983143 10144 0}
+11-08 18:27:49.085  2497  2671 D TrafficStats: tagSocket(85) with statsTag=0x1809, statsUid=-1
+11-08 18:27:49.146  2497  2671 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+11-08 18:27:49.146  2497  2671 W libc    : Access denied finding property "service.adb.tls.port"
+11-08 18:27:49.140  2497  2497 W binder:2497_4: type=1400 audit(0.0:1407): avc:  denied  { read } for  name="u:object_r:system_adbd_prop:s0" dev="tmpfs" ino=309 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:system_adbd_prop:s0 tclass=file permissive=0 app=com.google.android.gms
+11-08 18:27:49.140  2497  2497 W binder:2497_4: type=1400 audit(0.0:1408): avc:  denied  { read } for  name="u:object_r:adbd_prop:s0" dev="tmpfs" ino=54 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:adbd_prop:s0 tclass=file permissive=0 app=com.google.android.gms
+11-08 18:27:49.152   369   510 I RanchuHwc: logCompositionFallbackIfChanged: layer 2425 CompositionType fallback from 3 to 1
+11-08 18:27:49.173 21359 21359 D VRI[ComponentActivity]: visibilityChanged oldVisibility=true newVisibility=false
+11-08 18:27:49.190 21388 21402 I EGL_emulation: Opening libGLESv1_CM_emulation.so
+11-08 18:27:49.197 21388 21402 I EGL_emulation: Opening libGLESv2_emulation.so
+11-08 18:27:49.243   772   941 D EGL_emulation: app_time_stats: avg=464.66ms min=5.55ms max=1034.36ms count=4
+11-08 18:27:49.357 19946 21872 E BugleRcsEngine: Could not create DroidGuard token creation event [CONTEXT log_prefix="DroidGuardLogger" thread_id=96 ]
+11-08 18:27:49.370 21388 21402 W HWUI    : Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+11-08 18:27:49.370 21388 21402 W HWUI    : Failed to initialize 101010-2 format, error = EGL_SUCCESS
+11-08 18:27:49.378 21359 21364 I ru.liturgyguide: Background concurrent mark compact GC freed 9561KB AllocSpace bytes, 23(900KB) LOS objects, 49% free, 9672KB/18MB, paused 321us,33.671ms total 670.856ms
+11-08 18:27:49.384 19946 21872 I BugleRcsEngine: RequestWithImsiState: event Send config request [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:49.384 19946 21872 I BugleRcsEngine: InProgressState: event Send config request [340983ea-9ccf-446f-ab69-6c1151ac0335] [CONTEXT log_prefix="(PEv2-SM-Bugle-166073911)" thread_id=96 ]
+11-08 18:27:49.420 19946 21872 W BugleRcsEngine: Unable to send diagnostic log [CONTEXT thread_id=96 ]
+11-08 18:27:49.449 19946 21862 W BugleRcsEngine: Unable to send diagnostic log [CONTEXT thread_id=91 ]
+11-08 18:27:49.477  1210  1210 I TopTaskTracker: onTaskMovedToFront: (moved taskInfo to front) taskId=776, baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10000100 cmp=com.google.android.apps.nexuslauncher/.NexusLauncherActivity }
+11-08 18:27:49.479   345 21882 I resolv  : GetAddrInfoHandler::run: {103 786535 103 983143 10135 0}
+11-08 18:27:49.481   345 21883 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+11-08 18:27:49.481   345 21884 I resolv  : res_nmkquery: (QUERY, IN, A)
+11-08 18:27:49.485   386   386 I BpBinder: onLastStrongRef automatically unlinking death recipients:
+11-08 18:27:49.509  1210  1210 D StatsLog: LAUNCHER_ONRESUME
+11-08 18:27:49.546  1210  1210 D NexusLauncherModelDelegate: notifySmartspaceEvent: SmartspaceTargetEvent{mSmartspaceTarget=null, mSmartspaceActionId='null', mEventType=6}
+11-08 18:27:49.554   540  1371 W AppSearchIcing: icing-search-engine.cc:321: Error: 5, Message: Document (com.google.android.googlequicksearchbox$OneSearchZeroStateGoogleSuggestions/default, zp) not found.
+11-08 18:27:49.600  1210  1236 D QuickstepModelDelegate: notifyAppTargetEvent action=1 launchLocation=workspace/0/[-1,-1]/[1,1]
+11-08 18:27:49.602  1210  1210 D BaseDepthController: setSurface:
+11-08 18:27:49.602  1210  1210 D BaseDepthController: 	mWaitingOnSurfaceValidity: false
+11-08 18:27:49.602  1210  1210 D BaseDepthController: 	mSurface: Surface(name=com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity)/@0x2913254
+11-08 18:27:49.637 21359 21359 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@6934fa8 in: STOPPED
+11-08 18:27:49.638 21359 21359 V ActivityScenario: Update currentActivityStage to STOPPED, currentActivity=androidx.activity.ComponentActivity@6934fa8
+11-08 18:27:49.644 21359 21359 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@6934fa8 in: DESTROYED
+11-08 18:27:49.644 21359 21359 V ActivityScenario: Update currentActivityStage to DESTROYED, currentActivity=null
+11-08 18:27:49.645 21359 21359 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@94683ec
+11-08 18:27:49.660  1330  1582 I AiAiEcho: Predicting[0]:  [CONTEXT sampling_count=5 ]
+11-08 18:27:49.660  1330  1582 I AiAiEcho: EchoTargets:
+11-08 18:27:49.660  1330  1582 I AiAiEcho: Filtered by AiAi flag check:
+11-08 18:27:49.660  1330  1582 I AiAiEcho: [CONTEXT ratelimit_period="10 SECONDS" ]
+11-08 18:27:49.660  1330  1582 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata:  [CONTEXT ratelimit_period="10 SECONDS" ]
+11-08 18:27:49.661  1330  1582 I AiAiEcho: #remoteViewsTwiddler: feature disabled.
+11-08 18:27:49.662  1330  1582 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface home with targets# 0 (types=[])
+11-08 18:27:49.674   540  1609 W InputManager-JNI: Input channel object 'c6e9d43 ru.liturgyguide/androidx.activity.ComponentActivity (client)' was disposed without first being removed with the input manager!
+11-08 18:27:49.674  1210  1578 D OneSearchSuggestProvider: AppSearch 0-state cache not available, fallback to AGA
+11-08 18:27:49.674  1210  1578 D OneSearchSuggestProvider: java.util.concurrent.CompletionException: java.util.NoSuchElementException: No value present
+11-08 18:27:49.674  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:308)
+11-08 18:27:49.674  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:323)
+11-08 18:27:49.674  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture$UniAccept.tryFire(CompletableFuture.java:684)
+11-08 18:27:49.674  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:486)
+11-08 18:27:49.674  1210  1578 D OneSearchSuggestProvider: 	at java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2138)
+11-08 18:27:49.674  1210  1578 D OneSearchSuggestProvider: 	at com.google.android.apps.nexuslauncher.allapps.E0.onResult(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:67)
+11-08 18:27:49.674  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1.lambda$onResult$0(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:144)
+11-08 18:27:49.674  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1.$r8$lambda$CEk3q8sDAQVhU3rQwVueB8FAj_M(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:1)
+11-08 18:27:49.674  1210  1578 D OneSearchSuggestProvider: 	at android.app.appsearch.SearchSessionUtil$1$$ExternalSyntheticLambda0.run(go/retraceme 64eee9e9f568ff45978879ad2ff83146f2618ee8a88278736fbdf5fae931976e:22)
+11-08 18:27:49.674  1210  1578 D OneSearchSuggestProvider: 	at android.os.Handler.handleCallback(Handler.java:959)
+11-08 18:27:49.674  1210  1578 D OneSearchSuggestProvider: 	at android.os.Handler.dispatchMessage(Handler.java:100)
+11-08 18:27:49.674  1210  1578 D OneSearchSuggestProvider: 	at android.os.Looper.loopOnce(Looper.java:232)
+11-08 18:27:49.674  1210  1578 D OneSearchSuggestProvider: 	at android.os.Looper.loop(Looper.java:317)
+11-08 18:27:49.674  1210  1578 D OneSearchSuggestProvider: 	at android.os.HandlerThread.run(HandlerThread.java:85)
+11-08 18:27:49.674  1210  1578 D OneSearchSuggestProvider: Caused by: java.util.NoSuchElementException: No value present
+11-08 18:27:49.674  1210  1578 D OneSearchSuggestProvider: 	at java.util.Optional.get(Optional.java:143)
+11-08 18:27:49.674  1210  1578 D OneSearchSuggestProvider: 	at com.google.android.apps.nexuslauncher.allapps.E0.onResult(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:28)
+11-08 18:27:49.674  1210  1578 D OneSearchSuggestProvider: 	... 8 more
+11-08 18:27:49.677  1210  1210 D SsBaseTemplateCard: No text view can be set up
+11-08 18:27:49.677  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 18:27:49.678  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 18:27:49.678  1210  1210 D SsBaseTemplateCard: Passed-in item info is null
+11-08 18:27:49.678  1210  1210 I SsBaseTemplateCard: Secondary card pane is null
+11-08 18:27:49.679  1210  1578 D OneSearchSuggestProvider: Created the binder channel successfully for end point service =com.google.android.apps.search.googleapp.search.suggest.plugins.onesearch.server.OneSearchSuggestService , mChannel=i1{delegate=f{logId=1201, target=directaddress:///AndroidComponentAddress%5BIntent%20%7B%20act=grpc.io.action.BIND%20cmp=com.google.android.googlequicksearchbox/com.google.android.apps.search.googleapp.search.suggest.plugins.onesearch.server.OneSearchSuggestService%20%7D%5D}} , mOneSearchConnection=l2.Z@b881f4a
+11-08 18:27:49.688   345 21884 I resolv  : res_nsend: used send_dg 64 terrno: 0
+11-08 18:27:49.689   345 21884 I resolv  : doQuery: rcode=0, ancount=1, return value=64
+11-08 18:27:49.702   345 21883 I resolv  : res_nsend: used send_dg 76 terrno: 0
+11-08 18:27:49.702   345 21883 I resolv  : doQuery: rcode=0, ancount=1, return value=76
+11-08 18:27:49.744  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=1396
+11-08 18:27:49.744  1210  1210 I TopTaskTracker: onTaskRemoved: taskId=1396
+11-08 18:27:49.749  1441  1441 I A       : (REDACTED) Created gRPC endpoint for service %s
+11-08 18:27:49.765 19946 21862 D TrafficStats: tagSocket(123) with statsTag=0x4dea, statsUid=-1
+11-08 18:27:49.807  1210  1443 D EGL_emulation: app_time_stats: avg=1627.34ms min=164.40ms max=5568.09ms count=4
+11-08 18:27:49.809 19946 21862 W DynamiteModule: Local module descriptor class for com.google.android.gms.providerinstaller.dynamite not found.
+11-08 18:27:49.833  1210  1210 D StateManager: createAtomicAnimation - fromState: Background, toState: Normal, partial trace:
+11-08 18:27:49.833  1210  1210 D StateManager: 	at com.android.quickstep.util.WorkspaceRevealAnim.prepareToAnimate(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:22)
+11-08 18:27:49.833  1210  1210 D StateManager: 	at com.android.quickstep.util.WorkspaceRevealAnim.<init>(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:11)
+11-08 18:27:49.833  1210  1210 D StateManager: 	at com.android.launcher3.QuickstepTransitionManager.createWallpaperOpenAnimations(go/retraceme 31f9979659277bb965985aff1272c33e3c3c9e755b77166d20a2465454178f2c:735)
+11-08 18:27:49.881   540   653 I ImeTracker: com.google.android.apps.nexuslauncher:af4995f: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+11-08 18:27:49.881   540   653 I ImeTracker: com.google.android.apps.nexuslauncher:af4995f: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-08 18:27:49.915 21359 21373 D IdlingRegistry: Unregistering idling resources: [androidx.compose.ui.test.EspressoLink@6630424]
+11-08 18:27:49.951 21359 21373 I TestRunner: finished: aTallNarrowScreenKeepsReadableActionsWithoutReducingThePrayerSize(ru.liturgyguide.ui.ReaderAccessibilityTest)

@@ -1,0 +1,38 @@
+{
+  "run_id": "fb47da72c35444bbac3e6ec1d54749e7",
+  "case_id": "missing-reading",
+  "apk_sha256": "622af67363775b9edd60da02f867ce421c5936a0e0fa3d9cad7ebbafaf7fd6e1",
+  "selector": {
+    "text": "Сохраненное чтение"
+  },
+  "expected": [
+    {
+      "content-desc": "Включить плеер",
+      "ancestor": {
+        "class": "android.view.View",
+        "enabled": false,
+        "clickable": true
+      }
+    },
+    {
+      "text": "Тексты на 9 ноября 2026"
+    }
+  ],
+  "status": "PASS",
+  "coordinates": [
+    540,
+    1832
+  ],
+  "artifacts": [
+    {
+      "path": "actions/1794152721892703000-e1660388/after.xml",
+      "sha256": "a6d479e74a729c304236aee8499ddc59204135307cbf0546823e61a0234dcf87",
+      "bytes": 23051
+    },
+    {
+      "path": "actions/1794152721892703000-e1660388/before.xml",
+      "sha256": "f366d44dcbffeb94e432c4152a7c5bfaa9244e16763414ce09bdee780588127d",
+      "bytes": 15715
+    }
+  ]
+}

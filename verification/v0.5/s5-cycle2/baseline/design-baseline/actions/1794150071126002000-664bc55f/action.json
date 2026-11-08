@@ -1,0 +1,34 @@
+{
+  "run_id": "6593c319342c4ade9ecc6ec345cf7e5f",
+  "case_id": "creed-original",
+  "apk_sha256": "619bfeae2ee4220420cee3fd3ace70eef7fd6c1905c5d0dc2516e18a823e42ab",
+  "selector": {
+    "text": "Очень крупный"
+  },
+  "expected": [
+    {
+      "text": "Очень крупный",
+      "ancestor": {
+        "class": "android.view.View",
+        "checked": true
+      }
+    }
+  ],
+  "status": "PASS",
+  "coordinates": [
+    540,
+    1286
+  ],
+  "artifacts": [
+    {
+      "path": "actions/1794150071126002000-664bc55f/after.xml",
+      "sha256": "381cdd9abb6f15d2201a8159bcd4f08e42891da7dcbd93c2c5e4f6867a94c977",
+      "bytes": 15781
+    },
+    {
+      "path": "actions/1794150071126002000-664bc55f/before.xml",
+      "sha256": "4ac67043839af59b2e93fd029fcb7514d53959af28d89747c90b72b5484320d1",
+      "bytes": 16425
+    }
+  ]
+}

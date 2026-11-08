@@ -1,0 +1,30 @@
+{
+  "run_id": "6593c319342c4ade9ecc6ec345cf7e5f",
+  "case_id": "missing-reading",
+  "apk_sha256": "619bfeae2ee4220420cee3fd3ace70eef7fd6c1905c5d0dc2516e18a823e42ab",
+  "selector": {
+    "text": "Завтра"
+  },
+  "expected": [
+    {
+      "text": "9 ноября 2026, понедельник"
+    }
+  ],
+  "status": "PASS",
+  "coordinates": [
+    503,
+    1022
+  ],
+  "artifacts": [
+    {
+      "path": "actions/1794150582685376000-c6112265/after.xml",
+      "sha256": "3f37ef7568e7312d07506cd648e704a95018b37e2895b1d16fac1f9cf68c606f",
+      "bytes": 14755
+    },
+    {
+      "path": "actions/1794150582685376000-c6112265/before.xml",
+      "sha256": "5beb075d69f9d84f1ce18f7d06a15a4e88b931577c694043b7b3e5b424d4209a",
+      "bytes": 14676
+    }
+  ]
+}

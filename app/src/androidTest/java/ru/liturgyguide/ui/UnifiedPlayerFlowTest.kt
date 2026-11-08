@@ -2,9 +2,11 @@ package ru.liturgyguide.ui
 
 import android.content.Context
 import androidx.activity.ComponentActivity
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -104,7 +106,17 @@ class UnifiedPlayerFlowTest {
         assertEquals(0L, stopped.snapshot.elapsedQuarterMillis)
         compose.onNodeWithTag("missing_reading_barrier").assertIsDisplayed()
         compose.onNodeWithTag("play_lyrics").assertIsNotEnabled()
+        compose.onNodeWithText("Текста чтения пока нет").assertIsDisplayed()
+        val continueButton = compose.onNodeWithTag("continue_missing_reading")
+            .assertIsDisplayed().assertHeightIsAtLeast(48.dp)
+        val buttonBounds = continueButton.getUnclippedBoundsInRoot()
+        val readerBounds = compose.onNodeWithTag("lyrics_list").getBoundsInRoot()
+        assertTrue("The manual continuation must fit in the initial reader viewport",
+            buttonBounds.top >= readerBounds.top && buttonBounds.bottom <= readerBounds.bottom)
+        val cueBounds = compose.onNodeWithText("Как узнать этот момент").getUnclippedBoundsInRoot()
+        assertTrue("The continuation belongs before the long cue", buttonBounds.bottom <= cueBounds.top)
         compose.onNodeWithTag("player_meaning_tab").performClick()
+        compose.onNodeWithText("Что происходит").assertIsDisplayed()
         compose.onNodeWithTag("reading_unavailable").assertExists()
         compose.onNodeWithTag("player_text_tab").performClick()
         compose.runOnIdle {
@@ -184,6 +196,7 @@ class UnifiedPlayerFlowTest {
         compose.onNodeWithTag("lyric_line_1").assertTextEquals(track.lines[1].russian).assertIsSelected()
         compose.onNodeWithContentDescription("Остановить плеер").assertIsDisplayed()
         compose.onNodeWithTag("player_meaning_tab").performClick().assertIsSelected()
+        compose.onNodeWithText("Что происходит").assertIsDisplayed()
         val stopped = saved()
         compose.runOnIdle { monotonic.addAndGet(600_000) }
         compose.onNodeWithTag("player_original_tab").performClick().assertIsSelected()
@@ -196,6 +209,30 @@ class UnifiedPlayerFlowTest {
             compose.onAllNodesWithContentDescription("Включить плеер").fetchSemanticsNodes().size == 1
         }
         assertEquals(track.lines[1].id, preferences.getString("lyric_phrase_${track.id}", null))
+        assertPaused()
+    }
+
+    @Test
+    fun shortenedDuplicateTitleKeepsBothTextsDiscoverableAndRestoresTheSelectedPhrase() {
+        launch("creed", trackIndex = 1, lineIndex = 12)
+        val before = saved()
+        compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Символ веры")
+        compose.onNodeWithTag("current_track_title", useUnmergedTree = true).assertTextEquals("Полный текст · 2 из 2")
+        compose.onNodeWithTag("choose_track").assertContentDescriptionEquals("Выбрать текст: Символ веры")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "2 из 2"))
+            .performClick()
+        compose.onNodeWithTag("track_1").assertIsSelected().assertTextContains("Символ веры")
+        compose.onNodeWithTag("track_0").assertIsNotSelected().assertTextContains("Возлюбим друг друга")
+        assertEquals(before, saved())
+        compose.onNodeWithTag("track_0").performClick()
+        compose.onNodeWithTag("current_track_title", useUnmergedTree = true).assertTextEquals("Возлюбим друг друга")
+        compose.onNodeWithTag("lyric_line_0").assertIsSelected().assertIsDisplayed()
+        compose.onNodeWithTag("choose_track").assertContentDescriptionEquals("Выбрать текст: Возлюбим друг друга")
+            .performClick()
+        compose.onNodeWithTag("track_0").assertIsSelected()
+        compose.onNodeWithTag("track_1").assertIsNotSelected().performClick()
+        compose.onNodeWithTag("lyric_line_12").assertIsSelected().assertIsDisplayed()
+        assertEquals(before, saved())
         assertPaused()
     }
 

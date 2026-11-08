@@ -1,0 +1,67 @@
+{
+  "run_id": "6593c319342c4ade9ecc6ec345cf7e5f",
+  "case_id": "creed-meaning",
+  "apk_sha256": "619bfeae2ee4220420cee3fd3ace70eef7fd6c1905c5d0dc2516e18a823e42ab",
+  "manifest_sha256": "477f72d7fc0e042de06348e2f0c61e1149b5e21799344bffda98d5c511d8959c",
+  "started_ns": 1794150390672708000,
+  "status": "PASS",
+  "declared_conditions": {
+    "scene": "same creed phrase3, dark internal scale1.3, Meaning pauses by separately tested runtime contract"
+  },
+  "artifacts": {
+    "before.xml": {
+      "path": "cases/creed-meaning/before.xml",
+      "sha256": "dcc94b92d0370ccbf82e705aa1a3f42b7fd98fa1fd79d26075a1faacd63e8f27",
+      "bytes": 19400
+    },
+    "screen.png": {
+      "path": "cases/creed-meaning/screen.png",
+      "sha256": "ab8a8529dd0169348a4eb6e24dc45787ae9be6a4808ea5985ae94f3bb07e7405",
+      "bytes": 252283
+    },
+    "after.xml": {
+      "path": "cases/creed-meaning/after.xml",
+      "sha256": "dcc94b92d0370ccbf82e705aa1a3f42b7fd98fa1fd79d26075a1faacd63e8f27",
+      "bytes": 19400
+    },
+    "windows.txt": {
+      "path": "cases/creed-meaning/windows.txt",
+      "sha256": "9af4799cdcd07ea2bd53462aac6da3e9e9e2cbaa3bcbdf3b313b727fb296c0b0",
+      "bytes": 44043
+    },
+    "displays.txt": {
+      "path": "cases/creed-meaning/displays.txt",
+      "sha256": "17fd26d9eb32c912b9db203f2d9d75ee1382cd63cdb8a09100a6fc5d0a47b9de",
+      "bytes": 23016
+    }
+  },
+  "visual_status": "NOT_REVIEWED",
+  "observed": {
+    "serial": "emulator-5554",
+    "sdk": "35",
+    "fingerprint": "google/sdk_gphone64_arm64/emu64a:15/AE3A.240806.043/12960925:userdebug/dev-keys",
+    "wm_size": "Physical size: 1080x2400",
+    "density": "Physical density: 420",
+    "font_scale": "1.0",
+    "locale": "en-US",
+    "timezone": "Europe/Moscow",
+    "device_epoch_seconds": "1794150390",
+    "wifi_setting": "1",
+    "mobile_data_setting": "1",
+    "location_mode": "3",
+    "permissions": {
+      "android.permission.INTERNET": "true",
+      "android.permission.ACCESS_FINE_LOCATION": "false",
+      "android.permission.ACCESS_COARSE_LOCATION": "false",
+      "android.permission.RECORD_AUDIO": "false"
+    },
+    "version_code": "4",
+    "version_name": "0.4.0-guide"
+  },
+  "accessibility_tree_sha256": "15dd9b8b407d4482a51c9ae30c2d454a40eed19d75c4227501287ac704c7f91e",
+  "pixels": [
+    1080,
+    2400
+  ],
+  "finished_ns": 1794150396520573000
+}

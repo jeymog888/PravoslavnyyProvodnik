@@ -400,7 +400,11 @@ class GuideNavigationTest {
             expected.queries.forEach { query ->
                 openStage(expected.stageId, query)
                 compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals(expected.stageTitle)
-                compose.onNodeWithTag("current_track_title", useUnmergedTree = true).assertTextEquals(track.title)
+                if (expected.stageId == "creed") {
+                    compose.onNodeWithTag("choose_track").assertContentDescriptionEquals("Выбрать текст: Символ веры")
+                } else {
+                    compose.onNodeWithTag("current_track_title", useUnmergedTree = true).assertTextEquals(track.title)
+                }
                 compose.onNodeWithTag("lyric_line_${expected.lineIndex}")
                     .assertIsSelected().assertIsDisplayed().assertTextEquals(expected.russian)
                 assertEquals(track.id, preferences.getString("lyric_track_${expected.stageId}", null))
@@ -431,7 +435,7 @@ class GuideNavigationTest {
         compose.onNodeWithTag("stage_search").performTextReplacement("Верую")
         compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_creed"))
         compose.onNodeWithTag("stage_creed").performClick()
-        compose.onNodeWithTag("current_track_title", useUnmergedTree = true).assertTextContains("Символ веры")
+        compose.onNodeWithTag("choose_track").assertContentDescriptionEquals("Выбрать текст: Символ веры")
         compose.onNodeWithTag("lyric_line_0").assertIsSelected().assertTextContains("Верю", substring = true)
         compose.onNodeWithTag("play_lyrics").assertIsDisplayed()
         compose.waitUntil(timeoutMillis = 10_000) {
@@ -538,7 +542,7 @@ class GuideNavigationTest {
         compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_creed"))
         compose.onNodeWithTag("stage_creed").performClick()
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
-        compose.onNodeWithTag("current_track_title", useUnmergedTree = true).assertTextContains("Символ веры")
+        compose.onNodeWithTag("choose_track").assertContentDescriptionEquals("Выбрать текст: Символ веры")
         compose.onNodeWithTag("lyric_line_0").assertIsSelected()
     }
 
@@ -601,7 +605,7 @@ class GuideNavigationTest {
 
     private fun assertManualReading() {
         compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed()
-        compose.onNodeWithTag("line_status").assertTextContains("На паузе", substring = true)
+        compose.onNodeWithTag("line_status", useUnmergedTree = true).assertTextContains("На паузе", substring = true)
     }
 
     private fun assertWholePhraseVisible(index: Int) {

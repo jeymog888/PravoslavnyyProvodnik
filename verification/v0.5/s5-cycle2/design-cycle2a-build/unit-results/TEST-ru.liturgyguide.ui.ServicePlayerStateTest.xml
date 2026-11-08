@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.ui.ServicePlayerStateTest" tests="14" skipped="0" failures="0" errors="0" timestamp="2026-11-08T15:24:56" hostname="MacBook-Air-Dmitrij.local" time="0.043">
+  <properties/>
+  <testcase name="one owner advances tracks waits and stages while its mirror is always a paused snapshot" classname="ru.liturgyguide.ui.ServicePlayerStateTest" time="0.038"/>
+  <testcase name="failed mandatory pause remains paused and cannot resume from background" classname="ru.liturgyguide.ui.ServicePlayerStateTest" time="0.0"/>
+  <testcase name="an incoming running state is never automatically resumed by restoration" classname="ru.liturgyguide.ui.ServicePlayerStateTest" time="0.0"/>
+  <testcase name="failed speed change still focuses a newly reached missing-reading explanation" classname="ru.liturgyguide.ui.ServicePlayerStateTest" time="0.0"/>
+  <testcase name="missing text requires explicit continuation and End cannot restart from Play" classname="ru.liturgyguide.ui.ServicePlayerStateTest" time="0.001"/>
+  <testcase name="a tap from a displayed frame seeks its exact phrase after automatic track change" classname="ru.liturgyguide.ui.ServicePlayerStateTest" time="0.0"/>
+  <testcase name="a delayed tick from a replaced reading cannot touch its successor" classname="ru.liturgyguide.ui.ServicePlayerStateTest" time="0.0"/>
+  <testcase name="a failed boundary write stops playback and a forgotten owner never writes again" classname="ru.liturgyguide.ui.ServicePlayerStateTest" time="0.001"/>
+  <testcase name="changing speed uses the old multiplier and failure keeps that speed on pause" classname="ru.liturgyguide.ui.ServicePlayerStateTest" time="0.0"/>
+  <testcase name="pause after a boundary materializes it once and background time never advances it" classname="ru.liturgyguide.ui.ServicePlayerStateTest" time="0.0"/>
+  <testcase name="phrase and track taps from a replaced reading are rejected before pause or write" classname="ru.liturgyguide.ui.ServicePlayerStateTest" time="0.0"/>
+  <testcase name="manual track selection restores its own phrase without old elapsed time" classname="ru.liturgyguide.ui.ServicePlayerStateTest" time="0.0"/>
+  <testcase name="failed manual correction leaves the old materialized position paused" classname="ru.liturgyguide.ui.ServicePlayerStateTest" time="0.0"/>
+  <testcase name="failed new acceptance never installs a different date or revives the previous timer" classname="ru.liturgyguide.ui.ServicePlayerStateTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

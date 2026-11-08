@@ -1,0 +1,42 @@
+{
+  "run_id": "fb47da72c35444bbac3e6ec1d54749e7",
+  "case_id": "creed-original",
+  "apk_sha256": "622af67363775b9edd60da02f867ce421c5936a0e0fa3d9cad7ebbafaf7fd6e1",
+  "selector": {
+    "text": "Сохраненное чтение"
+  },
+  "expected": [
+    {
+      "text": "Оригинал",
+      "ancestor": {
+        "class": "android.view.View",
+        "selected": true
+      }
+    },
+    {
+      "content-desc": "Включить плеер",
+      "ancestor": {
+        "class": "android.view.View",
+        "enabled": true,
+        "clickable": true
+      }
+    }
+  ],
+  "status": "PASS",
+  "coordinates": [
+    540,
+    1718
+  ],
+  "artifacts": [
+    {
+      "path": "actions/1794152690311268000-23555120/after.xml",
+      "sha256": "b13a98135d91f18d69e4cb8bb8b090f05fcd68bbb7285d21c877b2aba00b5a2c",
+      "bytes": 22028
+    },
+    {
+      "path": "actions/1794152690311268000-23555120/before.xml",
+      "sha256": "4fb2ac2b30547d847c9fdbe8fa06e8bcc4680d554a995e322cd9459ec5fdeebe",
+      "bytes": 14952
+    }
+  ]
+}

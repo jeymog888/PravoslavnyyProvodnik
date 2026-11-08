@@ -88,7 +88,7 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
         title = { Text("Примерный темп") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Плеер меняет строки и этапы по расчету. Скорость хора может отличаться. Нажмите нужную строку или кнопку \"Уточнить\", чтобы поправить место.")
+                Text("Плеер двигает текст без звука. Строки и этапы сменяются по расчету, поэтому скорость чтения и пения в храме может отличаться. Нажмите нужную строку или кнопку \"Уточнить\", чтобы поправить место.")
                 PlaybackSpeed.entries.forEach { speed ->
                     Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { player.changeSpeed(speed, generation) }
                         .testTag("tempo_${speed.name.lowercase()}").semantics { selected = reading.state.speed == speed; role = Role.RadioButton },
@@ -116,7 +116,7 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
                                 style = MaterialTheme.typography.titleMedium, maxLines = if (landscape) 1 else 2, overflow = TextOverflow.Ellipsis)
                             Icon(Icons.Default.ExpandMore, null, Modifier.size(18.dp))
                         }
-                        if (!compactControls) Text("${index + 1} из ${reading.plan.stages.size} · Порядок службы", style = MaterialTheme.typography.bodySmall,
+                        if (!compactControls) Text("${index + 1} из ${reading.plan.stages.size} · Порядок", style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     if (!separateClarify) ReaderClarifyButton(::clarify)
@@ -200,16 +200,28 @@ private fun ReaderModes(selected: Int, originalAvailable: Boolean, onSelect: (In
 @Composable
 private fun ReaderTrackHeader(reading: ActiveServicePlayback, compact: Boolean, onTracks: () -> Unit, modifier: Modifier) {
     val track = reading.track ?: return
+    val position = reading.tracks.indexOf(track) + 1
+    val kind = when {
+        track.isScripture -> "Чтение дня"
+        track.isExcerpt -> "Фрагмент молитвы"
+        else -> "Полный текст"
+    }
+    val repeatsStageTitle = track.title == reading.stage.name
+    val label = if (repeatsStageTitle) "$kind · $position из ${reading.tracks.size}" else track.title
     val content: @Composable RowScope.() -> Unit = {
         Column(Modifier.weight(1f)) {
-            Text(track.title, Modifier.testTag("current_track_title"), style = if (compact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.titleMedium,
+            Text(label, Modifier.testTag("current_track_title"), style = if (compact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.titleMedium,
                 maxLines = if (compact) 1 else 2, overflow = TextOverflow.Ellipsis)
-            if (!compact) Text(if (track.isScripture) "Чтения дня · ${reading.tracks.count { it.isScripture }}" else if (track.isExcerpt) "Фрагмент молитвы" else "Полный текст",
+            if (!compact && !repeatsStageTitle) Text(if (track.isScripture) "Чтения дня · ${reading.tracks.count { it.isScripture }}" else kind,
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        if (reading.tracks.size > 1) Icon(Icons.Default.ExpandMore, "Выбрать текст", Modifier.padding(start = 4.dp).size(18.dp))
+        if (reading.tracks.size > 1) Icon(Icons.Default.ExpandMore, null, Modifier.padding(start = 4.dp).size(18.dp))
     }
-    if (reading.tracks.size > 1) TextButton(onClick = onTracks, modifier = modifier.heightIn(min = 48.dp).testTag("choose_track"),
+    if (reading.tracks.size > 1) TextButton(onClick = onTracks, modifier = modifier.heightIn(min = 48.dp).testTag("choose_track")
+        .semantics {
+            contentDescription = "Выбрать текст: ${track.title}"
+            stateDescription = "$position из ${reading.tracks.size}"
+        },
         contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp), content = content)
     else Row(modifier.padding(vertical = if (compact) 4.dp else 8.dp), verticalAlignment = Alignment.CenterVertically, content = content)
 }
@@ -225,16 +237,16 @@ private fun ReaderFooter(reading: ActiveServicePlayback, player: ServicePlayerSt
     val playable = reading.segment is PlaybackSegment.Text || reading.segment is PlaybackSegment.Wait
     Surface(color = MaterialTheme.colorScheme.surfaceContainer, tonalElevation = 2.dp) {
         PlayerControlScale {
-            Column(Modifier.navigationBarsPadding().padding(horizontal = if (compact) 8.dp else 16.dp, vertical = 4.dp)) {
-                if (textVisible) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                    if (compact) IconButton(onClick = onPreviousStage, enabled = index > 0, modifier = Modifier.testTag("previous_stage")) {
+            Column(Modifier.navigationBarsPadding().padding(horizontal = if (compact || textVisible) 8.dp else 16.dp, vertical = 4.dp)) {
+                if (textVisible && compact) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+                    if (compact) IconButton(onClick = onPreviousStage, enabled = index > 0, modifier = Modifier.size(48.dp).testTag("previous_stage")) {
                         Icon(Icons.Default.SkipPrevious, "Предыдущий этап")
                     }
                     IconButton(onClick = { reading.track?.let { track -> track.lines.getOrNull(reading.lineIndex - 1)?.let { player.seekLine(track.id, it.id, generation) } } }, enabled = reading.track != null && reading.lineIndex > 0,
-                        modifier = Modifier.testTag("previous_line")) { Icon(Icons.Default.KeyboardArrowUp, "Предыдущая фраза", Modifier.size(28.dp)) }
+                        modifier = Modifier.size(48.dp).testTag("previous_line")) { Icon(Icons.Default.KeyboardArrowUp, "Предыдущая фраза", Modifier.size(28.dp)) }
                     FilledTonalIconButton(onClick = { if (reading.state.isPlaying) player.pause(generation) else player.play(generation) }, enabled = playable,
-                        colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer),
+                        colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary),
                         modifier = Modifier.size(if (compact) 48.dp else 56.dp).testTag("play_lyrics").semantics {
                             stateDescription = if (reading.state.isPlaying) "Примерное движение включено" else "На паузе"
                         }) {
@@ -242,25 +254,60 @@ private fun ReaderFooter(reading: ActiveServicePlayback, player: ServicePlayerSt
                             if (reading.state.isPlaying) "Остановить плеер" else "Включить плеер", Modifier.size(28.dp))
                     }
                     IconButton(onClick = { reading.track?.let { track -> track.lines.getOrNull(reading.lineIndex + 1)?.let { player.seekLine(track.id, it.id, generation) } } },
-                        enabled = reading.track?.let { reading.lineIndex < it.lines.lastIndex } == true, modifier = Modifier.testTag("next_line")) {
+                        enabled = reading.track?.let { reading.lineIndex < it.lines.lastIndex } == true, modifier = Modifier.size(48.dp).testTag("next_line")) {
                         Icon(Icons.Default.KeyboardArrowDown, "Следующая фраза", Modifier.size(28.dp))
                     }
                     TextButton(onClick = onTempo, contentPadding = PaddingValues(horizontal = 4.dp),
                         modifier = Modifier.widthIn(min = 48.dp).heightIn(min = 48.dp).testTag("scroll_options")) { Text(reading.state.speed.label(), style = MaterialTheme.typography.bodySmall) }
-                    if (compact) IconButton(onClick = onNextStage, modifier = Modifier.testTag("next_stage")) {
+                    if (compact) IconButton(onClick = onNextStage, modifier = Modifier.size(48.dp).testTag("next_stage")) {
                         Icon(if (hasNext) Icons.Default.SkipNext else Icons.Default.Done, if (hasNext) "Следующий этап: $nextTitle" else nextTitle)
                     }
                 }
-                if (!compact && textVisible) Text(when (reading.segment) {
-                    is PlaybackSegment.Text -> "${if (reading.state.isPlaying) "Примерный темп" else "На паузе"} · фраза ${reading.lineIndex + 1} из ${reading.track?.lines?.size ?: 0}"
-                    is PlaybackSegment.Wait -> if (reading.state.isPlaying) "Примерный переход к следующему этапу" else "Переходы на паузе"
-                    is PlaybackSegment.MissingReading -> "Нужен ручной переход"
-                    is PlaybackSegment.End -> "Путеводитель завершен"
-                }, Modifier.align(Alignment.CenterHorizontally).padding(vertical = 4.dp).testTag("line_status"),
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (textVisible && !compact) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { reading.track?.let { track -> track.lines.getOrNull(reading.lineIndex - 1)?.let { player.seekLine(track.id, it.id, generation) } } },
+                        enabled = reading.track != null && reading.lineIndex > 0, modifier = Modifier.size(48.dp).testTag("previous_line")) {
+                        Icon(Icons.Default.KeyboardArrowUp, "Предыдущая фраза", Modifier.size(28.dp))
+                    }
+                    Button(onClick = { if (reading.state.isPlaying) player.pause(generation) else player.play(generation) }, enabled = playable,
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier.weight(1f).widthIn(min = 144.dp).heightIn(min = 56.dp).testTag("play_lyrics").semantics {
+                            stateDescription = if (reading.state.isPlaying) "Примерное движение включено" else "На паузе"
+                        }) {
+                        Icon(if (reading.state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            if (reading.state.isPlaying) "Остановить плеер" else "Включить плеер", Modifier.size(28.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(when (reading.segment) {
+                                is PlaybackSegment.Text, is PlaybackSegment.Wait -> if (reading.state.isPlaying) "По расчету" else "На паузе"
+                                is PlaybackSegment.MissingReading -> "Нет текста"
+                                is PlaybackSegment.End -> "Завершено"
+                            }, Modifier.testTag("line_status"), style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp),
+                                fontWeight = FontWeight.Medium, maxLines = 1, softWrap = false)
+                            if (reading.segment !is PlaybackSegment.End) Text(when (reading.segment) {
+                                is PlaybackSegment.Text -> "Фраза ${reading.lineIndex + 1}/${reading.track?.lines?.size ?: 0}"
+                                is PlaybackSegment.Wait -> "Переходы"
+                                is PlaybackSegment.MissingReading -> "Пауза"
+                                is PlaybackSegment.End -> ""
+                            }, style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp), maxLines = 1, softWrap = false)
+                        }
+                    }
+                    IconButton(onClick = { reading.track?.let { track -> track.lines.getOrNull(reading.lineIndex + 1)?.let { player.seekLine(track.id, it.id, generation) } } },
+                        enabled = reading.track?.let { reading.lineIndex < it.lines.lastIndex } == true,
+                        modifier = Modifier.size(48.dp).testTag("next_line")) {
+                        Icon(Icons.Default.KeyboardArrowDown, "Следующая фраза", Modifier.size(28.dp))
+                    }
+                    TextButton(onClick = onTempo, contentPadding = PaddingValues(horizontal = 4.dp),
+                        modifier = Modifier.width(48.dp).heightIn(min = 48.dp).testTag("scroll_options")) {
+                        Text(reading.state.speed.label(), style = MaterialTheme.typography.bodySmall)
+                    }
+                }
                 if (!compact || !textVisible) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onPreviousStage, enabled = index > 0, modifier = Modifier.testTag("previous_stage")) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Предыдущий этап") }
-                    TextButton(onClick = onNextStage, modifier = Modifier.weight(1f).testTag("next_stage")) {
+                    IconButton(onClick = onPreviousStage, enabled = index > 0, modifier = Modifier.size(48.dp).testTag("previous_stage")) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Предыдущий этап") }
+                    TextButton(onClick = onNextStage, modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("next_stage")) {
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             if (hasNext) Text("Следующий этап", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(nextTitle, maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -288,7 +335,7 @@ private fun ReaderLyrics(reading: ActiveServicePlayback, player: ServicePlayerSt
     LaunchedEffect(track?.id, current, player.focusRequest, original, block) {
         withFrameNanos { }
         val target = if (block) (track?.lines?.size ?: 0) + offset else current + offset
-        val inset = if (compact) 0 else (scroll.layoutInfo.viewportEndOffset / 4).coerceAtLeast(0)
+        val inset = if (compact || block) 0 else (scroll.layoutInfo.viewportEndOffset / 4).coerceAtLeast(0)
         scroll.animateScrollToItem(target, scrollOffset = -inset)
     }
     LazyColumn(Modifier.fillMaxSize().testTag("lyrics_list"), state = scroll,
@@ -331,10 +378,12 @@ private fun ReaderStageProgress(reading: ActiveServicePlayback, player: ServiceP
     Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = MaterialTheme.shapes.medium,
         modifier = Modifier.fillMaxWidth().testTag(when { missing -> "missing_reading_barrier"; end -> "playback_end"; else -> "stage_wait" })) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text(when { missing -> "Чтение нужно пройти вручную"; end -> "Путеводитель завершен"; reading.track == null -> reading.stage.shortTitle; else -> "Дальше слушаем службу" }, style = MaterialTheme.typography.titleLarge)
+            Text(when { missing -> "Текста чтения пока нет"; end -> "Путеводитель завершен"; reading.track == null -> reading.stage.shortTitle; else -> "Дальше слушаем службу" }, style = MaterialTheme.typography.titleLarge)
             if (missing) {
                 val date = reading.plan.serviceDate.format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru")))
-                Text("Текста на $date пока нет. Плеер остановлен. Когда чтение закончится, продолжите к следующему этапу.")
+                Text("В приложении нет текста на $date. Плеер на паузе. Когда чтение в храме закончится, можно перейти дальше.")
+                Button(onClick = { player.continueAfterMissing(generation) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                    .testTag("continue_missing_reading")) { Text("Чтение в храме закончилось") }
             }
             else if (end) Text("Это конец порядка в приложении. Ориентируйтесь на происходящее в храме.")
             else {
@@ -347,8 +396,7 @@ private fun ReaderStageProgress(reading: ActiveServicePlayback, player: ServiceP
                 Text(it, style = MaterialTheme.typography.bodyLarge)
             }
             if (!missing && !end && reading.stage.whatToDo.isNotBlank()) Text(reading.stage.whatToDo, style = MaterialTheme.typography.bodyLarge)
-            if (missing) Button(onClick = { player.continueAfterMissing(generation) }, modifier = Modifier.fillMaxWidth().testTag("continue_missing_reading")) { Text("Чтение закончилось · дальше") }
-            else OutlinedButton(onClick = onNextStage, modifier = Modifier.fillMaxWidth().testTag("wait_next_stage")) { Text(if (end) "Закончить чтение" else "Перейти дальше вручную") }
+            if (!missing) OutlinedButton(onClick = onNextStage, modifier = Modifier.fillMaxWidth().testTag("wait_next_stage")) { Text(if (end) "Закончить чтение" else "Перейти дальше вручную") }
             TextButton(onClick = onClarify, modifier = Modifier.fillMaxWidth()) { Text("Уточнить место по службе") }
         }
     }
@@ -362,7 +410,13 @@ private fun ReaderMeaning(reading: ActiveServicePlayback, missing: Boolean, modi
     LaunchedEffect(reading.stage.id, track?.id) { scroll.scrollToItem(0) }
     LazyColumn(modifier.fillMaxSize().testTag("service_content"), state = scroll,
         contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        if (missing) item { MeaningCard("Чтение на выбранную дату") { DailyReadingUnavailable() } }
+        item { MeaningCard("Что происходит") {
+            Text(reading.stage.description, style = MaterialTheme.typography.bodyLarge)
+            if (missing) DailyReadingUnavailable(meaning = true)
+        } }
+        item { MeaningCard("В чем смысл") { Text(reading.stage.meaning, style = MaterialTheme.typography.bodyLarge) } }
+        reading.stage.cue?.let { cue -> item { MeaningCard("Как узнать этот момент") { Text(cue, style = MaterialTheme.typography.bodyLarge) } } }
+        if (reading.stage.whatToDo.isNotBlank()) item { MeaningCard("На что обратить внимание") { Text(reading.stage.whatToDo, style = MaterialTheme.typography.bodyLarge) } }
         if (track != null && track.explanation.isNotBlank()) item {
             MeaningCard(if (track.isScripture) "О чем это чтение" else "Об этом тексте") {
                 Text(track.explanation, Modifier.testTag("track_explanation"), style = MaterialTheme.typography.bodyLarge)
@@ -373,10 +427,6 @@ private fun ReaderMeaning(reading: ActiveServicePlayback, missing: Boolean, modi
                 track.sourceUrl?.let { url -> TextButton(onClick = { onOpenSource(url) }) { Text("Источник текста") } }
             }
         }
-        item { MeaningCard("Что происходит") { Text(reading.stage.description, style = MaterialTheme.typography.bodyLarge) } }
-        item { MeaningCard("В чем смысл") { Text(reading.stage.meaning, style = MaterialTheme.typography.bodyLarge) } }
-        reading.stage.cue?.let { cue -> item { MeaningCard("Как узнать этот момент") { Text(cue, style = MaterialTheme.typography.bodyLarge) } } }
-        if (reading.stage.whatToDo.isNotBlank()) item { MeaningCard("На что обратить внимание") { Text(reading.stage.whatToDo, style = MaterialTheme.typography.bodyLarge) } }
         reading.stage.sourceUrl?.let { url -> item { TextButton(onClick = { onOpenSource(url) }) { Text(reading.stage.sourceTitle ?: "Источник объяснения") } } }
     }
 }
@@ -385,14 +435,15 @@ private fun ReaderMeaning(reading: ActiveServicePlayback, missing: Boolean, modi
 private fun MeaningCard(title: String, content: @Composable ColumnScope.() -> Unit) {
     Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
         Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(title, style = MaterialTheme.typography.titleLarge)
+            Text(title, Modifier.semantics { heading() }, style = MaterialTheme.typography.titleMedium)
             content()
         }
     }
 }
 
 @Composable
-private fun DailyReadingUnavailable() {
-    Text("Чтение на эту дату пока не добавлено. Здесь - только возглас перед чтением", Modifier.testTag("reading_unavailable"),
+private fun DailyReadingUnavailable(meaning: Boolean = false) {
+    Text(if (meaning) "Текста чтения на эту дату пока нет. Здесь объясняется этот этап службы"
+        else "Чтение на эту дату пока не добавлено. Здесь - только возглас перед чтением", Modifier.testTag("reading_unavailable"),
         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.service.PrayerTextSearchTest" tests="18" skipped="0" failures="0" errors="0" timestamp="2026-11-08T15:34:32" hostname="MacBook-Air-Dmitrij.local" time="0.048">
+  <properties/>
+  <testcase name="search removes stress but preserves the difference between short i and i" classname="ru.liturgyguide.service.PrayerTextSearchTest" time="0.001"/>
+  <testcase name="Russian meaning finds its paired line even when the original uses different words" classname="ru.liturgyguide.service.PrayerTextSearchTest" time="0.002"/>
+  <testcase name="a Gospel verse opens the reading after its introductory call" classname="ru.liturgyguide.service.PrayerTextSearchTest" time="0.01"/>
+  <testcase name="search folds the curated whole words without rewriting unknown word fragments" classname="ru.liturgyguide.service.PrayerTextSearchTest" time="0.0"/>
+  <testcase name="null blank punctuation and unmatched queries do not choose an arbitrary track" classname="ru.liturgyguide.service.PrayerTextSearchTest" time="0.003"/>
+  <testcase name="both Trisagion spellings locate the same phrase including original-only words" classname="ru.liturgyguide.service.PrayerTextSearchTest" time="0.001"/>
+  <testcase name="both Gospel spellings locate the same original call and paired meaning" classname="ru.liturgyguide.service.PrayerTextSearchTest" time="0.002"/>
+  <testcase name="unknown words and unlisted spelling guesses do not choose a real prayer" classname="ru.liturgyguide.service.PrayerTextSearchTest" time="0.012"/>
+  <testcase name="Our Father title and an internal petition locate their correct lines" classname="ru.liturgyguide.service.PrayerTextSearchTest" time="0.002"/>
+  <testcase name="an empty titled track cannot produce an invalid line index" classname="ru.liturgyguide.service.PrayerTextSearchTest" time="0.002"/>
+  <testcase name="all query words are required and may appear in a different order" classname="ru.liturgyguide.service.PrayerTextSearchTest" time="0.0"/>
+  <testcase name="Veruyu opens the actual Creed instead of the introductory prayer" classname="ru.liturgyguide.service.PrayerTextSearchTest" time="0.002"/>
+  <testcase name="a long original anchor remains searchable across paired phrases" classname="ru.liturgyguide.service.PrayerTextSearchTest" time="0.002"/>
+  <testcase name="case accents yo and punctuation are folded consistently with stage search" classname="ru.liturgyguide.service.PrayerTextSearchTest" time="0.002"/>
+  <testcase name="spelling variants find a later paired phrase instead of the track beginning" classname="ru.liturgyguide.service.PrayerTextSearchTest" time="0.002"/>
+  <testcase name="a long scripture query remains searchable across display chunks" classname="ru.liturgyguide.service.PrayerTextSearchTest" time="0.005"/>
+  <testcase name="common repeated terms are deterministic in track and line order" classname="ru.liturgyguide.service.PrayerTextSearchTest" time="0.0"/>
+  <testcase name="title match takes global priority over an earlier track body" classname="ru.liturgyguide.service.PrayerTextSearchTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

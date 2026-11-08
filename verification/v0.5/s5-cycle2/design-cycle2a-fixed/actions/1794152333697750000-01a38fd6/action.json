@@ -1,0 +1,37 @@
+{
+  "run_id": "16ce5b84d3e04b4ab8da03c6a953d6f7",
+  "case_id": "creed-meaning",
+  "apk_sha256": "4fc58204cf584e5c49bdf2da380bcd3e7c95d0e6e3b56675e5242edb5bed2330",
+  "selector": {
+    "text": "Смысл"
+  },
+  "expected": [
+    {
+      "text": "Смысл",
+      "ancestor": {
+        "class": "android.view.View",
+        "selected": true
+      }
+    },
+    {
+      "text": "Что происходит"
+    }
+  ],
+  "status": "PASS",
+  "coordinates": [
+    866,
+    472
+  ],
+  "artifacts": [
+    {
+      "path": "actions/1794152333697750000-01a38fd6/after.xml",
+      "sha256": "3019f142527faf1921a42de7eeb69f5d7fa3332977d72d20b53028c3417c941e",
+      "bytes": 19029
+    },
+    {
+      "path": "actions/1794152333697750000-01a38fd6/before.xml",
+      "sha256": "cce65f7a47f2e22caa2ad165788d307e97c273f0fd765344362041f4b83822ff",
+      "bytes": 21715
+    }
+  ]
+}

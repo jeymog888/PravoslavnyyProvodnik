@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.research.HypothesisPrototypeTest" tests="24" skipped="0" failures="0" errors="0" timestamp="2026-11-08T15:24:54" hostname="MacBook-Air-Dmitrij.local" time="0.272">
+  <properties/>
+  <testcase name="cancel clears active and pending candidate and increments context generation" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.128"/>
+  <testcase name="partial at deadline expires instead of extending window" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.014"/>
+  <testcase name="first final consumes token including empty ambiguous and oversized text" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.012"/>
+  <testcase name="invalid beginning windows create no token and require no duration arithmetic" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.013"/>
+  <testcase name="accepted attempt ids cannot be repeated after completion or invalidation" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.007"/>
+  <testcase name="generation exhaustion permanently prevents reuse after invalidation" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.004"/>
+  <testcase name="final at opened time is allowed but deadline is exclusive" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.004"/>
+  <testcase name="repeated distinctive phrase in a new attempt does not accumulate confidence" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.014"/>
+  <testcase name="one active attempt rejects another start without moving deadline or consuming its id" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.004"/>
+  <testcase name="context change invalidates even if the next service has identical date and parish" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.004"/>
+  <testcase name="normalized shared anchors are ambiguous but independent unique anchors can help a person" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.004"/>
+  <testcase name="quoted prayer is a candidate and a counterexample to automatic synchronization" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.004"/>
+  <testcase name="background blocks new attempts and foreground never resumes old capture or candidate" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.003"/>
+  <testcase name="control events preserve monotonic high water mark across generations" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.005"/>
+  <testcase name="common repeated fragment and reordered phrases do not select a stage" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.006"/>
+  <testcase name="stale final partial timeout and cancel cannot close or poison a newer attempt" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.007"/>
+  <testcase name="attempt counter stops at max without wrapping" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.003"/>
+  <testcase name="new attempts reject backward time after a completed attempt" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.005"/>
+  <testcase name="two different stages in one final remain ambiguous" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.006"/>
+  <testcase name="partials are never matched or joined to final" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.004"/>
+  <testcase name="only final stage survives a conflicting partial" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.003"/>
+  <testcase name="backward clock consumes attempt and cannot be repaired by a later callback" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.003"/>
+  <testcase name="real guide anchors yield only a human review candidate" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.003"/>
+  <testcase name="timeout before deadline does not close and timeout at deadline closes once" classname="ru.liturgyguide.research.HypothesisPrototypeTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

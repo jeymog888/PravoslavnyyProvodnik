@@ -1,0 +1,38 @@
+{
+  "run_id": "6593c319342c4ade9ecc6ec345cf7e5f",
+  "case_id": "missing-reading",
+  "apk_sha256": "619bfeae2ee4220420cee3fd3ace70eef7fd6c1905c5d0dc2516e18a823e42ab",
+  "selector": {
+    "content-desc": "Включить плеер"
+  },
+  "expected": [
+    {
+      "text": "Чтение нужно пройти вручную"
+    },
+    {
+      "content-desc": "Включить плеер",
+      "ancestor": {
+        "class": "android.view.View",
+        "enabled": false,
+        "clickable": true
+      }
+    }
+  ],
+  "status": "PASS",
+  "coordinates": [
+    429,
+    2015
+  ],
+  "artifacts": [
+    {
+      "path": "actions/1794151098158259000-fcdf9ec5/after.xml",
+      "sha256": "60abfec058c70b823abedc1865e742173f80aa8ca8fafb50e6a1cb23acdb13ba",
+      "bytes": 21840
+    },
+    {
+      "path": "actions/1794151098158259000-fcdf9ec5/before.xml",
+      "sha256": "78ec1c9b4dd24f0f7f65922d712f78e0802c75b6b0c0a599819a34da984ffebe",
+      "bytes": 20605
+    }
+  ]
+}

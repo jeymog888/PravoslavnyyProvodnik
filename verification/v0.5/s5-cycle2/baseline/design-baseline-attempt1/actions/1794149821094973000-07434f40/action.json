@@ -1,0 +1,26 @@
+{
+  "run_id": "d2262f3fb51b4934858a32bf391ba60a",
+  "case_id": "creed-original",
+  "apk_sha256": "619bfeae2ee4220420cee3fd3ace70eef7fd6c1905c5d0dc2516e18a823e42ab",
+  "selector": {
+    "text": "Очень крупный"
+  },
+  "expected": [
+    {
+      "text": "Очень крупный",
+      "ancestor": {
+        "class": "android.view.View",
+        "selected": true
+      }
+    }
+  ],
+  "status": "FAIL",
+  "error": "command failed: /private/tmp/liturgy-android-toolchain/sdk/platform-tools/adb: Command '['/private/tmp/liturgy-android-toolchain/sdk/platform-tools/adb', '-s', 'emulator-5554', 'shell', 'uiautomator', 'dump', '/data/local/tmp/feoria-harness-3d23ac6df93b42f8a7b85084f21df5c9.xml']' timed out after 0.11069450000000103 seconds",
+  "artifacts": [
+    {
+      "path": "actions/1794149821094973000-07434f40/before.xml",
+      "sha256": "4ac67043839af59b2e93fd029fcb7514d53959af28d89747c90b72b5484320d1",
+      "bytes": 16425
+    }
+  ]
+}

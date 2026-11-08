@@ -1,0 +1,30 @@
+{
+  "run_id": "6593c319342c4ade9ecc6ec345cf7e5f",
+  "case_id": "missing-reading",
+  "apk_sha256": "619bfeae2ee4220420cee3fd3ace70eef7fd6c1905c5d0dc2516e18a823e42ab",
+  "selector": {
+    "text": "Смотреть службу"
+  },
+  "expected": [
+    {
+      "text": "Тексты на 9 ноября 2026"
+    }
+  ],
+  "status": "PASS",
+  "coordinates": [
+    540,
+    648
+  ],
+  "artifacts": [
+    {
+      "path": "actions/1794151052660464000-1b6056a1/after.xml",
+      "sha256": "426fb9894ba4444e8a1b2b4592ebefd5000f8466186d3bc5036af18b1a8a019a",
+      "bytes": 20543
+    },
+    {
+      "path": "actions/1794151052660464000-1b6056a1/before.xml",
+      "sha256": "da8c4894b5d8e40a0d345a79b614329023442552e7139629b47fe51b74c69dbc",
+      "bytes": 15011
+    }
+  ]
+}

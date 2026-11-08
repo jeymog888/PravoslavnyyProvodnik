@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.service.LyricPlaybackEngineTest" tests="17" skipped="0" failures="0" errors="0" timestamp="2026-11-08T15:34:32" hostname="MacBook-Air-Dmitrij.local" time="0.005">
+  <properties/>
+  <testcase name="restoring a saved line and offset is paused until explicitly resumed" classname="ru.liturgyguide.service.LyricPlaybackEngineTest" time="0.002"/>
+  <testcase name="invalid requested tempo and offsets are normalized safely" classname="ru.liturgyguide.service.LyricPlaybackEngineTest" time="0.0"/>
+  <testcase name="a finished track stays finished after restoring into a slower global tempo" classname="ru.liturgyguide.service.LyricPlaybackEngineTest" time="0.0"/>
+  <testcase name="single line tracks wait their duration before stopping" classname="ru.liturgyguide.service.LyricPlaybackEngineTest" time="0.0"/>
+  <testcase name="tempo change preserves relative offset and playing state" classname="ru.liturgyguide.service.LyricPlaybackEngineTest" time="0.0"/>
+  <testcase name="empty and ambiguous tracks fail before player creation" classname="ru.liturgyguide.service.LyricPlaybackEngineTest" time="0.001"/>
+  <testcase name="manual mode is the default and never advances on elapsed time" classname="ru.liturgyguide.service.LyricPlaybackEngineTest" time="0.0"/>
+  <testcase name="clock reversal cannot move to an earlier line or make a negative offset" classname="ru.liturgyguide.service.LyricPlaybackEngineTest" time="0.0"/>
+  <testcase name="next previous and seek are bounded at track ends" classname="ru.liturgyguide.service.LyricPlaybackEngineTest" time="0.0"/>
+  <testcase name="restoring with saved tempo then adopting global tempo preserves phrase fraction" classname="ru.liturgyguide.service.LyricPlaybackEngineTest" time="0.0"/>
+  <testcase name="pause and resume preserve a partial line instead of restarting it" classname="ru.liturgyguide.service.LyricPlaybackEngineTest" time="0.001"/>
+  <testcase name="next and previous are relative to the visible timed line" classname="ru.liturgyguide.service.LyricPlaybackEngineTest" time="0.0"/>
+  <testcase name="playback stops on the last line and does not wrap or restart" classname="ru.liturgyguide.service.LyricPlaybackEngineTest" time="0.0"/>
+  <testcase name="extreme elapsed time stops safely without overflow" classname="ru.liturgyguide.service.LyricPlaybackEngineTest" time="0.0"/>
+  <testcase name="manual seeking pauses and clears the old offset" classname="ru.liturgyguide.service.LyricPlaybackEngineTest" time="0.0"/>
+  <testcase name="explicit playback advances at the chosen line boundary" classname="ru.liturgyguide.service.LyricPlaybackEngineTest" time="0.0"/>
+  <testcase name="invalid saved state cannot start an automatic timer" classname="ru.liturgyguide.service.LyricPlaybackEngineTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

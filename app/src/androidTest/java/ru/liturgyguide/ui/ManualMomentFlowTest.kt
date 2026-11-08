@@ -75,7 +75,11 @@ class ManualMomentFlowTest {
             accept()
             val expectedTrack = tracks(stageId)[trackIndex]
             compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals(stage.name)
-            compose.onNodeWithTag("current_track_title", useUnmergedTree = true).assertTextEquals(expectedTrack.title)
+            if (stageId == "creed") {
+                compose.onNodeWithTag("choose_track").assertContentDescriptionEquals("Выбрать текст: Символ веры")
+            } else {
+                compose.onNodeWithTag("current_track_title", useUnmergedTree = true).assertTextEquals(expectedTrack.title)
+            }
             compose.onNodeWithTag("lyric_line_0").assertIsSelected().assertIsDisplayed().assertTextEquals(expectedTrack.lines[0].russian)
             assertEquals(expectedTrack.id, preferences.getString("lyric_track_$stageId", null))
             assertEquals(expectedTrack.lines[0].id, preferences.getString("lyric_phrase_${expectedTrack.id}", null))
@@ -142,7 +146,7 @@ class ManualMomentFlowTest {
         landmark("creed")
         accept()
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
-        compose.onNodeWithTag("current_track_title", useUnmergedTree = true).assertTextEquals(creed.title)
+        compose.onNodeWithTag("choose_track").assertContentDescriptionEquals("Выбрать текст: Символ веры")
         compose.onNodeWithTag("lyric_line_0").assertIsSelected().assertIsDisplayed()
         assertEquals(creed.id, preferences.getString("lyric_track_creed", null))
         assertEquals(creed.lines[0].id, preferences.getString("lyric_phrase_${creed.id}", null))

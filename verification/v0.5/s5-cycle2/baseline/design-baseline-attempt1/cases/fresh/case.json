@@ -1,0 +1,67 @@
+{
+  "run_id": "d2262f3fb51b4934858a32bf391ba60a",
+  "case_id": "fresh",
+  "apk_sha256": "619bfeae2ee4220420cee3fd3ace70eef7fd6c1905c5d0dc2516e18a823e42ab",
+  "manifest_sha256": "477f72d7fc0e042de06348e2f0c61e1149b5e21799344bffda98d5c511d8959c",
+  "started_ns": 1794149659171238000,
+  "status": "PASS",
+  "declared_conditions": {
+    "scene": "fresh install, light theme, internal scale 1.0"
+  },
+  "artifacts": {
+    "before.xml": {
+      "path": "cases/fresh/before.xml",
+      "sha256": "86d116ac47292799d3c97a7c257fbd2e94e16d8f91bc12a5e9c709f42b79c7db",
+      "bytes": 14092
+    },
+    "screen.png": {
+      "path": "cases/fresh/screen.png",
+      "sha256": "b7dd2a175930e6b1946fc21001142fc549c53c33361a91c18df7aff4e6becc5b",
+      "bytes": 171980
+    },
+    "after.xml": {
+      "path": "cases/fresh/after.xml",
+      "sha256": "86d116ac47292799d3c97a7c257fbd2e94e16d8f91bc12a5e9c709f42b79c7db",
+      "bytes": 14092
+    },
+    "windows.txt": {
+      "path": "cases/fresh/windows.txt",
+      "sha256": "31a56fad8fcae9afc4d7558d889f3e1d7affc6d4b836353a442525d91c494a82",
+      "bytes": 44162
+    },
+    "displays.txt": {
+      "path": "cases/fresh/displays.txt",
+      "sha256": "c9539773f85609b218caa0e3558cced36b9a7a8e6e779aff08c02691429a780a",
+      "bytes": 23093
+    }
+  },
+  "visual_status": "NOT_REVIEWED",
+  "observed": {
+    "serial": "emulator-5554",
+    "sdk": "35",
+    "fingerprint": "google/sdk_gphone64_arm64/emu64a:15/AE3A.240806.043/12960925:userdebug/dev-keys",
+    "wm_size": "Physical size: 1080x2400",
+    "density": "Physical density: 420",
+    "font_scale": "1.0",
+    "locale": "en-US",
+    "timezone": "Europe/Moscow",
+    "device_epoch_seconds": "1794149659",
+    "wifi_setting": "1",
+    "mobile_data_setting": "1",
+    "location_mode": "3",
+    "permissions": {
+      "android.permission.INTERNET": "true",
+      "android.permission.ACCESS_FINE_LOCATION": "false",
+      "android.permission.ACCESS_COARSE_LOCATION": "false",
+      "android.permission.RECORD_AUDIO": "false"
+    },
+    "version_code": "4",
+    "version_name": "0.4.0-guide"
+  },
+  "accessibility_tree_sha256": "df2589f1f1d9ebad32261d9ec59049293d3110bc6f1205dc77c89d3898f1cc5d",
+  "pixels": [
+    1080,
+    2400
+  ],
+  "finished_ns": 1794149665355682000
+}

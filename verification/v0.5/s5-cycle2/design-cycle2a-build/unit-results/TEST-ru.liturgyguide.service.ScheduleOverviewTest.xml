@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.service.ScheduleOverviewTest" tests="18" skipped="0" failures="0" errors="0" timestamp="2026-11-08T15:24:56" hostname="MacBook-Air-Dmitrij.local" time="0.009">
+  <properties/>
+  <testcase name="published seconds remain compatible with repository and legacy suggestions" classname="ru.liturgyguide.service.ScheduleOverviewTest" time="0.003"/>
+  <testcase name="conflicting duplicates never choose an arbitrary personal override" classname="ru.liturgyguide.service.ScheduleOverviewTest" time="0.001"/>
+  <testcase name="only liturgy has a supported player and invalid neighboring data is skipped" classname="ru.liturgyguide.service.ScheduleOverviewTest" time="0.0"/>
+  <testcase name="missing known beginning offers service without inventing stage" classname="ru.liturgyguide.service.ScheduleOverviewTest" time="0.0"/>
+  <testcase name="old month and weekday are never recycled as a future service" classname="ru.liturgyguide.service.ScheduleOverviewTest" time="0.0"/>
+  <testcase name="multiple published starts select latest plausible current and nearest future" classname="ru.liturgyguide.service.ScheduleOverviewTest" time="0.001"/>
+  <testcase name="exhausted current guide and next known service are independent choices" classname="ru.liturgyguide.service.ScheduleOverviewTest" time="0.0"/>
+  <testcase name="spring DST gap and autumn DST overlap never get guessed" classname="ru.liturgyguide.service.ScheduleOverviewTest" time="0.0"/>
+  <testcase name="duplicated published instant keeps the same identity across the start boundary" classname="ru.liturgyguide.service.ScheduleOverviewTest" time="0.0"/>
+  <testcase name="personal time overrides only the suggestion for its parish and date" classname="ru.liturgyguide.service.ScheduleOverviewTest" time="0.0"/>
+  <testcase name="exact start enters current and 150 minute boundary is inclusive" classname="ru.liturgyguide.service.ScheduleOverviewTest" time="0.0"/>
+  <testcase name="a future published period can be shown before it begins" classname="ru.liturgyguide.service.ScheduleOverviewTest" time="0.001"/>
+  <testcase name="parish timezone determines the instant independently of fixed clock zone" classname="ru.liturgyguide.service.ScheduleOverviewTest" time="0.0"/>
+  <testcase name="current may cross parish midnight and retains its service date" classname="ru.liturgyguide.service.ScheduleOverviewTest" time="0.0"/>
+  <testcase name="each published event must lie within its own valid period" classname="ru.liturgyguide.service.ScheduleOverviewTest" time="0.001"/>
+  <testcase name="next service spans days and months without a two hour cutoff" classname="ru.liturgyguide.service.ScheduleOverviewTest" time="0.001"/>
+  <testcase name="invalid personal records do not hide published services" classname="ru.liturgyguide.service.ScheduleOverviewTest" time="0.0"/>
+  <testcase name="custom parish can use one explicit personal start without published validity dates" classname="ru.liturgyguide.service.ScheduleOverviewTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

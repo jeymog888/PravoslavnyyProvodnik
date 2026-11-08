@@ -1,0 +1,198 @@
+{
+  "schema": 1,
+  "package": "ru.liturgyguide",
+  "build_type": "debug",
+  "conditions": {
+    "data": "explicit local fixtures, not live parish schedule",
+    "clock": "device clock, no injected clock",
+    "location": "not used",
+    "network": "device settings recorded, no provider availability claim"
+  },
+  "cases": [
+    {
+      "id": "fresh",
+      "mode": "static",
+      "conditions": {
+        "scene": "fresh install, light theme, internal scale 1.0"
+      },
+      "expected": [
+        {
+          "text": "Выбрать храм"
+        },
+        {
+          "text": "Начните с выбора храма"
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.0",
+        "timezone": "Europe/Moscow",
+        "wm_size": "Physical size: 1080x2400",
+        "density": "Physical density: 420"
+      }
+    },
+    {
+      "id": "current-service",
+      "mode": "static",
+      "conditions": {
+        "scene": "UI-created cycle1 fixture: Kazan Temple_QA, personal start 2026-11-08 18:00 Europe/Moscow, light theme"
+      },
+      "expected": [
+        {
+          "text": "Temple_QA"
+        },
+        {
+          "text": "Начало указано вами"
+        },
+        {
+          "text": "Смотреть службу"
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.0",
+        "timezone": "Europe/Moscow",
+        "wm_size": "Physical size: 1080x2400",
+        "density": "Physical density: 420"
+      }
+    },
+    {
+      "id": "creed-original",
+      "mode": "static",
+      "conditions": {
+        "scene": "2026-11-08, creed full text, phrase index3, original, dark, internal scale1.3; paused observed"
+      },
+      "expected": [
+        {
+          "text": "Символ веры"
+        },
+        {
+          "text": "Оригинал",
+          "ancestor": {
+            "class": "android.view.View",
+            "selected": true
+          }
+        },
+        {
+          "content-desc": "Включить плеер",
+          "ancestor": {
+            "class": "android.view.View",
+            "enabled": true,
+            "clickable": true
+          }
+        },
+        {
+          "text": "Иже от Отца рожденнаго прежде всех век."
+        },
+        {
+          "text": "На паузе · фраза 4 из 20"
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.0",
+        "timezone": "Europe/Moscow",
+        "wm_size": "Physical size: 1080x2400",
+        "density": "Physical density: 420"
+      }
+    },
+    {
+      "id": "creed-meaning",
+      "mode": "static",
+      "conditions": {
+        "scene": "same creed phrase3, dark internal scale1.3, Meaning pauses by separately tested runtime contract"
+      },
+      "expected": [
+        {
+          "text": "Символ веры"
+        },
+        {
+          "text": "Смысл",
+          "ancestor": {
+            "class": "android.view.View",
+            "selected": true
+          }
+        },
+        {
+          "text": "Что происходит"
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.0",
+        "timezone": "Europe/Moscow",
+        "wm_size": "Physical size: 1080x2400",
+        "density": "Physical density: 420"
+      }
+    },
+    {
+      "id": "missing-reading",
+      "mode": "static",
+      "conditions": {
+        "scene": "2026-11-09 epistle missing reading, dark internal scale1.3, disabled Play observed"
+      },
+      "expected": [
+        {
+          "content-desc": "Включить плеер",
+          "ancestor": {
+            "class": "android.view.View",
+            "enabled": false,
+            "clickable": true
+          }
+        },
+        {
+          "text": "По-русски",
+          "ancestor": {
+            "class": "android.view.View",
+            "selected": true
+          }
+        },
+        {
+          "text": "Текста чтения пока нет"
+        }
+      ],
+      "human_review_required": true,
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.0",
+        "timezone": "Europe/Moscow",
+        "wm_size": "Physical size: 1080x2400",
+        "density": "Physical density: 420"
+      }
+    }
+  ]
+}

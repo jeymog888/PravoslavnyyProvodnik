@@ -32,17 +32,33 @@ fun MainScreen(lastStage: LiturgyStage?, currentDate: LocalDate, onStart: () -> 
                 FeoriaBrand()
             }
             item {
-                Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
-                    Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp)) {
+                Surface(color = if (church == null) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
+                    shape = MaterialTheme.shapes.medium) {
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = if (church == null) 20.dp else 12.dp)) {
                         Text(friendlyDate(currentDate), style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        TextButton(onClick = onChurch, contentPadding = PaddingValues(vertical = 8.dp),
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("open_church")) {
-                            Icon(Icons.Default.Place, null, Modifier.size(20.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text(church?.shortName ?: "Выбрать храм", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
-                            Spacer(Modifier.width(8.dp))
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(20.dp))
+                        if (church == null) {
+                            Spacer(Modifier.height(12.dp))
+                            Text("Начните с выбора храма", style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.testTag("schedule_unknown"))
+                            Spacer(Modifier.height(12.dp))
+                            Text("Так можно увидеть известное время службы. Тексты доступны и без выбора храма",
+                                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Spacer(Modifier.height(16.dp))
+                            Button(onClick = onChurch, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("open_church")) {
+                                Icon(Icons.Default.Place, null, Modifier.size(20.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Выбрать храм")
+                            }
+                        } else {
+                            TextButton(onClick = onChurch, contentPadding = PaddingValues(vertical = 8.dp),
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("open_church")) {
+                                Icon(Icons.Default.Place, null, Modifier.size(20.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text(church.shortName, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
+                                Spacer(Modifier.width(8.dp))
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(20.dp))
+                            }
                         }
                     }
                 }
@@ -58,15 +74,14 @@ fun MainScreen(lastStage: LiturgyStage?, currentDate: LocalDate, onStart: () -> 
                 ServiceSuggestionCard(next, currentDate, isCurrent = false,
                     primaryAction = overview.currentHypothesis == null, onOpenService = onOpenService)
             } }
-            if (overview.currentHypothesis == null && overview.nextKnownService == null) item {
+            if (church != null && overview.currentHypothesis == null && overview.nextKnownService == null) item {
                 Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
                     Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text(if (church == null) "Начните с выбора храма" else "Нет данных о ближайшей литургии",
+                        Text("Нет данных о ближайшей литургии",
                             style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("schedule_unknown"))
-                        Text(if (church == null) "Так можно увидеть известное время службы. Тексты доступны и без выбора храма"
-                            else "Уточните начало в храме или найдите текущий момент по словам службы",
+                        Text("Уточните начало в храме или найдите текущий момент по словам службы",
                             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        if (church != null && onPersonalTime != null) OutlinedButton(onClick = onPersonalTime,
+                        if (onPersonalTime != null) Button(onClick = onPersonalTime,
                             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("set_service_time")) {
                             Text("Указать начало литургии")
                         }
@@ -117,16 +132,18 @@ private fun ServiceSuggestionCard(suggestion: ContextSuggestion, currentDate: Lo
     } ?: suggestion.service.time
     val offset = local?.offset?.id?.let { if (it == "Z") "+00:00" else it }
     val sourceLabel = if (suggestion.source == ServiceStartSource.USER) "Начало указано вами" else "Начало по опубликованному расписанию"
-    Surface(color = if (isCurrent) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.surfaceContainerLow,
+    val secondary = !isCurrent && !primaryAction
+    Surface(color = if (isCurrent) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
         shape = MaterialTheme.shapes.large, modifier = Modifier.testTag("service_card_$key")) {
-        Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(Modifier.fillMaxWidth().padding(if (secondary) 20.dp else 24.dp),
+            verticalArrangement = Arrangement.spacedBy(if (secondary) 12.dp else 16.dp)) {
             Text(if (isCurrent) "Возможно, уже идет" else if (suggestion.source == ServiceStartSource.USER)
                 "Следующая по вашему времени" else "Следующая по расписанию",
                 style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.testTag("service_status_$key"))
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(suggestion.service.title, style = MaterialTheme.typography.titleLarge)
-                Text("$dateLabel · $timeLabel", style = MaterialTheme.typography.headlineSmall,
+                Text(suggestion.service.title, style = if (secondary) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge)
+                Text("$dateLabel · $timeLabel", style = if (secondary) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.testTag("service_start_$key"))
                 Text(if (offset != null) "Местное время храма · UTC$offset" else "Часовой пояс нужно уточнить",
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -137,8 +154,12 @@ private fun ServiceSuggestionCard(suggestion: ContextSuggestion, currentDate: Lo
             if (onOpenService != null) {
                 if (primaryAction) Button(onClick = { onOpenService(suggestion) },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("watch_$key")) { Text("Смотреть службу") }
-                else OutlinedButton(onClick = { onOpenService(suggestion) },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("watch_$key")) { Text("Смотреть службу") }
+                else TextButton(onClick = { onOpenService(suggestion) },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("watch_$key")) {
+                    Text("Смотреть службу")
+                    Spacer(Modifier.width(8.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(20.dp))
+                }
             }
         }
     }

@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "package": "ru.liturgyguide",
+  "build_type": "debug",
+  "conditions": {
+    "data": "UI-created Temple_QA fixture, two personal starts, not a parish schedule",
+    "clock": "device wall clock, expected active window verified by visible current state",
+    "location": "not used",
+    "network": "no provider assertion"
+  },
+  "cases": [
+    {
+      "id": "current",
+      "mode": "static",
+      "conditions": {
+        "data": "2026-11-08 and 2026-11-09 18:00 Europe/Moscow",
+        "appearance": "dark, internal font1.3, 1080x2400 at420dpi"
+      },
+      "expected": [
+        {
+          "text": "Возможно, уже идет"
+        },
+        {
+          "text": "8 ноября · 18:00"
+        },
+        {
+          "text": "Temple_QA"
+        }
+      ],
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.0",
+        "timezone": "Europe/Moscow",
+        "wm_size": "Physical size: 1080x2400",
+        "density": "Physical density: 420"
+      },
+      "human_review_required": true
+    },
+    {
+      "id": "next",
+      "mode": "static",
+      "conditions": {
+        "data": "2026-11-08 and 2026-11-09 18:00 Europe/Moscow",
+        "appearance": "dark, internal font1.3, 1080x2400 at420dpi"
+      },
+      "expected": [
+        {
+          "text": "Следующая по вашему времени"
+        },
+        {
+          "text": "9 ноября · 18:00"
+        },
+        {
+          "text": "Начало указано вами"
+        }
+      ],
+      "allowed_windows": [
+        {
+          "package": "com.google.android.apps.nexuslauncher",
+          "title": "Taskbar"
+        }
+      ],
+      "observed_requirements": {
+        "sdk": "35",
+        "font_scale": "1.0",
+        "timezone": "Europe/Moscow",
+        "wm_size": "Physical size: 1080x2400",
+        "density": "Physical density: 420"
+      },
+      "human_review_required": true
+    }
+  ]
+}

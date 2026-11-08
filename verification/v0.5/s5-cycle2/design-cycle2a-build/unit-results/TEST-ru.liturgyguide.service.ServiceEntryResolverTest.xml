@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.liturgyguide.service.ServiceEntryResolverTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-11-08T15:24:56" hostname="MacBook-Air-Dmitrij.local" time="0.009">
+  <properties/>
+  <testcase name="a future choice retains its own date and becomes current across the start boundary" classname="ru.liturgyguide.service.ServiceEntryResolverTest" time="0.005"/>
+  <testcase name="tomorrows selected service keeps tomorrows context while still upcoming" classname="ru.liturgyguide.service.ServiceEntryResolverTest" time="0.001"/>
+  <testcase name="accepted zone aliases compare against the canonical zone emitted by overview" classname="ru.liturgyguide.service.ServiceEntryResolverTest" time="0.001"/>
+  <testcase name="clock moving backwards changes relation but keeps the same selected occurrence" classname="ru.liturgyguide.service.ServiceEntryResolverTest" time="0.0"/>
+  <testcase name="current stage is recomputed at click time instead of taking the old snapshot" classname="ru.liturgyguide.service.ServiceEntryResolverTest" time="0.001"/>
+  <testcase name="an expired selected service is never silently replaced by another current or next service" classname="ru.liturgyguide.service.ServiceEntryResolverTest" time="0.0"/>
+  <testcase name="a late evening occurrence preserves yesterday as its service date after parish midnight" classname="ru.liturgyguide.service.ServiceEntryResolverTest" time="0.0"/>
+  <testcase name="title editing does not create a different occurrence while removal and date corruption do" classname="ru.liturgyguide.service.ServiceEntryResolverTest" time="0.001"/>
+  <testcase name="switching parish or its timezone rejects a stale card even with similar labels" classname="ru.liturgyguide.service.ServiceEntryResolverTest" time="0.0"/>
+  <testcase name="personal time changes and source changes invalidate the selected card" classname="ru.liturgyguide.service.ServiceEntryResolverTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

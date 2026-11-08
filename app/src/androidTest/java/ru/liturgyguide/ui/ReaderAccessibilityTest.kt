@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.text.TextLayoutResult
@@ -43,15 +44,36 @@ class ReaderAccessibilityTest {
     private val readingDay = requireNotNull(container.readings).days.first { it.date == "2026-11-08" }
 
     @Test
+    fun ordinaryFooterKeepsSeparateTargetsAtTheNarrowWidthAndFastestSpeed() {
+        launchReader("creed", 1, 3, width = 320, height = 800, systemFontScale = 1f)
+        assertReadingSpaceAndScale(3, 1.3f, 28.sp)
+        assertFooterTargets()
+        assertReadable(compose.onNodeWithTag("line_status", useUnmergedTree = true))
+        compose.onNodeWithTag("scroll_options").performClick()
+        compose.onNodeWithTag("tempo_fast").performClick()
+        compose.onNodeWithText("Готово").performClick()
+        assertFooterTargets()
+        assertReadable(compose.onNodeWithText("1,25×", useUnmergedTree = true))
+        val playTexts = compose.onAllNodes(hasAnyAncestor(hasTestTag("play_lyrics")) and
+            SemanticsMatcher("Has text") { it.config.contains(SemanticsProperties.Text) }, useUnmergedTree = true)
+        playTexts.fetchSemanticsNodes().indices.forEach { assertReadable(playTexts[it]) }
+        compose.onNodeWithTag("player_meaning_tab").performClick()
+        assertFooterTargets(textVisible = false)
+    }
+
+    @Test
     fun narrowLargeTextKeepsNamesReadableAndCancellationPreservesThePhrase() {
         launchReader("creed", 1, 3, width = 320, height = 640, systemFontScale = 2f)
         assertReadableHeader()
         assertReadingSpaceAndScale(3, 2.6f)
+        assertFooterTargets()
         compose.onNodeWithTag("player_original_tab").assertIsDisplayed().performClick()
         compose.onNodeWithTag("lyric_line_3").assertIsSelected()
         assertReadingSpaceAndScale(3, 2.6f)
 
         compose.onNodeWithTag("player_meaning_tab").performClick().assertIsSelected()
+        compose.onNodeWithText("Что происходит").assertIsDisplayed()
+        compose.onNodeWithTag("service_content").performScrollToNode(hasTestTag("track_explanation"))
         assertEquals(2.6f, textLayout(compose.onNodeWithTag("track_explanation")).layoutInput.density.fontScale, .001f)
         compose.onNodeWithTag("clarify_moment").assertIsDisplayed().performClick()
         compose.onNodeWithTag("manual_content").assertIsDisplayed()
@@ -70,6 +92,7 @@ class ReaderAccessibilityTest {
             launchReader("creed", 1, 3, width = 640, height = 360, systemFontScale = 1.3f)
             assertReadableHeader()
             assertReadingSpaceAndScale(3, 1.69f)
+            assertFooterTargets()
             compose.onNodeWithTag("next_line").assertIsDisplayed().performClick()
             compose.onNodeWithTag("lyric_line_4").assertIsSelected().assertIsDisplayed()
             compose.onNodeWithTag("player_meaning_tab").performClick().assertIsSelected()
@@ -224,6 +247,31 @@ class ReaderAccessibilityTest {
             assertReadable(node)
             assertEquals("A navigation label must stay on one line", 1, textLayout(node).lineCount)
         }
+    }
+
+    private fun assertFooterTargets(textVisible: Boolean = true) {
+        val tags = if (textVisible) listOf("previous_stage", "previous_line", "play_lyrics", "next_line", "scroll_options", "next_stage")
+            else listOf("previous_stage", "next_stage")
+        val tolerance = .5.dp
+        val bounds = tags.associateWith { tag ->
+            val node = compose.onNodeWithTag(tag).assertIsDisplayed()
+                .assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp)
+            val visible = node.getBoundsInRoot()
+            val full = node.getUnclippedBoundsInRoot()
+            assertTrue("Footer target $tag is clipped", visible.left <= full.left + tolerance &&
+                visible.top <= full.top + tolerance && visible.right >= full.right - tolerance && visible.bottom >= full.bottom - tolerance)
+            full
+        }
+        tags.forEachIndexed { index, first ->
+            tags.drop(index + 1).forEach { second ->
+                val a = bounds.getValue(first); val b = bounds.getValue(second)
+                assertTrue("Footer targets $first and $second intersect", a.right <= b.left + tolerance ||
+                    b.right <= a.left + tolerance || a.bottom <= b.top + tolerance || b.bottom <= a.top + tolerance)
+            }
+        }
+        val content = compose.onNodeWithTag(if (textVisible) "lyrics_list" else "service_content")
+            .assertHeightIsAtLeast(120.dp).getBoundsInRoot()
+        assertTrue("The footer overlaps the reading area", content.bottom <= bounds.values.minOf { it.top } + tolerance)
     }
 
     private fun assertReadableHeader() {
