@@ -1,0 +1,51 @@
+test_actual_build_function_rejects_failure_changed_inputs_and_old_apk (test_harness.ReceiptAndAggregateTests) ... ok
+test_apk_swapped_after_begin_is_detected (test_harness.ReceiptAndAggregateTests) ... ok
+test_build_failure_or_changed_inputs_rejected (test_harness.ReceiptAndAggregateTests) ... ok
+test_capture_cannot_be_replaced_in_same_run (test_harness.ReceiptAndAggregateTests) ... ok
+test_case_from_other_run_fails (test_harness.ReceiptAndAggregateTests) ... ok
+test_changed_manifest_cannot_bless_old_results (test_harness.ReceiptAndAggregateTests) ... ok
+test_changed_runner_version_cannot_continue_or_accept_run (test_harness.ReceiptAndAggregateTests) ... ok
+test_complete_observed_corpus_passes_without_visual_claim (test_harness.ReceiptAndAggregateTests) ... ok
+test_duplicate_manifest_ids_rejected (test_harness.ReceiptAndAggregateTests) ... ok
+test_duplicate_result_fails (test_harness.ReceiptAndAggregateTests) ... ok
+test_empty_png_fails (test_harness.ReceiptAndAggregateTests) ... ok
+test_failed_action_prevents_later_capture_from_masking_failure (test_harness.ReceiptAndAggregateTests) ... ok
+test_fingerprint_includes_untracked_production_but_excludes_docs (test_harness.ReceiptAndAggregateTests) ... ok
+test_incomplete_action_after_crash_fails (test_harness.ReceiptAndAggregateTests) ... ok
+test_missing_required_case_fails (test_harness.ReceiptAndAggregateTests) ... ok
+test_no_cases_or_unknown_conditions_rejected (test_harness.ReceiptAndAggregateTests) ... ok
+test_old_artifact_fails_even_when_content_hash_matches (test_harness.ReceiptAndAggregateTests) ... ok
+test_optional_explicit_rejection_prevents_pass (test_harness.ReceiptAndAggregateTests) ... ok
+test_optional_unknown_fact_does_not_claim_known_or_block_irrelevant_case (test_harness.ReceiptAndAggregateTests) ... ok
+test_required_unknown_fact_stops_capture (test_harness.ReceiptAndAggregateTests) ... ok
+test_review_is_separate_and_required_only_when_declared (test_harness.ReceiptAndAggregateTests) ... ok
+test_skipped_case_fails (test_harness.ReceiptAndAggregateTests) ... ok
+test_successful_tap_records_postcondition (test_harness.ReceiptAndAggregateTests) ... ok
+test_unknown_observed_required_condition_fails (test_harness.ReceiptAndAggregateTests) ... ok
+test_ambiguous_targets_rejected (test_harness.SelectorTests) ... ok
+test_ancestor_predicates_are_bounded_not_recursive (test_harness.SelectorTests) ... ok
+test_changing_tree_cannot_be_static_capture (test_harness.SelectorTests) ... ok
+test_disabled_play_is_observed_without_treating_its_icon_as_disabled (test_harness.SelectorTests) ... ok
+test_disabled_target_and_disabled_outer_ancestor_rejected (test_harness.SelectorTests) ... ok
+test_late_correct_postcondition_cannot_pass (test_harness.SelectorTests) ... ok
+test_late_identical_capture_cannot_pass (test_harness.SelectorTests) ... ok
+test_multiple_xml_windows_rejected (test_harness.SelectorTests) ... ok
+test_non_visible_overlay_does_not_block (test_harness.SelectorTests) ... ok
+test_offscreen_and_zero_sized_bounds_rejected (test_harness.SelectorTests) ... ok
+test_screenshot_dimensions_checked (test_harness.SelectorTests) ... ok
+test_selected_mode_is_observed_on_its_own_ancestor (test_harness.SelectorTests) ... ok
+test_split_apk_is_not_silently_accepted (test_harness.SelectorTests) ... ok
+test_static_capture_accepts_stable_tree (test_harness.SelectorTests) ... ok
+test_taskbar_requires_explicit_allowance (test_harness.SelectorTests) ... ok
+test_unexpected_visible_overlay_rejected (test_harness.SelectorTests) ... ok
+test_unique_clickable_ancestor_and_deduplicated_labels (test_harness.SelectorTests) ... ok
+test_unknown_window_visibility_rejected (test_harness.SelectorTests) ... ok
+test_visible_postcondition_and_timeout_use_real_expect (test_harness.SelectorTests) ... ok
+test_wrong_foreground_rejected (test_harness.SelectorTests) ... ok
+test_wrong_installed_apk_rejected (test_harness.SelectorTests) ... ok
+test_wrong_xml_package_rejected (test_harness.SelectorTests) ... ok
+
+----------------------------------------------------------------------
+Ran 46 tests in 0.180s
+
+OK
