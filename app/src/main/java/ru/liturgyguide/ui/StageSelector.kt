@@ -33,11 +33,11 @@ internal fun normalizedSearch(value: String): String = TextSearch.normalize(valu
 
 @Composable
 fun StageSelector(stageMatcher: StageMatcher, selectedId: String?, searchMode: Boolean, readingDay: ReadingDay?,
-    onSelect: (String, String?) -> Unit, onSearch: () -> Unit, onBack: () -> Unit) {
+    onSelect: (String, String?) -> Unit, onSearch: () -> Unit, onBack: () -> Unit,
+    onMicrophone: () -> Unit = {}) {
     val keyboard = LocalSoftwareKeyboardController.current
     val focus = LocalFocusManager.current
     var query by rememberSaveable { mutableStateOf("") }
-    var showListening by rememberSaveable { mutableStateOf(false) }
     val stages = stageMatcher.getAllStages()
     val listState = rememberLazyListState(
         // Item 0 is the order heading and the fallback when there is no selected stage.
@@ -76,13 +76,12 @@ fun StageSelector(stageMatcher: StageMatcher, selectedId: String?, searchMode: B
         LazyColumn(Modifier.fillMaxSize().padding(padding).imePadding().testTag("stage_list"),
             state = listState,
             contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 32.dp)) {
-            if (searchMode && query.isBlank()) item {
-                TextButton(onClick = { showListening = !showListening }, modifier = Modifier.fillMaxWidth().testTag("open_listening")) {
+            if (searchMode) item {
+                TextButton(onClick = { keyboard?.hide(); focus.clearFocus(); onMicrophone() }, modifier = Modifier.fillMaxWidth().testTag("open_listening")) {
                     Icon(Icons.Default.MicNone, null, Modifier.size(20.dp)); Spacer(Modifier.width(8.dp))
-                    Text(if (showListening) "Скрыть аудиоподсказку" else "Подсказка по звуку")
+                    Text("Микрофон")
                 }
-                if (showListening) ListeningCard(stages, onSelect)
-                Text("Или выберите знакомый момент ниже", Modifier.padding(vertical = 16.dp), style = MaterialTheme.typography.bodySmall,
+                if (query.isBlank()) Text("Или выберите знакомый момент ниже", Modifier.padding(vertical = 16.dp), style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (!searchMode) item {

@@ -40,9 +40,10 @@ class ReaderScreenAwakeOwner(private val setKeepScreenOn: (Boolean) -> Unit) {
         }
 
         /** Foreground loss releases the window before the pause can write to storage. */
-        fun pause() {
+        fun pause(onReleased: () -> Unit = {}) {
             if (closed || current !== this) return
             setEnabled(false)
+            onReleased()
             pausePlayer()
         }
 
@@ -71,20 +72,22 @@ internal fun readerKeepsScreenOn(serviceVisible: Boolean, resumed: Boolean, topR
 @Composable
 internal fun rememberReaderScreenAwakeBinding(player: ServicePlayerState, serviceVisible: Boolean,
     lifecycle: Lifecycle, activityForeground: ActivityForegroundState?, owner: ReaderScreenAwakeOwner?,
+    onForegroundLost: () -> Unit = {},
     onResumedChange: (Boolean) -> Unit): ReaderScreenAwakeOwner.Binding {
     val target = remember(owner) { owner ?: ReaderScreenAwakeOwner { } }
     val binding = remember(target, player, lifecycle, activityForeground) { target.binding { player.pause() } }
     val updateResumed by rememberUpdatedState(onResumedChange)
+    val notifyForegroundLoss by rememberUpdatedState(onForegroundLost)
     DisposableEffect(binding) {
         binding.attach()
         val observer = LifecycleEventObserver { _, event ->
             val lost = event == Lifecycle.Event.ON_PAUSE || event == Lifecycle.Event.ON_STOP ||
                 event == Lifecycle.Event.ON_DESTROY
             updateResumed(!lost && lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
-            if (lost) binding.pause()
+            if (lost) binding.pause { notifyForegroundLoss() }
         }
         lifecycle.addObserver(observer)
-        val unbind = activityForeground?.bind { binding.pause() }
+        val unbind = activityForeground?.bind { binding.pause { notifyForegroundLoss() } }
         onDispose {
             lifecycle.removeObserver(observer)
             unbind?.invoke()

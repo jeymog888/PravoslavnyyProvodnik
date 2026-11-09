@@ -16,6 +16,30 @@ spec.loader.exec_module(h)
 P = "ru.liturgyguide"
 DISPLAY = f"Display: mDisplayId=0\n init=320x640 160dpi cur=320x640\n mCurrentFocus=Window{{abc u0 {P}/.MainActivity}}\n"
 WINDOW = f"  Window #0 Window{{abc u0 {P}/.MainActivity}}:\n    mOwnerUid=10001 showForAllUsers=false package={P} appop=NONE\n isOnScreen=true\n isVisible=true\n"
+# Relevant lines preserved from the API35 permission dump in s4-microphone-native-r1.
+PERMISSION_PACKAGE = "com.google.android.permissioncontroller"
+PERMISSION_TITLE = PERMISSION_PACKAGE + "/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity"
+PERMISSION_WINDOWS = f"""  Window #8 Window{{79ca15c u0 {PERMISSION_TITLE}}}:
+    mOwnerUid=10192 showForAllUsers=false package={PERMISSION_PACKAGE} appop=NONE
+    isOnScreen=true
+    isVisible=true
+  Window #9 Window{{9968824 u0 ru.liturgyguide/ru.liturgyguide.ui.MainActivity}}:
+    mOwnerUid=10423 showForAllUsers=false package=ru.liturgyguide appop=NONE
+    isOnScreen=true
+    isVisible=true
+  Window #11 Window{{a0dd34a u0 com.android.systemui.wallpapers.ImageWallpaper}}:
+    mOwnerUid=10180 showForAllUsers=true package=com.android.systemui appop=NONE
+    isOnScreen=false
+    isVisible=false
+
+  Hiding System Alert Windows:
+  #0 Window{{79ca15c u0 {PERMISSION_TITLE}}}:
+    mOwnerUid=10192 showForAllUsers=false package={PERMISSION_PACKAGE} appop=NONE
+    isOnScreen=true
+    isVisible=true
+"""
+PERMISSION_DISPLAY = f"cur=1080x2400\n mCurrentFocus=Window{{79ca15c u0 {PERMISSION_TITLE}}}\n"
+PERMISSION_ALLOW = [{"package": P, "title": "ru.liturgyguide/ru.liturgyguide.ui.MainActivity"}]
 PNG = b"\x89PNG\r\n\x1a\n" + b"\0" * 8 + struct.pack(">II", 320, 640) + b"\0" * 20
 
 
@@ -178,6 +202,18 @@ class SelectorTests(unittest.TestCase):
             windows = WINDOW.replace(" isOnScreen=true", duplicate + " isOnScreen=true")
             with self.subTest(owner=other_package), self.assertRaisesRegex(h.GateError, "ambiguous window owner"):
                 view(windows=windows)
+
+    def test_permission_alert_summary_is_not_part_of_last_inventory_window(self):
+        size, visible = h.parse_windows(PERMISSION_WINDOWS, PERMISSION_DISPLAY, PERMISSION_PACKAGE, PERMISSION_ALLOW)
+        self.assertEqual(size, (1080, 2400))
+        self.assertEqual(visible, sorted([(PERMISSION_PACKAGE, PERMISSION_TITLE),
+                                         (P, "ru.liturgyguide/ru.liturgyguide.ui.MainActivity")]))
+
+    def test_real_duplicate_owner_inside_window_before_alert_summary_still_fails(self):
+        duplicate = f"    mOwnerUid=10192 showForAllUsers=false package={PERMISSION_PACKAGE} appop=NONE\n"
+        windows = PERMISSION_WINDOWS.replace("    isOnScreen=false", duplicate + "    isOnScreen=false", 1)
+        with self.assertRaisesRegex(h.GateError, "ambiguous window owner"):
+            h.parse_windows(windows, PERMISSION_DISPLAY, PERMISSION_PACKAGE, PERMISSION_ALLOW)
 
     def test_owner_must_be_on_an_owner_line(self):
         for owner_label in ("package=", "mAttrs package="):

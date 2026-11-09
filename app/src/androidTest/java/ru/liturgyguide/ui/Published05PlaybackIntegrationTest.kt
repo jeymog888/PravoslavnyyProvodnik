@@ -136,7 +136,7 @@ class Published05PlaybackIntegrationTest {
                     compose.onNodeWithText("Размер текста и настройки").performClick()
                 }
                 "order" -> compose.onNodeWithTag("open_map").performClick()
-                "correction" -> compose.onNodeWithTag("clarify_moment").performClick()
+                "correction" -> compose.openReaderControl("controls_clarify").performClick()
             }
             val before = preferences.all.toMap()
             val writesBefore = storage.commits
@@ -189,7 +189,7 @@ class Published05PlaybackIntegrationTest {
         seed(speed = PlaybackSpeed.FAST)
         val restoration = launch(oldContainer())
         main("resume_guide").performClick()
-        compose.onNodeWithTag("clarify_moment").performClick()
+        compose.openReaderControl("controls_clarify").performClick()
         val before = preferences.all.toMap()
         compose.runOnIdle { currentContainer = expandedContainer() }
         restoration.emulateSavedInstanceStateRestore()

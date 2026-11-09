@@ -139,10 +139,10 @@ class ReaderFontLayoutWitnessTest {
         fullTarget("open_map")
         fullTarget("player_menu")
         fullTarget("reader_controls")
-        fullTarget("clarify_moment")
+        fullTarget("reader_microphone")
         assertFixedTargetsDoNotOverlap(case.primary)
         fixedDescendantText("reader_controls", scale)
-        fixedDescendantText("clarify_moment", scale, singleLine = layouts.single() == "sidebar")
+        fixedDescendantText("reader_microphone", scale, singleLine = layouts.single() == "sidebar")
         if (compose.onAllNodesWithTag("reader_mode_chooser", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()) {
             val mode = if (case.meaning) "Смысл" else if (case.reading.tracks.any { track -> track.lines.any { it.original != null } }) "Оригинал" else "По-русски"
             val soundless = case.name in setOf("text", "wait", "before-start", "russian-scripture")
@@ -214,7 +214,7 @@ class ReaderFontLayoutWitnessTest {
     }
 
     private fun assertFixedTargetsDoNotOverlap(primaryTag: String) {
-        val tags = listOf(primaryTag, "clarify_moment", "reader_controls", "open_map", "player_menu") +
+        val tags = listOf(primaryTag, "reader_microphone", "reader_controls", "open_map", "player_menu") +
             listOf("return_to_phrase", "before_start_pause").filter {
                 compose.onAllNodesWithTag(it).fetchSemanticsNodes().isNotEmpty()
             }
@@ -294,7 +294,7 @@ class ReaderFontLayoutWitnessTest {
         val observations = JSONArray()
         val tags = listOf("font_witness_host", "reader_layout_normal", "reader_layout_compact", "reader_layout_sidebar",
             "reader_surface", "lyrics_list", "service_content", "reader_status", "reader_primary_label", "current_stage_title",
-            case.primary, "reader_controls", "reader_mode_chooser", "reader_selected_mode", "clarify_moment", "open_map", "soundless_note")
+            case.primary, "reader_controls", "reader_mode_chooser", "reader_selected_mode", "reader_microphone", "open_map", "soundless_note")
         for (tag in tags) {
             val nodes = compose.onAllNodesWithTag(tag, useUnmergedTree = true)
             val count = nodes.fetchSemanticsNodes().size
@@ -308,7 +308,7 @@ class ReaderFontLayoutWitnessTest {
             }
             observations.put(record)
         }
-        for (tag in listOf("reader_controls", "clarify_moment", "player_original_tab", "player_text_tab", "player_meaning_tab")) {
+        for (tag in listOf("reader_controls", "reader_microphone", "player_original_tab", "player_text_tab", "player_meaning_tab")) {
             val texts = compose.onAllNodes(hasAnyAncestor(hasTestTag(tag)) and
                 SemanticsMatcher.keyIsDefined(SemanticsActions.GetTextLayoutResult), useUnmergedTree = true)
             texts.fetchSemanticsNodes().indices.forEach { index ->

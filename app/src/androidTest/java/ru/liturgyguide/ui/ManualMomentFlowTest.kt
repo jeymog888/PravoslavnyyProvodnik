@@ -153,17 +153,18 @@ class ManualMomentFlowTest {
     }
 
     @Test
-    fun acceptingACorrectionOpensTextAtTheLandmarkAndPreservesOtherBookmarks() {
+    fun acceptingACorrectionPreservesMeaningAndOpensTheLandmarkWithoutLosingOtherBookmarks() {
         seed()
         launch()
         resumeMeaning()
         clarify()
         landmark("creed")
         accept()
-        compose.onNodeWithTag("player_text_tab").assertIsSelected()
+        compose.assertReaderMode("meaning", selected = true)
         compose.openReaderDetails()
         compose.onNodeWithTag("reading_details_track").assertTextEquals("Символ веры")
         compose.closeReaderDetails()
+        compose.selectReaderMode("text")
         compose.onFeedLine(creed, 0).assertIsSelected().assertIsDisplayed()
         assertEquals(creed.id, preferences.getString("lyric_track_creed", null))
         assertEquals(creed.lines[0].id, preferences.getString("lyric_phrase_${creed.id}", null))
@@ -181,7 +182,8 @@ class ManualMomentFlowTest {
         searchFromManual()
         typeSearch("духа святого животворящаго")
         compose.onNodeWithTag("stage_creed").assertIsNotSelected().performClick()
-        compose.onNodeWithTag("player_text_tab").assertIsSelected()
+        compose.assertReaderMode("meaning", selected = true)
+        compose.selectReaderMode("text")
         compose.onFeedLine(creed, 12).assertIsSelected().assertIsDisplayed()
         assertEquals(creed.lines[12].id, preferences.getString("lyric_phrase_${creed.id}", null))
         assertEquals(0L, preferences.getLong("lyric_offset_${creed.id}", -1L))
@@ -197,7 +199,7 @@ class ManualMomentFlowTest {
         compose.onNodeWithTag("player_text_tab").performClick()
         compose.onNodeWithTag("play_lyrics").performClick()
         // The canonical phrase has six words: its four-second minimum ends at 5000 ms.
-        compose.onNodeWithTag("clarify_moment").assertIsDisplayed()
+        compose.openReaderControl("controls_clarify").assertIsDisplayed()
             .performSemanticsAction(SemanticsActions.OnClick) { click ->
                 monotonic.set(4_999L)
                 click()
@@ -264,8 +266,8 @@ class ManualMomentFlowTest {
         val normalized = savedSession()
         assertFalse(normalized.autoAdvance)
         assertEquals("creed", normalized.anchorStageId)
-        compose.onNodeWithTag("reader_status").assertTextEquals("Пояснение · на паузе · сохраненное чтение").assertIsDisplayed().assertHasNoClickAction()
-        compose.onNodeWithTag("clarify_moment").performClick()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Пояснение · на паузе · сохраненное чтение · примерное место").assertIsDisplayed().assertHasNoClickAction()
+        compose.openReaderControl("controls_clarify").performClick()
         compose.onNodeWithTag("manual_content").assertExists()
         compose.onNodeWithText("Автоматические переходы остановлены").assertDoesNotExist()
         assertEquals(normalized, savedSession())
@@ -301,15 +303,17 @@ class ManualMomentFlowTest {
         searchFromManual()
         compose.onNodeWithTag("stage_search").assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("")))
         compose.onNodeWithTag("open_listening").performClick()
-        compose.onNodeWithText("Скрыть аудиоподсказку").assertIsDisplayed()
+        compose.onNodeWithTag("listening_screen").assertIsDisplayed()
+        compose.onNodeWithTag("stage_search").assertDoesNotExist()
+        back()
+        compose.onNodeWithTag("stage_search").assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("")))
         compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_dismissal"))
         back()
         back()
         findFromMain()
         searchFromManual()
-        compose.onNodeWithTag("open_listening").assertIsDisplayed()
-        compose.onNodeWithText("Подсказка по звуку").assertIsDisplayed()
-        compose.onNodeWithText("Скрыть аудиоподсказку").assertDoesNotExist()
+        compose.onNodeWithTag("open_listening").assertIsDisplayed().assertTextEquals("Микрофон")
+        compose.onNodeWithTag("listening_screen").assertDoesNotExist()
         compose.onNodeWithTag("stage_preparation").assertIsDisplayed().assertIsNotSelected()
         compose.onNodeWithTag("stage_dismissal").assertIsNotDisplayed()
         assertEquals(before, preferences.all)
@@ -343,7 +347,7 @@ class ManualMomentFlowTest {
         compose.onNodeWithTag("find_stage").performClick()
     }
 
-    private fun clarify() { compose.onNodeWithTag("clarify_moment").assertIsDisplayed().performClick() }
+    private fun clarify() { compose.openReaderControl("controls_clarify").performClick() }
     private fun back() { compose.onNodeWithContentDescription("Назад").performClick() }
     private fun landmark(id: String) {
         compose.onNodeWithTag("manual_content").performScrollToNode(hasTestTag("manual_$id"))

@@ -64,6 +64,7 @@ class StageSelectorTest {
         compose.onNodeWithTag("stage_preparation").assertIsNotDisplayed()
         compose.onNodeWithTag("stage_search").performTextReplacement("молит")
         closeSoftKeyboard()
+        compose.onNodeWithTag("open_listening").assertIsDisplayed().assertTextEquals("Микрофон")
         // Both the old late item and the first item match this query.
         compose.onNodeWithTag("stage_preparation").assertIsDisplayed()
         compose.onNodeWithTag("stage_dismissal").assertIsNotDisplayed()

@@ -138,7 +138,7 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
     onBack: () -> Unit, onSelectStage: () -> Unit, onFindStage: () -> Unit, onSettings: () -> Unit,
     dark: Boolean, onDarkChange: () -> Unit, onOpenSource: (String) -> Unit,
     onSoundSettings: () -> Unit, onFinish: () -> Unit, preferredOriginal: Boolean,
-    onOriginalChange: (Boolean) -> Unit, restoredNotice: Boolean = false) {
+    onOriginalChange: (Boolean) -> Unit, restoredNotice: Boolean = false, onMicrophone: () -> Unit = onFindStage) {
     val reading = player.reading ?: return
     val generation = player.generation
     val requestedDensity = LocalDensity.current
@@ -485,7 +485,7 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
                 if (compact) compactStatusSamples else statusSamples,
                 if (compact) compactPrimarySamples else primarySamples, chrome.kind, selectedTab, showReturn, modifier,
                 onPrimary = { primaryAction() }, onReturn = { returnToPhrase() },
-                onClarify = { clarify() }, onControls = { if (owner.matches(player)) controlsOpen = true })
+                onMicrophone = { if (owner.matches(player)) { player.pause(generation); onMicrophone() } }, onControls = { if (owner.matches(player)) controlsOpen = true })
         }
         Column(Modifier.fillMaxSize().testTag("reader_layout_${chrome.kind.name.lowercase()}")) {
             if (chrome.kind == ReaderChrome.COMPACT) {
@@ -524,9 +524,9 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
 }
 
 @Composable
-private fun ReaderClarifyButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun ReaderMicrophoneButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     TextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 4.dp),
-        modifier = modifier.heightIn(min = 48.dp).testTag("clarify_moment")) { Text("Уточнить") }
+        modifier = modifier.heightIn(min = 48.dp).testTag("reader_microphone")) { Text("Микрофон") }
 }
 
 @Composable
@@ -580,7 +580,7 @@ private fun ReaderFooter(reading: ActiveServicePlayback, player: ServicePlayerSt
     owner: ReaderFeedOwner, presentation: ReaderPresentation, fullStatus: String, status: String,
     statusSamples: List<String>, primarySamples: List<String>, chrome: ReaderChrome, selectedTab: Int, showReturn: Boolean,
     modifier: Modifier = Modifier, onPrimary: () -> Unit, onReturn: () -> Unit,
-    onClarify: () -> Unit, onControls: () -> Unit) {
+    onMicrophone: () -> Unit, onControls: () -> Unit) {
     val soundless = presentation.kind in setOf(ReaderStateKind.TEXT, ReaderStateKind.WAIT, ReaderStateKind.BEFORE_START)
     val compact = chrome != ReaderChrome.NORMAL
     val primaryTag = when (presentation.primaryAction) {
@@ -636,7 +636,7 @@ private fun ReaderFooter(reading: ActiveServicePlayback, player: ServicePlayerSt
                 }
                 primary(Modifier.fillMaxWidth())
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    ReaderDirectSecondary(Modifier.weight(1f), owner, onClarify)
+                    ReaderDirectSecondary(Modifier.weight(1f), owner, onMicrophone)
                     ReaderPositionSlot(Modifier.weight(1f), owner, showReturn, beginningPlaying, onReturn, onPause)
                     key(owner) { ReaderControlsButton(onControls, Modifier.weight(1f)) }
                 }
@@ -646,7 +646,7 @@ private fun ReaderFooter(reading: ActiveServicePlayback, player: ServicePlayerSt
                 statusText(Modifier.fillMaxWidth())
                 primary(Modifier.fillMaxWidth())
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    ReaderDirectSecondary(Modifier.weight(1f), owner, onClarify)
+                    ReaderDirectSecondary(Modifier.weight(1f), owner, onMicrophone)
                     positionAction()
                 }
             }
@@ -655,7 +655,7 @@ private fun ReaderFooter(reading: ActiveServicePlayback, player: ServicePlayerSt
                 statusText(Modifier.fillMaxWidth())
                 primary(Modifier.fillMaxWidth())
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    ReaderDirectSecondary(Modifier.weight(1f), owner, onClarify)
+                    ReaderDirectSecondary(Modifier.weight(1f), owner, onMicrophone)
                     positionAction()
                 }
             }
@@ -687,9 +687,9 @@ private fun ReaderModeControls(selected: Int, modifier: Modifier, soundless: Boo
     }
 }
 
-/** Budget the direct microphone label now, without creating a fake microphone control. */
+/** Keep the microphone action in the space already reserved by the reader layout. */
 @Composable
-private fun ReaderDirectSecondary(modifier: Modifier, owner: ReaderFeedOwner, onClarify: () -> Unit) {
+private fun ReaderDirectSecondary(modifier: Modifier, owner: ReaderFeedOwner, onMicrophone: () -> Unit) {
     SubcomposeLayout(modifier) { constraints ->
         val heights = listOf("Уточнить", "Микрофон").mapIndexed { index, label ->
             subcompose("measure_$index") {
@@ -697,7 +697,7 @@ private fun ReaderDirectSecondary(modifier: Modifier, owner: ReaderFeedOwner, on
             }.single().measure(constraints.copy(minHeight = 0)).height
         }
         val actual = subcompose("content") {
-            key(owner) { ReaderClarifyButton(onClarify, Modifier.fillMaxWidth()) }
+            key(owner) { ReaderMicrophoneButton(onMicrophone, Modifier.fillMaxWidth()) }
         }.single().measure(constraints.copy(minHeight = maxOf(heights.max(), constraints.minHeight)))
         layout(actual.width, actual.height) { actual.placeRelative(0, 0) }
     }

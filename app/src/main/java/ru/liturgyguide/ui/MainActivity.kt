@@ -35,8 +35,11 @@ import java.time.Clock
 import java.time.ZoneId
 import kotlinx.coroutines.delay
 
-private enum class Screen { MAIN, MANUAL, ARRIVAL, SERVICE, STAGE_SELECTOR, SEARCH, SETTINGS, SOURCES, CHURCH, DISCOVERY }
+private enum class Screen { MAIN, MANUAL, ARRIVAL, SERVICE, STAGE_SELECTOR, SEARCH, LISTENING, SETTINGS, SOURCES, CHURCH, DISCOVERY }
 private enum class ChurchSelectionOrigin { FIRST_HOME, DIRECTORY }
+private class ListeningRoute(val origin: Screen, val draft: ArrivalDraft, val previousDraft: ArrivalDraft?,
+    val churchId: String?, val generation: Int, val previousContext: ReadingContext?,
+    val targetContext: ReadingContext, val speed: PlaybackSpeed)
 
 class MainActivity : ComponentActivity() {
     private val activityForeground = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ActivityForegroundState() else null
@@ -60,7 +63,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     monotonicMillis: () -> Long = SystemClock::elapsedRealtime,
-    activityForeground: ActivityForegroundState? = null, screenAwakeOwner: ReaderScreenAwakeOwner? = null) {
+    activityForeground: ActivityForegroundState? = null, screenAwakeOwner: ReaderScreenAwakeOwner? = null,
+    speechFactory: (android.content.Context, (SpeechGuideState) -> Unit) -> SpeechGuide = { context, changed -> SpeechGuide(context, changed) }) {
     val context = LocalContext.current
     val screenStateHolder = rememberSaveableStateHolder()
     val preferences = remember { context.getSharedPreferences("guide_preferences", 0) }
@@ -84,6 +88,9 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     var screen by rememberSaveable { mutableStateOf(Screen.MAIN) }
     var selectorOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
     var searchOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
+    var listeningOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
+    var listeningRoute by remember { mutableStateOf<ListeningRoute?>(null) }
+    val listeningInterrupt = remember { ListeningInterrupt() }
     var settingsOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
     var churchOrigin by rememberSaveable { mutableStateOf(Screen.MAIN) }
     var churchSelectionOrigin by rememberSaveable { mutableStateOf(ChurchSelectionOrigin.DIRECTORY) }
@@ -206,8 +213,21 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     val scopedSearch = screen == Screen.SEARCH && searchOrigin in setOf(Screen.MANUAL, Screen.ARRIVAL)
     val validArrivalDraft = arrivalDraft?.takeIf { it.isValidFor(church) }
     val invalidArrival = (screen == Screen.MANUAL || screen == Screen.ARRIVAL || scopedSearch) && validArrivalDraft == null
-    val visibleScreen = if (invalidArrival || (screen == Screen.SERVICE && (invalidRecovery || player.reading == null)))
-        Screen.MAIN else screen
+    fun isCurrentListening(route: ListeningRoute): Boolean = screen == Screen.LISTENING &&
+        listeningRoute === route && arrivalDraft === route.draft && route.draft.isValidFor(church) &&
+        church?.id == route.churchId && player.generation == route.generation && player.reading?.context == route.previousContext
+    val listeningRecovery = screen == Screen.LISTENING && listeningRoute?.let(::isCurrentListening) != true
+    val listeningReturn = when (listeningOrigin) {
+        Screen.SERVICE -> if (!invalidRecovery && player.reading != null) Screen.SERVICE else Screen.MAIN
+        Screen.MANUAL, Screen.ARRIVAL -> if (validArrivalDraft != null) listeningOrigin else Screen.MAIN
+        Screen.SEARCH -> if (searchOrigin !in setOf(Screen.MANUAL, Screen.ARRIVAL) || validArrivalDraft != null) Screen.SEARCH else Screen.MAIN
+        else -> Screen.MAIN
+    }
+    val visibleScreen = when {
+        invalidArrival || (screen == Screen.SERVICE && (invalidRecovery || player.reading == null)) -> Screen.MAIN
+        listeningRecovery -> listeningReturn
+        else -> screen
+    }
     val readingDate = activeReadingContext?.serviceDate ?: currentDate.toString()
     val readingDay = container.readings?.days?.firstOrNull { it.date == readingDate }
     val searchReadingDay = when {
@@ -229,7 +249,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         }
     }
     val awakeBinding = rememberReaderScreenAwakeBinding(player, visibleScreen == Screen.SERVICE,
-        lifecycle, activityForeground, screenAwakeOwner) { lifecycleResumed = it }
+        lifecycle, activityForeground, screenAwakeOwner, onForegroundLost = listeningInterrupt::foregroundChanged) { lifecycleResumed = it }
     val playing = player.reading?.state?.isPlaying == true
     val topResumed = activityForeground?.isTopResumed != false
     LaunchedEffect(player, visibleScreen, lifecycleResumed, activityForeground, topResumed, playing, player.generation) {
@@ -250,7 +270,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         if (destination != Screen.CHURCH && destination != Screen.DISCOVERY) {
             churchSelectionOrigin = ChurchSelectionOrigin.DIRECTORY
         }
-        awakeBinding.pause()
+        awakeBinding.pause { listeningInterrupt.stop() }
         screen = destination
     }
     fun beginReading(value: ActiveServicePlayback, resetBookmarks: Boolean, resetReaderUi: Boolean = true,
@@ -341,7 +361,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         if (accepted == null) return
         val value = candidate(accepted, id, query, speed = if (draft.mode == ArrivalMode.CORRECTION)
             speedForContext(accepted) else PlaybackSpeed.NORMAL) ?: return
-        if (!beginReading(value, resetBookmarks = draft.mode == ArrivalMode.NEW_SERVICE)) return
+        if (!beginReading(value, resetBookmarks = draft.mode == ArrivalMode.NEW_SERVICE,
+                resetReaderUi = draft.mode == ArrivalMode.NEW_SERVICE)) return
         arrivalDraft = null
         navigate(Screen.SERVICE)
     }
@@ -350,6 +371,24 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         player.pause()
         beginArrival(ArrivalDraft(church?.id, church?.shortName ?: "Храм не выбран", mode,
             ArrivalSource.MANUAL, automationStopped = stopped), Screen.MANUAL)
+    }
+    fun openListening(origin: Screen) {
+        if (screen != origin) return
+        awakeBinding.pause()
+        val previous = arrivalDraft
+        val draft = if (origin in setOf(Screen.MANUAL, Screen.ARRIVAL) ||
+            (origin == Screen.SEARCH && searchOrigin in setOf(Screen.MANUAL, Screen.ARRIVAL))) {
+            validArrivalDraft ?: return
+        } else ArrivalDraft(church?.id, church?.shortName ?: "Храм не выбран",
+            if (player.reading != null) ArrivalMode.CORRECTION else ArrivalMode.NEW_SERVICE, ArrivalSource.MANUAL)
+        if (!draft.isValidFor(church)) return
+        val target = draft.pendingServiceContext ?: if (draft.mode == ArrivalMode.CORRECTION)
+            player.reading?.context ?: return else ReadingContextFactory.manual(church, clock.instant()) ?: return
+        arrivalDraft = draft
+        listeningOrigin = origin
+        listeningRoute = ListeningRoute(origin, draft, previous, church?.id, player.generation,
+            player.reading?.context, target, if (draft.mode == ArrivalMode.CORRECTION) speedForContext(target) else PlaybackSpeed.NORMAL)
+        navigate(Screen.LISTENING)
     }
     fun openOrder(origin: Screen) {
         player.pause()
@@ -418,6 +457,14 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     fun closeDiscovery() { churchPickerRequest++; navigate(Screen.CHURCH) }
     fun back() {
         if (invalidArrival) { recoverArrival(); return }
+        if (screen == Screen.LISTENING) {
+            val route = listeningRoute
+            listeningInterrupt.stop()
+            arrivalDraft = if (route != null) route.previousDraft else arrivalDraft.takeIf { listeningOrigin in setOf(Screen.MANUAL, Screen.ARRIVAL, Screen.SEARCH) }
+            listeningRoute = null
+            navigate(listeningReturn)
+            return
+        }
         // Both root and screen Back callbacks must reopen the saved picker.
         if (screen == Screen.DISCOVERY) { closeDiscovery(); return }
         val destination = when (screen) {
@@ -445,6 +492,9 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         // to the old accepted reading or silently acquire today's date.
         if (invalidArrival) recoverArrival()
     }
+    LaunchedEffect(listeningRecovery, listeningReturn) {
+        if (listeningRecovery) { listeningRoute = null; navigate(listeningReturn) }
+    }
     // A saved SERVICE screen may be a 0.4 restoration. Migrate before rendering a live reader.
     LaunchedEffect(screen, player.reading == null, invalidRecovery, legacyCandidate, restoredReading, migrationCandidate) {
         if (screen == Screen.SERVICE && player.reading == null) {
@@ -457,6 +507,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
 
     // A callback held by an old MAIN frame cannot revive a candidate after accept/clear.
     val resumeGeneration = player.generation
+    val searchGeneration = player.generation
 
     val navigationBar: @Composable () -> Unit = {
         GuideBottomBar(selected = when (screen) { Screen.CHURCH -> "church"; Screen.SETTINGS -> "settings"; else -> "home" },
@@ -537,6 +588,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                                     searchOrigin = Screen.MANUAL; navigate(Screen.SEARCH)
                                 }
                             },
+                            onMicrophone = { if (isCurrentArrival(draft, Screen.MANUAL)) openListening(Screen.MANUAL) },
                             onBack = ::back)
                     }
                     Screen.ARRIVAL -> validArrivalDraft?.let { draft ->
@@ -576,6 +628,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         },
                         onSelectStage = { openOrder(Screen.SERVICE) },
                         onFindStage = { openManual(ArrivalMode.CORRECTION) },
+                        onMicrophone = { openListening(Screen.SERVICE) },
                         onSettings = { settingsOrigin = Screen.SERVICE; navigate(Screen.SETTINGS) }
                     )
                     Screen.STAGE_SELECTOR, Screen.SEARCH -> StageSelector(
@@ -584,6 +637,10 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         searchMode = screen == Screen.SEARCH,
                         readingDay = searchReadingDay,
                         onSearch = { searchOrigin = Screen.STAGE_SELECTOR; navigate(Screen.SEARCH) },
+                        onMicrophone = {
+                            if (searchGeneration == player.generation && (!scopedSearch ||
+                                (validArrivalDraft != null && isCurrentArrival(validArrivalDraft, Screen.SEARCH)))) openListening(Screen.SEARCH)
+                        },
                         onSelect = select@{ id, query ->
                             if (scopedSearch) {
                                 // A callback from the discarded scoped search never becomes an
@@ -594,6 +651,29 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         },
                         onBack = ::back
                     )
+                    Screen.LISTENING -> listeningRoute?.let { route ->
+                        ListeningScreen(stages, isCurrent = { isCurrentListening(route) },
+                            isForeground = { lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) && activityForeground?.isTopResumed != false },
+                            interrupt = listeningInterrupt, speechFactory = speechFactory, onBack = ::back,
+                            onManual = {
+                                if (isCurrentListening(route)) {
+                                    listeningRoute = null
+                                    if (route.origin == Screen.SEARCH) {
+                                        arrivalDraft = route.previousDraft
+                                        navigate(Screen.SEARCH)
+                                    } else navigate(Screen.MANUAL)
+                                }
+                            },
+                            onSelect = select@{ id, query ->
+                                if (!isCurrentListening(route)) return@select false
+                                val value = candidate(route.targetContext, id, query, speed = route.speed) ?: return@select false
+                                val fresh = route.draft.mode == ArrivalMode.NEW_SERVICE
+                                if (!beginReading(value, resetBookmarks = fresh, resetReaderUi = fresh)) return@select false
+                                arrivalDraft = null; listeningRoute = null
+                                navigate(Screen.SERVICE)
+                                true
+                            })
+                    }
                     Screen.SETTINGS -> SettingsScreen(
                         dark = dark, textSize = textSize,
                         onDarkChange = { dark = it; preferences.edit().putBoolean("dark", it).apply() },

@@ -1,0 +1,109 @@
+{
+  "uniqueScenarios": 26,
+  "latestResults": {
+    "ru.liturgyguide.ui.GuideNavigationTest#serviceOrderIsSeparateFromSearchAndOptionalListening": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#findingAPrayerFromMeaningPreservesTheModeAndAcceptsTheMatchedPhrase": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ListeningNavigationTest#openingFromThePlayerPausesWithoutRequestingPermissionOrStartingCapture": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ListeningNavigationTest#confirmingAnInjectedPhrasePreservesMeaningAcceptedDateSpeedAndOtherBookmarks": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ListeningNavigationTest#listeningFromANonemptySearchAndBackPreserveItsQueryAndVisibleResult": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ListeningNavigationTest#rejectedAcceptanceKeepsTheTranscriptAndCandidateForAnExplicitRetry": {
+      "run": "s4-microphone-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#narrowLargeTextKeepsNamesReadableAndCancellationPreservesThePhrase": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderScreenAwakeFlowTest#realNavigationRetainsOnlyMovingReadingAndTempoWhileMeaningAndSettingsReleaseIt": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderScreenAwakeFlowTest#preparationAndOrdinaryWaitRetainOnlyWhileMovingAndMissingAndEndRelease": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderScreenAwakeFlowTest#replacedBindingsCannotClearTheNewWindowAndDisposalReleasesBeforeSaving": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderScreenAwakeFlowTest#rejectedPlayNeverAcquiresAndFailedMandatoryPauseReleasesBeforeTheFailedWrite": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderScreenAwakeFlowTest#topLossAndGainInOneCallbackReleaseBeforeSavingAndNeverAutomaticallyResume": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderScreenAwakeFlowTest#activityPauseReleasesBeforeTheWriterAndReturnPreservesTheMaterializedPlace": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#correctionSearchAcceptsTheMatchingPhraseAndPreservesOtherBookmarks": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#allFiveLandmarksWithoutAScheduleOpenTheExpectedTextAndPhraseAfterVerification": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#activePlayerPausesBeforeThePhraseBoundaryAndCorrectionNeverConsumesBackgroundTime": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#correctionCancelRestoresMeaningAndANonInitialPhraseAcrossAllThreeScreens": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#choosingAnotherLandmarkShowsItsNewCueBeforeConfirmation": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#acceptingACorrectionPreservesMeaningAndOpensTheLandmarkWithoutLosingOtherBookmarks": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#savedReadingNoticeUsesCorrectionAndKeepsTheAcceptedPausedSnapshot": {
+      "run": "s4-microphone-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#aFreshManualEntryResetsSearchListeningAndScrollButBackPreservesThem": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#correctionStopsPhraseScrollingAndCancelKeepsThePausedPhrase": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.StageSelectorTest#updatingTheCurrentStageDoesNotInterruptManualBrowsing": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.StageSelectorTest#searchStartsAtTheTopEvenWhenTheCurrentStageIsLate": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.StageSelectorTest#restoringSearchKeepsTheQueryAndTheManuallyBrowsedPosition": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.StageSelectorTest#editingAndClearingAQueryShowTheBeginningOfTheNewResults": {
+      "run": "s4-microphone-r1",
+      "status": "PASS"
+    }
+  }
+}

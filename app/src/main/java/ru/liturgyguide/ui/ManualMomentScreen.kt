@@ -24,7 +24,7 @@ private val manualLandmarks = listOf(
 
 @Composable
 internal fun ManualMomentScreen(draft: ArrivalDraft, onLandmark: (ManualLandmark) -> Unit,
-    onSearch: () -> Unit, onBack: () -> Unit) {
+    onSearch: () -> Unit, onBack: () -> Unit, onMicrophone: () -> Unit = onSearch) {
     Scaffold(topBar = {
         Column(Modifier.statusBarsPadding()) {
             PageHeader(if (draft.mode == ArrivalMode.CORRECTION) "Уточнить момент" else "Найти текущий момент", onBack)
@@ -49,6 +49,9 @@ internal fun ManualMomentScreen(draft: ArrivalDraft, onLandmark: (ManualLandmark
             item {
                 Button(onClick = onSearch, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("manual_search")) {
                     Text("Поиск по словам")
+                }
+                OutlinedButton(onClick = onMicrophone, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("manual_microphone")) {
+                    Text("Микрофон")
                 }
             }
             item {

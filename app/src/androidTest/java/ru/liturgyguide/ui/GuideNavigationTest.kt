@@ -128,7 +128,8 @@ class GuideNavigationTest {
         openMainSearch()
         compose.onNodeWithTag("stage_search").assertIsDisplayed()
         compose.onNodeWithTag("open_listening").assertIsDisplayed()
-        compose.onNodeWithText("Послушать фрагмент").assertDoesNotExist()
+        compose.onNodeWithTag("listening_screen").assertDoesNotExist()
+        compose.onNodeWithTag("start_listening").assertDoesNotExist()
     }
 
     @Test
@@ -376,7 +377,7 @@ class GuideNavigationTest {
             }
             compose.waitForIdle()
             compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Символ веры").assertIsDisplayed()
-            compose.onNodeWithTag("clarify_moment").assertIsDisplayed()
+            compose.onNodeWithTag("reader_microphone").assertIsDisplayed()
             compose.onFeedLine(acceptedTrack(), 0).assertIsSelected().assertIsDisplayed()
             assertWholePhraseVisible(0)
             compose.openReaderControl("next_line").assertIsDisplayed().performClick()
@@ -565,21 +566,22 @@ class GuideNavigationTest {
     }
 
     @Test
-    fun findingAPrayerFromMeaningOpensItsTextAtTheMatchedPhrase() {
+    fun findingAPrayerFromMeaningPreservesTheModeAndAcceptsTheMatchedPhrase() {
         openCreed()
         compose.openReaderControl("next_line").performClick()
         compose.onNodeWithTag("player_meaning_tab").performClick()
-        compose.onNodeWithTag("clarify_moment").performClick()
+        compose.openReaderControl("controls_clarify").performClick()
         compose.onNodeWithTag("manual_content").performScrollToNode(hasTestTag("manual_search"))
         compose.onNodeWithTag("manual_search").performClick()
         compose.onNodeWithTag("stage_search").performTextReplacement("Верую")
         closeSoftKeyboard()
         compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_creed"))
         compose.onNodeWithTag("stage_creed").performClick()
-        compose.onNodeWithTag("player_text_tab").assertIsSelected()
+        compose.assertReaderMode("meaning", selected = true)
         compose.openReaderDetails()
         compose.onNodeWithTag("reading_details_track").assertTextEquals("Символ веры")
         compose.closeReaderDetails()
+        compose.selectReaderMode("text")
         compose.onFeedLine(acceptedTrack(), 0).assertIsSelected()
     }
 

@@ -152,7 +152,7 @@ class ExhaustedServiceEntryTest {
         compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("watch_next"))
         compose.onNodeWithTag("watch_next").performClick()
         assertEquals("2026-11-09", saved().context.serviceDate)
-        compose.onNodeWithTag("clarify_moment").performClick()
+        compose.openReaderControl("controls_clarify").performClick()
         compose.onNodeWithTag("manual_content").assertIsDisplayed()
         val acceptedNext = preferences.all.toMap()
         compose.runOnIdle { oldLandmark(); oldAccept(); oldSearch(); oldSearchResult() }

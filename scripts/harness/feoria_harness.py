@@ -251,6 +251,8 @@ def parse_windows(windows, displays, package, allowed_windows=()):
     inventory = {}
     tokens = set()
     for block in blocks:
+        # This sibling section repeats Window details, but is not another inventory entry.
+        block = re.split(r"^  Hiding System Alert Windows:[ \t]*\r?$", block, maxsplit=1, flags=re.M)[0]
         header = re.search(r"^  Window #\d+ Window\{(\S+) u(\d+) (.+?)\}:", block)
         owner_lines = re.findall(r"^[ \t]+mOwnerUid=[^\r\n]*", block, flags=re.M)
         require(header and len(owner_lines) == 1, "unknown or ambiguous window owner format")

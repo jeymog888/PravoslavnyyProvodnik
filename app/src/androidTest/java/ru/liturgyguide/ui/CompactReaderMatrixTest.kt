@@ -52,7 +52,7 @@ class CompactReaderMatrixTest {
         }
         compose.runOnIdle { assertTrue(player.accept(initial, false)) }
         compose.onNodeWithTag("current_track_title").assertDoesNotExist()
-        compose.onNodeWithTag("clarify_moment").performClick()
+        compose.onNodeWithTag("reader_microphone").performClick()
         compose.runOnIdle { assertEquals(1, clarified) }
     }
 
@@ -92,7 +92,7 @@ class CompactReaderMatrixTest {
         val player = launch(412, 800, 1.3f, reading("epistle"))
         assertHeader("Апостол", "Прокимен и чтение Апостола", 7)
         assertTrackHeader(player)
-        val clarify = compose.onNodeWithText("Уточнить", useUnmergedTree = true)
+        val clarify = compose.onNodeWithText("Микрофон", useUnmergedTree = true)
         assertReadable(clarify)
         assertEquals(1.3f, textLayout(clarify).layoutInput.density.fontScale, .001f)
         compose.onNodeWithTag("lyrics_list").assertHeightIsAtLeast(120.dp)
@@ -133,7 +133,7 @@ class CompactReaderMatrixTest {
         val initial = reading("creed", approximate = false)
         val player = launch(360, 800, 1f, initial)
         compose.onNodeWithTag("reader_layout_normal").assertExists()
-        val oldActions = listOf("player_meaning_tab", "clarify_moment").map { tag -> requireNotNull(compose.onNodeWithTag(tag)
+        val oldActions = listOf("player_meaning_tab", "reader_microphone").map { tag -> requireNotNull(compose.onNodeWithTag(tag)
             .fetchSemanticsNode().config[SemanticsActions.OnClick].action) }.toMutableList()
         compose.onNodeWithTag("player_menu").performClick()
         oldActions += requireNotNull(compose.onNodeWithTag("choose_track").fetchSemanticsNode().config[SemanticsActions.OnClick].action)
@@ -151,7 +151,7 @@ class CompactReaderMatrixTest {
         compose.onNodeWithTag("track_list").assertDoesNotExist()
         compose.runOnIdle { assertEquals(0, clarified); assertEquals("creed", player.reading!!.stage.id) }
         compose.selectReaderMode("meaning")
-        compose.onNodeWithTag("clarify_moment").performClick()
+        compose.onNodeWithTag("reader_microphone").performClick()
         compose.runOnIdle { assertEquals(1, clarified) }
         compose.openReaderTracks()
         compose.onNodeWithTag("track_list").assertIsDisplayed()
@@ -276,9 +276,9 @@ class CompactReaderMatrixTest {
         compose.onNodeWithTag("reader_controls_list").performScrollToNode(hasTestTag("controls_stage_title"))
         assertReadable(compose.onNodeWithTag("controls_stage_title").performScrollTo().assertTextEquals(fullTitle))
         compose.dismissReaderControls()
-        compose.onAllNodesWithTag("clarify_moment").assertCountEquals(1)
-        compose.onNodeWithTag("clarify_moment").assertIsDisplayed().assertHeightIsAtLeast(48.dp)
-        assertReadable(compose.onNodeWithText("Уточнить", useUnmergedTree = true))
+        compose.onAllNodesWithTag("reader_microphone").assertCountEquals(1)
+        compose.onNodeWithTag("reader_microphone").assertIsDisplayed().assertHeightIsAtLeast(48.dp)
+        assertReadable(compose.onNodeWithText("Микрофон", useUnmergedTree = true))
         compose.onNodeWithTag("player_menu").assertIsDisplayed()
         compose.onNodeWithTag("lyrics_list").assertHeightIsAtLeast(120.dp)
     }

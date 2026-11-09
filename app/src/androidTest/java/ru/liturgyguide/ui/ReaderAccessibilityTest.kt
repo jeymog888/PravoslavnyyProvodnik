@@ -117,7 +117,7 @@ class ReaderAccessibilityTest {
         compose.onNodeWithText("Что происходит").assertIsDisplayed()
         compose.onNodeWithTag("service_content").performScrollToNode(hasTestTag("track_explanation"))
         assertEquals(2.6f, textLayout(compose.onNodeWithTag("track_explanation")).layoutInput.density.fontScale, .001f)
-        compose.onNodeWithTag("clarify_moment").assertIsDisplayed().performClick()
+        compose.openReaderControl("controls_clarify").performClick()
         compose.onNodeWithTag("manual_content").assertIsDisplayed()
         compose.onNodeWithContentDescription("Назад").performClick()
         compose.assertReaderMode("meaning", selected = true)
@@ -178,7 +178,7 @@ class ReaderAccessibilityTest {
         compose.onNodeWithTag("track_0").performClick()
         assertReadableHeader()
         assertReadingSpaceAndScale(0, 2.6f)
-        compose.onNodeWithTag("clarify_moment").performClick()
+        compose.openReaderControl("controls_clarify").performClick()
         compose.onNodeWithTag("manual_content").assertIsDisplayed()
         compose.onNodeWithContentDescription("Назад").performClick()
         compose.onFeedLine(acceptedTrack(), 0).assertIsSelected()
@@ -200,8 +200,8 @@ class ReaderAccessibilityTest {
         compose.onNodeWithTag("start_liturgy").assertIsDisplayed().assertHeightIsAtLeast(48.dp)
             .assertContentDescriptionEquals("Литургия началась")
         compose.onNodeWithTag("play_lyrics").assertDoesNotExist()
-        compose.onAllNodesWithTag("clarify_moment").assertCountEquals(1)
-        compose.onNodeWithTag("clarify_moment").assertIsDisplayed().performClick()
+        compose.onAllNodesWithTag("reader_microphone").assertCountEquals(1)
+        compose.openReaderControl("controls_clarify").performClick()
         compose.onNodeWithTag("manual_content").assertIsDisplayed()
         compose.onNodeWithContentDescription("Назад").performClick()
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals(
@@ -358,7 +358,7 @@ class ReaderAccessibilityTest {
     }
 
     private fun assertFooterTargets(textVisible: Boolean = true) {
-        val tags = listOf(if (textVisible) "play_lyrics" else "return_to_text", "clarify_moment", "reader_controls")
+        val tags = listOf(if (textVisible) "play_lyrics" else "return_to_text", "reader_microphone", "reader_controls")
         listOf("previous_stage", "previous_line", "next_line", "scroll_options", "next_stage")
             .forEach { compose.onNodeWithTag(it).assertDoesNotExist() }
         compose.openReaderControls()
@@ -427,9 +427,9 @@ class ReaderAccessibilityTest {
             val label = assertReadableModeText(node)
             if (!chooser) assertEquals("A short normal tab label must stay on one line", 1, textLayout(label).lineCount)
         }
-        compose.onAllNodesWithTag("clarify_moment").assertCountEquals(1)
-        compose.onNodeWithTag("clarify_moment").assertIsDisplayed().assertHeightIsAtLeast(48.dp)
-        assertReadable(compose.onNodeWithText("Уточнить", useUnmergedTree = true))
+        compose.onAllNodesWithTag("reader_microphone").assertCountEquals(1)
+        compose.onNodeWithTag("reader_microphone").assertIsDisplayed().assertHeightIsAtLeast(48.dp)
+        assertReadable(compose.onNodeWithText("Микрофон", useUnmergedTree = true))
         compose.onNodeWithTag("player_menu").assertIsDisplayed()
     }
 

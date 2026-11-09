@@ -1,235 +1,216 @@
 package ru.liturgyguide.service
 
-import android.Manifest
 import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.speech.RecognitionListener
-import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import androidx.annotation.MainThread
+import java.util.Locale
 
-enum class SpeechStatus { IDLE, STARTING, LISTENING, PROCESSING, RESULT, ERROR, UNAVAILABLE }
+enum class SpeechStatus { IDLE, CHECKING, STARTING, LISTENING, PROCESSING, RESULT, ERROR, UNAVAILABLE }
 
 data class SpeechGuideState(
     val status: SpeechStatus = SpeechStatus.IDLE,
     val transcript: String = "",
-    val message: String = "Коротко послушать службу на этом телефоне"
+    val message: String = "Коротко послушать службу на этом телефоне",
+    val canTryWithoutSupport: Boolean = false
 ) {
-    val isActive: Boolean
-        get() = status == SpeechStatus.STARTING || status == SpeechStatus.LISTENING ||
-            status == SpeechStatus.PROCESSING
+    val isActive: Boolean get() = status == SpeechStatus.CHECKING || status == SpeechStatus.STARTING ||
+        status == SpeechStatus.LISTENING || status == SpeechStatus.PROCESSING
 }
 
-/**
- * One explicitly started, bounded, on-device listening attempt. Never falls back
- * to a network recognizer, writes audio, or starts another attempt automatically.
- * The owner requests RECORD_AUDIO, calls stop() when leaving the foreground,
- * and destroy() when disposed. All methods and callbacks run on the main thread.
- */
-class SpeechGuide(
-    context: Context,
+/** One explicit on-device attempt. No network fallback, saved audio or automatic restart. */
+class SpeechGuide internal constructor(
+    private val backend: SpeechBackend,
+    private val scheduler: SpeechScheduler,
     private val onStateChanged: (SpeechGuideState) -> Unit
 ) {
-    private val appContext = context.applicationContext
-    private val handler = Handler(Looper.getMainLooper())
-    private var recognizer: SpeechRecognizer? = null
-    private var sessionId = 0
+    constructor(context: Context, onStateChanged: (SpeechGuideState) -> Unit) :
+        this(AndroidSpeechBackend(context.applicationContext), AndroidSpeechScheduler(), onStateChanged)
+
+    private class Attempt { var recognizer: SpeechAttempt? = null }
+    private var active: Attempt? = null
+    private var deadline: SpeechCancellation? = null
+    private var deadlineToken: Any? = null
     private var disposed = false
-    private var timeout: Runnable? = null
 
-    var state: SpeechGuideState = if (isOnDeviceAvailable()) {
-        SpeechGuideState()
-    } else {
-        SpeechGuideState(
-            status = SpeechStatus.UNAVAILABLE,
-            message = "На телефоне нет локального распознавания. Выберите этап по подсказкам"
-        )
-    }
+    var state: SpeechGuideState = availability()
         private set
-
     val initialState: SpeechGuideState get() = state
 
+    /** Checks only the service's presence. Never requests permission or opens a recognizer. */
     @MainThread
-    fun start() {
-        if (disposed || state.isActive) return
-        if (!isOnDeviceAvailable()) {
-            update(SpeechGuideState(
-                SpeechStatus.UNAVAILABLE,
-                message = "На телефоне нет локального распознавания. Выберите этап по подсказкам"
-            ))
-            return
-        }
-        if (appContext.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            update(SpeechGuideState(
-                SpeechStatus.ERROR,
-                message = "Для прослушивания разрешите доступ к микрофону"
-            ))
-            return
-        }
+    fun refreshAvailability() {
+        if (!disposed && !state.isActive && state.status != SpeechStatus.RESULT) update(availability())
+    }
 
-        val activeSession = ++sessionId
-        releaseRecognizer()
-        update(SpeechGuideState(SpeechStatus.STARTING, message = "Включаем микрофон"))
+    @MainThread
+    fun start(skipSupportCheck: Boolean = false) {
+        if (disposed || state.isActive || state.status == SpeechStatus.RESULT) return
+        if (!available()) { update(availability()); return }
+        if (!backend.hasPermission()) {
+            update(SpeechGuideState(SpeechStatus.ERROR, message = permissionMessage))
+            return
+        }
+        release()
+        val attempt = Attempt().also { active = it }
+        val checkSupport = backend.apiLevel >= 33 && !skipSupportCheck
+        update(SpeechGuideState(if (checkSupport) SpeechStatus.CHECKING else SpeechStatus.STARTING,
+            message = if (checkSupport) "Проверяем русский язык на телефоне" else "Включаем микрофон"))
+        if (!current(attempt)) return
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                recognizer = SpeechRecognizer.createOnDeviceSpeechRecognizer(appContext)
-            }
-            recognizer?.setRecognitionListener(listener(activeSession))
-            recognizer?.startListening(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ru-RU")
-                putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-                putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
-                // The on-device factory above enforces the processing mode.
-                // This extra alone would not guarantee offline processing.
-                putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
-            })
-            scheduleTimeout(15_000L) { finishListening() }
+            val recognizer = backend.create(events(attempt))
+            if (!current(attempt)) { recognizer.release(); return }
+            attempt.recognizer = recognizer
+            if (checkSupport) {
+                arm(attempt, 5_000) { supportUnknown("Телефон не ответил на проверку русского языка") }
+                recognizer.checkSupport({ support ->
+                    if (current(attempt) && state.status == SpeechStatus.CHECKING) acceptSupport(attempt, support)
+                }, { error ->
+                    if (current(attempt) && state.status == SpeechStatus.CHECKING) {
+                        if (error == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS) fail(permissionMessage)
+                        else supportUnknown("Не удалось проверить русский язык на телефоне")
+                    }
+                })
+            } else beginCapture(attempt)
         } catch (_: SecurityException) {
-            fail("Нет доступа к микрофону. Разрешите его в настройках приложения")
+            if (current(attempt)) fail(permissionMessage)
         } catch (_: RuntimeException) {
-            fail("Локальное распознавание недоступно. Выберите этап по подсказкам")
+            if (current(attempt)) {
+                if (checkSupport) supportUnknown("Не удалось проверить русский язык на телефоне")
+                else fail("Локальное распознавание недоступно. Выберите этап вручную")
+            }
         }
     }
 
-    /** Ends capture and briefly waits for the recognizer's final transcript. */
+    private fun acceptSupport(attempt: Attempt, support: SpeechSupport) {
+        when {
+            support.installed.any(::isRussian) -> beginCapture(attempt)
+            support.pending.any(::isRussian) -> unavailable("Русская модель ожидает загрузки. Проверьте настройки распознавания речи телефона")
+            support.supported.any(::isRussian) -> unavailable("Русская модель не установлена. Добавьте ее в настройках распознавания речи телефона")
+            else -> unavailable("Сервис телефона не поддерживает локальное распознавание русского языка. Выберите этап вручную")
+        }
+    }
+
+    private fun beginCapture(attempt: Attempt) {
+        if (!current(attempt)) return
+        update(SpeechGuideState(SpeechStatus.STARTING, message = "Включаем микрофон"))
+        if (!current(attempt)) return
+        arm(attempt, 15_000) { finishListening() }
+        try {
+            attempt.recognizer?.start()
+        } catch (_: SecurityException) {
+            if (current(attempt)) fail(permissionMessage)
+        } catch (_: RuntimeException) {
+            if (current(attempt)) fail("Не удалось включить локальное распознавание. Выберите этап вручную")
+        }
+    }
+
+    /** Ends capture once, then allows at most five seconds for the final transcript. */
     @MainThread
     fun finishListening() {
-        if (disposed || !state.isActive || state.status == SpeechStatus.PROCESSING) return
-        update(state.copy(status = SpeechStatus.PROCESSING, message = "Проверяем услышанную фразу"))
-        try {
-            recognizer?.stopListening()
-            scheduleTimeout(5_000L) {
-                fail("Не удалось разобрать фразу. Можно выбрать этап вручную")
-            }
-        } catch (_: RuntimeException) {
-            fail("Не удалось завершить распознавание. Можно выбрать этап вручную")
-        }
+        val attempt = active ?: return
+        if (!capturing(attempt)) return
+        beginProcessing(attempt)
+        if (!current(attempt)) return
+        try { attempt.recognizer?.finish() }
+        catch (_: RuntimeException) { if (current(attempt)) fail("Не удалось завершить распознавание. Выберите этап вручную") }
     }
 
-    /** Cancels capture and discards the transient transcript. No result is used. */
     @MainThread
     fun stop() {
         if (disposed) return
-        ++sessionId
-        releaseRecognizer()
-        val available = isOnDeviceAvailable()
-        update(SpeechGuideState(
-            status = if (available) SpeechStatus.IDLE else SpeechStatus.UNAVAILABLE,
-            message = if (available) "Микрофон выключен" else
-                "На телефоне нет локального распознавания. Выберите этап по подсказкам"
-        ))
+        release()
+        val next = availability()
+        update(if (next.status == SpeechStatus.IDLE) next.copy(message = "Микрофон выключен") else next)
     }
 
     @MainThread
     fun destroy() {
         if (disposed) return
         disposed = true
-        ++sessionId
-        releaseRecognizer()
+        release()
     }
 
-    private fun listener(activeSession: Int) = object : RecognitionListener {
-        private fun active() = !disposed && activeSession == sessionId
-
-        override fun onReadyForSpeech(params: Bundle?) {
-            // A delayed ready callback must not reactivate an attempt that the
-            // user or capture timeout has already moved into processing.
-            if (active() && state.status == SpeechStatus.STARTING) update(state.copy(
-                status = SpeechStatus.LISTENING, message = "Слушаем короткую фразу. Микрофон включен"
-            ))
+    private fun events(attempt: Attempt) = object : SpeechEvents {
+        override fun ready() {
+            if (current(attempt) && state.status == SpeechStatus.STARTING) update(state.copy(
+                status = SpeechStatus.LISTENING, message = "Слушаем короткую фразу. Микрофон включен"))
         }
-
-        override fun onBeginningOfSpeech() = Unit
-        override fun onRmsChanged(rmsdB: Float) = Unit
-        override fun onBufferReceived(buffer: ByteArray?) = Unit
-
-        override fun onEndOfSpeech() {
-            // stopListening() can trigger this callback too. In that case the
-            // existing processing deadline must not be restarted or extended.
-            if (!active() || state.status == SpeechStatus.PROCESSING) return
-            update(state.copy(status = SpeechStatus.PROCESSING, message = "Проверяем услышанную фразу"))
-            scheduleTimeout(5_000L) {
-                if (active()) fail("Не удалось разобрать фразу. Можно выбрать этап вручную")
-            }
+        override fun end() { if (capturing(attempt)) beginProcessing(attempt) }
+        override fun error(code: Int) { if (recognizing(attempt)) fail(errorMessage(code)) }
+        override fun partial(text: String) {
+            if (recognizing(attempt) && text.isNotBlank()) update(state.copy(transcript = text.trim()))
         }
-
-        override fun onError(error: Int) {
-            if (active()) fail(errorMessage(error))
+        override fun result(text: String) {
+            if (!recognizing(attempt)) return
+            val final = text.trim()
+            release()
+            if (final.isBlank()) update(SpeechGuideState(SpeechStatus.ERROR, message = noFinalMessage))
+            else update(SpeechGuideState(SpeechStatus.RESULT, final, "Распознанная фраза может содержать ошибки"))
         }
-
-        override fun onResults(results: Bundle?) {
-            if (!active()) return
-            val transcript = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                ?.firstOrNull().orEmpty().trim()
-            ++sessionId
-            releaseRecognizer()
-            if (transcript.isBlank()) {
-                update(SpeechGuideState(SpeechStatus.ERROR,
-                    message = "Не удалось разобрать фразу. Можно выбрать этап вручную"))
-            } else {
-                update(SpeechGuideState(SpeechStatus.RESULT, transcript,
-                    "Распознанная фраза может содержать ошибки"))
-            }
-        }
-
-        override fun onPartialResults(partialResults: Bundle?) {
-            if (!active()) return
-            val transcript = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                ?.firstOrNull().orEmpty().trim()
-            if (transcript.isNotBlank()) update(state.copy(transcript = transcript))
-        }
-
-        override fun onEvent(eventType: Int, params: Bundle?) = Unit
     }
 
-    private fun isOnDeviceAvailable(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-        try {
-            SpeechRecognizer.isOnDeviceRecognitionAvailable(appContext)
-        } catch (_: RuntimeException) {
-            false
-        }
+    private fun beginProcessing(attempt: Attempt) {
+        if (!capturing(attempt)) return
+        update(state.copy(status = SpeechStatus.PROCESSING, message = "Проверяем услышанную фразу"))
+        if (current(attempt)) arm(attempt, 5_000) { fail(noFinalMessage) }
+    }
 
+    private fun current(attempt: Attempt) = !disposed && active === attempt
+    private fun capturing(attempt: Attempt) = current(attempt) &&
+        (state.status == SpeechStatus.STARTING || state.status == SpeechStatus.LISTENING)
+    private fun recognizing(attempt: Attempt) = capturing(attempt) ||
+        (current(attempt) && state.status == SpeechStatus.PROCESSING)
+
+    private fun available() = backend.apiLevel >= 31 && runCatching { backend.isAvailable() }.getOrDefault(false)
+    private fun availability() = if (available()) SpeechGuideState() else SpeechGuideState(SpeechStatus.UNAVAILABLE,
+        message = "На телефоне нет локального распознавания. Выберите этап вручную")
     private fun update(next: SpeechGuideState) {
         if (disposed) return
         state = next
         onStateChanged(next)
     }
-
-    private fun fail(message: String) {
-        ++sessionId
-        releaseRecognizer()
-        update(SpeechGuideState(SpeechStatus.ERROR, message = message))
+    private fun fail(message: String) { release(); update(SpeechGuideState(SpeechStatus.ERROR, message = message)) }
+    private fun unavailable(message: String) { release(); update(SpeechGuideState(SpeechStatus.UNAVAILABLE, message = message)) }
+    private fun supportUnknown(message: String) {
+        release()
+        update(SpeechGuideState(SpeechStatus.ERROR, message = "$message. Можно повторить проверку или явно попробовать без нее",
+            canTryWithoutSupport = true))
     }
-
-    private fun scheduleTimeout(delay: Long, action: () -> Unit) {
-        timeout?.let(handler::removeCallbacks)
-        timeout = Runnable { if (!disposed) action() }.also { handler.postDelayed(it, delay) }
-    }
-
-    private fun releaseRecognizer() {
-        timeout?.let(handler::removeCallbacks)
-        timeout = null
-        recognizer?.let {
-            try { it.cancel() } catch (_: RuntimeException) { /* Already disconnected. */ }
-            try { it.destroy() } catch (_: RuntimeException) { /* Already disconnected. */ }
+    private fun arm(attempt: Attempt, delay: Long, action: () -> Unit) {
+        deadline?.cancel()
+        val token = Any().also { deadlineToken = it }
+        deadline = scheduler.schedule(delay) {
+            if (current(attempt) && deadlineToken === token) {
+                deadline = null
+                deadlineToken = null
+                action()
+            }
         }
-        recognizer = null
     }
-
+    private fun release() {
+        val old = active
+        active = null // Invalidate before cancel/destroy, which may deliver callbacks synchronously.
+        deadlineToken = null
+        deadline?.cancel()
+        deadline = null
+        old?.recognizer?.let { runCatching { it.release() } }
+    }
     private fun errorMessage(error: Int): String = when (error) {
-        SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Нет доступа к микрофону. Разрешите его в настройках приложения"
-        SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED,
-        SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE -> "Для локального распознавания нужен русский язык в настройках распознавания речи телефона"
-        SpeechRecognizer.ERROR_NO_MATCH,
-        SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "Не удалось разобрать фразу. Пение и эхо могут мешать - выберите этап вручную"
+        SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> permissionMessage
+        SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED -> "Сервис телефона не поддерживает русский язык. Выберите этап вручную"
+        SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE -> "Русская модель недоступна. Проверьте настройки распознавания речи телефона"
+        SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT ->
+            "Не удалось разобрать фразу. Пение и эхо могут мешать - выберите этап вручную"
         SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "Распознавание занято. Попробуйте еще раз чуть позже"
         SpeechRecognizer.ERROR_AUDIO -> "Не удалось включить микрофон. Возможно, он занят другим приложением"
-        else -> "Локальное распознавание не сработало. Можно выбрать этап по подсказкам"
+        else -> "Локальное распознавание не сработало. Выберите этап вручную"
+    }
+    private companion object {
+        const val permissionMessage = "Нет доступа к микрофону. Разрешите его в настройках приложения"
+        const val noFinalMessage = "Не удалось разобрать фразу. Можно выбрать этап вручную"
+        fun isRussian(tag: String): Boolean = runCatching {
+            Locale.Builder().setLanguageTag(tag.trim().replace('_', '-')).build().toLanguageTag()
+                .lowercase(Locale.ROOT) in setOf("ru", "ru-ru")
+        }.getOrDefault(false)
     }
 }
