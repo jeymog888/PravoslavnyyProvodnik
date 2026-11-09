@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.core.view.WindowCompat
 import ru.liturgyguide.LiturgyGuideApplication
@@ -41,11 +40,13 @@ private enum class ChurchSelectionOrigin { FIRST_HOME, DIRECTORY }
 
 class MainActivity : ComponentActivity() {
     private val activityForeground = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ActivityForegroundState() else null
+    private val screenAwakeOwner by lazy { readerScreenAwakeOwner(window) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        setContent { AppNavigation((application as LiturgyGuideApplication).container, activityForeground = activityForeground) }
+        setContent { AppNavigation((application as LiturgyGuideApplication).container,
+            activityForeground = activityForeground, screenAwakeOwner = screenAwakeOwner) }
     }
 
     override fun onTopResumedActivityChanged(isTopResumedActivity: Boolean) {
@@ -59,7 +60,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     monotonicMillis: () -> Long = SystemClock::elapsedRealtime,
-    activityForeground: ActivityForegroundState? = null) {
+    activityForeground: ActivityForegroundState? = null, screenAwakeOwner: ReaderScreenAwakeOwner? = null) {
     val context = LocalContext.current
     val screenStateHolder = rememberSaveableStateHolder()
     val preferences = remember { context.getSharedPreferences("guide_preferences", 0) }
@@ -227,26 +228,13 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
             while (true) { now = clock.instant(); delay(5_000L) }
         }
     }
-    DisposableEffect(player, lifecycle) {
-        val observer = LifecycleEventObserver { _, event ->
-            lifecycleResumed = event == Lifecycle.Event.ON_RESUME || lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
-            if (event == Lifecycle.Event.ON_PAUSE || event == Lifecycle.Event.ON_STOP || event == Lifecycle.Event.ON_DESTROY) {
-                lifecycleResumed = false
-                player.pause()
-            }
-        }
-        lifecycle.addObserver(observer)
-        onDispose { lifecycle.removeObserver(observer); player.pause() }
-    }
-    DisposableEffect(player, activityForeground) {
-        val unbind = activityForeground?.bind { player.pause() }
-        onDispose { unbind?.invoke() }
-    }
+    val awakeBinding = rememberReaderScreenAwakeBinding(player, visibleScreen == Screen.SERVICE,
+        lifecycle, activityForeground, screenAwakeOwner) { lifecycleResumed = it }
     val playing = player.reading?.state?.isPlaying == true
     val topResumed = activityForeground?.isTopResumed != false
     LaunchedEffect(player, visibleScreen, lifecycleResumed, activityForeground, topResumed, playing, player.generation) {
         if (visibleScreen != Screen.SERVICE || !lifecycleResumed || !topResumed) {
-            player.pause()
+            awakeBinding.pause()
         } else if (playing) {
             val generation = player.generation
             while (player.reading?.state?.isPlaying == true && generation == player.generation &&
@@ -262,7 +250,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         if (destination != Screen.CHURCH && destination != Screen.DISCOVERY) {
             churchSelectionOrigin = ChurchSelectionOrigin.DIRECTORY
         }
-        player.pause()
+        awakeBinding.pause()
         screen = destination
     }
     fun beginReading(value: ActiveServicePlayback, resetBookmarks: Boolean, resetReaderUi: Boolean = true,
