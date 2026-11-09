@@ -55,7 +55,13 @@ class ReaderAccessibilityTest {
         assertFooterTargets()
         compose.onNodeWithTag("line_status").assertDoesNotExist()
         assertReadable(compose.onNodeWithTag("reader_status", useUnmergedTree = true))
-        assertReadable(compose.onNodeWithTag("soundless_note", useUnmergedTree = true))
+        if (compose.readerHasModeChooser()) {
+            compose.openReaderControls()
+            compose.onNodeWithTag("reader_controls_list").performScrollToNode(hasTestTag("controls_soundless_note"))
+            assertReadable(compose.onNodeWithTag("controls_soundless_note").performScrollTo()
+                .assertTextEquals("Движение текста без звука"))
+            compose.dismissReaderControls()
+        } else assertReadable(compose.onNodeWithTag("soundless_note", useUnmergedTree = true))
         compose.openReaderControl("scroll_options").performClick()
         compose.onNodeWithTag("tempo_fast").performClick()
         compose.onNodeWithText("Готово").performClick()
@@ -67,8 +73,34 @@ class ReaderAccessibilityTest {
         val playTexts = compose.onAllNodes(hasAnyAncestor(hasTestTag("play_lyrics")) and
             SemanticsMatcher("Has text") { it.config.contains(SemanticsProperties.Text) }, useUnmergedTree = true)
         playTexts.fetchSemanticsNodes().indices.forEach { assertReadable(playTexts[it]) }
-        compose.onNodeWithTag("player_meaning_tab").performClick()
+        compose.selectReaderMode("meaning")
         assertFooterTargets(textVisible = false)
+    }
+
+    @Test
+    fun tempoOptionsAndFixedActionsStayReachableWithVeryLargeText() {
+        launchReader("creed", 1, 3, width = 320, height = 640, systemFontScale = 2f)
+        compose.openReaderControl("scroll_options").performClick()
+        fun assertWholeAction(tag: String) {
+            val node = compose.onNodeWithTag(tag).assertIsDisplayed().assertHeightIsAtLeast(48.dp)
+            val full = node.getUnclippedBoundsInRoot(); val visible = node.getBoundsInRoot()
+            assertTrue("Tempo action $tag is clipped", visible.left <= full.left + .5.dp &&
+                visible.top <= full.top + .5.dp && visible.right >= full.right - .5.dp && visible.bottom >= full.bottom - .5.dp)
+            val label = compose.onNode(hasAnyAncestor(hasTestTag(tag)) and
+                SemanticsMatcher.keyIsDefined(SemanticsActions.GetTextLayoutResult), useUnmergedTree = true)
+            assertReadable(label)
+            assertEquals(2.6f.toRawBits(), textLayout(label).layoutInput.density.fontScale.toRawBits())
+        }
+        assertWholeAction("tempo_done")
+        assertWholeAction("manual_reading")
+        compose.onNodeWithTag("manual_reading").assertTextEquals("Пауза").assertContentDescriptionEquals("Поставить на паузу")
+        listOf("tempo_slow", "tempo_normal", "tempo_fast").forEach { tag ->
+            compose.onNodeWithTag(tag).performScrollTo()
+            assertWholeAction(tag)
+        }
+        compose.onNodeWithTag("tempo_fast").performClick().assertIsSelected()
+        compose.onNodeWithTag("tempo_done").performClick()
+        compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
     }
 
     @Test
@@ -77,37 +109,41 @@ class ReaderAccessibilityTest {
         assertReadableHeader()
         assertReadingSpaceAndScale(3, 2.6f)
         assertFooterTargets()
-        compose.onNodeWithTag("player_original_tab").assertIsDisplayed().performClick()
+        compose.selectReaderMode("original")
         compose.onFeedLine(acceptedTrack(), 3).assertIsSelected()
         assertReadingSpaceAndScale(3, 2.6f)
 
-        compose.onNodeWithTag("player_meaning_tab").performClick().assertIsSelected()
+        compose.selectReaderMode("meaning")
         compose.onNodeWithText("Что происходит").assertIsDisplayed()
         compose.onNodeWithTag("service_content").performScrollToNode(hasTestTag("track_explanation"))
         assertEquals(2.6f, textLayout(compose.onNodeWithTag("track_explanation")).layoutInput.density.fontScale, .001f)
         compose.onNodeWithTag("clarify_moment").assertIsDisplayed().performClick()
         compose.onNodeWithTag("manual_content").assertIsDisplayed()
         compose.onNodeWithContentDescription("Назад").performClick()
-        compose.onNodeWithTag("player_meaning_tab").assertIsSelected()
-        compose.onNodeWithTag("player_original_tab").performClick()
+        compose.assertReaderMode("meaning", selected = true)
+        compose.assertReaderMode("original", selected = false)
+        compose.selectReaderMode("original")
         compose.onFeedLine(acceptedTrack(), 3).assertIsSelected().assertIsDisplayed()
         assertTrue(preferences.getBoolean("lyric_original", false))
         assertReadableHeader()
     }
 
     @Test
-    fun landscapeKeepsTabsOnOneLineAndLeavesSpaceForTheRequestedPrayerSize() {
+    fun landscapeKeepsModeChoicesReadableAndLeavesSpaceForTheRequestedPrayerSize() {
         try {
+            withCiFailureDiagnostics("landscape.nativeFontMetrics") {
             orient(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, Configuration.ORIENTATION_LANDSCAPE)
             launchReader("creed", 1, 3, width = 640, height = 360, systemFontScale = 1.3f)
             assertReadableHeader()
-            assertReadingSpaceAndScale(3, 1.69f)
+            // Match the fixture's exact float product; a rounded literal selects another native converter cache key.
+            assertReadingSpaceAndScale(3, 1.3f * 1.3f)
             assertFooterTargets()
             compose.openReaderControl("next_line").assertIsDisplayed().performClick()
             compose.onFeedLine(acceptedTrack(), 4).assertIsSelected().assertIsDisplayed()
-            compose.onNodeWithTag("player_meaning_tab").performClick().assertIsSelected()
-            compose.onNodeWithTag("player_text_tab").performClick().assertIsSelected()
+            compose.selectReaderMode("meaning")
+            compose.selectReaderMode("text")
             compose.onFeedLine(acceptedTrack(), 4).assertIsSelected()
+            }
         } finally {
             orient(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT, Configuration.ORIENTATION_PORTRAIT)
         }
@@ -117,8 +153,8 @@ class ReaderAccessibilityTest {
     fun aTallNarrowScreenKeepsReadableActionsWithoutReducingThePrayerSize() {
         launchReader("creed", 1, 3, width = 320, height = 800, systemFontScale = 2f)
         assertReadableHeader()
-        compose.onNodeWithTag("player_original_tab").assertIsDisplayed().assertIsEnabled()
-        assertReadable(compose.onNodeWithText("По-русски", useUnmergedTree = true))
+        compose.assertReaderMode("original", enabled = true)
+        compose.inspectReaderModes { _, node -> assertReadableModeText(node) }
         assertReadingSpaceAndScale(3, 2.6f, 28.sp)
     }
 
@@ -126,7 +162,7 @@ class ReaderAccessibilityTest {
     fun aTallScreenAtTheHeaderWidthBoundaryKeepsItsReadingArea() {
         launchReader("creed", 1, 3, width = 400, height = 800, systemFontScale = 2f)
         assertReadableHeader()
-        compose.onNodeWithTag("player_original_tab").assertIsDisplayed().assertIsEnabled()
+        compose.assertReaderMode("original", enabled = true)
         assertReadingSpaceAndScale(3, 2.6f, 28.sp)
         compose.openReaderControl("next_line").performClick()
         compose.onFeedLine(acceptedTrack(), 4).assertIsSelected().assertIsDisplayed()
@@ -152,15 +188,15 @@ class ReaderAccessibilityTest {
     fun scriptureAndAnEmptyTextStageKeepClarificationWithoutALanguageMenu() {
         launchReader("gospel", 1, 0, width = 320, height = 640, systemFontScale = 2f)
         assertTrue(tracks("gospel")[1].isScripture)
-        compose.onNodeWithTag("player_original_tab").assertIsDisplayed().assertIsEnabled()
-        compose.onNodeWithTag("player_text_tab").assertIsSelected()
+        compose.assertReaderMode("original", enabled = true)
+        compose.assertReaderMode("text", selected = true)
         assertReadableHeader()
         assertReadingSpaceAndScale(0, 2.6f)
         compose.onNodeWithTag("open_map").performClick()
         compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_preparation"))
         compose.onNodeWithTag("stage_preparation").performScrollTo().performClick()
         compose.onNodeWithTag("current_track_title").assertDoesNotExist()
-        compose.onNodeWithTag("reader_status").assertTextEquals("До начала литургии").assertIsDisplayed()
+        compose.assertReaderStatus("До начала литургии", "До начала")
         compose.onNodeWithTag("start_liturgy").assertIsDisplayed().assertHeightIsAtLeast(48.dp)
             .assertContentDescriptionEquals("Литургия началась")
         compose.onNodeWithTag("play_lyrics").assertDoesNotExist()
@@ -168,7 +204,8 @@ class ReaderAccessibilityTest {
         compose.onNodeWithTag("clarify_moment").assertIsDisplayed().performClick()
         compose.onNodeWithTag("manual_content").assertIsDisplayed()
         compose.onNodeWithContentDescription("Назад").performClick()
-        compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Подготовка к литургии")
+        compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals(
+            if (compose.readerHasModeChooser()) "До начала" else "Подготовка к литургии")
     }
 
     @Test
@@ -198,6 +235,36 @@ class ReaderAccessibilityTest {
     }
 
     @Test
+    fun ordinaryNavigationKeepsThreeColumnsAndWholeLabels() {
+        check(preferences.edit().clear().putString("church_id", "elisavetinsky_opalikha")
+            .putBoolean("dark", true).putInt("text_size", 0).commit())
+        launchApp(width = 320, height = 640, systemFontScale = 1f)
+        compose.onNodeWithTag("navigation_columns").assertIsDisplayed()
+        compose.onNodeWithTag("navigation_stacked").assertDoesNotExist()
+        val targets = mutableListOf<androidx.compose.ui.unit.DpRect>()
+        val icons = mutableListOf<androidx.compose.ui.unit.DpRect>()
+        listOf("nav_home" to "Служба", "nav_church" to "Храм", "open_settings" to "Настройки").forEach { (tag, label) ->
+            val text = compose.onNode(hasText(label) and hasAnyAncestor(hasTestTag(tag)), useUnmergedTree = true)
+            assertReadable(text)
+            assertEquals(1, textLayout(text).lineCount)
+            assertEquals(12.sp, textLayout(text).layoutInput.style.fontSize)
+            targets += compose.onNodeWithTag(tag).assertIsDisplayed().assertWidthIsAtLeast(48.dp)
+                .assertHeightIsAtLeast(48.dp).getUnclippedBoundsInRoot()
+            icons += compose.onNodeWithTag(if (tag == "open_settings") "nav_settings_icon" else "${tag}_icon", useUnmergedTree = true)
+                .assertIsDisplayed().getUnclippedBoundsInRoot()
+        }
+        assertTrue(icons.maxOf { it.top } - icons.minOf { it.top } <= .5.dp)
+        targets.zipWithNext().forEach { (a, b) -> assertTrue(a.right <= b.left + .5.dp) }
+        compose.onNodeWithTag("nav_home").assertIsSelected()
+        compose.onNodeWithTag("nav_church").performClick().assertIsSelected()
+        compose.onNodeWithTag("church_content").assertIsDisplayed().assertHeightIsAtLeast(300.dp)
+        compose.onNodeWithTag("open_settings").performClick().assertIsSelected()
+        compose.onNodeWithTag("settings_content").assertIsDisplayed().assertHeightIsAtLeast(300.dp)
+        compose.onNodeWithTag("nav_home").performClick().assertIsSelected()
+        compose.onNodeWithTag("main_content").assertIsDisplayed()
+    }
+
+    @Test
     fun largeTextNavigationLeavesSpaceForChurchAndSettingsWithoutScalingTheirContent() {
         check(preferences.edit().clear().putString("church_id", "elisavetinsky_opalikha")
             .putBoolean("dark", true).putInt("text_size", 2).commit())
@@ -207,7 +274,7 @@ class ReaderAccessibilityTest {
         assertNavigationLabels()
         val churchHeader = compose.onNodeWithTag("church_title", useUnmergedTree = true)
         assertReadable(churchHeader)
-        assertEquals(1, textLayout(churchHeader).lineCount)
+        churchHeader.assert(hasAnyAncestor(hasTestTag("church_content")))
         compose.onNodeWithTag("church_content").assertHeightIsAtLeast(300.dp)
         val church = container.parishes.getOrThrow().selected(null)
         assertEquals(2.6f, textLayout(compose.onNodeWithText(church.name, useUnmergedTree = true))
@@ -223,7 +290,7 @@ class ReaderAccessibilityTest {
         assertNavigationLabels()
         val settingsHeader = compose.onNodeWithTag("settings_title", useUnmergedTree = true)
         assertReadable(settingsHeader)
-        assertEquals(1, textLayout(settingsHeader).lineCount)
+        settingsHeader.assert(hasAnyAncestor(hasTestTag("settings_content")))
         compose.onNodeWithTag("settings_content").assertHeightIsAtLeast(300.dp)
         assertEquals(2.6f, textLayout(compose.onNodeWithText("Экран", useUnmergedTree = true))
             .layoutInput.density.fontScale, .001f)
@@ -260,11 +327,34 @@ class ReaderAccessibilityTest {
     }
 
     private fun assertNavigationLabels() {
+        val targets = mutableListOf<androidx.compose.ui.unit.DpRect>()
+        val icons = mutableListOf<androidx.compose.ui.unit.DpRect>()
+        compose.onNodeWithTag("navigation_stacked").assertIsDisplayed()
         listOf("nav_home" to "Служба", "nav_church" to "Храм", "open_settings" to "Настройки").forEach { (tag, label) ->
             val node = compose.onNode(hasText(label) and hasAnyAncestor(hasTestTag(tag)), useUnmergedTree = true)
             assertReadable(node)
-            assertEquals("A navigation label must stay on one line", 1, textLayout(node).lineCount)
+            val layout = textLayout(node)
+            assertEquals("Centered navigation must use the real full cell width",
+                layout.size.width.toFloat(), layout.multiParagraph.width, 1f)
+            // Full-width destinations must keep each native label whole at this profile.
+            assertEquals("A 320dp/2.6 label must remain on one line", 1, layout.lineCount)
+            for (line in 0 until layout.lineCount) {
+                val part = label.substring(layout.getLineStart(line), layout.getLineEnd(line, visibleEnd = true)).trim()
+                assertTrue("A navigation label must not leave one isolated letter: $label", part.length >= 2)
+            }
+            assertEquals(12.sp, layout.layoutInput.style.fontSize)
+            assertEquals(2.6f, layout.layoutInput.density.fontScale, .001f)
+            assertNativeTextMetrics(layout, Density(layout.layoutInput.density.density, 2.6f))
+            val target = compose.onNodeWithTag(tag).assertIsDisplayed().assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp)
+            val full = target.getUnclippedBoundsInRoot(); val visible = target.getBoundsInRoot()
+            assertTrue("Navigation target is clipped", visible.left <= full.left + .5.dp && visible.top <= full.top + .5.dp &&
+                visible.right >= full.right - .5.dp && visible.bottom >= full.bottom - .5.dp)
+            targets += full
+            icons += compose.onNodeWithTag(if (tag == "open_settings") "nav_settings_icon" else "${tag}_icon", useUnmergedTree = true)
+                .assertIsDisplayed().getUnclippedBoundsInRoot()
         }
+        assertTrue("Stacked navigation icons must share one column", icons.maxOf { it.left } - icons.minOf { it.left } <= .5.dp)
+        targets.zipWithNext().forEach { (a, b) -> assertTrue("Navigation targets overlap", a.bottom <= b.top + .5.dp) }
     }
 
     private fun assertFooterTargets(textVisible: Boolean = true) {
@@ -286,7 +376,7 @@ class ReaderAccessibilityTest {
         compose.readerControl("controls_order").assertIsEnabled()
         compose.readerControl("controls_clarify").assertIsEnabled()
         compose.dismissReaderControls()
-        if (!textVisible) compose.onNodeWithTag("reader_status").assertTextEquals("Пояснение · на паузе")
+        if (!textVisible) compose.assertReaderStatus("Пояснение · на паузе", "Пояснение")
         assertReadable(compose.onNodeWithTag("reader_status", useUnmergedTree = true))
         assertReadable(compose.onNodeWithTag("reader_primary_label", useUnmergedTree = true))
         val tolerance = .5.dp
@@ -308,9 +398,12 @@ class ReaderAccessibilityTest {
         }
         val content = compose.onNodeWithTag(if (textVisible) "lyrics_list" else "service_content")
             .assertHeightIsAtLeast(120.dp).getBoundsInRoot()
-        assertTrue("The footer overlaps the reading area", content.bottom <= bounds.values.minOf { it.top } + tolerance)
+        fun separate(a: androidx.compose.ui.unit.DpRect, b: androidx.compose.ui.unit.DpRect) =
+            a.right <= b.left + tolerance || b.right <= a.left + tolerance ||
+                a.bottom <= b.top + tolerance || b.bottom <= a.top + tolerance
+        bounds.forEach { (tag, target) -> assertTrue("Control $tag overlaps the reading area", separate(content, target)) }
         val status = compose.onNodeWithTag("reader_status").getUnclippedBoundsInRoot()
-        assertTrue("The footer status overlaps the reading area", content.bottom <= status.top + tolerance)
+        assertTrue("The status overlaps the reading area", separate(content, status))
     }
 
     private fun assertReadableHeader() {
@@ -328,10 +421,11 @@ class ReaderAccessibilityTest {
         compose.onNodeWithTag("lyrics_list").performSemanticsAction(SemanticsActions.ScrollToIndex) { assertTrue(it(line)) }
         compose.waitForIdle()
         compose.onFeedLine(phrase).performScrollTo().assertIsSelected().assertIsDisplayed()
-        listOf("Оригинал", "По-русски", "Смысл").forEach {
-            val node = compose.onNodeWithText(it, useUnmergedTree = true)
-            assertReadable(node)
-            assertEquals("A short tab label must stay on one line", 1, textLayout(node).lineCount)
+        val chooser = compose.readerHasModeChooser()
+        if (chooser) assertReadable(compose.onNodeWithTag("reader_selected_mode", useUnmergedTree = true))
+        compose.inspectReaderModes { _, node ->
+            val label = assertReadableModeText(node)
+            if (!chooser) assertEquals("A short normal tab label must stay on one line", 1, textLayout(label).lineCount)
         }
         compose.onAllNodesWithTag("clarify_moment").assertCountEquals(1)
         compose.onNodeWithTag("clarify_moment").assertIsDisplayed().assertHeightIsAtLeast(48.dp)
@@ -339,12 +433,24 @@ class ReaderAccessibilityTest {
         compose.onNodeWithTag("player_menu").assertIsDisplayed()
     }
 
-    private fun assertReadingSpaceAndScale(line: Int, expectedScale: Float, expectedFontSize: TextUnit = 20.sp) {
+    private fun assertReadableModeText(action: SemanticsNodeInteraction): SemanticsNodeInteraction {
+        val actionTag = action.fetchSemanticsNode().config[SemanticsProperties.TestTag]
+        val text = compose.onNode(hasAnyAncestor(hasTestTag(actionTag)) and
+            SemanticsMatcher.keyIsDefined(SemanticsActions.GetTextLayoutResult), useUnmergedTree = true)
+        assertReadable(text)
+        return text
+    }
+
+    private fun assertReadingSpaceAndScale(line: Int, expectedScale: Float, expectedFontSize: TextUnit = 28.sp) {
         compose.onNodeWithTag("lyrics_list").assertHeightIsAtLeast(120.dp)
         val lyric = compose.onFeedLine(acceptedTrack(), line).assertIsSelected().assertIsDisplayed()
         val layout = textLayout(lyric)
         assertEquals(expectedScale, layout.layoutInput.density.fontScale, .001f)
+        assertEquals("Exact native font scale from the fixture", expectedScale.toRawBits(),
+            layout.layoutInput.density.fontScale.toRawBits())
         assertEquals(expectedFontSize, layout.layoutInput.style.fontSize)
+        assertEquals(39.2.sp, layout.layoutInput.style.lineHeight)
+        assertNativeTextMetrics(layout, Density(layout.layoutInput.density.density, expectedScale))
     }
 
     private fun assertReadable(node: SemanticsNodeInteraction) {

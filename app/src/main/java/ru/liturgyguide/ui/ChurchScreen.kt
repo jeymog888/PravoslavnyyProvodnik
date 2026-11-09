@@ -18,6 +18,10 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.text.intl.LocaleList
+import androidx.compose.ui.text.style.Hyphens
+import androidx.compose.ui.text.style.LineBreak
 import ru.liturgyguide.service.ChurchDirectory
 import ru.liturgyguide.service.ChurchSelectionResult
 import ru.liturgyguide.service.SavedChurchCodec
@@ -175,11 +179,13 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     }
     Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = { Column(Modifier.statusBarsPadding()) {
         if (showBack) PageHeader("Мой храм", onBack)
-        else NavigationTextScale {
-            Text("Мой храм", Modifier.padding(horizontal = 24.dp, vertical = 16.dp).testTag("church_title"), style = MaterialTheme.typography.headlineLarge)
-        }
     } }, bottomBar = bottomBar) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("church_content"), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(28.dp)) {
+            if (!showBack) item {
+                Text("Мой храм", Modifier.testTag("church_title").semantics { heading() },
+                    style = MaterialTheme.typography.headlineLarge.copy(localeList = LocaleList("ru"),
+                        hyphens = Hyphens.Auto, lineBreak = LineBreak.Heading))
+            }
             if (church == null) item {
                 Text("Выберите или добавьте храм", style = MaterialTheme.typography.titleLarge)
                 Button(onClick = { picker = true }, modifier = Modifier.testTag("change_church")) { Text("Выбрать храм") }

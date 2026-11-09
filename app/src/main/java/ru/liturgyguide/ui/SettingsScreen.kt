@@ -14,6 +14,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.text.intl.LocaleList
+import androidx.compose.ui.text.style.Hyphens
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -22,11 +26,13 @@ fun SettingsScreen(dark: Boolean, textSize: Int, onDarkChange: (Boolean) -> Unit
     onBack: () -> Unit, showBack: Boolean = true, bottomBar: @Composable () -> Unit = {}) {
     Scaffold(topBar = { Column(Modifier.statusBarsPadding()) {
         if (showBack) PageHeader("Настройки", onBack)
-        else NavigationTextScale {
-            Text("Настройки", Modifier.padding(horizontal = 24.dp, vertical = 16.dp).testTag("settings_title"), style = MaterialTheme.typography.headlineLarge)
-        }
     } }, bottomBar = bottomBar) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("settings_content"), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(28.dp)) {
+            if (!showBack) item {
+                Text("Настройки", Modifier.testTag("settings_title").semantics { heading() },
+                    style = MaterialTheme.typography.headlineLarge.copy(localeList = LocaleList("ru"),
+                        hyphens = Hyphens.Auto, lineBreak = LineBreak.Heading))
+            }
             item {
                 Text("Экран", style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(12.dp))

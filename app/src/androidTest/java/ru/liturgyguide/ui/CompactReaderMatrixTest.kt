@@ -43,10 +43,11 @@ class CompactReaderMatrixTest {
         assertEquals(18, initial.plan.stages.size)
         initial.plan.stages.forEachIndexed { index, stage ->
             compose.runOnIdle { assertTrue(player.accept(initial.copy(state = initial.engine.start(stage.id)), false)) }
-            assertHeader(stage.name, stage.name, index + 1)
+            assertHeader(stage.shortTitle, stage.name, index + 1)
             assertReadable(compose.onNodeWithTag("reader_status"))
-            compose.onNodeWithTag("reader_status").assertTextEquals(
-                if (stage.id == "preparation") "До начала литургии · примерное место" else "На паузе · примерное место").assertHasNoClickAction()
+            val fullStatus = if (stage.id == "preparation") "До начала литургии · примерное место" else "На паузе · примерное место"
+            compose.assertReaderStatus(fullStatus, if (stage.id == "preparation") "До начала" else "Пауза · примерно").assertHasNoClickAction()
+            compose.assertReaderStatusDetails(fullStatus)
             assertTrackHeader(player)
         }
         compose.runOnIdle { assertTrue(player.accept(initial, false)) }
@@ -66,11 +67,12 @@ class CompactReaderMatrixTest {
                 compose.runOnIdle { assertTrue(player.accept(initial.copy(state = initial.engine.start(stage.id)), false)) }
                 assertHeader(stage.shortTitle, stage.name, index + 1)
                 assertReadable(compose.onNodeWithTag("reader_status"))
-                compose.onNodeWithTag("reader_status").assertTextEquals(
-                    if (stage.id == "preparation") "До начала литургии · примерное место" else "На паузе · примерное место").assertHasNoClickAction()
+                val fullStatus = if (stage.id == "preparation") "До начала литургии · примерное место" else "На паузе · примерное место"
+                compose.assertReaderStatus(fullStatus, if (stage.id == "preparation") "До начала" else "Пауза · примерно").assertHasNoClickAction()
+                compose.assertReaderStatusDetails(fullStatus)
                 assertTrackHeader(player)
                 try {
-                    compose.onNodeWithTag("player_meaning_tab").performClick().assertIsSelected()
+                    compose.selectReaderMode("meaning")
                     compose.onNodeWithTag("service_content").assertHeightIsAtLeast(120.dp)
                 } catch (failure: AssertionError) {
                     android.util.Log.e("CompactReaderMatrix", "Stage ${stage.id}: ${compose.onRoot().printToString()}")
@@ -78,8 +80,7 @@ class CompactReaderMatrixTest {
                     throw failure
                 }
                 val originalAvailable = player.reading?.tracks?.any { track -> track.lines.any { it.original != null } } == true
-                compose.onNodeWithTag(if (originalAvailable) "player_original_tab" else "player_text_tab")
-                    .performClick().assertIsSelected()
+                compose.selectReaderMode(if (originalAvailable) "original" else "text")
             }
         } finally {
             orient(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT, Configuration.ORIENTATION_PORTRAIT)
@@ -89,7 +90,7 @@ class CompactReaderMatrixTest {
     @Test
     fun epistleAt412DpRetainsTheRequestedClarifyScaleAndTheWholeTitle() {
         val player = launch(412, 800, 1.3f, reading("epistle"))
-        assertHeader("Прокимен и чтение Апостола", "Прокимен и чтение Апостола", 7)
+        assertHeader("Апостол", "Прокимен и чтение Апостола", 7)
         assertTrackHeader(player)
         val clarify = compose.onNodeWithText("Уточнить", useUnmergedTree = true)
         assertReadable(clarify)
@@ -110,14 +111,19 @@ class CompactReaderMatrixTest {
             val selected = requireNotNull(player.reading)
             val line = requireNotNull(selected.track).lines[selected.lineIndex]
             val before = selected.state
-            compose.onNodeWithTag("player_original_tab").performClick()
+            compose.selectReaderMode("original")
             val original = compose.onFeedLine(line).assertIsSelected()
                 .assertTextEquals(requireNotNull(line.original))
             assertEquals(2.6f, textLayout(original).layoutInput.density.fontScale, .001f)
-            assertEquals(20.sp, textLayout(original).layoutInput.style.fontSize)
-            compose.onNodeWithTag("player_text_tab").performClick()
+            assertEquals(28.sp, textLayout(original).layoutInput.style.fontSize)
+            assertEquals(39.2.sp, textLayout(original).layoutInput.style.lineHeight)
+            assertNativeTextMetrics(textLayout(original), Density(textLayout(original).layoutInput.density.density, 2.6f))
+            compose.selectReaderMode("text")
             val russian = compose.onFeedLine(line).assertIsSelected().assertTextEquals(line.russian)
             assertEquals(2.6f, textLayout(russian).layoutInput.density.fontScale, .001f)
+            assertEquals(28.sp, textLayout(russian).layoutInput.style.fontSize)
+            assertEquals(39.2.sp, textLayout(russian).layoutInput.style.lineHeight)
+            assertNativeTextMetrics(textLayout(russian), Density(textLayout(russian).layoutInput.density.density, 2.6f))
             compose.runOnIdle { assertEquals(before, player.reading!!.state) }
         }
     }
@@ -126,6 +132,7 @@ class CompactReaderMatrixTest {
     fun acceptingTheSameReadingRefreshesControlsWhileCapturedOldActionsStayInvalid() {
         val initial = reading("creed", approximate = false)
         val player = launch(360, 800, 1f, initial)
+        compose.onNodeWithTag("reader_layout_normal").assertExists()
         val oldActions = listOf("player_meaning_tab", "clarify_moment").map { tag -> requireNotNull(compose.onNodeWithTag(tag)
             .fetchSemanticsNode().config[SemanticsActions.OnClick].action) }.toMutableList()
         compose.onNodeWithTag("player_menu").performClick()
@@ -140,16 +147,16 @@ class CompactReaderMatrixTest {
             assertTrue(player.accept(initial, false))
             oldActions.forEach { it() }
         }
-        compose.onNodeWithTag("player_original_tab").assertIsSelected()
+        compose.assertReaderMode("original", selected = true)
         compose.onNodeWithTag("track_list").assertDoesNotExist()
         compose.runOnIdle { assertEquals(0, clarified); assertEquals("creed", player.reading!!.stage.id) }
-        compose.onNodeWithTag("player_meaning_tab").performClick().assertIsSelected()
+        compose.selectReaderMode("meaning")
         compose.onNodeWithTag("clarify_moment").performClick()
         compose.runOnIdle { assertEquals(1, clarified) }
         compose.openReaderTracks()
         compose.onNodeWithTag("track_list").assertIsDisplayed()
         compose.onNodeWithTag("track_0").performClick()
-        compose.onNodeWithTag("player_meaning_tab").assertIsSelected()
+        compose.assertReaderMode("meaning", selected = true)
         compose.openReaderControls()
         compose.onNodeWithTag("next_stage").assertDoesNotExist()
         compose.dismissReaderControls()
@@ -190,7 +197,7 @@ class CompactReaderMatrixTest {
         compose.runOnIdle { monotonic.addAndGet(86_400_000) }
         compose.onNodeWithTag("close_reading_details").performClick()
         compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
-        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе · примерное место")
+        compose.assertReaderStatus("На паузе · примерное место", "Пауза · примерно")
         compose.runOnIdle { assertEquals(paused, player.reading!!.state) }
     }
 
@@ -219,7 +226,8 @@ class CompactReaderMatrixTest {
     fun compactSavedReadingExposesItsDateWithoutPretendingToBeSynchronized() {
         val initial = reading("creed", date = "2026-11-09", approximate = false)
         val player = launch(320, 640, 2.6f, initial, restored = true)
-        compose.onNodeWithTag("reader_status").assertIsDisplayed().assertTextEquals("На паузе · сохраненное чтение").assertHasNoClickAction()
+        compose.assertReaderStatus("На паузе · сохраненное чтение", "Пауза").assertHasNoClickAction()
+        compose.assertReaderStatusDetails("На паузе · сохраненное чтение")
         compose.onNodeWithTag("player_menu").performClick()
         compose.onNodeWithTag("open_reading_details").performClick()
         compose.onNodeWithTag("reading_details_date").assertTextEquals("Тексты на 9 ноября 2026")
@@ -260,9 +268,14 @@ class CompactReaderMatrixTest {
     }
 
     private fun assertHeader(displayTitle: String, fullTitle: String, position: Int) {
-        val title = compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals(displayTitle)
+        val title = compose.onNodeWithTag("current_stage_title", useUnmergedTree = true)
+            .assertTextEquals(if (compose.readerHasModeChooser()) displayTitle else fullTitle)
         assertReadable(title)
         compose.onNodeWithTag("open_map").assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "$fullTitle, $position из 18"))
+        compose.openReaderControls()
+        compose.onNodeWithTag("reader_controls_list").performScrollToNode(hasTestTag("controls_stage_title"))
+        assertReadable(compose.onNodeWithTag("controls_stage_title").performScrollTo().assertTextEquals(fullTitle))
+        compose.dismissReaderControls()
         compose.onAllNodesWithTag("clarify_moment").assertCountEquals(1)
         compose.onNodeWithTag("clarify_moment").assertIsDisplayed().assertHeightIsAtLeast(48.dp)
         assertReadable(compose.onNodeWithText("Уточнить", useUnmergedTree = true))

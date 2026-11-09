@@ -30,32 +30,33 @@ class ReaderCompositionFlowTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext)
 
-    @Test fun oneReadingSurfaceKeepsSixStatesAndThreeVisibleModesWithoutDuplicateHeaders() =
+    @Test fun oneReadingSurfaceKeepsSixStatesAndReachableModesWithoutDuplicateHeaders() =
         withCiFailureDiagnostics("composition.singleSurfaceAndContext") {
             val h = launch(reading("creed", track = 1, line = 12))
             val cases = listOf(
-                reading("creed", track = 1, line = 12) to "На паузе",
-                segment("anaphora", PlaybackSegment.Wait::class.java) to "Примерный переход остановлен",
-                segment("preparation", PlaybackSegment.Wait::class.java) to "До начала литургии",
-                segment("epistle", PlaybackSegment.MissingReading::class.java, "2026-11-09") to "Текст на 9 ноября 2026 пока не добавлен · пауза",
-                segment("dismissal", PlaybackSegment.End::class.java) to "Порядок в приложении завершен")
-            for ((candidate, expectedStatus) in cases) {
+                Triple(reading("creed", track = 1, line = 12), "На паузе", "Пауза"),
+                Triple(segment("anaphora", PlaybackSegment.Wait::class.java), "Примерный переход остановлен", "Пауза · примерно"),
+                Triple(segment("preparation", PlaybackSegment.Wait::class.java), "До начала литургии", "До начала"),
+                Triple(segment("epistle", PlaybackSegment.MissingReading::class.java, "2026-11-09"), "Текст на 9 ноября 2026 пока не добавлен · пауза", "Нет текста"),
+                Triple(segment("dismissal", PlaybackSegment.End::class.java), "Порядок в приложении завершен", "Конец порядка"))
+            for ((candidate, expectedStatus, compactStatus) in cases) {
                 compose.runOnIdle { assertTrue(h.player.accept(candidate, false)) }
                 compose.onAllNodesWithTag("reader_surface").assertCountEquals(1)
                 compose.onNodeWithTag("lyrics_list").assert(hasAnyAncestor(hasTestTag("reader_surface"))).assertHeightIsAtLeast(120.dp)
                 listOf("reading_service_date", "current_track_title", "approximate_notice", "saved_earlier_notice")
                     .forEach { compose.onNodeWithTag(it).assertDoesNotExist() }
-                listOf("player_original_tab", "player_text_tab", "player_meaning_tab").forEach {
-                    compose.onNodeWithTag(it).assertIsDisplayed().assertHeightIsAtLeast(48.dp)
+                if (compose.readerHasModeChooser()) {
+                    compose.onNodeWithTag("reader_selected_mode", useUnmergedTree = true).assertIsDisplayed()
                 }
-                status(expectedStatus)
+                compose.inspectReaderModes { _, node -> node.assertIsDisplayed().assertHeightIsAtLeast(48.dp) }
+                status(expectedStatus, compactStatus)
                 compose.onNodeWithTag("reader_controls").assertIsDisplayed()
-                compose.onNodeWithTag("player_meaning_tab").performClick()
+                compose.selectReaderMode("meaning")
                 compose.onAllNodesWithTag("reader_surface").assertCountEquals(1)
                 compose.onNodeWithTag("service_content").assert(hasAnyAncestor(hasTestTag("reader_surface"))).assertHeightIsAtLeast(120.dp)
                 compose.onNodeWithText("Что происходит").assertIsDisplayed()
                     .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
-                status("Пояснение · на паузе")
+                status("Пояснение · на паузе", "Пояснение")
                 compose.onNodeWithTag("return_to_text").performClick()
             }
         }
@@ -165,7 +166,7 @@ class ReaderCompositionFlowTest {
             feed("playback_migration_notice").assertTextEquals(text)
                 .assert(hasAnyAncestor(hasTestTag(feedHeaderTag(first))))
             val position = h.current.state.segmentIndex
-            compose.onNodeWithTag("player_meaning_tab").performClick()
+            compose.selectReaderMode("meaning")
             compose.onNodeWithTag("service_content").performScrollToNode(hasTestTag("playback_migration_notice"))
             compose.onNodeWithTag("playback_migration_notice").assertTextEquals(text).assertIsDisplayed()
             val paused = h.current
@@ -186,8 +187,9 @@ class ReaderCompositionFlowTest {
         withCiFailureDiagnostics("composition.preparationClarification") {
             val h = launch(segment("preparation", PlaybackSegment.Wait::class.java))
             compose.runOnIdle { assertTrue(h.player.play()); h.now += 101 }
-            compose.onNodeWithTag("before_start_pause").assertIsDisplayed().assertHeightIsAtLeast(48.dp)
-            compose.onNodeWithTag("clarify_moment").assertDoesNotExist()
+            val pause = fullTarget("before_start_pause")
+            val clarify = fullTarget("clarify_moment")
+            assertSeparate("Pause and clarification", pause, clarify)
             compose.openReaderControls()
             compose.readerControl("controls_clarify").assertTextEquals("Уточнить место").performClick()
             compose.runOnIdle {
@@ -196,7 +198,7 @@ class ReaderCompositionFlowTest {
                 assertEquals(404L, h.current.state.elapsedQuarterMillis)
                 assertEquals(2, h.writes)
             }
-            status("До начала литургии · примерное место")
+            status("До начала литургии · примерное место", "До начала")
         }
 
     @Test fun narrowPortraitReturnReservesItsSlotWithoutChangingTheReadingOrPrimaryBounds() =
@@ -217,18 +219,28 @@ class ReaderCompositionFlowTest {
         val before = h.current
         val readingBounds = compose.onNodeWithTag("lyrics_list").assertHeightIsAtLeast(120.dp).getBoundsInRoot()
         val primary = fullTarget("play_lyrics")
-        val slot = fullTarget("clarify_moment")
+        val clarify = fullTarget("clarify_moment")
         val controls = fullTarget("reader_controls")
         feed(feedLineTag(h.current.tracks.last().lines.last()))
-        assertEquals(slot, fullTarget("return_to_phrase"))
-        compose.onNodeWithTag("clarify_moment").assertDoesNotExist()
+        val returnSlot = fullTarget("return_to_phrase")
+        assertEquals(clarify, fullTarget("clarify_moment"))
+        assertSeparate("Return and clarification", returnSlot, clarify)
+        assertSeparate("Return and primary", returnSlot, primary)
+        assertSeparate("Return and controls", returnSlot, controls)
+        if (compose.readerHasModeChooser()) {
+            compose.onNodeWithTag("return_to_phrase").assertContentDescriptionEquals("К выбранной фразе")
+            compose.openReaderControls()
+            compose.readerControl("controls_return").assertTextEquals("К выбранной фразе").assertIsEnabled()
+            compose.dismissReaderControls()
+        } else compose.onNodeWithTag("return_to_phrase").assertTextEquals("К выбранной фразе")
         assertEquals(readingBounds, compose.onNodeWithTag("lyrics_list").getBoundsInRoot())
         assertEquals(primary, fullTarget("play_lyrics"))
         assertEquals(controls, fullTarget("reader_controls"))
         compose.mainClock.advanceTimeBy(1_000)
-        assertEquals(slot, fullTarget("return_to_phrase"))
+        assertEquals(returnSlot, fullTarget("return_to_phrase"))
         compose.onNodeWithTag("return_to_phrase").performClick()
-        assertEquals(slot, fullTarget("clarify_moment"))
+        compose.onNodeWithTag("return_to_phrase").assertDoesNotExist()
+        assertEquals(clarify, fullTarget("clarify_moment"))
         assertEquals(readingBounds, compose.onNodeWithTag("lyrics_list").getBoundsInRoot())
         assertEquals(primary, fullTarget("play_lyrics"))
         compose.onFeedLine(requireNotNull(before.track), 0).assertIsSelected().assertIsDisplayed()
@@ -237,7 +249,7 @@ class ReaderCompositionFlowTest {
         compose.onNodeWithTag("play_lyrics").performClick()
         assertEquals(readingBounds, compose.onNodeWithTag("lyrics_list").getBoundsInRoot())
         assertEquals(primary, fullTarget("play_lyrics"))
-        assertEquals(slot, fullTarget("clarify_moment"))
+        assertEquals(clarify, fullTarget("clarify_moment"))
         assertEquals(controls, fullTarget("reader_controls"))
         compose.runOnIdle { assertTrue(h.current.state.isPlaying); h.now += 101 }
         compose.onNodeWithTag("play_lyrics").performClick()
@@ -298,7 +310,7 @@ class ReaderCompositionFlowTest {
         compose.onNodeWithTag("lyrics_list").performScrollToNode(hasTestTag(tag))
         return compose.onNodeWithTag(tag).performScrollTo().assertIsDisplayed()
     }
-    private fun status(expected: String) = compose.onNodeWithTag("reader_status").assertTextEquals(expected).assertIsDisplayed()
+    private fun status(expected: String, compact: String) = compose.assertReaderStatus(expected, compact)
     private fun action(node: SemanticsNodeInteraction) = requireNotNull(node.fetchSemanticsNode().config[SemanticsActions.OnClick].action)
     private fun fullTarget(tag: String): androidx.compose.ui.unit.DpRect {
         val node = compose.onNodeWithTag(tag).assertIsDisplayed().assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp)
@@ -306,6 +318,10 @@ class ReaderCompositionFlowTest {
         assertTrue("$tag must be fully visible", visible.left <= full.left + .5.dp && visible.top <= full.top + .5.dp &&
             visible.right >= full.right - .5.dp && visible.bottom >= full.bottom - .5.dp)
         return full
+    }
+    private fun assertSeparate(label: String, a: androidx.compose.ui.unit.DpRect, b: androidx.compose.ui.unit.DpRect) {
+        assertTrue("$label overlap: $a / $b", a.right <= b.left + .5.dp || b.right <= a.left + .5.dp ||
+            a.bottom <= b.top + .5.dp || b.bottom <= a.top + .5.dp)
     }
     private fun orient(requested: Int, expected: Int) {
         compose.activityRule.scenario.onActivity { it.requestedOrientation = requested }

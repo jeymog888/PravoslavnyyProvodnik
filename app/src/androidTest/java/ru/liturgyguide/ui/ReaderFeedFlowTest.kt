@@ -41,15 +41,15 @@ class ReaderFeedFlowTest {
         scroll(feedLineTag(other.lines[0]))
         compose.onNodeWithTag("lyrics_list").performTouchInput { swipeDown(startY = height * .45f, endY = height * .55f) }
         compose.onFeedLine(other, 0).assertIsDisplayed().assertIsNotSelected()
-        compose.onNodeWithTag("player_text_tab").performClick()
+        compose.selectReaderMode("text")
         compose.onFeedLine(other, 0).assertIsDisplayed().assertTextEquals(other.lines[0].russian)
-        compose.onNodeWithTag("player_original_tab").performClick()
+        compose.selectReaderMode("original")
         compose.onFeedLine(other, 0).assertIsDisplayed().assertTextEquals(requireNotNull(other.lines[0].original))
         returnButton().assertIsDisplayed()
         unchanged(h, before, 0)
-        compose.onNodeWithTag("player_meaning_tab").performClick()
+        compose.selectReaderMode("meaning")
         scroll("track_explanation", "service_content").assertTextEquals(requireNotNull(before.track).explanation)
-        compose.onNodeWithTag("reader_status").assertTextEquals("Пояснение · на паузе")
+        compose.assertReaderStatus("Пояснение · на паузе", "Пояснение")
         unchanged(h, before, 0)
         compose.onNodeWithTag("return_to_text").performClick()
         scroll(feedLineTag(other.lines[0])).performClick()
@@ -61,7 +61,7 @@ class ReaderFeedFlowTest {
             assertEquals(before.context, h.current.context)
             assertEquals(before.state.speed, h.current.state.speed)
         }
-        compose.onNodeWithTag("player_meaning_tab").performClick()
+        compose.selectReaderMode("meaning")
         scroll("track_explanation", "service_content").assertTextEquals(other.explanation)
     }
 
@@ -77,7 +77,7 @@ class ReaderFeedFlowTest {
             compose.runOnIdle { h.now += text.durationBaseMillis + 123 }
             // The owner has not received a tick. The real first user delta must pause and materialize it.
             compose.onNodeWithTag("lyrics_list").performTouchInput { swipeDown() }
-            compose.onNodeWithTag("reader_status").assertTextEquals("На паузе · примерное место")
+            compose.assertReaderStatus("На паузе · примерное место", "Пауза · примерно")
             compose.runOnIdle {
                 assertEquals(next, h.current.segment)
                 assertEquals(492L, h.current.state.elapsedQuarterMillis)
@@ -109,7 +109,7 @@ class ReaderFeedFlowTest {
             compose.onNodeWithTag("lyrics_list").performTouchInput { swipeDown() }
             val nextLine = h.current.plan.line(next)
             compose.onFeedLine(nextLine).assertIsSelected().assertIsDisplayed()
-            compose.onNodeWithTag("reader_status").assertTextEquals("На паузе · примерное место")
+            compose.assertReaderStatus("На паузе · примерное место", "Пауза · примерно")
             compose.onNodeWithTag("return_to_phrase").assertDoesNotExist()
             compose.onNodeWithTag("feed_continuation_anaphora").assertDoesNotExist()
             compose.runOnIdle {
@@ -180,7 +180,7 @@ class ReaderFeedFlowTest {
             compose.runOnIdle { assertTrue(h.current.state.isPlaying); assertEquals(1, h.writes); h.now += old.durationBaseMillis + 123; h.writable = false }
             val beforeBounds = compose.onFeedLine(requested).getUnclippedBoundsInRoot()
             compose.onFeedLine(requested).performClick()
-            compose.onNodeWithTag("reader_status").assertTextEquals("На паузе · примерное место")
+            compose.assertReaderStatus("На паузе · примерное место", "Пауза · примерно")
             compose.onFeedLine(requested).assertIsDisplayed().assertIsNotSelected()
             assertEquals(beforeBounds, compose.onFeedLine(requested).getUnclippedBoundsInRoot())
             compose.onFeedLine(h.current.plan.line(next)).assertIsNotDisplayed()
@@ -219,7 +219,7 @@ class ReaderFeedFlowTest {
             returnButton()
             compose.runOnIdle { h.writable = false }
             compose.onNodeWithTag("play_lyrics").performClick()
-            compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
+            compose.assertReaderStatus("На паузе", "Пауза")
             compose.onNodeWithTag("play_lyrics").assertContentDescriptionEquals("Двигать текст")
             compose.onFeedLine(away).assertIsDisplayed().assertIsNotSelected()
             assertEquals(bounds, compose.onFeedLine(away).getUnclippedBoundsInRoot())
@@ -249,16 +249,16 @@ class ReaderFeedFlowTest {
             val before = h.current
             val scripture = requireNotNull(before.track)
             val prayer = before.tracks.first { !it.isScripture }
-            compose.onNodeWithTag("player_original_tab").assertIsEnabled().assertIsSelected()
-            compose.onNodeWithTag("reader_status").assertTextEquals("На паузе · по-русски").assertIsDisplayed()
+            compose.assertReaderMode("original", selected = true, enabled = true)
+            compose.assertReaderStatus("На паузе · по-русски", "Пауза").assertIsDisplayed()
             compose.onFeedLine(scripture, 3).assertIsSelected().assertIsDisplayed().assertTextEquals(scripture.lines[3].russian)
             scroll(feedLanguageTag(scripture)).assertTextEquals("${scripture.subtitle}. Церковнославянский текст пока не добавлен")
             scroll(feedLineTag(prayer.lines[0])).assertTextEquals(requireNotNull(prayer.lines[0].original)).assertIsNotSelected()
             unchanged(h, before, 0)
-            compose.onNodeWithTag("player_meaning_tab").performClick()
+            compose.selectReaderMode("meaning")
             scroll("track_explanation", "service_content").assertTextEquals(scripture.explanation)
             compose.onNodeWithTag("return_to_text").performClick()
-            compose.onNodeWithTag("player_original_tab").assertIsSelected()
+            compose.assertReaderMode("original", selected = true)
             compose.onFeedLine(scripture, 3).assertIsSelected().assertIsDisplayed()
             unchanged(h, before, 0)
         }
@@ -272,8 +272,8 @@ class ReaderFeedFlowTest {
             val h = launch(initial)
             val scripture = requireNotNull(h.current.track)
             assertTrue(h.current.tracks.all { it.isScripture })
-            compose.onNodeWithTag("player_original_tab").assertIsNotEnabled()
-            compose.onNodeWithTag("player_text_tab").assertIsSelected()
+            compose.assertReaderMode("original", enabled = false)
+            compose.assertReaderMode("text", selected = true)
             compose.onFeedLine(scripture, 0).assertTextEquals(scripture.lines[0].russian).assertIsSelected()
             scroll(feedLanguageTag(scripture)).assertTextContains("Церковнославянский текст пока не добавлен", substring = true)
             compose.runOnIdle { assertTrue(h.original); assertEquals(0, h.writes) }
@@ -340,7 +340,7 @@ class ReaderFeedFlowTest {
             compose.onFeedLine(away).assertIsDisplayed()
             assertEquals(bounds, compose.onFeedLine(away).getUnclippedBoundsInRoot())
             returnButton().assertIsDisplayed()
-            compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
+            compose.assertReaderStatus("Движение по времени · примерно", "Примерно")
             compose.runOnIdle { assertEquals(accepted, h.current); assertEquals(writes, h.writes); assertTrue(h.current.state.isPlaying) }
         }
 
@@ -370,7 +370,7 @@ class ReaderFeedFlowTest {
             }
         }
 
-    @Test fun normalNarrowFooterKeepsItsReadingBoundsWhenReturnReplacesALongNextLabel() =
+    @Test fun normalNarrowFooterKeepsItsReadingBoundsWhenReturnAppears() =
         withCiFailureDiagnostics("feed.normalReturnGeometry") { checkReturnGeometry(fontScale = 1.3f, height = 800) }
 
     @Test fun compactFooterKeepsItsReadingBoundsAndPrimaryWhenReturnAppears() =
@@ -381,7 +381,7 @@ class ReaderFeedFlowTest {
             val initial = syntheticShrinkReading()
             val h = launch(initial, height = 800)
             val measured = browseMeasuredShrink(h)
-            compose.onNodeWithTag("player_text_tab").performClick()
+            compose.selectReaderMode("text")
             val russian = compose.onFeedLine(measured.line).assertIsDisplayed().assertIsNotSelected()
                 .assertTextEquals(measured.line.russian)
             assertEquals(measured.shortHeight, russian.getUnclippedBoundsInRoot().height)
@@ -400,6 +400,7 @@ class ReaderFeedFlowTest {
             val initial = syntheticShrinkReading()
             val h = launch(initial, height = 800)
             val measured = browseMeasuredShrink(h)
+            compose.onNodeWithTag("reader_layout_normal").assertExists()
             val russianAction = action(compose.onNodeWithTag("player_text_tab"))
             compose.mainClock.autoAdvance = false
             try {
@@ -479,13 +480,13 @@ class ReaderFeedFlowTest {
             compose.onNodeWithTag("lyrics_list").performSemanticsAction(SemanticsActions.ScrollToIndex) { assertTrue(it(index)) }
             compose.waitForIdle()
         }
-        compose.onNodeWithTag("player_text_tab").performClick()
+        compose.selectReaderMode("text")
         positionAtStart()
         val short = compose.onFeedLine(line).assertIsDisplayed().assertTextEquals(line.russian).getUnclippedBoundsInRoot()
         val next = compose.onFeedLine(track, 3).assertIsDisplayed().getUnclippedBoundsInRoot()
         val shortExtent = next.top - short.top // Actual item height plus actual inter-item spacing.
         assertTrue(shortExtent > short.height)
-        compose.onNodeWithTag("player_original_tab").performClick()
+        compose.selectReaderMode("original")
         positionAtStart()
         val original = compose.onFeedLine(line).assertIsDisplayed().assertTextEquals(requireNotNull(line.original)).getUnclippedBoundsInRoot()
         assertTrue("This synthetic pair must produce a measured height reduction", original.height > shortExtent * 3f)
@@ -506,13 +507,15 @@ class ReaderFeedFlowTest {
         val viewport = compose.onNodeWithTag("lyrics_list").assertHeightIsAtLeast(120.dp).getBoundsInRoot()
         val primary = compose.onNodeWithTag("play_lyrics").assertHeightIsAtLeast(48.dp).getUnclippedBoundsInRoot()
         compose.onNodeWithTag("reader_controls").assertIsDisplayed()
-        compose.onNodeWithTag("clarify_moment").assertIsDisplayed()
+        val clarify = compose.onNodeWithTag("clarify_moment").assertIsDisplayed().assertHeightIsAtLeast(48.dp).getUnclippedBoundsInRoot()
         scroll(feedLineTag(track.lines.last()))
         returnButton()
+        assertEquals(clarify, compose.onNodeWithTag("clarify_moment").assertIsDisplayed().getUnclippedBoundsInRoot())
         assertEquals(viewport, compose.onNodeWithTag("lyrics_list").getBoundsInRoot())
         assertEquals(primary, compose.onNodeWithTag("play_lyrics").getUnclippedBoundsInRoot())
         compose.mainClock.advanceTimeBy(1_000)
         returnButton()
+        assertEquals(clarify, compose.onNodeWithTag("clarify_moment").assertIsDisplayed().getUnclippedBoundsInRoot())
         assertEquals(viewport, compose.onNodeWithTag("lyrics_list").getBoundsInRoot())
         returnButton().performClick()
         compose.onFeedLine(track, 0).assertIsSelected().assertIsDisplayed()
@@ -580,6 +583,8 @@ class ReaderFeedFlowTest {
     private fun returnButton(): SemanticsNodeInteraction {
         val button = compose.onNodeWithTag("return_to_phrase").assertIsDisplayed()
             .assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp)
+        if (compose.readerHasModeChooser()) button.assertContentDescriptionEquals("К выбранной фразе")
+        else button.assertTextEquals("К выбранной фразе")
         val visible = button.getBoundsInRoot()
         val full = button.getUnclippedBoundsInRoot()
         assertTrue("Return must be fully visible", visible.left <= full.left + .5.dp && visible.top <= full.top + .5.dp &&

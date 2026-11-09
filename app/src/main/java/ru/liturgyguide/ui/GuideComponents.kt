@@ -5,21 +5,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.Density
 
-/** Navigation stays readable while content keeps the user's full text scale. */
+/** Navigation uses the same requested conversion as content. Layout owns the available space. */
 @Composable
-internal fun NavigationTextScale(enabled: Boolean = true, content: @Composable () -> Unit) {
-    val density = LocalDensity.current
-    CompositionLocalProvider(LocalDensity provides if (enabled) Density(density.density, density.fontScale.coerceAtMost(1.5f)) else density,
-        content = content)
+internal fun NavigationTextScale(content: @Composable () -> Unit) {
+    content()
 }
 
 @Composable

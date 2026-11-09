@@ -21,9 +21,30 @@ internal fun readerVisibleStatus(reading: ActiveServicePlayback, presentation: R
     restored: Boolean, original: Boolean): String = buildList {
     add(presentation.status)
     if (restored) add("сохраненное чтение")
-    else if (reading.isApproximate && !presentation.status.contains("примерн", ignoreCase = true)) add("примерное место")
+    if (reading.isApproximate && !presentation.status.contains("примерн", ignoreCase = true)) add("примерное место")
     if (presentation.kind == ReaderStateKind.TEXT && original && reading.track?.lines?.none { it.original != null } == true) add("по-русски")
 }.joinToString(" · ")
+
+/** Short visible labels; the action and status retain their full accessible descriptions. */
+internal fun readerCompactPrimary(presentation: ReaderPresentation): String = when (presentation.primaryAction) {
+    ReaderPrimaryAction.PLAY -> if (presentation.kind == ReaderStateKind.WAIT) "Продолжить" else "Двигать текст"
+    ReaderPrimaryAction.PAUSE -> "Пауза"
+    ReaderPrimaryAction.BEGIN_LITURGY -> "Началась"
+    ReaderPrimaryAction.RETURN_TO_TEXT -> if (presentation.primaryLabel == "К ходу службы") "К службе" else "К тексту"
+    ReaderPrimaryAction.CONTINUE_AFTER_MISSING -> "Прочитано"
+    ReaderPrimaryAction.FINISH -> "Закончить"
+}
+
+/** Keep the live state in the narrow shell; provenance remains in controls and reading details. */
+internal fun readerCompactStatus(reading: ActiveServicePlayback, presentation: ReaderPresentation): String = when (presentation.kind) {
+    ReaderStateKind.TEXT -> if (reading.state.isPlaying) "Примерно"
+        else if (reading.isApproximate) "Пауза · примерно" else "Пауза"
+    ReaderStateKind.WAIT -> if (reading.state.isPlaying) "Примерно" else "Пауза · примерно"
+    ReaderStateKind.BEFORE_START -> if (reading.state.isPlaying) "Примерно" else "До начала"
+    ReaderStateKind.MEANING -> "Пояснение"
+    ReaderStateKind.MISSING_READING -> "Нет текста"
+    ReaderStateKind.END -> "Конец порядка"
+}
 
 fun readerPresentation(reading: ActiveServicePlayback, meaning: Boolean): ReaderPresentation {
     val playing = reading.state.isPlaying

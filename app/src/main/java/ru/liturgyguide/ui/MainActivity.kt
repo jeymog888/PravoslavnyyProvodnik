@@ -18,12 +18,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.compose.ui.unit.Density
 import androidx.core.view.WindowCompat
 import ru.liturgyguide.LiturgyGuideApplication
 import ru.liturgyguide.di.AppContainer
@@ -477,7 +477,10 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
             onSettings = { settingsOrigin = Screen.MAIN; navigate(Screen.SETTINGS) })
     }
     GuideTheme(dark = dark) {
-        CompositionLocalProvider(LocalDensity provides Density(density.density, density.fontScale * listOf(1f, 1.15f, 1.3f)[textSize])) {
+        // Keep Text and TextMeasurer on Android's same nonlinear scaling curve.
+        // Compose 1.7.3 MeasureScope does not retain custom SP conversion overrides.
+        val appDensity = remember(density, textSize) { Density(density.density, density.fontScale * listOf(1f, 1.15f, 1.3f)[textSize]) }
+        CompositionLocalProvider(LocalDensity provides appDensity) {
             Surface(Modifier.fillMaxSize()) {
                 screenStateHolder.SaveableStateProvider(visibleScreen.name) {
                 if (stages.isEmpty() || matcher == null) {

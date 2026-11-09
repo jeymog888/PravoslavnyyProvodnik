@@ -18,7 +18,8 @@ class ReaderVisibleStatusTest {
         assertEquals("На паузе", status(manual))
         assertEquals("На паузе · примерное место", status(manual.copy(isApproximate = true)))
         assertEquals("На паузе · сохраненное чтение", status(manual, restored = true))
-        assertEquals("На паузе · сохраненное чтение", status(manual.copy(isApproximate = true), restored = true))
+        // Restoring a place does not make its original estimate exact.
+        assertEquals("На паузе · сохраненное чтение · примерное место", status(manual.copy(isApproximate = true), restored = true))
     }
 
     @Test fun `playing and waiting never duplicate the approximate qualifier`() {
@@ -63,7 +64,7 @@ class ReaderVisibleStatusTest {
         val missing = ActiveServicePlayback(missingPlan, context.copy(serviceDate = "2026-11-09"),
             ServicePlaybackEngine(missingPlan).start("epistle").copy(segmentIndex = index), isApproximate = true)
         assertEquals("Текст на 9 ноября 2026 пока не добавлен · пауза · примерное место", status(missing))
-        assertEquals("Текст на 9 ноября 2026 пока не добавлен · пауза · сохраненное чтение", status(missing, restored = true))
+        assertEquals("Текст на 9 ноября 2026 пока не добавлен · пауза · сохраненное чтение · примерное место", status(missing, restored = true))
         assertEquals("Порядок в приложении завершен · сохраненное чтение",
             status(reading("dismissal", PlaybackSegment.End::class.java), restored = true, original = true))
     }

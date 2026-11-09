@@ -109,7 +109,12 @@ class FirstVisitFlowTest {
         val before = preferences.all.toMap()
         val restoration = launch()
         compose.onNodeWithTag("open_church").performClick()
-        pressBack()
+        compose.onNodeWithTag("church_picker").assertIsDisplayed()
+        withCiFailureDiagnostics("firstVisit.dismissFocusedChurchPicker") {
+            androidx.test.espresso.Espresso.onView(androidx.test.espresso.matcher.ViewMatchers.isRoot())
+                .inRoot(androidx.test.espresso.matcher.RootMatchers.isDialog())
+                .perform(androidx.test.espresso.action.ViewActions.pressKey(android.view.KeyEvent.KEYCODE_BACK))
+        }
         compose.onNodeWithTag("church_picker").assertDoesNotExist()
         compose.onNodeWithTag("church_content").assertIsDisplayed()
         compose.onNodeWithTag("main_content").assertDoesNotExist()

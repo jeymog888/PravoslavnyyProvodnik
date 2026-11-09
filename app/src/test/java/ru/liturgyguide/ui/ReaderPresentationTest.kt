@@ -125,6 +125,15 @@ class ReaderPresentationTest {
         }
     }
 
+    @Test fun `restoring a rough place must not hide that it is approximate`() {
+        val reading = at("beginning", PlaybackSegment.Text::class.java).copy(isApproximate = true)
+        val presentation = readerPresentation(reading, false)
+        assertEquals("На паузе · сохраненное чтение · примерное место",
+            readerVisibleStatus(reading, presentation, restored = true, original = false))
+        assertEquals("Пауза · примерно", readerCompactStatus(reading, presentation))
+        assertFalse(reading.state.isPlaying)
+    }
+
     private fun at(stageId: String, segmentClass: Class<out PlaybackSegment>, speed: PlaybackSpeed = PlaybackSpeed.NORMAL): ActiveServicePlayback {
         val index = plan.segments.indexOfFirst { it.stageId == stageId && segmentClass.isInstance(it) }
         check(index >= 0)
