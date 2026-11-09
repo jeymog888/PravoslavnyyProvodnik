@@ -74,7 +74,9 @@ class Published05PlaybackIntegrationTest {
         assertEquals(text, plan.segments[expectedIndex])
         assertGlobalsAndOtherBookmarks()
         compose.onNodeWithTag("player_original_tab").assertIsSelected()
-        compose.onNodeWithTag("reading_service_date").assertTextEquals("Тексты на 8 ноября 2026")
+        compose.openReaderDetails()
+        compose.onNodeWithTag("reading_details_date").assertTextEquals("Тексты на 8 ноября 2026")
+        compose.closeReaderDetails()
         val writes = storage.commits
         reads.clear()
         restoration.emulateSavedInstanceStateRestore()
@@ -97,11 +99,11 @@ class Published05PlaybackIntegrationTest {
         compose.onNodeWithText(completedNote).assertDoesNotExist()
         unchanged(before)
         main("resume_guide").performClick()
-        assertStored(accepted, "great_litany", PlaybackSpeed.SLOW, 0L)
+        assertStored(accepted, "great_litany", PlaybackSpeed.SLOW, 0L, restored = true)
         assertEquals(oldText, plan(currentContainer).segments[saved().snapshot.segmentIndex])
         migrationNotice()
         compose.onNodeWithTag("player_meaning_tab").performClick()
-        migrationNotice()
+        migrationNotice("service_content")
         compose.onNodeWithTag("player_menu").performClick()
         compose.onNodeWithTag("open_reading_details").performClick()
         compose.onNodeWithTag("reading_details_migration_notice").assertIsDisplayed().assertTextEquals(completedNote)
@@ -109,12 +111,12 @@ class Published05PlaybackIntegrationTest {
         home()
         main("resume_guide").performClick()
         compose.onNodeWithTag("player_meaning_tab").assertIsSelected()
-        migrationNotice()
+        migrationNotice("service_content")
         compose.onNodeWithTag("player_menu").performClick()
         compose.onNodeWithText("Темный экран").performClick()
-        migrationNotice()
+        migrationNotice("service_content")
         compose.onNodeWithTag("player_text_tab").performClick()
-        compose.onNodeWithTag("next_stage").performClick()
+        compose.openReaderControl("next_stage").performClick()
         compose.onNodeWithTag("playback_migration_notice").assertDoesNotExist()
         assertEquals("antiphons", plan(currentContainer).stageAt(saved().snapshot.segmentIndex).id)
     }
@@ -168,7 +170,7 @@ class Published05PlaybackIntegrationTest {
         unchanged(before)
         main("resume_guide").performClick()
         assertEquals(3, storage.commits)
-        assertStored(accepted, "great_litany", PlaybackSpeed.SLOW, 0L)
+        assertStored(accepted, "great_litany", PlaybackSpeed.SLOW, 0L, restored = true)
         migrationNotice()
         assertGlobalsAndOtherBookmarks()
     }
@@ -277,7 +279,7 @@ class Published05PlaybackIntegrationTest {
         }
         restoration.emulateSavedInstanceStateRestore()
         main("resume_guide").performClick()
-        assertStored(accepted, "creed", PlaybackSpeed.SLOW, 0L)
+        assertStored(accepted, "creed", PlaybackSpeed.SLOW, 0L, restored = true)
         assertFalse(reads.any { it.startsWith("published_0_5/") })
     }
 
@@ -395,8 +397,8 @@ class Published05PlaybackIntegrationTest {
         node.fetchSemanticsNode().config[SemanticsActions.OnClick].action!!
     private fun saved() = requireNotNull(StoredServicePlaybackCodec.decode(preferences.getString(ServicePlaybackStore.PLAYBACK_KEY, null)))
     private fun unchanged(before: Map<String, *>) = compose.runOnIdle { assertEquals(before, preferences.all) }
-    private fun migrationNotice() = compose.onNodeWithTag("playback_migration_notice").assertIsDisplayed().assertTextEquals(completedNote)
-    private fun assertStored(value: ReadingContext, stageId: String, speed: PlaybackSpeed, offset: Long) {
+    private fun migrationNotice(parent: String = "lyrics_list") = scroll(parent, "playback_migration_notice").assertTextEquals(completedNote)
+    private fun assertStored(value: ReadingContext, stageId: String, speed: PlaybackSpeed, offset: Long, restored: Boolean = false) {
         compose.waitForIdle()
         val stored = saved()
         assertEquals(value, stored.context)
@@ -412,7 +414,7 @@ class Published05PlaybackIntegrationTest {
         assertFalse(marker.autoAdvance)
         assertEquals(0L, marker.elapsedInStageMillis)
         compose.onNodeWithContentDescription("Двигать текст").assertExists()
-        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
+        compose.onNodeWithTag("reader_status").assertTextEquals(if (restored) "На паузе · сохраненное чтение" else "На паузе")
     }
     private fun assertGlobalsAndOtherBookmarks() {
         assertFalse(preferences.getBoolean("dark", true))

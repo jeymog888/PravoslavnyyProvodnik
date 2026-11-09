@@ -13,6 +13,7 @@ import java.time.LocalDate
 internal fun feedLineTag(line: PlayerLine) = "feed_line_${line.id}"
 internal fun feedSpeakerTag(line: PlayerLine) = "feed_speaker_${line.id}"
 internal fun feedHeaderTag(track: PrayerTrack) = "feed_header_${track.id}"
+internal fun feedTitleTag(track: PrayerTrack) = "feed_title_${track.id}"
 internal fun feedLanguageTag(track: PrayerTrack) = "feed_language_${track.id}"
 internal fun feedContextTag(track: PrayerTrack) = "feed_context_${track.id}"
 internal fun SemanticsNodeInteractionsProvider.onFeedLine(line: PlayerLine) = onNodeWithTag(feedLineTag(line))

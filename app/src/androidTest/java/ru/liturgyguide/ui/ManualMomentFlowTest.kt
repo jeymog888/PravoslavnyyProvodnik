@@ -75,11 +75,9 @@ class ManualMomentFlowTest {
             accept()
             val expectedTrack = tracks(stageId)[trackIndex]
             compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals(stage.name)
-            if (stageId == "creed") {
-                compose.onNodeWithTag("choose_track").assertContentDescriptionEquals("Выбрать текст: Символ веры")
-            } else {
-                compose.onNodeWithTag("current_track_title", useUnmergedTree = true).assertTextEquals(expectedTrack.title)
-            }
+            compose.openReaderDetails()
+            compose.onNodeWithTag("reading_details_track").performScrollTo().assertTextEquals(expectedTrack.title)
+            compose.closeReaderDetails()
             compose.onFeedLine(expectedTrack, 0).assertIsSelected().assertIsDisplayed().assertTextEquals(expectedTrack.lines[0].russian)
             assertEquals(expectedTrack.id, preferences.getString("lyric_track_$stageId", null))
             assertEquals(expectedTrack.lines[0].id, preferences.getString("lyric_phrase_${expectedTrack.id}", null))
@@ -163,7 +161,9 @@ class ManualMomentFlowTest {
         landmark("creed")
         accept()
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
-        compose.onNodeWithTag("choose_track").assertContentDescriptionEquals("Выбрать текст: Символ веры")
+        compose.openReaderDetails()
+        compose.onNodeWithTag("reading_details_track").assertTextEquals("Символ веры")
+        compose.closeReaderDetails()
         compose.onFeedLine(creed, 0).assertIsSelected().assertIsDisplayed()
         assertEquals(creed.id, preferences.getString("lyric_track_creed", null))
         assertEquals(creed.lines[0].id, preferences.getString("lyric_phrase_${creed.id}", null))
@@ -219,7 +219,7 @@ class ManualMomentFlowTest {
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
         compose.onFeedLine(creed, 12).assertIsSelected().assertIsDisplayed()
         compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
-        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
+        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе · примерное место")
         assertEquals(paused, savedPlayback())
         assertOtherBookmark()
     }
@@ -234,7 +234,8 @@ class ManualMomentFlowTest {
         compose.onNodeWithContentDescription("Пауза").assertIsDisplayed()
         compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
         compose.runOnIdle { monotonic.addAndGet(1_234L) }
-        clarify()
+        compose.openReaderControl("controls_clarify").performClick()
+        compose.onNodeWithTag("manual_content").assertIsDisplayed()
         val session = savedSession()
         val stoppedLine = preferences.getInt("lyric_line_${creed.id}", -1)
         val stopped = savedPlayback()
@@ -246,7 +247,7 @@ class ManualMomentFlowTest {
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
         compose.onFeedLine(creed, stoppedLine).assertIsSelected().assertIsDisplayed()
         compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
-        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
+        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе · примерное место")
         assertEquals(stopped, savedPlayback())
         assertEquals(session, savedSession())
         assertOtherBookmark()
@@ -263,7 +264,7 @@ class ManualMomentFlowTest {
         val normalized = savedSession()
         assertFalse(normalized.autoAdvance)
         assertEquals("creed", normalized.anchorStageId)
-        compose.onNodeWithTag("saved_earlier_notice").assertIsDisplayed().assertHasNoClickAction()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Пояснение · на паузе · сохраненное чтение").assertIsDisplayed().assertHasNoClickAction()
         compose.onNodeWithTag("clarify_moment").performClick()
         compose.onNodeWithTag("manual_content").assertExists()
         compose.onNodeWithText("Автоматические переходы остановлены").assertDoesNotExist()

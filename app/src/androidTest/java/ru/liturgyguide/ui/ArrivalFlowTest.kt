@@ -51,7 +51,7 @@ class ArrivalFlowTest {
         assertGlobals()
         compose.onFeedLine(container.recordedFeedTrack(savedPlayback()), 0).assertIsSelected()
         compose.onNodeWithContentDescription("Двигать текст").assertExists()
-        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
+        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе · примерное место")
     }
 
     @Test fun anExpiredClickDoesNotReplaceOrClearTheSavedReading() {
@@ -87,7 +87,9 @@ class ArrivalFlowTest {
         assertEquals("preparation", savedSession().anchorStageId)
         assertFalse(savedSession().autoAdvance)
         assertFalse(savedSession().anchorIsApproximate)
-        compose.onNodeWithTag("reading_service_date").assertTextEquals("Тексты на 9 ноября 2026")
+        compose.openReaderDetails()
+        compose.onNodeWithTag("reading_details_date").assertTextEquals("Тексты на 9 ноября 2026")
+        compose.closeReaderDetails()
         compose.onNodeWithTag("clarify_moment").performClick()
         compose.onNodeWithTag("manual_content").performScrollToNode(hasTestTag("manual_creed"))
         compose.onNodeWithTag("manual_creed").performClick()
@@ -102,7 +104,9 @@ class ArrivalFlowTest {
         compose.runOnIdle { clock.current = Instant.parse("2026-11-09T21:05:00Z") }
         compose.mainClock.advanceTimeBy(6_000)
         restoration.emulateSavedInstanceStateRestore()
-        compose.onNodeWithTag("reading_service_date").assertTextEquals("Тексты на 9 ноября 2026")
+        compose.openReaderDetails()
+        compose.onNodeWithTag("reading_details_date").assertTextEquals("Тексты на 9 ноября 2026")
+        compose.closeReaderDetails()
         compose.onNodeWithTag("reading_unavailable").assertExists()
         assertEquals("2026-11-09", savedContext().serviceDate)
     }
@@ -158,7 +162,9 @@ class ArrivalFlowTest {
                 .commit())
         }
         restoration.emulateSavedInstanceStateRestore()
-        compose.onNodeWithTag("reading_service_date").assertTextEquals("Тексты на 7 ноября 2026")
+        compose.openReaderDetails()
+        compose.onNodeWithTag("reading_details_date").assertTextEquals("Тексты на 7 ноября 2026")
+        compose.closeReaderDetails()
         compose.onNodeWithTag("clarify_moment").performClick()
         compose.onNodeWithTag("manual_content").performScrollToNode(hasTestTag("manual_lords_prayer"))
         compose.onNodeWithTag("manual_lords_prayer").performClick()

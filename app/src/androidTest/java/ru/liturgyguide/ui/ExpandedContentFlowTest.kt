@@ -146,7 +146,7 @@ class ExpandedContentFlowTest {
         val tracks = requireNotNull(h.player.reading).tracks
         val index = tracks.indexOfFirst { it.title == title }
         check(index >= 0)
-        compose.onNodeWithTag("choose_track").performClick()
+        compose.openReaderTracks()
         val expandable = compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsActions.Expand))
         expandable.assertCountEquals(1)
         expandable[0].assertIsDisplayed().performSemanticsAction(SemanticsActions.Expand) { action ->

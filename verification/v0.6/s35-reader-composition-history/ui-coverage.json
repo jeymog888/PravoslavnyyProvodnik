@@ -1,0 +1,513 @@
+{
+  "uniqueScenarios": 127,
+  "latestResults": {
+    "ru.liturgyguide.ui.ReaderFeedFlowTest#oldLineReturnAndAdjacentCallbacksCannotTouchTheReplacementStateOrViewport": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderFeedFlowTest#rejectedPlayAndTrackChoiceKeepBothTheAcceptedPositionAndBrowsedText": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderFeedFlowTest#browsingAnotherHeaderDoesNotAcceptItOrChangeTheMeaning": {
+      "run": "s35-reader-composition-r3-diagnostic",
+      "status": "FAIL"
+    },
+    "ru.liturgyguide.ui.ReaderFeedFlowTest#choosingTheSameTrackReturnsWithoutASeekOrAnOwnerFocusIncrement": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderFeedFlowTest#realDragAtAStageBoundaryInstallsOnlyTheMaterializedStageFeed": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderFeedFlowTest#compactFooterKeepsItsReadingBoundsAndPrimaryWhenReturnAppears": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderFeedFlowTest#playFromAnotherTrackReturnsToTheAcceptedOffsetBeforeContinuing": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderFeedFlowTest#realDragMaterializesATrackBoundaryBeforeBrowsingWithoutFollowingItBack": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderFeedFlowTest#aScriptureOnlyFixtureDoesNotAdvertiseAnOriginalItDoesNotHave": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderFeedFlowTest#aRealEarlyDragCancelsInitialFocusAndStillOffersReturn": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderFeedFlowTest#newDragAndReplacementCancelPendingLanguageRestoreBeforeItsFrame": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderFeedFlowTest#aRejectedLineChoiceCannotTurnBoundaryPauseIntoSuccessfulFocus": {
+      "run": "s35-reader-composition-r3-diagnostic",
+      "status": "FAIL"
+    },
+    "ru.liturgyguide.ui.ReaderFeedFlowTest#acceptedScriptureKeepsItsRussianLabelAndThePrayerOriginalInTheSameFeed": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderFeedFlowTest#normalNarrowFooterKeepsItsReadingBoundsWhenReturnReplacesALongNextLabel": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderFeedFlowTest#nonTextPositionsStayOnTheirContinuationUntilAnExplicitOldLineIsChosen": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderFeedFlowTest#returnChangesOnlyViewportAndPartialLongTextIsStillVisible": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderFeedFlowTest#measuredLanguageShrinkKeepsTheBrowsedCanonicalLineWithoutAcceptingIt": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.SavedReadingTest#legacyTrackBookmarksKeepTheirPhraseButDiscardTheOldTimerOffsets": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.SavedReadingTest#anOldSavedReadingIsLabelledPausedAndANewServiceClearsItsPositions": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.SavedReadingTest#aPresentCorruptSnapshotCannotSilentlyReimportLegacyBookmarks": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.SavedReadingTest#aLegacyFinishedTextRestoresItsLastPhrasePausedWithoutInventingNewElapsedTime": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#languageAndProgrammaticScrollKeepPlayingButMeaningAndUserDragPause": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#endStopsThePlayerAndFinishingClearsTheAcceptedReading": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#oldRunningSessionAndWallClockChangesCannotMoveTheUnifiedReader": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#shortenedDuplicateTitleKeepsBothTextsDiscoverableAndRestoresTheSelectedPhrase": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#missingDatedReadingsStopHugeTicksAndEachNeedsItsOwnManualContinuation": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#onePlayMovesThroughTextsAUsefulWaitAndTheNextStage": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#changingSpeedCapturesTheOldMultiplierWithoutMovingToAnotherPhrase": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#explicitRestartReplacesOnlyTheCorruptSnapshotEvenWhenContextAndMarkerAreIdentical": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#losingResumedStatePausesAndDoesNotConsumeTimeBeforeReturning": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#losingTopResumedPausesSynchronouslyEvenWhenLifecycleStaysResumed": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#scriptureCannotMasqueradeAsOriginalAndThePreferredLanguageReturnsForPrayer": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.CompactReaderMatrixTest#epistleAt412DpRetainsTheRequestedClarifyScaleAndTheWholeTitle": {
+      "run": "s35-reader-composition-r2",
+      "status": "FAIL"
+    },
+    "ru.liturgyguide.ui.CompactReaderMatrixTest#acceptingTheSameReadingRefreshesControlsWhileCapturedOldActionsStayInvalid": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.CompactReaderMatrixTest#readingDetailsUseTheAcceptedDateAndTheStageMaterializedByPause": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.CompactReaderMatrixTest#staleDetailsActionCannotPauseOrDescribeAReplacementReading": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.CompactReaderMatrixTest#nextStageUsesTheCurrentlyDisplayedStageAfterAutomaticMovement": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.CompactReaderMatrixTest#allEighteenPortraitStageNamesRemainWholeWithLargeTextAndAnApproximationNotice": {
+      "run": "s35-reader-composition-r2",
+      "status": "FAIL"
+    },
+    "ru.liturgyguide.ui.CompactReaderMatrixTest#longTrackNamesWrapAndLanguageChangesKeepTheCanonicalPhraseAndFullScale": {
+      "run": "s35-reader-composition-r2",
+      "status": "FAIL"
+    },
+    "ru.liturgyguide.ui.CompactReaderMatrixTest#allEighteenLandscapeNamesKeepFullAccessibleContextAndReadingSpace": {
+      "run": "s35-reader-composition-r2",
+      "status": "FAIL"
+    },
+    "ru.liturgyguide.ui.CompactReaderMatrixTest#compactSavedReadingExposesItsDateWithoutPretendingToBeSynchronized": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#restoredCorrectionKeepsTheValidatedContextAndFastSpeedOnExplicitAcceptance": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#restoredServiceAndBackFromItsChildrenNeverAcceptThePendingCandidate": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#changedWaitExplainsTheReturnOnlyAfterAcceptanceAndKeepsTheNoticeAcrossHomeAndTheme": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#aConfirmedChurchChangeClearsTheCandidateAndRejectsItsOldResumeCallback": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#previewUsesTheSnapshotAddressAndExplicitResumeRetriesWithoutLosingPreferences": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#aNewManualMomentUsesTodayAndNormalSpeedAndLateResumeCannotReplaceIt": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#anExhaustedOccurrenceKeepsItsOwnDateAndNormalSpeedInsteadOfTheCandidateTempo": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#failedCommitAndRollbackDoNotReportAcceptanceAndTheSameCandidateCanBeRetried": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#assetReaderPreservesDefaultInputsCacheFailuresAndExplicitStageRetry": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#missingOrCorruptHistoricalAssetsNeverFallBackToLegacyButCurrentValidStillWorks": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#choosingFromOrderKeepsTheValidatedContextAndSlowSpeedWithoutAMigrationNotice": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#churchHasTodayAndTomorrowAndChangingItStartsAFreshContext": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#unifiedPlaybackHasNoSeparateStageTimerAndManualSeekPausesIt": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#startingANewServiceClearsPositionsButKeepsTheLanguagePreference": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#trackPhraseAndLanguageSurviveRecreationAndReturningHome": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#orderOpensAtDismissalWithLargestAppText": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#choosingManualReadingFromTempoOptionsStopsAnActiveScroll": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#searchingAfterFinishingDoesNotReusePositionsFromThePreviousService": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#readingCanAdvanceAndReturnWithoutLosingTheStage": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#selectedParishUsesItsLocalDateAndManualChoiceRemainsAvailable": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#onePlayerStartsDirectlyAndPausesWithoutASecondStageTimer": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#serviceOrderIsSeparateFromSearchAndOptionalListening": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#largeTextAndDarkModePersistAndNavigationRemainsUsable": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#explanationChangesWithTheSelectedText": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#landscapeWithLargestAppTextKeepsCurrentPhraseAndControlsVisible": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#findingAPrayerFromMeaningOpensItsTextAtTheMatchedPhrase": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#backgroundingAndRecreationKeepTheAcceptedPhrasePaused": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#spellingVariantsOpenTheSamePairedPhraseFromMainSearch": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#anUnknownPhraseCanBeClearedToRestoreTheGuide": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#showingAllStagesAfterUnknownWordsDismissesTheKeyboardAndFocus": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#meaningAndReadingPositionSurviveOrderHomeAndSettingsNavigation": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#choosingAnotherPhraseStopsAutomaticScrolling": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#switchingToMeaningPausesScrollingAndKeepsThePhrase": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#orderOpensAtTheBeginningFromThePlayer": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#orderOpensAtCreedAndManualBrowsingReturnsToTheCurrentPhrase": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#searchingForADailyReadingUsesTodaysTextAndKeepsItsNoteOptional": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#searchingForCreedOpensTheMatchingTextAndClosesTheKeyboard": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#heardWordsLeadToTheRelevantExplanation": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#aSingleTextRetainsItsFullTitleAndTheClarificationAction": {
+      "run": "s35-reader-composition-r2",
+      "status": "FAIL"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#scriptureAndAnEmptyTextStageKeepClarificationWithoutALanguageMenu": {
+      "run": "s35-reader-composition-r2",
+      "status": "FAIL"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#narrowScheduleKeepsBothDayLabelsOnOneLineAndSelectable": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#aTallNarrowScreenKeepsReadableActionsWithoutReducingThePrayerSize": {
+      "run": "s35-reader-composition-r2",
+      "status": "FAIL"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#landscapeKeepsTabsOnOneLineAndLeavesSpaceForTheRequestedPrayerSize": {
+      "run": "s35-reader-composition-r2",
+      "status": "FAIL"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#largeTextNavigationLeavesSpaceForChurchAndSettingsWithoutScalingTheirContent": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#aTallScreenAtTheHeaderWidthBoundaryKeepsItsReadingArea": {
+      "run": "s35-reader-composition-r2",
+      "status": "FAIL"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#narrowLargeTextKeepsNamesReadableAndCancellationPreservesThePhrase": {
+      "run": "s35-reader-composition-r2",
+      "status": "FAIL"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#ordinaryFooterKeepsSeparateTargetsAtTheNarrowWidthAndFastestSpeed": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderCompositionFlowTest#controlsKeepPhraseBoundariesTempoAndTheIntendedPreviousStageAtAPauseBoundary": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderCompositionFlowTest#landscapeReturnReservesItsSlotWithoutClippingPrimaryOrReading": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderCompositionFlowTest#capturedControlsCannotOpenSeekOrPauseTheReplacementOwner": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderCompositionFlowTest#migrationNoteRemainsReachableAtTheFirstHeaderAcrossTrackBoundaryMeaningAndDetails": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderCompositionFlowTest#controlsOpenAndDismissNeitherPauseLivePlaybackNorResetManualBrowsing": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderCompositionFlowTest#narrowPortraitReturnReservesItsSlotWithoutChangingTheReadingOrPrimaryBounds": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderCompositionFlowTest#runningPreparationKeepsPauseDirectAndClarificationReachableInControls": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderCompositionFlowTest#oneReadingSurfaceKeepsSixStatesAndThreeVisibleModesWithoutDuplicateHeaders": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderStateFlowTest#anAlreadyRunningPreparationCanBeStoppedAndAFailedBeginningDoesNotLookAccepted": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderStateFlowTest#finalWaitAndEndDoNotPromiseAnotherStageAndFinishNeedsAnExplicitAction": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderStateFlowTest#meaningPausesTheActualOwnerAndReturnsToTheSameOriginalPhraseAndTempo": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderStateFlowTest#capturedBeginningContinuationAndFinishCannotChangeAReplacementReading": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderStateFlowTest#missingReadingRetainsItsDateAndBarrierAcrossMeaningAndARejectedWrite": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderStateFlowTest#waitingExplainsTheNextCueAndItsOwnApproximateTransition": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderStateFlowTest#beforeStartUsesAnObservedCueAndAnExplicitPausedBeginning": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ReaderStateFlowTest#textNamesItsSoundlessMovementAndPauseFreezesTheLivePosition": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#foreignOrCorruptContextRestoredInServiceRequiresANewExplicitChoice": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#anInvalidLegacySessionCannotSupplyTheDateForAnOtherwiseValidBookmark": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#explicitlyStartingAgainUsesTodayInsteadOfThePreviouslyOpenedFutureDate": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#watchingRecalculatesTheStageAtTheClickAndOpensTextPaused": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#aPersonalStartOpensItsOwnEstimateAndIsRecordedAsPersonal": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#resumingALegacyBookmarkPinsItsOriginalAnchorDateWithoutClearingThePhrase": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#anExpiredClickDoesNotReplaceOrClearTheSavedReading": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#aNextServiceBecomesCurrentBetweenDisplayAndClickWithoutSwitchingOccurrence": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#restorationStraightIntoLegacyServicePinsTheAnchorDateBeforeAnyCorrection": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#tomorrowsReadingKeepsItsDateAcrossCorrectionMidnightAndRestoration": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExpandedContentFlowTest#anaphoraSuppliesTheMissingSubjectAndExplanationsBesideBothLanguagePresentations": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExpandedContentFlowTest#localOmissionsRemainAvailableInBothLanguagesWithoutBecomingReadingPositions": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExpandedContentFlowTest#scriptureRetainsItsSeparateDayExplanationAndDoesNotAcquireAPrayerSpeaker": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExpandedContentFlowTest#thePublishedMixedDialogueHasTwoVoicesWhileOnlyTappingAPhraseChangesItsAddress": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#correctionSearchAcceptsTheMatchingPhraseAndPreservesOtherBookmarks": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#allFiveLandmarksWithoutAScheduleOpenTheExpectedTextAndPhraseAfterVerification": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#acceptingACorrectionOpensTextAtTheLandmarkAndPreservesOtherBookmarks": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#activePlayerPausesBeforeThePhraseBoundaryAndCorrectionNeverConsumesBackgroundTime": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#correctionCancelRestoresMeaningAndANonInitialPhraseAcrossAllThreeScreens": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#choosingAnotherLandmarkShowsItsNewCueBeforeConfirmation": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#savedReadingNoticeUsesCorrectionAndKeepsTheAcceptedPausedSnapshot": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#aFreshManualEntryResetsSearchListeningAndScrollButBackPreservesThem": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#correctionStopsPhraseScrollingAndCancelKeepsThePausedPhrase": {
+      "run": "s35-reader-composition-r2",
+      "status": "PASS"
+    }
+  }
+}

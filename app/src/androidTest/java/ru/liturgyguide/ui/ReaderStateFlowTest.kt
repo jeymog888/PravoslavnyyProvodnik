@@ -38,7 +38,7 @@ class ReaderStateFlowTest {
             compose.onNodeWithTag("player_text_tab").performClick().assertIsSelected()
             compose.runOnIdle { assertTrue(h.current.state.isPlaying) }
             compose.onNodeWithTag("play_lyrics").performClick()
-            assertPrimary("play_lyrics", "Двигать текст", "На паузе")
+            assertPrimary("play_lyrics", "Двигать текст", "На паузе · примерное место")
             compose.runOnIdle {
                 assertEquals(303L, h.current.state.elapsedQuarterMillis)
                 assertEquals(PlaybackSpeed.SLOW, h.current.state.speed)
@@ -70,7 +70,7 @@ class ReaderStateFlowTest {
                 assertEquals(303L, h.current.state.elapsedQuarterMillis)
             }
             assertFrozenAfterTime(h)
-            compose.onNodeWithTag("next_stage").performClick()
+            compose.openReaderControl("next_stage").performClick()
             assertPrimary("play_lyrics", "Двигать текст", "На паузе")
             compose.runOnIdle { assertEquals(nextStage(before).id, h.current.stage.id); assertFalse(h.current.state.isPlaying) }
         }
@@ -81,7 +81,9 @@ class ReaderStateFlowTest {
             val before = h.current
             assertPrimary("start_liturgy", "Литургия началась", "До начала литургии")
             soundless()
+            compose.openReaderControls()
             compose.onNodeWithTag("next_stage").assertDoesNotExist()
+            compose.dismissReaderControls()
             compose.onNodeWithTag("before_start_pause").assertDoesNotExist()
             body("before_start").assertIsDisplayed()
             body("next_stage_cue").assertTextEquals(requireNotNull(nextStage(before).cue))
@@ -103,11 +105,11 @@ class ReaderStateFlowTest {
             compose.runOnIdle { assertTrue(h.player.play()); h.now += 101 }
             assertPrimary("start_liturgy", "Литургия началась", "До начала литургии · примерный переход включен")
             compose.onNodeWithTag("before_start_pause").assertIsDisplayed().assertHeightIsAtLeast(48.dp).performClick()
-            assertPrimary("start_liturgy", "Литургия началась", "До начала литургии")
+            assertPrimary("start_liturgy", "Литургия началась", "До начала литургии · примерное место")
             compose.onNodeWithTag("before_start_pause").assertDoesNotExist()
             val paused = compose.runOnIdle { h.current.also { assertEquals(303L, it.state.elapsedQuarterMillis); h.writable = false } }
             compose.onNodeWithTag("start_liturgy").performClick()
-            assertPrimary("start_liturgy", "Литургия началась", "До начала литургии")
+            assertPrimary("start_liturgy", "Литургия началась", "До начала литургии · примерное место")
             compose.runOnIdle { assertEquals(paused, h.current); assertFalse(h.current.state.isPlaying) }
             assertFrozenAfterTime(h)
             compose.runOnIdle { h.writable = true }
@@ -122,13 +124,13 @@ class ReaderStateFlowTest {
             compose.onNodeWithTag("play_lyrics").performClick()
             compose.runOnIdle { h.now += 101 }
             compose.onNodeWithTag("player_meaning_tab").performClick()
-            assertPrimary("return_to_text", "К тексту", "Пояснение · на паузе")
+            assertPrimary("return_to_text", "К тексту", "Пояснение · на паузе · примерное место")
             noTransport()
             val paused = compose.runOnIdle { h.current.also { assertFalse(it.state.isPlaying); assertEquals(303L, it.state.elapsedQuarterMillis) } }
             assertFrozenAfterTime(h)
             compose.onNodeWithTag("return_to_text").performClick()
             compose.onNodeWithTag("player_original_tab").assertIsSelected()
-            assertPrimary("play_lyrics", "Двигать текст", "На паузе")
+            assertPrimary("play_lyrics", "Двигать текст", "На паузе · примерное место")
             compose.runOnIdle { assertEquals(paused, h.current); assertTrue(h.original) }
         }
 
@@ -138,12 +140,12 @@ class ReaderStateFlowTest {
             compose.onNodeWithTag("play_lyrics").performClick()
             advance(h, 86_400_000)
             val missing = compose.runOnIdle { h.current.also { assertTrue(it.segment is PlaybackSegment.MissingReading); assertFalse(it.state.isPlaying) } }
-            val status = "Текст на 9 ноября 2026 пока не добавлен · пауза"
+            val status = "Текст на 9 ноября 2026 пока не добавлен · пауза · примерное место"
             assertPrimary("continue_missing_reading", "Чтение в храме закончилось", status)
             noTransport()
             body("missing_reading_barrier").assertIsDisplayed()
             compose.onNodeWithTag("player_meaning_tab").performClick()
-            assertPrimary("return_to_text", "К тексту", "Пояснение · на паузе")
+            assertPrimary("return_to_text", "К тексту", "Пояснение · на паузе · примерное место")
             noTransport()
             compose.onNodeWithTag("return_to_text").performClick()
             assertPrimary("continue_missing_reading", "Чтение в храме закончилось", status)
@@ -170,13 +172,13 @@ class ReaderStateFlowTest {
             compose.onNodeWithTag("next_stage_cue").assertDoesNotExist()
             compose.onNodeWithTag("play_lyrics").performClick()
             advance(h, 86_400_000)
-            assertPrimary("finish_reading", "Закончить чтение", "Порядок в приложении завершен")
+            assertPrimary("finish_reading", "Закончить чтение", "Порядок в приложении завершен · примерное место")
             noTransport()
             body("playback_end").assertIsDisplayed()
             compose.onNodeWithTag("player_meaning_tab").performClick()
-            assertPrimary("return_to_text", "К тексту", "Пояснение · на паузе")
+            assertPrimary("return_to_text", "К тексту", "Пояснение · на паузе · примерное место")
             compose.onNodeWithTag("return_to_text").performClick()
-            assertPrimary("finish_reading", "Закончить чтение", "Порядок в приложении завершен")
+            assertPrimary("finish_reading", "Закончить чтение", "Порядок в приложении завершен · примерное место")
             assertFrozenAfterTime(h)
             compose.runOnIdle { assertEquals(0, h.finishes); assertTrue(h.current.segment is PlaybackSegment.End) }
             compose.onNodeWithTag("finish_reading").performClick()
@@ -258,8 +260,15 @@ class ReaderStateFlowTest {
     }
 
     private fun soundless() = compose.onNodeWithTag("soundless_note").assertTextEquals("Без звука").assertIsDisplayed()
-    private fun noTransport() = listOf("play_lyrics", "next_stage", "previous_stage", "next_line", "previous_line", "scroll_options")
-        .forEach { compose.onNodeWithTag(it).assertDoesNotExist() }
+    private fun noTransport() {
+        compose.onNodeWithTag("play_lyrics").assertDoesNotExist()
+        compose.openReaderControls()
+        listOf("next_stage", "previous_stage", "next_line", "previous_line", "scroll_options")
+            .forEach { compose.onNodeWithTag(it).assertDoesNotExist() }
+        compose.readerControl("controls_order").assertIsEnabled()
+        compose.readerControl("controls_clarify").assertIsEnabled()
+        compose.dismissReaderControls()
+    }
     private fun body(tag: String): SemanticsNodeInteraction {
         compose.onNodeWithTag("lyrics_list").performScrollToNode(hasTestTag(tag))
         return compose.onNodeWithTag(tag).performScrollTo().assertIsDisplayed()

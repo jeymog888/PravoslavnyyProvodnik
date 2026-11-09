@@ -16,6 +16,15 @@ data class ReaderPresentation(
     val primaryLabel: String
 )
 
+/** The compact shell must keep both the live state and the basis of the accepted place visible. */
+internal fun readerVisibleStatus(reading: ActiveServicePlayback, presentation: ReaderPresentation,
+    restored: Boolean, original: Boolean): String = buildList {
+    add(presentation.status)
+    if (restored) add("сохраненное чтение")
+    else if (reading.isApproximate && !presentation.status.contains("примерн", ignoreCase = true)) add("примерное место")
+    if (presentation.kind == ReaderStateKind.TEXT && original && reading.track?.lines?.none { it.original != null } == true) add("по-русски")
+}.joinToString(" · ")
+
 fun readerPresentation(reading: ActiveServicePlayback, meaning: Boolean): ReaderPresentation {
     val playing = reading.state.isPlaying
     if (meaning) return ReaderPresentation(

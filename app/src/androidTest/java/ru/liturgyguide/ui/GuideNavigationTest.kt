@@ -7,6 +7,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.unit.dp
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
@@ -54,13 +55,15 @@ class GuideNavigationTest {
     fun readingCanAdvanceAndReturnWithoutLosingTheStage() {
         tapMain("start_guide")
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Подготовка к литургии")
+        compose.openReaderControls()
         compose.onNodeWithTag("previous_stage").assertDoesNotExist()
         compose.onNodeWithTag("next_stage").assertDoesNotExist()
+        compose.dismissReaderControls()
         compose.onNodeWithTag("start_liturgy").assertContentDescriptionEquals("Литургия началась").performClick()
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Начало литургии")
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
         compose.onFeedLine(acceptedTrack(), 0).assertIsSelected().assertIsDisplayed()
-        compose.onNodeWithTag("previous_stage").performClick()
+        compose.openReaderControl("previous_stage").performClick()
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Подготовка к литургии")
     }
 
@@ -151,7 +154,7 @@ class GuideNavigationTest {
     @Test
     fun orderOpensAtCreedAndManualBrowsingReturnsToTheCurrentPhrase() {
         openCreed()
-        compose.onNodeWithTag("next_line").performClick()
+        compose.openReaderControl("next_line").performClick()
         compose.onFeedLine(acceptedTrack(), 1).assertIsSelected()
         compose.onNodeWithTag("open_map").performClick()
         compose.onNodeWithTag("stage_search").assertDoesNotExist()
@@ -184,8 +187,8 @@ class GuideNavigationTest {
     @Test
     fun trackPhraseAndLanguageSurviveRecreationAndReturningHome() {
         openCreed()
-        compose.onNodeWithTag("next_line").performClick()
-        compose.onNodeWithTag("next_line").performClick()
+        compose.openReaderControl("next_line").performClick()
+        compose.openReaderControl("next_line").performClick()
         selectOriginal()
         val expected = requireNotNull(tracksFor("creed")[1].lines[2].original)
         compose.onFeedLine(acceptedTrack(), 2).assertIsSelected().assertTextEquals(expected)
@@ -217,7 +220,9 @@ class GuideNavigationTest {
         tapMain("start_guide")
         compose.onNodeWithTag("start_liturgy").assertIsDisplayed().performClick()
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Начало литургии")
-        compose.onNodeWithTag("next_stage").assertIsDisplayed()
+        compose.openReaderControls()
+        compose.readerControl("next_stage").assertIsEnabled()
+        compose.dismissReaderControls()
     }
 
     @Test
@@ -236,7 +241,7 @@ class GuideNavigationTest {
         assertNotNull(StoredServicePlaybackCodec.decode(preferences.getString(ServicePlaybackStore.PLAYBACK_KEY, null)))
         compose.onNodeWithTag("play_lyrics").performClick()
         compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
-        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
+        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе · примерное место")
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Начало литургии")
         assertFalse(savedSession().autoAdvance)
     }
@@ -247,7 +252,7 @@ class GuideNavigationTest {
         startScrolling()
         compose.onNodeWithContentDescription("Пауза").assertIsDisplayed()
         compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
-        compose.onNodeWithTag("scroll_options").performClick()
+        compose.openReaderControl("scroll_options").performClick()
         compose.onNodeWithTag("manual_reading").performClick()
         assertManualReading()
     }
@@ -256,7 +261,7 @@ class GuideNavigationTest {
     fun choosingAnotherPhraseStopsAutomaticScrolling() {
         openCreed()
         startScrolling()
-        compose.onNodeWithTag("next_line").performClick()
+        compose.openReaderControl("next_line").performClick()
         compose.onFeedLine(acceptedTrack(), 1).assertIsSelected().assertIsDisplayed()
         assertManualReading()
     }
@@ -264,11 +269,11 @@ class GuideNavigationTest {
     @Test
     fun switchingToMeaningPausesScrollingAndKeepsThePhrase() {
         openCreed()
-        compose.onNodeWithTag("next_line").performClick()
+        compose.openReaderControl("next_line").performClick()
         startScrolling()
         compose.onNodeWithTag("player_meaning_tab").performClick().assertIsSelected()
         compose.onNodeWithTag("play_lyrics").assertDoesNotExist()
-        compose.onNodeWithTag("reader_status").assertTextEquals("Пояснение · на паузе")
+        compose.onNodeWithTag("reader_status").assertTextEquals("Пояснение · на паузе · примерное место")
         compose.onNodeWithTag("return_to_text").assertIsDisplayed().performClick()
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
         compose.onFeedLine(acceptedTrack(), 1).assertIsSelected()
@@ -310,8 +315,8 @@ class GuideNavigationTest {
     @Test
     fun startingANewServiceClearsPositionsButKeepsTheLanguagePreference() {
         openCreed()
-        compose.onNodeWithTag("next_line").performClick()
-        compose.onNodeWithTag("next_line").performClick()
+        compose.openReaderControl("next_line").performClick()
+        compose.openReaderControl("next_line").performClick()
         selectOriginal()
         pressBack()
         tapMain("start_guide")
@@ -336,7 +341,7 @@ class GuideNavigationTest {
         compose.onNodeWithContentDescription("Пауза").assertIsDisplayed()
         compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
         assertFalse(savedSession().autoAdvance)
-        compose.onNodeWithTag("next_line").performClick()
+        compose.openReaderControl("next_line").performClick()
         compose.onFeedLine(acceptedTrack(), 1).assertIsSelected()
         assertManualReading()
     }
@@ -374,12 +379,15 @@ class GuideNavigationTest {
             compose.onNodeWithTag("clarify_moment").assertIsDisplayed()
             compose.onFeedLine(acceptedTrack(), 0).assertIsSelected().assertIsDisplayed()
             assertWholePhraseVisible(0)
-            compose.onNodeWithTag("next_line").assertIsDisplayed().performClick()
+            compose.openReaderControl("next_line").assertIsDisplayed().performClick()
             compose.onFeedLine(acceptedTrack(), 1).assertIsSelected().assertIsDisplayed()
             assertWholePhraseVisible(1)
-            compose.onNodeWithTag("previous_line").assertDoesNotExist()
-            compose.onNodeWithTag("next_line").assertIsDisplayed()
-            compose.onNodeWithTag("next_stage").assertIsDisplayed()
+            compose.openReaderControls()
+            compose.readerControl("previous_line").assertIsEnabled()
+            compose.readerControl("next_line").assertIsEnabled()
+            compose.readerControl("next_stage").assertIsEnabled()
+            compose.dismissReaderControls()
+            compose.onNodeWithTag("reader_controls").assertIsDisplayed().assertHeightIsAtLeast(48.dp)
         } finally {
             compose.activityRule.scenario.onActivity {
                 it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -413,9 +421,13 @@ class GuideNavigationTest {
                 openStage(expected.stageId, query)
                 compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals(expected.stageTitle)
                 if (expected.stageId == "creed") {
-                    compose.onNodeWithTag("choose_track").assertContentDescriptionEquals("Выбрать текст: Символ веры")
+                    compose.openReaderDetails()
+                    compose.onNodeWithTag("reading_details_track").assertTextEquals("Символ веры")
+                    compose.closeReaderDetails()
                 } else {
-                    compose.onNodeWithTag("current_track_title", useUnmergedTree = true).assertTextEquals(track.title)
+                    compose.openReaderDetails()
+                    compose.onNodeWithTag("reading_details_track").assertTextEquals(track.title)
+                    compose.closeReaderDetails()
                 }
                 compose.onFeedLine(acceptedTrack(), expected.lineIndex)
                     .assertIsSelected().assertIsDisplayed().assertTextEquals(expected.russian)
@@ -447,7 +459,9 @@ class GuideNavigationTest {
         compose.onNodeWithTag("stage_search").performTextReplacement("Верую")
         compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_creed"))
         compose.onNodeWithTag("stage_creed").performClick()
-        compose.onNodeWithTag("choose_track").assertContentDescriptionEquals("Выбрать текст: Символ веры")
+        compose.openReaderDetails()
+        compose.onNodeWithTag("reading_details_track").assertTextEquals("Символ веры")
+        compose.closeReaderDetails()
         compose.onFeedLine(acceptedTrack(), 0).assertIsSelected().assertTextContains("Верю", substring = true)
         compose.onNodeWithTag("play_lyrics").assertIsDisplayed()
         compose.waitUntil(timeoutMillis = 10_000) {
@@ -476,7 +490,9 @@ class GuideNavigationTest {
             return
         }
         openStage("gospel", "Лазарь")
-        compose.onNodeWithTag("current_track_title", useUnmergedTree = true).assertTextContains(reading.reference)
+        compose.openReaderDetails()
+        compose.onNodeWithTag("reading_details_track").assertTextContains(reading.reference)
+        compose.closeReaderDetails()
         compose.onNode(isSelected() and hasText("Лазарь", substring = true)).assertIsDisplayed()
         captureQaScreenshot("daily-search-match")
         compose.onNodeWithTag("player_meaning_tab").performClick()
@@ -492,7 +508,7 @@ class GuideNavigationTest {
     fun churchHasTodayAndTomorrowAndChangingItStartsAFreshContext() {
         chooseDefaultParish()
         openCreed()
-        compose.onNodeWithTag("next_line").performClick()
+        compose.openReaderControl("next_line").performClick()
         pressBack()
         compose.onNodeWithTag("nav_church").performClick()
         val today = LocalDate.now(ZoneId.of("Europe/Moscow"))
@@ -529,7 +545,7 @@ class GuideNavigationTest {
     @Test
     fun meaningAndReadingPositionSurviveOrderHomeAndSettingsNavigation() {
         openCreed()
-        compose.onNodeWithTag("next_line").performClick()
+        compose.openReaderControl("next_line").performClick()
         compose.onNodeWithTag("player_meaning_tab").performClick()
         compose.onNodeWithTag("open_map").performClick()
         pressBack()
@@ -551,7 +567,7 @@ class GuideNavigationTest {
     @Test
     fun findingAPrayerFromMeaningOpensItsTextAtTheMatchedPhrase() {
         openCreed()
-        compose.onNodeWithTag("next_line").performClick()
+        compose.openReaderControl("next_line").performClick()
         compose.onNodeWithTag("player_meaning_tab").performClick()
         compose.onNodeWithTag("clarify_moment").performClick()
         compose.onNodeWithTag("manual_content").performScrollToNode(hasTestTag("manual_search"))
@@ -561,19 +577,21 @@ class GuideNavigationTest {
         compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_creed"))
         compose.onNodeWithTag("stage_creed").performClick()
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
-        compose.onNodeWithTag("choose_track").assertContentDescriptionEquals("Выбрать текст: Символ веры")
+        compose.openReaderDetails()
+        compose.onNodeWithTag("reading_details_track").assertTextEquals("Символ веры")
+        compose.closeReaderDetails()
         compose.onFeedLine(acceptedTrack(), 0).assertIsSelected()
     }
 
     @Test
     fun searchingAfterFinishingDoesNotReusePositionsFromThePreviousService() {
         openCreed()
-        compose.onNodeWithTag("next_line").performClick()
-        compose.onNodeWithTag("next_line").performClick()
+        compose.openReaderControl("next_line").performClick()
+        compose.openReaderControl("next_line").performClick()
         compose.onNodeWithTag("open_map").performClick()
         compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_dismissal"))
         compose.onNodeWithTag("stage_dismissal").performClick()
-        compose.onNodeWithTag("next_stage").performClick()
+        compose.openReaderControl("next_stage").performClick()
         assertNull(preferences.getString("session", null))
         openStage("cherubic_hymn", "херувимы")
         compose.onNodeWithTag("open_map").performClick()
@@ -608,7 +626,7 @@ class GuideNavigationTest {
     }
 
     private fun chooseTrack(index: Int) {
-        compose.onNodeWithTag("choose_track").performClick()
+        compose.openReaderTracks()
         compose.onNodeWithTag("track_list").performScrollToNode(hasTestTag("track_$index"))
         compose.onNodeWithTag("track_$index").performClick()
     }
@@ -625,7 +643,8 @@ class GuideNavigationTest {
 
     private fun assertManualReading() {
         compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
-        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
+        val expected = if (savedSession().anchorIsApproximate) "На паузе · примерное место" else "На паузе"
+        compose.onNodeWithTag("reader_status").assertTextEquals(expected)
     }
 
     private fun assertWholePhraseVisible(index: Int) {

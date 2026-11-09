@@ -75,15 +75,15 @@ class SavedReadingTest {
         seed(line = 3, offset = 0L, selectedTrack = 1, stale = true)
         ActivityScenario.launch(MainActivity::class.java).use {
             resumeReading()
-            compose.onNodeWithTag("saved_earlier_notice").assertIsDisplayed()
+            compose.onNodeWithTag("reader_status").assertIsDisplayed().assertTextEquals("На паузе · сохраненное чтение")
             compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Символ веры")
             compose.onFeedLine(tracks[1], 3).assertIsSelected()
             compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
-            compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
+            compose.onNodeWithTag("reader_status").assertTextEquals("На паузе · сохраненное чтение")
             pressBack()
             compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("start_guide"))
             compose.onNodeWithTag("start_guide").performClick()
-            compose.onNodeWithTag("saved_earlier_notice").assertDoesNotExist()
+            compose.onNodeWithTag("reader_status").assertTextEquals("До начала литургии")
             compose.onNodeWithTag("open_map").performClick()
             compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_creed"))
             compose.onNodeWithTag("stage_creed").performClick()
@@ -134,7 +134,7 @@ class SavedReadingTest {
     }
 
     private fun selectTrack(index: Int) {
-        compose.onNodeWithTag("choose_track").performClick()
+        compose.openReaderTracks()
         compose.onNodeWithTag("track_list").performScrollToNode(hasTestTag("track_$index"))
         compose.onNodeWithTag("track_$index").performClick()
     }
