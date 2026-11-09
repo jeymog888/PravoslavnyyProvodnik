@@ -1,0 +1,32 @@
+{
+  "archive": "evidence.tar.gz",
+  "bytes": 2226649,
+  "sha256": "5d901d05eac4becdcee58a1c578a5d97e71887e87ef0ba872bb24ba87ef4b14c",
+  "files": 364,
+  "roots": [
+    "s32-content-r1",
+    "s32-content-r2",
+    "s32-content-ui-r1",
+    "s32-content-ui-diagnostic",
+    "s32-content-ui-r2",
+    "s32-upgrade-old",
+    "s32-upgrade-old-r2",
+    "s32-upgrade-new",
+    "s32-upgrade-checkpoints",
+    "s32-current-plans"
+  ],
+  "excluded": "APK files; hashes retained in receipts",
+  "equal_current_production_input_groups": [
+    "s32-content-r1",
+    "s32-content-r2",
+    "s32-content-ui-r1",
+    "s32-content-ui-diagnostic",
+    "s32-content-ui-r2",
+    "s32-upgrade-new"
+  ],
+  "published_baseline_separate": [
+    "s32-upgrade-old",
+    "s32-upgrade-old-r2"
+  ],
+  "limits": "Published baseline has deliberately different source inputs; its APK identity and upgrade continuity are separately verified in checkpoints"
+}

@@ -13,4 +13,4 @@ data class PrayerTrack(
 )
 
 /** A single reading position shared by both language presentations. */
-data class PlayerLine(val id: String, val russian: String, val original: String?)
+data class PlayerLine(val id: String, val russian: String, val original: String?, val speaker: String? = null)

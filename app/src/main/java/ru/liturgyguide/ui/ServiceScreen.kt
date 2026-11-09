@@ -430,16 +430,28 @@ private fun ReaderLyrics(reading: ActiveServicePlayback, player: ServicePlayerSt
                     else if (original) "Церковнославянский текст" else "Русское изложение смысла молитвы",
                     Modifier.testTag(if (track!!.isScripture) "original_unavailable" else "language_note"),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                track?.takeUnless { it.isScripture }?.contextNote?.let { note ->
+                    Text(note, Modifier.testTag("prayer_context_note"),
+                        style = MaterialTheme.typography.bodySmall.readingParagraph(),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         }
         itemsIndexed(track?.lines.orEmpty(), key = { _, line -> line.id }) { index, line ->
-            Text(if (original) line.original ?: line.russian else line.russian,
-                Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { player.seekLine(requireNotNull(track).id, line.id, generation) }
-                    .testTag("lyric_line_$index").semantics { selected = index == current; role = Role.Button },
-                fontSize = textSize.sp, lineHeight = (textSize * 1.4f).sp,
-                style = MaterialTheme.typography.bodyLarge.readingParagraph(),
-                fontWeight = if (index == current) FontWeight.SemiBold else FontWeight.Normal,
-                color = if (index == current) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                line.speaker?.let { speaker ->
+                    Text(speaker, Modifier.testTag("prayer_speaker_$index"),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Text(if (original) line.original ?: line.russian else line.russian,
+                    Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { player.seekLine(requireNotNull(track).id, line.id, generation) }
+                        .testTag("lyric_line_$index").semantics { selected = index == current; role = Role.Button },
+                    fontSize = textSize.sp, lineHeight = (textSize * 1.4f).sp,
+                    style = MaterialTheme.typography.bodyLarge.readingParagraph(),
+                    fontWeight = if (index == current) FontWeight.SemiBold else FontWeight.Normal,
+                    color = if (index == current) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
         item(key = "stage_continuation") {
             if (block) ReaderStageProgress(reading, player, generation, onClarify, onNextStage)
@@ -513,8 +525,11 @@ private fun ReaderMeaning(reading: ActiveServicePlayback, missing: Boolean, modi
             MeaningCard(if (track.isScripture) "О чем это чтение" else "Об этом тексте") {
                 Text(track.explanation, Modifier.testTag("track_explanation"), style = MaterialTheme.typography.bodyLarge.readingParagraph())
                 track.contextNote?.let { note ->
-                    TextButton(onClick = { showDayNote = !showDayNote }, Modifier.testTag("reading_note_toggle")) { Text("О чтениях этого дня") }
-                    if (showDayNote) Text(note, Modifier.testTag("reading_day_note"), style = MaterialTheme.typography.bodySmall.readingParagraph())
+                    if (track.isScripture) {
+                        TextButton(onClick = { showDayNote = !showDayNote }, Modifier.testTag("reading_note_toggle")) { Text("О чтениях этого дня") }
+                        if (showDayNote) Text(note, Modifier.testTag("reading_day_note"), style = MaterialTheme.typography.bodySmall.readingParagraph())
+                    } else Text(note, Modifier.testTag("prayer_context_note"),
+                        style = MaterialTheme.typography.bodySmall.readingParagraph())
                 }
                 track.sourceUrl?.let { url -> TextButton(onClick = { onOpenSource(url) }) { Text("Источник текста") } }
             }

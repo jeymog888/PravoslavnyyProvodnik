@@ -1,0 +1,125 @@
+{
+  "uniqueScenarios": 30,
+  "latestResults": {
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#languageAndProgrammaticScrollKeepPlayingButMeaningAndUserDragPause": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#endStopsThePlayerAndFinishingClearsTheAcceptedReading": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#oldRunningSessionAndWallClockChangesCannotMoveTheUnifiedReader": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#shortenedDuplicateTitleKeepsBothTextsDiscoverableAndRestoresTheSelectedPhrase": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#missingDatedReadingsStopHugeTicksAndEachNeedsItsOwnManualContinuation": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#onePlayMovesThroughTextsAUsefulWaitAndTheNextStage": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#changingSpeedCapturesTheOldMultiplierWithoutMovingToAnotherPhrase": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#explicitRestartReplacesOnlyTheCorruptSnapshotEvenWhenContextAndMarkerAreIdentical": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#losingResumedStatePausesAndDoesNotConsumeTimeBeforeReturning": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#losingTopResumedPausesSynchronouslyEvenWhenLifecycleStaysResumed": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#scriptureCannotMasqueradeAsOriginalAndThePreferredLanguageReturnsForPrayer": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExplanationSourceFlowTest#aDifferentStageOrAddressAtRestorationCannotInheritTheOldExpandedSource": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExplanationSourceFlowTest#recreationKeepsTheExpandedPublicationWithoutOpeningItOrChangingTheReading": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExplanationSourceFlowTest#changingTheStageOrItsAddressResetsDisclosureAndMissingAddressHasNoAction": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExplanationSourceFlowTest#disclosureIsLocalAndOpeningThePublicationPreservesThePausedReading": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#restoredCorrectionKeepsTheValidatedContextAndFastSpeedOnExplicitAcceptance": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#restoredServiceAndBackFromItsChildrenNeverAcceptThePendingCandidate": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#changedWaitExplainsTheReturnOnlyAfterAcceptanceAndKeepsTheNoticeAcrossHomeAndTheme": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#aConfirmedChurchChangeClearsTheCandidateAndRejectsItsOldResumeCallback": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#previewUsesTheSnapshotAddressAndExplicitResumeRetriesWithoutLosingPreferences": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#aNewManualMomentUsesTodayAndNormalSpeedAndLateResumeCannotReplaceIt": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#anExhaustedOccurrenceKeepsItsOwnDateAndNormalSpeedInsteadOfTheCandidateTempo": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#failedCommitAndRollbackDoNotReportAcceptanceAndTheSameCandidateCanBeRetried": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#assetReaderPreservesDefaultInputsCacheFailuresAndExplicitStageRetry": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#missingOrCorruptHistoricalAssetsNeverFallBackToLegacyButCurrentValidStillWorks": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#choosingFromOrderKeepsTheValidatedContextAndSlowSpeedWithoutAMigrationNotice": {
+      "run": "s32-content-ui-r1",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExpandedContentFlowTest#anaphoraSuppliesTheMissingSubjectAndExplanationsBesideBothLanguagePresentations": {
+      "run": "s32-content-ui-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExpandedContentFlowTest#localOmissionsRemainAvailableInBothLanguagesWithoutBecomingReadingPositions": {
+      "run": "s32-content-ui-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExpandedContentFlowTest#scriptureRetainsItsSeparateDayExplanationAndDoesNotAcquireAPrayerSpeaker": {
+      "run": "s32-content-ui-r2",
+      "status": "PASS"
+    },
+    "ru.liturgyguide.ui.ExpandedContentFlowTest#thePublishedMixedDialogueHasTwoVoicesWhileOnlyTappingAPhraseChangesItsAddress": {
+      "run": "s32-content-ui-r2",
+      "status": "PASS"
+    }
+  }
+}

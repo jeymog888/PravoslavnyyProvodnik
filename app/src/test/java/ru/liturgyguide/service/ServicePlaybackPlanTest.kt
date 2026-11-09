@@ -162,10 +162,9 @@ class ServicePlaybackPlanTest {
         assertEquals(listOf("epistle", "gospel"), missing.segments.filterIsInstance<PlaybackSegment.MissingReading>().map { it.stageId })
         val anaphora = missing.segments.filter { it.stageId == "anaphora" }
         val textMillis = anaphora.filterIsInstance<PlaybackSegment.Text>().sumOf { it.durationBaseMillis }
-        // The current resource has two dialog lines and three hymn lines, all below eight words.
-        assertEquals(listOf(4_000L, 4_000L, 4_000L, 4_000L, 4_000L),
-            anaphora.filterIsInstance<PlaybackSegment.Text>().map { it.durationBaseMillis })
-        assertEquals(20_000L, textMillis)
+        // The expanded audible excerpt keeps the quiet prayers outside the timed text.
+        assertEquals(22, anaphora.filterIsInstance<PlaybackSegment.Text>().size)
+        assertEquals(107_500L, textMillis)
         assertEquals(12 * 60_000L - textMillis, anaphora.filterIsInstance<PlaybackSegment.Wait>().single().durationBaseMillis)
     }
 }

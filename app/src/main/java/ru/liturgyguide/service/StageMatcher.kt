@@ -75,7 +75,8 @@ class StageMatcher(jsonString: String) {
                             val line = requireNotNull(nullableLine) { "Строка ${lineIndex + 1} этапа $id отсутствует" }
                             PrayerLine(
                                 requiredText(line.original, "Исходная строка ${lineIndex + 1} этапа $id"),
-                                requiredText(line.translation, "Перевод строки ${lineIndex + 1} этапа $id")
+                                requiredText(line.translation, "Перевод строки ${lineIndex + 1} этапа $id"),
+                                line.speaker?.trim()?.takeIf { it.isNotEmpty() }
                             )
                         }.also { paired ->
                             require(normalizeNewlines(original) == paired.joinToString("\n") { it.original }) {
@@ -95,7 +96,8 @@ class StageMatcher(jsonString: String) {
                         sourceTitle = text.sourceTitle,
                         isExcerpt = text.isExcerpt ?: true,
                         lines = lines,
-                        title = text.title?.let { requiredText(it, "Название текста этапа $id") }
+                        title = text.title?.let { requiredText(it, "Название текста этапа $id") },
+                        contextNote = text.contextNote?.trim()?.takeIf { it.isNotEmpty() }
                     )
                 }
             LiturgyStage(
@@ -172,8 +174,10 @@ class StageMatcher(jsonString: String) {
         val sourceTitle: String? = null,
         val isExcerpt: Boolean? = null,
         val lines: List<PrayerLineData?>? = null,
-        val title: String? = null
+        val title: String? = null,
+        val contextNote: String? = null
     )
 
-    private data class PrayerLineData(val original: String? = null, val translation: String? = null)
+    private data class PrayerLineData(val original: String? = null, val translation: String? = null,
+        val speaker: String? = null)
 }

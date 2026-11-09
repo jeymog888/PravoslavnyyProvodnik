@@ -1,0 +1,76 @@
+{
+  "status": "SOURCE FREEZE",
+  "scope": "3.2 approved audible content and required presentation metadata",
+  "tests": {
+    "newUnitMethods": 8,
+    "newInstrumentationMethods": 4,
+    "updatedExistingMethods": 2,
+    "executed": false
+  },
+  "files": [
+    {
+      "path": "app/src/main/assets/liturgy_stages.json",
+      "sha256": "ea0b891378c31dc7428643fe599862cf3bc06e58c88b8319c82ce2b8a04d7233"
+    },
+    {
+      "path": "app/src/main/java/ru/liturgyguide/model/LiturgyStage.kt",
+      "sha256": "81b452cf6bbd0c60112f557ce5b4b3807cee09187dba9c3563df608eaee898ed"
+    },
+    {
+      "path": "app/src/main/java/ru/liturgyguide/model/PrayerTrack.kt",
+      "sha256": "f41bac96c628a51044d9e5a69cacd224fb409ddcbc6b4e96e64d6cb5381c0cd8"
+    },
+    {
+      "path": "app/src/main/java/ru/liturgyguide/service/PrayerTrackFactory.kt",
+      "sha256": "a368e0425c6d09015f8f2680f91641265e404f1b04dc9398eba3dcde961917ff"
+    },
+    {
+      "path": "app/src/main/java/ru/liturgyguide/service/StageMatcher.kt",
+      "sha256": "a6662995944b8188909bf632e033a947cf1109325ddf767036f9c3912b81f736"
+    },
+    {
+      "path": "app/src/main/java/ru/liturgyguide/ui/ServiceScreen.kt",
+      "sha256": "dee490b778d3a3fe9d3fafc2fdc8e6f338b474b31ee5400bc3d10f1840753849"
+    },
+    {
+      "path": "app/src/test/java/ru/liturgyguide/service/ServicePlaybackPlanTest.kt",
+      "sha256": "8283d97cc4d0b8e5b234eb75bcbcff63833f84d483a7b3e12a56d4d4b9712e8a"
+    },
+    {
+      "path": "app/src/androidTest/java/ru/liturgyguide/ui/UnifiedPlayerFlowTest.kt",
+      "sha256": "a364b52ee8c2de733310a0dd31952d7556f150ac87febd919d2350c69a14dbe3"
+    },
+    {
+      "path": "app/src/test/java/ru/liturgyguide/service/ExpandedContentTest.kt",
+      "sha256": "68368d012f5ad445a4839e9a98763f1ef8b2a6d4dc4fab3ad2444a47b305b82c"
+    },
+    {
+      "path": "app/src/androidTest/java/ru/liturgyguide/ui/ExpandedContentFlowTest.kt",
+      "sha256": "b6ab63c402bf293481f824cd4030f7ad811fde85c39523815f73dd16634eb443"
+    },
+    {
+      "path": "verification/v0.6/s32-content/README.md",
+      "sha256": "17c9e98285b34d3787a3baa8f1597a28e241dd2fa9793cca76d4d3d3535a00ef"
+    },
+    {
+      "path": "verification/v0.6/s32-content/content-ledger.json",
+      "sha256": "15856e06cee42519ec0c16f2ece102ef2ef62bf5ed4ea7390bac423a870faac8"
+    },
+    {
+      "path": "verification/v0.6/s32-content/qa-preparation.md",
+      "sha256": "ad0b1617f16afc91934435c02bfe21f990d041617a7f92c8050a9c449fac16b6"
+    },
+    {
+      "path": "verification/v0.6/s32-content/semantic-preflight-review.md",
+      "sha256": "16289dea64ab1936f6eda09c0979861028235899a61a9438014bdac983813e14"
+    }
+  ],
+  "root_correction": "r2: ExpandedContentTest compares stage.texts, not old (List). Production unchanged. r1 compile FAIL retained; tests NOT_RUN.",
+  "ui_test_correction": {
+    "path": "app/src/androidTest/java/ru/liturgyguide/ui/ExpandedContentFlowTest.kt",
+    "before_sha256": "572fbd9779d268945e970777311a9b7dc653a8a3dd5e27e6fe698f3eca54b02e",
+    "after_sha256": "b6ab63c402bf293481f824cd4030f7ad811fde85c39523815f73dd16634eb443",
+    "reason": "Explicitly expand the observed partially expanded long track sheet using its real Expand action before the unchanged scroll/display/click assertions",
+    "scope": "Test helper only; production and all other frozen files unchanged; not executed yet"
+  }
+}

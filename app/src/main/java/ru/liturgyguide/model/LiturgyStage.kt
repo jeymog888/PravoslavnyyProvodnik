@@ -28,11 +28,12 @@ data class StageText(
     val sourceTitle: String? = null,
     val isExcerpt: Boolean = true,
     val lines: List<PrayerLine> = emptyList(),
-    val title: String? = null
+    val title: String? = null,
+    val contextNote: String? = null
 )
 
 /** One editorially aligned pair; switching language must retain this position. */
-data class PrayerLine(val original: String, val translation: String)
+data class PrayerLine(val original: String, val translation: String, val speaker: String? = null)
 
 data class LiturgyService(
     val service: String,

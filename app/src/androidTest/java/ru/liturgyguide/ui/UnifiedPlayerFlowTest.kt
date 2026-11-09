@@ -75,18 +75,18 @@ class UnifiedPlayerFlowTest {
         val tracks = tracks("anaphora")
         compose.onNodeWithTag("current_track_title", useUnmergedTree = true).assertTextEquals(tracks[0].title)
         play()
-        // The packaged anaphora has two introductory lines and three hymn lines, each four seconds.
-        advanceBy(8_000) { currentText()?.trackId == tracks[1].id }
+        // The first audible dialogue now precedes the preserved "Горе имеим" track.
+        advanceBy(22_500) { currentText()?.trackId == tracks[1].id }
         compose.onNodeWithTag("current_track_title", useUnmergedTree = true).assertTextEquals(tracks[1].title)
         compose.onNodeWithTag("lyric_line_0").assertIsSelected().assertIsDisplayed()
         compose.onNodeWithContentDescription("Остановить плеер").assertIsDisplayed()
-        advanceBy(12_000) { segment() is PlaybackSegment.Wait }
+        advanceBy(85_000) { segment() is PlaybackSegment.Wait }
         compose.onNodeWithTag("stage_wait").assertIsDisplayed()
         compose.onNodeWithText("Дальше слушаем службу").assertIsDisplayed()
         compose.onNodeWithText(requireNotNull(container.getStageMatcher().getStageById("anaphora")).meaning).assertExists()
-        assertEquals(tracks[1].lines.last().id, preferences.getString("lyric_phrase_${tracks[1].id}", null))
-        // The editorial twelve-minute stage retains 700 seconds of explained waiting.
-        advanceBy(700_000) { marker().anchorStageId == "theotokos" }
+        assertEquals(tracks.last().lines.last().id, preferences.getString("lyric_phrase_${tracks.last().id}", null))
+        // Added audible text reduces the remainder within the same editorial twelve-minute budget.
+        advanceBy(612_500) { marker().anchorStageId == "theotokos" }
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true)
             .assertTextEquals(requireNotNull(container.getStageMatcher().getStageById("theotokos")).name)
         compose.onNodeWithTag("lyric_line_0").assertIsSelected().assertIsDisplayed()

@@ -30,12 +30,14 @@ object PrayerTrackFactory {
                 id = id,
                 title = text.title?.trim()?.takeIf { it.isNotEmpty() } ?: text.type,
                 subtitle = "Смысл по-русски",
-                lines = pairs.map { (original, russian) ->
-                    PlayerLine(uniqueId("$id:${digest(original.trim())}", lineIdentities), russian.trim(), original.trim())
+                lines = pairs.mapIndexed { index, (original, russian) ->
+                    PlayerLine(uniqueId("$id:${digest(original.trim())}", lineIdentities), russian.trim(), original.trim(),
+                        speaker = text.lines.getOrNull(index)?.speaker?.trim()?.takeIf { it.isNotEmpty() })
                 },
                 sourceUrl = httpsUrl(text.sourceUrl) ?: httpsUrl(stage.sourceUrl),
                 isExcerpt = text.isExcerpt,
-                explanation = text.explanation
+                explanation = text.explanation,
+                contextNote = text.contextNote?.trim()?.takeIf { it.isNotEmpty() }
             )
         }
 
