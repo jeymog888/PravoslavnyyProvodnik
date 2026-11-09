@@ -83,7 +83,7 @@ class ExhaustedServiceEntryTest {
         compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_gospel"))
         assertUnchanged(before)
         compose.onNodeWithTag("stage_gospel").performClick()
-        assertAccepted(expected, "gospel")
+        assertAccepted(expected, "gospel", expectedStatus = "На паузе · по-русски")
         val plan = planFor(expected)
         val text = plan.segments[saved().snapshot.segmentIndex] as PlaybackSegment.Text
         assertEquals("От Луки 16:19-31", plan.track(text.trackId)?.title)
@@ -270,7 +270,7 @@ class ExhaustedServiceEntryTest {
     private fun saved(): StoredServicePlayback = requireNotNull(
         StoredServicePlaybackCodec.decode(preferences.getString(ServicePlaybackStore.PLAYBACK_KEY, null)))
     private fun assertUnchanged(before: Map<String, *>) = compose.runOnIdle { assertEquals(before, preferences.all) }
-    private fun assertAccepted(value: ReadingContext, stageId: String) {
+    private fun assertAccepted(value: ReadingContext, stageId: String, expectedStatus: String = "На паузе") {
         val stored = saved()
         assertEquals(value, stored.context)
         assertEquals(value, ReadingContextStore(preferences).restore())
@@ -285,7 +285,7 @@ class ExhaustedServiceEntryTest {
         assertFalse(marker.autoAdvance)
         assertFalse(marker.anchorIsApproximate)
         compose.onNodeWithContentDescription("Двигать текст").assertExists()
-        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
+        compose.onNodeWithTag("reader_status").assertTextEquals(expectedStatus)
         compose.onNodeWithTag("manual_content").assertDoesNotExist()
         compose.onNodeWithTag("arrival_content").assertDoesNotExist()
     }

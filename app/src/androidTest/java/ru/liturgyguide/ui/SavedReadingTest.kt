@@ -75,11 +75,11 @@ class SavedReadingTest {
         seed(line = 3, offset = 0L, selectedTrack = 1, stale = true)
         ActivityScenario.launch(MainActivity::class.java).use {
             resumeReading()
-            compose.onNodeWithTag("reader_status").assertIsDisplayed().assertTextEquals("На паузе · сохраненное чтение")
+            compose.onNodeWithTag("reader_status").assertIsDisplayed().assertTextEquals("На паузе · сохраненное чтение · примерное место")
             compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Символ веры")
             compose.onFeedLine(tracks[1], 3).assertIsSelected()
             compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
-            compose.onNodeWithTag("reader_status").assertTextEquals("На паузе · сохраненное чтение")
+            compose.onNodeWithTag("reader_status").assertTextEquals("На паузе · сохраненное чтение · примерное место")
             pressBack()
             compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("start_guide"))
             compose.onNodeWithTag("start_guide").performClick()
