@@ -175,7 +175,9 @@ class FirstVisitFlowTest {
         assertEquals(ReadingContextSource.USER, reading.source)
         assertEquals(Instant.parse("2026-11-08T06:30:00Z").toEpochMilli(), reading.startEpochMillis)
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Подготовка к литургии")
-        compose.onNodeWithContentDescription("Включить плеер").assertExists()
+        compose.onNodeWithTag("start_liturgy").assertIsDisplayed().assertContentDescriptionEquals("Литургия началась")
+        compose.onNodeWithTag("reader_status").assertTextEquals("До начала литургии")
+        compose.onNodeWithTag("play_lyrics").assertDoesNotExist()
     }
 
     @Test fun confirmingRecoveredLegacyParishPreservesTheReadingAndPersistsTheChoice() {

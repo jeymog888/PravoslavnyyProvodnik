@@ -54,8 +54,9 @@ class GuideNavigationTest {
     fun readingCanAdvanceAndReturnWithoutLosingTheStage() {
         tapMain("start_guide")
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Подготовка к литургии")
-        compose.onNodeWithTag("previous_stage").assertIsNotEnabled()
-        compose.onNodeWithTag("next_stage").performClick()
+        compose.onNodeWithTag("previous_stage").assertDoesNotExist()
+        compose.onNodeWithTag("next_stage").assertDoesNotExist()
+        compose.onNodeWithTag("start_liturgy").assertContentDescriptionEquals("Литургия началась").performClick()
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Начало литургии")
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
         compose.onNodeWithTag("lyric_line_0").assertIsSelected().assertIsDisplayed()
@@ -214,7 +215,7 @@ class GuideNavigationTest {
         assertEquals(2, preferences.getInt("text_size", -1))
         pressBack()
         tapMain("start_guide")
-        compose.onNodeWithTag("next_stage").assertIsDisplayed().performClick()
+        compose.onNodeWithTag("start_liturgy").assertIsDisplayed().performClick()
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Начало литургии")
         compose.onNodeWithTag("next_stage").assertIsDisplayed()
     }
@@ -222,14 +223,20 @@ class GuideNavigationTest {
     @Test
     fun onePlayerStartsDirectlyAndPausesWithoutASecondStageTimer() {
         tapMain("start_guide")
+        compose.onNodeWithTag("reader_status").assertTextEquals("До начала литургии")
+        compose.onNodeWithTag("play_lyrics").assertDoesNotExist()
+        compose.onNodeWithTag("start_liturgy").performClick()
+        compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Начало литургии")
+        assertManualReading()
         compose.onNodeWithTag("play_lyrics").assertIsEnabled().performClick()
-        compose.onNodeWithContentDescription("Остановить плеер").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Пауза").assertIsDisplayed()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
         compose.onNodeWithText("Автопрокрутка").assertDoesNotExist()
         assertFalse(savedSession().autoAdvance)
         assertNotNull(StoredServicePlaybackCodec.decode(preferences.getString(ServicePlaybackStore.PLAYBACK_KEY, null)))
         compose.onNodeWithTag("play_lyrics").performClick()
-        compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed()
-        compose.onNodeWithTag("next_stage").performClick()
+        compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
+        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Начало литургии")
         assertFalse(savedSession().autoAdvance)
     }
@@ -238,7 +245,8 @@ class GuideNavigationTest {
     fun choosingManualReadingFromTempoOptionsStopsAnActiveScroll() {
         openCreed()
         startScrolling()
-        compose.onNodeWithContentDescription("Остановить плеер").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Пауза").assertIsDisplayed()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
         compose.onNodeWithTag("scroll_options").performClick()
         compose.onNodeWithTag("manual_reading").performClick()
         assertManualReading()
@@ -260,7 +268,9 @@ class GuideNavigationTest {
         startScrolling()
         compose.onNodeWithTag("player_meaning_tab").performClick().assertIsSelected()
         compose.onNodeWithTag("play_lyrics").assertDoesNotExist()
-        compose.onNodeWithTag("player_text_tab").performClick()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Пояснение · на паузе")
+        compose.onNodeWithTag("return_to_text").assertIsDisplayed().performClick()
+        compose.onNodeWithTag("player_text_tab").assertIsSelected()
         compose.onNodeWithTag("lyric_line_1").assertIsSelected()
         assertManualReading()
     }
@@ -323,7 +333,8 @@ class GuideNavigationTest {
         compose.onNodeWithTag("toggle_follow").assertDoesNotExist()
         compose.onNodeWithText("Этапы по времени").assertDoesNotExist()
         pressBack()
-        compose.onNodeWithContentDescription("Остановить плеер").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Пауза").assertIsDisplayed()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
         assertFalse(savedSession().autoAdvance)
         compose.onNodeWithTag("next_line").performClick()
         compose.onNodeWithTag("lyric_line_1").assertIsSelected()
@@ -366,7 +377,8 @@ class GuideNavigationTest {
             compose.onNodeWithTag("next_line").assertIsDisplayed().performClick()
             compose.onNodeWithTag("lyric_line_1").assertIsSelected().assertIsDisplayed()
             assertWholePhraseVisible(1)
-            compose.onNodeWithTag("previous_line").assertIsDisplayed()
+            compose.onNodeWithTag("previous_line").assertDoesNotExist()
+            compose.onNodeWithTag("next_line").assertIsDisplayed()
             compose.onNodeWithTag("next_stage").assertIsDisplayed()
         } finally {
             compose.activityRule.scenario.onActivity {
@@ -607,12 +619,13 @@ class GuideNavigationTest {
 
     private fun startScrolling() {
         compose.onNodeWithTag("play_lyrics").performClick()
-        compose.onNodeWithContentDescription("Остановить плеер").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Пауза").assertIsDisplayed()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
     }
 
     private fun assertManualReading() {
-        compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed()
-        compose.onNodeWithTag("line_status", useUnmergedTree = true).assertTextContains("На паузе", substring = true)
+        compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
+        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
     }
 
     private fun assertWholePhraseVisible(index: Int) {

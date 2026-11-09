@@ -52,6 +52,8 @@ class ReaderAccessibilityTest {
         assertReadingSpaceAndScale(3, 1.3f, 28.sp)
         assertFooterTargets()
         assertReadable(compose.onNodeWithTag("line_status", useUnmergedTree = true))
+        assertReadable(compose.onNodeWithTag("reader_status", useUnmergedTree = true))
+        assertReadable(compose.onNodeWithTag("soundless_note", useUnmergedTree = true))
         compose.onNodeWithTag("scroll_options").performClick()
         compose.onNodeWithTag("tempo_fast").performClick()
         compose.onNodeWithText("Готово").performClick()
@@ -69,7 +71,7 @@ class ReaderAccessibilityTest {
         launchReader("creed", 1, 3, width = 320, height = 640, systemFontScale = 2f)
         assertReadableHeader()
         assertReadingSpaceAndScale(3, 2.6f)
-        assertFooterTargets()
+        assertFooterTargets(compact = true)
         compose.onNodeWithTag("player_original_tab").assertIsDisplayed().performClick()
         compose.onNodeWithTag("lyric_line_3").assertIsSelected()
         assertReadingSpaceAndScale(3, 2.6f)
@@ -95,7 +97,7 @@ class ReaderAccessibilityTest {
             launchReader("creed", 1, 3, width = 640, height = 360, systemFontScale = 1.3f)
             assertReadableHeader()
             assertReadingSpaceAndScale(3, 1.69f)
-            assertFooterTargets()
+            assertFooterTargets(compact = true)
             compose.onNodeWithTag("next_line").assertIsDisplayed().performClick()
             compose.onNodeWithTag("lyric_line_4").assertIsSelected().assertIsDisplayed()
             compose.onNodeWithTag("player_meaning_tab").performClick().assertIsSelected()
@@ -150,6 +152,10 @@ class ReaderAccessibilityTest {
         compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_preparation"))
         compose.onNodeWithTag("stage_preparation").performScrollTo().performClick()
         compose.onNodeWithTag("current_track_title").assertDoesNotExist()
+        compose.onNodeWithTag("reader_status").assertTextEquals("До начала литургии").assertIsDisplayed()
+        compose.onNodeWithTag("start_liturgy").assertIsDisplayed().assertHeightIsAtLeast(48.dp)
+            .assertContentDescriptionEquals("Литургия началась")
+        compose.onNodeWithTag("play_lyrics").assertDoesNotExist()
         compose.onAllNodesWithTag("clarify_moment").assertCountEquals(1)
         compose.onNodeWithTag("clarify_moment").assertIsDisplayed().performClick()
         compose.onNodeWithTag("manual_content").assertIsDisplayed()
@@ -253,9 +259,22 @@ class ReaderAccessibilityTest {
         }
     }
 
-    private fun assertFooterTargets(textVisible: Boolean = true) {
-        val tags = if (textVisible) listOf("previous_stage", "previous_line", "play_lyrics", "next_line", "scroll_options", "next_stage")
-            else listOf("previous_stage", "next_stage")
+    private fun assertFooterTargets(textVisible: Boolean = true, compact: Boolean = false) {
+        val tags = when {
+            !textVisible -> listOf("return_to_text")
+            compact -> listOf("play_lyrics", "next_line", "scroll_options", "next_stage")
+            else -> listOf("previous_stage", "previous_line", "play_lyrics", "next_line", "scroll_options", "next_stage")
+        }
+        if (!textVisible) {
+            listOf("play_lyrics", "previous_stage", "previous_line", "next_line", "scroll_options", "next_stage")
+                .forEach { compose.onNodeWithTag(it).assertDoesNotExist() }
+            compose.onNodeWithTag("reader_status").assertTextEquals("Пояснение · на паузе")
+        } else if (compact) {
+            compose.onNodeWithTag("previous_stage").assertDoesNotExist()
+            compose.onNodeWithTag("previous_line").assertDoesNotExist()
+        }
+        assertReadable(compose.onNodeWithTag("reader_status", useUnmergedTree = true))
+        assertReadable(compose.onNodeWithTag("reader_primary_label", useUnmergedTree = true))
         val tolerance = .5.dp
         val bounds = tags.associateWith { tag ->
             val node = compose.onNodeWithTag(tag).assertIsDisplayed()
@@ -276,6 +295,8 @@ class ReaderAccessibilityTest {
         val content = compose.onNodeWithTag(if (textVisible) "lyrics_list" else "service_content")
             .assertHeightIsAtLeast(120.dp).getBoundsInRoot()
         assertTrue("The footer overlaps the reading area", content.bottom <= bounds.values.minOf { it.top } + tolerance)
+        val status = compose.onNodeWithTag("reader_status").getUnclippedBoundsInRoot()
+        assertTrue("The footer status overlaps the reading area", content.bottom <= status.top + tolerance)
     }
 
     private fun assertReadableHeader() {

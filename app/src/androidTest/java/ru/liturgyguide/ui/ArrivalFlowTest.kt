@@ -50,7 +50,8 @@ class ArrivalFlowTest {
         assertOldPositionsCleared()
         assertGlobals()
         compose.onNodeWithTag("lyric_line_0").assertIsSelected()
-        compose.onNodeWithContentDescription("Включить плеер").assertExists()
+        compose.onNodeWithContentDescription("Двигать текст").assertExists()
+        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
     }
 
     @Test fun anExpiredClickDoesNotReplaceOrClearTheSavedReading() {

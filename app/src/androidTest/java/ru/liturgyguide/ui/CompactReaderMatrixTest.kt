@@ -140,6 +140,9 @@ class CompactReaderMatrixTest {
         compose.onNodeWithTag("choose_track").performClick()
         compose.onNodeWithTag("track_list").assertIsDisplayed()
         compose.onNodeWithTag("track_0").performClick()
+        compose.onNodeWithTag("player_meaning_tab").assertIsSelected()
+        compose.onNodeWithTag("next_stage").assertDoesNotExist()
+        compose.onNodeWithTag("return_to_text").performClick()
         compose.onNodeWithTag("next_stage").performClick()
         compose.runOnIdle { assertEquals("anaphora", player.reading!!.stage.id) }
     }
@@ -175,7 +178,8 @@ class CompactReaderMatrixTest {
         assertFalse(paused.isPlaying)
         compose.runOnIdle { monotonic.addAndGet(86_400_000) }
         compose.onNodeWithTag("close_reading_details").performClick()
-        compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
+        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
         compose.runOnIdle { assertEquals(paused, player.reading!!.state) }
     }
 

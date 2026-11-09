@@ -31,7 +31,8 @@ class SavedReadingTest {
             resumeReading()
             selectTrack(1)
             compose.onNodeWithTag("lyric_line_1").assertIsSelected().assertIsDisplayed()
-            compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed()
+            compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
+            compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
             assertEquals(0L, savedPlayback().snapshot.elapsedQuarterMillis)
             assertEquals(PlaybackSpeed.NORMAL, savedPlayback().snapshot.speed)
             assertEquals(tracks[1].lines[1].id, preferences.getString("lyric_phrase_${tracks[1].id}", null))
@@ -51,7 +52,8 @@ class SavedReadingTest {
         ActivityScenario.launch(MainActivity::class.java).use {
             resumeReading()
             compose.onNodeWithTag("lyric_line_${tracks[1].lines.lastIndex}").assertIsSelected()
-            compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed()
+            compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
+            compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
             assertEquals(0L, savedPlayback().snapshot.elapsedQuarterMillis)
             assertEquals(PlaybackSpeed.NORMAL, savedPlayback().snapshot.speed)
             selectTrack(0)
@@ -62,7 +64,8 @@ class SavedReadingTest {
         ActivityScenario.launch(MainActivity::class.java).use {
             resumeReading()
             compose.onNodeWithTag("lyric_line_${tracks[1].lines.lastIndex}").assertIsSelected()
-            compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed()
+            compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
+            compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
             assertEquals(saved, savedPlayback())
         }
     }
@@ -75,7 +78,8 @@ class SavedReadingTest {
             compose.onNodeWithTag("saved_earlier_notice").assertIsDisplayed()
             compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Символ веры")
             compose.onNodeWithTag("lyric_line_3").assertIsSelected()
-            compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed()
+            compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
+            compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
             pressBack()
             compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("start_guide"))
             compose.onNodeWithTag("start_guide").performClick()

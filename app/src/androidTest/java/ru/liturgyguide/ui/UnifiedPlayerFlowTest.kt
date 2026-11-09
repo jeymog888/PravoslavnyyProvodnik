@@ -57,7 +57,9 @@ class UnifiedPlayerFlowTest {
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true)
             .assertIsDisplayed().assertTextEquals("Подготовка к литургии")
         compose.onNodeWithTag("main_content").assertDoesNotExist()
-        assertPaused()
+        compose.onNodeWithTag("start_liturgy").assertIsDisplayed().assertContentDescriptionEquals("Литургия началась")
+        compose.onNodeWithTag("reader_status").assertTextEquals("До начала литургии")
+        compose.onNodeWithTag("play_lyrics").assertDoesNotExist()
         assertEquals(encodedContext, preferences.getString(ReadingContextStore.CONTEXT_KEY, null))
         assertEquals(encodedMarker, preferences.getString("session", null))
         assertEquals(accepted, saved().context)
@@ -79,18 +81,22 @@ class UnifiedPlayerFlowTest {
         advanceBy(22_500) { currentText()?.trackId == tracks[1].id }
         compose.onNodeWithTag("current_track_title", useUnmergedTree = true).assertTextEquals(tracks[1].title)
         compose.onNodeWithTag("lyric_line_0").assertIsSelected().assertIsDisplayed()
-        compose.onNodeWithContentDescription("Остановить плеер").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Пауза").assertIsDisplayed()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
         advanceBy(85_000) { segment() is PlaybackSegment.Wait }
         compose.onNodeWithTag("stage_wait").assertIsDisplayed()
-        compose.onNodeWithText("Дальше слушаем службу").assertIsDisplayed()
-        compose.onNodeWithText(requireNotNull(container.getStageMatcher().getStageById("anaphora")).meaning).assertExists()
+        compose.onNodeWithText("Слушаем службу").assertIsDisplayed()
+        compose.onNodeWithText("Доступный текст закончился, но этот этап в храме может продолжаться.").assertExists()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Примерный переход включен")
+        compose.onNodeWithTag("play_lyrics").assertContentDescriptionEquals("Пауза")
         assertEquals(tracks.last().lines.last().id, preferences.getString("lyric_phrase_${tracks.last().id}", null))
         // Added audible text reduces the remainder within the same editorial twelve-minute budget.
         advanceBy(612_500) { marker().anchorStageId == "theotokos" }
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true)
             .assertTextEquals(requireNotNull(container.getStageMatcher().getStageById("theotokos")).name)
         compose.onNodeWithTag("lyric_line_0").assertIsSelected().assertIsDisplayed()
-        compose.onNodeWithContentDescription("Остановить плеер").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Пауза").assertIsDisplayed()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
         assertFalse(marker().autoAdvance)
         assertEquals(0L, saved().snapshot.elapsedQuarterMillis)
     }
@@ -105,16 +111,20 @@ class UnifiedPlayerFlowTest {
         assertEquals("2026-11-09", stopped.context.serviceDate)
         assertEquals(0L, stopped.snapshot.elapsedQuarterMillis)
         compose.onNodeWithTag("missing_reading_barrier").assertIsDisplayed()
-        compose.onNodeWithTag("play_lyrics").assertIsNotEnabled()
+        compose.onNodeWithTag("play_lyrics").assertDoesNotExist()
+        compose.onNodeWithTag("next_stage").assertDoesNotExist()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Текст на 9 ноября 2026 пока не добавлен · пауза")
         compose.onNodeWithText("Текста чтения пока нет").assertIsDisplayed()
+        compose.onAllNodesWithTag("continue_missing_reading").assertCountEquals(1)
         val continueButton = compose.onNodeWithTag("continue_missing_reading")
             .assertIsDisplayed().assertHeightIsAtLeast(48.dp)
         val buttonBounds = continueButton.getUnclippedBoundsInRoot()
         val readerBounds = compose.onNodeWithTag("lyrics_list").getBoundsInRoot()
-        assertTrue("The manual continuation must fit in the initial reader viewport",
-            buttonBounds.top >= readerBounds.top && buttonBounds.bottom <= readerBounds.bottom)
-        val cueBounds = compose.onNodeWithText("Как узнать этот момент").getUnclippedBoundsInRoot()
-        assertTrue("The continuation belongs before the long cue", buttonBounds.bottom <= cueBounds.top)
+        val visibleBounds = continueButton.getBoundsInRoot()
+        assertTrue("The footer continuation must be fully visible", visibleBounds.top <= buttonBounds.top + .5.dp &&
+            visibleBounds.bottom >= buttonBounds.bottom - .5.dp && visibleBounds.left <= buttonBounds.left + .5.dp &&
+            visibleBounds.right >= buttonBounds.right - .5.dp)
+        assertTrue("The continuation must not overlap the reading area", readerBounds.bottom <= buttonBounds.top)
         compose.onNodeWithTag("player_meaning_tab").performClick()
         compose.onNodeWithText("Что происходит").assertIsDisplayed()
         compose.onNodeWithTag("reading_unavailable").assertExists()
@@ -126,7 +136,8 @@ class UnifiedPlayerFlowTest {
         restoration.emulateSavedInstanceStateRestore()
         assertEquals(stopped, saved())
         compose.onNodeWithTag("reading_service_date").assertTextEquals("Тексты на 9 ноября 2026")
-        compose.onNodeWithTag("play_lyrics").assertIsNotEnabled()
+        compose.onNodeWithTag("play_lyrics").assertDoesNotExist()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Текст на 9 ноября 2026 пока не добавлен · пауза")
         continueMissing()
         assertEquals("gospel", marker().anchorStageId)
         assertEquals(0L, saved().snapshot.elapsedQuarterMillis)
@@ -134,7 +145,9 @@ class UnifiedPlayerFlowTest {
         play()
         advanceBy(86_400_000) { segment() is PlaybackSegment.MissingReading }
         assertEquals("gospel", marker().anchorStageId)
-        compose.onNodeWithTag("play_lyrics").assertIsNotEnabled()
+        compose.onNodeWithTag("play_lyrics").assertDoesNotExist()
+        compose.onNodeWithTag("next_stage").assertDoesNotExist()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Текст на 9 ноября 2026 пока не добавлен · пауза")
         continueMissing()
         assertEquals("litanies", marker().anchorStageId)
         assertEquals("2026-11-09", saved().context.serviceDate)
@@ -221,12 +234,17 @@ class UnifiedPlayerFlowTest {
         val track = tracks("creed")[1]
         advanceBy(4_000) { currentText()?.lineId == track.lines[1].id }
         compose.onNodeWithTag("lyric_line_1").assertIsSelected().assertIsDisplayed()
-        compose.onNodeWithContentDescription("Остановить плеер").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Пауза").assertIsDisplayed()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
         compose.onNodeWithTag("player_text_tab").performClick().assertIsSelected()
         compose.onNodeWithTag("lyric_line_1").assertTextEquals(track.lines[1].russian).assertIsSelected()
-        compose.onNodeWithContentDescription("Остановить плеер").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Пауза").assertIsDisplayed()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
         compose.onNodeWithTag("player_meaning_tab").performClick().assertIsSelected()
         compose.onNodeWithText("Что происходит").assertIsDisplayed()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Пояснение · на паузе")
+        compose.onNodeWithTag("return_to_text").assertIsDisplayed().assertContentDescriptionEquals("К тексту")
+        compose.onNodeWithTag("play_lyrics").assertDoesNotExist()
         val stopped = saved()
         compose.runOnIdle { monotonic.addAndGet(600_000) }
         compose.onNodeWithTag("player_original_tab").performClick().assertIsSelected()
@@ -236,7 +254,7 @@ class UnifiedPlayerFlowTest {
         play()
         compose.onNodeWithTag("lyrics_list").performTouchInput { swipeUp() }
         compose.waitUntil(5_000) {
-            compose.onAllNodesWithContentDescription("Включить плеер").fetchSemanticsNodes().size == 1
+            compose.onAllNodesWithContentDescription("Двигать текст").fetchSemanticsNodes().size == 1
         }
         assertEquals(track.lines[1].id, preferences.getString("lyric_phrase_${track.id}", null))
         assertPaused()
@@ -300,7 +318,8 @@ class UnifiedPlayerFlowTest {
         }
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Символ веры")
         compose.onNodeWithTag("lyric_line_0").assertIsSelected()
-        compose.onNodeWithContentDescription("Остановить плеер").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Пауза").assertIsDisplayed()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
         assertEquals(before, saved())
         advanceBy(4_000) { currentText()?.lineId == tracks("creed")[1].lines[1].id }
         compose.onNodeWithTag("lyric_line_1").assertIsSelected()
@@ -313,17 +332,20 @@ class UnifiedPlayerFlowTest {
         play()
         advanceBy(60_000) { segment() is PlaybackSegment.Wait }
         compose.onNodeWithTag("stage_wait").assertIsDisplayed()
-        compose.onNodeWithText("Доступный фрагмент закончился. Продолжайте слушать заключительные молитвы в храме.")
+        compose.onNodeWithText("Доступный текст закончился. Продолжайте слушать заключительные молитвы в храме.")
             .assertIsDisplayed()
-        compose.onNodeWithText("Доступный фрагмент закончился. Переход к следующему этапу будет примерным.")
-            .assertDoesNotExist()
+        compose.onNodeWithTag("next_stage_cue").assertDoesNotExist()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Примерный переход включен")
         advanceBy(86_400_000) { segment() is PlaybackSegment.End }
         compose.onNodeWithTag("playback_end").assertIsDisplayed()
-        compose.onNodeWithTag("play_lyrics").assertIsNotEnabled()
+        compose.onNodeWithTag("play_lyrics").assertDoesNotExist()
+        compose.onNodeWithTag("next_stage").assertDoesNotExist()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Порядок в приложении завершен")
+        compose.onAllNodesWithTag("finish_reading").assertCountEquals(1)
         val end = saved()
         compose.runOnIdle { monotonic.addAndGet(86_400_000) }
         assertEquals(end, saved())
-        compose.onNodeWithTag("next_stage").performClick()
+        compose.onNodeWithTag("finish_reading").assertIsDisplayed().assertHeightIsAtLeast(48.dp).performClick()
         compose.onNodeWithTag("main_content").assertExists()
         assertFalse(preferences.contains(ServicePlaybackStore.PLAYBACK_KEY))
         assertFalse(preferences.contains(ReadingContextStore.CONTEXT_KEY))
@@ -351,12 +373,16 @@ class UnifiedPlayerFlowTest {
 
     private fun play() {
         compose.onNodeWithTag("play_lyrics").assertIsEnabled().performClick()
-        compose.onNodeWithContentDescription("Остановить плеер").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Пауза").assertIsDisplayed()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
     }
-    private fun assertPaused() { compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed() }
+    private fun assertPaused() {
+        compose.onNodeWithTag("play_lyrics").assertIsDisplayed().assertContentDescriptionEquals("Двигать текст")
+        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
+    }
     private fun continueMissing() {
-        compose.onNodeWithTag("lyrics_list").performScrollToNode(hasTestTag("continue_missing_reading"))
-        compose.onNodeWithTag("continue_missing_reading").performClick()
+        compose.onNodeWithTag("continue_missing_reading").assertIsDisplayed()
+            .assertContentDescriptionEquals("Чтение в храме закончилось").performClick()
     }
     private fun advanceBy(delta: Long, reached: () -> Boolean) {
         compose.runOnIdle { monotonic.addAndGet(delta) }

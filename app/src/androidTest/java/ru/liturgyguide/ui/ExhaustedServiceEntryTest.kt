@@ -284,7 +284,8 @@ class ExhaustedServiceEntryTest {
         assertEquals(stageId, marker.anchorStageId)
         assertFalse(marker.autoAdvance)
         assertFalse(marker.anchorIsApproximate)
-        compose.onNodeWithContentDescription("Включить плеер").assertExists()
+        compose.onNodeWithContentDescription("Двигать текст").assertExists()
+        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
         compose.onNodeWithTag("manual_content").assertDoesNotExist()
         compose.onNodeWithTag("arrival_content").assertDoesNotExist()
     }

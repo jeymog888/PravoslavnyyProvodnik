@@ -411,7 +411,8 @@ class Published05PlaybackIntegrationTest {
         assertEquals(stageId, marker.anchorStageId)
         assertFalse(marker.autoAdvance)
         assertEquals(0L, marker.elapsedInStageMillis)
-        compose.onNodeWithContentDescription("Включить плеер").assertExists()
+        compose.onNodeWithContentDescription("Двигать текст").assertExists()
+        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
     }
     private fun assertGlobalsAndOtherBookmarks() {
         assertFalse(preferences.getBoolean("dark", true))

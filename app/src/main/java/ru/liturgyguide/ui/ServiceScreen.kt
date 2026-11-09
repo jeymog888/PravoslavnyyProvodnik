@@ -75,6 +75,12 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
     val selectedTab = if (meaning) 2 else if (original) 0 else 1
     val index = reading.plan.stages.indexOf(reading.stage)
     val missing = reading.stage.id in setOf("epistle", "gospel") && reading.tracks.none { it.isScripture }
+    val presentation = readerPresentation(reading, meaning)
+    // A restored explanation must never consume hidden playback time. The status reflects
+    // the real player until this pause has been applied, rather than assuming it is paused.
+    LaunchedEffect(generation, meaning, reading.state.isPlaying) {
+        if (meaning && reading.state.isPlaying) player.pause(generation)
+    }
     fun selectTab(value: Int) {
         if (generation != player.generation) return
         if (value == 2) { player.pause(generation); meaning = true }
@@ -91,7 +97,25 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
     fun nextStage() {
         if (generation != player.generation) return
         player.pause(generation)
+        if (generation != player.generation) return
         if (index < reading.plan.stages.lastIndex) onStageChange(reading.plan.stages[index + 1].id) else onFinish()
+    }
+    fun primaryAction() {
+        if (generation != player.generation) return
+        when (presentation.primaryAction) {
+            ReaderPrimaryAction.PLAY -> player.play(generation)
+            ReaderPrimaryAction.PAUSE -> player.pause(generation)
+            ReaderPrimaryAction.BEGIN_LITURGY -> nextStage()
+            ReaderPrimaryAction.RETURN_TO_TEXT -> {
+                player.pause(generation)
+                if (generation == player.generation) meaning = false
+            }
+            ReaderPrimaryAction.CONTINUE_AFTER_MISSING -> player.continueAfterMissing(generation)
+            ReaderPrimaryAction.FINISH -> {
+                player.pause(generation)
+                if (generation == player.generation) onFinish()
+            }
+        }
     }
 
     details?.let { snapshot ->
@@ -142,7 +166,7 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
         title = { Text("Примерный темп") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Плеер двигает текст без звука. Строки и этапы сменяются по расчету, поэтому скорость чтения и пения в храме может отличаться. Нажмите нужную строку или кнопку \"Уточнить\", чтобы поправить место.")
+                Text("Текст движется без звука. Темп задает, как быстро приложение меняет строки и переходит к следующему этапу. Чтение и пение в храме могут идти быстрее или медленнее. Чтобы поправить место один раз, выберите нужную строку или нажмите \"Уточнить\".")
                 PlaybackSpeed.entries.forEach { speed ->
                     Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { player.changeSpeed(speed, generation) }
                         .testTag("tempo_${speed.name.lowercase()}").semantics { selected = reading.state.speed == speed; role = Role.RadioButton },
@@ -225,7 +249,7 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
             }
         }
     }, bottomBar = {
-        ReaderFooter(reading, player, generation, textVisible = !meaning, compact = compactControls,
+        ReaderFooter(reading, player, generation, presentation, compact = compactControls, inlineStatus = landscape, onPrimary = { primaryAction() },
             onPreviousStage = { if (generation == player.generation && index > 0) { player.pause(generation); onStageChange(reading.plan.stages[index - 1].id) } },
             onNextStage = { nextStage() }, onTempo = { if (generation == player.generation) tempoOpen = true })
     }) { padding ->
@@ -241,7 +265,7 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
             if (meaning) ReaderMeaning(reading, missing, Modifier.weight(1f)) { if (generation == player.generation) onOpenSource(it) }
             else Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = RoundedCornerShape(24.dp),
                 modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = if (compact) 8.dp else 16.dp, vertical = 8.dp)) {
-                ReaderLyrics(reading, player, generation, original, compact, missing, { clarify() }, { nextStage() })
+                ReaderLyrics(reading, player, generation, original, compact, missing, presentation)
             }
         }
     }
@@ -311,89 +335,87 @@ private fun ReaderTrackHeader(reading: ActiveServicePlayback, compact: Boolean, 
 private fun PlaybackSpeed.label(): String = when (this) { PlaybackSpeed.SLOW -> "0,75×"; PlaybackSpeed.NORMAL -> "1×"; PlaybackSpeed.FAST -> "1,25×" }
 
 @Composable
-private fun ReaderFooter(reading: ActiveServicePlayback, player: ServicePlayerState, generation: Int, textVisible: Boolean, compact: Boolean,
+private fun ReaderFooter(reading: ActiveServicePlayback, player: ServicePlayerState, generation: Int,
+    presentation: ReaderPresentation, compact: Boolean, inlineStatus: Boolean, onPrimary: () -> Unit,
     onPreviousStage: () -> Unit, onNextStage: () -> Unit, onTempo: () -> Unit) {
     val index = reading.plan.stages.indexOf(reading.stage)
-    val hasNext = index < reading.plan.stages.lastIndex
-    val nextTitle = if (hasNext) reading.plan.stages[index + 1].shortTitle else "Закончить чтение"
-    val playable = reading.segment is PlaybackSegment.Text || reading.segment is PlaybackSegment.Wait
+    val next = reading.plan.stages.getOrNull(index + 1)
+    val text = presentation.kind == ReaderStateKind.TEXT
+    val timed = text || presentation.kind == ReaderStateKind.WAIT
+    val primaryTag = when (presentation.primaryAction) {
+        ReaderPrimaryAction.PLAY, ReaderPrimaryAction.PAUSE -> "play_lyrics"
+        ReaderPrimaryAction.BEGIN_LITURGY -> "start_liturgy"
+        ReaderPrimaryAction.RETURN_TO_TEXT -> "return_to_text"
+        ReaderPrimaryAction.CONTINUE_AFTER_MISSING -> "continue_missing_reading"
+        ReaderPrimaryAction.FINISH -> "finish_reading"
+    }
+    val nextLabel = next?.let { "Следующий этап: ${it.shortTitle}" } ?: "Закончить чтение"
+    val soundless = timed || presentation.kind == ReaderStateKind.BEFORE_START
     Surface(color = MaterialTheme.colorScheme.surfaceContainer, tonalElevation = 2.dp) {
         PlayerControlScale {
-            Column(Modifier.navigationBarsPadding().padding(horizontal = if (compact || textVisible) 8.dp else 16.dp, vertical = 4.dp)) {
-                if (textVisible && compact) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                    if (compact) IconButton(onClick = onPreviousStage, enabled = index > 0, modifier = Modifier.size(48.dp).testTag("previous_stage")) {
-                        Icon(Icons.Default.SkipPrevious, "Предыдущий этап")
-                    }
-                    IconButton(onClick = { reading.track?.let { track -> track.lines.getOrNull(reading.lineIndex - 1)?.let { player.seekLine(track.id, it.id, generation) } } }, enabled = reading.track != null && reading.lineIndex > 0,
-                        modifier = Modifier.size(48.dp).testTag("previous_line")) { Icon(Icons.Default.KeyboardArrowUp, "Предыдущая фраза", Modifier.size(28.dp)) }
-                    FilledTonalIconButton(onClick = { if (reading.state.isPlaying) player.pause(generation) else player.play(generation) }, enabled = playable,
-                        colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary),
-                        modifier = Modifier.size(if (compact) 48.dp else 56.dp).testTag("play_lyrics").semantics {
-                            stateDescription = if (reading.state.isPlaying) "Примерное движение включено" else "На паузе"
-                        }) {
-                        Icon(if (reading.state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            if (reading.state.isPlaying) "Остановить плеер" else "Включить плеер", Modifier.size(28.dp))
-                    }
-                    IconButton(onClick = { reading.track?.let { track -> track.lines.getOrNull(reading.lineIndex + 1)?.let { player.seekLine(track.id, it.id, generation) } } },
-                        enabled = reading.track?.let { reading.lineIndex < it.lines.lastIndex } == true, modifier = Modifier.size(48.dp).testTag("next_line")) {
-                        Icon(Icons.Default.KeyboardArrowDown, "Следующая фраза", Modifier.size(28.dp))
-                    }
-                    TextButton(onClick = onTempo, contentPadding = PaddingValues(horizontal = 4.dp),
-                        modifier = Modifier.widthIn(min = 48.dp).heightIn(min = 48.dp).testTag("scroll_options")) { Text(reading.state.speed.label(), style = MaterialTheme.typography.bodySmall) }
-                    if (compact) IconButton(onClick = onNextStage, modifier = Modifier.size(48.dp).testTag("next_stage")) {
-                        Icon(if (hasNext) Icons.Default.SkipNext else Icons.Default.Done, if (hasNext) "Следующий этап: $nextTitle" else nextTitle)
+            Column(Modifier.navigationBarsPadding().padding(horizontal = 8.dp, vertical = 4.dp)) {
+                if (!inlineStatus) Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(presentation.status, Modifier.weight(1f).testTag("reader_status"),
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (soundless) {
+                        Text("Без звука", Modifier.testTag("soundless_note"), style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
-                if (textVisible && !compact) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = { reading.track?.let { track -> track.lines.getOrNull(reading.lineIndex - 1)?.let { player.seekLine(track.id, it.id, generation) } } },
-                        enabled = reading.track != null && reading.lineIndex > 0, modifier = Modifier.size(48.dp).testTag("previous_line")) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    if (inlineStatus) Column(Modifier.weight(0.8f).padding(horizontal = 8.dp)) {
+                        Text(presentation.status, Modifier.testTag("reader_status"),
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (soundless) Text("Без звука", Modifier.testTag("soundless_note"),
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    if (text && !compact) IconButton(onClick = {
+                        reading.track?.let { track -> track.lines.getOrNull(reading.lineIndex - 1)?.let { player.seekLine(track.id, it.id, generation) } }
+                    }, enabled = reading.lineIndex > 0, modifier = Modifier.size(48.dp).testTag("previous_line")) {
                         Icon(Icons.Default.KeyboardArrowUp, "Предыдущая фраза", Modifier.size(28.dp))
                     }
-                    Button(onClick = { if (reading.state.isPlaying) player.pause(generation) else player.play(generation) }, enabled = playable,
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                        modifier = Modifier.weight(1f).widthIn(min = 144.dp).heightIn(min = 56.dp).testTag("play_lyrics").semantics {
-                            stateDescription = if (reading.state.isPlaying) "Примерное движение включено" else "На паузе"
-                        }) {
-                        Icon(if (reading.state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            if (reading.state.isPlaying) "Остановить плеер" else "Включить плеер", Modifier.size(28.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(when (reading.segment) {
-                                is PlaybackSegment.Text, is PlaybackSegment.Wait -> if (reading.state.isPlaying) "По расчету" else "На паузе"
-                                is PlaybackSegment.MissingReading -> "Нет текста"
-                                is PlaybackSegment.End -> "Завершено"
-                            }, Modifier.testTag("line_status"), style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp),
-                                fontWeight = FontWeight.Medium, maxLines = 1, softWrap = false)
-                            if (reading.segment !is PlaybackSegment.End) Text(when (reading.segment) {
-                                is PlaybackSegment.Text -> "Фраза ${reading.lineIndex + 1}/${reading.track?.lines?.size ?: 0}"
-                                is PlaybackSegment.Wait -> "Переходы"
-                                is PlaybackSegment.MissingReading -> "Пауза"
-                                is PlaybackSegment.End -> ""
-                            }, style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp), maxLines = 1, softWrap = false)
+                    key(generation) {
+                        Button(onClick = onPrimary, contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                            modifier = Modifier.weight(1f).heightIn(min = if (compact) 48.dp else 56.dp).testTag(primaryTag).semantics {
+                                contentDescription = presentation.primaryLabel
+                                stateDescription = presentation.status
+                            }) {
+                            Text(presentation.primaryLabel, Modifier.testTag("reader_primary_label"),
+                                style = MaterialTheme.typography.labelLarge)
                         }
                     }
-                    IconButton(onClick = { reading.track?.let { track -> track.lines.getOrNull(reading.lineIndex + 1)?.let { player.seekLine(track.id, it.id, generation) } } },
-                        enabled = reading.track?.let { reading.lineIndex < it.lines.lastIndex } == true,
+                    if (text) IconButton(onClick = {
+                        reading.track?.let { track -> track.lines.getOrNull(reading.lineIndex + 1)?.let { player.seekLine(track.id, it.id, generation) } }
+                    }, enabled = reading.track?.let { reading.lineIndex < it.lines.lastIndex } == true,
                         modifier = Modifier.size(48.dp).testTag("next_line")) {
                         Icon(Icons.Default.KeyboardArrowDown, "Следующая фраза", Modifier.size(28.dp))
                     }
-                    TextButton(onClick = onTempo, contentPadding = PaddingValues(horizontal = 4.dp),
-                        modifier = Modifier.width(48.dp).heightIn(min = 48.dp).testTag("scroll_options")) {
+                    if (timed) TextButton(onClick = onTempo, contentPadding = PaddingValues(horizontal = 4.dp),
+                        modifier = Modifier.width(48.dp).heightIn(min = 48.dp).testTag("scroll_options")
+                            .semantics { contentDescription = "Примерный темп: ${reading.state.speed.label()}" }) {
                         Text(reading.state.speed.label(), style = MaterialTheme.typography.bodySmall)
                     }
-                }
-                if (!compact || !textVisible) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onPreviousStage, enabled = index > 0, modifier = Modifier.size(48.dp).testTag("previous_stage")) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Предыдущий этап") }
-                    TextButton(onClick = onNextStage, modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("next_stage")) {
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            if (hasNext) Text("Следующий этап", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(nextTitle, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    if (timed && compact) IconButton(onClick = onNextStage,
+                        modifier = Modifier.size(48.dp).testTag("next_stage")) {
+                        Icon(if (next != null) Icons.Default.SkipNext else Icons.Default.Done, nextLabel)
+                    }
+                    if (presentation.kind == ReaderStateKind.BEFORE_START && reading.state.isPlaying) {
+                        TextButton(onClick = { player.pause(generation) }, Modifier.heightIn(min = 48.dp).testTag("before_start_pause")) {
+                            Text("Пауза")
                         }
+                    }
+                }
+                if (timed && !compact) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onPreviousStage, enabled = index > 0, modifier = Modifier.size(48.dp).testTag("previous_stage")) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Предыдущий этап")
+                    }
+                    if (text) Text("Фраза ${reading.lineIndex + 1}/${reading.track?.lines?.size ?: 0}",
+                        Modifier.padding(horizontal = 8.dp).testTag("line_status"), style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    TextButton(onClick = onNextStage, modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("next_stage")
+                        .semantics { contentDescription = nextLabel }) {
+                        Text(nextLabel, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
                         Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(20.dp))
                     }
                 }
@@ -404,7 +426,7 @@ private fun ReaderFooter(reading: ActiveServicePlayback, player: ServicePlayerSt
 
 @Composable
 private fun ReaderLyrics(reading: ActiveServicePlayback, player: ServicePlayerState, generation: Int, original: Boolean, compact: Boolean,
-    missing: Boolean, onClarify: () -> Unit, onNextStage: () -> Unit) {
+    missing: Boolean, presentation: ReaderPresentation) {
     val scroll = rememberLazyListState()
     val dragged by scroll.interactionSource.collectIsDraggedAsState()
     val track = reading.track
@@ -454,7 +476,7 @@ private fun ReaderLyrics(reading: ActiveServicePlayback, player: ServicePlayerSt
             }
         }
         item(key = "stage_continuation") {
-            if (block) ReaderStageProgress(reading, player, generation, onClarify, onNextStage)
+            if (block) ReaderStageProgress(reading, presentation)
             else Column(Modifier.padding(top = 12.dp, bottom = 48.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(if (track?.isExcerpt == true) "Конец фрагмента" else "Конец текста", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 val trackIndex = reading.tracks.indexOf(track)
@@ -467,36 +489,50 @@ private fun ReaderLyrics(reading: ActiveServicePlayback, player: ServicePlayerSt
 }
 
 @Composable
-private fun ReaderStageProgress(reading: ActiveServicePlayback, player: ServicePlayerState, generation: Int, onClarify: () -> Unit, onNextStage: () -> Unit) {
-    val missing = reading.segment is PlaybackSegment.MissingReading
-    val end = reading.segment is PlaybackSegment.End
+private fun ReaderStageProgress(reading: ActiveServicePlayback, presentation: ReaderPresentation) {
+    val kind = presentation.kind
+    val next = reading.plan.stages.getOrNull(reading.plan.stages.indexOf(reading.stage) + 1)
     Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = MaterialTheme.shapes.medium,
-        modifier = Modifier.fillMaxWidth().testTag(when { missing -> "missing_reading_barrier"; end -> "playback_end"; else -> "stage_wait" })) {
+        modifier = Modifier.fillMaxWidth().testTag(when (kind) {
+            ReaderStateKind.MISSING_READING -> "missing_reading_barrier"
+            ReaderStateKind.END -> "playback_end"
+            ReaderStateKind.BEFORE_START -> "before_start"
+            else -> "stage_wait"
+        })) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text(when { missing -> "Текста чтения пока нет"; end -> "Путеводитель завершен"; reading.track == null -> reading.stage.shortTitle; else -> "Дальше слушаем службу" }, style = MaterialTheme.typography.titleLarge)
-            if (missing) {
-                val date = reading.plan.serviceDate.format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru")))
-                Text("В приложении нет текста на $date. Плеер на паузе. Когда чтение в храме закончится, можно перейти дальше.")
-                Button(onClick = { player.continueAfterMissing(generation) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
-                    .testTag("continue_missing_reading")) { Text("Чтение в храме закончилось") }
+            Text(when (kind) {
+                ReaderStateKind.MISSING_READING -> "Текста чтения пока нет"
+                ReaderStateKind.END -> "Конец порядка в приложении"
+                ReaderStateKind.BEFORE_START -> "Ожидаем начало литургии"
+                else -> "Слушаем службу"
+            }, style = MaterialTheme.typography.titleLarge)
+            when (kind) {
+                ReaderStateKind.MISSING_READING -> {
+                    val date = reading.plan.serviceDate.format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru")))
+                    Text("В приложении нет текста на $date. Слушайте чтение в храме. Когда оно закончится, подтвердите переход.",
+                        style = MaterialTheme.typography.bodyLarge.readingParagraph())
+                }
+                ReaderStateKind.END -> Text("Это конец порядка в приложении. Ориентируйтесь на происходящее в храме.",
+                    style = MaterialTheme.typography.bodyLarge.readingParagraph())
+                ReaderStateKind.BEFORE_START -> {
+                    Text("До литургии в храме могут читать часы. Когда услышите начальный возглас, нажмите \"Литургия началась\".",
+                        style = MaterialTheme.typography.bodyLarge.readingParagraph())
+                    next?.cue?.let { cue ->
+                        Text("Как узнать начало", style = MaterialTheme.typography.titleMedium)
+                        Text(cue, Modifier.testTag("next_stage_cue"), style = MaterialTheme.typography.bodyLarge.readingParagraph())
+                    }
+                }
+                else -> {
+                    Text(if (next != null) "Доступный текст закончился, но этот этап в храме может продолжаться."
+                        else "Доступный текст закончился. Продолжайте слушать заключительные молитвы в храме.",
+                        style = MaterialTheme.typography.bodyLarge.readingParagraph())
+                    Text(reading.stage.description, style = MaterialTheme.typography.bodyLarge.readingParagraph())
+                    next?.let { stage ->
+                        Text("Далее: ${stage.shortTitle}", style = MaterialTheme.typography.titleMedium)
+                        stage.cue?.let { cue -> Text(cue, Modifier.testTag("next_stage_cue"), style = MaterialTheme.typography.bodyLarge.readingParagraph()) }
+                    }
+                }
             }
-            else if (end) Text("Это конец порядка в приложении. Ориентируйтесь на происходящее в храме.")
-            else {
-                if (reading.track != null) Text(
-                    if (reading.stage.id == reading.plan.stages.last().id)
-                        "Доступный фрагмент закончился. Продолжайте слушать заключительные молитвы в храме."
-                    else "Доступный фрагмент закончился. Переход к следующему этапу будет примерным.",
-                    style = MaterialTheme.typography.bodySmall.readingParagraph())
-                Text(reading.stage.description, style = MaterialTheme.typography.bodyLarge.readingParagraph())
-                Text(reading.stage.meaning, style = MaterialTheme.typography.bodyLarge.readingParagraph())
-            }
-            reading.stage.cue?.let {
-                Text("Как узнать этот момент", style = MaterialTheme.typography.titleMedium)
-                Text(it, style = MaterialTheme.typography.bodyLarge.readingParagraph())
-            }
-            if (!missing && !end && reading.stage.whatToDo.isNotBlank()) Text(reading.stage.whatToDo, style = MaterialTheme.typography.bodyLarge.readingParagraph())
-            if (!missing) OutlinedButton(onClick = onNextStage, modifier = Modifier.fillMaxWidth().testTag("wait_next_stage")) { Text(if (end) "Закончить чтение" else "Перейти дальше вручную") }
-            TextButton(onClick = onClarify, modifier = Modifier.fillMaxWidth()) { Text("Уточнить место по службе") }
         }
     }
 }

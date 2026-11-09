@@ -1,0 +1,44 @@
+{
+  "archive": "evidence.tar.gz",
+  "sha256": "be0695901828a93fdde6bc941491c9844e382ab94b4cb5898d8d31d6418866e5",
+  "bytes": 2635141,
+  "files": 440,
+  "roots": [
+    "s33-reader-state-r1",
+    "s33-reader-state-r2",
+    "s33-reader-native"
+  ],
+  "fixtureOrigin": "s32-current-plans",
+  "sourceDelta": {
+    "app/src/main/java/ru/liturgyguide/ui/ServiceScreen.kt": {
+      "r1": "448b791db8b272762d75aeb9fd502bb6dfe55e9b2a8b726310889327a509af26",
+      "r2Native": "9b208da3507f19990214c081aba29117651cd231a886a0d9b369546c11390504",
+      "scope": "Only key(generation) wrapper; reverse byte comparison passed"
+    }
+  },
+  "inputGroups": {
+    "r1": "c08c15f5cd7f40926a1dc1c2030371de77b0257cd54afdc94a2a77aa6133e587",
+    "r2": "bdabde66b7c6c6e1280d5e47e7dcec79c8d4e3733e1738c4adbc5153db0da0c6",
+    "native": "bdabde66b7c6c6e1280d5e47e7dcec79c8d4e3733e1738c4adbc5153db0da0c6"
+  },
+  "nativeGate": {
+    "schema": 1,
+    "run_id": "58f37391434e4d9f9c5a26a171cf9155",
+    "apk_sha256": "80d79d0eac6d72ff3e14f9d22b53fc7d7439ab7155143df1ffffc778d898d197",
+    "status": "PASS",
+    "required_cases": 6,
+    "passed_cases": 6,
+    "visual_reviews": [
+      "wait",
+      "missing",
+      "meaning",
+      "end",
+      "before",
+      "text"
+    ],
+    "limits": "Observed postconditions and stable accessibility trees only. Visual reviews are separate; not an automated accessibility PASS."
+  },
+  "excludedFiles": [],
+  "exclusionPolicy": "No APK or keystore bytes; APK identities remain in build/run receipts. Failed r1 has no successful APK receipt.",
+  "limits": "421 unit only r1; latest UI union 123 from r1/r2, not a full corrected-source rerun. Six native light/normal/paused layout fixtures, no automatic accessibility or release-wide visual verdict."
+}

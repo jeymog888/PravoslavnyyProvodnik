@@ -218,7 +218,8 @@ class ManualMomentFlowTest {
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Символ веры")
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
         compose.onNodeWithTag("lyric_line_12").assertIsSelected().assertIsDisplayed()
-        compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
+        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
         assertEquals(paused, savedPlayback())
         assertOtherBookmark()
     }
@@ -230,7 +231,8 @@ class ManualMomentFlowTest {
         resumeMeaning()
         compose.onNodeWithTag("player_text_tab").performClick()
         compose.onNodeWithTag("play_lyrics").performClick()
-        compose.onNodeWithContentDescription("Остановить плеер").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Пауза").assertIsDisplayed()
+        compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
         compose.runOnIdle { monotonic.addAndGet(1_234L) }
         clarify()
         val session = savedSession()
@@ -243,7 +245,8 @@ class ManualMomentFlowTest {
         back()
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
         compose.onNodeWithTag("lyric_line_$stoppedLine").assertIsSelected().assertIsDisplayed()
-        compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
+        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
         assertEquals(stopped, savedPlayback())
         assertEquals(session, savedSession())
         assertOtherBookmark()
@@ -379,7 +382,8 @@ class ManualMomentFlowTest {
         assertEquals(0L, session.elapsedInStageMillis)
         assertFalse(session.autoAdvance)
         assertFalse(session.anchorIsApproximate)
-        compose.onNodeWithContentDescription("Включить плеер").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
+        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
     }
     private class AdjustableClock(var current: Instant) : Clock() {
         override fun getZone(): ZoneId = ZoneOffset.UTC

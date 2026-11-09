@@ -1,0 +1,655 @@
+{
+  "uniqueScenarios": 123,
+  "latestResults": {
+    "ru.liturgyguide.ui.SavedReadingTest#legacyTrackBookmarksKeepTheirPhraseButDiscardTheOldTimerOffsets": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.SavedReadingTest#anOldSavedReadingIsLabelledPausedAndANewServiceClearsItsPositions": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.SavedReadingTest#aPresentCorruptSnapshotCannotSilentlyReimportLegacyBookmarks": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.SavedReadingTest#aLegacyFinishedTextRestoresItsLastPhrasePausedWithoutInventingNewElapsedTime": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#languageAndProgrammaticScrollKeepPlayingButMeaningAndUserDragPause": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#endStopsThePlayerAndFinishingClearsTheAcceptedReading": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#oldRunningSessionAndWallClockChangesCannotMoveTheUnifiedReader": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#shortenedDuplicateTitleKeepsBothTextsDiscoverableAndRestoresTheSelectedPhrase": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#missingDatedReadingsStopHugeTicksAndEachNeedsItsOwnManualContinuation": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#onePlayMovesThroughTextsAUsefulWaitAndTheNextStage": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#changingSpeedCapturesTheOldMultiplierWithoutMovingToAnotherPhrase": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#explicitRestartReplacesOnlyTheCorruptSnapshotEvenWhenContextAndMarkerAreIdentical": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#losingResumedStatePausesAndDoesNotConsumeTimeBeforeReturning": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#losingTopResumedPausesSynchronouslyEvenWhenLifecycleStaysResumed": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.UnifiedPlayerFlowTest#scriptureCannotMasqueradeAsOriginalAndThePreferredLanguageReturnsForPrayer": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ExplanationSourceFlowTest#aDifferentStageOrAddressAtRestorationCannotInheritTheOldExpandedSource": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ExplanationSourceFlowTest#recreationKeepsTheExpandedPublicationWithoutOpeningItOrChangingTheReading": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ExplanationSourceFlowTest#changingTheStageOrItsAddressResetsDisclosureAndMissingAddressHasNoAction": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ExplanationSourceFlowTest#disclosureIsLocalAndOpeningThePublicationPreservesThePausedReading": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#leavingFirstHomeEntryThenOpeningTheChurchTabDoesNotReturnHomeOnSelection": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#corruptModernMetadataNeverAssignsTheLegacyDefault": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#firstChoiceFromHomeSurvivesRecreationAndReturnsToTheExactService": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#firstVisitOpensThePickerDirectlyAndManualReadingKeepsNoParishAfterRestore": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#confirmingRecoveredLegacyParishPreservesTheReadingAndPersistsTheChoice": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#newTempleWithoutScheduleLeadsThroughPersonalTimeToTheExactService": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#aFailedChoiceKeepsThePickerOpenAndCanBeRetried": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#firstChoiceFromTheChurchTabStaysOnTheChurchPage": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#retryAfterDirectorySaveAndFailedSelectionReusesTheSameRecord": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.FirstVisitFlowTest#dismissingThePickerKeepsTheFirstHomeEntryUntilAChoiceSucceeds": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#restoredCorrectionKeepsTheValidatedContextAndFastSpeedOnExplicitAcceptance": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#restoredServiceAndBackFromItsChildrenNeverAcceptThePendingCandidate": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#changedWaitExplainsTheReturnOnlyAfterAcceptanceAndKeepsTheNoticeAcrossHomeAndTheme": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#aConfirmedChurchChangeClearsTheCandidateAndRejectsItsOldResumeCallback": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#previewUsesTheSnapshotAddressAndExplicitResumeRetriesWithoutLosingPreferences": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#aNewManualMomentUsesTodayAndNormalSpeedAndLateResumeCannotReplaceIt": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#anExhaustedOccurrenceKeepsItsOwnDateAndNormalSpeedInsteadOfTheCandidateTempo": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#failedCommitAndRollbackDoNotReportAcceptanceAndTheSameCandidateCanBeRetried": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#assetReaderPreservesDefaultInputsCacheFailuresAndExplicitStageRetry": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#missingOrCorruptHistoricalAssetsNeverFallBackToLegacyButCurrentValidStillWorks": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.Published05PlaybackIntegrationTest#choosingFromOrderKeepsTheValidatedContextAndSlowSpeedWithoutAMigrationNotice": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ExhaustedServiceEntryTest#staleCallbacksCannotReplaceTheDraftForANewerAcceptedService": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ExhaustedServiceEntryTest#aLandmarkAfterMidnightPreservesTheOccurrenceAndRetriesAnAtomicWrite": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ExhaustedServiceEntryTest#midnightDuringTheDraftDoesNotRebindItsDateAndBackDoesNotAccept": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ExhaustedServiceEntryTest#lostOrCorruptDraftsReturnSafelyFromManualArrivalAndBothScopedSearchOrigins": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ExhaustedServiceEntryTest#significantPublishedSecondsAreShownOnBothManualScreens": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ExhaustedServiceEntryTest#anEstimateThatBecomesExhaustedBeforeTheTapUsesTheFreshResolverResult": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ExhaustedServiceEntryTest#aSearchAfterMidnightRestoresAndFindsTheChosenDaysScripture": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ReaderStateFlowTest#anAlreadyRunningPreparationCanBeStoppedAndAFailedBeginningDoesNotLookAccepted": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ReaderStateFlowTest#finalWaitAndEndDoNotPromiseAnotherStageAndFinishNeedsAnExplicitAction": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ReaderStateFlowTest#meaningPausesTheActualOwnerAndReturnsToTheSameOriginalPhraseAndTempo": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ReaderStateFlowTest#capturedBeginningContinuationAndFinishCannotChangeAReplacementReading": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ReaderStateFlowTest#missingReadingRetainsItsDateAndBarrierAcrossMeaningAndARejectedWrite": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ReaderStateFlowTest#waitingExplainsTheNextCueAndItsOwnApproximateTransition": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ReaderStateFlowTest#beforeStartUsesAnObservedCueAndAnExplicitPausedBeginning": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ReaderStateFlowTest#textNamesItsSoundlessMovementAndPauseFreezesTheLivePosition": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#correctionSearchAcceptsTheMatchingPhraseAndPreservesOtherBookmarks": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#allFiveLandmarksWithoutAScheduleOpenTheExpectedTextAndPhraseAfterVerification": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#acceptingACorrectionOpensTextAtTheLandmarkAndPreservesOtherBookmarks": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#activePlayerPausesBeforeThePhraseBoundaryAndCorrectionNeverConsumesBackgroundTime": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#correctionCancelRestoresMeaningAndANonInitialPhraseAcrossAllThreeScreens": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#choosingAnotherLandmarkShowsItsNewCueBeforeConfirmation": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#savedReadingNoticeUsesCorrectionAndKeepsTheAcceptedPausedSnapshot": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#aFreshManualEntryResetsSearchListeningAndScrollButBackPreservesThem": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ManualMomentFlowTest#correctionStopsPhraseScrollingAndCancelKeepsThePausedPhrase": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.CompactReaderMatrixTest#epistleAt412DpRetainsTheRequestedClarifyScaleAndTheWholeTitle": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.CompactReaderMatrixTest#acceptingTheSameReadingRefreshesControlsWhileCapturedOldActionsStayInvalid": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.CompactReaderMatrixTest#readingDetailsUseTheAcceptedDateAndTheStageMaterializedByPause": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.CompactReaderMatrixTest#staleDetailsActionCannotPauseOrDescribeAReplacementReading": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.CompactReaderMatrixTest#nextStageUsesTheCurrentlyDisplayedStageAfterAutomaticMovement": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.CompactReaderMatrixTest#allEighteenPortraitStageNamesRemainWholeWithLargeTextAndAnApproximationNotice": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.CompactReaderMatrixTest#longTrackNamesWrapAndLanguageChangesKeepTheCanonicalPhraseAndFullScale": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.CompactReaderMatrixTest#allEighteenLandscapeNamesKeepFullAccessibleContextAndReadingSpace": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.CompactReaderMatrixTest#compactSavedReadingExposesItsDateWithoutPretendingToBeSynchronized": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#churchHasTodayAndTomorrowAndChangingItStartsAFreshContext": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#unifiedPlaybackHasNoSeparateStageTimerAndManualSeekPausesIt": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#startingANewServiceClearsPositionsButKeepsTheLanguagePreference": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#trackPhraseAndLanguageSurviveRecreationAndReturningHome": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#orderOpensAtDismissalWithLargestAppText": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#choosingManualReadingFromTempoOptionsStopsAnActiveScroll": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#searchingAfterFinishingDoesNotReusePositionsFromThePreviousService": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#readingCanAdvanceAndReturnWithoutLosingTheStage": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#selectedParishUsesItsLocalDateAndManualChoiceRemainsAvailable": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#onePlayerStartsDirectlyAndPausesWithoutASecondStageTimer": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#serviceOrderIsSeparateFromSearchAndOptionalListening": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#largeTextAndDarkModePersistAndNavigationRemainsUsable": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#explanationChangesWithTheSelectedText": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#landscapeWithLargestAppTextKeepsCurrentPhraseAndControlsVisible": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#findingAPrayerFromMeaningOpensItsTextAtTheMatchedPhrase": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#backgroundingAndRecreationKeepTheAcceptedPhrasePaused": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#spellingVariantsOpenTheSamePairedPhraseFromMainSearch": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#anUnknownPhraseCanBeClearedToRestoreTheGuide": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#showingAllStagesAfterUnknownWordsDismissesTheKeyboardAndFocus": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#meaningAndReadingPositionSurviveOrderHomeAndSettingsNavigation": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#choosingAnotherPhraseStopsAutomaticScrolling": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#switchingToMeaningPausesScrollingAndKeepsThePhrase": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#orderOpensAtTheBeginningFromThePlayer": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#orderOpensAtCreedAndManualBrowsingReturnsToTheCurrentPhrase": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#searchingForADailyReadingUsesTodaysTextAndKeepsItsNoteOptional": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#searchingForCreedOpensTheMatchingTextAndClosesTheKeyboard": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.GuideNavigationTest#heardWordsLeadToTheRelevantExplanation": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#aSingleTextRetainsItsFullTitleAndTheClarificationAction": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#scriptureAndAnEmptyTextStageKeepClarificationWithoutALanguageMenu": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#narrowScheduleKeepsBothDayLabelsOnOneLineAndSelectable": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#aTallNarrowScreenKeepsReadableActionsWithoutReducingThePrayerSize": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#landscapeKeepsTabsOnOneLineAndLeavesSpaceForTheRequestedPrayerSize": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#largeTextNavigationLeavesSpaceForChurchAndSettingsWithoutScalingTheirContent": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#aTallScreenAtTheHeaderWidthBoundaryKeepsItsReadingArea": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#narrowLargeTextKeepsNamesReadableAndCancellationPreservesThePhrase": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ReaderAccessibilityTest#ordinaryFooterKeepsSeparateTargetsAtTheNarrowWidthAndFastestSpeed": {
+      "run": "s33-reader-state-r2",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#foreignOrCorruptContextRestoredInServiceRequiresANewExplicitChoice": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#anInvalidLegacySessionCannotSupplyTheDateForAnOtherwiseValidBookmark": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#explicitlyStartingAgainUsesTodayInsteadOfThePreviouslyOpenedFutureDate": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#watchingRecalculatesTheStageAtTheClickAndOpensTextPaused": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#aPersonalStartOpensItsOwnEstimateAndIsRecordedAsPersonal": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#resumingALegacyBookmarkPinsItsOriginalAnchorDateWithoutClearingThePhrase": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#anExpiredClickDoesNotReplaceOrClearTheSavedReading": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#aNextServiceBecomesCurrentBetweenDisplayAndClickWithoutSwitchingOccurrence": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#restorationStraightIntoLegacyServicePinsTheAnchorDateBeforeAnyCorrection": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ArrivalFlowTest#tomorrowsReadingKeepsItsDateAcrossCorrectionMidnightAndRestoration": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ExpandedContentFlowTest#anaphoraSuppliesTheMissingSubjectAndExplanationsBesideBothLanguagePresentations": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ExpandedContentFlowTest#localOmissionsRemainAvailableInBothLanguagesWithoutBecomingReadingPositions": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ExpandedContentFlowTest#scriptureRetainsItsSeparateDayExplanationAndDoesNotAcquireAPrayerSpeaker": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    },
+    "ru.liturgyguide.ui.ExpandedContentFlowTest#thePublishedMixedDialogueHasTwoVoicesWhileOnlyTappingAPhraseChangesItsAddress": {
+      "run": "s33-reader-state-r1",
+      "status": "PASS",
+      "xml": "ui-results/TEST-Liturgy_API_35(AVD) - 15-_app-.xml"
+    }
+  },
+  "runs": {
+    "s33-reader-state-r1": {
+      "tests": 123,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    },
+    "s33-reader-state-r2": {
+      "tests": 37,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "originalFail": "ru.liturgyguide.ui.ReaderStateFlowTest#capturedBeginningContinuationAndFinishCannotChangeAReplacementReading",
+  "latestProvenance": {
+    "s33-reader-state-r1": 86,
+    "s33-reader-state-r2": 37
+  },
+  "unit": {
+    "run": "s33-reader-state-r1",
+    "totals": {
+      "tests": 421,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "r2": "NOT_RUN",
+    "limits": "421 unit executed on r1 before the sole key(generation) delta; not repeated on r2"
+  },
+  "environmentEvent": {
+    "tests": "NOT_RUN",
+    "artifact": "support/feoria-v06-reader-state-root-preflight.json"
+  },
+  "limits": "Latest union is not 123 tests repeated on r2. Native fixtures are layout evidence, not arrival, upgrade or acoustic tests."
+}
