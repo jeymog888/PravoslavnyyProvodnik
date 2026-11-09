@@ -59,7 +59,7 @@ class GuideNavigationTest {
         compose.onNodeWithTag("start_liturgy").assertContentDescriptionEquals("Литургия началась").performClick()
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Начало литургии")
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
-        compose.onNodeWithTag("lyric_line_0").assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(acceptedTrack(), 0).assertIsSelected().assertIsDisplayed()
         compose.onNodeWithTag("previous_stage").performClick()
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Подготовка к литургии")
     }
@@ -152,7 +152,7 @@ class GuideNavigationTest {
     fun orderOpensAtCreedAndManualBrowsingReturnsToTheCurrentPhrase() {
         openCreed()
         compose.onNodeWithTag("next_line").performClick()
-        compose.onNodeWithTag("lyric_line_1").assertIsSelected()
+        compose.onFeedLine(acceptedTrack(), 1).assertIsSelected()
         compose.onNodeWithTag("open_map").performClick()
         compose.onNodeWithTag("stage_search").assertDoesNotExist()
         // No scrolling before this assertion: the selected stage must be visible on entry.
@@ -173,12 +173,12 @@ class GuideNavigationTest {
         compose.onNodeWithTag("stage_creed").assertIsNotDisplayed()
         pressBack()
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Символ веры")
-        compose.onNodeWithTag("lyric_line_1").assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(acceptedTrack(), 1).assertIsSelected().assertIsDisplayed()
         // A fresh entry should show the current stage, not the saved list position at preparation.
         compose.onNodeWithTag("open_map").performClick()
         compose.onNodeWithTag("stage_creed").assertIsSelected().assertIsDisplayed()
         pressBack()
-        compose.onNodeWithTag("lyric_line_1").assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(acceptedTrack(), 1).assertIsSelected().assertIsDisplayed()
     }
 
     @Test
@@ -188,14 +188,14 @@ class GuideNavigationTest {
         compose.onNodeWithTag("next_line").performClick()
         selectOriginal()
         val expected = requireNotNull(tracksFor("creed")[1].lines[2].original)
-        compose.onNodeWithTag("lyric_line_2").assertIsSelected().assertTextEquals(expected)
+        compose.onFeedLine(acceptedTrack(), 2).assertIsSelected().assertTextEquals(expected)
         compose.activityRule.scenario.recreate()
-        compose.onNodeWithTag("lyric_line_2").assertIsSelected().assertTextEquals(expected)
+        compose.onFeedLine(acceptedTrack(), 2).assertIsSelected().assertTextEquals(expected)
         assertTrue(preferences.getBoolean("lyric_original", false))
         pressBack()
         tapMain("resume_guide")
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Символ веры")
-        compose.onNodeWithTag("lyric_line_2").assertIsSelected().assertTextEquals(expected)
+        compose.onFeedLine(acceptedTrack(), 2).assertIsSelected().assertTextEquals(expected)
         assertManualReading()
     }
 
@@ -257,7 +257,7 @@ class GuideNavigationTest {
         openCreed()
         startScrolling()
         compose.onNodeWithTag("next_line").performClick()
-        compose.onNodeWithTag("lyric_line_1").assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(acceptedTrack(), 1).assertIsSelected().assertIsDisplayed()
         assertManualReading()
     }
 
@@ -271,7 +271,7 @@ class GuideNavigationTest {
         compose.onNodeWithTag("reader_status").assertTextEquals("Пояснение · на паузе")
         compose.onNodeWithTag("return_to_text").assertIsDisplayed().performClick()
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
-        compose.onNodeWithTag("lyric_line_1").assertIsSelected()
+        compose.onFeedLine(acceptedTrack(), 1).assertIsSelected()
         assertManualReading()
     }
 
@@ -302,7 +302,7 @@ class GuideNavigationTest {
         assertTrue(pausedLine >= 0)
         compose.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
         compose.activityRule.scenario.recreate()
-        compose.onNodeWithTag("lyric_line_$pausedLine").assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(acceptedTrack(), pausedLine).assertIsSelected().assertIsDisplayed()
         assertManualReading()
         assertEquals(paused, StoredServicePlaybackCodec.decode(preferences.getString(ServicePlaybackStore.PLAYBACK_KEY, null)))
     }
@@ -320,7 +320,7 @@ class GuideNavigationTest {
         compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_creed"))
         compose.onNodeWithTag("stage_creed").performClick()
         chooseTrack(1)
-        compose.onNodeWithTag("lyric_line_0").assertIsSelected()
+        compose.onFeedLine(acceptedTrack(), 0).assertIsSelected()
             .assertTextEquals(requireNotNull(tracksFor("creed")[1].lines[0].original))
         assertTrue(preferences.getBoolean("lyric_original", false))
     }
@@ -337,7 +337,7 @@ class GuideNavigationTest {
         compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
         assertFalse(savedSession().autoAdvance)
         compose.onNodeWithTag("next_line").performClick()
-        compose.onNodeWithTag("lyric_line_1").assertIsSelected()
+        compose.onFeedLine(acceptedTrack(), 1).assertIsSelected()
         assertManualReading()
     }
 
@@ -372,10 +372,10 @@ class GuideNavigationTest {
             compose.waitForIdle()
             compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Символ веры").assertIsDisplayed()
             compose.onNodeWithTag("clarify_moment").assertIsDisplayed()
-            compose.onNodeWithTag("lyric_line_0").assertIsSelected().assertIsDisplayed()
+            compose.onFeedLine(acceptedTrack(), 0).assertIsSelected().assertIsDisplayed()
             assertWholePhraseVisible(0)
             compose.onNodeWithTag("next_line").assertIsDisplayed().performClick()
-            compose.onNodeWithTag("lyric_line_1").assertIsSelected().assertIsDisplayed()
+            compose.onFeedLine(acceptedTrack(), 1).assertIsSelected().assertIsDisplayed()
             assertWholePhraseVisible(1)
             compose.onNodeWithTag("previous_line").assertDoesNotExist()
             compose.onNodeWithTag("next_line").assertIsDisplayed()
@@ -417,18 +417,18 @@ class GuideNavigationTest {
                 } else {
                     compose.onNodeWithTag("current_track_title", useUnmergedTree = true).assertTextEquals(track.title)
                 }
-                compose.onNodeWithTag("lyric_line_${expected.lineIndex}")
+                compose.onFeedLine(acceptedTrack(), expected.lineIndex)
                     .assertIsSelected().assertIsDisplayed().assertTextEquals(expected.russian)
                 assertEquals(track.id, preferences.getString("lyric_track_${expected.stageId}", null))
                 assertEquals(track.lines[expected.lineIndex].id, preferences.getString("lyric_phrase_${track.id}", null))
                 assertManualReading()
 
                 selectOriginal()
-                compose.onNodeWithTag("lyric_line_${expected.lineIndex}")
+                compose.onFeedLine(acceptedTrack(), expected.lineIndex)
                     .assertIsSelected().assertIsDisplayed().assertTextEquals(expected.original)
                 if (expected.stageId == "creed") captureQaScreenshot("s2-search-creed-original")
                 compose.onNodeWithTag("player_text_tab").performClick()
-                compose.onNodeWithTag("lyric_line_${expected.lineIndex}")
+                compose.onFeedLine(acceptedTrack(), expected.lineIndex)
                     .assertIsSelected().assertIsDisplayed().assertTextEquals(expected.russian)
                 if (expected.stageId == "creed") captureQaScreenshot("s2-search-creed-russian")
                 pressBack()
@@ -448,7 +448,7 @@ class GuideNavigationTest {
         compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_creed"))
         compose.onNodeWithTag("stage_creed").performClick()
         compose.onNodeWithTag("choose_track").assertContentDescriptionEquals("Выбрать текст: Символ веры")
-        compose.onNodeWithTag("lyric_line_0").assertIsSelected().assertTextContains("Верю", substring = true)
+        compose.onFeedLine(acceptedTrack(), 0).assertIsSelected().assertTextContains("Верю", substring = true)
         compose.onNodeWithTag("play_lyrics").assertIsDisplayed()
         compose.waitUntil(timeoutMillis = 10_000) {
             var hidden = false
@@ -538,14 +538,14 @@ class GuideNavigationTest {
         tapMain("resume_guide")
         compose.onNodeWithTag("player_meaning_tab").assertIsSelected()
         compose.onNodeWithTag("player_text_tab").performClick()
-        compose.onNodeWithTag("lyric_line_1").assertIsSelected()
+        compose.onFeedLine(acceptedTrack(), 1).assertIsSelected()
         compose.onNodeWithTag("player_menu").performClick()
         compose.onNodeWithText("Размер текста и настройки").performClick()
         compose.onNodeWithTag("settings_content").performScrollToNode(hasTestTag("text_size_1"))
         compose.onNodeWithTag("text_size_1").performClick()
         pressBack()
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
-        compose.onNodeWithTag("lyric_line_1").assertIsSelected()
+        compose.onFeedLine(acceptedTrack(), 1).assertIsSelected()
     }
 
     @Test
@@ -562,7 +562,7 @@ class GuideNavigationTest {
         compose.onNodeWithTag("stage_creed").performClick()
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
         compose.onNodeWithTag("choose_track").assertContentDescriptionEquals("Выбрать текст: Символ веры")
-        compose.onNodeWithTag("lyric_line_0").assertIsSelected()
+        compose.onFeedLine(acceptedTrack(), 0).assertIsSelected()
     }
 
     @Test
@@ -580,7 +580,7 @@ class GuideNavigationTest {
         compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_creed"))
         compose.onNodeWithTag("stage_creed").performClick()
         chooseTrack(1)
-        compose.onNodeWithTag("lyric_line_0").assertIsSelected()
+        compose.onFeedLine(acceptedTrack(), 0).assertIsSelected()
     }
 
     private fun tapMain(tag: String) {
@@ -629,7 +629,7 @@ class GuideNavigationTest {
     }
 
     private fun assertWholePhraseVisible(index: Int) {
-        val phrase = compose.onNodeWithTag("lyric_line_$index")
+        val phrase = compose.onFeedLine(acceptedTrack(), index)
         val visible = phrase.getBoundsInRoot()
         val full = phrase.getUnclippedBoundsInRoot()
         assertTrue("Current phrase is vertically clipped: visible=$visible, full=$full",
@@ -651,6 +651,9 @@ class GuideNavigationTest {
     private fun tracksFor(stageId: String) = PrayerTrackFactory.build(requireNotNull(
         (compose.activity.application as LiturgyGuideApplication).container.getStageMatcherResult().getOrThrow().getStageById(stageId)
     ), null)
+
+    private fun acceptedTrack() = (compose.activity.application as LiturgyGuideApplication).container.recordedFeedTrack(
+        requireNotNull(StoredServicePlaybackCodec.decode(preferences.getString(ServicePlaybackStore.PLAYBACK_KEY, null))))
 
     private fun savedSession(): ServiceSession = requireNotNull(
         Gson().fromJson(preferences.getString("session", null), ServiceSession::class.java)

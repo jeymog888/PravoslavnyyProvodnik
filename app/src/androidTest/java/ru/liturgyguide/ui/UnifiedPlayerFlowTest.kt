@@ -80,7 +80,7 @@ class UnifiedPlayerFlowTest {
         // The first audible dialogue now precedes the preserved "Горе имеим" track.
         advanceBy(22_500) { currentText()?.trackId == tracks[1].id }
         compose.onNodeWithTag("current_track_title", useUnmergedTree = true).assertTextEquals(tracks[1].title)
-        compose.onNodeWithTag("lyric_line_0").assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(container.recordedFeedTrack(saved()), 0).assertIsSelected().assertIsDisplayed()
         compose.onNodeWithContentDescription("Пауза").assertIsDisplayed()
         compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
         advanceBy(85_000) { segment() is PlaybackSegment.Wait }
@@ -94,7 +94,7 @@ class UnifiedPlayerFlowTest {
         advanceBy(612_500) { marker().anchorStageId == "theotokos" }
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true)
             .assertTextEquals(requireNotNull(container.getStageMatcher().getStageById("theotokos")).name)
-        compose.onNodeWithTag("lyric_line_0").assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(container.recordedFeedTrack(saved()), 0).assertIsSelected().assertIsDisplayed()
         compose.onNodeWithContentDescription("Пауза").assertIsDisplayed()
         compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
         assertFalse(marker().autoAdvance)
@@ -171,7 +171,7 @@ class UnifiedPlayerFlowTest {
         assertEquals(7_008L, saved().snapshot.elapsedQuarterMillis)
         assertEquals(PlaybackSpeed.FAST, saved().snapshot.speed)
         compose.onNodeWithTag("scroll_options").assertTextContains("1,25×")
-        compose.onNodeWithTag("lyric_line_12").assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(container.recordedFeedTrack(saved()), 12).assertIsSelected().assertIsDisplayed()
         assertPaused()
     }
 
@@ -186,7 +186,7 @@ class UnifiedPlayerFlowTest {
         monotonic.addAndGet(86_400_000)
         compose.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
         compose.waitForIdle()
-        compose.onNodeWithTag("lyric_line_12").assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(container.recordedFeedTrack(saved()), 12).assertIsSelected().assertIsDisplayed()
         assertPaused()
         assertEquals(stopped, saved())
         // An explicit new Play starts from the pause, not from the pre-background monotonic anchor.
@@ -216,7 +216,7 @@ class UnifiedPlayerFlowTest {
             assertEquals(stopped, saved())
         }
         compose.waitForIdle()
-        compose.onNodeWithTag("lyric_line_12").assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(container.recordedFeedTrack(saved()), 12).assertIsSelected().assertIsDisplayed()
         assertPaused()
         assertEquals(stopped, saved())
         play()
@@ -233,11 +233,11 @@ class UnifiedPlayerFlowTest {
         play()
         val track = tracks("creed")[1]
         advanceBy(4_000) { currentText()?.lineId == track.lines[1].id }
-        compose.onNodeWithTag("lyric_line_1").assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(container.recordedFeedTrack(saved()), 1).assertIsSelected().assertIsDisplayed()
         compose.onNodeWithContentDescription("Пауза").assertIsDisplayed()
         compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
         compose.onNodeWithTag("player_text_tab").performClick().assertIsSelected()
-        compose.onNodeWithTag("lyric_line_1").assertTextEquals(track.lines[1].russian).assertIsSelected()
+        compose.onFeedLine(container.recordedFeedTrack(saved()), 1).assertTextEquals(track.lines[1].russian).assertIsSelected()
         compose.onNodeWithContentDescription("Пауза").assertIsDisplayed()
         compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
         compose.onNodeWithTag("player_meaning_tab").performClick().assertIsSelected()
@@ -248,7 +248,7 @@ class UnifiedPlayerFlowTest {
         val stopped = saved()
         compose.runOnIdle { monotonic.addAndGet(600_000) }
         compose.onNodeWithTag("player_original_tab").performClick().assertIsSelected()
-        compose.onNodeWithTag("lyric_line_1").assertTextEquals(requireNotNull(track.lines[1].original)).assertIsSelected()
+        compose.onFeedLine(container.recordedFeedTrack(saved()), 1).assertTextEquals(requireNotNull(track.lines[1].original)).assertIsSelected()
         assertPaused()
         assertEquals(stopped, saved())
         play()
@@ -274,12 +274,12 @@ class UnifiedPlayerFlowTest {
         assertEquals(before, saved())
         compose.onNodeWithTag("track_0").performClick()
         compose.onNodeWithTag("current_track_title", useUnmergedTree = true).assertTextEquals("Возлюбим друг друга")
-        compose.onNodeWithTag("lyric_line_0").assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(container.recordedFeedTrack(saved()), 0).assertIsSelected().assertIsDisplayed()
         compose.onNodeWithTag("choose_track").assertContentDescriptionEquals("Выбрать текст: Возлюбим друг друга")
             .performClick()
         compose.onNodeWithTag("track_0").assertIsSelected()
         compose.onNodeWithTag("track_1").assertIsNotSelected().performClick()
-        compose.onNodeWithTag("lyric_line_12").assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(container.recordedFeedTrack(saved()), 12).assertIsSelected().assertIsDisplayed()
         assertEquals(before, saved())
         assertPaused()
     }
@@ -290,15 +290,20 @@ class UnifiedPlayerFlowTest {
         compose.onNodeWithTag("player_original_tab").performClick().assertIsSelected()
         compose.onNodeWithTag("choose_track").performClick()
         compose.onNodeWithTag("track_1").performClick()
-        compose.onNodeWithTag("player_original_tab").assertIsNotEnabled()
-        compose.onNodeWithTag("player_text_tab").assertIsSelected()
-        compose.onNodeWithTag("original_unavailable").assertExists()
+        compose.onNodeWithTag("player_original_tab").assertIsEnabled().assertIsSelected()
+        compose.onNodeWithTag("player_text_tab").assertIsNotSelected()
+        compose.onNodeWithTag("current_track_title", useUnmergedTree = true)
+            .assertTextEquals("По-русски · ${tracks("gospel")[1].title}")
+        compose.onNodeWithTag("lyrics_list").performScrollToNode(hasTestTag(feedLanguageTag(tracks("gospel")[1])))
+        compose.onNodeWithTag(feedLanguageTag(tracks("gospel")[1])).performScrollTo()
+            .assertTextEquals("${tracks("gospel")[1].subtitle}. Церковнославянский текст пока не добавлен")
         assertTrue(preferences.getBoolean("lyric_original", false))
-        compose.onNodeWithTag("lyric_line_0").assertTextEquals(tracks("gospel")[1].lines[0].russian).assertIsSelected()
+        compose.onNodeWithTag("lyrics_list").performScrollToNode(hasTestTag(feedLineTag(tracks("gospel")[1].lines[0])))
+        compose.onFeedLine(tracks("gospel")[1], 0).performScrollTo().assertTextEquals(tracks("gospel")[1].lines[0].russian).assertIsSelected()
         compose.onNodeWithTag("choose_track").performClick()
         compose.onNodeWithTag("track_0").performClick()
         compose.onNodeWithTag("player_original_tab").assertIsEnabled().assertIsSelected()
-        compose.onNodeWithTag("lyric_line_0").assertTextEquals(requireNotNull(tracks("gospel")[0].lines[0].original))
+        compose.onFeedLine(container.recordedFeedTrack(saved()), 0).assertTextEquals(requireNotNull(tracks("gospel")[0].lines[0].original))
         assertPaused()
     }
 
@@ -306,7 +311,7 @@ class UnifiedPlayerFlowTest {
     fun oldRunningSessionAndWallClockChangesCannotMoveTheUnifiedReader() {
         launch("creed", trackIndex = 1, legacyAutoAdvance = true)
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Символ веры")
-        compose.onNodeWithTag("lyric_line_0").assertIsSelected()
+        compose.onFeedLine(container.recordedFeedTrack(saved()), 0).assertIsSelected()
         assertFalse(marker().autoAdvance)
         play()
         val before = saved()
@@ -317,12 +322,12 @@ class UnifiedPlayerFlowTest {
             compose.onNodeWithTag("player_text_tab").performClick()
         }
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Символ веры")
-        compose.onNodeWithTag("lyric_line_0").assertIsSelected()
+        compose.onFeedLine(container.recordedFeedTrack(saved()), 0).assertIsSelected()
         compose.onNodeWithContentDescription("Пауза").assertIsDisplayed()
         compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
         assertEquals(before, saved())
         advanceBy(4_000) { currentText()?.lineId == tracks("creed")[1].lines[1].id }
-        compose.onNodeWithTag("lyric_line_1").assertIsSelected()
+        compose.onFeedLine(container.recordedFeedTrack(saved()), 1).assertIsSelected()
         assertFalse(marker().autoAdvance)
     }
 

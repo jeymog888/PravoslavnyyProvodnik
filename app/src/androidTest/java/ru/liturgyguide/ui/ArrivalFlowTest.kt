@@ -49,7 +49,7 @@ class ArrivalFlowTest {
         assertEquals(ReadingContextSource.PUBLISHED, savedContext().source)
         assertOldPositionsCleared()
         assertGlobals()
-        compose.onNodeWithTag("lyric_line_0").assertIsSelected()
+        compose.onFeedLine(container.recordedFeedTrack(savedPlayback()), 0).assertIsSelected()
         compose.onNodeWithContentDescription("Двигать текст").assertExists()
         compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
     }
@@ -141,7 +141,7 @@ class ArrivalFlowTest {
         // The 0.4 bookmark has no context; its saved anchor was 7 November in the parish timezone.
         assertEquals("2026-11-07", savedContext().serviceDate)
         assertEquals(ReadingContextSource.MANUAL, savedContext().source)
-        compose.onNodeWithTag("lyric_line_3").assertIsSelected()
+        compose.onFeedLine(container.recordedFeedTrack(savedPlayback()), 3).assertIsSelected()
         assertGlobals()
     }
 

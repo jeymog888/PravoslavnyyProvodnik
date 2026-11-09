@@ -80,7 +80,7 @@ class ManualMomentFlowTest {
             } else {
                 compose.onNodeWithTag("current_track_title", useUnmergedTree = true).assertTextEquals(expectedTrack.title)
             }
-            compose.onNodeWithTag("lyric_line_0").assertIsSelected().assertIsDisplayed().assertTextEquals(expectedTrack.lines[0].russian)
+            compose.onFeedLine(expectedTrack, 0).assertIsSelected().assertIsDisplayed().assertTextEquals(expectedTrack.lines[0].russian)
             assertEquals(expectedTrack.id, preferences.getString("lyric_track_$stageId", null))
             assertEquals(expectedTrack.lines[0].id, preferences.getString("lyric_phrase_${expectedTrack.id}", null))
             assertFalse(preferences.contains("lyric_phrase_old_track"))
@@ -150,7 +150,7 @@ class ManualMomentFlowTest {
         compose.onNodeWithTag("player_meaning_tab").assertIsSelected()
         assertEquals(before, preferences.all)
         compose.onNodeWithTag("player_text_tab").performClick()
-        compose.onNodeWithTag("lyric_line_12").assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(creed, 12).assertIsSelected().assertIsDisplayed()
         assertOtherBookmark()
     }
 
@@ -164,7 +164,7 @@ class ManualMomentFlowTest {
         accept()
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
         compose.onNodeWithTag("choose_track").assertContentDescriptionEquals("Выбрать текст: Символ веры")
-        compose.onNodeWithTag("lyric_line_0").assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(creed, 0).assertIsSelected().assertIsDisplayed()
         assertEquals(creed.id, preferences.getString("lyric_track_creed", null))
         assertEquals(creed.lines[0].id, preferences.getString("lyric_phrase_${creed.id}", null))
         assertEquals(0L, preferences.getLong("lyric_offset_${creed.id}", -1L))
@@ -182,7 +182,7 @@ class ManualMomentFlowTest {
         typeSearch("духа святого животворящаго")
         compose.onNodeWithTag("stage_creed").assertIsNotSelected().performClick()
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
-        compose.onNodeWithTag("lyric_line_12").assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(creed, 12).assertIsSelected().assertIsDisplayed()
         assertEquals(creed.lines[12].id, preferences.getString("lyric_phrase_${creed.id}", null))
         assertEquals(0L, preferences.getLong("lyric_offset_${creed.id}", -1L))
         assertManualSession("creed")
@@ -217,7 +217,7 @@ class ManualMomentFlowTest {
         back()
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Символ веры")
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
-        compose.onNodeWithTag("lyric_line_12").assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(creed, 12).assertIsSelected().assertIsDisplayed()
         compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
         compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
         assertEquals(paused, savedPlayback())
@@ -244,7 +244,7 @@ class ManualMomentFlowTest {
         back()
         back()
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
-        compose.onNodeWithTag("lyric_line_$stoppedLine").assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(creed, stoppedLine).assertIsSelected().assertIsDisplayed()
         compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
         compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
         assertEquals(stopped, savedPlayback())
@@ -275,7 +275,7 @@ class ManualMomentFlowTest {
         back()
         compose.onNodeWithTag("player_meaning_tab").assertIsSelected()
         compose.onNodeWithTag("player_text_tab").performClick()
-        compose.onNodeWithTag("lyric_line_12").assertIsSelected()
+        compose.onFeedLine(creed, 12).assertIsSelected()
         assertEquals(normalized, savedSession())
         assertEquals(accepted, savedPlayback())
         assertOtherBookmark()
@@ -333,7 +333,7 @@ class ManualMomentFlowTest {
     private fun resumeMeaning() {
         compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("resume_guide"))
         compose.onNodeWithTag("resume_guide").performClick()
-        compose.onNodeWithTag("lyric_line_12").assertIsSelected()
+        compose.onFeedLine(creed, 12).assertIsSelected()
         compose.onNodeWithTag("player_meaning_tab").performClick()
     }
 

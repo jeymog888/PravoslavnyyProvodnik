@@ -2,9 +2,10 @@ package ru.liturgyguide.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -19,7 +20,15 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -33,11 +42,81 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.job
 import ru.liturgyguide.service.*
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 private data class OpenReadingDetails(val reading: ActiveServicePlayback, val restored: Boolean)
+
+private data class ReaderFeedOwner(val generation: Int, val fingerprint: String, val stageId: String) {
+    fun matches(player: ServicePlayerState): Boolean = player.generation == generation &&
+        player.reading?.let { it.plan.fingerprint == fingerprint && it.stage.id == stageId } == true
+}
+
+private data class ReaderLanguageAnchor(val request: Int, val key: String, val original: Boolean)
+
+/** Transient viewport intent only. The accepted position belongs exclusively to the player. */
+@Stable
+private class ReaderViewport(val owner: ReaderFeedOwner) {
+    val scroll = LazyListState()
+    var manual by mutableStateOf(false)
+        private set
+    var focusRequest by mutableIntStateOf(0)
+        private set
+    var initiallyFocused by mutableStateOf(false)
+    var focusing by mutableStateOf(false)
+    var bounds by mutableStateOf<Rect?>(null)
+    var phraseBounds by mutableStateOf<Pair<String, Rect>?>(null)
+    var focusJob: Job? = null
+    var languageAnchor by mutableStateOf<ReaderLanguageAnchor?>(null)
+        private set
+    var languageJob: Job? = null
+    private var languageRequest = 0
+
+    fun cancelLanguageAnchor() {
+        languageAnchor = null
+        languageJob?.cancel()
+    }
+
+    fun preserveLanguageAnchor(original: Boolean) {
+        cancelLanguageAnchor()
+        if (!manual) return
+        val key = scroll.layoutInfo.visibleItemsInfo
+            .firstOrNull { it.index == scroll.firstVisibleItemIndex }?.key as? String ?: return
+        languageAnchor = ReaderLanguageAnchor(++languageRequest, key, original)
+    }
+
+    fun finishLanguageAnchor(request: ReaderLanguageAnchor) {
+        if (languageAnchor == request) languageAnchor = null
+    }
+
+    fun browse() {
+        cancelLanguageAnchor()
+        manual = true
+        // A user may interrupt the first animated focus after the list has been laid out.
+        // They must still be able to return when that interrupted focus never completes.
+        if (bounds != null) initiallyFocused = true
+        focusJob?.cancel()
+    }
+
+    fun requestFocus() {
+        cancelLanguageAnchor()
+        focusJob?.cancel()
+        manual = false
+        focusRequest++
+    }
+
+    fun canReturn(text: PlaybackSegment.Text?): Boolean {
+        if (text == null || !initiallyFocused || focusing) return false
+        val viewport = bounds ?: return false
+        if (scroll.layoutInfo.visibleItemsInfo.none { it.key == "line:${text.lineId}" }) return true
+        val phrase = phraseBounds?.takeIf { it.first == text.lineId }?.second ?: return false
+        return !readerTextIntersectsViewport(phrase.top, phrase.bottom, viewport.top, viewport.bottom)
+    }
+}
 
 private fun PlaybackMigrationNote.message(): String = when (this) {
     PlaybackMigrationNote.EXPANDED_STAGE_LAST_PHRASE ->
@@ -70,12 +149,28 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
     var tracksOpen by remember { mutableStateOf(false) }
     var tempoOpen by remember { mutableStateOf(false) }
     var details by remember(generation) { mutableStateOf<OpenReadingDetails?>(null) }
-    val supportsOriginal = reading.track?.lines?.any { it.original != null } == true
+    val owner = ReaderFeedOwner(generation, reading.plan.fingerprint, reading.stage.id)
+    val viewport = remember(owner) { ReaderViewport(owner) }
+    val feed = remember(owner) { ReaderFeed(reading.stage.id, reading.tracks) }
+    val supportsOriginal = feed.supportsOriginal
     val original = preferredOriginal && supportsOriginal
     val selectedTab = if (meaning) 2 else if (original) 0 else 1
     val index = reading.plan.stages.indexOf(reading.stage)
     val missing = reading.stage.id in setOf("epistle", "gospel") && reading.tracks.none { it.isScripture }
     val presentation = readerPresentation(reading, meaning)
+    val actualText = reading.segment as? PlaybackSegment.Text
+    val showReturn by remember(viewport, actualText, meaning) {
+        derivedStateOf { !meaning && viewport.canReturn(actualText) }
+    }
+    fun seekLine(line: ReaderFeedItem.Line) {
+        if (!owner.matches(player)) return
+        // A failed write must not let pause's boundary focus pretend this choice succeeded.
+        viewport.browse()
+        if (player.seekLine(line.trackId, line.line.id, generation) && owner.matches(player)) viewport.requestFocus()
+    }
+    fun returnToPhrase() {
+        if (owner.matches(player) && player.reading?.segment is PlaybackSegment.Text) viewport.requestFocus()
+    }
     // A restored explanation must never consume hidden playback time. The status reflects
     // the real player until this pause has been applied, rather than assuming it is paused.
     LaunchedEffect(generation, meaning, reading.state.isPlaying) {
@@ -84,7 +179,13 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
     fun selectTab(value: Int) {
         if (generation != player.generation) return
         if (value == 2) { player.pause(generation); meaning = true }
-        else { meaning = false; onOriginalChange(value == 0) }
+        else {
+            if (meaning) viewport.requestFocus()
+            else if (original != (value == 0)) viewport.preserveLanguageAnchor(value == 0)
+            else viewport.cancelLanguageAnchor()
+            meaning = false
+            onOriginalChange(value == 0)
+        }
     }
     fun clarify() { if (generation == player.generation) onFindStage() }
     fun openTracks() { if (generation == player.generation) { player.pause(generation); tracksOpen = true } }
@@ -103,12 +204,18 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
     fun primaryAction() {
         if (generation != player.generation) return
         when (presentation.primaryAction) {
-            ReaderPrimaryAction.PLAY -> player.play(generation)
+            ReaderPrimaryAction.PLAY -> {
+                viewport.cancelLanguageAnchor()
+                if (player.play(generation) && owner.matches(player)) viewport.requestFocus()
+            }
             ReaderPrimaryAction.PAUSE -> player.pause(generation)
             ReaderPrimaryAction.BEGIN_LITURGY -> nextStage()
             ReaderPrimaryAction.RETURN_TO_TEXT -> {
                 player.pause(generation)
-                if (generation == player.generation) meaning = false
+                if (generation == player.generation) {
+                    meaning = false
+                    if (owner.matches(player)) viewport.requestFocus()
+                }
             }
             ReaderPrimaryAction.CONTINUE_AFTER_MISSING -> player.continueAfterMissing(generation)
             ReaderPrimaryAction.FINISH -> {
@@ -157,7 +264,15 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
                 ListItem(headlineContent = { Text(track.title) }, supportingContent = {
                     Text(if (track.isScripture) track.subtitle else if (track.isExcerpt) "Фрагмент молитвы" else "Полный текст")
                 }, trailingContent = { if (track.id == reading.track?.id) Icon(Icons.Default.Check, "Выбранный текст") },
-                    modifier = Modifier.clickable { if (player.selectTrack(track.id, generation)) tracksOpen = false }.testTag("track_$i")
+                    modifier = Modifier.clickable {
+                        if (owner.matches(player)) {
+                            viewport.browse()
+                            if (player.selectTrack(track.id, generation)) {
+                                tracksOpen = false
+                                if (owner.matches(player)) viewport.requestFocus()
+                            }
+                        }
+                    }.testTag("track_$i")
                         .semantics { selected = track.id == reading.track?.id })
             }
         }
@@ -235,13 +350,13 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
             PlayerControlScale {
                 if (landscape) Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     ReaderModes(selectedTab, supportsOriginal, { value -> selectTab(value) }, Modifier.width(300.dp))
-                    if (reading.track != null) ReaderTrackHeader(reading, true, { openTracks() }, Modifier.weight(1f))
+                    if (reading.track != null) ReaderTrackHeader(reading, original, true, { openTracks() }, Modifier.weight(1f))
                     else Spacer(Modifier.weight(1f))
                     CompositionLocalProvider(LocalDensity provides clarifyDensity) { ReaderClarifyButton({ clarify() }) }
                 } else {
                     ReaderModes(selectedTab, supportsOriginal, { value -> selectTab(value) }, Modifier.fillMaxWidth().padding(horizontal = 16.dp))
                     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        if (reading.track != null) ReaderTrackHeader(reading, compactControls, { openTracks() }, Modifier.weight(1f))
+                        if (reading.track != null) ReaderTrackHeader(reading, original, compactControls, { openTracks() }, Modifier.weight(1f))
                         else Spacer(Modifier.weight(1f))
                         CompositionLocalProvider(LocalDensity provides clarifyDensity) { ReaderClarifyButton({ clarify() }) }
                     }
@@ -250,6 +365,7 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
         }
     }, bottomBar = {
         ReaderFooter(reading, player, generation, presentation, compact = compactControls, inlineStatus = landscape, onPrimary = { primaryAction() },
+            feed = feed, owner = owner, showReturn = showReturn, onReturn = { returnToPhrase() }, onSeekLine = { seekLine(it) },
             onPreviousStage = { if (generation == player.generation && index > 0) { player.pause(generation); onStageChange(reading.plan.stages[index - 1].id) } },
             onNextStage = { nextStage() }, onTempo = { if (generation == player.generation) tempoOpen = true })
     }) { padding ->
@@ -265,7 +381,9 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
             if (meaning) ReaderMeaning(reading, missing, Modifier.weight(1f)) { if (generation == player.generation) onOpenSource(it) }
             else Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = RoundedCornerShape(24.dp),
                 modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = if (compact) 8.dp else 16.dp, vertical = 8.dp)) {
-                ReaderLyrics(reading, player, generation, original, compact, missing, presentation)
+                key(owner) {
+                    ReaderLyrics(reading, player, viewport, feed, original, compact, missing, presentation, onSeekLine = { seekLine(it) })
+                }
             }
         }
     }
@@ -303,7 +421,7 @@ private fun ReaderModes(selected: Int, originalAvailable: Boolean, onSelect: (In
 }
 
 @Composable
-private fun ReaderTrackHeader(reading: ActiveServicePlayback, compact: Boolean, onTracks: () -> Unit, modifier: Modifier) {
+private fun ReaderTrackHeader(reading: ActiveServicePlayback, original: Boolean, compact: Boolean, onTracks: () -> Unit, modifier: Modifier) {
     val track = reading.track ?: return
     val position = reading.tracks.indexOf(track) + 1
     val kind = when {
@@ -312,7 +430,8 @@ private fun ReaderTrackHeader(reading: ActiveServicePlayback, compact: Boolean, 
         else -> "Полный текст"
     }
     val repeatsStageTitle = track.title == reading.stage.name
-    val label = if (repeatsStageTitle) "$kind · $position из ${reading.tracks.size}" else track.title
+    val title = if (repeatsStageTitle) "$kind · $position из ${reading.tracks.size}" else track.title
+    val label = if (original && track.lines.none { it.original != null }) "По-русски · $title" else title
     val content: @Composable RowScope.() -> Unit = {
         Column(Modifier.weight(1f)) {
             Text(label, Modifier.testTag("current_track_title"), style = if (compact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.titleMedium,
@@ -337,6 +456,7 @@ private fun PlaybackSpeed.label(): String = when (this) { PlaybackSpeed.SLOW -> 
 @Composable
 private fun ReaderFooter(reading: ActiveServicePlayback, player: ServicePlayerState, generation: Int,
     presentation: ReaderPresentation, compact: Boolean, inlineStatus: Boolean, onPrimary: () -> Unit,
+    feed: ReaderFeed, owner: ReaderFeedOwner, showReturn: Boolean, onReturn: () -> Unit, onSeekLine: (ReaderFeedItem.Line) -> Unit,
     onPreviousStage: () -> Unit, onNextStage: () -> Unit, onTempo: () -> Unit) {
     val index = reading.plan.stages.indexOf(reading.stage)
     val next = reading.plan.stages.getOrNull(index + 1)
@@ -351,6 +471,16 @@ private fun ReaderFooter(reading: ActiveServicePlayback, player: ServicePlayerSt
     }
     val nextLabel = next?.let { "Следующий этап: ${it.shortTitle}" } ?: "Закончить чтение"
     val soundless = timed || presentation.kind == ReaderStateKind.BEFORE_START
+    val previousLine = feed.adjacentLine(reading.segment, -1)
+    val nextLine = feed.adjacentLine(reading.segment, 1)
+    val returnButton: @Composable (Modifier) -> Unit = { modifier ->
+        key(owner) {
+            TextButton(onClick = onReturn, contentPadding = PaddingValues(horizontal = 8.dp),
+                modifier = modifier.heightIn(min = 48.dp).testTag("return_to_phrase")) {
+                Text("К выбранной фразе", style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
     Surface(color = MaterialTheme.colorScheme.surfaceContainer, tonalElevation = 2.dp) {
         PlayerControlScale {
             Column(Modifier.navigationBarsPadding().padding(horizontal = 8.dp, vertical = 4.dp)) {
@@ -363,60 +493,68 @@ private fun ReaderFooter(reading: ActiveServicePlayback, player: ServicePlayerSt
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    if (inlineStatus) Column(Modifier.weight(0.8f).padding(horizontal = 8.dp)) {
-                        Text(presentation.status, Modifier.testTag("reader_status"),
-                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        if (soundless) Text("Без звука", Modifier.testTag("soundless_note"),
-                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    if (text && !compact) IconButton(onClick = {
-                        reading.track?.let { track -> track.lines.getOrNull(reading.lineIndex - 1)?.let { player.seekLine(track.id, it.id, generation) } }
-                    }, enabled = reading.lineIndex > 0, modifier = Modifier.size(48.dp).testTag("previous_line")) {
-                        Icon(Icons.Default.KeyboardArrowUp, "Предыдущая фраза", Modifier.size(28.dp))
-                    }
-                    key(generation) {
-                        Button(onClick = onPrimary, contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                            modifier = Modifier.weight(1f).heightIn(min = if (compact) 48.dp else 56.dp).testTag(primaryTag).semantics {
-                                contentDescription = presentation.primaryLabel
-                                stateDescription = presentation.status
-                            }) {
-                            Text(presentation.primaryLabel, Modifier.testTag("reader_primary_label"),
-                                style = MaterialTheme.typography.labelLarge)
+                ReaderPrimarySlot(reserveReturn = compact && text) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        if (inlineStatus) Column(Modifier.weight(0.8f).padding(horizontal = 8.dp)) {
+                            Text(presentation.status, Modifier.testTag("reader_status"),
+                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            if (soundless) Text("Без звука", Modifier.testTag("soundless_note"),
+                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                    }
-                    if (text) IconButton(onClick = {
-                        reading.track?.let { track -> track.lines.getOrNull(reading.lineIndex + 1)?.let { player.seekLine(track.id, it.id, generation) } }
-                    }, enabled = reading.track?.let { reading.lineIndex < it.lines.lastIndex } == true,
-                        modifier = Modifier.size(48.dp).testTag("next_line")) {
-                        Icon(Icons.Default.KeyboardArrowDown, "Следующая фраза", Modifier.size(28.dp))
-                    }
-                    if (timed) TextButton(onClick = onTempo, contentPadding = PaddingValues(horizontal = 4.dp),
-                        modifier = Modifier.width(48.dp).heightIn(min = 48.dp).testTag("scroll_options")
-                            .semantics { contentDescription = "Примерный темп: ${reading.state.speed.label()}" }) {
-                        Text(reading.state.speed.label(), style = MaterialTheme.typography.bodySmall)
-                    }
-                    if (timed && compact) IconButton(onClick = onNextStage,
-                        modifier = Modifier.size(48.dp).testTag("next_stage")) {
-                        Icon(if (next != null) Icons.Default.SkipNext else Icons.Default.Done, nextLabel)
-                    }
-                    if (presentation.kind == ReaderStateKind.BEFORE_START && reading.state.isPlaying) {
-                        TextButton(onClick = { player.pause(generation) }, Modifier.heightIn(min = 48.dp).testTag("before_start_pause")) {
-                            Text("Пауза")
+                        if (text && !compact) key(owner) {
+                            IconButton(onClick = { previousLine?.let(onSeekLine) },
+                                enabled = previousLine != null, modifier = Modifier.size(48.dp).testTag("previous_line")) {
+                                Icon(Icons.Default.KeyboardArrowUp, "Предыдущая фраза", Modifier.size(28.dp))
+                            }
+                        }
+                        key(generation) {
+                            Button(onClick = onPrimary, contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                                modifier = Modifier.weight(1f).heightIn(min = if (compact) 48.dp else 56.dp).testTag(primaryTag).semantics {
+                                    contentDescription = presentation.primaryLabel
+                                    stateDescription = presentation.status
+                                }) {
+                                Text(presentation.primaryLabel, Modifier.testTag("reader_primary_label"),
+                                    style = MaterialTheme.typography.labelLarge)
+                            }
+                        }
+                        if (text && !(compact && showReturn)) key(owner) {
+                            IconButton(onClick = { nextLine?.let(onSeekLine) }, enabled = nextLine != null,
+                                modifier = Modifier.size(48.dp).testTag("next_line")) {
+                                Icon(Icons.Default.KeyboardArrowDown, "Следующая фраза", Modifier.size(28.dp))
+                            }
+                        }
+                        if (compact && showReturn) returnButton(Modifier.width(144.dp))
+                        if (timed && !(compact && showReturn)) TextButton(onClick = onTempo, contentPadding = PaddingValues(horizontal = 4.dp),
+                            modifier = Modifier.width(48.dp).heightIn(min = 48.dp).testTag("scroll_options")
+                                .semantics { contentDescription = "Примерный темп: ${reading.state.speed.label()}" }) {
+                            Text(reading.state.speed.label(), style = MaterialTheme.typography.bodySmall)
+                        }
+                        if (timed && compact && !showReturn) IconButton(onClick = onNextStage,
+                            modifier = Modifier.size(48.dp).testTag("next_stage")) {
+                            Icon(if (next != null) Icons.Default.SkipNext else Icons.Default.Done, nextLabel)
+                        }
+                        if (presentation.kind == ReaderStateKind.BEFORE_START && reading.state.isPlaying) {
+                            TextButton(onClick = { player.pause(generation) }, Modifier.heightIn(min = 48.dp).testTag("before_start_pause")) {
+                                Text("Пауза")
+                            }
                         }
                     }
                 }
-                if (timed && !compact) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onPreviousStage, enabled = index > 0, modifier = Modifier.size(48.dp).testTag("previous_stage")) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Предыдущий этап")
-                    }
-                    if (text) Text("Фраза ${reading.lineIndex + 1}/${reading.track?.lines?.size ?: 0}",
-                        Modifier.padding(horizontal = 8.dp).testTag("line_status"), style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    TextButton(onClick = onNextStage, modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("next_stage")
-                        .semantics { contentDescription = nextLabel }) {
-                        Text(nextLabel, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(20.dp))
+                if (timed && !compact) SubcomposeLayout(Modifier.fillMaxWidth()) { constraints ->
+                    // Measure the same labels without creating hidden actions. Both variants
+                    // occupy this natural height, so Return cannot cause a visibility/layout loop.
+                    val navigationHeight = subcompose("measure") {
+                        ReaderSecondaryNavigation(reading, text, index, nextLabel, onPreviousStage, onNextStage, interactive = false)
+                    }.single().measure(constraints.copy(minHeight = 0)).height
+                    val returnHeight = subcompose("return_measure") {
+                        ReaderReturnMeasure(Modifier.fillMaxWidth())
+                    }.single().measure(constraints.copy(minHeight = 0)).height
+                    val content = subcompose("content") {
+                        if (showReturn) returnButton(Modifier.fillMaxWidth())
+                        else ReaderSecondaryNavigation(reading, text, index, nextLabel, onPreviousStage, onNextStage, interactive = true)
+                    }.single().measure(constraints.copy(minHeight = maxOf(navigationHeight, returnHeight, constraints.minHeight)))
+                    layout(content.width, content.height) {
+                        content.placeRelative(0, 0)
                     }
                 }
             }
@@ -425,63 +563,181 @@ private fun ReaderFooter(reading: ActiveServicePlayback, player: ServicePlayerSt
 }
 
 @Composable
-private fun ReaderLyrics(reading: ActiveServicePlayback, player: ServicePlayerState, generation: Int, original: Boolean, compact: Boolean,
-    missing: Boolean, presentation: ReaderPresentation) {
-    val scroll = rememberLazyListState()
-    val dragged by scroll.interactionSource.collectIsDraggedAsState()
-    val track = reading.track
-    val current = reading.lineIndex
-    val textSize = if (compact) maxOf(30f / LocalDensity.current.fontScale, 20f) else 28f
-    val hasIntro = track != null
-    val offset = if (hasIntro) 1 else 0
-    val block = reading.segment !is PlaybackSegment.Text
-    LaunchedEffect(dragged) { if (dragged) player.pause(generation) }
-    LaunchedEffect(track?.id, current, player.focusRequest, original, block) {
-        withFrameNanos { }
-        val target = if (block) (track?.lines?.size ?: 0) + offset else current + offset
-        val inset = if (compact || block) 0 else (scroll.layoutInfo.viewportEndOffset / 4).coerceAtLeast(0)
-        scroll.animateScrollToItem(target, scrollOffset = -inset)
+private fun ReaderReturnMeasure(modifier: Modifier) {
+    Row(modifier.heightIn(min = 48.dp).padding(horizontal = 8.dp).clearAndSetSemantics { },
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+        Text("К выбранной фразе", style = MaterialTheme.typography.bodySmall)
     }
-    LazyColumn(Modifier.fillMaxSize().testTag("lyrics_list"), state = scroll,
+}
+
+@Composable
+private fun ReaderPrimarySlot(reserveReturn: Boolean, content: @Composable () -> Unit) {
+    SubcomposeLayout(Modifier.fillMaxWidth()) { constraints ->
+        // Compact Text replaces exactly three 48dp controls with one 144dp Return.
+        // The primary keeps the same width in both variants; reserve Return's natural height.
+        val returnHeight = if (reserveReturn) subcompose("measure") {
+            ReaderReturnMeasure(Modifier.width(144.dp))
+        }.single().measure(constraints.copy(minWidth = 0, minHeight = 0)).height else 0
+        val row = subcompose("content", content).single()
+            .measure(constraints.copy(minHeight = maxOf(constraints.minHeight, returnHeight)))
+        layout(row.width, row.height) { row.placeRelative(0, 0) }
+    }
+}
+
+@Composable
+private fun ReaderSecondaryNavigation(reading: ActiveServicePlayback, text: Boolean, index: Int, nextLabel: String,
+    onPreviousStage: () -> Unit, onNextStage: () -> Unit, interactive: Boolean) {
+    Row(Modifier.fillMaxWidth().then(if (interactive) Modifier else Modifier.clearAndSetSemantics { }),
+        verticalAlignment = Alignment.CenterVertically) {
+        if (interactive) IconButton(onClick = onPreviousStage, enabled = index > 0,
+            modifier = Modifier.size(48.dp).testTag("previous_stage")) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Предыдущий этап")
+        }
+        else Spacer(Modifier.size(48.dp))
+        if (text) Text("Фраза ${reading.lineIndex + 1}/${reading.track?.lines?.size ?: 0}",
+            Modifier.padding(horizontal = 8.dp).then(if (interactive) Modifier.testTag("line_status") else Modifier),
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        val label: @Composable RowScope.() -> Unit = {
+            Text(nextLabel, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(20.dp))
+        }
+        if (interactive) TextButton(onClick = onNextStage, contentPadding = ButtonDefaults.TextButtonContentPadding,
+            modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("next_stage")
+                .semantics { contentDescription = nextLabel }, content = label)
+        else Row(Modifier.weight(1f).heightIn(min = 48.dp).padding(ButtonDefaults.TextButtonContentPadding),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, content = label)
+    }
+}
+
+@Composable
+private fun ReaderLyrics(reading: ActiveServicePlayback, player: ServicePlayerState, viewport: ReaderViewport,
+    feed: ReaderFeed, original: Boolean, compact: Boolean, missing: Boolean, presentation: ReaderPresentation,
+    onSeekLine: (ReaderFeedItem.Line) -> Unit) {
+    val owner = viewport.owner
+    val scroll = viewport.scroll
+    val actualText = reading.segment as? PlaybackSegment.Text
+    val textSize = if (compact) maxOf(30f / LocalDensity.current.fontScale, 20f) else 28f
+    val block = actualText == null
+    val dragConnection = remember(viewport, player) {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (source == NestedScrollSource.UserInput && available.y != 0f && owner.matches(player)) {
+                    // Runs before the list consumes its first user delta, unlike a post-composition
+                    // drag observer. Pause may materialize a boundary; its focus must be suppressed.
+                    val wasManual = viewport.manual
+                    viewport.browse()
+                    if (!wasManual) player.pause(owner.generation)
+                }
+                return Offset.Zero
+            }
+        }
+    }
+    val languageAnchor = viewport.languageAnchor
+    LaunchedEffect(viewport, languageAnchor, original) {
+        val request = languageAnchor ?: return@LaunchedEffect
+        if (!viewport.manual || !owner.matches(player) || original != request.original) return@LaunchedEffect
+        val job = currentCoroutineContext().job
+        viewport.languageJob = job
+        try {
+            withFrameNanos { }
+            if (!viewport.manual || !owner.matches(player) || viewport.languageAnchor != request) return@LaunchedEffect
+            val target = feed.items.indexOfFirst { it.key == request.key }
+            if (target >= 0) scroll.scrollToItem(target)
+            viewport.finishLanguageAnchor(request)
+        } finally {
+            if (viewport.languageJob === job) viewport.languageJob = null
+        }
+    }
+    LaunchedEffect(viewport, actualText?.lineId, player.focusRequest, viewport.focusRequest, original, block) {
+        if (viewport.manual || !owner.matches(player)) return@LaunchedEffect
+        val job = currentCoroutineContext().job
+        viewport.focusJob = job
+        viewport.focusing = true
+        try {
+            withFrameNanos { }
+            if (viewport.manual || !owner.matches(player)) return@LaunchedEffect
+            val current = player.reading ?: return@LaunchedEffect
+            val target = feed.targetIndex(current.segment)
+            val inset = if (compact || current.segment !is PlaybackSegment.Text) 0
+                else (scroll.layoutInfo.viewportEndOffset / 4).coerceAtLeast(0)
+            scroll.animateScrollToItem(target, scrollOffset = -inset)
+            if (!viewport.manual && owner.matches(player)) viewport.initiallyFocused = true
+        } finally {
+            if (viewport.focusJob === job) {
+                viewport.focusJob = null
+                viewport.focusing = false
+            }
+        }
+    }
+    DisposableEffect(viewport) {
+        onDispose {
+            viewport.focusJob?.cancel()
+            viewport.cancelLanguageAnchor()
+            viewport.bounds = null
+            viewport.phraseBounds = null
+        }
+    }
+    LazyColumn(Modifier.fillMaxSize().testTag("lyrics_list").nestedScroll(dragConnection)
+        .onGloballyPositioned { viewport.bounds = it.boundsInRoot() }, state = scroll,
         contentPadding = PaddingValues(horizontal = if (compact) 16.dp else 24.dp, vertical = if (compact) 12.dp else 24.dp),
         verticalArrangement = Arrangement.spacedBy(if (compact) 20.dp else 28.dp)) {
-        if (hasIntro) item(key = "text_note") {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (missing) DailyReadingUnavailable()
-                else Text(if (track!!.isScripture) "${track.subtitle}. Церковнославянский текст пока не добавлен"
-                    else if (original) "Церковнославянский текст" else "Русское изложение смысла молитвы",
-                    Modifier.testTag(if (track!!.isScripture) "original_unavailable" else "language_note"),
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                track?.takeUnless { it.isScripture }?.contextNote?.let { note ->
-                    Text(note, Modifier.testTag("prayer_context_note"),
-                        style = MaterialTheme.typography.bodySmall.readingParagraph(),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+        items(feed.items, key = { it.key }, contentType = {
+            when (it) {
+                is ReaderFeedItem.Header -> "header"
+                is ReaderFeedItem.Line -> "line"
+                is ReaderFeedItem.Continuation -> "continuation"
             }
-        }
-        itemsIndexed(track?.lines.orEmpty(), key = { _, line -> line.id }) { index, line ->
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                line.speaker?.let { speaker ->
-                    Text(speaker, Modifier.testTag("prayer_speaker_$index"),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }) { item ->
+            when (item) {
+                is ReaderFeedItem.Header -> {
+                    val track = item.track
+                    Column(Modifier.fillMaxWidth().testTag("feed_header_${track.id}"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(track.title, Modifier.testTag("feed_title_${track.id}").semantics { heading() },
+                            style = MaterialTheme.typography.titleMedium.readingParagraph())
+                        if (missing) DailyReadingUnavailable()
+                        Text(readerTrackLanguage(track, original), Modifier.testTag("feed_language_${track.id}"),
+                            style = MaterialTheme.typography.bodySmall.readingParagraph(), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        track.takeUnless { it.isScripture }?.contextNote?.let { note ->
+                            Text(note, Modifier.testTag("feed_context_${track.id}"), style = MaterialTheme.typography.bodySmall.readingParagraph(),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
                 }
-                Text(if (original) line.original ?: line.russian else line.russian,
-                    Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { player.seekLine(requireNotNull(track).id, line.id, generation) }
-                        .testTag("lyric_line_$index").semantics { selected = index == current; role = Role.Button },
-                    fontSize = textSize.sp, lineHeight = (textSize * 1.4f).sp,
-                    style = MaterialTheme.typography.bodyLarge.readingParagraph(),
-                    fontWeight = if (index == current) FontWeight.SemiBold else FontWeight.Normal,
-                    color = if (index == current) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-        item(key = "stage_continuation") {
-            if (block) ReaderStageProgress(reading, presentation)
-            else Column(Modifier.padding(top = 12.dp, bottom = 48.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(if (track?.isExcerpt == true) "Конец фрагмента" else "Конец текста", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                val trackIndex = reading.tracks.indexOf(track)
-                if (trackIndex >= 0 && trackIndex < reading.tracks.lastIndex) OutlinedButton(onClick = { player.selectTrack(reading.tracks[trackIndex + 1].id, generation) }, Modifier.testTag("next_track")) {
-                    Text("Следующий текст: ${reading.tracks[trackIndex + 1].title}")
+                is ReaderFeedItem.Line -> {
+                    val line = item.line
+                    val selected = actualText?.let { it.trackId == item.trackId && it.lineId == line.id } == true
+                    DisposableEffect(viewport, line.id, selected) {
+                        onDispose {
+                            if (viewport.phraseBounds?.first == line.id) viewport.phraseBounds = null
+                        }
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        line.speaker?.let { speaker ->
+                            Text(speaker, Modifier.testTag("feed_speaker_${line.id}"), style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Box(Modifier.padding(top = 8.dp).width(3.dp).height(24.dp)
+                                .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerLow,
+                                    RoundedCornerShape(2.dp)))
+                            Text(readerLineText(line, original),
+                                Modifier.weight(1f).heightIn(min = 48.dp).clickable { if (owner.matches(player)) onSeekLine(item) }
+                                    .testTag("feed_line_${line.id}").semantics { this.selected = selected; role = Role.Button }
+                                    .onGloballyPositioned { coordinates ->
+                                        if (selected && owner.matches(player)) viewport.phraseBounds = line.id to coordinates.boundsInRoot()
+                                    },
+                                fontSize = textSize.sp, lineHeight = (textSize * 1.4f).sp,
+                                style = MaterialTheme.typography.bodyLarge.readingParagraph(),
+                                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+                is ReaderFeedItem.Continuation -> Column(Modifier.fillMaxWidth().testTag("feed_continuation_${item.stageId}")) {
+                    if (block) ReaderStageProgress(reading, presentation)
+                    else Text("Здесь заканчиваются доступные тексты этапа",
+                        Modifier.padding(top = 12.dp, bottom = 48.dp), style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }

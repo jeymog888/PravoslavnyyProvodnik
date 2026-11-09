@@ -38,7 +38,7 @@ class ExpandedContentFlowTest {
                 val writes = h.writes
                 for (original in listOf(true, false)) {
                     mode(original)
-                    val note = lyrics("prayer_context_note")
+                    val note = lyrics(feedContextTag(requireNotNull(before.track)))
                     note.assertTextContains(omission, substring = true)
                         .assertTextContains("пропущены", substring = true).assert(noClick())
                     assertCurrentLine(before, original)
@@ -60,7 +60,7 @@ class ExpandedContentFlowTest {
                 val writes = h.writes
                 for (original in listOf(true, false)) {
                     mode(original)
-                    lyrics("prayer_context_note").assertTextContains(explanation, substring = true).assert(noClick())
+                    lyrics(feedContextTag(requireNotNull(before.track))).assertTextContains(explanation, substring = true).assert(noClick())
                     assertCurrentLine(before, original)
                     unchanged(h, before, writes)
                 }
@@ -81,12 +81,12 @@ class ExpandedContentFlowTest {
             val writes = h.writes
             for (original in listOf(true, false)) {
                 mode(original)
-                lyrics("prayer_speaker_0").assertTextEquals("Священник").assert(noClick())
-                lyrics("prayer_speaker_1").assertTextEquals("Хор").assert(noClick())
+                lyrics(feedSpeakerTag(requireNotNull(before.track).lines[0])).assertTextEquals("Священник").assert(noClick())
+                lyrics(feedSpeakerTag(requireNotNull(before.track).lines[1])).assertTextEquals("Хор").assert(noClick())
                 assertCurrentLine(before, original)
                 unchanged(h, before, writes)
             }
-            lyrics("lyric_line_0").performClick()
+            lyrics(feedLineTag(requireNotNull(before.track).lines[0])).performClick()
             compose.runOnIdle {
                 val after = requireNotNull(h.player.reading)
                 assertEquals(before.context, after.context)
@@ -105,9 +105,10 @@ class ExpandedContentFlowTest {
             val h = launch("gospel", scripture.title)
             val before = requireNotNull(h.player.reading)
             val writes = h.writes
-            lyrics("original_unavailable").assertIsDisplayed()
-            compose.onNodeWithTag("prayer_speaker_0").assertDoesNotExist()
-            compose.onNodeWithTag("prayer_context_note").assertDoesNotExist()
+            lyrics(feedLanguageTag(scripture)).assertIsDisplayed()
+                .assertTextEquals("${scripture.subtitle}. Церковнославянский текст пока не добавлен")
+            compose.onNodeWithTag(feedSpeakerTag(scripture.lines[0])).assertDoesNotExist()
+            compose.onNodeWithTag(feedContextTag(scripture)).assertDoesNotExist()
             compose.onNodeWithTag("player_meaning_tab").performClick()
             scroll("service_content", "reading_note_toggle").assertTextContains("О чтениях этого дня").performClick()
             scroll("service_content", "reading_day_note").assertTextEquals(requireNotNull(scripture.contextNote))
@@ -168,7 +169,7 @@ class ExpandedContentFlowTest {
     private fun assertCurrentLine(reading: ActiveServicePlayback, original: Boolean) {
         val track: PrayerTrack = requireNotNull(reading.track)
         val line = track.lines[reading.lineIndex]
-        lyrics("lyric_line_${reading.lineIndex}").assertIsSelected()
+        lyrics(feedLineTag(track.lines[reading.lineIndex])).assertIsSelected()
             .assertTextEquals(if (original) requireNotNull(line.original) else line.russian)
     }
     private fun unchanged(h: Harness, before: ActiveServicePlayback, writes: Int) = compose.runOnIdle {

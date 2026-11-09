@@ -75,7 +75,7 @@ class CompactReaderMatrixTest {
                     captureFailure(stage.id)
                     throw failure
                 }
-                val originalAvailable = player.reading?.track?.lines?.any { it.original != null } == true
+                val originalAvailable = player.reading?.tracks?.any { track -> track.lines.any { it.original != null } } == true
                 compose.onNodeWithTag(if (originalAvailable) "player_original_tab" else "player_text_tab")
                     .performClick().assertIsSelected()
             }
@@ -109,12 +109,12 @@ class CompactReaderMatrixTest {
             val line = requireNotNull(selected.track).lines[selected.lineIndex]
             val before = selected.state
             compose.onNodeWithTag("player_original_tab").performClick()
-            val original = compose.onNodeWithTag("lyric_line_${selected.lineIndex}").assertIsSelected()
+            val original = compose.onFeedLine(line).assertIsSelected()
                 .assertTextEquals(requireNotNull(line.original))
             assertEquals(2.6f, textLayout(original).layoutInput.density.fontScale, .001f)
             assertEquals(20.sp, textLayout(original).layoutInput.style.fontSize)
             compose.onNodeWithTag("player_text_tab").performClick()
-            val russian = compose.onNodeWithTag("lyric_line_${selected.lineIndex}").assertIsSelected().assertTextEquals(line.russian)
+            val russian = compose.onFeedLine(line).assertIsSelected().assertTextEquals(line.russian)
             assertEquals(2.6f, textLayout(russian).layoutInput.density.fontScale, .001f)
             compose.runOnIdle { assertEquals(before, player.reading!!.state) }
         }

@@ -32,6 +32,8 @@ import org.junit.runner.RunWith
 import ru.liturgyguide.di.AppContainer
 import ru.liturgyguide.service.PrayerTrackFactory
 import ru.liturgyguide.service.ServiceSession
+import ru.liturgyguide.service.ServicePlaybackStore
+import ru.liturgyguide.service.StoredServicePlaybackCodec
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -73,7 +75,7 @@ class ReaderAccessibilityTest {
         assertReadingSpaceAndScale(3, 2.6f)
         assertFooterTargets(compact = true)
         compose.onNodeWithTag("player_original_tab").assertIsDisplayed().performClick()
-        compose.onNodeWithTag("lyric_line_3").assertIsSelected()
+        compose.onFeedLine(acceptedTrack(), 3).assertIsSelected()
         assertReadingSpaceAndScale(3, 2.6f)
 
         compose.onNodeWithTag("player_meaning_tab").performClick().assertIsSelected()
@@ -85,7 +87,7 @@ class ReaderAccessibilityTest {
         compose.onNodeWithContentDescription("Назад").performClick()
         compose.onNodeWithTag("player_meaning_tab").assertIsSelected()
         compose.onNodeWithTag("player_original_tab").performClick()
-        compose.onNodeWithTag("lyric_line_3").assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(acceptedTrack(), 3).assertIsSelected().assertIsDisplayed()
         assertTrue(preferences.getBoolean("lyric_original", false))
         assertReadableHeader()
     }
@@ -99,10 +101,10 @@ class ReaderAccessibilityTest {
             assertReadingSpaceAndScale(3, 1.69f)
             assertFooterTargets(compact = true)
             compose.onNodeWithTag("next_line").assertIsDisplayed().performClick()
-            compose.onNodeWithTag("lyric_line_4").assertIsSelected().assertIsDisplayed()
+            compose.onFeedLine(acceptedTrack(), 4).assertIsSelected().assertIsDisplayed()
             compose.onNodeWithTag("player_meaning_tab").performClick().assertIsSelected()
             compose.onNodeWithTag("player_text_tab").performClick().assertIsSelected()
-            compose.onNodeWithTag("lyric_line_4").assertIsSelected()
+            compose.onFeedLine(acceptedTrack(), 4).assertIsSelected()
         } finally {
             orient(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT, Configuration.ORIENTATION_PORTRAIT)
         }
@@ -124,7 +126,7 @@ class ReaderAccessibilityTest {
         compose.onNodeWithTag("player_original_tab").assertIsDisplayed().assertIsEnabled()
         assertReadingSpaceAndScale(3, 2.6f, 28.sp)
         compose.onNodeWithTag("next_line").performClick()
-        compose.onNodeWithTag("lyric_line_4").assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(acceptedTrack(), 4).assertIsSelected().assertIsDisplayed()
     }
 
     @Test
@@ -137,14 +139,14 @@ class ReaderAccessibilityTest {
         compose.onNodeWithTag("clarify_moment").performClick()
         compose.onNodeWithTag("manual_content").assertIsDisplayed()
         compose.onNodeWithContentDescription("Назад").performClick()
-        compose.onNodeWithTag("lyric_line_0").assertIsSelected()
+        compose.onFeedLine(acceptedTrack(), 0).assertIsSelected()
     }
 
     @Test
     fun scriptureAndAnEmptyTextStageKeepClarificationWithoutALanguageMenu() {
         launchReader("gospel", 1, 0, width = 320, height = 640, systemFontScale = 2f)
         assertTrue(tracks("gospel")[1].isScripture)
-        compose.onNodeWithTag("player_original_tab").assertIsDisplayed().assertIsNotEnabled()
+        compose.onNodeWithTag("player_original_tab").assertIsDisplayed().assertIsEnabled()
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
         assertReadableHeader()
         assertReadingSpaceAndScale(0, 2.6f)
@@ -315,7 +317,7 @@ class ReaderAccessibilityTest {
 
     private fun assertReadingSpaceAndScale(line: Int, expectedScale: Float, expectedFontSize: TextUnit = 20.sp) {
         compose.onNodeWithTag("lyrics_list").assertHeightIsAtLeast(120.dp)
-        val lyric = compose.onNodeWithTag("lyric_line_$line").assertIsSelected().assertIsDisplayed()
+        val lyric = compose.onFeedLine(acceptedTrack(), line).assertIsSelected().assertIsDisplayed()
         val layout = textLayout(lyric)
         assertEquals(expectedScale, layout.layoutInput.density.fontScale, .001f)
         assertEquals(expectedFontSize, layout.layoutInput.style.fontSize)
@@ -350,6 +352,8 @@ class ReaderAccessibilityTest {
     }
 
     private fun tracks(stageId: String) = PrayerTrackFactory.build(requireNotNull(container.getStageMatcher().getStageById(stageId)), readingDay)
+    private fun acceptedTrack() = container.recordedFeedTrack(requireNotNull(
+        StoredServicePlaybackCodec.decode(preferences.getString(ServicePlaybackStore.PLAYBACK_KEY, null))))
 
     private fun orient(requested: Int, expected: Int) {
         compose.activityRule.scenario.onActivity { it.requestedOrientation = requested }
