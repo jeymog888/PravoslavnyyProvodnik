@@ -28,7 +28,7 @@ import java.time.LocalDate
 @RunWith(AndroidJUnit4::class)
 class ReaderCompositionFlowTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
-    private val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext)
+    private val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
 
     @Test fun oneReadingSurfaceKeepsSixStatesAndReachableModesWithoutDuplicateHeaders() =
         withCiFailureDiagnostics("composition.singleSurfaceAndContext") {

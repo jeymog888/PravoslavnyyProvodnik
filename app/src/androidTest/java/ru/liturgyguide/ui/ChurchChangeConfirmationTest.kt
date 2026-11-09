@@ -32,7 +32,7 @@ class ChurchChangeConfirmationTest {
     @get:Rule val compose = createComposeRule()
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
     private val preferences = context.getSharedPreferences("guide_preferences", Context.MODE_PRIVATE)
-    private val container = AppContainer(context)
+    private val container = AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
     private val firstId = "elisavetinsky_opalikha"
     private val otherId = "vsetsaritsa_nakhabino"
     private val instant = Instant.parse("2026-11-08T07:00:00Z")

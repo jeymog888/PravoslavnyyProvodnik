@@ -16,7 +16,7 @@ import ru.liturgyguide.di.AppContainer
 @RunWith(AndroidJUnit4::class)
 class StageSelectorTest {
     @get:Rule val compose = createComposeRule()
-    private val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext)
+    private val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
 
     @Test
     fun updatingTheCurrentStageDoesNotInterruptManualBrowsing() {

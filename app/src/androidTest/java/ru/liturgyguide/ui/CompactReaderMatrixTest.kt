@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicLong
 @RunWith(AndroidJUnit4::class)
 class CompactReaderMatrixTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
-    private val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext)
+    private val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
     private val monotonic = AtomicLong(1_000L)
     private var clarified = 0
 

@@ -7,8 +7,8 @@ enum class PlaybackMigrationNote { EXPANDED_STAGE_LAST_PHRASE }
 data class MigratedPlaybackPosition(val state: ServicePlaybackState, val note: PlaybackMigrationNote? = null)
 
 /**
- * Limited 0.5 compatibility, not a registry of arbitrary content versions.
- * The store supplies the old plan only through Historical05Content's release-byte validation.
+ * Compatibility for frozen 0.5 and 0.6 plans, not arbitrary content versions.
+ * The store supplies the old plan only through the historical loaders' release-byte validation.
  * Both engines validate their own positions; an old numeric index never addresses the new plan.
  */
 object Published05PlaybackMigration {

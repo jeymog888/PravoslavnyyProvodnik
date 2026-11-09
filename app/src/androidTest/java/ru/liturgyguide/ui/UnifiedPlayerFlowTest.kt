@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicLong
 class UnifiedPlayerFlowTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
-    private val container = AppContainer(context)
+    private val container = AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
     private val preferences get() = context.getSharedPreferences("guide_preferences", Context.MODE_PRIVATE)
     private val monotonic = AtomicLong(1_000L)
     private val wall = AdjustableClock(Instant.parse("2026-11-08T12:00:00Z"))

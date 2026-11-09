@@ -4,19 +4,37 @@ import android.content.Context
 import ru.liturgyguide.service.StageMatcher
 import ru.liturgyguide.service.ParishRepository
 import ru.liturgyguide.service.Historical05Content
+import ru.liturgyguide.service.Historical06Content
 import com.google.gson.Gson
 import ru.liturgyguide.model.DailyReadings
 import ru.liturgyguide.service.discovery.DefaultPlaceDiscovery
 import ru.liturgyguide.service.discovery.DiscoveryCacheStore
 import ru.liturgyguide.service.discovery.PlaceDiscovery
+import ru.liturgyguide.service.schedule.InternetSchedules
+import ru.liturgyguide.service.schedule.InternetScheduleRepository
+import ru.liturgyguide.service.schedule.ScheduleCacheStore
+import ru.liturgyguide.service.schedule.UrlConnectionScheduleTransport
 
 class AppContainer(context: Context, private val discoveryOverride: PlaceDiscovery? = null,
-    assetReader: ((String) -> String)? = null) {
+    assetReader: ((String) -> String)? = null, scheduleOverride: InternetSchedules? = null) {
     private val appContext = context.applicationContext
     private val readAsset: (String) -> String = assetReader ?: { name ->
         appContext.assets.open(name).bufferedReader(Charsets.UTF_8).use { it.readText() }
     }
     val historical05Content = Historical05Content(readAsset)
+    val historical06Content = Historical06Content(readAsset)
+    val internetSchedules: InternetSchedules by lazy {
+        scheduleOverride ?: InternetScheduleRepository(UrlConnectionScheduleTransport(), object : ScheduleCacheStore {
+            private val preferences = appContext.getSharedPreferences("internet_schedule_cache", Context.MODE_PRIVATE)
+            override fun read(parishId: String): String? = runCatching { preferences.getString(parishId, null) }.getOrNull()
+            override fun write(parishId: String, value: String) {
+                if (value.length > 200_000) return
+                val edit = preferences.edit().putString(parishId, value)
+                if (!preferences.contains(parishId) && preferences.all.size >= 100) preferences.all.keys.firstOrNull()?.let(edit::remove)
+                edit.apply()
+            }
+        })
+    }
     val placeDiscovery: PlaceDiscovery by lazy {
         discoveryOverride ?: DefaultPlaceDiscovery(cache = object : DiscoveryCacheStore {
             private val cache = appContext.getSharedPreferences("place_discovery_cache", Context.MODE_PRIVATE)

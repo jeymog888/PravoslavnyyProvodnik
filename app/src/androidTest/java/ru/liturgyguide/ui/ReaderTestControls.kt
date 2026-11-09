@@ -9,16 +9,37 @@ import org.junit.Assert.assertTrue
 /** Explicit paths through the real UI. No retries, inferred state, or direct player calls. */
 internal fun SemanticsNodeInteractionsProvider.openReaderControls() {
     onNodeWithTag("reader_controls_list").assertDoesNotExist()
-    onNodeWithTag("reader_controls").assertIsDisplayed().assertHeightIsAtLeast(48.dp).performClick()
+    val tag = if (onAllNodesWithTag("service_book").fetchSemanticsNodes().isNotEmpty()) "reader_mode_chooser" else "reader_controls"
+    onNodeWithTag(tag).assertIsDisplayed().assertHeightIsAtLeast(48.dp).performClick()
     onNodeWithTag("reader_controls_list").assertIsDisplayed()
 }
 
 internal fun SemanticsNodeInteractionsProvider.readerControl(tag: String): SemanticsNodeInteraction {
+    if (onAllNodesWithTag("service_book").fetchSemanticsNodes().isNotEmpty()) {
+        return onNodeWithTag(tag).performScrollTo().assertIsDisplayed().assertHeightIsAtLeast(48.dp)
+    }
     onNodeWithTag("reader_controls_list").assertIsDisplayed().performScrollToNode(hasTestTag(tag))
     return onNodeWithTag(tag).performScrollTo().assertIsDisplayed().assertHeightIsAtLeast(48.dp)
 }
 
 internal fun SemanticsNodeInteractionsProvider.openReaderControl(tag: String): SemanticsNodeInteraction {
+    // The continuous reader exposes frequent actions directly and speed in its menu.
+    // Unsupported old stage/phrase transport controls deliberately do not get fake aliases.
+    if (onAllNodesWithTag("service_book").fetchSemanticsNodes().isNotEmpty()) {
+        return when (tag) {
+            "controls_clarify" -> onNodeWithTag("clarify_stage").assertIsDisplayed()
+            "controls_order" -> onNodeWithTag("open_map").assertIsDisplayed()
+            "scroll_options" -> {
+                onNodeWithTag("player_menu").performClick()
+                onNodeWithTag("scroll_options").assertIsDisplayed()
+            }
+            "next_stage" -> {
+                onNodeWithTag("lyrics_list").performScrollToNode(hasTestTag("next_stage"))
+                onNodeWithTag("next_stage").assertIsDisplayed()
+            }
+            else -> error("Control $tag belongs to the retired stage-local reader")
+        }
+    }
     openReaderControls()
     return readerControl(tag)
 }
@@ -53,7 +74,7 @@ internal fun SemanticsNodeInteractionsProvider.readerHasModeChooser(): Boolean =
 
 private fun readerModeLabel(mode: String): String = when (mode) {
     "original" -> "Оригинал"
-    "text" -> "По-русски"
+    "text" -> "Русский"
     "meaning" -> "Смысл"
     else -> error("Unknown reader mode: $mode")
 }

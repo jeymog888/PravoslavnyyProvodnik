@@ -21,7 +21,8 @@ sealed interface PlaybackRestoreResult {
 
 /** Reads only. All writes go through ReadingAcceptanceStore with the matching context and marker. */
 class ServicePlaybackStore(private val preferences: SharedPreferences,
-    private val historicalContent: Historical05Content? = null) {
+    private val historicalContent: Historical05Content? = null,
+    private val historical06Content: Historical06Content? = null) {
     fun restore(plan: ServicePlaybackPlan, expectedContext: ReadingContext): PlaybackRestoreResult {
         val values = runCatching { preferences.all }.getOrElse {
             return PlaybackRestoreResult.Invalid(PlaybackRestoreResult.Reason.UNREADABLE)
@@ -35,11 +36,15 @@ class ServicePlaybackStore(private val preferences: SharedPreferences,
             return PlaybackRestoreResult.Invalid(PlaybackRestoreResult.Reason.PLAN_MISMATCH)
         ServicePlaybackEngine(plan).restore(stored.snapshot)?.let { return PlaybackRestoreResult.Valid(stored, it) }
         // Historical I/O is opt-in and happens only after strict decoding and current-plan restore.
-        val oldPlan = historicalContent?.loadPlan(plan.serviceDate)
-            ?: return PlaybackRestoreResult.Invalid(PlaybackRestoreResult.Reason.PLAN_MISMATCH)
-        val migrated = Published05PlaybackMigration.migrate(oldPlan, plan, stored.snapshot)
-            ?: return PlaybackRestoreResult.Invalid(PlaybackRestoreResult.Reason.PLAN_MISMATCH)
-        return PlaybackRestoreResult.MigrationCandidate(stored, migrated.state, migrated.note)
+        for (load in listOf<() -> ServicePlaybackPlan?>(
+            { historical06Content?.loadPlan(plan.serviceDate) },
+            { historicalContent?.loadPlan(plan.serviceDate) }
+        )) {
+            val oldPlan = load() ?: continue
+            val migrated = Published05PlaybackMigration.migrate(oldPlan, plan, stored.snapshot) ?: continue
+            return PlaybackRestoreResult.MigrationCandidate(stored, migrated.state, migrated.note)
+        }
+        return PlaybackRestoreResult.Invalid(PlaybackRestoreResult.Reason.PLAN_MISMATCH)
     }
 
     companion object { const val PLAYBACK_KEY = "service_playback_v1" }

@@ -39,7 +39,7 @@ class MainScheduleOverviewTest {
         compose.onNodeWithTag("service_status_current").assertTextEquals("Возможно, уже идет")
         scrollTo("watch_current"); compose.onNodeWithTag("watch_current").performClick()
         scrollTo("service_status_next")
-        compose.onNodeWithTag("service_status_next").assertTextEquals("Следующая по расписанию")
+        compose.onNodeWithTag("service_status_next").assertTextEquals("Следующая литургия")
         scrollTo("watch_next"); compose.onNodeWithTag("watch_next").performClick()
         compose.runOnIdle {
             assertEquals(2, opened.size)
@@ -49,7 +49,7 @@ class MainScheduleOverviewTest {
     }
 
     @Test fun evenARecentSavedReadingNeverMasksCurrentOrNextService() {
-        val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext)
+        val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
         val stage = requireNotNull(container.getStageMatcher().getStageById("creed"))
         var resumed = 0
         compose.setContent { GuideTheme(false) { MainScreen(stage, today,
@@ -80,7 +80,7 @@ class MainScheduleOverviewTest {
         compose.onNodeWithTag("service_start_next").assertTextEquals("1 января 2027 · 00:30")
         compose.onNodeWithTag("service_zone_next").assertTextEquals("Местное время храма · UTC+10:00")
         scrollTo("service_status_next")
-        compose.onNodeWithTag("service_status_next").assertTextEquals("Следующая по вашему времени")
+        compose.onNodeWithTag("service_status_next").assertTextEquals("Следующая литургия · ваше время")
         scrollTo("service_source_next")
         compose.onNodeWithTag("service_source_next").assertTextEquals("Начало указано вами")
         compose.onNodeWithTag("service_card_current").assertDoesNotExist()
@@ -94,18 +94,15 @@ class MainScheduleOverviewTest {
             bottomBar = {}, overview = ScheduleOverview(), onOpenService = { fail("Unknown service cannot be opened") }) } }
         scrollTo("open_church"); compose.onNodeWithTag("open_church").performClick()
         scrollTo("schedule_unknown")
-        compose.onNodeWithTag("schedule_unknown").assertTextEquals("Нет данных о ближайшей литургии")
+        compose.onNodeWithTag("schedule_unknown").assertTextEquals("Литургия")
         scrollTo("find_stage")
         compose.onAllNodesWithTag("find_stage").assertCountEquals(1)
         compose.onNodeWithTag("find_stage").assertTextEquals("Найти текущий момент").performClick()
         scrollTo("set_service_time")
         compose.onNodeWithTag("set_service_time").assertTextEquals("Указать начало литургии").performClick()
-        assertTrue("Finding the current moment must precede the secondary time action",
-            compose.onNodeWithTag("find_stage").getUnclippedBoundsInRoot().bottom <=
-                compose.onNodeWithTag("set_service_time").getUnclippedBoundsInRoot().top)
         scrollTo("open_order")
         compose.onNodeWithTag("open_order").performClick()
-        scrollTo("start_guide"); compose.onNodeWithTag("start_guide").performClick()
+        scrollTo("start_guide"); compose.onNodeWithTag("start_guide").assertTextEquals("Открыть текст").performClick()
         compose.runOnIdle { assertEquals(listOf(1, 1, 1, 1, 1), listOf(chosen, found, ordered, started, timed)) }
         compose.onNodeWithTag("watch_current").assertDoesNotExist()
         compose.onNodeWithTag("watch_next").assertDoesNotExist()

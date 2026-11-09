@@ -137,7 +137,7 @@ class PersonalServiceTimeTest {
             searchQuery = "", onSearchQueryChange = {}, onSelect = { _, selected -> selected(); ChurchSelectionResult.SELECTED }, onOpenUrl = {}, onBack = {}, userStarts = starts.value,
             onSaveStart = { value -> starts.value = listOf(value); true },
             onRemoveStart = { date -> starts.value = starts.value.filterNot { it.date == date.toString() }; true }) } }
-        compose.onNodeWithTag("church_content").performScrollToNode(hasText("Опубликованное расписание"))
+        compose.onNodeWithTag("church_content").performScrollToNode(hasText("Расписание прихода"))
         compose.onNodeWithText("09:00").assertIsDisplayed()
         compose.onNodeWithText("Поздняя литургия").assertIsDisplayed()
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("personal_start_summary"))

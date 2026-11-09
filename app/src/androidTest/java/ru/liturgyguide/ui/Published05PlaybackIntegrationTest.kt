@@ -33,7 +33,7 @@ class Published05PlaybackIntegrationTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
     private val preferences = context.getSharedPreferences("guide_preferences", Context.MODE_PRIVATE)
-    private val production = AppContainer(context)
+    private val production = AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
     private val parish get() = production.parishes.getOrThrow().selected(null)
     private val accepted get() = ReadingContext(parish.id, "2026-11-08", parish.timezone,
         ReadingContextSource.PUBLISHED, Instant.parse("2026-11-08T04:00:15.500Z").toEpochMilli())
@@ -103,7 +103,7 @@ class Published05PlaybackIntegrationTest {
         assertEquals(oldText, plan(currentContainer).segments[saved().snapshot.segmentIndex])
         migrationNotice()
         compose.onNodeWithTag("player_meaning_tab").performClick()
-        migrationNotice("service_content")
+        migrationNotice()
         compose.onNodeWithTag("player_menu").performClick()
         compose.onNodeWithTag("open_reading_details").performClick()
         compose.onNodeWithTag("reading_details_migration_notice").assertIsDisplayed().assertTextEquals(completedNote)
@@ -111,13 +111,14 @@ class Published05PlaybackIntegrationTest {
         home()
         main("resume_guide").performClick()
         compose.onNodeWithTag("player_meaning_tab").assertIsSelected()
-        migrationNotice("service_content")
+        migrationNotice()
         compose.onNodeWithTag("player_menu").performClick()
         compose.onNodeWithText("Темный экран").performClick()
-        migrationNotice("service_content")
+        migrationNotice()
         compose.onNodeWithTag("player_text_tab").performClick()
-        compose.openReaderControl("next_stage").performClick()
-        compose.onNodeWithTag("playback_migration_notice").assertDoesNotExist()
+        compose.onNodeWithTag("open_map").performClick()
+        stage("antiphons").performClick()
+        assertNoMigrationNotice()
         assertEquals("antiphons", plan(currentContainer).stageAt(saved().snapshot.segmentIndex).id)
     }
 
@@ -133,10 +134,10 @@ class Published05PlaybackIntegrationTest {
             when (route) {
                 "settings" -> {
                     compose.onNodeWithTag("player_menu").performClick()
-                    compose.onNodeWithText("Размер текста и настройки").performClick()
+                    compose.onNodeWithText("Размер текста").performClick()
                 }
                 "order" -> compose.onNodeWithTag("open_map").performClick()
-                "correction" -> compose.openReaderControl("controls_clarify").performClick()
+                "correction" -> compose.onNodeWithTag("clarify_stage").performClick()
             }
             val before = preferences.all.toMap()
             val writesBefore = storage.commits
@@ -181,7 +182,7 @@ class Published05PlaybackIntegrationTest {
         main("open_order").performClick()
         stage("lords_prayer").performClick()
         assertStored(accepted, "lords_prayer", PlaybackSpeed.SLOW, 0L)
-        compose.onNodeWithTag("playback_migration_notice").assertDoesNotExist()
+        assertNoMigrationNotice()
         assertGlobalsAndOtherBookmarks()
     }
 
@@ -189,7 +190,7 @@ class Published05PlaybackIntegrationTest {
         seed(speed = PlaybackSpeed.FAST)
         val restoration = launch(oldContainer())
         main("resume_guide").performClick()
-        compose.openReaderControl("controls_clarify").performClick()
+        compose.onNodeWithTag("clarify_stage").performClick()
         val before = preferences.all.toMap()
         compose.runOnIdle { currentContainer = expandedContainer() }
         restoration.emulateSavedInstanceStateRestore()
@@ -197,7 +198,7 @@ class Published05PlaybackIntegrationTest {
         landmark("lords_prayer")
         acceptArrival()
         assertStored(accepted, "lords_prayer", PlaybackSpeed.FAST, 0L)
-        compose.onNodeWithTag("playback_migration_notice").assertDoesNotExist()
+        assertNoMigrationNotice()
     }
 
     @Test fun aNewManualMomentUsesTodayAndNormalSpeedAndLateResumeCannotReplaceIt() = withCiFailureDiagnostics("migration.aNewManualMomentUsesTodayAndNormalSpeedAndLateResumeCannotReplaceIt") {
@@ -285,14 +286,14 @@ class Published05PlaybackIntegrationTest {
 
     @Test fun assetReaderPreservesDefaultInputsCacheFailuresAndExplicitStageRetry() = withCiFailureDiagnostics("migration.assetReaderPreservesDefaultInputsCacheFailuresAndExplicitStageRetry") {
         val defaultPlan = plan(production)
-        val explicitCurrent = AppContainer(context, assetReader = ::asset)
+        val explicitCurrent = AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules, assetReader = ::asset)
         assertEquals(plan(explicitCurrent).fingerprint, defaultPlan.fingerprint)
         val discovery = production.placeDiscovery
-        assertSame(discovery, AppContainer(context, discovery).placeDiscovery)
+        assertSame(discovery, AppContainer(context, discovery, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules).placeDiscovery)
         val counts = mutableMapOf<String, Int>()
         var stagesAvailable = false
         var dailyAvailable = false
-        val container = AppContainer(context, assetReader = { name ->
+        val container = AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules, assetReader = { name ->
             counts[name] = (counts[name] ?: 0) + 1
             when (name) {
                 "liturgy_stages.json" -> if (stagesAvailable) originalJson else error("stage read failure")
@@ -314,11 +315,11 @@ class Published05PlaybackIntegrationTest {
     }
 
     private fun asset(name: String): String = context.assets.open(name).bufferedReader(Charsets.UTF_8).use { it.readText() }
-    private fun oldContainer() = AppContainer(context, assetReader = { name ->
+    private fun oldContainer() = AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules, assetReader = { name ->
         if (name == "liturgy_stages.json") originalJson else asset(name)
     })
     private fun expandedContainer(reads: MutableList<String> = mutableListOf(), historical: ((String) -> String)? = null) =
-        AppContainer(context, assetReader = { name ->
+        AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules, assetReader = { name ->
             reads += name
             when {
                 name == "liturgy_stages.json" -> expandedJson
@@ -397,7 +398,18 @@ class Published05PlaybackIntegrationTest {
         node.fetchSemanticsNode().config[SemanticsActions.OnClick].action!!
     private fun saved() = requireNotNull(StoredServicePlaybackCodec.decode(preferences.getString(ServicePlaybackStore.PLAYBACK_KEY, null)))
     private fun unchanged(before: Map<String, *>) = compose.runOnIdle { assertEquals(before, preferences.all) }
-    private fun migrationNotice(parent: String = "lyrics_list") = scroll(parent, "playback_migration_notice").assertTextEquals(completedNote)
+    // The reading book keeps secondary provenance in its real details dialog.
+    // Check its presence/absence there, rather than asserting a retired HUD tag.
+    private fun migrationNotice() {
+        compose.openReaderDetails()
+        compose.onNodeWithTag("reading_details_migration_notice").assertIsDisplayed().assertTextEquals(completedNote)
+        compose.closeReaderDetails()
+    }
+    private fun assertNoMigrationNotice() {
+        compose.openReaderDetails()
+        compose.onNodeWithTag("reading_details_migration_notice").assertDoesNotExist()
+        compose.closeReaderDetails()
+    }
     private fun assertStored(value: ReadingContext, stageId: String, speed: PlaybackSpeed, offset: Long, restored: Boolean = false) {
         compose.waitForIdle()
         val stored = saved()
@@ -413,8 +425,12 @@ class Published05PlaybackIntegrationTest {
         assertEquals(stageId, marker.anchorStageId)
         assertFalse(marker.autoAdvance)
         assertEquals(0L, marker.elapsedInStageMillis)
-        compose.onNodeWithContentDescription("Двигать текст").assertExists()
-        compose.onNodeWithTag("reader_status").assertTextEquals(if (restored) "На паузе · сохраненное чтение" else "На паузе")
+        compose.onNodeWithTag("play_lyrics").assertIsDisplayed().assertTextEquals("Автопрокрутка")
+        if (restored) {
+            compose.openReaderDetails()
+            compose.onNodeWithText("Сохранённое чтение. Место в храме можно уточнить по словам или микрофону").assertIsDisplayed()
+            compose.closeReaderDetails()
+        }
     }
     private fun assertGlobalsAndOtherBookmarks() {
         assertFalse(preferences.getBoolean("dark", true))

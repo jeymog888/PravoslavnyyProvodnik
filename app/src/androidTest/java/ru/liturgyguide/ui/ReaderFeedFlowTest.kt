@@ -30,7 +30,7 @@ import java.time.LocalDate
 @RunWith(AndroidJUnit4::class)
 class ReaderFeedFlowTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
-    private val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext)
+    private val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
 
     @Test fun browsingAnotherHeaderDoesNotAcceptItOrChangeTheMeaning() = withCiFailureDiagnostics("feed.browseAndMeaning") {
         val h = launch(reading("anaphora", trackIndex = 0, lineIndex = 1, offset = 1_234))

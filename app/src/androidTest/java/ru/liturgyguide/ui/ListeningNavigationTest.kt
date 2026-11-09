@@ -24,7 +24,7 @@ import java.time.ZoneOffset
 class ListeningNavigationTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
-    private val container = AppContainer(context)
+    private val container = AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
     private val preferences get() = context.getSharedPreferences("guide_preferences", Context.MODE_PRIVATE)
     private val day = LocalDate.of(2026, 11, 8)
     private val clock = Clock.fixed(Instant.parse("2026-11-10T12:00:00Z"), ZoneOffset.UTC)
@@ -35,7 +35,7 @@ class ListeningNavigationTest {
             seed()
             val speech = launch()
             resume()
-            compose.onNodeWithTag("play_lyrics").performClick().assertContentDescriptionEquals("Пауза")
+            compose.onNodeWithTag("play_lyrics").performClick().assertTextEquals("Пауза")
             val before = saved()
             val permission = context.checkSelfPermission(Manifest.permission.RECORD_AUDIO)
             compose.onNodeWithTag("reader_microphone").assertIsDisplayed().performClick()
@@ -50,7 +50,7 @@ class ListeningNavigationTest {
             assertEquals(permission, context.checkSelfPermission(Manifest.permission.RECORD_AUDIO))
             assertEquals(before, saved())
             back()
-            compose.onNodeWithTag("play_lyrics").assertContentDescriptionEquals("Двигать текст")
+            compose.onNodeWithTag("play_lyrics").assertTextEquals("Автопрокрутка")
             assertEquals(before, saved())
         }
 
@@ -98,14 +98,14 @@ class ListeningNavigationTest {
             assertEquals("2026-11-08", accepted.context.serviceDate)
             assertEquals(PlaybackSpeed.FAST, accepted.snapshot.speed)
             assertEquals(0L, accepted.snapshot.elapsedQuarterMillis)
-            val target = original.plan.tracksByStage.getValue("lords_prayer")[0]
+            val target = original.plan.tracksByStage.getValue("lords_prayer").single { it.title == "Отче наш" }
             assertEquals(original.plan.indexOfLine(target.id, target.lines[0].id), accepted.snapshot.segmentIndex)
             oldBookmarks.forEach { (key, value) -> assertEquals("Unrelated bookmark $key", value, preferences.all[key]) }
             assertTrue(preferences.getBoolean("lyric_original", false))
             compose.onNodeWithTag("return_to_text").performClick()
             compose.assertReaderMode("original", selected = true)
             compose.onFeedLine(target, 0).assertIsSelected().assertIsDisplayed()
-            compose.onNodeWithTag("play_lyrics").assertContentDescriptionEquals("Двигать текст")
+            compose.onNodeWithTag("play_lyrics").assertTextEquals("Автопрокрутка")
             compose.runOnIdle { assertEquals(1, speech.backend.starts); assertEquals(1, speech.backend.releases) }
         }
 
@@ -172,7 +172,7 @@ class ListeningNavigationTest {
         val plan = ServicePlaybackPlan.build(container.getStageMatcher().getAllStages(), day,
             container.readings?.days?.single { it.date == day.toString() })
         val engine = ServicePlaybackEngine(plan)
-        val track = plan.tracksByStage.getValue("creed")[1]
+        val track = plan.tracksByStage.getValue("creed").single { it.title == "Символ веры" }
         val state = engine.seekLine(engine.start("creed", PlaybackSpeed.FAST), track.id, track.lines[12].id)
             .copy(elapsedQuarterMillis = 1_234)
         val reading = ActiveServicePlayback(plan,
@@ -181,7 +181,7 @@ class ListeningNavigationTest {
             .putBoolean("lyric_original", true).putInt("text_size", 0).commit())
         check(ReadingAcceptanceStore(preferences).acceptPlayback(plan, reading.context, engine.snapshot(state, 1_000),
             ServiceSession("creed", Instant.parse("2026-11-08T12:00:00Z").toEpochMilli()), true, PlaybackBookmark.at(plan, state)))
-        val other = plan.tracksByStage.getValue("communion")[1]
+        val other = plan.tracksByStage.getValue("communion").single { it.title == "Верую, Господи, и исповедую" }
         check(preferences.edit().putString("lyric_track_communion", other.id)
             .putString("lyric_phrase_${other.id}", other.lines[4].id).putInt("lyric_line_${other.id}", 4)
             .putLong("lyric_offset_${other.id}", 321).commit())

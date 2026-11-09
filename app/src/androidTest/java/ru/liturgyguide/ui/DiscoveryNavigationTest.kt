@@ -48,7 +48,7 @@ class DiscoveryNavigationTest {
             override suspend fun findChurches(center: GeoPoint, radiusMeters: Int): DiscoveryResult<DiscoveredChurch> = error("Name entry must not request nearby places")
         }
         val restore = StateRestorationTester(compose)
-        val container = AppContainer(context, fake)
+        val container = AppContainer(context, fake, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
         restore.setContent { AppNavigation(container, Clock.fixed(Instant.parse("2026-11-08T03:00:00Z"), ZoneOffset.UTC)) }
         compose.onNodeWithTag("open_church").performClick()
         compose.onNodeWithTag("church_picker").assertIsDisplayed()
@@ -99,7 +99,7 @@ class DiscoveryNavigationTest {
             override suspend fun findChurches(center: GeoPoint, radiusMeters: Int): DiscoveryResult<DiscoveredChurch> = error("Name entry must not request nearby places")
         }
         val restore = StateRestorationTester(compose)
-        val container = AppContainer(context, fake)
+        val container = AppContainer(context, fake, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
         restore.setContent { AppNavigation(container, Clock.fixed(Instant.parse("2026-11-08T03:00:00Z"), ZoneOffset.UTC)) }
         compose.onNodeWithTag("open_church").performClick()
         compose.onNodeWithTag("church_search").performTextInput("Новый храм Казань")
@@ -132,7 +132,7 @@ class DiscoveryNavigationTest {
         compose.onNodeWithTag("add_church_form").assertDoesNotExist()
         compose.onNodeWithTag("open_church").assertTextContains(church.name)
         compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("schedule_unknown"))
-        compose.onNodeWithTag("schedule_unknown").assertTextEquals("Нет данных о ближайшей литургии")
+        compose.onNodeWithTag("schedule_unknown").assertTextEquals("Литургия")
         compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("find_stage"))
         compose.onAllNodesWithTag("find_stage").assertCountEquals(1)
         compose.onNodeWithTag("find_stage").assertTextEquals("Найти текущий момент").assertIsDisplayed()
@@ -176,7 +176,7 @@ class DiscoveryNavigationTest {
             override suspend fun findChurches(center: GeoPoint, radiusMeters: Int): DiscoveryResult<DiscoveredChurch> = error("A name result must not require nearby search")
         }
         val restore = StateRestorationTester(compose)
-        val container = AppContainer(context, fake)
+        val container = AppContainer(context, fake, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
         restore.setContent { AppNavigation(container, Clock.fixed(Instant.parse("2026-11-08T03:00:00Z"), ZoneOffset.UTC)) }
         compose.onNodeWithTag("open_church").performClick()
         compose.onNodeWithTag("change_church").performClick()

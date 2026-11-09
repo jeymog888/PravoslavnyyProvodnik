@@ -40,7 +40,7 @@ class ReaderPlatformFontTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val context = instrumentation.targetContext
     private val preferences get() = context.getSharedPreferences("guide_preferences", Context.MODE_PRIVATE)
-    private val container = AppContainer(context)
+    private val container = AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
     private val instant = Instant.parse("2026-11-08T12:00:00Z")
     private val clock = Clock.fixed(instant, ZoneOffset.UTC)
     private val parent = AtomicReference<PlatformParent?>()

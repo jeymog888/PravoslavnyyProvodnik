@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.MicNone
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -47,19 +49,28 @@ internal fun ManualMomentScreen(draft: ArrivalDraft, onLandmark: (ManualLandmark
                 }
             }
             item {
-                Button(onClick = onSearch, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("manual_search")) {
-                    Text("Поиск по словам")
-                }
-                OutlinedButton(onClick = onMicrophone, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("manual_microphone")) {
-                    Text("Микрофон")
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text("Узнайте место по услышанным словам", style = MaterialTheme.typography.headlineSmall)
+                    Button(onClick = onSearch, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("manual_search")) {
+                        Icon(Icons.Default.Search, null, Modifier.size(20.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Text("Поиск по словам")
+                    }
+                    OutlinedButton(onClick = onMicrophone, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("manual_microphone")) {
+                        Icon(Icons.Default.MicNone, null, Modifier.size(20.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Text("Микрофон")
+                    }
+                    Text("Введите несколько слов или дайте телефону послушать. Найденное место можно проверить перед переходом",
+                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             item {
                 Text("Что сейчас слышно или видно?", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(12.dp))
                 Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
-                    Column {
-                        manualLandmarks.forEachIndexed { index, landmark ->
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        manualLandmarks.forEach { landmark ->
                             Row(Modifier.fillMaxWidth().heightIn(min = 56.dp)
                                 .clickable(role = Role.Button) { onLandmark(landmark) }
                                 .testTag("manual_${landmark.stageId}")
@@ -70,8 +81,6 @@ internal fun ManualMomentScreen(draft: ArrivalDraft, onLandmark: (ManualLandmark
                                 Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(18.dp),
                                     tint = MaterialTheme.colorScheme.primary)
                             }
-                            if (index < manualLandmarks.lastIndex) HorizontalDivider(Modifier.padding(horizontal = 20.dp),
-                                color = MaterialTheme.colorScheme.outlineVariant)
                         }
                     }
                 }

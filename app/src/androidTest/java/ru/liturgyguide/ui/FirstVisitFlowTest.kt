@@ -28,7 +28,7 @@ import java.time.ZoneOffset
 class FirstVisitFlowTest {
     @get:Rule val compose = createComposeRule()
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
-    private val container = AppContainer(context)
+    private val container = AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
     private val preferences get() = context.getSharedPreferences("guide_preferences", Context.MODE_PRIVATE)
     private val now = Instant.parse("2026-11-08T06:00:00Z")
     private val parish get() = container.parishes.getOrThrow().selected(null)
@@ -156,7 +156,7 @@ class FirstVisitFlowTest {
         compose.onNodeWithTag("main_content").assertIsDisplayed()
         compose.onNodeWithTag("open_church").assertTextContains(saved.name)
         compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("schedule_unknown"))
-        compose.onNodeWithTag("schedule_unknown").assertTextEquals("Нет данных о ближайшей литургии")
+        compose.onNodeWithTag("schedule_unknown").assertTextEquals("Литургия")
         compose.onNodeWithTag("nav_church").performClick()
         // A previous look at tomorrow must not change the date of the Main screen's action.
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("schedule_tomorrow"))

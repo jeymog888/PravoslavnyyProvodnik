@@ -22,7 +22,7 @@ import java.time.LocalDate
 @RunWith(AndroidJUnit4::class)
 class ExpandedContentFlowTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
-    private val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext)
+    private val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
     private val date = LocalDate.of(2026, 11, 8)
     private val accepted = ReadingContext("selected-test-church", date.toString(), "Europe/Moscow", ReadingContextSource.MANUAL)
     private val plan by lazy { ServicePlaybackPlan.build(container.getStageMatcher().getAllStages(), date,

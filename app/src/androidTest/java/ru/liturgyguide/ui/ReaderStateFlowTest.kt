@@ -23,7 +23,7 @@ import java.time.LocalDate
 @RunWith(AndroidJUnit4::class)
 class ReaderStateFlowTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
-    private val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext)
+    private val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
     private val date = LocalDate.of(2026, 11, 9)
     private val primaryTags = listOf("play_lyrics", "start_liturgy", "return_to_text", "continue_missing_reading", "finish_reading")
 

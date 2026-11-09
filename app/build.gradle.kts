@@ -12,8 +12,8 @@ android {
         applicationId = "ru.liturgyguide"
         minSdk = 26
         targetSdk = 35
-        versionCode = 6
-        versionName = "0.6.0-guide"
+        versionCode = 7
+        versionName = "0.7.0-guide"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -62,6 +62,8 @@ dependencies {
 
     // Gson
     implementation("com.google.code.gson:gson:2.10.1")
+    // HTML parsing only; networking stays in the bounded cancellable transport.
+    implementation("org.jsoup:jsoup:1.18.3")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation(composeBom)

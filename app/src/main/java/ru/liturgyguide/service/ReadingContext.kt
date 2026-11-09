@@ -7,6 +7,7 @@ import com.google.gson.stream.JsonToken
 import ru.liturgyguide.model.Parish
 import java.io.StringReader
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 
 /** The selected service's date is immutable while reading, even after local midnight. */
@@ -21,6 +22,13 @@ data class ReadingContext(
 enum class ReadingContextSource { MANUAL, PUBLISHED, USER }
 
 object ReadingContextFactory {
+    /** A date chosen in the church page is a reading date, never an invented service start. */
+    fun manualOnDate(parish: Parish?, date: LocalDate, fallbackTimezone: String = "Europe/Moscow"): ReadingContext? =
+        runCatching {
+            ReadingContextCodec.validated(ReadingContext(parish?.id, date.toString(),
+                ZoneId.of(parish?.timezone ?: fallbackTimezone).id, ReadingContextSource.MANUAL))
+        }.getOrNull()
+
     /** A new manual reading belongs to the parish's local date at this explicit action. */
     fun manual(parish: Parish?, now: Instant, fallbackTimezone: String = "Europe/Moscow"): ReadingContext? =
         runCatching {

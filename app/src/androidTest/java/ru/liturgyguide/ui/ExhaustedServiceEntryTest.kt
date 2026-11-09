@@ -37,7 +37,7 @@ class ExhaustedServiceEntryTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
     private val preferences = context.getSharedPreferences("guide_preferences", Context.MODE_PRIVATE)
-    private val container = AppContainer(context)
+    private val container = AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
     private val parish get() = container.parishes.getOrThrow().selected(null)
     private val afterMidnight = Instant.parse("2026-11-08T21:50:00Z")
     private val expected = ReadingContext("elisavetinsky_opalikha", "2026-11-08", "Europe/Moscow",

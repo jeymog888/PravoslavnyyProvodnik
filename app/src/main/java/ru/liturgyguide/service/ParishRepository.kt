@@ -31,11 +31,5 @@ class ParishRepository(json: String) {
     }
     fun selected(id: String?): Parish = directory.churches.firstOrNull { it.id == id }
         ?: directory.churches.first { it.id == directory.defaultChurchId }
-    fun scheduleFor(church: Parish, date: LocalDate): List<ParishService> {
-        if (church.schedule.isEmpty()) return emptyList()
-        val from = runCatching { LocalDate.parse(church.scheduleValidFrom) }.getOrNull() ?: return emptyList()
-        val until = runCatching { LocalDate.parse(church.scheduleValidUntil) }.getOrNull() ?: return emptyList()
-        return if (date.isBefore(from) || date.isAfter(until)) emptyList()
-            else church.schedule.filter { it.date == date.toString() }.sortedBy { it.time }
-    }
+    fun scheduleFor(church: Parish, date: LocalDate): List<ParishService> = PublishedSchedule.forDate(church, date)
 }

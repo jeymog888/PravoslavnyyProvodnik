@@ -17,7 +17,7 @@ import java.time.LocalDate
 @RunWith(AndroidJUnit4::class)
 class DateRolloverTest {
     @get:Rule val compose = createComposeRule()
-    private val parishes = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext).parishes.getOrThrow()
+    private val parishes = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules).parishes.getOrThrow()
 
     @Test
     fun mainDateUpdatesWhileTheScreenStaysOpen() {
@@ -88,7 +88,7 @@ class DateRolloverTest {
     }
 
     private fun assertNoConfirmedSchedule() {
-        assertScheduleText("На этот день нет опубликованного расписания в приложении")
+        assertScheduleText("Типовой порядок")
         compose.onNodeWithText("07:00").assertDoesNotExist()
         compose.onNodeWithText("08:00").assertDoesNotExist()
         compose.onNodeWithText("09:30").assertDoesNotExist()

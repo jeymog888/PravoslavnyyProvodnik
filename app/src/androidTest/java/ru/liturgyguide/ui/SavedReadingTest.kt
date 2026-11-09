@@ -22,7 +22,7 @@ class SavedReadingTest {
     @get:Rule val compose = createEmptyComposeRule()
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
     private val preferences get() = context.getSharedPreferences("guide_preferences", Context.MODE_PRIVATE)
-    private val tracks = PrayerTrackFactory.build(requireNotNull(AppContainer(context).getStageMatcher().getStageById("creed")), null)
+    private val tracks = PrayerTrackFactory.build(requireNotNull(AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules).getStageMatcher().getStageById("creed")), null)
 
     @Test
     fun legacyTrackBookmarksKeepTheirPhraseButDiscardTheOldTimerOffsets() {

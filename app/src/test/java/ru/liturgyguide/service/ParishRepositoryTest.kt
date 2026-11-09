@@ -20,8 +20,8 @@ class ParishRepositoryTest {
         val repository = repository()
         val churches = repository.directory.churches
 
-        assertEquals(2, churches.size)
-        assertEquals(setOf("elisavetinsky_opalikha", "vsetsaritsa_nakhabino"), churches.map { it.id }.toSet())
+        assertEquals(4, churches.size)
+        assertEquals(setOf("elisavetinsky_opalikha", "vsetsaritsa_nakhabino", "sretensky_old", "sretensky_new"), churches.map { it.id }.toSet())
         assertEquals("elisavetinsky_opalikha", repository.directory.defaultChurchId)
         val main = repository.selected(null)
         val affiliated = repository.selected("vsetsaritsa_nakhabino")
@@ -30,6 +30,19 @@ class ParishRepositoryTest {
         assertTrue(affiliated.address.contains("Нахабино"))
         assertNotEquals(main.id, affiliated.id)
         assertNotEquals(main.phone, affiliated.phone)
+    }
+
+    @Test
+    fun `Sretensky buildings retain separate published times and expire after the verified week`() {
+        val repository = repository()
+        val sunday = LocalDate.of(2026, 11, 15)
+        val old = repository.selected("sretensky_old")
+        val new = repository.selected("sretensky_new")
+        assertEquals(listOf("07:00"), repository.scheduleFor(old, sunday).filter { it.kind == "liturgy" }.map { it.time })
+        assertEquals(listOf("10:00"), repository.scheduleFor(new, sunday).filter { it.kind == "liturgy" }.map { it.time })
+        assertTrue(repository.scheduleFor(old, sunday.plusDays(1)).isEmpty())
+        assertTrue(repository.scheduleFor(new, sunday.plusDays(1)).isEmpty())
+        assertEquals(2, ChurchDirectory.search(repository.directory.churches, "сретенский", emptySet()).size)
     }
 
     @Test
@@ -97,7 +110,7 @@ class ParishRepositoryTest {
         assertTrue(source["note"].asString.isNotBlank())
         source.getAsJsonArray("churches").forEach { element ->
             val church = element.asJsonObject
-            listOf("sourceUrl", "website", "coordinateSourceUrl").forEach { key ->
+            (listOf("sourceUrl", "website") + if (church.has("latitude")) listOf("coordinateSourceUrl") else emptyList()).forEach { key ->
                 val url = URI(church[key].asString)
                 assertEquals("https", url.scheme)
                 assertFalse(url.host.isNullOrBlank())
@@ -105,12 +118,13 @@ class ParishRepositoryTest {
             listOf("scheduleSource", "scheduleCoverage", "scheduleNote", "phoneSource").forEach { key ->
                 assertTrue("${church["id"]}: missing provenance field $key", church[key].asString.isNotBlank())
             }
-            assertEquals("2026-11-01", church["scheduleValidFrom"].asString)
-            assertEquals("2026-11-30", church["scheduleValidUntil"].asString)
+            val from = LocalDate.parse(church["scheduleValidFrom"].asString)
+            val until = LocalDate.parse(church["scheduleValidUntil"].asString)
+            assertFalse(until.isBefore(from))
             val schedule = church.getAsJsonArray("schedule")
             val keys = schedule.map { it.asJsonObject.let { entry -> "${entry["date"].asString} ${entry["time"].asString}" } }
             assertEquals("Repeated times in ${church["id"]}", keys.size, keys.distinct().size)
-            assertTrue(schedule.all { it.asJsonObject["kind"].asString == "liturgy" })
+            assertTrue(schedule.all { it.asJsonObject["kind"].asString in setOf("liturgy", "evening", "moleben") })
         }
     }
 }

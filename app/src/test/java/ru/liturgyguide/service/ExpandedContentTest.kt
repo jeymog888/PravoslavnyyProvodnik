@@ -7,11 +7,11 @@ import ru.liturgyguide.model.DailyReadings
 import ru.liturgyguide.model.LiturgyStage
 import java.time.LocalDate
 
-/** Actual packaged 0.6 content, compared with the byte-verified published 0.5 baseline. */
+/** Frozen released 0.6 content, compared with the byte-verified published 0.5 baseline. */
 class ExpandedContentTest {
     private val changed = setOf("great_litany", "troparia_trisagion", "anaphora")
     private fun asset(name: String) = Published05Fixtures.asset(name)
-    private fun currentStages() = StageMatcher(asset("liturgy_stages.json")).getAllStages()
+    private fun currentStages() = StageMatcher(asset("published_0_6/liturgy_stages.json")).getAllStages()
     private fun currentPlan(date: LocalDate, stages: List<LiturgyStage> = currentStages()): ServicePlaybackPlan {
         val day = Gson().fromJson(asset("daily_readings.json"), DailyReadings::class.java)
             .days.singleOrNull { it.date == date.toString() }

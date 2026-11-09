@@ -27,6 +27,8 @@ import androidx.core.view.WindowCompat
 import ru.liturgyguide.LiturgyGuideApplication
 import ru.liturgyguide.di.AppContainer
 import ru.liturgyguide.service.*
+import ru.liturgyguide.service.schedule.InternetScheduleState
+import ru.liturgyguide.service.schedule.withInternetSchedule
 import java.time.Instant
 import com.google.gson.Gson
 import java.time.Duration
@@ -73,7 +75,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     var userStarts by remember { mutableStateOf(startStore.records()) }
     val readingContextStore = remember(preferences) { ReadingContextStore(preferences) }
     val readingAcceptanceStore = remember(preferences) { ReadingAcceptanceStore(preferences) }
-    val playbackStore = remember(preferences, container) { ServicePlaybackStore(preferences, container.historical05Content) }
+    val playbackStore = remember(preferences, container) { ServicePlaybackStore(preferences, container.historical05Content, container.historical06Content) }
     var readingContext by remember { mutableStateOf(readingContextStore.restore()) }
     var hasReadingMetadata by remember { mutableStateOf(preferences.contains(ReadingContextStore.CONTEXT_KEY)) }
     var hasPlaybackSnapshot by remember { mutableStateOf(preferences.contains(ServicePlaybackStore.PLAYBACK_KEY)) }
@@ -112,12 +114,31 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     val stages = matcher?.getAllStages().orEmpty()
     val sessionEngine = remember(stages, clock) { if (stages.isEmpty()) null else ServiceSessionEngine(stages, clock) }
     val parishes = container.parishes.getOrNull()
-    val churches = remember(parishes, savedChurches) { ChurchDirectory.merge(parishes?.directory?.churches.orEmpty(), savedChurches) }
+    val baseChurches = remember(parishes, savedChurches) { ChurchDirectory.merge(parishes?.directory?.churches.orEmpty(), savedChurches) }
     val validatedSession = session?.takeIf { runCatching { sessionEngine?.isValid(it) == true }.getOrDefault(false) }
-    val church = ChurchSelection.resolve(churches, hasChurchSelection, churchId,
+    val baseChurch = ChurchSelection.resolve(baseChurches, hasChurchSelection, churchId,
         hasReadingMetadata, readingContext, hasPlaybackSnapshot,
         hasLegacyReading = validatedSession != null || stages.any { it.id == selectedId },
         legacyDefaultId = parishes?.directory?.defaultChurchId)
+    val internetSchedules = container.internetSchedules
+    var internetSchedule by remember(internetSchedules, baseChurch?.id) {
+        mutableStateOf(baseChurch?.let(internetSchedules::cached))
+    }
+    var scheduleRefresh by remember(baseChurch?.id) { mutableIntStateOf(0) }
+    var scheduleSourceOverride by remember(baseChurch?.id) { mutableStateOf<String?>(null) }
+    val parishDay = baseChurch?.let { now.atZone(ZoneId.of(it.timezone)).toLocalDate() }
+    LaunchedEffect(internetSchedules, baseChurch?.id, parishDay, scheduleRefresh) {
+        val selected = baseChurch ?: return@LaunchedEffect
+        // Fresh curated data needs no surprise request. Explicit refresh remains available.
+        val hasBundle = parishDay?.let { PublishedSchedule.forDate(selected, it).isNotEmpty() ||
+            PublishedSchedule.forDate(selected, it.plusDays(1)).isNotEmpty() } == true
+        if (hasBundle && scheduleRefresh == 0) return@LaunchedEffect
+        internetSchedule = (internetSchedule ?: InternetScheduleState(selected.id)).copy(loading = true)
+        internetSchedule = internetSchedules.refresh(selected, now, force = scheduleRefresh > 0,
+            sourceOverride = scheduleSourceOverride)
+    }
+    val church = baseChurch?.let { original -> internetSchedule?.let { original.withInternetSchedule(it, now) } ?: original }
+    val churches = remember(baseChurches, church) { baseChurches.map { if (it.id == church?.id) requireNotNull(church) else it } }
     val contextEngine = remember(stages, clock) { if (stages.isEmpty()) null else ContextSuggestionEngine(stages, clock) }
     val overview = church?.let { contextEngine?.overview(it, now, userStarts) } ?: ScheduleOverview()
     val currentDate = now.atZone(ZoneId.of(church?.timezone ?: "Europe/Moscow")).toLocalDate()
@@ -299,6 +320,37 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         }
         ActiveServicePlayback(plan, accepted, state, approximate)
     }.getOrNull()
+    // A generic open action resumes the same dated reading; only an explicitly
+    // labelled restart replaces a different/legacy pending reading.
+    fun resumableText(date: LocalDate): ActiveServicePlayback? =
+        if (invalidRecovery) null else (player.reading ?: restoredReading)?.takeIf {
+            it.context.parishId == church?.id && it.context.serviceDate == date.toString()
+        }
+    fun openReadingText(date: LocalDate) {
+        val existing = resumableText(date)
+        if (existing != null) {
+            if (player.reading != null || beginReading(existing, resetBookmarks = false,
+                    resetReaderUi = false, preserveRestoreNotice = true)) {
+                arrivalDraft = null
+                navigate(Screen.SERVICE)
+            }
+            return
+        }
+        val accepted = ReadingContextFactory.manualOnDate(church, date)
+        val first = stages.firstOrNull { it.id == "beginning" } ?: stages.first()
+        val value = accepted?.let { candidate(it, first.id) }
+        if (value != null && beginReading(value, resetBookmarks = true)) {
+            arrivalDraft = null
+            navigate(Screen.SERVICE)
+        }
+    }
+    val hasReadingToReplace = selectedStage != null || hasReadingMetadata || hasPlaybackSnapshot
+    fun readingEntryLabel(date: LocalDate, freshLabel: String): String = when {
+        resumableText(date) != null -> "Продолжить чтение"
+        hasReadingToReplace -> "Читать с начала"
+        else -> freshLabel
+    }
+
     fun recoverArrival() {
         arrivalDraft = null
         searchOrigin = Screen.MAIN
@@ -546,10 +598,12 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         onOpenService = ::openScheduledService,
                         onChurch = { openChurch(fromHome = true) },
                         onPersonalTime = ::openPersonalTime,
+                        startLabel = readingEntryLabel(currentDate, "Открыть текст"),
                         onStart = {
-                            val accepted = ReadingContextFactory.manual(church, clock.instant())
-                            val value = accepted?.let { candidate(it, stages.first().id) }
-                            if (value != null && beginReading(value, resetBookmarks = true)) navigate(Screen.SERVICE)
+                            // Preserve the promise of a visible Continue button even at midnight.
+                            val date = if (resumableText(currentDate) != null) currentDate else
+                                clock.instant().atZone(ZoneId.of(church?.timezone ?: "Europe/Moscow")).toLocalDate()
+                            openReadingText(date)
                         },
                         onResume = resume@{
                             if (screen != Screen.MAIN || resumeGeneration != player.generation) return@resume
@@ -690,6 +744,9 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                     )
                     Screen.CHURCH -> ChurchScreen(
                         churches = churches, selectedId = church?.id,
+                        internetSchedule = internetSchedule,
+                        onRefreshSchedule = { scheduleSourceOverride = null; scheduleRefresh++ },
+                        onSetScheduleSource = { url -> scheduleSourceOverride = url; scheduleRefresh++ },
                         favorites = favoriteChurches,
                         onToggleFavorite = { id -> favoriteChurches = churchStore.toggleFavorite(id, churches.map { it.id }.toSet()) },
                         onAddChurch = { record ->
@@ -702,6 +759,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         pickerRequest = churchPickerRequest,
                         personalTimeRequest = personalTimeRequest,
                         onGoToService = { navigate(Screen.MAIN) },
+                        onReadLiturgy = ::openReadingText,
+                        readingEntryLabel = { date -> readingEntryLabel(date, "Читать литургию") },
                         userStarts = userStarts,
                         onSaveStart = { value ->
                             val saved = church?.let { startStore.save(value, it) } == true

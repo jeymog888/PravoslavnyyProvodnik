@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicReference
 class ReaderFontLayoutWitnessTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
-    private val container = AppContainer(instrumentation.targetContext)
+    private val container = AppContainer(instrumentation.targetContext, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
 
     @Test fun narrowPortrait320By640AtRequested260KeepsAllStatesReadable() =
         profile(320, 640, 2.6f)

@@ -24,7 +24,7 @@ class MainContextTest {
 
     @Test
     fun anOldReadingKeepsTheCurrentServicePrimaryAndCanStillBeOpened() {
-        val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext)
+        val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
         val parish = container.parishes.getOrThrow().selected(null)
         val stage = requireNotNull(container.getStageMatcher().getStageById("creed"))
         val joined = AtomicInteger()

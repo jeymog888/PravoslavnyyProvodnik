@@ -23,7 +23,7 @@ import java.time.ZoneOffset
 class ArrivalFlowTest {
     @get:Rule val compose = createComposeRule()
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
-    private val container = AppContainer(context)
+    private val container = AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
     private val preferences get() = context.getSharedPreferences("guide_preferences", Context.MODE_PRIVATE)
     private val instant = Instant.parse("2026-11-08T04:35:20Z")
     private val parish get() = container.parishes.getOrThrow().selected(null)

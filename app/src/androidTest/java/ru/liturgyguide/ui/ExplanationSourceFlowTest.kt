@@ -23,7 +23,7 @@ import java.time.LocalDate
 @RunWith(AndroidJUnit4::class)
 class ExplanationSourceFlowTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
-    private val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext)
+    private val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
     private val date = LocalDate.of(2026, 11, 8)
     // This accepted church differs from the site which published the explanation source.
     private val acceptedContext = ReadingContext("another-selected-church", date.toString(),

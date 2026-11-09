@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicReference
 @RunWith(AndroidJUnit4::class)
 class DailyReadingSearchTest {
     @get:Rule val compose = createComposeRule()
-    private val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext)
+    private val container = AppContainer(InstrumentationRegistry.getInstrumentation().targetContext, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
 
     @Test
     fun bothSpellingsFindTheSameStageAndPreserveTheEnteredQuery() {

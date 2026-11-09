@@ -24,7 +24,8 @@ import java.util.Locale
 fun MainScreen(lastStage: LiturgyStage?, currentDate: LocalDate, onStart: () -> Unit, onResume: () -> Unit, onFindStage: () -> Unit,
     church: Parish?, onChurch: () -> Unit, overview: ScheduleOverview,
     onOpenService: ((ContextSuggestion) -> Unit)? = null, onOrder: () -> Unit, bottomBar: @Composable () -> Unit,
-    readingNotice: String? = null, savedReadingNote: String? = null, onPersonalTime: (() -> Unit)? = null) {
+    readingNotice: String? = null, savedReadingNote: String? = null, onPersonalTime: (() -> Unit)? = null,
+    startLabel: String = "Открыть текст") {
     val unknownSchedule = church != null && overview.currentHypothesis == null && overview.nextKnownService == null
     val hasScopedMomentAction = overview.currentHypothesis?.estimatedGuideExhausted == true && onOpenService != null
     Scaffold(containerColor = MaterialTheme.colorScheme.background, bottomBar = bottomBar) { padding ->
@@ -77,17 +78,30 @@ fun MainScreen(lastStage: LiturgyStage?, currentDate: LocalDate, onStart: () -> 
                     primaryAction = overview.currentHypothesis == null, onOpenService = onOpenService)
             } }
             if (unknownSchedule) item {
-                Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
-                    Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("Нет данных о ближайшей литургии",
-                            style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("schedule_unknown"))
-                        Text("Найдите текущую часть службы по словам молитвы или тому, что происходит в храме",
-                            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Button(onClick = onFindStage,
+                Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.large) {
+                    Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                        Text("Литургия", style = MaterialTheme.typography.headlineMedium,
+                            modifier = Modifier.testTag("schedule_unknown"))
+                        Text("Читайте службу, перевод и объяснение в своем темпе",
+                            style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Button(onClick = onStart,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("start_guide")) {
+                            Icon(Icons.Default.MenuBook, null, Modifier.size(20.dp))
+                            Spacer(Modifier.width(12.dp))
+                            Text(startLabel)
+                        }
+                        OutlinedButton(onClick = onFindStage,
                             modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("find_stage")) {
                             Text("Найти текущий момент")
                         }
-                        if (onPersonalTime != null) TextButton(onClick = onPersonalTime,
+                    }
+                }
+            }
+            if (unknownSchedule) item {
+                Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.large) {
+                    Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                        TypicalScheduleContent(currentDate)
+                        if (onPersonalTime != null) OutlinedButton(onClick = onPersonalTime,
                             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("set_service_time")) {
                             Text("Указать начало литургии")
                         }
@@ -101,17 +115,16 @@ fun MainScreen(lastStage: LiturgyStage?, currentDate: LocalDate, onStart: () -> 
             }
             item {
                 Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
-                    Column {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         if (!unknownSchedule && !hasScopedMomentAction) {
                             GuideActionRow("Найти текущий момент", "По ориентиру или словам молитвы", Icons.Default.Search, onFindStage, "find_stage")
-                            HorizontalDivider(Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.outlineVariant)
                         }
                         GuideActionRow("Порядок службы", "Части и этапы литургии", Icons.Default.FormatListNumbered, onOrder, "open_order")
                     }
                 }
             }
-            item {
-                TextButton(onClick = onStart, modifier = Modifier.fillMaxWidth().testTag("start_guide")) { Text("Читать с начала") }
+            if (!unknownSchedule) item {
+                TextButton(onClick = onStart, modifier = Modifier.fillMaxWidth().testTag("start_guide")) { Text(startLabel) }
             }
             item {
                 Text("Тексты доступны без интернета", style = MaterialTheme.typography.bodySmall,
@@ -147,7 +160,7 @@ private fun ServiceSuggestionCard(suggestion: ContextSuggestion, currentDate: Lo
         Column(Modifier.fillMaxWidth().padding(if (secondary) 20.dp else 24.dp),
             verticalArrangement = Arrangement.spacedBy(if (secondary) 12.dp else 16.dp)) {
             Text(if (exhausted) "Нужно уточнить момент" else if (isCurrent) "Возможно, уже идет" else if (suggestion.source == ServiceStartSource.USER)
-                "Следующая по вашему времени" else "Следующая по расписанию",
+                "Следующая литургия · ваше время" else "Следующая литургия",
                 style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.testTag("service_status_$key"))
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
