@@ -168,7 +168,7 @@ class UrlConnectionDiscoveryTransport(
     }
 
     companion object {
-        const val USER_AGENT = "Feoria/0.5 (+https://github.com/jeymog888/PravoslavnyyProvodnik)"
+        const val USER_AGENT = "Feoria/0.6 (+https://github.com/jeymog888/PravoslavnyyProvodnik)"
         // Shared, bounded daemon pools avoid creating threads every time a search screen is opened.
         private val threadCounter = AtomicLong()
         private fun daemonThread(job: Runnable) = Thread(job, "feoria-discovery-${threadCounter.incrementAndGet()}").apply { isDaemon = true }

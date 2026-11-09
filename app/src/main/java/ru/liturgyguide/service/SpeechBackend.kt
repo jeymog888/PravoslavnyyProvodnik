@@ -14,6 +14,8 @@ import android.speech.RecognitionSupport
 import android.speech.RecognitionSupportCallback
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import androidx.annotation.RequiresApi
+import java.util.concurrent.Executor
 
 /** Narrow Android boundary, so cancellation and deadlines can be tested without a microphone. */
 internal data class SpeechSupport(val installed: List<String>, val supported: List<String>, val pending: List<String>)
@@ -87,12 +89,7 @@ internal class AndroidSpeechBackend(private val context: Context) : SpeechBacken
                     error(SpeechRecognizer.ERROR_CANNOT_CHECK_SUPPORT)
                     return
                 }
-                recognizer.checkRecognitionSupport(intent, context.mainExecutor, object : RecognitionSupportCallback {
-                    override fun onSupportResult(support: RecognitionSupport) = result(SpeechSupport(
-                        support.installedOnDeviceLanguages.toList(), support.supportedOnDeviceLanguages.toList(),
-                        support.pendingOnDeviceLanguages.toList()))
-                    override fun onError(code: Int) = error(code)
-                })
+                SpeechSupportApi33.check(recognizer, intent, context.mainExecutor, result, error)
             }
             override fun start() = recognizer.startListening(intent)
             override fun finish() = recognizer.stopListening()
@@ -104,4 +101,23 @@ internal class AndroidSpeechBackend(private val context: Context) : SpeechBacken
     }
     private fun transcript(bundle: Bundle?) = bundle?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
         ?.firstOrNull().orEmpty()
+}
+
+/** Keep API 33 callback types out of the attempt used on Android 12. */
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+private object SpeechSupportApi33 {
+    fun check(
+        recognizer: SpeechRecognizer,
+        intent: Intent,
+        executor: Executor,
+        result: (SpeechSupport) -> Unit,
+        error: (Int) -> Unit,
+    ) {
+        recognizer.checkRecognitionSupport(intent, executor, object : RecognitionSupportCallback {
+            override fun onSupportResult(support: RecognitionSupport) = result(SpeechSupport(
+                support.installedOnDeviceLanguages.toList(), support.supportedOnDeviceLanguages.toList(),
+                support.pendingOnDeviceLanguages.toList()))
+            override fun onError(code: Int) = error(code)
+        })
+    }
 }
