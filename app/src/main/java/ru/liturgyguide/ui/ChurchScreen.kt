@@ -248,9 +248,6 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                             Text("Текст можно читать в любое время", style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        if (internetSchedule != null && onRefreshSchedule != null) InternetScheduleControls(
-                            state = internetSchedule, timezone = church.timezone, onRefresh = onRefreshSchedule,
-                            onOpenUrl = onOpenUrl, onSetSource = onSetScheduleSource)
                         Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.large) {
                             Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                                 if (entries.isEmpty()) TypicalScheduleContent(date)
@@ -289,6 +286,9 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("edit_personal_time")) {
                             Text(if (personalStart == null) "Указать известное мне время" else "Изменить мое время")
                         }
+                        if (internetSchedule != null && onRefreshSchedule != null) InternetScheduleControls(
+                            state = internetSchedule, timezone = church.timezone, onRefresh = onRefreshSchedule,
+                            onOpenUrl = onOpenUrl, onSetSource = onSetScheduleSource)
                     }
                 }
                 if (SavedChurchCodec.isSafeWebsite(church.website) || church.phone.isNotBlank()) item {

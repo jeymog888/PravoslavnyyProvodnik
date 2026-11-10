@@ -43,9 +43,9 @@ class FirstVisitFlowTest {
         compose.onNodeWithTag("church_picker").assertIsDisplayed()
         compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("church_${parish.id}"))
         compose.onNodeWithTag("church_${parish.id}").assertIsNotSelected()
-        pressBack()
+        dismissPickerWithBack()
         compose.onNodeWithText("Выберите или добавьте храм").assertIsDisplayed()
-        compose.onNodeWithText(parish.name).assertDoesNotExist()
+        compose.onNodeWithText(parish.shortName).assertDoesNotExist()
         compose.onNodeWithTag("nav_home").performClick()
         mainClick("start_guide")
         assertNull(ReadingContextStore(preferences).restore()!!.parishId)
@@ -89,18 +89,18 @@ class FirstVisitFlowTest {
         compose.onNodeWithTag("church_picker").assertDoesNotExist()
         compose.onNodeWithTag("main_content").assertDoesNotExist()
         compose.onNodeWithTag("church_content").assertIsDisplayed()
-        compose.onNodeWithText(parish.name).assertIsDisplayed()
+        compose.onNodeWithText(parish.shortName).performScrollTo().assertIsDisplayed()
         assertEquals(parish.id, preferences.getString("church_id", null))
         // Once a church is selected, opening its Home card is ordinary directory navigation.
         compose.onNodeWithTag("nav_home").performClick()
         compose.onNodeWithTag("open_church").performClick()
-        compose.onNodeWithTag("change_church").performClick()
+        compose.onNodeWithTag("change_church").performScrollTo().performClick()
         val other = container.parishes.getOrThrow().directory.churches.first { it.id != parish.id }
         compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("church_${other.id}"))
         compose.onNodeWithTag("church_${other.id}").performClick()
         compose.onNodeWithTag("main_content").assertDoesNotExist()
         compose.onNodeWithTag("church_content").assertIsDisplayed()
-        compose.onNodeWithText(other.name).assertIsDisplayed()
+        compose.onNodeWithText(other.shortName).performScrollTo().assertIsDisplayed()
         assertEquals(other.id, preferences.getString("church_id", null))
     }
 
@@ -110,17 +110,13 @@ class FirstVisitFlowTest {
         val restoration = launch()
         compose.onNodeWithTag("open_church").performClick()
         compose.onNodeWithTag("church_picker").assertIsDisplayed()
-        withCiFailureDiagnostics("firstVisit.dismissFocusedChurchPicker") {
-            androidx.test.espresso.Espresso.onView(androidx.test.espresso.matcher.ViewMatchers.isRoot())
-                .inRoot(androidx.test.espresso.matcher.RootMatchers.isDialog())
-                .perform(androidx.test.espresso.action.ViewActions.pressKey(android.view.KeyEvent.KEYCODE_BACK))
-        }
+        dismissPickerWithBack()
         compose.onNodeWithTag("church_picker").assertDoesNotExist()
         compose.onNodeWithTag("church_content").assertIsDisplayed()
         compose.onNodeWithTag("main_content").assertDoesNotExist()
         compose.runOnIdle { assertEquals(before, preferences.all) }
         restoration.emulateSavedInstanceStateRestore()
-        compose.onNodeWithTag("change_church").performClick()
+        compose.onNodeWithTag("change_church").performScrollTo().performClick()
         chooseParish()
         compose.onNodeWithTag("main_content").assertIsDisplayed()
         assertEquals(parish.id, preferences.getString("church_id", null))
@@ -130,7 +126,7 @@ class FirstVisitFlowTest {
         clear()
         launch()
         compose.onNodeWithTag("open_church").performClick()
-        pressBack()
+        dismissPickerWithBack()
         compose.onNodeWithTag("open_settings").performClick()
         compose.onNodeWithTag("nav_church").performClick()
         chooseParish()
@@ -180,9 +176,9 @@ class FirstVisitFlowTest {
         assertEquals(ReadingContextSource.USER, reading.source)
         assertEquals(Instant.parse("2026-11-08T06:30:00Z").toEpochMilli(), reading.startEpochMillis)
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Подготовка к литургии")
-        compose.onNodeWithTag("start_liturgy").assertIsDisplayed().assertContentDescriptionEquals("Литургия началась")
-        compose.onNodeWithTag("reader_status").assertTextEquals("До начала литургии")
-        compose.onNodeWithTag("play_lyrics").assertDoesNotExist()
+        compose.onNodeWithTag("start_liturgy").assertIsDisplayed().assertTextEquals("Перейти к началу литургии")
+        compose.onNodeWithTag("play_lyrics").assertIsDisplayed()
+            .assert(hasText("Автопрокрутка") or hasContentDescription("Автопрокрутка"))
     }
 
     @Test fun confirmingRecoveredLegacyParishPreservesTheReadingAndPersistsTheChoice() {
@@ -194,13 +190,13 @@ class FirstVisitFlowTest {
         val restoration = launch()
         compose.onNodeWithTag("open_church").assertTextContains(parish.shortName)
         compose.onNodeWithTag("open_church").performClick()
-        compose.onNodeWithTag("change_church").performClick()
+        compose.onNodeWithTag("change_church").performScrollTo().performClick()
         compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("church_${parish.id}"))
         compose.onNodeWithTag("church_${parish.id}").performClick()
         assertEquals(before + ("church_id" to parish.id), preferences.all)
         restoration.emulateSavedInstanceStateRestore()
         compose.onNodeWithTag("church_content").assertIsDisplayed()
-        compose.onNodeWithText(parish.name).assertIsDisplayed()
+        compose.onNodeWithText(parish.shortName).performScrollTo().assertIsDisplayed()
         assertEquals(before + ("church_id" to parish.id), preferences.all)
     }
 
@@ -252,7 +248,7 @@ class FirstVisitFlowTest {
         assertEquals(setOf(first), records.keys)
         assertEquals(2, choices)
         // A separately added temple must start a new draft, not overwrite the recovered one.
-        compose.onNodeWithTag("change_church").performClick()
+        compose.onNodeWithTag("change_church").performScrollTo().performClick()
         compose.onNodeWithTag("add_church").performClick()
         compose.onNodeWithTag("new_church_name").assert(
             SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("")))
@@ -262,6 +258,18 @@ class FirstVisitFlowTest {
         assertEquals(2, records.size)
         assertEquals("Храм в поездке", records[first]?.name)
         assertEquals("Второй храм", records.values.single { it.id != first }.name)
+    }
+
+    private fun dismissPickerWithBack() {
+        compose.onNodeWithTag("church_picker").assertIsDisplayed()
+        // The modal owns focus. Espresso's default root can select the unfocused Activity.
+        // Send one real Back key to the dialog, keeping the navigation contract under test.
+        withCiFailureDiagnostics("firstVisit.dismissFocusedChurchPicker") {
+            androidx.test.espresso.Espresso.onView(androidx.test.espresso.matcher.ViewMatchers.isRoot())
+                .inRoot(androidx.test.espresso.matcher.RootMatchers.isDialog())
+                .perform(androidx.test.espresso.action.ViewActions.pressKey(android.view.KeyEvent.KEYCODE_BACK))
+        }
+        compose.onNodeWithTag("church_picker").assertDoesNotExist()
     }
 
     private fun chooseParish() {

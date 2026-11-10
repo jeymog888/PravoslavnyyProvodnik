@@ -29,10 +29,17 @@ data class PrayerTextMatch(val trackIndex: Int, val lineIndex: Int)
  */
 object PrayerTextSearch {
     fun find(tracks: List<PrayerTrack>, query: String?): PrayerTextMatch? {
-        val words = TextSearch.normalize(query ?: return null).split(' ').filter { it.isNotEmpty() }.distinct()
+        val normalizedQuery = TextSearch.normalize(query ?: return null)
+        val words = normalizedQuery.split(' ').filter { it.isNotEmpty() }.distinct()
         if (words.isEmpty()) return null
         fun matches(value: String): Boolean = TextSearch.normalize(value).let { text -> words.all(text::contains) }
 
+        // The named prayer wins over an introduction mentioning that prayer.
+        tracks.forEachIndexed { trackIndex, track ->
+            if (track.lines.isNotEmpty() && TextSearch.normalize(track.title) == normalizedQuery) {
+                return PrayerTextMatch(trackIndex, 0)
+            }
+        }
         // A recognizable title outranks a coincidental occurrence in another text.
         tracks.forEachIndexed { trackIndex, track ->
             if (track.lines.isNotEmpty() && matches(track.title)) return PrayerTextMatch(trackIndex, 0)

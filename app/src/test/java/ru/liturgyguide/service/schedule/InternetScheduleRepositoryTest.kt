@@ -62,6 +62,38 @@ class InternetScheduleRepositoryTest {
         assertNull(repo.cached(parish("osm:node:43")).publication)
     }
 
+    @Test fun `www redirect on a child schedule survives recreation and offline refresh`() = runBlocking {
+        val cache = Cache()
+        val selected = parish()
+        val repo = InternetScheduleRepository(ScheduleTransport { url ->
+            when (url) {
+                "https://example.org/" -> response(url, "<a href='/schedule/'>Расписание</a>")
+                "https://example.org/schedule/" -> response("https://www.example.org/schedule/", html)
+                else -> error("Unexpected request $url")
+            }
+        }, cache)
+        val result = repo.refresh(selected, now, sourceOverride = "https://example.org/")
+        assertEquals(InternetScheduleStatus.READY, result.status)
+        assertEquals("https://www.example.org/schedule/", result.publication?.sourceUrl)
+        assertEquals("https://example.org/", result.customSource)
+        assertEquals(result, repo.cached(selected))
+
+        val restored = InternetScheduleRepository(ScheduleTransport { throw IOException() }, cache)
+        assertEquals(result, restored.cached(selected))
+        val offline = restored.refresh(selected, now.plusSeconds(60), force = true)
+        assertEquals(InternetScheduleStatus.UNAVAILABLE, offline.status)
+        assertEquals(result.publication, offline.publication)
+        assertEquals(result.customSource, offline.customSource)
+        assertEquals(offline, restored.cached(selected))
+
+        // Accept only the transport's www alias, not arbitrary subdomains or unrelated sites.
+        for (foreign in listOf("https://other.example.org/schedule/", "https://another.org/schedule/")) {
+            cache.data[selected.id] = ScheduleCacheCodec.encode(result.copy(
+                publication = result.publication!!.copy(sourceUrl = foreign)))
+            assertNull(restored.cached(selected).publication)
+        }
+    }
+
     @Test fun `missing website unsupported PDF and failed refresh are honest and preserve curated data`() = runBlocking {
         val cache = Cache()
         var fail = false

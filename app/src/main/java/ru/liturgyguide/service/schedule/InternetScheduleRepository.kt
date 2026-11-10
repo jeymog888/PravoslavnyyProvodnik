@@ -168,7 +168,8 @@ internal object ScheduleCacheCodec {
             require(part("parishId") == parish.id && part("timezone") == parish.timezone)
             val site = requireNotNull(ScheduleUrl.normalized(part("website")))
             val url = requireNotNull(ScheduleUrl.normalized(part("sourceUrl")))
-            require(ScheduleUrl.sameOrigin(site, url))
+            // A child page may use the same www redirect already accepted by the transport.
+            require(ScheduleUrl.sameOrigin(site, url) || ScheduleUrl.permittedRedirect(site, url))
             val fetched = part("fetchedAt").also { Instant.parse(it) }
             val array = value.getAsJsonArray("events")
             require(array.size() in 1..200)

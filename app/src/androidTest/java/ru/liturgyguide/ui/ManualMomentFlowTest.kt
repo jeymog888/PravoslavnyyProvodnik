@@ -38,8 +38,8 @@ class ManualMomentFlowTest {
     private val container = AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
     private val preferences get() = context.getSharedPreferences("guide_preferences", Context.MODE_PRIVATE)
     private val instant = Instant.parse("2026-12-01T12:00:00Z") // Outside the bundled schedule.
-    private val creed = tracks("creed")[1]
-    private val other = tracks("communion")[1]
+    private val creed = tracks("creed").single { it.title == "Символ веры" }
+    private val other = tracks("communion").single { it.title == "Верую, Господи, и исповедую" }
     private val monotonic = AtomicLong(1_000L)
 
     @Test
@@ -51,15 +51,15 @@ class ManualMomentFlowTest {
         compose.onNodeWithTag("find_stage").assertIsDisplayed()
         compose.onAllNodesWithTag("find_stage").assertCountEquals(1)
         compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("start_guide"))
-        compose.onNodeWithText("Читать с начала").assertIsDisplayed()
+        compose.onNodeWithTag("start_guide").assertTextEquals("Открыть текст")
         val cases = listOf(
-            Triple("little_entrance", "Выносят Евангелие", 0),
-            Triple("cherubic_hymn", "Слышно \"Иже Херувимы\"", 0),
-            Triple("creed", "Слышно \"Верую во единаго Бога\"", 1),
-            Triple("lords_prayer", "Слышно \"Отче наш\"", 0),
-            Triple("communion", "Выносят чашу: \"Со страхом Божиим\"", 0)
+            Triple("little_entrance", "Выносят Евангелие", "Премудрость, прости"),
+            Triple("cherubic_hymn", "Слышно \"Иже Херувимы\"", "Херувимская: до Великого входа"),
+            Triple("creed", "Слышно \"Верую во единаго Бога\"", "Символ веры"),
+            Triple("lords_prayer", "Слышно \"Отче наш\"", "Отче наш"),
+            Triple("communion", "Выносят чашу: \"Со страхом Божиим\"", "Со страхом Божиим и верою")
         )
-        cases.forEach { (stageId, label, trackIndex) ->
+        cases.forEach { (stageId, label, trackTitle) ->
             check(preferences.edit().putString("lyric_phrase_old_track", "old_phrase").commit())
             val before = preferences.all.toMap()
             findFromMain()
@@ -73,7 +73,7 @@ class ManualMomentFlowTest {
             if (stageId == "creed") restoration.emulateSavedInstanceStateRestore()
             assertEquals(before, preferences.all)
             accept()
-            val expectedTrack = tracks(stageId)[trackIndex]
+            val expectedTrack = tracks(stageId).single { it.title == trackTitle }
             compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals(stage.name)
             compose.openReaderDetails()
             compose.onNodeWithTag("reading_details_track").performScrollTo().assertTextEquals(expectedTrack.title)
@@ -199,7 +199,7 @@ class ManualMomentFlowTest {
         compose.onNodeWithTag("player_text_tab").performClick()
         compose.onNodeWithTag("play_lyrics").performClick()
         // The canonical phrase has six words: its four-second minimum ends at 5000 ms.
-        compose.openReaderControl("controls_clarify").assertIsDisplayed()
+        compose.onNodeWithTag("clarify_stage").assertIsDisplayed()
             .performSemanticsAction(SemanticsActions.OnClick) { click ->
                 monotonic.set(4_999L)
                 click()
@@ -220,8 +220,7 @@ class ManualMomentFlowTest {
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Символ веры")
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
         compose.onFeedLine(creed, 12).assertIsSelected().assertIsDisplayed()
-        compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
-        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе · примерное место")
+        compose.onNodeWithTag("play_lyrics").assert(hasText("Автопрокрутка") or hasContentDescription("Автопрокрутка")).assertIsDisplayed()
         assertEquals(paused, savedPlayback())
         assertOtherBookmark()
     }
@@ -233,10 +232,9 @@ class ManualMomentFlowTest {
         resumeMeaning()
         compose.onNodeWithTag("player_text_tab").performClick()
         compose.onNodeWithTag("play_lyrics").performClick()
-        compose.onNodeWithContentDescription("Пауза").assertIsDisplayed()
-        compose.onNodeWithTag("reader_status").assertTextEquals("Движение по времени · примерно")
+        compose.onNodeWithTag("play_lyrics").assert(hasText("Пауза") or hasContentDescription("Пауза")).assertIsDisplayed()
         compose.runOnIdle { monotonic.addAndGet(1_234L) }
-        compose.openReaderControl("controls_clarify").performClick()
+        compose.onNodeWithTag("clarify_stage").performClick()
         compose.onNodeWithTag("manual_content").assertIsDisplayed()
         val session = savedSession()
         val stoppedLine = preferences.getInt("lyric_line_${creed.id}", -1)
@@ -248,8 +246,7 @@ class ManualMomentFlowTest {
         back()
         compose.onNodeWithTag("player_text_tab").assertIsSelected()
         compose.onFeedLine(creed, stoppedLine).assertIsSelected().assertIsDisplayed()
-        compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
-        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе · примерное место")
+        compose.onNodeWithTag("play_lyrics").assert(hasText("Автопрокрутка") or hasContentDescription("Автопрокрутка")).assertIsDisplayed()
         assertEquals(stopped, savedPlayback())
         assertEquals(session, savedSession())
         assertOtherBookmark()
@@ -266,8 +263,11 @@ class ManualMomentFlowTest {
         val normalized = savedSession()
         assertFalse(normalized.autoAdvance)
         assertEquals("creed", normalized.anchorStageId)
-        compose.onNodeWithTag("reader_status").assertTextEquals("Пояснение · на паузе · сохраненное чтение · примерное место").assertIsDisplayed().assertHasNoClickAction()
-        compose.openReaderControl("controls_clarify").performClick()
+        compose.openReaderDetails()
+        compose.onNodeWithText("Сохранённое чтение. Место в храме можно уточнить по словам или микрофону")
+            .performScrollTo().assertIsDisplayed().assertHasNoClickAction()
+        compose.closeReaderDetails()
+        compose.onNodeWithTag("clarify_stage").performClick()
         compose.onNodeWithTag("manual_content").assertExists()
         compose.onNodeWithText("Автоматические переходы остановлены").assertDoesNotExist()
         assertEquals(normalized, savedSession())
@@ -347,7 +347,7 @@ class ManualMomentFlowTest {
         compose.onNodeWithTag("find_stage").performClick()
     }
 
-    private fun clarify() { compose.openReaderControl("controls_clarify").performClick() }
+    private fun clarify() { compose.onNodeWithTag("clarify_stage").performClick() }
     private fun back() { compose.onNodeWithContentDescription("Назад").performClick() }
     private fun landmark(id: String) {
         compose.onNodeWithTag("manual_content").performScrollToNode(hasTestTag("manual_$id"))
@@ -387,8 +387,7 @@ class ManualMomentFlowTest {
         assertEquals(0L, session.elapsedInStageMillis)
         assertFalse(session.autoAdvance)
         assertFalse(session.anchorIsApproximate)
-        compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
-        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе")
+        compose.onNodeWithTag("play_lyrics").assert(hasText("Автопрокрутка") or hasContentDescription("Автопрокрутка")).assertIsDisplayed()
     }
     private class AdjustableClock(var current: Instant) : Clock() {
         override fun getZone(): ZoneId = ZoneOffset.UTC

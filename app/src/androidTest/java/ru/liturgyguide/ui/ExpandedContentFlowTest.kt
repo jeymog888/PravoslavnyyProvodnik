@@ -38,7 +38,7 @@ class ExpandedContentFlowTest {
                 val writes = h.writes
                 for (original in listOf(true, false)) {
                     mode(original)
-                    val note = lyrics(feedContextTag(requireNotNull(before.track)))
+                    val note = contextNote(requireNotNull(before.track))
                     note.assertTextContains(omission, substring = true)
                         .assertTextContains("пропущены", substring = true).assert(noClick())
                     assertCurrentLine(before, original)
@@ -60,7 +60,7 @@ class ExpandedContentFlowTest {
                 val writes = h.writes
                 for (original in listOf(true, false)) {
                     mode(original)
-                    lyrics(feedContextTag(requireNotNull(before.track))).assertTextContains(explanation, substring = true).assert(noClick())
+                    contextNote(requireNotNull(before.track)).assertTextContains(explanation, substring = true).assert(noClick())
                     assertCurrentLine(before, original)
                     unchanged(h, before, writes)
                 }
@@ -70,7 +70,6 @@ class ExpandedContentFlowTest {
             compose.onNodeWithTag("player_meaning_tab").performClick()
             scroll("service_content", "prayer_context_note")
                 .assertTextContains("Все, что мы приносим Богу, уже получено от Него", substring = true).assert(noClick())
-            compose.onNodeWithTag("reading_note_toggle").assertDoesNotExist()
             unchanged(h, beforeMeaning, writes)
         }
 
@@ -81,8 +80,8 @@ class ExpandedContentFlowTest {
             val writes = h.writes
             for (original in listOf(true, false)) {
                 mode(original)
-                lyrics(feedSpeakerTag(requireNotNull(before.track).lines[0])).assertTextEquals("Священник").assert(noClick())
-                lyrics(feedSpeakerTag(requireNotNull(before.track).lines[1])).assertTextEquals("Хор").assert(noClick())
+                speaker(requireNotNull(before.track).lines[0]).assertTextEquals("Священник").assert(noClick())
+                speaker(requireNotNull(before.track).lines[1]).assertTextEquals("Хор").assert(noClick())
                 assertCurrentLine(before, original)
                 unchanged(h, before, writes)
             }
@@ -106,13 +105,13 @@ class ExpandedContentFlowTest {
             val before = requireNotNull(h.player.reading)
             val writes = h.writes
             lyrics(feedLanguageTag(scripture)).assertIsDisplayed()
-                .assertTextEquals("${scripture.subtitle}. Церковнославянский текст пока не добавлен")
+                .assertTextEquals(scripture.subtitle + " · русский текст")
+            lyrics(feedLineTag(scripture.lines[0]))
             compose.onNodeWithTag(feedSpeakerTag(scripture.lines[0])).assertDoesNotExist()
-            compose.onNodeWithTag(feedContextTag(scripture)).assertDoesNotExist()
+            contextNote(scripture).assertTextEquals(requireNotNull(scripture.contextNote)).assert(noClick())
+            lyrics(feedLineTag(scripture.lines[0]))
             compose.onNodeWithTag("player_meaning_tab").performClick()
-            scroll("service_content", "reading_note_toggle").assertTextContains("О чтениях этого дня").performClick()
-            scroll("service_content", "reading_day_note").assertTextEquals(requireNotNull(scripture.contextNote))
-            compose.onNodeWithTag("prayer_context_note").assertDoesNotExist()
+            scroll("service_content", "prayer_context_note").assertTextEquals(requireNotNull(scripture.contextNote)).assert(noClick())
             unchanged(h, before, writes)
         }
 
@@ -143,25 +142,44 @@ class ExpandedContentFlowTest {
 
     private fun selectTrack(h: Harness, title: String) {
         if (h.player.reading?.track?.title == title) return
-        val tracks = requireNotNull(h.player.reading).tracks
-        val index = tracks.indexOfFirst { it.title == title }
-        check(index >= 0)
-        compose.openReaderTracks()
-        val expandable = compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsActions.Expand))
-        expandable.assertCountEquals(1)
-        expandable[0].assertIsDisplayed().performSemanticsAction(SemanticsActions.Expand) { action ->
-            assertTrue(action())
-        }
-        compose.waitForIdle()
-        scroll("track_list", "track_$index").performClick()
+        val track = requireNotNull(h.player.reading).tracks.single { it.title == title }
+        lyrics(feedLineTag(track.lines[0])).performClick()
         compose.waitForIdle()
         assertEquals(title, h.player.reading?.track?.title)
+    }
+
+    private fun contextNote(track: PrayerTrack): SemanticsNodeInteraction {
+        lyrics("feed_context_toggle_${track.id}")
+        if (compose.onAllNodesWithTag(feedContextTag(track)).fetchSemanticsNodes().isEmpty()) {
+            compose.onNodeWithTag("feed_context_toggle_${track.id}").performClick()
+        }
+        return lyrics(feedContextTag(track))
+    }
+
+    private fun speaker(line: ru.liturgyguide.model.PlayerLine): SemanticsNodeInteraction {
+        lyrics(feedLineTag(line))
+        return compose.onNodeWithTag(feedSpeakerTag(line)).performScrollTo().assertIsDisplayed()
     }
 
     private fun mode(original: Boolean) = compose.onNodeWithTag(if (original) "player_original_tab" else "player_text_tab")
         .performClick().assertIsSelected()
     private fun scroll(parent: String, tag: String): SemanticsNodeInteraction {
-        compose.onNodeWithTag(parent).performScrollToNode(hasTestTag(tag))
+        if (parent == "lyrics_list") {
+            // Resolve a packaged item before querying its composed child. Searching the
+            // changing lazy semantics tree can traverse a disposed node on Compose 1.7.
+            val key = when {
+                tag.startsWith("feed_line_") -> "line:${tag.removePrefix("feed_line_")}"
+                else -> {
+                    val prefix = listOf("feed_context_toggle_", "feed_context_", "feed_language_", "feed_header_")
+                        .first { tag.startsWith(it) }
+                    "track:${tag.removePrefix(prefix)}"
+                }
+            }
+            val index = requireNotNull(ContinuousServiceFeed(plan).indexOf(key))
+            compose.waitForIdle()
+            compose.onNodeWithTag(parent).performSemanticsAction(SemanticsActions.ScrollToIndex) { assertTrue(it(index)) }
+            compose.waitForIdle()
+        }
         return compose.onNodeWithTag(tag).performScrollTo().assertIsDisplayed()
     }
     private fun lyrics(tag: String) = scroll("lyrics_list", tag)
@@ -169,7 +187,12 @@ class ExpandedContentFlowTest {
     private fun assertCurrentLine(reading: ActiveServicePlayback, original: Boolean) {
         val track: PrayerTrack = requireNotNull(reading.track)
         val line = track.lines[reading.lineIndex]
-        lyrics(feedLineTag(track.lines[reading.lineIndex])).assertIsSelected()
+        // Inspecting a preceding speaker scrolls the book. Restore the accepted line to
+        // the viewport before switching language, which intentionally accepts its visible anchor.
+        val index = requireNotNull(ContinuousServiceFeed(reading.plan).indexOf("line:${line.id}"))
+        compose.onNodeWithTag("lyrics_list").performSemanticsAction(SemanticsActions.ScrollToIndex) { assertTrue(it(index)) }
+        compose.waitForIdle()
+        compose.onNodeWithTag(feedLineTag(line)).assertIsSelected()
             .assertTextEquals(if (original) requireNotNull(line.original) else line.russian)
     }
     private fun unchanged(h: Harness, before: ActiveServicePlayback, writes: Int) = compose.runOnIdle {

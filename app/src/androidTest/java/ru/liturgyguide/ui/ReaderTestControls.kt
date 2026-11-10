@@ -1,7 +1,6 @@
 package ru.liturgyguide.ui
 
 import androidx.compose.ui.semantics.SemanticsActions
-import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertTrue
@@ -9,23 +8,18 @@ import org.junit.Assert.assertTrue
 /** Explicit paths through the real UI. No retries, inferred state, or direct player calls. */
 internal fun SemanticsNodeInteractionsProvider.openReaderControls() {
     onNodeWithTag("reader_controls_list").assertDoesNotExist()
-    val tag = if (onAllNodesWithTag("service_book").fetchSemanticsNodes().isNotEmpty()) "reader_mode_chooser" else "reader_controls"
-    onNodeWithTag(tag).assertIsDisplayed().assertHeightIsAtLeast(48.dp).performClick()
+    onNodeWithTag("reader_mode_chooser").assertIsDisplayed().assertHeightIsAtLeast(48.dp).performClick()
     onNodeWithTag("reader_controls_list").assertIsDisplayed()
 }
 
 internal fun SemanticsNodeInteractionsProvider.readerControl(tag: String): SemanticsNodeInteraction {
-    if (onAllNodesWithTag("service_book").fetchSemanticsNodes().isNotEmpty()) {
-        return onNodeWithTag(tag).performScrollTo().assertIsDisplayed().assertHeightIsAtLeast(48.dp)
-    }
-    onNodeWithTag("reader_controls_list").assertIsDisplayed().performScrollToNode(hasTestTag(tag))
+    onNodeWithTag("reader_controls_list").assertIsDisplayed()
     return onNodeWithTag(tag).performScrollTo().assertIsDisplayed().assertHeightIsAtLeast(48.dp)
 }
 
 internal fun SemanticsNodeInteractionsProvider.openReaderControl(tag: String): SemanticsNodeInteraction {
     // The continuous reader exposes frequent actions directly and speed in its menu.
     // Unsupported old stage/phrase transport controls deliberately do not get fake aliases.
-    if (onAllNodesWithTag("service_book").fetchSemanticsNodes().isNotEmpty()) {
         return when (tag) {
             "controls_clarify" -> onNodeWithTag("clarify_stage").assertIsDisplayed()
             "controls_order" -> onNodeWithTag("open_map").assertIsDisplayed()
@@ -39,9 +33,6 @@ internal fun SemanticsNodeInteractionsProvider.openReaderControl(tag: String): S
             }
             else -> error("Control $tag belongs to the retired stage-local reader")
         }
-    }
-    openReaderControls()
-    return readerControl(tag)
 }
 
 internal fun SemanticsNodeInteractionsProvider.dismissReaderControls() {
@@ -50,12 +41,6 @@ internal fun SemanticsNodeInteractionsProvider.dismissReaderControls() {
     dismiss.assertCountEquals(1)
     dismiss[0].performSemanticsAction(SemanticsActions.Dismiss) { assertTrue(it()) }
     onNodeWithTag("reader_controls_list").assertDoesNotExist()
-}
-
-internal fun SemanticsNodeInteractionsProvider.openReaderTracks() {
-    onNodeWithTag("player_menu").performClick()
-    onNodeWithTag("choose_track").assertContentDescriptionEquals("Тексты этапа").performClick()
-    onNodeWithTag("track_list").assertIsDisplayed()
 }
 
 internal fun SemanticsNodeInteractionsProvider.openReaderDetails() {
@@ -119,18 +104,4 @@ internal fun SemanticsNodeInteractionsProvider.inspectReaderModes(check: (String
         check(mode, node)
     }
     if (chooser) dismissReaderControls()
-}
-
-internal fun SemanticsNodeInteractionsProvider.assertReaderStatus(full: String, compact: String): SemanticsNodeInteraction {
-    val normal = onAllNodesWithTag("reader_layout_normal").fetchSemanticsNodes().isNotEmpty()
-    return onNodeWithTag("reader_status", useUnmergedTree = true).assertIsDisplayed()
-        .assertTextEquals(if (normal) full else compact)
-        .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, full))
-}
-
-internal fun SemanticsNodeInteractionsProvider.assertReaderStatusDetails(full: String) {
-    openReaderControls()
-    onNodeWithTag("reader_controls_list").performScrollToNode(hasTestTag("controls_reading_status"))
-    onNodeWithTag("controls_reading_status").performScrollTo().assertIsDisplayed().assertTextEquals(full)
-    dismissReaderControls()
 }

@@ -58,23 +58,22 @@ class ReaderFontLayoutWitnessTest {
         profile(640, 360, 1.69f)
 
     private data class Case(val name: String, val reading: ActiveServicePlayback,
-        val primary: String, val primaryDescription: String, val fullStatus: String, val meaning: Boolean = false)
+        val primary: String, val primaryDescription: String, val meaning: Boolean = false)
 
     private fun profile(width: Int, height: Int, scale: Float) = withCiFailureDiagnostics("fontWitness.$width.$height.$scale") {
         val landscape = width > height
         try {
             orient(if (landscape) ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE else ActivityInfo.SCREEN_ORIENTATION_PORTRAIT,
                 if (landscape) Configuration.ORIENTATION_LANDSCAPE else Configuration.ORIENTATION_PORTRAIT)
-            val text = reading("creed", 1, 12)
+            val text = reading("creed", 0, 12)
             val cases = listOf(
-                Case("text", text, "play_lyrics", "Двигать текст", "На паузе · сохраненное чтение"),
-                Case("wait", segment("anaphora", PlaybackSegment.Wait::class.java), "play_lyrics", "Продолжить по времени", "Примерный переход остановлен · сохраненное чтение"),
-                Case("before-start", segment("preparation", PlaybackSegment.Wait::class.java), "start_liturgy", "Литургия началась", "До начала литургии · сохраненное чтение"),
-                Case("missing", segment("epistle", PlaybackSegment.MissingReading::class.java, "2026-11-09"), "continue_missing_reading", "Чтение в храме закончилось", "Текст на 9 ноября 2026 пока не добавлен · пауза · сохраненное чтение"),
-                Case("end", segment("dismissal", PlaybackSegment.End::class.java), "finish_reading", "Закончить чтение", "Порядок в приложении завершен · сохраненное чтение"),
-                Case("russian-scripture", reading("gospel", 1, 0), "play_lyrics", "Двигать текст", "На паузе · сохраненное чтение · по-русски"),
-                // Last: meaning is entered by the real visible control, never an injected flag.
-                Case("meaning", text, "return_to_text", "К тексту", "Пояснение · на паузе · сохраненное чтение", meaning = true))
+                Case("text", text, "play_lyrics", "Автопрокрутка"),
+                Case("wait", segment("anaphora", PlaybackSegment.Wait::class.java), "play_lyrics", "Автопрокрутка"),
+                Case("before-start", segment("preparation", PlaybackSegment.Wait::class.java), "play_lyrics", "Автопрокрутка"),
+                Case("missing", segment("epistle", PlaybackSegment.MissingReading::class.java, "2026-11-09"), "continue_missing_reading", "Чтение закончилось"),
+                Case("end", segment("dismissal", PlaybackSegment.End::class.java), "finish_reading", "Закончить чтение"),
+                Case("russian-scripture", reading("gospel", 1, 0), "play_lyrics", "Автопрокрутка"),
+                Case("meaning", text, "return_to_text", "К тексту", meaning = true))
             val h = launch(text, width, height, scale)
             val failures = mutableListOf<Throwable>()
             val capturedImages = mutableSetOf<String>()
@@ -101,98 +100,86 @@ class ReaderFontLayoutWitnessTest {
         }
     }
 
-    private fun enterMeaning() {
-        if (compose.onAllNodesWithTag("reader_mode_chooser", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()) {
-            compose.openReaderControls()
-            compose.readerControl("controls_meaning").performClick()
-        } else compose.onNodeWithTag("player_meaning_tab").performClick()
-    }
+    private fun enterMeaning() = compose.selectReaderMode("meaning")
 
     private fun checkCase(case: Case, h: Harness, width: Int, height: Int, scale: Float) {
         val root = compose.onNodeWithTag("font_witness_host").assertIsDisplayed()
-        // The real insets are consumed by ServiceScreen. Do not subtract them here again.
         root.assertWidthIsEqualTo(width.dp).assertHeightIsEqualTo(height.dp)
         val viewport = compose.onNodeWithTag(if (case.meaning) "service_content" else "lyrics_list").assertIsDisplayed()
         assertTrue("Visible reading viewport below 120dp: ${viewport.getBoundsInRoot()}", viewport.getBoundsInRoot().height >= 120.dp)
         viewport.assertHeightIsAtLeast(120.dp)
         compose.onAllNodesWithTag("reader_surface").assertCountEquals(1)
-        val primary = fullTarget(case.primary).assertContentDescriptionEquals(case.primaryDescription)
-        primary.assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, case.fullStatus))
-        val status = compose.onNodeWithTag("reader_status", useUnmergedTree = true)
-            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, case.fullStatus))
-        readable(status, scale)
-        readable(compose.onNodeWithTag("reader_primary_label", useUnmergedTree = true), scale)
-        val layouts = listOf("normal", "compact", "sidebar").filter {
-            compose.onAllNodesWithTag("reader_layout_$it").fetchSemanticsNodes().isNotEmpty()
-        }
-        assertEquals("Exactly one reader layout is active", 1, layouts.size)
-        if (width < height) assertNotEquals("A portrait reader must not turn into narrow columns", "sidebar", layouts.single())
-        if (layouts.single() == "sidebar") {
-            assertEquals("A narrow pill must not wrap and clip its label", 1,
-                layout(compose.onNodeWithTag("reader_primary_label", useUnmergedTree = true)).lineCount)
-            assertEquals("Sidebar mode must remain a whole label", 1,
-                layout(compose.onNodeWithTag("reader_selected_mode", useUnmergedTree = true)).lineCount)
-        }
+        compose.onNodeWithTag("service_book").assertIsDisplayed()
+        val compact = compose.readerHasModeChooser()
+        val primary = fullTarget(case.primary)
+        if (compact) primary.assertContentDescriptionEquals(case.primaryDescription)
+        else primary.assertTextEquals(case.primaryDescription)
+        fixedDescendantText(case.primary, scale)
         val title = compose.onNodeWithTag("current_stage_title", useUnmergedTree = true)
-            .assertTextEquals(if (layouts.single() == "normal") case.reading.stage.name else case.reading.stage.shortTitle)
+            .assertTextEquals(if (compact) case.reading.stage.shortTitle else case.reading.stage.name)
         readable(title, scale)
-        fullTarget("open_map")
+        fullTarget("open_map").assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, case.reading.stage.name))
         fullTarget("player_menu")
-        fullTarget("reader_controls")
+        fullTarget("clarify_stage")
         fullTarget("reader_microphone")
         assertFixedTargetsDoNotOverlap(case.primary)
-        fixedDescendantText("reader_controls", scale)
-        fixedDescendantText("reader_microphone", scale, singleLine = layouts.single() == "sidebar")
-        if (compose.onAllNodesWithTag("reader_mode_chooser", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()) {
-            val mode = if (case.meaning) "Смысл" else if (case.reading.tracks.any { track -> track.lines.any { it.original != null } }) "Оригинал" else "По-русски"
-            val soundless = case.name in setOf("text", "wait", "before-start", "russian-scripture")
-            compose.onNodeWithTag("reader_controls")
-                .assertContentDescriptionEquals("Режим чтения и управление")
-                .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription,
-                    mode + if (soundless) " · Без звука" else ""))
-            compose.onNodeWithTag("reader_selected_mode", useUnmergedTree = true)
-                .assertTextEquals(mode)
+        if (compact) {
+            fullTarget("reader_mode_chooser").assertContentDescriptionEquals("Язык и пояснение")
             readable(compose.onNodeWithTag("reader_selected_mode", useUnmergedTree = true), scale)
         } else {
-            val selected = if (case.meaning) "player_meaning_tab" else if (case.reading.tracks.any { track -> track.lines.any { it.original != null } }) "player_original_tab" else "player_text_tab"
-            fullTarget(selected).assertIsSelected()
-            listOf("player_original_tab", "player_text_tab", "player_meaning_tab").forEach {
-                fullTarget(it)
-                fixedDescendantText(it, scale)
-            }
+            fixedDescendantText("clarify_stage", scale)
+            fixedDescendantText("reader_microphone", scale)
+        }
+        val expectedMode = if (case.meaning) "meaning" else if (case.name == "russian-scripture") "text" else "original"
+        compose.inspectReaderModes { mode, node ->
+            if (mode == expectedMode) node.assertIsSelected() else node.assertIsNotSelected()
+            val tag = node.fetchSemanticsNode().config[SemanticsProperties.TestTag]
+            fullTarget(tag)
+            fixedDescendantText(tag, scale)
         }
         if (case.name == "text") {
             val line = compose.onFeedLine(requireNotNull(case.reading.track), 12).assertIsDisplayed().assertIsSelected()
             val layout = completeLayout(line)
-            assertEquals(28.sp, layout.layoutInput.style.fontSize)
-            assertEquals(39.2.sp, layout.layoutInput.style.lineHeight)
+            assertEquals(25.sp, layout.layoutInput.style.fontSize)
+            assertEquals(36.sp, layout.layoutInput.style.lineHeight)
             assertEquals(scale, layout.layoutInput.density.fontScale, .0001f)
-            val native = Density(layout.layoutInput.density.density, scale)
-            assertEquals(with(native) { 28.sp.toDp().value }, with(layout.layoutInput.density) { 28.sp.toDp().value }, .001f)
+            assertNativeTextMetrics(layout, Density(layout.layoutInput.density.density, scale))
         }
-        // Secondary provenance remains reachable after leaving the compact fixed chrome.
-        compose.openReaderControls()
-        compose.onNodeWithTag("reader_controls_list").performScrollToNode(hasTestTag("controls_reading_status"))
-        compose.onNodeWithTag("controls_reading_status").assertIsDisplayed().assertTextEquals(case.fullStatus)
-        if (case.name in setOf("text", "wait", "before-start", "russian-scripture")) {
-            compose.onNodeWithTag("reader_controls_list").performScrollToNode(hasTestTag("controls_soundless_note"))
-            compose.onNodeWithTag("controls_soundless_note").assertIsDisplayed().assertTextEquals("Движение текста без звука")
+        when (case.name) {
+            "before-start" -> {
+                compose.onNodeWithTag("lyrics_list").performScrollToNode(hasTestTag("start_liturgy"))
+                compose.onNodeWithTag("start_liturgy").performScrollTo()
+                fullTarget("start_liturgy").assertTextEquals("Перейти к началу литургии")
+            }
+            "wait" -> {
+                compose.onNodeWithTag("lyrics_list").performScrollToNode(hasTestTag("next_stage"))
+                compose.onNodeWithTag("next_stage").performScrollTo()
+                fullTarget("next_stage")
+            }
+            "missing" -> {
+                // The whole book can compose both missing Epistle and Gospel cards.
+                // The current one must be visible; tag uniqueness is no longer a reader invariant.
+                val barriers = compose.onAllNodesWithTag("missing_reading_barrier")
+                assertTrue("The current missing-reading card must be visible",
+                    barriers.fetchSemanticsNodes().indices.any { barriers[it].isDisplayed() })
+            }
+            "end" -> compose.onNodeWithTag("book_end").assertExists()
+            "russian-scripture" -> {
+                assertTrue(requireNotNull(case.reading.track).isScripture)
+                if (compact) compose.openReaderControls()
+                readable(compose.onNodeWithTag("scripture_language_notice").performScrollTo()
+                    .assertTextEquals("Для этого чтения доступен русский текст"), scale)
+                if (compact) compose.dismissReaderControls()
+                compose.assertReaderMode("original", enabled = false)
+            }
         }
-        compose.dismissReaderControls()
-        if (case.name == "russian-scripture") {
-            val track = requireNotNull(case.reading.track)
-            assertTrue(track.isScripture)
-            assertTrue(track.lines.all { it.original == null })
-            val language = "feed_language_${track.id}"
-            compose.onNodeWithTag("lyrics_list").performScrollToNode(hasTestTag(language))
-            compose.onNodeWithTag(language).assertIsDisplayed()
-                .assertTextContains("Церковнославянский текст пока не добавлен", substring = true)
-            compose.onNodeWithTag("player_menu").performClick()
-            compose.onNodeWithTag("open_reading_details").performClick()
-            compose.onNodeWithTag("reading_details_language").performScrollTo().assertIsDisplayed()
-                .assertTextContains("Церковнославянский текст пока не добавлен", substring = true)
-            compose.onNodeWithTag("close_reading_details").performClick()
-        }
+        // Details expose the date and provenance without reinstating the retired status footer.
+        compose.openReaderDetails()
+        compose.onNodeWithTag("reading_details_date").performScrollTo().assertTextEquals(
+            if (case.name == "missing") "Тексты на 9 ноября 2026" else "Тексты на 8 ноября 2026")
+        readable(compose.onNodeWithTag("reading_details_date"), scale)
+        fullTarget("close_reading_details")
+        compose.closeReaderDetails()
         compose.runOnIdle {
             assertEquals(case.reading.context, h.current.context)
             assertEquals(case.reading.state.segmentIndex, h.current.state.segmentIndex)
@@ -214,10 +201,9 @@ class ReaderFontLayoutWitnessTest {
     }
 
     private fun assertFixedTargetsDoNotOverlap(primaryTag: String) {
-        val tags = listOf(primaryTag, "reader_microphone", "reader_controls", "open_map", "player_menu") +
-            listOf("return_to_phrase", "before_start_pause").filter {
-                compose.onAllNodesWithTag(it).fetchSemanticsNodes().isNotEmpty()
-            }
+        val tags = listOf(primaryTag, "reader_microphone", "clarify_stage", "open_map", "player_menu") +
+            if (compose.readerHasModeChooser()) listOf("reader_mode_chooser")
+            else listOf("player_original_tab", "player_text_tab", "player_meaning_tab")
         val targets = tags.map { it to fullTarget(it).fetchSemanticsNode().boundsInRoot }
         for (first in targets.indices) for (second in first + 1 until targets.size) {
             val (firstTag, a) = targets[first]
@@ -226,6 +212,12 @@ class ReaderFontLayoutWitnessTest {
             val overlapHeight = minOf(a.bottom, b.bottom) - maxOf(a.top, b.top)
             assertTrue("Fixed targets overlap: $firstTag=$a, $secondTag=$b; overlap=${overlapWidth}x$overlapHeight px",
                 overlapWidth <= 0f || overlapHeight <= 0f)
+        }
+        val viewport = compose.onNodeWithTag(if (primaryTag == "return_to_text") "service_content" else "lyrics_list")
+            .fetchSemanticsNode().boundsInRoot
+        targets.forEach { (tag, target) ->
+            assertTrue("Fixed target $tag overlaps reading viewport $viewport", target.right <= viewport.left ||
+                viewport.right <= target.left || target.bottom <= viewport.top || viewport.bottom <= target.top)
         }
     }
 
@@ -292,9 +284,9 @@ class ReaderFontLayoutWitnessTest {
         val captureHash = MessageDigest.getInstance("SHA-256").digest(File(directory, "screen.png").readBytes())
             .joinToString("") { (it.toInt() and 0xff).toString(16).padStart(2, '0') }
         val observations = JSONArray()
-        val tags = listOf("font_witness_host", "reader_layout_normal", "reader_layout_compact", "reader_layout_sidebar",
-            "reader_surface", "lyrics_list", "service_content", "reader_status", "reader_primary_label", "current_stage_title",
-            case.primary, "reader_controls", "reader_mode_chooser", "reader_selected_mode", "reader_microphone", "open_map", "soundless_note")
+        val tags = listOf("font_witness_host", "service_book", "reader_surface", "lyrics_list", "service_content", "current_stage_title",
+            case.primary, "clarify_stage", "reader_mode_chooser", "reader_selected_mode", "reader_microphone", "open_map",
+            "scripture_language_notice", "stage_wait", "missing_reading_barrier", "book_end")
         for (tag in tags) {
             val nodes = compose.onAllNodesWithTag(tag, useUnmergedTree = true)
             val count = nodes.fetchSemanticsNodes().size
@@ -308,7 +300,7 @@ class ReaderFontLayoutWitnessTest {
             }
             observations.put(record)
         }
-        for (tag in listOf("reader_controls", "reader_microphone", "player_original_tab", "player_text_tab", "player_meaning_tab")) {
+        for (tag in listOf(case.primary, "clarify_stage", "reader_microphone", "reader_mode_chooser", "player_original_tab", "player_text_tab", "player_meaning_tab")) {
             val texts = compose.onAllNodes(hasAnyAncestor(hasTestTag(tag)) and
                 SemanticsMatcher.keyIsDefined(SemanticsActions.GetTextLayoutResult), useUnmergedTree = true)
             texts.fetchSemanticsNodes().indices.forEach { index ->
@@ -429,7 +421,12 @@ class ReaderFontLayoutWitnessTest {
         container.readings?.days?.singleOrNull { it.date == date })
     private fun reading(stage: String, track: Int, line: Int): ActiveServicePlayback {
         val plan = plan("2026-11-08")
-        val text = plan.tracksByStage.getValue(stage)[track]
+        val stageTracks = plan.tracksByStage.getValue(stage)
+        val text = when (stage) {
+            "creed" -> stageTracks.single { it.title == "Символ веры" }
+            "gospel" -> stageTracks.single { it.isScripture && it.title == "От Луки 16:19-31" }
+            else -> stageTracks[track]
+        }
         val engine = ServicePlaybackEngine(plan)
         return ActiveServicePlayback(plan, ReadingContext("selected-church", "2026-11-08", "Europe/Moscow", ReadingContextSource.MANUAL),
             engine.seekLine(engine.start(stage), text.id, text.lines[line].id).copy(elapsedQuarterMillis = 1_234))

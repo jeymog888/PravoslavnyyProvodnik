@@ -43,7 +43,7 @@ class ExplanationSourceFlowTest {
         assertEquals(PlaybackSpeed.SLOW, before.state.speed)
         assertEquals(3_210L, before.state.elapsedQuarterMillis)
 
-        sourceToggle().assertTextContains("Источник пояснения").assert(state("Свернуто"))
+        sourceToggle().assertTextContains("Источники текста и пояснения").assert(state("Свернуто"))
         compose.onNodeWithText(oldCompositeTitle).assertDoesNotExist()
         compose.onNodeWithText("Сайт храма Пророка Илии").assertDoesNotExist()
         sourceToggle().performClick()
@@ -72,7 +72,11 @@ class ExplanationSourceFlowTest {
         compose.onNodeWithTag("player_meaning_tab").performClick()
         sourceToggle().performClick()
         assertExpanded()
-        compose.runOnIdle { assertTrue(h.player.seekStage("lords_prayer")) }
+        compose.onNodeWithTag("return_to_text").performClick()
+        val next = requireNotNull(h.player.reading).plan.tracksByStage.getValue("lords_prayer").single { it.title == "Отче наш" }
+        compose.onNodeWithTag("lyrics_list").performScrollToNode(hasTestTag(feedLineTag(next.lines[0])))
+        compose.onFeedLine(next, 0).performScrollTo().performClick()
+        compose.onNodeWithTag("player_meaning_tab").performClick()
         sourceToggle().assert(state("Свернуто"))
         compose.onNodeWithTag("explanation_source_open").assertDoesNotExist()
         sourceToggle().performClick()
@@ -88,13 +92,12 @@ class ExplanationSourceFlowTest {
         compose.onNodeWithTag("explanation_source_open").assertDoesNotExist()
         sourceToggle().performClick()
         scrollTo("explanation_source_title").assertTextEquals("Другая публикация")
-        scrollTo("explanation_source_site").assertTextEquals("Сайт: ikoni.cerkov.ru")
         sourceOpen().performClick()
         compose.runOnIdle { assertEquals(listOf(anotherUrl), h.opened) }
 
         compose.runOnIdle {
             assertTrue(h.player.accept(reading(stages().map {
-                if (it.id == "lords_prayer") it.copy(sourceUrl = null) else it
+                if (it.id == "lords_prayer") it.copy(sourceUrl = null, texts = it.texts.map { text -> text.copy(sourceUrl = null) }) else it
             }, stageId = "lords_prayer"), resetBookmarks = false))
         }
         // Reach the end before asserting absence, so lazy composition cannot hide a stale source.
@@ -191,7 +194,8 @@ class ExplanationSourceFlowTest {
     private fun reading(stages: List<LiturgyStage> = stages(), stageId: String = "creed"): ActiveServicePlayback {
         val plan = ServicePlaybackPlan.build(stages, date, null)
         val engine = ServicePlaybackEngine(plan)
-        val track = plan.tracksByStage.getValue(stageId).first { it.lines.size > 3 }
+        val title = if (stageId == "creed") "Символ веры" else "Отче наш"
+        val track = plan.tracksByStage.getValue(stageId).single { it.title == title }
         val state = engine.seekLine(engine.start(stageId, PlaybackSpeed.SLOW), track.id, track.lines[3].id)
             .copy(elapsedQuarterMillis = 3_210L)
         return ActiveServicePlayback(plan, acceptedContext, state)
@@ -199,18 +203,16 @@ class ExplanationSourceFlowTest {
 
     private fun state(value: String) = SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, value)
     private fun scrollTo(tag: String): SemanticsNodeInteraction {
-        compose.onNodeWithTag("service_content").performScrollToNode(hasTestTag(tag))
         return compose.onNodeWithTag(tag).performScrollTo().assertIsDisplayed()
     }
     private fun sourceToggle() = scrollTo("explanation_source_toggle")
     private fun sourceOpen() = scrollTo("explanation_source_open")
     private fun assertExpanded() {
         sourceToggle().assert(state("Развернуто"))
-        val purpose = "Публикация, использованная при подготовке пояснения"
-        compose.onNodeWithTag("service_content").performScrollToNode(hasText(purpose))
+        val purpose = "Публикация для подготовки пояснения"
         compose.onNodeWithText(purpose).performScrollTo().assertIsDisplayed()
         scrollTo("explanation_source_title").assertTextEquals(knownTitle)
-        scrollTo("explanation_source_site").assertTextEquals("Сайт храма Пророка Илии")
-        sourceOpen().assertTextContains("Открыть публикацию")
+        compose.onNodeWithText(oldCompositeTitle).assertDoesNotExist()
+        sourceOpen().assertTextContains("Открыть пояснение")
     }
 }

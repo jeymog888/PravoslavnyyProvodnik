@@ -48,8 +48,9 @@ import ru.liturgyguide.service.*
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-private data class BookOwner(val generation: Int, val fingerprint: String) {
-    fun matches(player: ServicePlayerState) = generation == player.generation && player.reading?.plan?.fingerprint == fingerprint
+private data class BookOwner(val generation: Int, val fingerprint: String, val context: ReadingContext) {
+    fun matches(player: ServicePlayerState) = generation == player.generation &&
+        player.reading?.plan?.fingerprint == fingerprint && player.reading?.context == context
 }
 
 @Stable
@@ -69,13 +70,29 @@ private class BookViewport(val owner: BookOwner, initialIndex: Int, initialOffse
     }
 }
 
-private fun bookViewportSaver(owner: BookOwner, feed: ContinuousServiceFeed) = listSaver<BookViewport, Any>(
-    save = { listOf(owner.generation, owner.fingerprint, feed.visibleItem(it.scroll.firstVisibleItemIndex).key,
-        it.scroll.firstVisibleItemScrollOffset, it.manual) },
+private fun bookViewportSaver(owner: BookOwner, feed: ContinuousServiceFeed, player: ServicePlayerState) = listSaver<BookViewport, Any>(
+    save = { viewport ->
+        val state = player.reading?.state
+        if (!owner.matches(player) || state == null) emptyList()
+        else listOf(owner.generation, owner.fingerprint, feed.visibleItem(viewport.scroll.firstVisibleItemIndex).key,
+            viewport.scroll.firstVisibleItemScrollOffset, viewport.manual, ReadingContextCodec.encode(owner.context),
+            state.segmentIndex, state.elapsedQuarterMillis, viewport.playStartKey.orEmpty(), viewport.playStartOffset,
+            viewport.playStartElapsedQuarterMillis)
+    },
     restore = {
-        if (it[0] != owner.generation || it[1] != owner.fingerprint) null
+        val state = player.reading?.state
+        // A recreated player starts its runtime generation again. Durable identity
+        // comes from context and position, while callbacks still use generation.
+        if (it.size != 11 || it[1] != owner.fingerprint ||
+            it[5] != ReadingContextCodec.encode(owner.context) || it[6] != state?.segmentIndex ||
+            it[7] != state?.elapsedQuarterMillis) null
         else (it[2] as? String)?.let(feed::indexOf)?.let { index ->
-            BookViewport(owner, index, (it[3] as Int).coerceAtLeast(0)).apply { manual = it[4] as Boolean }
+            BookViewport(owner, index, (it[3] as Int).coerceAtLeast(0)).apply {
+                manual = it[4] as Boolean
+                playStartKey = (it[8] as String).takeIf(String::isNotEmpty)
+                playStartOffset = (it[9] as Int).coerceAtLeast(0)
+                playStartElapsedQuarterMillis = (it[10] as Long).coerceAtLeast(0)
+            }
         }
     }
 )
@@ -102,12 +119,13 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
     onSoundSettings: () -> Unit, onFinish: () -> Unit, preferredOriginal: Boolean,
     onOriginalChange: (Boolean) -> Unit, restoredNotice: Boolean = false, onMicrophone: () -> Unit = onFindStage) {
     val reading = player.reading ?: return
-    val owner = BookOwner(player.generation, reading.plan.fingerprint)
+    val owner = BookOwner(player.generation, reading.plan.fingerprint, reading.context)
     val feed = remember(owner) { ContinuousServiceFeed(reading.plan) }
-    val viewport = rememberSaveable(owner, saver = bookViewportSaver(owner, feed)) {
+    val viewport = rememberSaveable(owner, saver = bookViewportSaver(owner, feed, player)) {
         BookViewport(owner, feed.targetIndex(reading.segment))
     }
     val scope = rememberCoroutineScope()
+    val requestedDensity = LocalDensity.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     var meaning by rememberSaveable { mutableStateOf(false) }
     var menu by remember(owner) { mutableStateOf(false) }
@@ -298,7 +316,7 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
         val fontScale = LocalDensity.current.fontScale
         val compact = maxHeight < 500.dp || fontScale >= 1.8f || (maxWidth < 360.dp && fontScale > 1.25f)
         Column(Modifier.fillMaxSize().testTag("service_book")) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = if (compact) 2.dp else 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { leave(onBack) }, Modifier.size(48.dp)) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, "К службе")
@@ -308,7 +326,8 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
                     verticalArrangement = Arrangement.Center) {
                     Text(if (compact) visibleStage.shortTitle else visibleStage.name,
                         Modifier.testTag("current_stage_title").semantics { heading() },
-                        style = MaterialTheme.typography.titleMedium, maxLines = if (compact) 2 else 3, overflow = TextOverflow.Ellipsis)
+                        style = if (compact) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium, maxLines = 3, overflow = TextOverflow.Ellipsis)
                     if (!compact) Text("${reading.plan.stages.indexOf(visibleStage) + 1} из ${reading.plan.stages.size} · Порядок службы",
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -317,15 +336,17 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
                         Icon(Icons.Default.MoreHoriz, "Настройки чтения")
                     }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                        CompositionLocalProvider(LocalDensity provides requestedDensity) {
                         DropdownMenuItem(text = { Text("Скорость автопрокрутки") }, onClick = { menu = false; tempoOpen = true }, Modifier.testTag("scroll_options"))
                         DropdownMenuItem(text = { Text("Открытое чтение") }, onClick = { menu = false; saveVisible(); detailsOpen = true }, Modifier.testTag("open_reading_details"))
                         DropdownMenuItem(text = { Text(if (dark) "Светлый экран" else "Темный экран") }, onClick = { menu = false; onDarkChange() })
                         DropdownMenuItem(text = { Text("Размер текста") }, onClick = { menu = false; leave(onSettings) })
                         DropdownMenuItem(text = { Text("Тишина на телефоне") }, onClick = { menu = false; leave(onSoundSettings) })
+                        }
                     }
                 }
             }
-            if (compact) Box(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)) {
+            if (compact) Box(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 4.dp)) {
                 val labels = listOf("Оригинал", "Русский", "Смысл")
                 OutlinedButton(onClick = { modeMenu = true }, Modifier.fillMaxWidth().heightIn(min = 48.dp)
                     .testTag("reader_mode_chooser").semantics { contentDescription = "Язык и пояснение"; stateDescription = labels[mode] }) {
@@ -334,6 +355,10 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
                 }
                 DropdownMenu(expanded = modeMenu, onDismissRequest = { modeMenu = false },
                     modifier = Modifier.testTag("reader_controls_list").semantics { dismiss { modeMenu = false; true } }) {
+                    CompositionLocalProvider(LocalDensity provides requestedDensity) {
+                    if (russianFallback && !meaning) Text("Для этого чтения доступен русский текст",
+                        Modifier.padding(horizontal = 16.dp, vertical = 8.dp).testTag("scripture_language_notice"),
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     labels.forEachIndexed { index, label ->
                         val tag = listOf("controls_original", "controls_text", "controls_meaning")[index]
                         DropdownMenuItem(text = { Text(label) }, enabled = index != 0 || visibleOriginalAvailable,
@@ -341,6 +366,7 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
                             trailingIcon = { if (mode == index) Icon(Icons.Default.Check, null, Modifier.testTag("${tag}_selected_marker")) },
                             modifier = Modifier.heightIn(min = 48.dp).testTag(tag).semantics { selected = mode == index })
                         if (index < labels.lastIndex) Spacer(Modifier.height(12.dp))
+                    }
                     }
                 }
             } else Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -359,11 +385,14 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
                     }
                 }
             }
-            if (russianFallback && !meaning) Text("Для этого чтения доступен русский текст",
+            if (russianFallback && !meaning && !compact) Text("Для этого чтения доступен русский текст",
                 Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 4.dp).testTag("scripture_language_notice"),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Surface(Modifier.weight(1f).fillMaxWidth().heightIn(min = 120.dp).testTag("reader_surface"), color = MaterialTheme.colorScheme.surface) {
-                if (meaning) BookMeaning(visibleStage, visibleTrack, onOpenSource)
+                if (meaning) BookMeaning(visibleStage, visibleTrack, onOpenSource,
+                    reading.plan.serviceDate.takeIf { reading.plan.segments.any { segment ->
+                        segment is PlaybackSegment.MissingReading && segment.stageId == visibleStage.id
+                    } })
                 else LazyColumn(state = viewport.scroll,
                     modifier = Modifier.fillMaxSize().testTag("lyrics_list").nestedScroll(drag),
                     contentPadding = PaddingValues(top = 20.dp, bottom = 48.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
@@ -399,7 +428,8 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
                                     is ServiceBookItem.Line -> {
                                         val selected = reading.segment.let { it is PlaybackSegment.Text && it.lineId == item.line.id }
                                         item.line.speaker?.let { Text(it, style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp)) }
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.padding(bottom = 8.dp).testTag("feed_speaker_${item.line.id}")) }
                                         Text(readerLineText(item.line, original),
                                             Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("feed_line_${item.line.id}")
                                                 .clickable {
@@ -431,7 +461,8 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
                                             }
                                         }
                                     }
-                                    is ServiceBookItem.Missing -> Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(16.dp)) {
+                                    is ServiceBookItem.Missing -> Surface(modifier = Modifier.testTag("missing_reading_${item.stageId}"),
+                                        color = MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(16.dp)) {
                                         Column(Modifier.padding(20.dp).testTag("missing_reading_barrier"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                             Text("Чтение этого дня", style = MaterialTheme.typography.titleMedium)
                                             Text("Текст на ${reading.plan.serviceDate.format(bookDateFormat)} пока не добавлен. Послушайте чтение в храме, затем продолжайте ниже",
@@ -460,6 +491,10 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
                                     is ServiceBookItem.End -> Column(Modifier.padding(vertical = 24.dp).testTag("book_end"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                         Text("Конец порядка службы", style = MaterialTheme.typography.headlineMedium)
                                         Text("Можно вернуться к любому месту выше", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        if (reading.segment !is PlaybackSegment.End && currentItem !is ServiceBookItem.End) {
+                                            TextButton(onClick = { leave(onFinish) }, Modifier.heightIn(min = 48.dp)
+                                                .testTag("finish_book_reading")) { Text("Закончить чтение") }
+                                        }
                                     }
                                 }
                             }
@@ -472,7 +507,7 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
             val label = when { reading.state.isPlaying -> "Пауза"; meaning -> "К тексту"; missing -> "Чтение закончилось"; end -> "Закончить чтение"; else -> "Автопрокрутка" }
             val primaryTag = when { meaning -> "return_to_text"; missing -> "continue_missing_reading"; end -> "finish_reading"; else -> "play_lyrics" }
             Surface(color = MaterialTheme.colorScheme.background, tonalElevation = 0.dp) {
-                Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = if (compact) 8.dp else 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     if (failedSave) Text("Не удалось сохранить место. Попробуйте ещё раз", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                     if (reading.state.isPlaying && !compact) Text("Автопрокрутка · примерный темп",
                         Modifier.testTag("reading_status"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -501,7 +536,10 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
         }
     }
 
-    if (tempoOpen) AlertDialog(onDismissRequest = { tempoOpen = false }, title = { Text("Автопрокрутка") }, text = {
+    if (tempoOpen) AlertDialog(onDismissRequest = { tempoOpen = false }, title = {
+        CompositionLocalProvider(LocalDensity provides requestedDensity) { Text("Автопрокрутка") }
+    }, text = {
+        CompositionLocalProvider(LocalDensity provides requestedDensity) {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Текст движется без звука, с примерной скоростью службы. Любая ручная прокрутка остановит его")
             PlaybackSpeed.entries.forEach { speed ->
@@ -514,8 +552,16 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
             }
             Text("Перед отсутствующим чтением плеер остановится. Продолжить можно после того, как чтение прозвучит в храме", style = MaterialTheme.typography.bodySmall)
         }
-    }, confirmButton = { TextButton(onClick = { tempoOpen = false }, Modifier.testTag("tempo_done")) { Text("Готово") } })
-    if (detailsOpen) AlertDialog(onDismissRequest = { detailsOpen = false }, title = { Text("Открытое чтение") }, text = {
+        }
+    }, confirmButton = {
+        CompositionLocalProvider(LocalDensity provides requestedDensity) {
+            TextButton(onClick = { tempoOpen = false }, Modifier.heightIn(min = 48.dp).testTag("tempo_done")) { Text("Готово") }
+        }
+    })
+    if (detailsOpen) AlertDialog(onDismissRequest = { detailsOpen = false }, title = {
+        CompositionLocalProvider(LocalDensity provides requestedDensity) { Text("Открытое чтение") }
+    }, text = {
+        CompositionLocalProvider(LocalDensity provides requestedDensity) {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Тексты на ${reading.plan.serviceDate.format(bookDateFormat)}", Modifier.testTag("reading_details_date"))
             reading.migrationNote?.let {
@@ -527,7 +573,12 @@ fun ServiceScreen(player: ServicePlayerState, onStageChange: (String) -> Unit,
             Text(if (restoredNotice) "Сохранённое чтение. Место в храме можно уточнить по словам или микрофону" else "Вы читаете самостоятельно. Автопрокрутка показывает только примерный ход службы")
             Text("Постоянные тексты собраны по порядку. Песнопения и чтения, которые меняются по дате и храму, могут отличаться", style = MaterialTheme.typography.bodySmall)
         }
-    }, confirmButton = { TextButton(onClick = { detailsOpen = false }, Modifier.testTag("close_reading_details")) { Text("Закрыть") } })
+        }
+    }, confirmButton = {
+        CompositionLocalProvider(LocalDensity provides requestedDensity) {
+            TextButton(onClick = { detailsOpen = false }, Modifier.heightIn(min = 48.dp).testTag("close_reading_details")) { Text("Закрыть") }
+        }
+    })
 }
 
 private val bookDateFormat = DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru"))
@@ -548,13 +599,23 @@ private fun BookContextDisclosure(trackId: String, note: String) {
 }
 
 @Composable
-private fun BookMeaning(stage: LiturgyStage, track: PrayerTrack?, onOpenSource: (String) -> Unit) {
-    var sourceOpen by rememberSaveable(stage.id, track?.id) { mutableStateOf(false) }
+private fun BookMeaning(stage: LiturgyStage, track: PrayerTrack?, onOpenSource: (String) -> Unit,
+    missingReadingDate: java.time.LocalDate?) {
+    // Save the publication identity with its disclosure. Restoration must not open
+    // a different source merely because it occupies the same composition slot.
+    val sourceIdentity = listOf(stage.id, track?.id.orEmpty(), stage.sourceUrl.orEmpty(), track?.sourceUrl.orEmpty())
+    var expandedSource by rememberSaveable(sourceIdentity) { mutableStateOf<List<String>?>(null) }
+    val sourceOpen = expandedSource == sourceIdentity
     val source = explanationSource(stage.sourceUrl, stage.sourceTitle)
     val scroll = key(stage.id, track?.id) { rememberScrollState() }
     Box(Modifier.fillMaxSize().verticalScroll(scroll).testTag("service_content"), contentAlignment = Alignment.TopCenter) {
         Column(Modifier.widthIn(max = 640.dp).fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(28.dp)) {
             BookMeaningSection("Что происходит", stage.description)
+            if (missingReadingDate != null) Surface(color = MaterialTheme.colorScheme.surfaceContainer,
+                shape = RoundedCornerShape(16.dp)) {
+                Text("Текст чтения на ${missingReadingDate.format(bookDateFormat)} пока не добавлен. Здесь объясняется общий смысл этой части службы",
+                    Modifier.padding(20.dp).testTag("reading_unavailable"), style = MaterialTheme.typography.bodyMedium)
+            }
             BookMeaningSection("В чём смысл", stage.meaning)
             stage.cue?.takeIf { it.isNotBlank() }?.let { BookMeaningSection("Как узнать этот момент", it) }
             stage.whatToDo.takeIf { it.isNotBlank() }?.let { BookMeaningSection("На что обратить внимание", it) }
@@ -571,7 +632,9 @@ private fun BookMeaning(stage: LiturgyStage, track: PrayerTrack?, onOpenSource: 
                 }
             }
             if (source != null || track?.sourceUrl != null) {
-                TextButton(onClick = { sourceOpen = !sourceOpen }, Modifier.heightIn(min = 48.dp).testTag("explanation_source_toggle")) {
+                TextButton(onClick = { expandedSource = if (sourceOpen) null else sourceIdentity },
+                    Modifier.heightIn(min = 48.dp).testTag("explanation_source_toggle")
+                        .semantics { stateDescription = if (sourceOpen) "Развернуто" else "Свернуто" }) {
                     Text("Источники текста и пояснения")
                 }
                 if (sourceOpen) Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {

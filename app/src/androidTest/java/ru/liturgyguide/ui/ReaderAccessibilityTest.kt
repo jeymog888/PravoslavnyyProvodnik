@@ -34,6 +34,7 @@ import ru.liturgyguide.service.PrayerTrackFactory
 import ru.liturgyguide.service.ServiceSession
 import ru.liturgyguide.service.ServicePlaybackStore
 import ru.liturgyguide.service.StoredServicePlaybackCodec
+import ru.liturgyguide.service.ServicePlaybackPlan
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -51,28 +52,16 @@ class ReaderAccessibilityTest {
     @Test
     fun ordinaryFooterKeepsSeparateTargetsAtTheNarrowWidthAndFastestSpeed() {
         launchReader("creed", 1, 3, width = 320, height = 800, systemFontScale = 1f)
-        assertReadingSpaceAndScale(3, 1.3f, 28.sp)
+        assertReadingSpaceAndScale(3, 1.3f, 25.sp)
         assertFooterTargets()
-        compose.onNodeWithTag("line_status").assertDoesNotExist()
-        assertReadable(compose.onNodeWithTag("reader_status", useUnmergedTree = true))
-        if (compose.readerHasModeChooser()) {
-            compose.openReaderControls()
-            compose.onNodeWithTag("reader_controls_list").performScrollToNode(hasTestTag("controls_soundless_note"))
-            assertReadable(compose.onNodeWithTag("controls_soundless_note").performScrollTo()
-                .assertTextEquals("Движение текста без звука"))
-            compose.dismissReaderControls()
-        } else assertReadable(compose.onNodeWithTag("soundless_note", useUnmergedTree = true))
         compose.openReaderControl("scroll_options").performClick()
-        compose.onNodeWithTag("tempo_fast").performClick()
-        compose.onNodeWithText("Готово").performClick()
+        compose.onNodeWithTag("tempo_fast").performScrollTo().performClick()
+        compose.onNodeWithTag("tempo_done").performClick()
         assertFooterTargets()
-        compose.openReaderControls()
-        compose.readerControl("scroll_options").assertTextEquals("Примерный темп: 1,25×")
-        assertReadable(compose.onNodeWithText("Примерный темп: 1,25×", useUnmergedTree = true))
-        compose.dismissReaderControls()
-        val playTexts = compose.onAllNodes(hasAnyAncestor(hasTestTag("play_lyrics")) and
-            SemanticsMatcher("Has text") { it.config.contains(SemanticsProperties.Text) }, useUnmergedTree = true)
-        playTexts.fetchSemanticsNodes().indices.forEach { assertReadable(playTexts[it]) }
+        compose.openReaderControl("scroll_options").performClick()
+        compose.onNodeWithTag("tempo_fast").performScrollTo().assertIsSelected()
+        assertReadable(compose.onNodeWithText("Быстрее · 1,25×", useUnmergedTree = true))
+        compose.onNodeWithTag("tempo_done").performClick()
         compose.selectReaderMode("meaning")
         assertFooterTargets(textVisible = false)
     }
@@ -92,15 +81,13 @@ class ReaderAccessibilityTest {
             assertEquals(2.6f.toRawBits(), textLayout(label).layoutInput.density.fontScale.toRawBits())
         }
         assertWholeAction("tempo_done")
-        assertWholeAction("manual_reading")
-        compose.onNodeWithTag("manual_reading").assertTextEquals("Пауза").assertContentDescriptionEquals("Поставить на паузу")
         listOf("tempo_slow", "tempo_normal", "tempo_fast").forEach { tag ->
             compose.onNodeWithTag(tag).performScrollTo()
             assertWholeAction(tag)
         }
         compose.onNodeWithTag("tempo_fast").performClick().assertIsSelected()
         compose.onNodeWithTag("tempo_done").performClick()
-        compose.onNodeWithContentDescription("Двигать текст").assertIsDisplayed()
+        compose.onNodeWithTag("play_lyrics").assertIsDisplayed().assertContentDescriptionEquals("Автопрокрутка")
     }
 
     @Test
@@ -115,9 +102,9 @@ class ReaderAccessibilityTest {
 
         compose.selectReaderMode("meaning")
         compose.onNodeWithText("Что происходит").assertIsDisplayed()
-        compose.onNodeWithTag("service_content").performScrollToNode(hasTestTag("track_explanation"))
+        compose.onNodeWithTag("track_explanation").performScrollTo()
         assertEquals(2.6f, textLayout(compose.onNodeWithTag("track_explanation")).layoutInput.density.fontScale, .001f)
-        compose.openReaderControl("controls_clarify").performClick()
+        compose.onNodeWithTag("clarify_stage").assertIsDisplayed().performClick()
         compose.onNodeWithTag("manual_content").assertIsDisplayed()
         compose.onNodeWithContentDescription("Назад").performClick()
         compose.assertReaderMode("meaning", selected = true)
@@ -138,7 +125,7 @@ class ReaderAccessibilityTest {
             // Match the fixture's exact float product; a rounded literal selects another native converter cache key.
             assertReadingSpaceAndScale(3, 1.3f * 1.3f)
             assertFooterTargets()
-            compose.openReaderControl("next_line").assertIsDisplayed().performClick()
+            selectPhrase(4)
             compose.onFeedLine(acceptedTrack(), 4).assertIsSelected().assertIsDisplayed()
             compose.selectReaderMode("meaning")
             compose.selectReaderMode("text")
@@ -155,7 +142,7 @@ class ReaderAccessibilityTest {
         assertReadableHeader()
         compose.assertReaderMode("original", enabled = true)
         compose.inspectReaderModes { _, node -> assertReadableModeText(node) }
-        assertReadingSpaceAndScale(3, 2.6f, 28.sp)
+        assertReadingSpaceAndScale(3, 2.6f, 25.sp)
     }
 
     @Test
@@ -163,8 +150,8 @@ class ReaderAccessibilityTest {
         launchReader("creed", 1, 3, width = 400, height = 800, systemFontScale = 2f)
         assertReadableHeader()
         compose.assertReaderMode("original", enabled = true)
-        assertReadingSpaceAndScale(3, 2.6f, 28.sp)
-        compose.openReaderControl("next_line").performClick()
+        assertReadingSpaceAndScale(3, 2.6f, 25.sp)
+        selectPhrase(4)
         compose.onFeedLine(acceptedTrack(), 4).assertIsSelected().assertIsDisplayed()
     }
 
@@ -172,36 +159,31 @@ class ReaderAccessibilityTest {
     fun aSingleTextRetainsItsFullTitleAndTheClarificationAction() {
         launchReader("beginning", 0, 0, width = 320, height = 640, systemFontScale = 2f)
         assertEquals(1, tracks("beginning").size)
-        compose.openReaderTracks()
-        compose.onNodeWithTag("track_0").assertIsSelected().assertIsDisplayed()
-        compose.onNodeWithTag("track_1").assertDoesNotExist()
-        compose.onNodeWithTag("track_0").performClick()
         assertReadableHeader()
         assertReadingSpaceAndScale(0, 2.6f)
-        compose.openReaderControl("controls_clarify").performClick()
+        compose.onNodeWithTag("clarify_stage").assertIsDisplayed().performClick()
         compose.onNodeWithTag("manual_content").assertIsDisplayed()
         compose.onNodeWithContentDescription("Назад").performClick()
         compose.onFeedLine(acceptedTrack(), 0).assertIsSelected()
     }
 
     @Test
-    fun scriptureAndAnEmptyTextStageKeepClarificationWithoutALanguageMenu() {
+    fun scriptureAndPreparationKeepAccessibleLanguageAndClarification() {
         launchReader("gospel", 1, 0, width = 320, height = 640, systemFontScale = 2f)
-        assertTrue(tracks("gospel")[1].isScripture)
-        compose.assertReaderMode("original", enabled = true)
+        assertTrue(acceptedTrack().isScripture)
+        compose.assertReaderMode("original", enabled = false)
         compose.assertReaderMode("text", selected = true)
         assertReadableHeader()
         assertReadingSpaceAndScale(0, 2.6f)
         compose.onNodeWithTag("open_map").performClick()
         compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_preparation"))
         compose.onNodeWithTag("stage_preparation").performScrollTo().performClick()
-        compose.onNodeWithTag("current_track_title").assertDoesNotExist()
-        compose.assertReaderStatus("До начала литургии", "До начала")
-        compose.onNodeWithTag("start_liturgy").assertIsDisplayed().assertHeightIsAtLeast(48.dp)
-            .assertContentDescriptionEquals("Литургия началась")
-        compose.onNodeWithTag("play_lyrics").assertDoesNotExist()
+        compose.onNodeWithTag("lyrics_list").performScrollToNode(hasTestTag("start_liturgy"))
+        compose.onNodeWithTag("start_liturgy").performScrollTo().assertIsDisplayed().assertHeightIsAtLeast(48.dp)
+            .assertTextEquals("Перейти к началу литургии")
+        compose.onNodeWithTag("play_lyrics").assertIsDisplayed().assertHeightIsAtLeast(48.dp)
         compose.onAllNodesWithTag("reader_microphone").assertCountEquals(1)
-        compose.openReaderControl("controls_clarify").performClick()
+        compose.onNodeWithTag("clarify_stage").assertIsDisplayed().performClick()
         compose.onNodeWithTag("manual_content").assertIsDisplayed()
         compose.onNodeWithContentDescription("Назад").performClick()
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals(
@@ -277,7 +259,7 @@ class ReaderAccessibilityTest {
         churchHeader.assert(hasAnyAncestor(hasTestTag("church_content")))
         compose.onNodeWithTag("church_content").assertHeightIsAtLeast(300.dp)
         val church = container.parishes.getOrThrow().selected(null)
-        assertEquals(2.6f, textLayout(compose.onNodeWithText(church.name, useUnmergedTree = true))
+        assertEquals(2.6f, textLayout(compose.onNodeWithText(church.shortName, useUnmergedTree = true).performScrollTo())
             .layoutInput.density.fontScale, .001f)
         listOf("schedule_today" to "Сегодня", "schedule_tomorrow" to "Завтра").forEach { (tag, label) ->
             compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag(tag))
@@ -298,7 +280,12 @@ class ReaderAccessibilityTest {
 
     private fun launchReader(stageId: String, trackIndex: Int, phraseIndex: Int,
         width: Int, height: Int, systemFontScale: Float) {
-        val track = tracks(stageId)[trackIndex]
+        val available = tracks(stageId)
+        val track = when (stageId) {
+            "creed" -> available.single { it.title == "Символ веры" }
+            "gospel" -> available.single { it.isScripture && it.title == "От Луки 16:19-31" }
+            else -> available[trackIndex]
+        }
         check(preferences.edit().clear().putBoolean("dark", true).putInt("text_size", 2)
             .putString("stage_id", stageId).putString("session", Gson().toJson(ServiceSession(stageId, instant.toEpochMilli())))
             .putString("lyric_track_$stageId", track.id).putInt("lyric_line_${track.id}", phraseIndex)
@@ -358,69 +345,57 @@ class ReaderAccessibilityTest {
     }
 
     private fun assertFooterTargets(textVisible: Boolean = true) {
-        val tags = listOf(if (textVisible) "play_lyrics" else "return_to_text", "reader_microphone", "reader_controls")
-        listOf("previous_stage", "previous_line", "next_line", "scroll_options", "next_stage")
-            .forEach { compose.onNodeWithTag(it).assertDoesNotExist() }
-        compose.openReaderControls()
-        if (textVisible) {
-            listOf("previous_stage", "previous_line", "next_line", "scroll_options", "next_stage").forEach { tag ->
-                val node = compose.readerControl(tag).assertWidthIsAtLeast(48.dp)
-                val visible = node.getBoundsInRoot(); val full = node.getUnclippedBoundsInRoot()
-                assertTrue("Control $tag is clipped", visible.left <= full.left + .5.dp && visible.top <= full.top + .5.dp &&
-                    visible.right >= full.right - .5.dp && visible.bottom >= full.bottom - .5.dp)
-            }
-        } else {
-            listOf("play_lyrics", "previous_stage", "previous_line", "next_line", "scroll_options", "next_stage")
-                .forEach { compose.onNodeWithTag(it).assertDoesNotExist() }
+        val primary = if (textVisible) "play_lyrics" else "return_to_text"
+        val compact = compose.readerHasModeChooser()
+        val tags = listOf(primary, "reader_microphone", "clarify_stage", "open_map", "player_menu") +
+            if (compact) listOf("reader_mode_chooser") else listOf("player_original_tab", "player_text_tab", "player_meaning_tab")
+        compose.onNodeWithTag("clarify_stage").assertIsEnabled()
+        compose.onNodeWithTag("reader_microphone").assertIsEnabled()
+        compose.onNodeWithTag("open_map").assertIsEnabled()
+        if (compact) {
+            compose.onNodeWithTag("reader_microphone").assertContentDescriptionEquals("Микрофон")
+            compose.onNodeWithTag("clarify_stage").assertContentDescriptionEquals("Найти место")
+            compose.onNodeWithTag(primary).assertContentDescriptionEquals(if (textVisible) "Автопрокрутка" else "К тексту")
         }
-        compose.readerControl("controls_order").assertIsEnabled()
-        compose.readerControl("controls_clarify").assertIsEnabled()
-        compose.dismissReaderControls()
-        if (!textVisible) compose.assertReaderStatus("Пояснение · на паузе", "Пояснение")
-        assertReadable(compose.onNodeWithTag("reader_status", useUnmergedTree = true))
-        assertReadable(compose.onNodeWithTag("reader_primary_label", useUnmergedTree = true))
         val tolerance = .5.dp
         val bounds = tags.associateWith { tag ->
-            val node = compose.onNodeWithTag(tag).assertIsDisplayed()
-                .assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp)
-            val visible = node.getBoundsInRoot()
-            val full = node.getUnclippedBoundsInRoot()
-            assertTrue("Footer target $tag is clipped", visible.left <= full.left + tolerance &&
+            val node = compose.onNodeWithTag(tag).assertIsDisplayed().assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp)
+            val visible = node.getBoundsInRoot(); val full = node.getUnclippedBoundsInRoot()
+            assertTrue("Fixed target $tag is clipped", visible.left <= full.left + tolerance &&
                 visible.top <= full.top + tolerance && visible.right >= full.right - tolerance && visible.bottom >= full.bottom - tolerance)
+            val labels = compose.onAllNodes(hasAnyAncestor(hasTestTag(tag)) and
+                SemanticsMatcher.keyIsDefined(SemanticsActions.GetTextLayoutResult), useUnmergedTree = true)
+            labels.fetchSemanticsNodes().indices.forEach { assertReadable(labels[it]) }
             full
         }
-        tags.forEachIndexed { index, first ->
-            tags.drop(index + 1).forEach { second ->
-                val a = bounds.getValue(first); val b = bounds.getValue(second)
-                assertTrue("Footer targets $first and $second intersect", a.right <= b.left + tolerance ||
-                    b.right <= a.left + tolerance || a.bottom <= b.top + tolerance || b.bottom <= a.top + tolerance)
-            }
-        }
+        fun separate(a: androidx.compose.ui.unit.DpRect, b: androidx.compose.ui.unit.DpRect) =
+            a.right <= b.left + tolerance || b.right <= a.left + tolerance || a.bottom <= b.top + tolerance || b.bottom <= a.top + tolerance
+        tags.forEachIndexed { index, first -> tags.drop(index + 1).forEach { second ->
+            assertTrue("Fixed targets $first and $second intersect", separate(bounds.getValue(first), bounds.getValue(second)))
+        } }
         val content = compose.onNodeWithTag(if (textVisible) "lyrics_list" else "service_content")
             .assertHeightIsAtLeast(120.dp).getBoundsInRoot()
-        fun separate(a: androidx.compose.ui.unit.DpRect, b: androidx.compose.ui.unit.DpRect) =
-            a.right <= b.left + tolerance || b.right <= a.left + tolerance ||
-                a.bottom <= b.top + tolerance || b.bottom <= a.top + tolerance
         bounds.forEach { (tag, target) -> assertTrue("Control $tag overlaps the reading area", separate(content, target)) }
-        val status = compose.onNodeWithTag("reader_status").getUnclippedBoundsInRoot()
-        assertTrue("The status overlaps the reading area", separate(content, status))
+        compose.inspectReaderModes { _, node -> assertReadableModeText(node) }
     }
 
     private fun assertReadableHeader() {
         assertReadable(compose.onNodeWithTag("current_stage_title", useUnmergedTree = true))
         val track = acceptedTrack()
-        val stageId = requireNotNull(preferences.getString("stage_id", null))
-        val feed = ReaderFeed(stageId, tracks(stageId))
-        val header = feed.items.indexOfFirst { it is ReaderFeedItem.Header && it.track.id == track.id }
-        assertTrue(header >= 0)
-        compose.onNodeWithTag("lyrics_list").performSemanticsAction(SemanticsActions.ScrollToIndex) { assertTrue(it(header)) }
-        compose.waitForIdle()
-        assertReadable(compose.onNodeWithTag(feedTitleTag(track)).performScrollTo().assertTextEquals(track.title))
+        val saved = requireNotNull(StoredServicePlaybackCodec.decode(preferences.getString(ServicePlaybackStore.PLAYBACK_KEY, null)))
+        val plan = ServicePlaybackPlan.build(container.getStageMatcher().getAllStages(), LocalDate.parse(saved.context.serviceDate), readingDay)
+        val feed = ContinuousServiceFeed(plan)
+        val header = feed.indexOf("track:${track.id}")
+        if (header != null) {
+            compose.onNodeWithTag("lyrics_list").performSemanticsAction(SemanticsActions.ScrollToIndex) { assertTrue(it(header)) }
+            compose.waitForIdle()
+            assertReadable(compose.onNodeWithTag(feedHeaderTag(track)).assertTextEquals(track.title))
+        } else assertFalse(bookShowsTrackHeading(track))
         val phrase = track.lines.single { it.id == preferences.getString("lyric_phrase_${track.id}", null) }
-        val line = requireNotNull(feed.lineIndex(track.id, phrase.id))
+        val line = requireNotNull(feed.indexOf("line:${phrase.id}"))
         compose.onNodeWithTag("lyrics_list").performSemanticsAction(SemanticsActions.ScrollToIndex) { assertTrue(it(line)) }
         compose.waitForIdle()
-        compose.onFeedLine(phrase).performScrollTo().assertIsSelected().assertIsDisplayed()
+        compose.onFeedLine(phrase).assertIsSelected().assertIsDisplayed()
         val chooser = compose.readerHasModeChooser()
         if (chooser) assertReadable(compose.onNodeWithTag("reader_selected_mode", useUnmergedTree = true))
         compose.inspectReaderModes { _, node ->
@@ -429,7 +404,8 @@ class ReaderAccessibilityTest {
         }
         compose.onAllNodesWithTag("reader_microphone").assertCountEquals(1)
         compose.onNodeWithTag("reader_microphone").assertIsDisplayed().assertHeightIsAtLeast(48.dp)
-        assertReadable(compose.onNodeWithText("Микрофон", useUnmergedTree = true))
+        if (chooser) compose.onNodeWithTag("reader_microphone").assertContentDescriptionEquals("Микрофон")
+        else assertReadable(compose.onNodeWithText("Микрофон", useUnmergedTree = true))
         compose.onNodeWithTag("player_menu").assertIsDisplayed()
     }
 
@@ -441,7 +417,23 @@ class ReaderAccessibilityTest {
         return text
     }
 
-    private fun assertReadingSpaceAndScale(line: Int, expectedScale: Float, expectedFontSize: TextUnit = 28.sp) {
+    private fun selectPhrase(index: Int) {
+        compose.waitForIdle()
+        val line = acceptedTrack().lines[index]
+        val saved = requireNotNull(StoredServicePlaybackCodec.decode(preferences.getString(ServicePlaybackStore.PLAYBACK_KEY, null)))
+        val date = LocalDate.parse(saved.context.serviceDate)
+        val plan = ServicePlaybackPlan.build(container.getStageMatcher().getAllStages(), date,
+            container.readings?.days?.singleOrNull { it.date == date.toString() })
+        val bookIndex = requireNotNull(ContinuousServiceFeed(plan).indexOf("line:${line.id}"))
+        // Scroll through the real UI action. A whole-book scan can inspect a disappearing
+        // lazy item while its font layout is being recomposed; use its stable identity index.
+        compose.onNodeWithTag("lyrics_list").performSemanticsAction(SemanticsActions.ScrollToIndex) { assertTrue(it(bookIndex)) }
+        compose.waitForIdle()
+        compose.onFeedLine(line).assertIsDisplayed().performClick()
+        compose.waitForIdle()
+    }
+
+    private fun assertReadingSpaceAndScale(line: Int, expectedScale: Float, expectedFontSize: TextUnit = 25.sp) {
         compose.onNodeWithTag("lyrics_list").assertHeightIsAtLeast(120.dp)
         val lyric = compose.onFeedLine(acceptedTrack(), line).assertIsSelected().assertIsDisplayed()
         val layout = textLayout(lyric)
@@ -449,7 +441,7 @@ class ReaderAccessibilityTest {
         assertEquals("Exact native font scale from the fixture", expectedScale.toRawBits(),
             layout.layoutInput.density.fontScale.toRawBits())
         assertEquals(expectedFontSize, layout.layoutInput.style.fontSize)
-        assertEquals(39.2.sp, layout.layoutInput.style.lineHeight)
+        assertEquals(36.sp, layout.layoutInput.style.lineHeight)
         assertNativeTextMetrics(layout, Density(layout.layoutInput.density.density, expectedScale))
     }
 

@@ -10,6 +10,7 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -191,6 +192,61 @@ class ContinuousReaderFlowTest {
         compose.onNodeWithTag("scripture_language_notice").assertDoesNotExist()
     }
 
+    @Test fun reachingTheEndByHandOffersAnImmediateFinishAction() {
+        val h = launch("beginning")
+        compose.onNodeWithTag("lyrics_list").performScrollToNode(hasTestTag("book_end"))
+        compose.onNodeWithTag("lyrics_list").performTouchInput { swipeUp(startY = height * .75f, endY = height * .55f) }
+        compose.waitForIdle()
+        compose.onNode(hasText("Закончить чтение") and hasClickAction()).assertIsDisplayed().performClick()
+        compose.runOnIdle { assertEquals(1, h.finishes); assertFalse(h.current.state.isPlaying) }
+    }
+
+    @Test fun returningFromMicrophoneKeepsTheTallParagraphPlaybackBaseline() {
+        val h = launch("beginning", fontScale = 2f, smallPhone = true)
+        val line = h.feed.items.filterIsInstance<ServiceBookItem.Line>().maxBy { it.line.russian.length }
+        browseTo(requireNotNull(h.feed.indexOf(line.key)))
+        compose.onNodeWithTag("feed_line_${line.line.id}").performClick()
+        compose.onNodeWithTag("play_lyrics").performClick()
+        compose.runOnIdle {
+            val segment = h.current.segment as PlaybackSegment.Text
+            h.now += segment.durationBaseMillis * 45 / 100
+            h.player.tick(h.player.generation)
+        }
+        compose.waitForIdle()
+        val before = compose.onNodeWithTag("feed_line_${line.line.id}").getUnclippedBoundsInRoot().top
+        assertTrue(before < compose.onNodeWithTag("lyrics_list").getBoundsInRoot().top - 24.dp)
+        compose.onNodeWithTag("reader_microphone").performClick()
+        compose.runOnIdle { h.showReader = true }
+        compose.waitForIdle()
+        assertEquals(before, compose.onNodeWithTag("feed_line_${line.line.id}").getUnclippedBoundsInRoot().top)
+        compose.runOnIdle { assertFalse(h.current.state.isPlaying) }
+    }
+
+    @Test fun aRecreatedPlayerKeepsManualPlaybackProgressAfterItsGenerationRestarts() {
+        val h = launch("beginning", fontScale = 2f, smallPhone = true)
+        compose.runOnIdle { assertTrue(h.player.accept(h.current, false)); assertTrue(h.player.generation > 0) }
+        val line = h.feed.items.filterIsInstance<ServiceBookItem.Line>().maxBy { it.line.russian.length }
+        browseTo(requireNotNull(h.feed.indexOf(line.key)))
+        compose.onNodeWithTag("lyrics_list").performTouchInput { swipeUp(startY = height * .8f, endY = height * .6f) }
+        compose.waitForIdle()
+        compose.onNodeWithTag("play_lyrics").performClick()
+        compose.runOnIdle {
+            val segment = h.current.segment as PlaybackSegment.Text
+            h.now += segment.durationBaseMillis * 45 / 100
+            h.player.tick(h.player.generation)
+        }
+        compose.onNodeWithTag("play_lyrics").performClick()
+        compose.waitForIdle()
+        val before = compose.onNodeWithTag("feed_line_${line.line.id}").getUnclippedBoundsInRoot().top
+        assertTrue(before < compose.onNodeWithTag("lyrics_list").getBoundsInRoot().top - 24.dp)
+        compose.runOnIdle { h.player = ServicePlayerState(h.current, { h.now }, ServicePlaybackWriter { _, _, _ -> true }) }
+        assertEquals(0, h.player.generation)
+        h.restoration.emulateSavedInstanceStateRestore()
+        compose.waitForIdle()
+        assertEquals(before, compose.onNodeWithTag("feed_line_${line.line.id}").getUnclippedBoundsInRoot().top)
+        compose.runOnIdle { assertFalse(h.current.state.isPlaying) }
+    }
+
     @Test fun aSmallPhoneWithDoubleSizeTextKeepsReadingSpaceAndEveryEssentialAction() {
         launch("great_litany", fontScale = 2f, smallPhone = true)
         compose.onNodeWithTag("reader_surface").assertHeightIsAtLeast(120.dp).assertIsDisplayed()
@@ -214,9 +270,11 @@ class ContinuousReaderFlowTest {
         compose.waitForIdle()
     }
 
-    private class Harness(val player: ServicePlayerState, val feed: ContinuousServiceFeed) {
+    private class Harness(var player: ServicePlayerState, val feed: ContinuousServiceFeed) {
+        lateinit var restoration: StateRestorationTester
         var now = 10_000L
         var writable = true
+        var finishes = 0
         var showReader by mutableStateOf(true)
         val current get() = requireNotNull(player.reading)
     }
@@ -230,7 +288,8 @@ class ContinuousReaderFlowTest {
         lateinit var h: Harness
         val player = ServicePlayerState(initial, { h.now }, ServicePlaybackWriter { _, _, _ -> h.writable })
         h = Harness(player, ContinuousServiceFeed(plan))
-        compose.setContent {
+        h.restoration = StateRestorationTester(compose)
+        h.restoration.setContent {
             var original by remember { mutableStateOf(preferredOriginal) }
             val holder = rememberSaveableStateHolder()
             val density = LocalDensity.current
@@ -238,8 +297,8 @@ class ContinuousReaderFlowTest {
                 GuideTheme(false) {
                     if (h.showReader) holder.SaveableStateProvider("reader") {
                         Box(if (smallPhone) Modifier.size(320.dp, 640.dp) else Modifier.fillMaxSize()) {
-                        ServiceScreen(player, onStageChange = { player.seekStage(it) }, onBack = {}, onSelectStage = {}, onFindStage = {},
-                            onSettings = {}, dark = false, onDarkChange = {}, onOpenSource = {}, onSoundSettings = {}, onFinish = {},
+                        ServiceScreen(h.player, onStageChange = { h.player.seekStage(it) }, onBack = {}, onSelectStage = {}, onFindStage = {},
+                            onSettings = {}, dark = false, onDarkChange = {}, onOpenSource = {}, onSoundSettings = {}, onFinish = { h.finishes++ },
                             preferredOriginal = original, onOriginalChange = { original = it }, onMicrophone = { h.showReader = false })
                         }
                     }

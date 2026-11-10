@@ -50,8 +50,7 @@ class ArrivalFlowTest {
         assertOldPositionsCleared()
         assertGlobals()
         compose.onFeedLine(container.recordedFeedTrack(savedPlayback()), 0).assertIsSelected()
-        compose.onNodeWithContentDescription("Двигать текст").assertExists()
-        compose.onNodeWithTag("reader_status").assertTextEquals("На паузе · примерное место")
+        compose.onNodeWithTag("play_lyrics").assert(hasText("Автопрокрутка") or hasContentDescription("Автопрокрутка")).assertExists()
     }
 
     @Test fun anExpiredClickDoesNotReplaceOrClearTheSavedReading() {
@@ -90,7 +89,7 @@ class ArrivalFlowTest {
         compose.openReaderDetails()
         compose.onNodeWithTag("reading_details_date").assertTextEquals("Тексты на 9 ноября 2026")
         compose.closeReaderDetails()
-        compose.openReaderControl("controls_clarify").performClick()
+        compose.onNodeWithTag("clarify_stage").performClick()
         compose.onNodeWithTag("manual_content").performScrollToNode(hasTestTag("manual_creed"))
         compose.onNodeWithTag("manual_creed").performClick()
         compose.onNodeWithTag("arrival_content").performScrollToNode(hasTestTag("accept_arrival"))
@@ -100,14 +99,16 @@ class ArrivalFlowTest {
         compose.onNodeWithTag("open_map").performClick()
         compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_epistle"))
         compose.onNodeWithTag("stage_epistle").performClick()
-        compose.onNodeWithTag("reading_unavailable").assertExists()
+        compose.onNodeWithTag("lyrics_list").performScrollToNode(hasTestTag("missing_reading_epistle"))
+        compose.onNodeWithTag("missing_reading_epistle").assertIsDisplayed()
         compose.runOnIdle { clock.current = Instant.parse("2026-11-09T21:05:00Z") }
         compose.mainClock.advanceTimeBy(6_000)
         restoration.emulateSavedInstanceStateRestore()
         compose.openReaderDetails()
         compose.onNodeWithTag("reading_details_date").assertTextEquals("Тексты на 9 ноября 2026")
         compose.closeReaderDetails()
-        compose.onNodeWithTag("reading_unavailable").assertExists()
+        compose.onNodeWithTag("lyrics_list").performScrollToNode(hasTestTag("missing_reading_epistle"))
+        compose.onNodeWithTag("missing_reading_epistle").assertIsDisplayed()
         assertEquals("2026-11-09", savedContext().serviceDate)
     }
 
@@ -119,7 +120,7 @@ class ArrivalFlowTest {
         compose.onNodeWithContentDescription("К службе").performClick()
         compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("start_guide"))
         compose.onNodeWithTag("start_guide").performClick()
-        assertEquals("preparation", savedSession().anchorStageId)
+        assertEquals("beginning", savedSession().anchorStageId)
         assertEquals("2026-11-08", savedContext().serviceDate)
         assertEquals(ReadingContextSource.MANUAL, savedContext().source)
         assertNull(savedContext().startEpochMillis)
@@ -165,7 +166,7 @@ class ArrivalFlowTest {
         compose.openReaderDetails()
         compose.onNodeWithTag("reading_details_date").assertTextEquals("Тексты на 7 ноября 2026")
         compose.closeReaderDetails()
-        compose.openReaderControl("controls_clarify").performClick()
+        compose.onNodeWithTag("clarify_stage").performClick()
         compose.onNodeWithTag("manual_content").performScrollToNode(hasTestTag("manual_lords_prayer"))
         compose.onNodeWithTag("manual_lords_prayer").performClick()
         compose.onNodeWithTag("arrival_content").performScrollToNode(hasTestTag("accept_arrival"))
@@ -215,7 +216,7 @@ class ArrivalFlowTest {
         compose.onNodeWithTag("watch_$which").performClick()
     }
     private fun seed() {
-        val track = creedTracks[1]
+        val track = creedTracks.single { it.title == "Символ веры" }
         check(preferences.edit().clear().putBoolean("dark", true).putInt("text_size", 0)
             .putBoolean("lyric_original", true).putInt("lyric_tempo", 8).putBoolean("lyric_intro_seen", true)
             .putString("stage_id", "creed")
@@ -241,7 +242,7 @@ class ArrivalFlowTest {
     }
     private fun assertOldPositionsCleared() {
         assertFalse(preferences.contains("lyric_track_creed"))
-        assertFalse(preferences.contains("lyric_line_${creedTracks[1].id}"))
+        assertFalse(preferences.contains("lyric_line_${creedTracks.single { it.title == "Символ веры" }.id}"))
         assertFalse(preferences.all.keys.any { "old_track" in it || "old_stage" in it })
     }
     private class AdjustableClock(var current: Instant) : Clock() {

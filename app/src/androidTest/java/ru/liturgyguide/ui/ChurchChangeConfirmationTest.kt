@@ -318,7 +318,7 @@ class ChurchChangeConfirmationTest {
         compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("open_church"))
         compose.onNodeWithTag("open_church").assertIsDisplayed().performClick()
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("change_church"))
-        compose.onNodeWithTag("change_church").assertIsDisplayed().performClick()
+        compose.onNodeWithTag("change_church").performScrollTo().assertIsDisplayed().performClick()
         compose.onNodeWithTag("church_picker").assertIsDisplayed()
     }
 

@@ -418,8 +418,9 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         arrivalDraft = null
         navigate(Screen.SERVICE)
     }
-    fun openManual(mode: ArrivalMode) {
-        val stopped = mode == ArrivalMode.CORRECTION && player.reading?.state?.isPlaying == true
+    fun openManual(mode: ArrivalMode, wasPlayingInReader: Boolean = false) {
+        val stopped = mode == ArrivalMode.CORRECTION &&
+            (wasPlayingInReader || player.reading?.state?.isPlaying == true)
         player.pause()
         beginArrival(ArrivalDraft(church?.id, church?.shortName ?: "Храм не выбран", mode,
             ArrivalSource.MANUAL, automationStopped = stopped), Screen.MANUAL)
@@ -663,28 +664,33 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                             },
                             onBack = ::back)
                     }
-                    Screen.SERVICE -> ServiceScreen(
-                        player = player,
-                        onStageChange = { selectStage(it) },
-                        onBack = { navigate(Screen.MAIN) },
-                        dark = dark,
-                        onDarkChange = { dark = !dark; preferences.edit().putBoolean("dark", dark).apply() },
-                        onOpenSource = { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(it))) },
-                        preferredOriginal = preferredOriginal,
-                        onOriginalChange = { preferredOriginal = it; preferences.edit().putBoolean("lyric_original", it).apply() },
-                        restoredNotice = restoredNotice,
-                        onSoundSettings = { openExternal(Intent(Settings.ACTION_SOUND_SETTINGS)) },
-                        onFinish = {
-                            if (clearAcceptedReading()) {
-                                navigate(Screen.MAIN)
-                                Toast.makeText(context, "Если включали режим тишины, не забудьте проверить его после службы", Toast.LENGTH_LONG).show()
-                            }
-                        },
-                        onSelectStage = { openOrder(Screen.SERVICE) },
-                        onFindStage = { openManual(ArrivalMode.CORRECTION) },
-                        onMicrophone = { openListening(Screen.SERVICE) },
-                        onSettings = { settingsOrigin = Screen.SERVICE; navigate(Screen.SETTINGS) }
-                    )
+                    Screen.SERVICE -> {
+                        // The book pauses before leaving so its visible bookmark is saved.
+                        // Preserve the visible running state for the destination's explanation.
+                        val wasPlayingInReader = player.reading?.state?.isPlaying == true
+                        ServiceScreen(
+                            player = player,
+                            onStageChange = { selectStage(it) },
+                            onBack = { navigate(Screen.MAIN) },
+                            dark = dark,
+                            onDarkChange = { dark = !dark; preferences.edit().putBoolean("dark", dark).apply() },
+                            onOpenSource = { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(it))) },
+                            preferredOriginal = preferredOriginal,
+                            onOriginalChange = { preferredOriginal = it; preferences.edit().putBoolean("lyric_original", it).apply() },
+                            restoredNotice = restoredNotice,
+                            onSoundSettings = { openExternal(Intent(Settings.ACTION_SOUND_SETTINGS)) },
+                            onFinish = {
+                                if (clearAcceptedReading()) {
+                                    navigate(Screen.MAIN)
+                                    Toast.makeText(context, "Если включали режим тишины, не забудьте проверить его после службы", Toast.LENGTH_LONG).show()
+                                }
+                            },
+                            onSelectStage = { openOrder(Screen.SERVICE) },
+                            onFindStage = { openManual(ArrivalMode.CORRECTION, wasPlayingInReader) },
+                            onMicrophone = { openListening(Screen.SERVICE) },
+                            onSettings = { settingsOrigin = Screen.SERVICE; navigate(Screen.SETTINGS) }
+                        )
+                    }
                     Screen.STAGE_SELECTOR, Screen.SEARCH -> StageSelector(
                         stageMatcher = matcher,
                         selectedId = if (scopedSearch) null else selectedStage?.id,

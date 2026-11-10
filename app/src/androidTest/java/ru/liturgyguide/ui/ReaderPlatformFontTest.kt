@@ -153,16 +153,17 @@ class ReaderPlatformFontTest {
 
     private fun assertReaderWindows(factor: Float) {
         compose.onNodeWithTag("player_menu").performClick()
-        sample(textWithin("choose_track", "Тексты этапа"), factor)
+        sample(textWithin("scroll_options", "Скорость автопрокрутки"), factor)
         compose.onNodeWithTag("open_reading_details").performClick()
         sample(compose.onNodeWithTag("reading_details_date").performScrollTo()
             .assertTextEquals("Тексты на 8 ноября 2026"), factor)
         sample(textWithin("close_reading_details", "Закрыть"), factor)
         compose.closeReaderDetails()
-        compose.openReaderControls()
-        compose.readerControl("controls_original").assertIsSelected()
-        sample(textWithin("controls_original", "Оригинал"), factor)
-        compose.dismissReaderControls()
+        compose.inspectReaderModes { mode, node ->
+            if (mode == "original") node.assertIsSelected()
+            val tag = node.fetchSemanticsNode().config[SemanticsProperties.TestTag]
+            sample(textWithin(tag, when (mode) { "original" -> "Оригинал"; "text" -> "Русский"; else -> "Смысл" }), factor)
+        }
     }
 
     private fun assertReaderAndStoredState(initial: ActiveServicePlayback, saved: StoredServicePlayback,
@@ -170,15 +171,14 @@ class ReaderPlatformFontTest {
         val line = requireNotNull(initial.track).lines[initial.lineIndex]
         val node = compose.onFeedLine(line).assertIsSelected().assertIsDisplayed().assertTextEquals(requireNotNull(line.original))
         val actual = sample(node, factor, fixed = false)
-        assertEquals(28.sp, actual.layoutInput.style.fontSize)
-        assertEquals(39.2.sp, actual.layoutInput.style.lineHeight)
+        assertEquals(25.sp, actual.layoutInput.style.fontSize)
+        assertEquals(36.sp, actual.layoutInput.style.lineHeight)
         compose.onNodeWithTag("lyrics_list").assertHeightIsAtLeast(120.dp)
-        compose.onNodeWithTag("play_lyrics").assertIsDisplayed().assertContentDescriptionEquals("Двигать текст")
-            .assert(SemanticsMatcher("Actual reader is paused") {
-                it.config.contains(SemanticsProperties.StateDescription) &&
-                    it.config[SemanticsProperties.StateDescription].contains("пауз", ignoreCase = true)
-            })
-        sample(compose.onNodeWithTag("reader_primary_label", useUnmergedTree = true), factor)
+        val play = compose.onNodeWithTag("play_lyrics").assertIsDisplayed().assertHeightIsAtLeast(48.dp)
+        if (compose.readerHasModeChooser()) play.assertContentDescriptionEquals("Автопрокрутка")
+        else play.assertTextEquals("Автопрокрутка")
+        sample(compose.onNode(hasAnyAncestor(hasTestTag("play_lyrics")) and
+            SemanticsMatcher.keyIsDefined(SemanticsActions.GetTextLayoutResult), useUnmergedTree = true), factor)
         assertEquals(saved, savedPlayback())
         assertEquals(initial.context, ReadingContextStore(preferences).restore())
         assertEquals(bookmarks, bookmarkValues())
@@ -195,7 +195,7 @@ class ReaderPlatformFontTest {
         val child = actual.layoutInput.density
         assertEquals("No physical DP density changes", platform.density, child.density, 0f)
         assertEquals("No hidden font cap", expected.fontScale, child.fontScale, .001f)
-        val values = listOf(12f, 20f, 24f, 28f, 32f, 39.2f).map { size ->
+        val values = listOf(12f, 20f, 24f, 25f, 32f, 36f).map { size ->
             val unit = size.sp
             val dp = with(expected) { unit.toDp() }
             val px = with(expected) { unit.toPx() }
@@ -240,7 +240,7 @@ class ReaderPlatformFontTest {
         val date = LocalDate.parse("2026-11-08")
         val day = requireNotNull(container.readings).days.single { it.date == date.toString() }
         val plan = ServicePlaybackPlan.build(container.getStageMatcher().getAllStages(), date, day)
-        val track = plan.tracksByStage.getValue("creed")[1]
+        val track = plan.tracksByStage.getValue("creed").single { it.title == "Символ веры" }
         val engine = ServicePlaybackEngine(plan)
         val state = engine.seekLine(engine.start("creed", PlaybackSpeed.FAST), track.id, track.lines[3].id)
             .copy(elapsedQuarterMillis = 1_234)

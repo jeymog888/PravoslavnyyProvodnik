@@ -92,10 +92,9 @@ class DailyReadingSearchTest {
                     preferredOriginal = false, onOriginalChange = {})
             }
         }
-        compose.onNodeWithTag("lyrics_list").performScrollToNode(hasTestTag("reading_unavailable"))
-        compose.onNodeWithTag("reading_unavailable").assertIsDisplayed()
+        compose.onNodeWithTag("lyrics_list").performScrollToNode(hasTestTag("missing_reading_gospel"))
+        compose.onNodeWithTag("missing_reading_gospel").performScrollTo().assertIsDisplayed()
         compose.onNodeWithTag("player_meaning_tab").performClick()
-        compose.onNodeWithTag("service_content").performScrollToNode(hasTestTag("reading_unavailable"))
-        compose.onNodeWithTag("reading_unavailable").assertIsDisplayed()
+        compose.onNodeWithTag("reading_unavailable").performScrollTo().assertIsDisplayed().assertTextContains("9 ноября 2026", substring = true)
     }
 }

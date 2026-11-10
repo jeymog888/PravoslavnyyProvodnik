@@ -83,7 +83,7 @@ class ExhaustedServiceEntryTest {
         compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_gospel"))
         assertUnchanged(before)
         compose.onNodeWithTag("stage_gospel").performClick()
-        assertAccepted(expected, "gospel", expectedStatus = "На паузе · по-русски")
+        assertAccepted(expected, "gospel", russianFallback = true)
         val plan = planFor(expected)
         val text = plan.segments[saved().snapshot.segmentIndex] as PlaybackSegment.Text
         assertEquals("От Луки 16:19-31", plan.track(text.trackId)?.title)
@@ -152,7 +152,7 @@ class ExhaustedServiceEntryTest {
         compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("watch_next"))
         compose.onNodeWithTag("watch_next").performClick()
         assertEquals("2026-11-09", saved().context.serviceDate)
-        compose.openReaderControl("controls_clarify").performClick()
+        compose.onNodeWithTag("clarify_stage").performClick()
         compose.onNodeWithTag("manual_content").assertIsDisplayed()
         val acceptedNext = preferences.all.toMap()
         compose.runOnIdle { oldLandmark(); oldAccept(); oldSearch(); oldSearchResult() }
@@ -270,7 +270,7 @@ class ExhaustedServiceEntryTest {
     private fun saved(): StoredServicePlayback = requireNotNull(
         StoredServicePlaybackCodec.decode(preferences.getString(ServicePlaybackStore.PLAYBACK_KEY, null)))
     private fun assertUnchanged(before: Map<String, *>) = compose.runOnIdle { assertEquals(before, preferences.all) }
-    private fun assertAccepted(value: ReadingContext, stageId: String, expectedStatus: String = "На паузе") {
+    private fun assertAccepted(value: ReadingContext, stageId: String, russianFallback: Boolean = false) {
         val stored = saved()
         assertEquals(value, stored.context)
         assertEquals(value, ReadingContextStore(preferences).restore())
@@ -284,8 +284,11 @@ class ExhaustedServiceEntryTest {
         assertEquals(stageId, marker.anchorStageId)
         assertFalse(marker.autoAdvance)
         assertFalse(marker.anchorIsApproximate)
-        compose.onNodeWithContentDescription("Двигать текст").assertExists()
-        compose.onNodeWithTag("reader_status").assertTextEquals(expectedStatus)
+        compose.onNodeWithTag("play_lyrics").assert(hasText("Автопрокрутка") or hasContentDescription("Автопрокрутка")).assertExists()
+        if (russianFallback) {
+            compose.assertReaderMode("text", selected = true)
+            compose.onNodeWithText("Для этого чтения доступен русский текст").assertIsDisplayed()
+        }
         compose.onNodeWithTag("manual_content").assertDoesNotExist()
         compose.onNodeWithTag("arrival_content").assertDoesNotExist()
     }

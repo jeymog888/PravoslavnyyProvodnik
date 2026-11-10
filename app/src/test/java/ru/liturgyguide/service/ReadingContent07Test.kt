@@ -46,6 +46,14 @@ class ReadingContent07Test {
         assertTrue(tracks[match.trackIndex].lines.first().original.orEmpty().startsWith("Отче наш"))
     }
 
+    @Test fun `the exact Creed title wins over the preceding call mentioning it`() {
+        val tracks = PrayerTrackFactory.build(stages().single { it.id == "creed" }, null)
+        val match = requireNotNull(PrayerTextSearch.find(tracks, "Символ веры"))
+        assertEquals("Символ веры", tracks[match.trackIndex].title)
+        assertEquals(0, match.lineIndex)
+        assertTrue(tracks[match.trackIndex].lines.first().original.orEmpty().startsWith("Верую"))
+    }
+
     @Test fun `new text fits stage budgets and never fills unknown daily readings`() {
         val plan = ServicePlaybackPlan.build(stages(), LocalDate.of(2026, 11, 10), null)
         plan.stages.forEach { stage ->
