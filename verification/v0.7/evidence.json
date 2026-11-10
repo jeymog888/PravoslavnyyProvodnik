@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "state": "ACCEPTED",
+  "runs": [
+    {
+      "file": "release-candidate/native-full.txt",
+      "sha256": "d12d74865cdb9d99cda790b8d9ec179d6a0eaeab83c0d877e33cb94881bdd9e5",
+      "pass": 230,
+      "fail": 7,
+      "skip": 2
+    },
+    {
+      "file": "final-fixes/native-targeted.txt",
+      "sha256": "87bf7d60c6764869eaf8535247e8dc3d3df58f1c88f4049b2ec44f81e9c07f95",
+      "pass": 54,
+      "fail": 1,
+      "skip": 0
+    },
+    {
+      "file": "test-scroll-fix/native-live-and-content.txt",
+      "sha256": "76e8f645ad0ee61ca21cc73f062005d5e3398f5386d683b117155ec906a9c50a",
+      "pass": 6,
+      "fail": 0,
+      "skip": 0
+    }
+  ],
+  "latest_unique_outcomes": {
+    "total": 239,
+    "pass": 239,
+    "fail": 0,
+    "skip": 0
+  },
+  "limits": "Aggregated latest outcomes across the listed runs, not a claim that the first full run passed. Network tests explicitly enabled in the last run. Physical phone and live acoustics not tested.",
+  "debug_apk_sha256": "1ac804c0f100e82ed1c04c2b391591c2fa95ed63efb6fec11463448ab72dba66",
+  "signed_candidate_sha256": "db890b14ee5b57eb8750e142545fd3d7e8197b6213087f898d08fed09b9bb07f",
+  "ci_run": "https://github.com/jeymog888/PravoslavnyyProvodnik/actions/runs/42727723655",
+  "live_schedules": [
+    {
+      "parish": "kresta",
+      "source": "https://hramkresta.ru/schedule/",
+      "checked_at": "2026-11-10T00:19:26.796274Z",
+      "status": "READY",
+      "events": 38,
+      "exact_liturgy_starts": 11
+    },
+    {
+      "parish": "petr-fevronia",
+      "source": "https://hram-petr-fevronia.ru/parish-life/schedule/",
+      "checked_at": "2026-11-10T00:19:28.119699Z",
+      "status": "READY",
+      "events": 8,
+      "exact_liturgy_starts": 1
+    },
+    {
+      "parish": "nikolai",
+      "source": "https://www.svt-nikolai.org/ru/?page_id=6846",
+      "checked_at": "2026-11-10T00:19:30.585084Z",
+      "status": "READY",
+      "events": 8,
+      "exact_liturgy_starts": 0
+    }
+  ],
+  "ci": {
+    "commit": "9f47a3f66271057a0dfe02b449060eb56a8a9efb",
+    "conclusion": "success",
+    "unit": {
+      "tests": 500,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "ui": {
+      "tests": 239,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 2
+    },
+    "note": "Two explicit network scenarios passed separately on the local Android emulator"
+  }
+}
