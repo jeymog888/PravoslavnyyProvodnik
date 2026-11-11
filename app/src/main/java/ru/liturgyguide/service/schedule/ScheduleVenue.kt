@@ -29,17 +29,18 @@ internal object ScheduleVenue {
             !clock.containsMatchIn(candidate) && tokens(candidate).isNotEmpty()
     }
 
-    fun inlineLabel(text: String, calendarDate: LocalDate? = null): String? {
+    fun inlineLabel(text: String, calendarDate: LocalDate? = null, datedPreface: Boolean = false): String? {
         var candidate = text.replace(calendarFeast, " ")
         // A calendar preface before the first clock in a dated service row is not a venue.
         // Standalone building headings, separate venue cells and locations after the clock
         // remain subject to identity checks, including churches dedicated to the same feast.
         if (calendarDate != null) {
             val firstClock = clock.find(candidate)?.range?.first
-            if (firstClock != null) {
-                val prefix = candidate.substring(0, firstClock).replace(martyrsFeast, " ")
+            if (firstClock != null || datedPreface) {
+                val split = firstClock ?: candidate.length
+                val prefix = candidate.substring(0, split).replace(martyrsFeast, " ")
                 candidate = (if (calendarDate.monthValue == 11 && calendarDate.dayOfMonth == 21)
-                    prefix.replace(shortMichaelFeast, " ") else prefix) + candidate.substring(firstClock)
+                    prefix.replace(shortMichaelFeast, " ") else prefix) + candidate.substring(split)
             }
         }
         val labels = location.findAll(candidate).map { it.value }.toMutableList()

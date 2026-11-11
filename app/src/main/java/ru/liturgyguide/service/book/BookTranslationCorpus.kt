@@ -3,6 +3,7 @@ package ru.liturgyguide.service.book
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import ru.liturgyguide.model.WorshipKind
 
 /** Old pairs remain useful, but an old or partially loaded corpus is never declared complete. */
 internal data class BookTranslationCorpus(
@@ -11,8 +12,8 @@ internal data class BookTranslationCorpus(
     val version: Int = VERSION
 ) {
     val current: Boolean get() = version == VERSION
-    val complete: Boolean get() = current && index.size > 0 &&
-        completedSources.containsAll(BookTranslationIndex.PARALLEL_SOURCES.map { it.url })
+    fun completeFor(worship: WorshipKind): Boolean = current && index.size > 0 &&
+        completedSources.containsAll(BookTranslationIndex.requiredSources(worship).map { it.url })
 
     fun encode(): String = JsonObject().apply {
         addProperty("version", version)
@@ -22,8 +23,8 @@ internal data class BookTranslationCorpus(
 
     companion object {
         // Bump when the required source set or exact extraction rules change.
-        const val VERSION = 2
-        const val MAX_BYTES = 1_500_000
+        const val VERSION = 4
+        const val MAX_BYTES = 2_000_000
 
         fun decode(json: String?): BookTranslationCorpus = runCatching {
             require(json != null && json.length <= MAX_BYTES)
@@ -32,7 +33,7 @@ internal data class BookTranslationCorpus(
             val value = root.asJsonObject
             val version = value.get("version").asInt
             val sources = value.getAsJsonArray("completedSources").map { it.asString }.toSet()
-            require(sources.all { url -> BookTranslationIndex.PARALLEL_SOURCES.any { it.url == url } })
+            require(sources.all { url -> BookTranslationIndex.ALL_PARALLEL_SOURCES.any { it.url == url } })
             BookTranslationCorpus(BookTranslationIndex.decode(value.getAsJsonArray("entries").toString()), sources, version)
         }.getOrElse { BookTranslationCorpus() }
     }

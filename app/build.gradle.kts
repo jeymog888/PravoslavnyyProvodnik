@@ -64,6 +64,8 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
     // HTML parsing only; networking stays in the bounded cancellable transport.
     implementation("org.jsoup:jsoup:1.18.3")
+    // Read actual PDF glyphs on Android 8+, retaining superscript clock geometry before OCR.
+    implementation("com.tom-roush:pdfbox-android:2.0.27.0")
     // On-device Russian schedule OCR, including scanned PDF pages.
     implementation("cz.adaptech.tesseract4android:tesseract4android:4.9.0")
 

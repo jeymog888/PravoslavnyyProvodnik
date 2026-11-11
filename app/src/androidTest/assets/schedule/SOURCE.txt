@@ -5,3 +5,12 @@ PDF: https://www.svt-nikolai.org/ru/wp-content/uploads/2026/09/%D0%A0%D0%B0%D1%8
 helsinki-2026-11.png is the rendered second page of that PDF, unchanged
 Cross-check of expected dates and times: https://www.svt-nikolai.org/ru/?page_id=6846
 The fixture is a real scanned source, not generated text or a substitute OCR response
+
+Real PDF text-layer fixture: dnepr-2026-11.pdf
+Parish: Трехсвятительский храм, Днепр
+Source: https://trisvyat-dp.church.ua/files/2026/11/РАСПИСАНИЕ-БОГОСЛУЖЕНИЙ-НА-НОЯБРЬ-2026.pdf
+Fetched: 2026-11-11
+SHA256: fb10d3c89cad7312cde0c3c905479b31fc0918587d669c427d487093cf4b8634
+Unchanged original PDF with an actual Cyrillic text layer. Printed hours use 14.04pt text, minutes 9pt raised 5.04pt
+Expected: 14 November 07:30 and 14:00; 15 November 08:00; 21 November 07:30
+The bottom "Каждую среду 09:00" block must not inherit the preceding Sunday 29 November

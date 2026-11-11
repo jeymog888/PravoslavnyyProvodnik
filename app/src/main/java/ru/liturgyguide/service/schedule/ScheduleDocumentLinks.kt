@@ -16,7 +16,7 @@ object ScheduleDocumentLinks {
         copy.select("nav,footer,aside,header,.sidebar,.comments").remove()
         // Navigation often contains the only schedule link; retain anchors there, but not images.
         page.select("a[href]").take(500).forEach { anchor ->
-            val url = ScheduleUrl.normalized(anchor.absUrl("href")) ?: return@forEach
+            val url = ScheduleUrl.publicSource(anchor.absUrl("href")) ?: return@forEach
             val label = anchor.text() + " " + decoded(anchor.attr("href"))
             val binary = extension.containsMatchIn(url)
             if (!schedule.containsMatchIn(label) && !(binary && schedule.containsMatchIn(copy.select("h1,h2,h3").text()))) return@forEach
@@ -27,7 +27,7 @@ object ScheduleDocumentLinks {
         val schedulePage = schedule.containsMatchIn(copy.select("h1,h2,h3").text())
         content.select("img[src],img[data-src]").take(30).forEach { picture ->
             val raw = picture.absUrl("data-src").ifBlank { picture.absUrl("src") }
-            val url = ScheduleUrl.normalized(raw) ?: return@forEach
+            val url = ScheduleUrl.publicSource(raw) ?: return@forEach
             val label = picture.attr("alt") + " " + picture.attr("title") + " " + decoded(raw)
             val small = listOf("width", "height").mapNotNull { picture.attr(it).toIntOrNull() }.any { it < 150 }
             if (small || (!schedule.containsMatchIn(label) && !schedulePage)) return@forEach

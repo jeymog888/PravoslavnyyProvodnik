@@ -6,6 +6,7 @@ import org.jsoup.nodes.Document
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.net.CookieHandler
 import java.net.HttpURLConnection
 import java.net.InetAddress
 import java.net.URI
@@ -36,15 +37,31 @@ object ScheduleUrl {
         URI("https://$host${uri.rawPath.ifEmpty { "/" }}${uri.rawQuery?.let { "?$it" }.orEmpty()}").toASCIIString()
     }.getOrNull()
 
+    /** Preserve an explicitly published protocol; HTTP is never inferred from an HTTPS failure. */
+    fun publicSource(value: String): String? = runCatching {
+        val trimmed = value.trim()
+        val uri = URI(trimmed)
+        val scheme = uri.scheme?.lowercase() ?: error("Missing scheme")
+        require(scheme in setOf("http", "https") && uri.userInfo == null)
+        require(uri.port == -1 || uri.port == if (scheme == "http") 80 else 443)
+        val host = requireNotNull(uri.host).lowercase().removeSuffix(".")
+        require(host.contains('.') && host != "localhost" && !host.endsWith(".local") && !host.endsWith(".localhost"))
+        require(!Regex("^[0-9.]+$").matches(host) && !host.contains(':'))
+        require(trimmed.length <= 2_048 && trimmed.none(Char::isISOControl))
+        URI("$scheme://$host${uri.rawPath.ifEmpty { "/" }}${uri.rawQuery?.let { "?$it" }.orEmpty()}").toASCIIString()
+    }.getOrNull()
+
     fun sameOrigin(first: String, second: String): Boolean = runCatching {
         val a = URI(first); val b = URI(second)
         a.scheme == b.scheme && a.host.equals(b.host, ignoreCase = true) && a.port == b.port
     }.getOrDefault(false)
 
     internal fun permittedRedirect(first: String, second: String): Boolean = runCatching {
-        val a = URI(first).host.removePrefix("www.")
-        val b = URI(second).host.removePrefix("www.")
-        a == b
+        val from = URI(first); val to = URI(second)
+        val a = from.host.removePrefix("www.")
+        val b = to.host.removePrefix("www.")
+        a == b && from.scheme in setOf("http", "https") && to.scheme in setOf("http", "https") &&
+            !(from.scheme == "https" && to.scheme == "http")
     }.getOrDefault(false)
 }
 
@@ -63,7 +80,8 @@ class UrlConnectionScheduleTransport(
     private val timeoutMillis: Long = 12_000,
     private val limitBytes: Int = 12_582_912,
     private val connectionFactory: (URL) -> HttpURLConnection = { it.openConnection() as HttpURLConnection },
-    private val resolve: (String) -> Array<InetAddress> = InetAddress::getAllByName
+    private val resolve: (String) -> Array<InetAddress> = InetAddress::getAllByName,
+    private val allowExplicitHttp: Boolean = false
 ) : ScheduleTransport {
     init { require(timeoutMillis in 1..20_000); require(limitBytes in 1..12_582_912) }
 
@@ -89,32 +107,51 @@ class UrlConnectionScheduleTransport(
         if (complete.get()) timeout.cancel(false)
         val task = runCatching { networkPool.submit {
             try {
-                var target = ScheduleUrl.normalized(url) ?: throw IOException()
+                val published = (if (allowExplicitHttp) ScheduleUrl.publicSource(url) else ScheduleUrl.normalized(url)) ?: throw IOException()
+                var fallbackHttp = published.takeIf { allowExplicitHttp && it.startsWith("http://") }
+                var target = fallbackHttp?.let { "https://" + it.removePrefix("http://") } ?: published
                 var redirects = 0
                 while (!complete.get()) {
                     val addresses = resolve(URI(target).host)
-                    if (addresses.isEmpty() || addresses.any { it.isAnyLocalAddress || it.isLoopbackAddress || it.isLinkLocalAddress || it.isSiteLocalAddress || it.isMulticastAddress }) throw IOException()
+                    if (addresses.isEmpty() || addresses.any { !publicAddress(it) }) throw IOException()
+                    // URLConnection uses the process-wide cookie handler. This public reader must
+                    // not turn an authenticated browser/session into an HTTP request.
+                    if (target.startsWith("http://") && CookieHandler.getDefault() != null) throw IOException()
                     if (complete.get()) return@submit
                     val current = connectionFactory(URL(target))
                     socket.set(current)
                     try {
                         if (complete.get()) return@submit
                         current.instanceFollowRedirects = false
-                        current.connectTimeout = timeoutMillis.toInt()
-                        current.readTimeout = timeoutMillis.toInt()
+                        val attemptTimeout = if (fallbackHttp != null) minOf(timeoutMillis.toInt(), 4_000) else timeoutMillis.toInt()
+                        current.connectTimeout = attemptTimeout
+                        current.readTimeout = attemptTimeout
+                        current.requestMethod = "GET"
+                        current.useCaches = false
                         current.setRequestProperty("User-Agent", "Feoria/0.8 (+https://github.com/jeymog888/PravoslavnyyProvodnik)")
                         current.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/json,application/pdf,image/*;q=0.9")
                         current.setRequestProperty("Accept-Encoding", "identity")
-                        val status = current.responseCode
+                        val status = try { current.responseCode } catch (failure: IOException) {
+                            val fallback = fallbackHttp ?: throw failure
+                            if (complete.get()) return@submit
+                            target = fallback; fallbackHttp = null
+                            continue
+                        }
                         if (status in setOf(301, 302, 303, 307, 308)) {
                             if (++redirects > 2) throw IOException()
                             val location = current.getHeaderField("Location") ?: throw IOException()
-                            val next = ScheduleUrl.normalized(URI(target).resolve(location).toString()) ?: throw IOException()
+                            val next = ScheduleUrl.publicSource(URI(target).resolve(location).toString()) ?: throw IOException()
                             if (!ScheduleUrl.permittedRedirect(target, next)) throw IOException()
                             target = next
                             continue
                         }
-                        if (status != 200 || current.contentLengthLong > limitBytes) throw IOException()
+                        if (status != 200) {
+                            val fallback = fallbackHttp ?: throw IOException()
+                            target = fallback; fallbackHttp = null
+                            continue
+                        }
+                        fallbackHttp = null // A valid HTTPS response is never downgraded after a body/parser error
+                        if (current.contentLengthLong > limitBytes) throw IOException()
                         val output = ByteArrayOutputStream()
                         current.inputStream.use { input ->
                             val buffer = ByteArray(8_192)
@@ -168,6 +205,18 @@ class UrlConnectionScheduleTransport(
     }
 
     companion object {
+        internal fun publicAddress(address: InetAddress): Boolean {
+            if (address.isAnyLocalAddress || address.isLoopbackAddress || address.isLinkLocalAddress ||
+                address.isSiteLocalAddress || address.isMulticastAddress) return false
+            val bytes = address.address.map { it.toInt() and 255 }
+            if (bytes.size == 4) {
+                if (bytes[0] == 0 || bytes[0] >= 224 || bytes[0] == 100 && bytes[1] in 64..127 ||
+                    bytes[0] == 198 && bytes[1] in 18..19) return false
+            }
+            if (bytes.size == 16 && (bytes[0] and 0xfe) == 0xfc) return false // IPv6 unique local
+            return true
+        }
+
         private fun daemon(job: Runnable) = Thread(job, "feoria-schedule").apply { isDaemon = true }
         private val networkPool = ThreadPoolExecutor(2, 2, 0L, TimeUnit.MILLISECONDS, ArrayBlockingQueue(2), ::daemon, ThreadPoolExecutor.AbortPolicy())
         private val cleanupPool = Executors.newSingleThreadExecutor(::daemon)

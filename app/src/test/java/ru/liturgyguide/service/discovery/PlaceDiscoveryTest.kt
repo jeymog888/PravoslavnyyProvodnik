@@ -82,11 +82,12 @@ class PlaceDiscoveryTest {
         assertEquals(GeoPoint(55.80, 49.11), result.queryCenter)
         assertEquals(3_000, result.radiusMeters)
         val query = URLDecoder.decode(transport.requests.single().postBody!!.removePrefix("data="), "UTF-8")
-        assertTrue(query.contains("around:3000,55.80,49.11"))
+        assertTrue(query.contains("around:3800,55.80,49.11"))
         assertFalse(query.contains("55.796127"))
         assertTrue(query.contains("out center tags 60"))
         assertFalse(query.contains(".*orthodox.*"))
         val distances = result.items.map { GeoPoint(55.796127, 49.106414).distanceMeters(it.center) }
+        assertTrue(distances.all { it <= 3_000 })
         assertEquals(distances.sorted(), distances)
     }
 

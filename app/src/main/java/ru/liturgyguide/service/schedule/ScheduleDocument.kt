@@ -11,7 +11,7 @@ import kotlin.math.max
 data class ScheduleWord(val text: String, val left: Int, val top: Int, val right: Int, val bottom: Int,
     val confidence: Int = 100)
 data class ScheduleDocumentLine(val text: String, val confidence: Int = 100, val struck: Boolean = false,
-    val temporalConfidence: Int = 100, val headingLevel: Int = 0, val venue: String? = null)
+    val temporalConfidence: Int = 100, val headingLevel: Int = 0, val venue: String? = null, val endsTable: Boolean = false)
 data class ScheduleDocumentPage(val lines: List<ScheduleDocumentLine>)
 data class ScheduleDocument(val sourceUrl: String, val format: String, val pages: List<ScheduleDocumentPage>)
 enum class ScheduleParseDisposition { PARSED, UNSUPPORTED, REJECTED }
@@ -20,7 +20,8 @@ data class ScheduleParseResult(
     val events: List<InternetService> = emptyList(),
     val withdrawnDates: Set<String> = emptySet(),
     val withdrawnStarts: Set<String> = emptySet(),
-    val withdrawsAll: Boolean = false
+    val withdrawsAll: Boolean = false,
+    val yearInferred: Boolean = false
 )
 
 fun interface ScheduleDocumentExtractor {
@@ -103,6 +104,9 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
                     }
                 }
             }
+            // A general note after the table must not inherit the last row's date.
+            // Explicit outer date/building headings are handled by the parser separately.
+            lines += ScheduleDocumentLine("", endsTable = true)
         }
         fun walk(element: Element) {
             if (element.hasAttr("data-day")) lines += ScheduleDocumentLine(element.attr("data-day"))
@@ -126,7 +130,7 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
         return ScheduleDocument(document.baseUri(), "html", listOf(ScheduleDocumentPage(lines.take(2_000))))
     }
 
-    private val clockCell = Regex("(?<![\\d./:-])\\d{1,2}\\s*[.:]\\s*\\d{2}(?![\\d./])")
+    private val clockCell = ScheduleClocks.pattern
     private val monthWord = "(?:январ[ьяе]|феврал[ьяе]|март[ае]?|апрел[ьяе]|ма[йяе]|июн[ьяе]|июл[ьяе]|август[ае]?|сентябр[ьяе]|октябр[ьяе]|ноябр[ьяе]|декабр[ьяе])"
     private val dateCell = Regex("(?iu)^\\d{1,2}(?:\\s*[./]\\s*\\d{1,2}(?:[./](?:20\\d{2}|\\d{2}))?|\\s+$monthWord(?:\\s+20\\d{2})?)\\s*,?\\s*(?:(?:пн|вт|ср|чт|пт|сб|вс|понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)\\.?)?$")
 }

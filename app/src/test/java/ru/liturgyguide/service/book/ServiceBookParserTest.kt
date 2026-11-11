@@ -63,6 +63,7 @@ class ServiceBookParserTest {
         Triple("matins-2026-11-15", "2026-11-15", WorshipKind.MATINS),
         Triple("matins-2026-04-12", "2026-04-12", WorshipKind.MATINS),
         Triple("hour1-2026-11-12", "2026-11-12", WorshipKind.HOUR1),
+        Triple("hour1-2026-11-15", "2026-11-15", WorshipKind.HOUR1),
         Triple("chas3-2026-11-12", "2026-11-12", WorshipKind.HOUR3),
         Triple("chas6-2026-11-12", "2026-11-12", WorshipKind.HOUR6),
         Triple("chas9-2026-11-12", "2026-11-12", WorshipKind.HOUR9)
@@ -73,6 +74,33 @@ class ServiceBookParserTest {
             val book = try { parser.parse(Jsoup.parse(BookFixtures.html(name)), ServiceBookKey(date, kind), 12345) }
                 catch (failure: InvalidServiceBook) { throw AssertionError("Complete fixture $name was rejected", failure) }
             assertTrue(name, ServiceBookIntegrity.valid(book))
+        }
+    }
+
+    @Test fun sundayFirstHourHasCompleteSmallDismissalWithoutManyYears() {
+        val book = parser.parse(Jsoup.parse(BookFixtures.html("hour1-2026-11-15")),
+            ServiceBookKey("2026-11-15", WorshipKind.HOUR1), 12345)
+        assertTrue(ServiceBookIntegrity.valid(book))
+        assertFalse(book.chapters.any { BookText.normalized(it.title) == "многолетие" })
+        assertEquals("господи помилуй трижды", BookText.normalized(book.blocks.last().original))
+        assertTrue(book.blocks.any { BookText.normalized(it.original).startsWith("воскресый из мертвых христос истинный бог наш") })
+    }
+
+    @Test fun finalThreefoldResponseDoesNotCoverMissingFirstHourDismissal() {
+        val document = Jsoup.parse(BookFixtures.html("hour1-2026-11-15"))
+        val body = requireNotNull(document.selectFirst(".article-single-content.main-page-content"))
+        var removed = false
+        fun removeDismissal(node: Node) {
+            if (node is TextNode && BookText.normalized(node.text()).startsWith("воскресый из мертвых христос истинный бог наш")) {
+                node.text("")
+                removed = true
+            } else node.childNodes().forEach(::removeDismissal)
+        }
+        removeDismissal(body)
+        assertTrue(removed)
+        assertTrue(BookText.normalized(body.text()).endsWith("лик господи помилуй трижды"))
+        assertThrows(InvalidServiceBook::class.java) {
+            parser.parse(document, ServiceBookKey("2026-11-15", WorshipKind.HOUR1), 12345)
         }
     }
 

@@ -6,7 +6,7 @@ import java.time.LocalTime
 import java.time.YearMonth
 import java.util.Locale
 
-/** Format-independent rows from a real document. An explicit document year is required. */
+/** Format-independent rows. A missing year is accepted only with qualified, reported provenance. */
 object ScheduleDocumentParser {
     private val monthNames = listOf("январ", "феврал", "март", "апрел", "ма", "июн", "июл", "август", "сентябр", "октябр", "ноябр", "декабр")
     private val monthPattern = "(январ[ьяе]|феврал[ьяе]|март[ае]?|апрел[ьяе]|ма[йяе]|июн[ьяе]|июл[ьяе]|август[ае]?|сентябр[ьяе]|октябр[ьяе]|ноябр[ьяе]|декабр[ьяе])"
@@ -18,7 +18,7 @@ object ScheduleDocumentParser {
     private val isoDate = Regex("(?<!\\d)(20\\d{2}-\\d{2}-\\d{2})(?!\\d)")
     private val dayPrefix = Regex("(?iu)^\\s*(\\d{1,2})\\s*[| ]*\\s*(пн|вт|ср|чт|пт|сб|вс|понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)\\.?\\b")
     private val simpleDay = Regex("^\\s*(\\d{1,2})\\s*\\|")
-    private val clocks = Regex("(?<![\\d./:-])(\\d{1,2})\\s*[.:]\\s*(\\d{2})(?![\\d./])")
+    private val clocks = ScheduleClocks.pattern
     private val weekday = Regex("(?iu)(?<![а-яё])(пн|вт|ср|чт|пт|сб|вс|понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)\\.?(?![а-яё])")
     private val weekdays = listOf(setOf("пн", "понедельник"), setOf("вт", "вторник"), setOf("ср", "среда"), setOf("чт", "четверг"), setOf("пт", "пятница"), setOf("сб", "суббота"), setOf("вс", "воскресенье"))
     private val service = Regex("(?iu)(литурги|всенощ|вечерн|утрен|исповед|молеб|панихид|часы|лития|акафист)")
@@ -34,7 +34,8 @@ object ScheduleDocumentParser {
         val cancelledStarts = mutableSetOf<String>()
         var rejectedScope = false
         var cancelledAll = false
-        document.pages.take(12).forEach { page ->
+        val inferredMonths = ScheduleYearInference.months(document, today)
+        document.pages.take(12).forEachIndexed { pageIndex, page ->
             data class HeadingScope(val cancelled: Boolean, val venue: String?, val date: LocalDate?)
             val headings = sortedMapOf<Int, HeadingScope>()
             var sectionVenue: String? = null
@@ -55,7 +56,12 @@ object ScheduleDocumentParser {
                 if (!rejected && day != null && time != null) event(day, time, pendingTitle, today, parish, pendingVenue)?.let(events::add)
                 pendingDate = null; pendingClock = null; pendingTitle = ""; pendingVenue = null; rejected = false
             }
-            page.lines.take(2_000).forEach lineLoop@{ line ->
+            page.lines.take(2_000).forEachIndexed lineLoop@{ lineIndex, line ->
+                if (line.endsTable) {
+                    flush()
+                    currentDate = headings.values.mapNotNull { it.date }.lastOrNull()
+                    return@lineLoop
+                }
                 val clean = line.text.replace('\u00a0', ' ').replace(Regex("[\\t ]+"), " ").trim()
                 if (clean.isEmpty()) return@lineLoop
                 if (line.struck || line.confidence < 45 || line.temporalConfidence < 55) {
@@ -69,6 +75,9 @@ object ScheduleDocumentParser {
                     flush()
                     scope = runCatching { YearMonth.of(month.groupValues[2].toInt(), monthNumber(month.groupValues[1])) }.getOrNull()
                     currentDate = null
+                }
+                inferredMonths[pageIndex]?.takeIf { lineIndex in it.headingIndices }?.let { inferred ->
+                    flush(); scope = inferred.value; currentDate = null
                 }
                 val venueLabel = clean.takeIf(ScheduleVenue::isLabel)?.let { ScheduleVenue.inlineLabel(it) ?: it }
                 if (line.headingLevel > 0) {
@@ -84,7 +93,7 @@ object ScheduleDocumentParser {
                 val locatedRowDate = dateIn(clean, scope)
                 val rowDate = locatedRowDate?.first ?: currentDate
                 val venueText = locatedRowDate?.let { clean.removeRange(it.second) } ?: clean
-                val scopedVenue = line.venue ?: ScheduleVenue.inlineLabel(venueText, rowDate) ?:
+                val scopedVenue = line.venue ?: ScheduleVenue.inlineLabel(venueText, rowDate, datedPreface = locatedRowDate != null) ?:
                     headings.values.mapNotNull { it.venue }.lastOrNull() ?: sectionVenue
                 val scopedCancellation = headings.values.any { it.cancelled }
                 if (!ScheduleVenue.matches(scopedVenue, parish)) { flush(); currentDate = null; rejectedScope = true; return@lineLoop }
@@ -92,6 +101,13 @@ object ScheduleDocumentParser {
                 clean.split('\n').forEach { physical ->
                     var text = physical.trim()
                     if (text.isBlank()) return@forEach
+                    if (Regex("(?iu)^(?:кажд(?:ый|ую|ое|ые|ая)|ежедневно|еженедельно)(?=\\s|:)").containsMatchIn(text)) {
+                        // This can be a <br>-separated footer inside the same HTML paragraph.
+                        // A weekly/daily rule never inherits the last printed date.
+                        flush(); currentDate = null
+                        headings.keys.toList().forEach { level -> headings[level] = headings.getValue(level).copy(date = null) }
+                        return@forEach
+                    }
                     if (Regex("(?iu)^(адрес|телефон|www\\.|https?://|с\\s+\\d+\\s+[а-я]+.*начало)").containsMatchIn(text)) { flush(); return@forEach }
                     val located = dateIn(text, scope)
                     if (located != null) {
@@ -152,7 +168,8 @@ object ScheduleDocumentParser {
             accepted.isNotEmpty() -> ScheduleParseDisposition.PARSED
             cancelledAll || cancelledDates.isNotEmpty() || rejectedScope -> ScheduleParseDisposition.REJECTED
             else -> ScheduleParseDisposition.UNSUPPORTED
-        }, accepted, cancelledDates.map(LocalDate::toString).toSet(), cancelledStarts, cancelledAll)
+        }, accepted, cancelledDates.map(LocalDate::toString).toSet(), cancelledStarts, cancelledAll,
+            yearInferred = accepted.isNotEmpty() && inferredMonths.isNotEmpty())
     }
 
     private fun monthNumber(word: String): Int = monthNames.indexOfFirst { word.lowercase(Locale.ROOT).startsWith(it) } + 1

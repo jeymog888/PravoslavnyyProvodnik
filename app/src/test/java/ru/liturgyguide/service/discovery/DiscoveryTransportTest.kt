@@ -124,6 +124,27 @@ class DiscoveryTransportTest {
         assertEquals(2, calls)
     }
 
+    @Test fun `another provider can be queried immediately without bypassing the first provider rate limit`() = runBlocking {
+        var calls = 0
+        val transport = UrlConnectionDiscoveryTransport(monotonicNanos = { 10_000_000_000L }, connectionFactory = { calls++; Connection() })
+        transport.fetch(DiscoveryRequest("https://first.example/test"))
+        transport.fetch(DiscoveryRequest("https://second.example/test"))
+        assertFailure(DiscoveryFailure.RATE_LIMITED) { transport.fetch(DiscoveryRequest("https://first.example/other")) }
+        assertEquals(2, calls)
+    }
+
+    @Test fun `per request deadline can shorten but never increase the transport deadline`() = runBlocking {
+        for ((transportTimeout, requestTimeout) in listOf(80L to 25_000L, 25_000L to 80L)) {
+            val connection = Connection(source = object : InputStream() {
+                override fun read(): Int { Thread.sleep(5_000); return -1 }
+            })
+            val transport = UrlConnectionDiscoveryTransport(timeoutMillis = transportTimeout, connectionFactory = { connection })
+            withTimeout(1_000) {
+                assertFailure(DiscoveryFailure.TIMEOUT) { transport.fetch(DiscoveryRequest("https://example.com/test", timeoutMillis = requestTimeout)) }
+            }
+        }
+    }
+
     @Test fun `unsafe request URL is rejected before the connection factory`() = runBlocking {
         var called = false
         val transport = UrlConnectionDiscoveryTransport(connectionFactory = { called = true; Connection() })

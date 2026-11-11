@@ -227,6 +227,11 @@ class ServiceBookParser {
         val manyYears = normalized.endsWith("господи сохрани их на многая лета")
         val dailyMatinsEnd = normalized.endsWith("утверди боже святую православную веру православных христиан во век века")
         val vigilBlessing = normalized.endsWith("благословение господне на вас того благодатию и человеколюбием всегда ныне и присно и во веки веков лик аминь")
+        // Sunday's first hour uses the small dismissal and the final threefold response,
+        // not the weekday many-years acclamation. Match the whole published ending.
+        val firstHourSundayEnd = normalized.endsWith("отпуст воскресый из мертвых христос истинный бог наш " +
+            "молитвами пречистыя своея матере преподобных и богоносных отец наших и всех святых " +
+            "помилует и спасет нас яко благ и человеколюбец лик господи помилуй трижды")
         val finalAmen = normalized.endsWith("во веки веков аминь")
         val complete = when (kind) {
             WorshipKind.LITURGY -> text.length >= 15_000 && "причащ" in normalized && "отпуст" in normalized &&
@@ -237,7 +242,7 @@ class ServiceBookParser {
             WorshipKind.MATINS -> text.length >= 12_000 &&
                 ("шестопсалм" in normalized || "христос воскресе" in normalized && "песнь 9" in normalized) &&
                 (manyYears || dailyMatinsEnd)
-            WorshipKind.HOUR1 -> text.length >= 2_000 && "отче наш" in normalized && manyYears
+            WorshipKind.HOUR1 -> text.length >= 2_000 && "отче наш" in normalized && (manyYears || firstHourSundayEnd)
             WorshipKind.HOUR3 -> text.length >= 2_000 && "отче наш" in normalized && finalAmen &&
                 "владыко боже отче вседержителю" in normalized.takeLast(500) &&
                 "яко благословен еси" in normalized.takeLast(80)

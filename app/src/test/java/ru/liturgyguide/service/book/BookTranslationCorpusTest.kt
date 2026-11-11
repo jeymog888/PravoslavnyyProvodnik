@@ -16,7 +16,7 @@ class BookTranslationCorpusTest {
     private val directory = Files.createTempDirectory("book-corpus-").toFile()
     private val cache = FileBookCache(directory)
     private val liturgy = ServiceBookKey("2026-11-11")
-    private val vespers = ServiceBookKey("2026-11-12", WorshipKind.VESPERS)
+    private val nextLiturgy = ServiceBookKey("2026-11-15")
     private val sources = BookTranslationIndex.PARALLEL_SOURCES
     private val allUrls = sources.map { it.url }.toSet()
     private val oldPrayer = "Господи, помилуй."
@@ -28,9 +28,10 @@ class BookTranslationCorpusTest {
         Jsoup.parse(page(oldPrayer, "Сохраненный русский текст"), sources[0].url))
     private fun response(url: String, html: String) = ScheduleResponse(url, html.toByteArray(), "text/html;charset=utf-8")
     private fun basePage(url: String): String? = when {
-        "worship=liturgy" in url -> BookFixtures.html()
+        "worship=liturgy" in url -> BookFixtures.html(if ("2026-11-15" in url) "liturgy-2026-11-15" else "liturgy-2026-11-11")
         "worship=vespers" in url -> BookFixtures.html("vespers-2026-11-12")
         "/biblia/days/" in url -> "<html></html>"
+        url.startsWith("https://azbyka.ru/days/") -> CalendarFixtures.page(url.substringAfterLast('/'))
         else -> null
     }
 
@@ -38,7 +39,7 @@ class BookTranslationCorpusTest {
         assertTrue(cache.writeTranslationCorpus(oldIndex().encode()))
         val old = BookTranslationCorpus.decode(cache.readTranslationCorpus())
         assertFalse(old.current)
-        assertFalse(old.complete)
+        assertFalse(old.completeFor(WorshipKind.LITURGY))
         val requests = mutableListOf<String>()
         val repository = ServiceBookRepository(cache, ScheduleTransport { url ->
             basePage(url)?.let { return@ScheduleTransport response(url, it) }
@@ -53,7 +54,7 @@ class BookTranslationCorpusTest {
         assertEquals(BookSupplementStatus.RETRY_NEEDED, result.book.enrichment.russian)
         val saved = BookTranslationCorpus.decode(FileBookCache(directory).readTranslationCorpus())
         assertTrue(saved.current)
-        assertFalse(saved.complete)
+        assertFalse(saved.completeFor(WorshipKind.LITURGY))
         assertEquals(setOf(sources[1].url), saved.completedSources)
         assertEquals("Сохраненный русский текст", saved.index.find(oldPrayer)?.russian)
         assertEquals("${sources[1].url}?edition=verified", saved.index.find("Царю Небесный, Утешителю, Душе истины.")?.source?.url)
@@ -73,11 +74,11 @@ class BookTranslationCorpusTest {
         assertEquals(allUrls - sources[2].url, BookTranslationCorpus.decode(cache.readTranslationCorpus()).completedSources)
         requests.clear()
         failing = false
-        val second = repository.load(vespers) as BookLoadResult.Ready
+        val second = repository.load(nextLiturgy) as BookLoadResult.Ready
         assertEquals(listOf(sources[2].url), requests)
         assertEquals(BookSupplementStatus.AVAILABLE, second.book.enrichment.russian)
         val saved = BookTranslationCorpus.decode(cache.readTranslationCorpus())
-        assertTrue(saved.complete)
+        assertTrue(saved.completeFor(WorshipKind.LITURGY))
         assertEquals(3, saved.index.size)
     }
 
@@ -118,7 +119,7 @@ class BookTranslationCorpusTest {
         assertEquals(BookSupplementStatus.RETRY_NEEDED, refreshed.book.enrichment.russian)
         val saved = BookTranslationCorpus.decode(cache.readTranslationCorpus())
         assertEquals(allUrls - sources[1].url, saved.completedSources)
-        assertFalse(saved.complete)
+        assertFalse(saved.completeFor(WorshipKind.LITURGY))
         assertEquals(old.index.find(oldPrayer), saved.index.find(oldPrayer))
     }
 

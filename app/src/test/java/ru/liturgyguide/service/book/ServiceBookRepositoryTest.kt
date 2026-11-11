@@ -45,6 +45,7 @@ class ServiceBookRepositoryTest {
             val html = when {
                 url.contains("/worships/") -> BookFixtures.html()
                 url.contains("/biblia/days/") -> { scriptureRequests++; if (available) dailyReadings() else "<html>Unavailable</html>" }
+                url.startsWith("https://azbyka.ru/days/") -> if (available) CalendarFixtures.page(key.date) else "<html>Unavailable</html>"
                 else -> { russianRequests++; if (available) parallelPrayer() else "<html>Unavailable</html>" }
             }
             ScheduleResponse(url, html.toByteArray(), "text/html;charset=utf-8")
@@ -80,6 +81,7 @@ class ServiceBookRepositoryTest {
             val html = when {
                 url.contains("/worships/") -> BookFixtures.html()
                 url.contains("/biblia/days/") -> if (available) dailyReadings() else error("Offline")
+                url.startsWith("https://azbyka.ru/days/") -> if (available) CalendarFixtures.page(key.date) else error("Offline")
                 else -> { russianRequests++; if (available) parallelPrayer() else error("Offline") }
             }
             ScheduleResponse(url, html.toByteArray(), "text/html;charset=utf-8")
@@ -115,6 +117,35 @@ class ServiceBookRepositoryTest {
     private fun parallelPrayer(): String {
         val original = BookFixtures.book().blocks.first { it.kind == BookBlockKind.PRAYER }.original
         return "<table><tr><td>${org.jsoup.nodes.Entities.escape(original)}</td><td>Проверенный русский перевод этой молитвы</td></tr></table>"
+    }
+
+    @Test fun publishedExactTranslationTakesPrecedenceOverEditorialParaphrase() = runBlocking {
+        val original = BookFixtures.book().blocks.first { it.kind == BookBlockKind.PRAYER }.original
+        val editorial = BookTranslationIndex.fromAssets(null, com.google.gson.Gson().toJson(listOf(
+            mapOf("original" to original, "russian" to "Непроверенное редакционное изложение"))))
+        val repository = ServiceBookRepository(FileBookCache(directory), ScheduleTransport { url ->
+            ScheduleResponse(url, (if (url.contains("/worships/")) BookFixtures.html() else parallelPrayer())
+                .toByteArray(), "text/html;charset=utf-8")
+        }, translations = editorial)
+        val result = (repository.load(key) as BookLoadResult.Ready).book.blocks.first { it.original == original }
+        assertEquals("Проверенный русский перевод этой молитвы", result.russian)
+        assertNotEquals(BookTranslationIndex.EDITORIAL_SOURCE, result.translationSource)
+    }
+
+    @Test fun aRefreshDoesNotRetainAnOldEditorialParaphraseAsPublishedRussian() = runBlocking {
+        val cache = FileBookCache(directory)
+        val plain = BookFixtures.book()
+        val target = plain.blocks.first { it.kind == BookBlockKind.PRAYER }
+        val old = plain.copy(chapters = plain.chapters.map { chapter -> chapter.copy(blocks = chapter.blocks.map {
+            if (it.id == target.id) it.copy(russian = "Непроверенное изложение", translationSource = BookTranslationIndex.EDITORIAL_SOURCE) else it
+        }) }).let { it.copy(contentHash = ServiceBookIntegrity.contentHash(it)) }
+        assertTrue(cache.write(old))
+        val repository = ServiceBookRepository(cache, ScheduleTransport { url ->
+            ScheduleResponse(url, BookFixtures.html().toByteArray(), "text/html;charset=utf-8")
+        }, downloadRussian = false)
+        val refreshed = (repository.load(key, force = true) as BookLoadResult.Ready).book
+        assertNull(refreshed.blocks.first { it.id == target.id }.russian)
+        assertEquals(target.original, refreshed.blocks.first { it.id == target.id }.original)
     }
 
     private fun dailyReadings(): String {

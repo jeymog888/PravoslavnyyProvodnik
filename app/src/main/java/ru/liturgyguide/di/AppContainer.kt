@@ -15,7 +15,6 @@ import ru.liturgyguide.service.schedule.InternetScheduleRepository
 import ru.liturgyguide.service.schedule.ScheduleCacheStore
 import ru.liturgyguide.service.schedule.UrlConnectionScheduleTransport
 import ru.liturgyguide.service.schedule.AndroidScheduleDocumentExtractor
-import ru.liturgyguide.service.book.BookTranslationIndex
 import ru.liturgyguide.service.book.FileBookCache
 import ru.liturgyguide.service.book.ServiceBookRepository
 import ru.liturgyguide.service.book.ServiceBooks
@@ -32,7 +31,7 @@ class AppContainer(context: Context, private val discoveryOverride: PlaceDiscove
     val historical06Content = Historical06Content(readAsset)
     val internetSchedules: InternetSchedules by lazy {
         scheduleOverride ?: InternetScheduleRepository(UrlConnectionScheduleTransport(timeoutMillis = 15_000,
-            limitBytes = AndroidScheduleDocumentExtractor.MAX_DOCUMENT_BYTES), object : ScheduleCacheStore {
+            limitBytes = AndroidScheduleDocumentExtractor.MAX_DOCUMENT_BYTES, allowExplicitHttp = true), object : ScheduleCacheStore {
             private val preferences = appContext.getSharedPreferences("internet_schedule_cache", Context.MODE_PRIVATE)
             override fun read(parishId: String): String? = runCatching { preferences.getString(parishId, null) }.getOrNull()
             override fun write(parishId: String, value: String) {
@@ -44,9 +43,9 @@ class AppContainer(context: Context, private val discoveryOverride: PlaceDiscove
         }, AndroidScheduleDocumentExtractor(appContext))
     }
     val serviceBooks: ServiceBooks by lazy {
-        booksOverride ?: ServiceBookRepository(FileBookCache(File(appContext.filesDir, "service-books-v1")),
-            translations = BookTranslationIndex.fromAssets(readAsset("liturgy_stages.json"),
-                runCatching { readAsset("book_russian_common.json") }.getOrNull()))
+        // The complete book uses published, exactly matched translations. Editorial paraphrases
+        // from the older short guide are explanations, not a substitute for a sourced prayer.
+        booksOverride ?: ServiceBookRepository(FileBookCache(File(appContext.filesDir, "service-books-v2")))
     }
     val placeDiscovery: PlaceDiscovery by lazy {
         discoveryOverride ?: DefaultPlaceDiscovery(cache = object : DiscoveryCacheStore {

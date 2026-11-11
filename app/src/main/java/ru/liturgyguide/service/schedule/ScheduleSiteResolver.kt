@@ -14,7 +14,7 @@ fun interface ScheduleSiteResolver { suspend fun resolve(parish: Parish): Schedu
 /** Exact OSM identity first, then an identified encyclopedia entity, never the first search hit. */
 class OpenScheduleSiteResolver(private val transport: ScheduleTransport) : ScheduleSiteResolver {
     override suspend fun resolve(parish: Parish): ScheduleSite? {
-        ScheduleUrl.normalized(parish.website)?.let { return ScheduleSite(it, parish.sourceUrl, parish.name) }
+        ScheduleUrl.publicSource(parish.website)?.let { return ScheduleSite(it, parish.sourceUrl, parish.name) }
         var tags: JsonObject? = null
         val osm = Regex("^osm:(node|way|relation):([1-9][0-9]{0,18})$").matchEntire(parish.id)
         if (osm != null) {
@@ -25,7 +25,7 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport) : Sched
                 value?.get("type")?.asString == osm.groupValues[1] && value.get("id")?.asString == osm.groupValues[2]
             }?.asJsonObject?.getAsJsonObject("tags")
             listOf("website", "contact:website").firstNotNullOfOrNull { key ->
-                tags?.string(key)?.let(ScheduleUrl::normalized)
+                tags?.string(key)?.let(ScheduleUrl::publicSource)
             }?.let { return ScheduleSite(it, url, tags?.string("name") ?: parish.name) }
         }
         // These links belong to the exact selected map object and need no broad search inference.
@@ -37,6 +37,7 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport) : Sched
             pages(json(api)).firstNotNullOfOrNull { it.getAsJsonObject("pageprops")?.string("wikibase_item") }
                 ?.let { id -> fromWikidata(id, title)?.let { return it } }
         }
+        PalomnikScheduleSiteResolver(transport).resolve(parish)?.let { return it }
         val latitude = parish.latitude ?: return null
         val longitude = parish.longitude ?: return null
         val distinctive = nameTokens(parish.name)
@@ -69,7 +70,7 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport) : Sched
             .filter { it.string("rank") != "deprecated" && it.getAsJsonObject("qualifiers")?.has("P582") != true }
             .sortedByDescending { it.string("rank") == "preferred" }
         val sites = active.mapNotNull { claim ->
-            claim.getAsJsonObject("mainsnak")?.getAsJsonObject("datavalue")?.string("value")?.let(ScheduleUrl::normalized)
+            claim.getAsJsonObject("mainsnak")?.getAsJsonObject("datavalue")?.string("value")?.let(ScheduleUrl::publicSource)
         }.distinct()
         val chosen = sites.firstOrNull() ?: return null
         return ScheduleSite(chosen, "https://www.wikidata.org/wiki/$id", title)

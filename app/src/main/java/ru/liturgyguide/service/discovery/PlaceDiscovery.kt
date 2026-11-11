@@ -106,7 +106,7 @@ data class DiscoveryEndpoints(
     }
 }
 
-/** No requests run until one of the explicit search methods is called. No retries or provider chain. */
+/** Explicit searches only. Nearby search has at most one fallback, with a separate provider and parser. */
 class DefaultPlaceDiscovery(
     private val transport: DiscoveryTransport = UrlConnectionDiscoveryTransport(),
     private val cache: DiscoveryCacheStore = NoDiscoveryCache,
@@ -138,15 +138,49 @@ class DefaultPlaceDiscovery(
             return@withContext DiscoveryResult.Failure(DiscoveryFailure.INVALID_QUERY)
         }
         val area = center.searchAreaCenter()
-        val query = churchQuery(area, radiusMeters)
+        // Fixed padding covers every point in the rounded cell without disclosing the exact offset.
+        val queryRadius = radiusMeters + ROUNDING_PADDING_METERS
+        val query = churchQuery(area, queryRadius)
         val key = endpoints.churches + query
-        val request = DiscoveryRequest(endpoints.churches, postBody = "data=" + encode(query))
-        val result = search("churches", key, request, DiscoveryProvider.VK_MAPS, area, radiusMeters) {
-            DiscoveryJson.churches(it, area, radiusMeters)
+        val nearbyUrl = nearbyPlacesUrl(endpoints.cities, area, queryRadius)
+        val now = clock.millis()
+        val parseOrthodox: (String) -> List<DiscoveredChurch> = { DiscoveryJson.churches(it, area, queryRadius) }
+        // The one fixed slot stores only one area. The full endpoint+query key binds data to its parser/provider.
+        val orthodoxCache = readCache("churches", sha256(key), now, parseOrthodox)
+        val photonCache = readCache("churches", sha256(nearbyUrl), now, DiscoveryJson::places)
+        fun local(result: DiscoveryResult.Success<DiscoveredChurch>) = result.copy(
+            items = result.items.filter { center.distanceMeters(it.center) <= radiusMeters }
+                .sortedBy { center.distanceMeters(it.center) })
+        for ((cached, provider) in listOf(orthodoxCache to DiscoveryProvider.VK_MAPS, photonCache to DiscoveryProvider.PHOTON)) {
+            if (cached != null && now - cached.fetchedAt <= CACHE_FRESH_MILLIS) {
+                return@withContext local(DiscoveryResult.Success(cached.items, cached.fetchedAt,
+                    DiscoveryCacheStatus.FRESH_CACHE, provider, area, radiusMeters))
+            }
         }
-        // The request and cache contain only the rounded center. Sorting uses the precise point locally.
+        val request = DiscoveryRequest(endpoints.churches, postBody = "data=" + encode(query), timeoutMillis = NEARBY_PRIMARY_TIMEOUT_MILLIS)
+        val primary = search("churches", key, request, DiscoveryProvider.VK_MAPS, area, radiusMeters, parser = parseOrthodox)
+        val failure = when (primary) {
+            is DiscoveryResult.Failure -> primary.reason
+            is DiscoveryResult.Success -> primary.fallbackReason
+        }
+        // An empty valid answer is still authoritative. Never bypass a rate limit or start another request after cancellation/busy.
+        if (failure !in NEARBY_FALLBACK_FAILURES) return@withContext when (primary) {
+            is DiscoveryResult.Success -> local(primary)
+            is DiscoveryResult.Failure -> primary
+        }
+        currentCoroutineContext().ensureActive()
+        val usablePrimary = primary is DiscoveryResult.Success && local(primary).items.isNotEmpty()
+        val fallback = search("churches", nearbyUrl,
+            DiscoveryRequest(nearbyUrl, timeoutMillis = NEARBY_FALLBACK_TIMEOUT_MILLIS),
+            DiscoveryProvider.PHOTON, area, radiusMeters,
+            cacheIf = { items -> !usablePrimary || items.any { center.distanceMeters(it.center) <= radiusMeters } },
+            parser = DiscoveryJson::places)
+        // Photon is name/category search, not proof of denomination. Preserve its WORSHIP_PLACE kind and OSM identity.
+        // A partial name search finding nothing must not erase useful saved Orthodox places.
+        val result = if (primary is DiscoveryResult.Success && (fallback is DiscoveryResult.Failure ||
+                (usablePrimary && fallback is DiscoveryResult.Success && local(fallback).items.isEmpty()))) primary else fallback
         when (result) {
-            is DiscoveryResult.Success -> result.copy(items = result.items.sortedBy { center.distanceMeters(it.center) })
+            is DiscoveryResult.Success -> local(result)
             is DiscoveryResult.Failure -> result
         }
     }
@@ -158,6 +192,7 @@ class DefaultPlaceDiscovery(
         provider: DiscoveryProvider,
         area: GeoPoint? = null,
         radius: Int? = null,
+        cacheIf: (List<T>) -> Boolean = { true },
         parser: (String) -> List<T>
     ): DiscoveryResult<T> {
         val key = sha256(identity)
@@ -173,7 +208,7 @@ class DefaultPlaceDiscovery(
             val items = parser(body)
             currentCoroutineContext().ensureActive()
             val fetchedAt = clock.millis()
-            writeCache(slot, key, fetchedAt, body)
+            if (cacheIf(items)) writeCache(slot, key, fetchedAt, body)
             DiscoveryResult.Success(items, fetchedAt, DiscoveryCacheStatus.FRESH_NETWORK, provider, area, radius)
         } catch (cancelled: CancellationException) {
             throw cancelled
@@ -221,6 +256,11 @@ class DefaultPlaceDiscovery(
         const val MAX_RESPONSE_BYTES = 1_048_576
         const val MIN_RADIUS_METERS = 500
         const val MAX_RADIUS_METERS = 5_000
+        internal const val ROUNDING_PADDING_METERS = 800
+        internal const val NEARBY_PRIMARY_TIMEOUT_MILLIS = 8_000L
+        internal const val NEARBY_FALLBACK_TIMEOUT_MILLIS = 10_000L
+        private val NEARBY_FALLBACK_FAILURES = setOf(DiscoveryFailure.UNAVAILABLE, DiscoveryFailure.SERVER_UNAVAILABLE,
+            DiscoveryFailure.TIMEOUT, DiscoveryFailure.TOO_LARGE, DiscoveryFailure.INVALID_RESPONSE)
         const val CACHE_FRESH_MILLIS = 24 * 60 * 60 * 1_000L
         const val CACHE_MAX_AGE_MILLIS = 7 * CACHE_FRESH_MILLIS
         const val ATTRIBUTION = "Данные OpenStreetMap, могут быть неполными"
@@ -230,14 +270,32 @@ class DefaultPlaceDiscovery(
             .digest(value.toByteArray(StandardCharsets.UTF_8)).joinToString("") { "%02x".format(it) }
 
         internal fun churchQuery(center: GeoPoint, radiusMeters: Int): String {
-            require(center.isValid && radiusMeters in MIN_RADIUS_METERS..MAX_RADIUS_METERS)
+            require(center.isValid && radiusMeters in MIN_RADIUS_METERS..MAX_RADIUS_METERS + ROUNDING_PADDING_METERS)
             val lat = String.format(Locale.ROOT, "%.2f", center.latitude)
             val lon = String.format(Locale.ROOT, "%.2f", center.longitude)
             val denominations = DiscoveryJson.DENOMINATIONS.joinToString("|")
-            return """[out:json][timeout:15][maxsize:8388608];
+            return """[out:json][timeout:6][maxsize:8388608];
                 |nwr(around:$radiusMeters,$lat,$lon)["amenity"~"^(place_of_worship|monastery)${'$'}"]["religion"="christian"]
                 |["denomination"~"(^|;)($denominations)(;|${'$'})"];
                 |out center tags $MAX_CHURCHES;""".trimMargin()
+        }
+
+        internal fun nearbyPlacesUrl(endpoint: String, area: GeoPoint, queryRadius: Int): String {
+            require(area.isValid && queryRadius in MIN_RADIUS_METERS..MAX_RADIUS_METERS + ROUNDING_PADDING_METERS)
+            val angularRadius = queryRadius / 6_371_000.0
+            val latitudeDelta = Math.toDegrees(angularRadius)
+            val minLat = max(-90.0, area.latitude - latitudeDelta)
+            val maxLat = min(90.0, area.latitude + latitudeDelta)
+            val longitudeDelta = if (minLat <= -90.0 || maxLat >= 90.0) 180.0 else
+                Math.toDegrees(asin((sin(angularRadius) / cos(Math.toRadians(area.latitude))).coerceIn(-1.0, 1.0)))
+            // Photon bbox cannot wrap at the date line. The bounded response is still filtered locally by radius.
+            val wraps = area.longitude - longitudeDelta < -180.0 || area.longitude + longitudeDelta > 180.0
+            val minLon = if (wraps) -180.0 else area.longitude - longitudeDelta
+            val maxLon = if (wraps) 180.0 else area.longitude + longitudeDelta
+            val bbox = listOf(minLon, minLat, maxLon, maxLat).joinToString(",") { String.format(Locale.ROOT, "%.6f", it) }
+            return endpoint + "?q=" + encode("храм") + "&lat=" + String.format(Locale.ROOT, "%.2f", area.latitude) +
+                "&lon=" + String.format(Locale.ROOT, "%.2f", area.longitude) + "&bbox=" + encode(bbox) +
+                "&limit=$MAX_PLACES&lang=default&include=osm.amenity.place_of_worship,osm.amenity.monastery"
         }
     }
 }

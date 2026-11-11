@@ -20,9 +20,12 @@ class LiveScheduleFixtureTest {
     @Test fun `Kazansky named dates and weekday paragraphs preserve the complete table when year is explicit`() {
         val source = fixture("kazansky-november-2026-no-year.html")
         // This assertion deliberately does not claim that the real source prints a year.
-        assertTrue(parse(source, kazanskyUrl, "Казанский кафедральный собор").events.isEmpty())
+        val inferred = parse(source, kazanskyUrl, "Казанский кафедральный собор")
+        assertTrue(inferred.yearInferred)
         val explicit = source.replace("Расписание на ноябрь", "Расписание на ноябрь 2026")
         val result = parse(explicit, kazanskyUrl, "Казанский кафедральный собор")
+        assertFalse(result.yearInferred)
+        assertEquals(result.events, inferred.events)
         assertEquals(ScheduleParseDisposition.PARSED, result.disposition)
         for (day in 10..30) {
             val date = "2026-11-${day.toString().padStart(2, '0')}"
@@ -34,6 +37,27 @@ class LiveScheduleFixtureTest {
         assertTrue(result.events.none { it.title.contains("Жизнь собора") || it.title.contains("Секретарь") })
         assertTrue(parse(source.replace("Расписание на ноябрь", "Расписание на ноябрь 2015"),
             kazanskyUrl, "Казанский кафедральный собор").events.isEmpty())
+    }
+
+    @Test fun `weekly footer does not inherit the last explicit date`() {
+        val html = "<h1>Ноябрь 2026</h1><p>29 ноября 08:00 Литургия</p>" +
+            "<h2>Каждую среду:</h2><p>09:00 Молебен</p><p>30 ноября 10:00 Литургия</p>"
+        val result = parse(html, dneprUrl, "Трехсвятительский храм")
+        assertEquals(listOf("2026-11-29T08:00", "2026-11-30T10:00"), result.events.map { "${it.date}T${it.time}" })
+    }
+
+    @Test fun `a dated feast preface without its own clock retains the following service`() {
+        val html = "<h1>Ноябрь 2026</h1><p>21.11.26, суббота Собор Архистратига Михаила</p>" +
+            "<p>07:30 Утреня. Божественная Литургия</p><p>14:00 Вечернее Богослужение</p>"
+        assertEquals(listOf("07:30", "14:00"), parse(html, dneprUrl, "Трехсвятительский храм").events.map { it.time })
+        assertTrue(parse(html.replace("21.11.26, суббота ", ""), dneprUrl, "Трехсвятительский храм").events.isEmpty())
+    }
+
+    @Test fun `recurring rows inside the same HTML paragraph never inherit November 29`() {
+        val html = "<h1>Ноябрь 2026</h1><p>29 ноября 08:00 Литургия<br>ЕЖЕДНЕВНО:<br>09:00 Молебен<br>КАЖДУЮ СРЕДУ:<br>09:00 Молебен с акафистом</p>"
+        assertEquals(listOf("08:00"), parse(html, dneprUrl, "Трехсвятительский храм").events.map { it.time })
+        val real = parse(fixture("dnepr-november-2026.html"), dneprUrl, "Трехсвятительский храм")
+        assertEquals(listOf("08:00"), real.events.filter { it.date == "2026-11-29" }.map { it.time })
     }
 
     @Test fun `Dnepr short calendar feast does not erase its liturgy or following evening service`() {

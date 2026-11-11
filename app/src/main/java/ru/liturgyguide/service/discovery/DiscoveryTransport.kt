@@ -21,7 +21,9 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 /** A null body means GET; otherwise the transport sends an encoded POST form. */
-data class DiscoveryRequest(val url: String, val postBody: String? = null)
+data class DiscoveryRequest(val url: String, val postBody: String? = null, val timeoutMillis: Long = 25_000) {
+    init { require(timeoutMillis in 1..25_000) }
+}
 class DiscoveryException(val reason: DiscoveryFailure) : IOException(reason.name)
 
 fun interface DiscoveryTransport {
@@ -46,17 +48,23 @@ class UrlConnectionDiscoveryTransport(
         require(minimumRequestIntervalMillis in 0..60_000)
     }
     private val active = AtomicBoolean(false)
-    private val lastStartedNanos = AtomicReference<Long?>(null)
+    // A fallback to another provider must not be mistaken for a rapid retry to the failed host.
+    // The active gate serializes access and the map is bounded even for custom endpoints.
+    private val lastStartedByHost = linkedMapOf<String, Long>()
 
     override suspend fun fetch(request: DiscoveryRequest): String {
         if (!active.compareAndSet(false, true)) throw DiscoveryException(DiscoveryFailure.BUSY)
         val started = monotonicNanos()
-        val previous = lastStartedNanos.get()
+        val host = runCatching { URL(request.url).host.lowercase(java.util.Locale.ROOT) }.getOrDefault("")
+        val previous = lastStartedByHost[host]
         if (previous != null && started >= previous && started - previous < minimumRequestIntervalMillis * 1_000_000) {
             active.set(false)
             throw DiscoveryException(DiscoveryFailure.RATE_LIMITED)
         }
-        lastStartedNanos.set(started)
+        lastStartedByHost.remove(host)
+        lastStartedByHost[host] = started
+        if (lastStartedByHost.size > 8) lastStartedByHost.remove(lastStartedByHost.keys.first())
+        val requestTimeout = minOf(timeoutMillis, request.timeoutMillis)
         return suspendCancellableCoroutine { continuation ->
             val completed = AtomicBoolean(false)
             val connection = AtomicReference<HttpURLConnection?>(null)
@@ -80,7 +88,7 @@ class UrlConnectionDiscoveryTransport(
                     cleanup()
                 }
             }
-            val timeout = deadlineExecutor.schedule({ fail(DiscoveryFailure.TIMEOUT) }, timeoutMillis, TimeUnit.MILLISECONDS)
+            val timeout = deadlineExecutor.schedule({ fail(DiscoveryFailure.TIMEOUT) }, requestTimeout, TimeUnit.MILLISECONDS)
             deadline.set(timeout)
             if (completed.get()) timeout.cancel(false)
 
@@ -99,7 +107,7 @@ class UrlConnectionDiscoveryTransport(
                     if (completed.get()) return@submit
                     fun remainingMillis(): Int {
                         val elapsed = TimeUnit.NANOSECONDS.toMillis((monotonicNanos() - started).coerceAtLeast(0))
-                        val remaining = timeoutMillis - elapsed
+                        val remaining = requestTimeout - elapsed
                         if (remaining <= 0 || completed.get()) throw SocketTimeoutException()
                         return remaining.coerceAtMost(Int.MAX_VALUE.toLong()).toInt().coerceAtLeast(1)
                     }

@@ -13,3 +13,7 @@ The fixtures retain the selected date, service kind, full-size selector, church 
 - `vespers-2026-04-12` is an intentional negative fixture: the endpoint returns a Paschal Midnight Office instead of Vespers, with `midnight` as the first selector option and no selected option. It must be rejected for a Vespers request. A separate regression also forces the selector to match and checks the actual service title
 
 Tests also cut these real DOMs at several positions and remove their last content paragraph. Presence of an earlier "Amen" must not make a truncated service pass validation
+
+- `evening-psalm-originals.json` preserves 10 complete Church Slavonic Psalms that match the dated books after matching Psalm-number headings are separated on both sides of a source row
+- `evening-prayer-originals.json` preserves a complete matching original from each of the six added evening/hour sources
+- `calendar-hymns-2026-11-11.html` preserves the calendar page's canonical date, heading, paired DOM structure and eight complete Church Slavonic originals. Modern Russian translations are replaced with explicit synthetic markers; six pairs match the actual liturgy fixture. Source: `https://azbyka.ru/days/2026-11-11`

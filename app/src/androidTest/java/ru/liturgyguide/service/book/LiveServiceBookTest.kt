@@ -20,14 +20,14 @@ class LiveServiceBookTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val directory = File(context.cacheDir, "live-book-${System.nanoTime()}")
         try {
-            val translations = BookTranslationIndex.fromAssets(context.assets.open("liturgy_stages.json").bufferedReader().use { it.readText() },
-                context.assets.open("book_russian_common.json").bufferedReader().use { it.readText() })
             val key = ServiceBookKey("2026-11-11")
-            val online = ServiceBookRepository(FileBookCache(directory), translations = translations)
+            val online = ServiceBookRepository(FileBookCache(directory))
             val result = online.load(key)
             assertTrue("Live book: $result", result is BookLoadResult.Ready)
             val ready = result as BookLoadResult.Ready
             assertTrue(ready.saved)
+            assertTrue(ready.book.blocks.filter { it.russian != null && it.kind in setOf(BookBlockKind.PRAYER, BookBlockKind.SCRIPTURE) }.all { it.translationSource != null &&
+                it.translationSource != BookTranslationIndex.EDITORIAL_SOURCE })
             assertTrue(ready.book.blocks.size > 200)
             assertTrue(ready.book.chapters.any { BookText.normalized(it.title) == "отпуст" })
             val scripture = ready.book.blocks.filter { it.kind == BookBlockKind.SCRIPTURE }

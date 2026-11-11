@@ -22,7 +22,8 @@ enum class InternetScheduleStatus { IDLE, READY, NO_WEBSITE, UNSUPPORTED, UNAVAI
 data class SchedulePublication(
     val parishId: String, val timezone: String, val website: String, val sourceUrl: String,
     val fetchedAt: String, val events: List<InternetService>,
-    val documentFormat: String = "html", val linkedFrom: String = ""
+    val documentFormat: String = "html", val linkedFrom: String = "",
+    val yearInferred: Boolean = false
 ) {
     fun forDate(date: LocalDate): List<InternetService> = events.filter { it.date == date.toString() }
     fun isFresh(now: Instant): Boolean = runCatching {
@@ -62,7 +63,7 @@ object OfflineInternetSchedules : InternetSchedules {
 }
 
 private fun initialScheduleState(parish: Parish): InternetScheduleState {
-    val website = ScheduleUrl.normalized(parish.website).orEmpty()
+    val website = ScheduleUrl.publicSource(parish.website).orEmpty()
     return InternetScheduleState(parish.id, website = website, configuredWebsite = website)
 }
 
@@ -86,9 +87,9 @@ class InternetScheduleRepository(
         if (!force && sourceOverride == null && age != null && !age.isNegative && age < retryAfter) return@withContext previous
         val date = runCatching { now.atZone(ZoneId.of(parish.timezone)).toLocalDate() }.getOrNull()
             ?: return@withContext previous.copy(status = InternetScheduleStatus.UNAVAILABLE)
-        if (sourceOverride != null && ScheduleUrl.normalized(sourceOverride) == null) return@withContext previous.copy(status = InternetScheduleStatus.UNAVAILABLE)
-        val configured = ScheduleUrl.normalized(parish.website).orEmpty()
-        val custom = sourceOverride?.let(ScheduleUrl::normalized) ?: previous.customSource
+        if (sourceOverride != null && ScheduleUrl.publicSource(sourceOverride) == null) return@withContext previous.copy(status = InternetScheduleStatus.UNAVAILABLE)
+        val configured = ScheduleUrl.publicSource(parish.website).orEmpty()
+        val custom = sourceOverride?.let(ScheduleUrl::publicSource) ?: previous.customSource
         val changedSource = sourceOverride != null && custom != previous.customSource
         var website = custom.takeIf(String::isNotBlank) ?: configured.takeIf(String::isNotBlank) ?: previous.website
         var source = website
@@ -120,6 +121,7 @@ class InternetScheduleRepository(
                 var bestFormat = "html"
                 var bestLinkedFrom = ""
                 var bestDedicated = false
+                var bestYearInferred = false
                 val withdrawnDates = mutableSetOf<String>()
                 val withdrawnStarts = mutableSetOf<String>()
                 fun retained(values: List<InternetService>) = values.filterNot {
@@ -137,6 +139,9 @@ class InternetScheduleRepository(
                     catch (_: Exception) { continue }
                     anyResponse = true
                     val html = response.html()
+                    // External hosts are authorized only for a directly linked PDF/image. A
+                    // filename ending in .pdf cannot turn a foreign HTML page into this parish.
+                    if (html != null && !ScheduleDocumentLinks.sameSite(website, response.url)) continue
                     if (visited.size == 1 && html != null) website = response.url
                     val format: String
                     val parsed: ScheduleParseResult
@@ -178,18 +183,20 @@ class InternetScheduleRepository(
                     val prefer = bestEvents.isEmpty() || when {
                         candidateNext != null && bestNext == null -> true
                         candidateNext == null && bestNext != null -> false
+                        parsed.yearInferred != bestYearInferred -> !parsed.yearInferred
                         candidateNext != bestNext -> requireNotNull(candidateNext) < requireNotNull(bestNext)
                         dedicated != bestDedicated -> dedicated
                         else -> events.size > bestEvents.size
                     }
                     if (events.isNotEmpty() && prefer) {
                         bestEvents = events; source = response.url; bestFormat = format; bestLinkedFrom = next.linkedFrom; bestDedicated = dedicated
+                        bestYearInferred = parsed.yearInferred
                     }
                 }
                 if (bestEvents.isEmpty()) status = if (anyResponse) InternetScheduleStatus.UNSUPPORTED else InternetScheduleStatus.UNAVAILABLE
                 else {
                     publication = SchedulePublication(parish.id, parish.timezone, website, source, now.toString(), bestEvents,
-                        documentFormat = bestFormat, linkedFrom = bestLinkedFrom)
+                        documentFormat = bestFormat, linkedFrom = bestLinkedFrom, yearInferred = bestYearInferred)
                     status = InternetScheduleStatus.READY
                 }
                 true
@@ -218,21 +225,21 @@ internal object ScheduleCacheCodec {
         val root = JsonParser.parseString(json).asJsonObject
         fun field(key: String) = root.get(key)?.takeUnless { it.isJsonNull }?.asString.orEmpty()
         require(field("parishId") == parish.id)
-        val website = field("website").also { require(it.isEmpty() || ScheduleUrl.normalized(it) == it) }
-        val source = field("sourceUrl").also { require(it.isEmpty() || ScheduleUrl.normalized(it) == it) }
-        val configured = field("configuredWebsite").also { require(it == ScheduleUrl.normalized(parish.website).orEmpty()) }
-        val custom = field("customSource").also { require(it.isEmpty() || ScheduleUrl.normalized(it) == it) }
+        val website = field("website").also { require(it.isEmpty() || ScheduleUrl.publicSource(it) == it) }
+        val source = field("sourceUrl").also { require(it.isEmpty() || ScheduleUrl.publicSource(it) == it) }
+        val configured = field("configuredWebsite").also { require(it == ScheduleUrl.publicSource(parish.website).orEmpty()) }
+        val custom = field("customSource").also { require(it.isEmpty() || ScheduleUrl.publicSource(it) == it) }
         val checked = field("checkedAt").also { Instant.parse(it) }
-        val evidence = field("siteEvidenceUrl").also { require(it.isEmpty() || ScheduleUrl.normalized(it) == it) }
+        val evidence = field("siteEvidenceUrl").also { require(it.isEmpty() || ScheduleUrl.publicSource(it) == it) }
         val rejected = root.get("publicationRejected")?.takeUnless { it.isJsonNull }?.asBoolean ?: false
         val publication = root.get("publication")?.takeUnless { it.isJsonNull }?.asJsonObject?.let { value ->
             fun part(key: String) = value.get(key)?.takeUnless { it.isJsonNull }?.asString.orEmpty()
             require(part("parishId") == parish.id && part("timezone") == parish.timezone)
-            val site = requireNotNull(ScheduleUrl.normalized(part("website")))
-            val url = requireNotNull(ScheduleUrl.normalized(part("sourceUrl")))
+            val site = requireNotNull(ScheduleUrl.publicSource(part("website")))
+            val url = requireNotNull(ScheduleUrl.publicSource(part("sourceUrl")))
             // A child page may use the same www redirect already accepted by the transport.
             val format = part("documentFormat").ifBlank { "html" }.also { require(it in setOf("html", "pdf", "image")) }
-            val linkedFrom = part("linkedFrom").also { require(it.isEmpty() || ScheduleUrl.normalized(it) == it) }
+            val linkedFrom = part("linkedFrom").also { require(it.isEmpty() || ScheduleUrl.publicSource(it) == it) }
             require(ScheduleDocumentLinks.sameSite(site, url) || (format in setOf("pdf", "image") &&
                 linkedFrom.isNotEmpty() && ScheduleDocumentLinks.sameSite(site, linkedFrom)))
             val fetched = part("fetchedAt").also { Instant.parse(it) }
@@ -248,7 +255,12 @@ internal object ScheduleCacheCodec {
             }
             val publicationDate = Instant.parse(fetched).atZone(ZoneId.of(parish.timezone)).toLocalDate()
             require(events.all { LocalDate.parse(it.date) in publicationDate.minusDays(1)..publicationDate.plusDays(45) })
-            SchedulePublication(parish.id, parish.timezone, site, url, fetched, events, format, linkedFrom)
+            val yearInferred = value.get("yearInferred")?.takeUnless { it.isJsonNull }?.let { flag ->
+                require(flag.isJsonPrimitive && flag.asJsonPrimitive.isBoolean)
+                flag.asBoolean
+            } ?: false
+            if (yearInferred) require(events.all { java.time.YearMonth.from(LocalDate.parse(it.date)) == java.time.YearMonth.from(publicationDate) })
+            SchedulePublication(parish.id, parish.timezone, site, url, fetched, events, format, linkedFrom, yearInferred)
         }
         require(!rejected || publication == null)
         InternetScheduleState(parish.id, InternetScheduleStatus.valueOf(field("status")), website, source, checked, publication,
@@ -266,9 +278,12 @@ fun Parish.withInternetSchedule(state: InternetScheduleState, now: Instant): Par
     val today = now.atZone(ZoneId.of(timezone)).toLocalDate()
     val events = online.events.filter { LocalDate.parse(it.date) >= today }
     return copy(website = online.website, sourceUrl = online.sourceUrl,
-        scheduleSource = "Страница расписания прихода", scheduleValidFrom = events.minOfOrNull { it.date }.orEmpty(),
+        scheduleSource = if (online.yearInferred) "Время с сайта прихода; год не указан" else "Страница расписания прихода",
+        scheduleValidFrom = events.minOfOrNull { it.date }.orEmpty(),
         scheduleValidUntil = events.maxOfOrNull { it.date }.orEmpty(),
         schedule = events.map { ParishService(it.date, it.time, it.title, it.kind) },
-        scheduleCoverage = "События с указанной датой на сайте прихода",
-        scheduleNote = "Загружено с сайта ${java.net.URI(online.sourceUrl).host}. Составные службы показаны с временем начала всего блока")
+        scheduleCoverage = if (online.yearInferred) "Год предположен по месяцу и дням недели" else "События с указанной датой на сайте прихода",
+        scheduleNote = (if (online.yearInferred) "Год не указан - проверьте дату в расписании. " else "") +
+            (if (online.sourceUrl.startsWith("http://")) "Источник использует HTTP. " else "") +
+            "Загружено с сайта ${java.net.URI(online.sourceUrl).host}. Составные службы показаны с временем начала всего блока")
 }

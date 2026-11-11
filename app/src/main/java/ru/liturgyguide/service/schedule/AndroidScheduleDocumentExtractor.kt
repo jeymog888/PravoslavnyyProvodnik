@@ -23,7 +23,7 @@ import kotlin.coroutines.resumeWithException
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
-/** Runs the actual Russian OCR on Android. No service key or network model download is required. */
+/** Extracts real PDF text first, then runs Russian OCR for scanned or unreliable pages. */
 class AndroidScheduleDocumentExtractor(context: Context) : ScheduleDocumentExtractor {
     private val app = context.applicationContext
 
@@ -59,32 +59,53 @@ class AndroidScheduleDocumentExtractor(context: Context) : ScheduleDocumentExtra
                 var api: TessBaseAPI? = null
                 try {
                     if (complete.get()) return@submit
-                    val directory = prepareModel()
-                    val engine = TessBaseAPI()
-                    api = engine
-                    if (!engine.init(directory.absolutePath, "rus", TessBaseAPI.OEM_LSTM_ONLY)) throw IOException("Russian recognition model unavailable")
-                    synchronized(lifetime) { active.set(engine) }
-                    if (complete.get()) return@submit
-                    engine.setPageSegMode(TessBaseAPI.PageSegMode.PSM_AUTO)
+                    fun checkCancelled() {
+                        if (complete.get() || Thread.currentThread().isInterrupted) throw IOException("Recognition cancelled")
+                    }
+                    fun ocr(): TessBaseAPI {
+                        api?.let { return it }
+                        checkCancelled()
+                        val directory = prepareModel()
+                        val engine = TessBaseAPI()
+                        try {
+                            if (!engine.init(directory.absolutePath, "rus", TessBaseAPI.OEM_LSTM_ONLY)) throw IOException("Russian recognition model unavailable")
+                            engine.setPageSegMode(TessBaseAPI.PageSegMode.PSM_AUTO)
+                            api = engine
+                            synchronized(lifetime) { active.set(engine) }
+                            checkCancelled()
+                            return engine
+                        } catch (error: Exception) {
+                            if (api == null) engine.recycle()
+                            throw error
+                        }
+                    }
                     fun recognize(bitmap: Bitmap): ScheduleDocumentPage {
                         try {
-                            if (complete.get() || Thread.currentThread().isInterrupted) throw IOException("Recognition cancelled")
+                            checkCancelled()
+                            val engine = ocr()
                             engine.setImage(bitmap)
                             // getHOCRText supports stop(), unlike the synchronous getUTF8Text convenience method.
                             val hocr = engine.getHOCRText(0)
                             if (complete.get()) throw IOException("Recognition cancelled")
                             return ScheduleDocumentPage(ScheduleOcrLayout.fromHocr(hocr.orEmpty()))
-                        } finally { engine.clear(); bitmap.recycle() }
+                        } finally { api?.clear(); bitmap.recycle() }
                     }
                     val pages = if (pdf) {
                         val file = File.createTempFile("schedule-", ".pdf", app.cacheDir)
                         try {
                             file.outputStream().use { it.write(response.bytes) }
-                            ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY).use { descriptor ->
+                            val textPages = try {
+                                PdfScheduleTextExtractor(app).extract(file) { complete.get() }
+                            } catch (_: Exception) { checkCancelled(); null }
+                            checkCancelled()
+                            if (textPages != null && textPages.all { it != null }) textPages.map { requireNotNull(it) }
+                            else ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY).use { descriptor ->
                                 PdfRenderer(descriptor).use { renderer ->
-                                    if (renderer.pageCount !in 1..12) throw IOException("Schedule has too many pages")
+                                    if (renderer.pageCount !in 1..PdfScheduleTextExtractor.MAX_PAGES) throw IOException("Schedule has too many pages")
                                     (0 until renderer.pageCount).map { index ->
-                                        if (complete.get()) throw IOException("Recognition cancelled")
+                                        checkCancelled()
+                                        val text = textPages?.takeIf { it.size == renderer.pageCount }?.get(index)
+                                        if (text != null) return@map text
                                         renderer.openPage(index).use { page ->
                                             val dimensions = dimensions(page.width, page.height, 1_800)
                                             val bitmap = Bitmap.createBitmap(dimensions.first, dimensions.second, Bitmap.Config.ARGB_8888)

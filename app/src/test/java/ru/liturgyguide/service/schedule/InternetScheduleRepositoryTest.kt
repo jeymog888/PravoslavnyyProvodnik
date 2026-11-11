@@ -236,6 +236,39 @@ class InternetScheduleRepositoryTest {
         assertEquals(listOf("10:00"), result.publication?.events?.map { it.time })
     }
 
+    @Test fun `external PDF filename returning HTML cannot publish another site or follow its links`() = runBlocking {
+        val selected = parish(site = "https://example.org/")
+        val cache = Cache()
+        val documentUrl = "https://outside.org/schedule.pdf"
+        val calls = mutableListOf<String>()
+        val repo = InternetScheduleRepository(ScheduleTransport { url ->
+            calls += url
+            response(url, when (url) {
+                selected.website -> "<a href='$documentUrl'>Расписание PDF</a>"
+                documentUrl -> html + "<a href='/schedule/'>Еще расписание</a>"
+                else -> error("Foreign HTML navigation must not be followed")
+            })
+        }, cache)
+        val state = repo.refresh(selected, now)
+        assertEquals(listOf(selected.website, documentUrl), calls)
+        assertEquals(InternetScheduleStatus.UNSUPPORTED, state.status)
+        assertNull(state.publication)
+        assertEquals(state, repo.cached(selected))
+    }
+
+    @Test fun `same site document filename returning HTML still has a valid parish binding`() = runBlocking {
+        val selected = parish(site = "https://example.org/")
+        val documentUrl = "https://example.org/schedule.pdf"
+        val repo = InternetScheduleRepository(ScheduleTransport { url ->
+            response(url, if (url == selected.website) "<a href='$documentUrl'>Расписание PDF</a>" else html)
+        }, Cache())
+        val state = repo.refresh(selected, now)
+        assertEquals(InternetScheduleStatus.READY, state.status)
+        assertEquals(documentUrl, state.publication?.sourceUrl)
+        assertEquals("html", state.publication?.documentFormat)
+        assertEquals(state, repo.cached(selected))
+    }
+
     @Test fun `explicit linked PDF on another host retains its source relationship through offline cache`() = runBlocking {
         val selected = parish(site = "https://example.org/")
         val cache = Cache()
