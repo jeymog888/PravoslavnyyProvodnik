@@ -64,6 +64,8 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
     // HTML parsing only; networking stays in the bounded cancellable transport.
     implementation("org.jsoup:jsoup:1.18.3")
+    // On-device Russian schedule OCR, including scanned PDF pages.
+    implementation("cz.adaptech.tesseract4android:tesseract4android:4.9.0")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation(composeBom)

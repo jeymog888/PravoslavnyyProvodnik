@@ -14,9 +14,16 @@ import ru.liturgyguide.service.schedule.InternetSchedules
 import ru.liturgyguide.service.schedule.InternetScheduleRepository
 import ru.liturgyguide.service.schedule.ScheduleCacheStore
 import ru.liturgyguide.service.schedule.UrlConnectionScheduleTransport
+import ru.liturgyguide.service.schedule.AndroidScheduleDocumentExtractor
+import ru.liturgyguide.service.book.BookTranslationIndex
+import ru.liturgyguide.service.book.FileBookCache
+import ru.liturgyguide.service.book.ServiceBookRepository
+import ru.liturgyguide.service.book.ServiceBooks
+import java.io.File
 
 class AppContainer(context: Context, private val discoveryOverride: PlaceDiscovery? = null,
-    assetReader: ((String) -> String)? = null, scheduleOverride: InternetSchedules? = null) {
+    assetReader: ((String) -> String)? = null, scheduleOverride: InternetSchedules? = null,
+    booksOverride: ServiceBooks? = null) {
     private val appContext = context.applicationContext
     private val readAsset: (String) -> String = assetReader ?: { name ->
         appContext.assets.open(name).bufferedReader(Charsets.UTF_8).use { it.readText() }
@@ -24,7 +31,8 @@ class AppContainer(context: Context, private val discoveryOverride: PlaceDiscove
     val historical05Content = Historical05Content(readAsset)
     val historical06Content = Historical06Content(readAsset)
     val internetSchedules: InternetSchedules by lazy {
-        scheduleOverride ?: InternetScheduleRepository(UrlConnectionScheduleTransport(), object : ScheduleCacheStore {
+        scheduleOverride ?: InternetScheduleRepository(UrlConnectionScheduleTransport(timeoutMillis = 15_000,
+            limitBytes = AndroidScheduleDocumentExtractor.MAX_DOCUMENT_BYTES), object : ScheduleCacheStore {
             private val preferences = appContext.getSharedPreferences("internet_schedule_cache", Context.MODE_PRIVATE)
             override fun read(parishId: String): String? = runCatching { preferences.getString(parishId, null) }.getOrNull()
             override fun write(parishId: String, value: String) {
@@ -33,7 +41,12 @@ class AppContainer(context: Context, private val discoveryOverride: PlaceDiscove
                 if (!preferences.contains(parishId) && preferences.all.size >= 100) preferences.all.keys.firstOrNull()?.let(edit::remove)
                 edit.apply()
             }
-        })
+        }, AndroidScheduleDocumentExtractor(appContext))
+    }
+    val serviceBooks: ServiceBooks by lazy {
+        booksOverride ?: ServiceBookRepository(FileBookCache(File(appContext.filesDir, "service-books-v1")),
+            translations = BookTranslationIndex.fromAssets(readAsset("liturgy_stages.json"),
+                runCatching { readAsset("book_russian_common.json") }.getOrNull()))
     }
     val placeDiscovery: PlaceDiscovery by lazy {
         discoveryOverride ?: DefaultPlaceDiscovery(cache = object : DiscoveryCacheStore {

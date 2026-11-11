@@ -18,6 +18,8 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
+import java.util.zip.GZIPInputStream
+import java.util.zip.InflaterInputStream
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -58,12 +60,12 @@ fun interface ScheduleTransport { suspend fun fetch(url: String): ScheduleRespon
 
 /** Separate from map search: accepts HTML and its charset, with bounded same-site redirects. */
 class UrlConnectionScheduleTransport(
-    private val timeoutMillis: Long = 8_000,
-    private val limitBytes: Int = 2_097_152,
+    private val timeoutMillis: Long = 12_000,
+    private val limitBytes: Int = 12_582_912,
     private val connectionFactory: (URL) -> HttpURLConnection = { it.openConnection() as HttpURLConnection },
     private val resolve: (String) -> Array<InetAddress> = InetAddress::getAllByName
 ) : ScheduleTransport {
-    init { require(timeoutMillis in 1..20_000); require(limitBytes in 1..2_097_152) }
+    init { require(timeoutMillis in 1..20_000); require(limitBytes in 1..12_582_912) }
 
     override suspend fun fetch(url: String): ScheduleResponse = suspendCancellableCoroutine { continuation ->
         val complete = AtomicBoolean(false)
@@ -100,8 +102,8 @@ class UrlConnectionScheduleTransport(
                         current.instanceFollowRedirects = false
                         current.connectTimeout = timeoutMillis.toInt()
                         current.readTimeout = timeoutMillis.toInt()
-                        current.setRequestProperty("User-Agent", "Feoria/0.7 (+https://github.com/jeymog888/PravoslavnyyProvodnik)")
-                        current.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/json;q=0.9")
+                        current.setRequestProperty("User-Agent", "Feoria/0.8 (+https://github.com/jeymog888/PravoslavnyyProvodnik)")
+                        current.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/json,application/pdf,image/*;q=0.9")
                         current.setRequestProperty("Accept-Encoding", "identity")
                         val status = current.responseCode
                         if (status in setOf(301, 302, 303, 307, 308)) {
@@ -123,9 +125,10 @@ class UrlConnectionScheduleTransport(
                                 output.write(buffer, 0, count)
                             }
                         }
+                        val bytes = decodeBody(output.toByteArray(), current.getHeaderField("Content-Encoding"))
                         if (complete.compareAndSet(false, true)) {
                             deadline.getAndSet(null)?.cancel(false)
-                            continuation.resume(ScheduleResponse(target, output.toByteArray(), current.contentType.orEmpty()))
+                            continuation.resume(ScheduleResponse(target, bytes, current.contentType.orEmpty()))
                         }
                         return@submit
                     } finally {
@@ -137,6 +140,31 @@ class UrlConnectionScheduleTransport(
         } }.getOrElse { fail(); return@suspendCancellableCoroutine }
         worker.set(task)
         if (complete.get()) task.cancel(true)
+    }
+
+    private fun decodeBody(bytes: ByteArray, contentEncoding: String?): ByteArray {
+        // Some sources send gzip even after Accept-Encoding: identity. Bound the
+        // expanded body too, so a tiny compressed response cannot exhaust memory.
+        val encoding = contentEncoding.orEmpty().trim().lowercase()
+        val gzip = bytes.size >= 2 && bytes[0] == 0x1f.toByte() && bytes[1] == 0x8b.toByte()
+        val input = when {
+            gzip || encoding == "gzip" -> GZIPInputStream(ByteArrayInputStream(bytes))
+            encoding == "deflate" -> InflaterInputStream(ByteArrayInputStream(bytes))
+            encoding.isBlank() || encoding == "identity" -> return bytes
+            else -> throw IOException("Unsupported response encoding")
+        }
+        return input.use { decoded ->
+            val output = ByteArrayOutputStream()
+            val buffer = ByteArray(8_192)
+            while (true) {
+                if (Thread.currentThread().isInterrupted) throw IOException("Response cancelled")
+                val count = decoded.read(buffer)
+                if (count == -1) break
+                if (count > limitBytes - output.size()) throw IOException("Expanded response too large")
+                output.write(buffer, 0, count)
+            }
+            output.toByteArray()
+        }
     }
 
     companion object {

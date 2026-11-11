@@ -16,38 +16,42 @@ import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 
 private val LightColors = lightColorScheme(
-    primary = Color(0xFF345B52), onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFE4EEEA), onPrimaryContainer = Color(0xFF203D32),
-    secondary = Color(0xFF626E75), onSecondary = Color.White,
-    secondaryContainer = Color(0xFFE9ECEF), onSecondaryContainer = Color(0xFF354047),
-    background = Color(0xFFF3F2EF), onBackground = Color(0xFF252A2D),
-    surface = Color(0xFFFFFFFF), onSurface = Color(0xFF252A2D),
-    surfaceContainerLow = Color(0xFFFFFFFF), surfaceContainer = Color(0xFFECEBE7), surfaceContainerHigh = Color(0xFFE3E5E3),
-    surfaceVariant = Color(0xFFECEDE9), onSurfaceVariant = Color(0xFF5C6265),
-    outline = Color(0xFF7B8182), outlineVariant = Color(0xFFD5D8D5)
+    primary = Color(0xFF245B4B), onPrimary = Color.White,
+    primaryContainer = Color(0xFFE3EEE8), onPrimaryContainer = Color(0xFF173F31),
+    secondary = Color(0xFF59666B), onSecondary = Color.White,
+    secondaryContainer = Color(0xFFE6EBED), onSecondaryContainer = Color(0xFF334047),
+    background = Color(0xFFF3F4F6), onBackground = Color(0xFF202629),
+    surface = Color.White, onSurface = Color(0xFF202629),
+    surfaceContainerLow = Color(0xFFF7F8FA), surfaceContainer = Color(0xFFECEFF1), surfaceContainerHigh = Color(0xFFE3E7E9),
+    surfaceVariant = Color(0xFFEBEFF0), onSurfaceVariant = Color(0xFF566167),
+    outline = Color(0xFF7A858A), outlineVariant = Color(0xFFD6DEE1)
 )
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFFAFCCB7), onPrimary = Color(0xFF18382C),
-    primaryContainer = Color(0xFF293F34), onPrimaryContainer = Color(0xFFD4E7D7),
-    secondary = Color(0xFFD4BF92), onSecondary = Color(0xFF3D321D),
-    secondaryContainer = Color(0xFF3C3526), onSecondaryContainer = Color(0xFFE8D7B1),
-    background = Color(0xFF171A1D), onBackground = Color(0xFFE1E6DC),
-    surface = Color(0xFF171A1D), onSurface = Color(0xFFE1E6DC),
-    surfaceContainerLow = Color(0xFF222629), surfaceContainer = Color(0xFF2A2E31), surfaceContainerHigh = Color(0xFF33383B),
-    surfaceVariant = Color(0xFF292F31), onSurfaceVariant = Color(0xFFBAC4B7),
-    outline = Color(0xFF8A9687), outlineVariant = Color(0xFF434B4D)
+    primary = Color(0xFFAFD0BE), onPrimary = Color(0xFF123A2A),
+    primaryContainer = Color(0xFF29473A), onPrimaryContainer = Color(0xFFD9EDE1),
+    secondary = Color(0xFFBECACF), onSecondary = Color(0xFF243239),
+    secondaryContainer = Color(0xFF354349), onSecondaryContainer = Color(0xFFDDE7EB),
+    background = Color(0xFF141719), onBackground = Color(0xFFECEFED),
+    surface = Color(0xFF1C2022), onSurface = Color(0xFFECEFED),
+    surfaceContainerLow = Color(0xFF23282A), surfaceContainer = Color(0xFF2A3033), surfaceContainerHigh = Color(0xFF333A3D),
+    surfaceVariant = Color(0xFF2A3235), onSurfaceVariant = Color(0xFFBBC6CA),
+    outline = Color(0xFF8D999E), outlineVariant = Color(0xFF434D52)
 )
+// Interface typography stays quiet and familiar. Book text supplies its own serif face.
 private val GuideTypography = Typography(
-    displaySmall = TextStyle(fontFamily = FontFamily.Serif, fontSize = 36.sp, lineHeight = 42.sp),
-    headlineLarge = TextStyle(fontFamily = FontFamily.Serif, fontSize = 30.sp, lineHeight = 36.sp),
-    headlineMedium = TextStyle(fontFamily = FontFamily.Serif, fontSize = 28.sp, lineHeight = 34.sp),
-    titleLarge = TextStyle(fontFamily = FontFamily.Serif, fontSize = 23.sp, lineHeight = 29.sp),
-    titleMedium = TextStyle(fontWeight = FontWeight.Medium, fontSize = 18.sp, lineHeight = 25.sp),
-    bodyLarge = TextStyle(fontSize = 17.sp, lineHeight = 26.sp),
-    bodyMedium = TextStyle(fontSize = 16.sp, lineHeight = 24.sp),
-    bodySmall = TextStyle(fontSize = 14.sp, lineHeight = 21.sp),
-    labelLarge = TextStyle(fontWeight = FontWeight.Medium, fontSize = 16.sp, lineHeight = 22.sp),
-    labelMedium = TextStyle(fontWeight = FontWeight.Medium, fontSize = 12.sp, lineHeight = 18.sp, letterSpacing = 1.sp)
+    displaySmall = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 34.sp, lineHeight = 40.sp),
+    headlineLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 30.sp, lineHeight = 36.sp),
+    headlineMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 27.sp, lineHeight = 34.sp),
+    headlineSmall = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, fontSize = 24.sp, lineHeight = 30.sp),
+    titleLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, fontSize = 22.sp, lineHeight = 28.sp),
+    titleMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, fontSize = 18.sp, lineHeight = 25.sp),
+    titleSmall = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, fontSize = 16.sp, lineHeight = 23.sp),
+    bodyLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontSize = 17.sp, lineHeight = 26.sp),
+    bodyMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontSize = 16.sp, lineHeight = 24.sp),
+    bodySmall = TextStyle(fontFamily = FontFamily.SansSerif, fontSize = 14.sp, lineHeight = 21.sp),
+    labelLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, fontSize = 16.sp, lineHeight = 22.sp),
+    labelMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, fontSize = 13.sp, lineHeight = 18.sp, letterSpacing = 0.2.sp),
+    labelSmall = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, fontSize = 12.sp, lineHeight = 17.sp)
 )
 
 @Composable
@@ -67,7 +71,7 @@ fun GuideTheme(dark: Boolean, content: @Composable () -> Unit) {
     }
     MaterialTheme(
         colorScheme = colors, typography = GuideTypography,
-        shapes = Shapes(small = RoundedCornerShape(12.dp), medium = RoundedCornerShape(20.dp), large = RoundedCornerShape(28.dp)),
+        shapes = Shapes(small = RoundedCornerShape(12.dp), medium = RoundedCornerShape(16.dp), large = RoundedCornerShape(24.dp)),
         content = content
     )
 }

@@ -27,6 +27,9 @@ import androidx.core.view.WindowCompat
 import ru.liturgyguide.LiturgyGuideApplication
 import ru.liturgyguide.di.AppContainer
 import ru.liturgyguide.service.*
+import ru.liturgyguide.service.book.*
+import ru.liturgyguide.model.ServiceBookKey
+import ru.liturgyguide.model.WorshipKind
 import ru.liturgyguide.service.schedule.InternetScheduleState
 import ru.liturgyguide.service.schedule.withInternetSchedule
 import java.time.Instant
@@ -37,7 +40,7 @@ import java.time.Clock
 import java.time.ZoneId
 import kotlinx.coroutines.delay
 
-private enum class Screen { MAIN, MANUAL, ARRIVAL, SERVICE, STAGE_SELECTOR, SEARCH, LISTENING, SETTINGS, SOURCES, CHURCH, DISCOVERY }
+private enum class Screen { MAIN, MANUAL, ARRIVAL, SERVICE, STAGE_SELECTOR, SEARCH, LISTENING, SETTINGS, SOURCES, CHURCH, DISCOVERY, BOOK }
 private enum class ChurchSelectionOrigin { FIRST_HOME, DIRECTORY }
 private class ListeningRoute(val origin: Screen, val draft: ArrivalDraft, val previousDraft: ArrivalDraft?,
     val churchId: String?, val generation: Int, val previousContext: ReadingContext?,
@@ -71,6 +74,12 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     val screenStateHolder = rememberSaveableStateHolder()
     val preferences = remember { context.getSharedPreferences("guide_preferences", 0) }
     val churchStore = remember(preferences) { ChurchDirectoryStore(preferences) }
+    val bookStore = remember(context) { BookReadingStore(context.getSharedPreferences("service_book_reading", 0)) }
+    var bookRequestJson by rememberSaveable { mutableStateOf<String?>(null) }
+    var bookParishId by rememberSaveable { mutableStateOf<String?>(null) }
+    val bookRequest = remember(bookRequestJson) { runCatching {
+        Gson().fromJson(bookRequestJson, ServiceBookKey::class.java)?.takeIf { it.isValid() }
+    }.getOrNull() }
     val startStore = remember(preferences) { UserServiceStartStore(preferences) }
     var userStarts by remember { mutableStateOf(startStore.records()) }
     val readingContextStore = remember(preferences) { ReadingContextStore(preferences) }
@@ -100,6 +109,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     var churchSearchQuery by rememberSaveable { mutableStateOf("") }
     var churchSearchMode by rememberSaveable { mutableStateOf(ChurchSearchMode.NAME) }
     var personalTimeRequest by rememberSaveable { mutableIntStateOf(0) }
+    var availableTextsDate by rememberSaveable { mutableStateOf<String?>(null) }
     var arrivalDraft by rememberSaveable(stateSaver = ArrivalDraft.Saver) { mutableStateOf<ArrivalDraft?>(null) }
     var arrivalRecoveryNotice by rememberSaveable { mutableStateOf(false) }
     var hasChurchSelection by rememberSaveable { mutableStateOf(preferences.contains("church_id")) }
@@ -121,6 +131,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         hasLegacyReading = validatedSession != null || stages.any { it.id == selectedId },
         legacyDefaultId = parishes?.directory?.defaultChurchId)
     val internetSchedules = container.internetSchedules
+    val scheduleImport = internetSchedules.progress?.collectAsState()?.value
     var internetSchedule by remember(internetSchedules, baseChurch?.id) {
         mutableStateOf(baseChurch?.let(internetSchedules::cached))
     }
@@ -129,10 +140,6 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     val parishDay = baseChurch?.let { now.atZone(ZoneId.of(it.timezone)).toLocalDate() }
     LaunchedEffect(internetSchedules, baseChurch?.id, parishDay, scheduleRefresh) {
         val selected = baseChurch ?: return@LaunchedEffect
-        // Fresh curated data needs no surprise request. Explicit refresh remains available.
-        val hasBundle = parishDay?.let { PublishedSchedule.forDate(selected, it).isNotEmpty() ||
-            PublishedSchedule.forDate(selected, it.plusDays(1)).isNotEmpty() } == true
-        if (hasBundle && scheduleRefresh == 0) return@LaunchedEffect
         internetSchedule = (internetSchedule ?: InternetScheduleState(selected.id)).copy(loading = true)
         internetSchedule = internetSchedules.refresh(selected, now, force = scheduleRefresh > 0,
             sourceOverride = scheduleSourceOverride)
@@ -141,6 +148,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     val churches = remember(baseChurches, church) { baseChurches.map { if (it.id == church?.id) requireNotNull(church) else it } }
     val contextEngine = remember(stages, clock) { if (stages.isEmpty()) null else ContextSuggestionEngine(stages, clock) }
     val overview = church?.let { contextEngine?.overview(it, now, userStarts) } ?: ScheduleOverview()
+    val lastBook = remember(screen, church?.id) { bookStore.last(church?.id) }
     val currentDate = now.atZone(ZoneId.of(church?.timezone ?: "Europe/Moscow")).toLocalDate()
     val invalidReadingMetadata = hasReadingMetadata && (readingContext == null || readingContext?.parishId != church?.id)
     val validSession = validatedSession?.takeIf { !invalidReadingMetadata }
@@ -245,6 +253,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         else -> Screen.MAIN
     }
     val visibleScreen = when {
+        screen == Screen.BOOK && bookRequest == null -> Screen.MAIN
         invalidArrival || (screen == Screen.SERVICE && (invalidRecovery || player.reading == null)) -> Screen.MAIN
         listeningRecovery -> listeningReturn
         else -> screen
@@ -326,6 +335,29 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         if (invalidRecovery) null else (player.reading ?: restoredReading)?.takeIf {
             it.context.parishId == church?.id && it.context.serviceDate == date.toString()
         }
+    fun openBook(key: ServiceBookKey) {
+        if (!key.isValid()) return
+        bookRequestJson = Gson().toJson(key)
+        bookParishId = church?.id
+        navigate(Screen.BOOK)
+    }
+    fun openBookOnDate(date: LocalDate, kind: WorshipKind, eveningMatins: Boolean = false) {
+        openBook(ServiceBookSelection.forCivilDate(date, kind, church, eveningMatins))
+    }
+    fun resumeLegacyReading() {
+        if (invalidRecovery) return
+        if (player.reading != null) { navigate(Screen.SERVICE); return }
+        val pending = restoredReading ?: migrationCandidate ?: legacyCandidate ?: selectedStage?.let { stage ->
+            ReadingContextFactory.manual(church, clock.instant())?.let { accepted ->
+                candidate(accepted, stage.id)?.let { value ->
+                    val migrated = LegacyPlaybackMigration.resolve(value.plan, stage.id, preferences.all)
+                    value.copy(state = migrated ?: value.state)
+                }
+            }
+        }
+        if (pending != null && beginReading(pending, resetBookmarks = false,
+                resetReaderUi = false, preserveRestoreNotice = true)) navigate(Screen.SERVICE)
+    }
     fun openReadingText(date: LocalDate) {
         val existing = resumableText(date)
         if (existing != null) {
@@ -507,7 +539,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         personalTimeRequest++
         navigate(Screen.CHURCH)
     }
-    fun closeDiscovery() { churchPickerRequest++; navigate(Screen.CHURCH) }
+    fun closeDiscovery() { navigate(if (churchSelectionOrigin == ChurchSelectionOrigin.FIRST_HOME) Screen.MAIN else Screen.CHURCH) }
     fun back() {
         if (invalidArrival) { recoverArrival(); return }
         if (screen == Screen.LISTENING) {
@@ -578,57 +610,25 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                 if (stages.isEmpty() || matcher == null) {
                     ContentUnavailable(onRetry = { reload++ })
                 } else when (visibleScreen) {
-                    Screen.MAIN -> MainScreen(
-                        lastStage = selectedStage,
-                        currentDate = currentDate,
-                        readingNotice = when {
-                            invalidArrival || arrivalRecoveryNotice -> "Не удалось восстановить выбранную службу. Выберите ее заново"
-                            invalidRecovery -> "Не удалось восстановить сохраненное чтение. Выберите службу или начните с начала"
-                            else -> null
-                        },
-                        savedReadingNote = when {
-                            migrationCandidate != null && player.reading == null -> listOfNotNull(
-                                "Тексты на ${LocalDate.parse(migrationCandidate.context.serviceDate).format(java.time.format.DateTimeFormatter.ofPattern("d MMMM uuuu", java.util.Locale.forLanguageTag("ru")))}",
-                                migrationCandidate.migrationNote?.let { "Тексты дополнены. При открытии вернемся к последней сохраненной фразе" }
-                            ).joinToString(" · ")
-                            readingNeedsExplicitDate -> "Дата не сохранена · откроется на сегодня"
-                            else -> null
-                        },
-                        church = church,
-                        overview = overview,
-                        onOpenService = ::openScheduledService,
-                        onChurch = { openChurch(fromHome = true) },
-                        onPersonalTime = ::openPersonalTime,
-                        startLabel = readingEntryLabel(currentDate, "Открыть текст"),
-                        onStart = {
-                            // Preserve the promise of a visible Continue button even at midnight.
-                            val date = if (resumableText(currentDate) != null) currentDate else
-                                clock.instant().atZone(ZoneId.of(church?.timezone ?: "Europe/Moscow")).toLocalDate()
-                            openReadingText(date)
-                        },
-                        onResume = resume@{
-                            if (screen != Screen.MAIN || resumeGeneration != player.generation) return@resume
-                            if (!invalidRecovery) {
-                                if (player.reading != null) navigate(Screen.SERVICE)
-                                else {
-                                    // A bookmark without a usable old date is explicitly opened on today.
-                                    val pending = restoredReading ?: migrationCandidate ?: legacyCandidate ?: selectedStage?.let { stage ->
-                                        ReadingContextFactory.manual(church, clock.instant())?.let { accepted ->
-                                            candidate(accepted, stage.id)?.let { value ->
-                                                val migrated = LegacyPlaybackMigration.resolve(value.plan, stage.id, preferences.all)
-                                                value.copy(state = migrated ?: value.state)
-                                            }
-                                        }
-                                    }
-                                    if (pending != null && beginReading(pending, resetBookmarks = false,
-                                            resetReaderUi = false, preserveRestoreNotice = true)) navigate(Screen.SERVICE)
-                                }
-                            }
-                        },
-                        onFindStage = { openManual(ArrivalMode.NEW_SERVICE) },
-                        onOrder = { openOrder(Screen.MAIN) },
+                    Screen.MAIN -> TodayScreen(
+                        church = church, now = now, internetSchedule = internetSchedule,
+                        importProgress = scheduleImport, lastBook = lastBook,
+                        onFindChurch = { churchOrigin = Screen.MAIN; churchSelectionOrigin = ChurchSelectionOrigin.FIRST_HOME; navigate(Screen.DISCOVERY) },
+                        onChurchDetails = { openChurch(fromHome = false) },
+                        onOpenBook = ::openBookOnDate,
+                        onResumeBook = { openBook(it.key) },
+                        onRefresh = { scheduleSourceOverride = null; scheduleRefresh++ },
+                        onResumeLegacy = if (selectedStage == null) null else { { resumeLegacyReading() } },
                         bottomBar = navigationBar
                     )
+                    Screen.BOOK -> bookRequest?.let { request ->
+                        ServiceBookScreen(request, bookParishId, container.serviceBooks, bookStore, textSize,
+                            onBack = { navigate(Screen.MAIN) },
+                            onSettings = { settingsOrigin = Screen.BOOK; navigate(Screen.SETTINGS) },
+                            onOpenUrl = { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(it))) },
+                            onRequestChanged = { bookRequestJson = Gson().toJson(it) },
+                            onOpenCommonLiturgy = { openReadingText(LocalDate.parse(request.date)) })
+                    }
                     Screen.MANUAL -> validArrivalDraft?.let { draft ->
                         ManualMomentScreen(draft = draft,
                             onLandmark = landmark@{ landmark ->
@@ -765,8 +765,15 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         pickerRequest = churchPickerRequest,
                         personalTimeRequest = personalTimeRequest,
                         onGoToService = { navigate(Screen.MAIN) },
-                        onReadLiturgy = ::openReadingText,
-                        readingEntryLabel = { date -> readingEntryLabel(date, "Читать литургию") },
+                        onReadLiturgy = { openBookOnDate(it, WorshipKind.LITURGY) },
+                        onOpenService = { service ->
+                            val kind = ServiceBookSelection.kindFor(service.title)
+                            if (kind != null) openBookOnDate(LocalDate.parse(service.date), kind,
+                                kind == WorshipKind.MATINS && runCatching { java.time.LocalTime.parse(service.time).hour >= 12 }.getOrDefault(false))
+                            else availableTextsDate = service.date
+                        },
+                        now = now,
+                        readingEntryLabel = { "Открыть литургию" },
                         userStarts = userStarts,
                         onSaveStart = { value ->
                             val saved = church?.let { startStore.save(value, it) } == true
@@ -787,6 +794,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                     )
                     Screen.DISCOVERY -> ChurchDiscoveryScreen(
                         discovery = container.placeDiscovery,
+                        savedChurches = churches,
+                        onSelectSaved = ::chooseChurch,
                         query = churchSearchQuery, onQueryChange = { churchSearchQuery = it },
                         mode = churchSearchMode, onModeChange = { churchSearchMode = it },
                         onBack = ::closeDiscovery,
@@ -801,6 +810,10 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                     )
                 }
                 }
+            }
+            availableTextsDate?.let { selectedDate ->
+                ServiceBookChooser(LocalDate.parse(selectedDate), onDismiss = { availableTextsDate = null },
+                    onSelect = { date, kind -> availableTextsDate = null; openBookOnDate(date, kind) })
             }
             pendingChurchSelection?.let { pending ->
                 ChurchChangeDialog(

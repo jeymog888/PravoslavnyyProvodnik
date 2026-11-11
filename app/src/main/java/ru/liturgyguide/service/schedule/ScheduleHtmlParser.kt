@@ -7,6 +7,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
 import java.util.Locale
+import ru.liturgyguide.model.Parish
 
 data class InternetService(val date: String, val time: String, val title: String, val kind: String)
 
@@ -27,6 +28,19 @@ object ScheduleHtmlParser {
 
     fun parse(html: String, sourceUrl: String, today: LocalDate): List<InternetService> =
         parse(Jsoup.parse(html, sourceUrl), today)
+
+    /** Empty extraction is not permission to bypass an explicit cancellation or ambiguity. */
+    fun inspect(document: Document, today: LocalDate, parish: Parish? = null): ScheduleParseResult {
+        val structured = HtmlScheduleDocumentExtractor.fromHtml(document)
+        // A named building or a dated cancellation needs the general parser's section context,
+        // rather than the legacy parser's whole-document rejection or context-free row extraction.
+        if (structured.pages.any { page -> page.lines.any {
+            it.venue != null || ScheduleVenue.isLabel(it.text) || cancelled.containsMatchIn(it.text)
+        } }) return ScheduleDocumentParser.inspect(structured, today, parish)
+        val events = parse(document, today)
+        val known = document.select("[data-day],.bg_ortcal_schedule").isNotEmpty()
+        return ScheduleParseResult(if (events.isNotEmpty() || known) ScheduleParseDisposition.PARSED else ScheduleParseDisposition.UNSUPPORTED, events)
+    }
 
     fun parse(document: Document, today: LocalDate): List<InternetService> {
         if (globalVenue.containsMatchIn(document.text()) || document.select("h1,h2,h3").any {

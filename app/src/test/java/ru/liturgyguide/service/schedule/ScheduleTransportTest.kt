@@ -4,23 +4,25 @@ import kotlinx.coroutines.*
 import org.junit.Assert.*
 import org.junit.Test
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.InetAddress
 import java.net.URL
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.zip.GZIPOutputStream
 
 class ScheduleTransportTest {
     private class Connection(val bytes: ByteArray = "ok".toByteArray(), val status: Int = 200,
-        val location: String? = null, val input: InputStream? = null) : HttpURLConnection(URL("https://example.org/")) {
+        val location: String? = null, val input: InputStream? = null, val encoding: String? = null) : HttpURLConnection(URL("https://example.org/")) {
         val disconnected = AtomicBoolean()
         override fun connect() = Unit
         override fun disconnect() { disconnected.set(true) }
         override fun usingProxy() = false
         override fun getResponseCode() = status
         override fun getContentType() = "text/html; charset=utf-8"
-        override fun getHeaderField(name: String?): String? = if (name == "Location") location else null
+        override fun getHeaderField(name: String?): String? = when (name) { "Location" -> location; "Content-Encoding" -> encoding; else -> null }
         override fun getInputStream(): InputStream = input ?: ByteArrayInputStream(bytes)
     }
     private val publicDns: (String) -> Array<InetAddress> = { arrayOf(InetAddress.getByAddress(byteArrayOf(8, 8, 8, 8))) }
@@ -67,5 +69,27 @@ class ScheduleTransportTest {
         val response = ScheduleResponse("https://example.org/", text.toByteArray(charset("windows-1251")), "text/html; charset=windows-1251")
         assertEquals("Литургия", response.html()!!.body().text())
         assertNull(ScheduleResponse("https://example.org/", text.toByteArray(), "application/pdf").html())
+    }
+
+    @Test fun `server gzip is decoded even when identity was requested`() = runBlocking {
+        val html = "<html><body>Русское чтение дня</body></html>"
+        val bytes = ByteArrayOutputStream().also { output -> GZIPOutputStream(output).use { it.write(html.toByteArray()) } }.toByteArray()
+        for (header in listOf("gzip", null)) {
+            val transport = UrlConnectionScheduleTransport(resolve = publicDns, connectionFactory = { Connection(bytes, encoding = header) })
+            assertEquals("Русское чтение дня", transport.fetch("https://example.org/").html()!!.body().text())
+        }
+    }
+
+    @Test fun `expanded gzip size and truncated streams are rejected`() = runBlocking {
+        val bytes = ByteArrayOutputStream().also { output -> GZIPOutputStream(output).use { it.write("x".repeat(10_000).toByteArray()) } }.toByteArray()
+        assertTrue(bytes.size < 100)
+        for (body in listOf(bytes, bytes.copyOf(bytes.size - 5))) {
+            val transport = UrlConnectionScheduleTransport(limitBytes = 100, resolve = publicDns,
+                connectionFactory = { Connection(body, encoding = "gzip") })
+            try { transport.fetch("https://example.org/"); fail("Compressed response must not bypass bounds") } catch (_: IOException) { }
+        }
+        val truncated = UrlConnectionScheduleTransport(resolve = publicDns,
+            connectionFactory = { Connection(bytes.copyOf(bytes.size - 5), encoding = "gzip") })
+        try { truncated.fetch("https://example.org/"); fail("A truncated compressed body must not be parsed") } catch (_: IOException) { }
     }
 }

@@ -47,7 +47,7 @@ class LiveChurchDiscoveryTest {
         write("run.json", JSONObject().put("run", run).put("apkSha256", apkHash)
             .put("fingerprint", Build.FINGERPRINT).put("hardware", Build.HARDWARE)
             .put("startedAtEpochMillis", System.currentTimeMillis())
-            .put("mode", "Real MainActivity and production discovery; no injected responses")
+            .put("mode", "Real MainActivity and production discovery; single-tap selection; no injected responses")
             .put("visualVerdict", "NOT_REVIEWED").toString(2))
 
         check(preferences.edit().clear().commit())
@@ -60,14 +60,16 @@ class LiveChurchDiscoveryTest {
             withCiFailureDiagnostics("LiveChurchDiscoveryTest.realNamesCanBeFoundReviewedAndSavedInTwoCities") {
                 compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("open_church"))
                 compose.onNodeWithTag("open_church").performClick()
-                // With clean preferences, the first Home entry opens the picker directly.
-                compose.onNodeWithTag("church_picker").assertIsDisplayed()
+                // With clean preferences, Home opens the unified search directly.
+                compose.onNodeWithTag("discovery_content").assertIsDisplayed()
+                compose.onNodeWithTag("church_picker").assertDoesNotExist()
                 searchAndSave("sretensky", "Сретенский монастырь Москва", "osm:relation:3325777", "Сретенский монастырь", "Москва",
                     returnsHome = true)
 
                 compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("change_church"))
                 compose.onNodeWithTag("change_church").performClick()
-                compose.onNodeWithTag("church_picker").assertIsDisplayed()
+                compose.onNodeWithTag("discovery_content").assertIsDisplayed()
+                compose.onNodeWithTag("church_picker").assertDoesNotExist()
                 searchAndSave("petersburg", "Казанский собор Санкт-Петербург", "osm:relation:11763697", "Казанский собор", "Санкт-Петербург")
 
                 val records = ChurchDirectoryStore(preferences).records()
@@ -88,15 +90,18 @@ class LiveChurchDiscoveryTest {
 
     private fun searchAndSave(label: String, query: String, id: String, name: String, city: String,
         returnsHome: Boolean = false) {
-        compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("church_search"))
-        compose.onNodeWithTag("church_search").performTextReplacement(query)
+        val previousSelectedId = preferences.getString("church_id", null)
+        val previousRecords = preferences.getString(ChurchDirectoryStore.RECORDS_KEY, null)
+        compose.onNodeWithTag("discovery_content").performScrollToNode(hasTestTag("discovery_query"))
+        compose.onNodeWithTag("discovery_query").assertIsDisplayed().performTextReplacement(query)
         closeSoftKeyboardWithCiDiagnostics()
-        compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("discover_churches"))
-        compose.onNodeWithTag("discover_churches").performClick()
         compose.onNodeWithTag("discovery_mode_name").assertIsSelected()
         compose.onNodeWithTag("discovery_query").assertTextContains(query)
+        assertEquals(previousSelectedId, preferences.getString("church_id", null))
+        assertEquals(previousRecords, preferences.getString(ChurchDirectoryStore.RECORDS_KEY, null))
         val previousCache = cache.getString("places", null)
         val requestedAt = System.currentTimeMillis()
+        compose.onNodeWithTag("discovery_content").performScrollToNode(hasTestTag("discovery_submit"))
         compose.onNodeWithTag("discovery_submit").performClick()
         compose.waitUntil(timeoutMillis = 30_000L) {
             cache.getString("places", null) != previousCache ||
@@ -122,6 +127,7 @@ class LiveChurchDiscoveryTest {
             .put("fetchedAtEpochMillis", fetchedAt).put("bodySha256", sha256(body.toByteArray(Charsets.UTF_8)))
             .put("provider", "Production Photon Android transport")
             .put("responseKind", "FRESH_NETWORK: empty cache initially, then distinct query")
+            .put("selection", "One explicit tap on the verified result; timezone derived from coordinates")
             .toString(2))
 
         val features = JSONObject(body).getJSONArray("features")
@@ -138,27 +144,24 @@ class LiveChurchDiscoveryTest {
         compose.onNodeWithTag("discovery_content").performScrollToNode(hasTestTag(tag))
         compose.onNodeWithTag(tag).assertIsDisplayed().assertTextContains(name)
         compose.onNodeWithTag("discovery_cache_notice").assertDoesNotExist()
+        assertEquals("Searching must not select a parish", previousSelectedId, preferences.getString("church_id", null))
+        assertEquals("Searching must not save a map result", previousRecords, preferences.getString(ChurchDirectoryStore.RECORDS_KEY, null))
         capture("$label-results")
         compose.onNodeWithTag(tag).performClick()
-        compose.onNodeWithTag("import_church_name").assertTextEquals(name)
-        compose.onNodeWithTag("church_timezone_picker").performScrollTo().performClick()
-        compose.onNodeWithTag("zone_Europe/Moscow").performScrollTo().assertIsDisplayed().performClick()
-        compose.onNodeWithTag("church_timezone_picker").assertTextContains("Москва")
-        compose.onNodeWithTag("confirm_import_timezone").performScrollTo().assertIsOn()
-        capture("$label-review")
-        compose.onNodeWithTag("save_new_church").performScrollTo().performClick()
+        compose.onNodeWithTag("add_church_form").assertDoesNotExist()
         compose.onNodeWithTag("church_change_confirmation").assertDoesNotExist()
+        compose.onNodeWithTag("discovery_content").assertDoesNotExist()
         if (returnsHome) {
             compose.onNodeWithTag("main_content").assertIsDisplayed()
             compose.onNodeWithTag("church_content").assertDoesNotExist()
-            compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("open_church"))
-            compose.onNodeWithTag("open_church").assertTextContains(name)
-            compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("find_stage"))
-            compose.onAllNodesWithTag("find_stage").assertCountEquals(1)
-            compose.onNodeWithTag("find_stage").assertIsDisplayed()
+            compose.onNodeWithTag("main_content").performScrollToNode(hasText(name))
+            compose.onNodeWithText(name).assertIsDisplayed()
+            val readingEntry = hasTestTag("start_guide") or hasTestTag("open_service_book") or hasTestTag("today_choose_unknown_service")
+            compose.onNodeWithTag("main_content").performScrollToNode(readingEntry)
+            compose.onNode(readingEntry).assertIsDisplayed().assertIsEnabled()
             capture("$label-home")
-            // The first Home selection returns to the service entry. Open the directory
-            // intentionally before checking the saved parish or starting another search.
+            // First Home selection returns to services. Open the parish details intentionally
+            // before checking the persisted record or starting the second city's search.
             compose.onNodeWithTag("nav_church").performClick()
         }
         compose.onNodeWithTag("church_content").assertIsDisplayed()

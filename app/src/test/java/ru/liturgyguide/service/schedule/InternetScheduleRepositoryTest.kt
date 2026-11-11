@@ -94,7 +94,7 @@ class InternetScheduleRepositoryTest {
         }
     }
 
-    @Test fun `missing website unsupported PDF and failed refresh are honest and preserve curated data`() = runBlocking {
+    @Test fun `missing website unsupported PDF and failed refresh preserve a confirmed publication`() = runBlocking {
         val cache = Cache()
         var fail = false
         val repo = InternetScheduleRepository(ScheduleTransport { url ->
@@ -110,7 +110,7 @@ class InternetScheduleRepositoryTest {
         assertEquals(ready.publication, failed.publication)
         val bundled = selected.copy(scheduleValidFrom = "2026-11-10", scheduleValidUntil = "2026-11-10",
             schedule = listOf(ParishService("2026-11-10", "10:00", "Литургия", "liturgy")))
-        assertEquals(bundled, bundled.withInternetSchedule(failed, now))
+        assertEquals(listOf("09:00"), bundled.withInternetSchedule(failed, now).schedule.map { it.time })
         fail = false
         val pdf = repo.refresh(selected, now.plusSeconds(120), force = true, sourceOverride = "https://example.org/schedule.pdf")
         assertEquals(InternetScheduleStatus.UNSUPPORTED, pdf.status)
@@ -153,5 +153,116 @@ class InternetScheduleRepositoryTest {
         assertEquals(InternetScheduleStatus.UNSUPPORTED, repo.refresh(parish(site = "https://example.org/"), now).status)
         assertEquals(3, calls.size)
         assertTrue(calls.all { it.startsWith("https://example.org/") })
+    }
+
+    @Test fun `generic HTML table imports without a known site template`() = runBlocking {
+        val repo = InternetScheduleRepository(ScheduleTransport { url -> response(url,
+            "<h1>Расписание ноябрь 2026</h1><table><tr><td>15 ноября</td><td>09:00</td><td>Литургия</td></tr></table>") }, Cache())
+        val state = repo.refresh(parish(site = "https://example.org/"), now)
+        assertEquals(InternetScheduleStatus.READY, state.status)
+        assertEquals("2026-11-15", state.publication!!.events.single().date)
+        assertEquals("09:00", state.publication.events.single().time)
+    }
+
+    @Test fun `a future homepage announcement does not hide the linked current schedule`() = runBlocking {
+        val calls = mutableListOf<String>()
+        val repo = InternetScheduleRepository(ScheduleTransport { url ->
+            calls += url
+            response(url, if (url.endsWith("/schedule/"))
+                "<h1>Ноябрь 2026</h1><p>11 ноября | 08:00 | Литургия</p>" else
+                """<p>30.11.2026 09:00 Литургия</p><a href="/schedule/">Расписание богослужений</a>""")
+        }, Cache())
+        val result = repo.refresh(parish(site = "https://example.org/"), now)
+        assertEquals(listOf("https://example.org/", "https://example.org/schedule/"), calls)
+        assertEquals("https://example.org/schedule/", result.publication?.sourceUrl)
+        assertEquals(listOf("2026-11-11"), result.publication?.events?.map { it.date })
+    }
+
+    @Test fun `a fresh source replaces the bundled time and source even when the bundle covers today`() = runBlocking {
+        val selected = parish(site = "https://example.org/").copy(sourceUrl = "https://example.org/old/",
+            scheduleSource = "Старое расписание", scheduleValidFrom = "2026-11-10", scheduleValidUntil = "2026-11-10",
+            schedule = listOf(ParishService("2026-11-10", "10:00", "Литургия", "liturgy")))
+        val repo = InternetScheduleRepository(ScheduleTransport { response(it, html) }, Cache())
+        val effective = selected.withInternetSchedule(repo.refresh(selected, now), now)
+        assertEquals(listOf("09:00"), effective.schedule.map { it.time })
+        assertEquals(selected.website, effective.sourceUrl)
+        assertEquals("Страница расписания прихода", effective.scheduleSource)
+    }
+
+    @Test fun `a dated cancellation filters a linked schedule without hiding the next day`() = runBlocking {
+        val repo = InternetScheduleRepository(ScheduleTransport { url -> response(url,
+            if (url.endsWith("/schedule/")) """<h1>Ноябрь 2026</h1><p>15 ноября 09:00 Литургия</p>
+                <p>16 ноября 08:00 Литургия</p>""" else """<h1>Ноябрь 2026</h1>
+                <h2>15 ноября - все службы отменены</h2><a href="/schedule/">Расписание</a>""") }, Cache())
+        val selected = parish(site = "https://example.org/")
+        val state = repo.refresh(selected, now)
+        assertEquals(listOf("2026-11-16"), state.publication?.events?.map { it.date })
+        assertFalse(state.publicationRejected)
+        assertEquals(state, repo.cached(selected))
+    }
+
+    @Test fun `an explicit cancellation cannot fall through or resurrect cached and bundled events`() = runBlocking {
+        val selected = parish(site = "https://example.org/").copy(scheduleValidFrom = "2026-11-10", scheduleValidUntil = "2026-11-15",
+            schedule = listOf(ParishService("2026-11-10", "10:00", "Литургия", "liturgy")))
+        val cache = Cache()
+        var body = html
+        val repo = InternetScheduleRepository(ScheduleTransport { response(it, body) }, cache)
+        assertNotNull(repo.refresh(selected, now).publication)
+        body = """<article class="hentry"><h1 class="entry-title">Ноябрь 2026</h1>
+            <div class="entry-content"><h2>Все службы отменены</h2><p>15 Вс. 09:00 Литургия</p></div></article>"""
+        val rejected = repo.refresh(selected, now.plusSeconds(60), force = true)
+        assertNull(rejected.publication)
+        assertTrue(rejected.publicationRejected)
+        assertTrue(selected.withInternetSchedule(rejected, now).schedule.isEmpty())
+        val restored = InternetScheduleRepository(ScheduleTransport { throw IOException() }, cache)
+        assertEquals(rejected, restored.cached(selected))
+        val offline = restored.refresh(selected, now.plusSeconds(120), force = true)
+        assertTrue(offline.publicationRejected)
+        assertTrue(selected.withInternetSchedule(offline, now).schedule.isEmpty())
+        assertEquals(offline, restored.cached(selected))
+        body = html
+        val recovered = repo.refresh(selected, now.plusSeconds(180), force = true)
+        assertFalse(recovered.publicationRejected)
+        assertEquals(listOf("09:00"), selected.withInternetSchedule(recovered, now.plusSeconds(180)).schedule.map { it.time })
+    }
+
+    @Test fun `known day containers keep date and building context when a section needs general parsing`() = runBlocking {
+        val selected = parish(site = "https://example.org/").copy(name = "Никольский храм", shortName = "Никольский храм")
+        val page = """<h1>Ноябрь 2026</h1><h2>Казанский храм</h2>
+            <article data-day="2026-11-15"><li><time>09:00</time><span>Литургия</span></li></article>
+            <h2>Никольский храм</h2><article data-day="2026-11-15"><li><time>10:00</time><span>Литургия</span></li></article>"""
+        val repo = InternetScheduleRepository(ScheduleTransport { response(it, page) }, Cache())
+        val result = repo.refresh(selected, now)
+        assertEquals(listOf("10:00"), result.publication?.events?.map { it.time })
+    }
+
+    @Test fun `explicit linked PDF on another host retains its source relationship through offline cache`() = runBlocking {
+        val selected = parish(site = "https://example.org/")
+        val cache = Cache()
+        val documentUrl = "https://cdn.example.org/schedule.pdf"
+        val repo = InternetScheduleRepository(ScheduleTransport { url ->
+            if (url == selected.website) response(url, "<h1>Расписание</h1><a href='$documentUrl'>Скачать расписание PDF</a>")
+            else response(url, "%PDF-fixture", "application/pdf")
+        }, cache, ScheduleDocumentExtractor { data -> ScheduleDocument(data.url, "pdf", listOf(
+            ScheduleDocumentPage(listOf(ScheduleDocumentLine("Ноябрь 2026"), ScheduleDocumentLine("15 Вс. 09:30 Исповедь и Литургия"))))) })
+        val state = repo.refresh(selected, now)
+        assertEquals(InternetScheduleStatus.READY, state.status)
+        assertEquals(documentUrl, state.publication?.sourceUrl)
+        assertEquals(selected.website, state.publication?.linkedFrom)
+        assertEquals(state, repo.cached(selected))
+        cache.data[selected.id] = ScheduleCacheCodec.encode(state.copy(publication = state.publication!!.copy(linkedFrom = "https://wrong.org/")))
+        assertNull(repo.cached(selected).publication)
+    }
+
+    @Test fun `an unsuccessful lookup can retry after five minutes instead of hiding for six hours`() = runBlocking {
+        var calls = 0
+        val repo = InternetScheduleRepository(ScheduleTransport { calls++; throw IOException() }, Cache())
+        val selected = parish(site = "https://example.org/")
+        repo.refresh(selected, now)
+        assertEquals(1, calls)
+        repo.refresh(selected, now.plusSeconds(60))
+        assertEquals(1, calls)
+        repo.refresh(selected, now.plusSeconds(301))
+        assertEquals(2, calls)
     }
 }
