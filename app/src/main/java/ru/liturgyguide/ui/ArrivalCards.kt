@@ -16,6 +16,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.unit.dp
 import ru.liturgyguide.model.Parish
 import ru.liturgyguide.model.ParishService
@@ -31,6 +33,8 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 /** A selected day stays a selected day. A future occurrence never silently replaces its date. */
 internal data class ArrivalSchedule(
@@ -90,6 +94,31 @@ internal fun scheduleEmptyTitle(state: InternetScheduleState?, hasPublication: B
     state?.loading == true -> "Ищем расписание"
     hasPublication -> "Нет записей на эту дату"
     else -> "Расписание пока не найдено"
+}
+
+/** A completed retry must remain visible even when it produced the same empty result. */
+internal fun scheduleCheckReceipt(state: InternetScheduleState?, timezone: String): String? {
+    if (state == null || state.loading || state.status == InternetScheduleStatus.IDLE) return null
+    val checked = runCatching {
+        Instant.parse(state.checkedAt).atZone(ZoneId.of(timezone))
+            .format(DateTimeFormatter.ofPattern("d MMMM yyyy, HH:mm:ss", Locale.forLanguageTag("ru")))
+    }.getOrNull() ?: return null
+    val result = if (state.publicationRejected) "Расписание не подтверждено источником" else when (state.status) {
+        InternetScheduleStatus.READY -> if (state.publication != null) "Расписание получено" else "Расписание не получено"
+        InternetScheduleStatus.NO_WEBSITE -> "Источник расписания не найден"
+        InternetScheduleStatus.UNSUPPORTED -> "Не удалось прочитать даты и время"
+        InternetScheduleStatus.UNAVAILABLE -> "Обновление не удалось"
+        InternetScheduleStatus.IDLE -> return null
+    }
+    return "$result\nПопытка обновления: $checked"
+}
+
+@Composable
+internal fun ScheduleCheckReceipt(state: InternetScheduleState?, timezone: String, modifier: Modifier = Modifier) {
+    val receipt = scheduleCheckReceipt(state, timezone) ?: return
+    Text(receipt, style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier.semantics { liveRegion = LiveRegionMode.Polite })
 }
 
 @Composable

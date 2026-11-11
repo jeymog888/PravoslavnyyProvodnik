@@ -288,6 +288,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                             Text("Обновить не удалось. Показаны ранее полученные данные", style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("church_schedule_update_error"))
                         }
+                        ScheduleCheckReceipt(ownState, church.timezone, Modifier.testTag("church_schedule_checked"))
                     }
                 }
                 if (personalStart != null) item {

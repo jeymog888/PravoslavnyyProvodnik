@@ -148,6 +148,7 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                             Text("Обновить не удалось. Показаны ранее полученные данные", style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("today_schedule_update_error"))
                         }
+                        ScheduleCheckReceipt(ownState, church.timezone, Modifier.testTag("today_schedule_checked"))
                     }
                 }
                 if (personalStart != null) item {
