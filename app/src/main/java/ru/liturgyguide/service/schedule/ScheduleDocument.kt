@@ -12,7 +12,11 @@ data class ScheduleWord(val text: String, val left: Int, val top: Int, val right
     val confidence: Int = 100)
 data class ScheduleDocumentLine(val text: String, val confidence: Int = 100, val struck: Boolean = false,
     val temporalConfidence: Int = 100, val headingLevel: Int = 0, val venue: String? = null, val endsTable: Boolean = false,
-    val startsDayContainer: Boolean = false, val endsDayContainer: Boolean = false)
+    val startsDayContainer: Boolean = false, val endsDayContainer: Boolean = false,
+    // Optional display-title material. Full text above still governs dates and cancellation.
+    val serviceText: String? = null,
+    // Only complete known calendar names reconstructed in a proven column may be removed.
+    val venueEvidence: String? = null)
 data class ScheduleDocumentPage(val lines: List<ScheduleDocumentLine>)
 data class ScheduleDocument(val sourceUrl: String, val format: String, val pages: List<ScheduleDocumentPage>)
 enum class ScheduleParseDisposition { PARSED, UNSUPPORTED, REJECTED }
@@ -174,10 +178,12 @@ object ScheduleOcrLayout {
             val row = rows.lastOrNull { abs(it.middle - middle) <= max(it.height, (word.bottom - word.top).toDouble()) * .48 }
             if (row == null) rows += Row(mutableListOf(word)) else row.members += word
         }
-        return rows.sortedBy { it.middle }.map { row ->
-            val ordered = row.members.sortedBy { it.left }
+        val orderedRows = rows.sortedBy { it.middle }.map { it.members.sortedBy { word -> word.left } }
+        val serviceColumn = ScheduleOcrServiceColumn.texts(orderedRows)
+        return orderedRows.mapIndexed { index, ordered ->
             ScheduleDocumentLine(ordered.joinToString(" ") { it.text }, ordered.map { it.confidence }.average().toInt(),
-                temporalConfidence = ordered.filter { it.text.any(Char::isDigit) }.minOfOrNull { it.confidence } ?: 100)
+                temporalConfidence = ordered.filter { it.text.any(Char::isDigit) }.minOfOrNull { it.confidence } ?: 100,
+                serviceText = serviceColumn[index]?.service, venueEvidence = serviceColumn[index]?.venueEvidence)
         }
     }
 }

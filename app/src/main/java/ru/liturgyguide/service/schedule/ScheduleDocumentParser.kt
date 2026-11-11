@@ -97,7 +97,8 @@ object ScheduleDocumentParser {
                 inferredMonths[pageIndex]?.takeIf { lineIndex in it.headingIndices }?.let { inferred ->
                     flush(); scope = inferred.value; currentDate = null
                 }
-                val venueLabel = clean.takeIf(ScheduleVenue::isLabel)?.let { ScheduleVenue.inlineLabel(it) ?: it }
+                val venueEvidence = line.venueEvidence ?: clean
+                val venueLabel = venueEvidence.takeIf(ScheduleVenue::isLabel)?.let { ScheduleVenue.inlineLabel(it) ?: it }
                 if (line.headingLevel > 0) {
                     flush()
                     headings.keys.filter { it >= line.headingLevel }.toList().forEach(headings::remove)
@@ -110,7 +111,7 @@ object ScheduleDocumentParser {
                 }
                 val locatedRowDate = dateIn(clean, scope)
                 val rowDate = locatedRowDate?.first ?: currentDate
-                val venueText = locatedRowDate?.let { clean.removeRange(it.second) } ?: clean
+                val venueText = dateIn(venueEvidence, scope)?.let { venueEvidence.removeRange(it.second) } ?: venueEvidence
                 val scopedVenue = line.venue ?: ScheduleVenue.inlineLabel(venueText, rowDate, datedPreface = locatedRowDate != null) ?:
                     headings.values.mapNotNull { it.venue }.lastOrNull() ?: sectionVenue
                 val scopedCancellation = headings.values.any { it.cancelled }
@@ -118,6 +119,9 @@ object ScheduleDocumentParser {
                 if (scopedCancellation) rejectedScope = true
                 clean.split('\n').forEach { physical ->
                     var text = physical.trim()
+                    // OCR may identify a service column, but dates and withdrawals
+                    // continue to use the untouched full physical row in `text`.
+                    var titleText = line.serviceText?.takeIf { '\n' !in clean }?.trim()
                     if (text.isBlank()) return@forEach
                     if (Regex("(?iu)^(?:кажд(?:ый|ую|ое|ые|ая)|ежедневно|еженедельно)(?=\\s|:)").containsMatchIn(text)) {
                         // This can be a <br>-separated footer inside the same HTML paragraph.
@@ -135,10 +139,17 @@ object ScheduleDocumentParser {
                         val stated = weekday.find(text)?.groupValues?.get(1)?.lowercase(Locale.ROOT)
                         if (stated != null && stated !in weekdays[currentDate!!.dayOfWeek.value - 1]) currentDate = null
                         text = text.replace(weekday, " ").trim(' ', '|', ',', '.')
+                        titleText = titleText?.let { title ->
+                            val titleDate = dateIn(title, scope)
+                            (titleDate?.let { title.removeRange(it.second) } ?: title)
+                                .replace(weekday, " ").trim(' ', '|', ',', '.', '-')
+                        }
                     } else if (looksLikeDateHeading(text)) {
                         flush(); currentDate = null
                     }
                     val matches = clocks.findAll(text).toList()
+                    val titleClocks = titleText?.let { clocks.findAll(it).toList() }
+                    val useServiceColumn = titleClocks != null && titleClocks.map { it.groupValues.drop(1) } == matches.map { it.groupValues.drop(1) }
                     if (matches.isEmpty() && cancellation.containsMatchIn(text) && generalServices.containsMatchIn(text)) {
                         // A day/building section must not withdraw unrelated days or buildings.
                         val day = currentDate
@@ -157,8 +168,11 @@ object ScheduleDocumentParser {
                             val hour = match.groupValues[1].toIntOrNull()
                             val minute = match.groupValues[2].toIntOrNull()
                             val time = runCatching { LocalTime.of(requireNotNull(hour), requireNotNull(minute)).toString() }.getOrNull()
-                            val tail = text.substring(match.range.last + 1, matches.getOrNull(index + 1)?.range?.first ?: text.length)
-                            val lead = if (index == 0) text.substring(0, match.range.first) else ""
+                            val title = if (useServiceColumn) requireNotNull(titleText) else text
+                            val titleMatches = if (useServiceColumn) requireNotNull(titleClocks) else matches
+                            val titleMatch = titleMatches[index]
+                            val tail = title.substring(titleMatch.range.last + 1, titleMatches.getOrNull(index + 1)?.range?.first ?: title.length)
+                            val lead = if (index == 0) title.substring(0, titleMatch.range.first) else ""
                             pendingClock = time
                             pendingDate = currentDate
                             pendingVenue = scopedVenue
@@ -171,7 +185,8 @@ object ScheduleDocumentParser {
                         }
                     } else if (pendingClock != null && located == null && month == null) {
                         if (pendingTitle.length + text.length < 500 && !Regex("(?iu)(расписан|пожертв|контакт|наверх)").containsMatchIn(text)) {
-                            pendingTitle += " " + text
+                            val continuation = titleText ?: text
+                            if (continuation.isNotBlank()) pendingTitle += " " + continuation
                             rejected = rejected || cancellation.containsMatchIn(text)
                         } else flush()
                     }

@@ -122,6 +122,8 @@ class InternetScheduleRepository(
                 var bestLinkedFrom = ""
                 var bestDedicated = false
                 var bestYearInferred = false
+                var previousImage: ScheduleDocument? = null
+                var previousImageParent = ""
                 val withdrawnDates = mutableSetOf<String>()
                 val withdrawnStarts = mutableSetOf<String>()
                 fun retained(values: List<InternetService>) = values.filterNot {
@@ -136,15 +138,17 @@ class InternetScheduleRepository(
                     phase(if (next.document) ScheduleImportPhase.READING_DOCUMENT else ScheduleImportPhase.LOADING_PAGE)
                     val response = try { transport.fetch(next.url) }
                     catch (cancelled: CancellationException) { throw cancelled }
-                    catch (_: Exception) { continue }
+                    catch (_: Exception) { previousImage = null; previousImageParent = ""; continue }
                     anyResponse = true
                     val html = response.html()
+                    if (html != null) { previousImage = null; previousImageParent = "" }
                     // External hosts are authorized only for a directly linked PDF/image. A
                     // filename ending in .pdf cannot turn a foreign HTML page into this parish.
                     if (html != null && !ScheduleDocumentLinks.sameSite(website, response.url)) continue
                     if (visited.size == 1 && html != null) website = response.url
                     val format: String
                     val parsed: ScheduleParseResult
+                    var publicationSource = response.url
                     if (html != null) {
                         val existing = ScheduleHtmlParser.inspect(html, date, parish)
                         parsed = if (existing.disposition != ScheduleParseDisposition.UNSUPPORTED) existing else
@@ -156,21 +160,29 @@ class InternetScheduleRepository(
                         val document = try { documentExtractor.extract(response) }
                         catch (cancelled: CancellationException) { throw cancelled }
                         catch (_: Exception) { null }
-                        parsed = document?.let { ScheduleDocumentParser.inspect(it, date, parish) }
+                        val continuation = document?.takeIf { next.linkedFrom.isNotBlank() && next.linkedFrom == previousImageParent }
+                            ?.let { current -> previousImage?.let { previous ->
+                                ScheduleImageContinuation.join(previous, current, next.linkedFrom, parish)
+                            } }
+                        val selectedDocument = continuation ?: document
+                        previousImage = selectedDocument?.takeIf { it.format == "image" }
+                        previousImageParent = next.linkedFrom.takeIf { previousImage != null }.orEmpty()
+                        if (continuation != null) publicationSource = continuation.sourceUrl
+                        parsed = selectedDocument?.let { ScheduleDocumentParser.inspect(it, date, parish) }
                             ?: ScheduleParseResult(ScheduleParseDisposition.UNSUPPORTED)
-                        format = document?.format ?: "unknown"
+                        format = selectedDocument?.format ?: "unknown"
                     }
                     withdrawnDates += parsed.withdrawnDates
                     withdrawnStarts += parsed.withdrawnStarts
                     bestEvents = retained(bestEvents)
                     if (parsed.disposition == ScheduleParseDisposition.REJECTED) {
                         rejectedPublication = true
-                        if (bestEvents.isEmpty()) source = response.url
+                        if (bestEvents.isEmpty()) source = publicationSource
                     }
                     if (parsed.withdrawsAll) {
                         // Only a truly unscoped withdrawal stops the lookup. A cancelled day must
                         // not hide another day's schedule on a linked page.
-                        bestEvents = emptyList(); source = response.url
+                        bestEvents = emptyList(); source = publicationSource
                         break
                     }
                     val events = retained(parsed.events)
@@ -189,7 +201,7 @@ class InternetScheduleRepository(
                         else -> events.size > bestEvents.size
                     }
                     if (events.isNotEmpty() && prefer) {
-                        bestEvents = events; source = response.url; bestFormat = format; bestLinkedFrom = next.linkedFrom; bestDedicated = dedicated
+                        bestEvents = events; source = publicationSource; bestFormat = format; bestLinkedFrom = next.linkedFrom; bestDedicated = dedicated
                         bestYearInferred = parsed.yearInferred
                     }
                 }

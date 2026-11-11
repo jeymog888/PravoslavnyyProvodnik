@@ -33,6 +33,10 @@ internal object ScheduleVenue {
     private fun parishInLegalName(text: String): String? = legalParish.matchEntire(text.trim())
         ?.groupValues?.get(1)?.takeIf { building.containsMatchIn(it) && !service.containsMatchIn(it) && !clock.containsMatchIn(it) }
 
+    /** Exact already-supported calendar names, for reconstruction within a proven OCR column. */
+    internal fun calendarRanges(text: String): List<IntRange> =
+        (calendarFeast.findAll(text) + localCouncilFeast.findAll(text)).map { it.range }.toList()
+
     fun isLabel(text: String): Boolean {
         val candidate = (parishInLegalName(text) ?: text).replace(calendarFeast, " ").replace(localCouncilFeast, " ")
         return building.containsMatchIn(candidate) && !service.containsMatchIn(candidate) &&
