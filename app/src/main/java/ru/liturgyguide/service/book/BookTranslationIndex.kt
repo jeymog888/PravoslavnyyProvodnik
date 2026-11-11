@@ -112,6 +112,7 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
         )): BookTranslationIndex {
             if (source.url == PSALTER_SOURCE.url) return fromPsalterPage(document)
             val result = linkedMapOf<String, BookTranslation>()
+            val responseParagraphs = linkedMapOf<String, BookTranslation>()
             for (row in document.select("table tr")) {
                 val cells = row.children().filter { it.tagName() == "td" }
                 if (cells.size != 2) continue
@@ -128,6 +129,9 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
                     }
                 }
                 addParallel(result, original, russian, source)
+                pairedResponseParagraph(cells[0], cells[1])?.let { (left, right) ->
+                    addParallel(responseParagraphs, left, right, source)
+                }
                 // A Psalm heading belongs to the edition's structure. Keep the original pair too,
                 // and add a body-only pair only when both leading DOM headings name the same Psalm.
                 val leftPsalm = psalmBody(cells[0])
@@ -135,7 +139,41 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
                 if (leftPsalm != null && rightPsalm != null && leftPsalm.first == rightPsalm.first)
                     addParallel(result, leftPsalm.second, rightPsalm.second, source)
             }
+            // Preserve an already available whole-cell edition even when a derived pair occurs
+            // earlier on the page. New boundaries should only fill missing concordance entries.
+            responseParagraphs.forEach { (key, value) -> result.putIfAbsent(key, value) }
             return BookTranslationIndex(result)
+        }
+
+        /** Some litany rows place the choir's response before a separate petition paragraph.
+         * Accept that boundary only when both columns have the same, complete response first.
+         * Arbitrary paragraph counts or similar words do not establish a translation pair. */
+        private fun pairedResponseParagraph(left: Element, right: Element): Pair<String, String>? {
+            fun parts(cell: Element): Pair<String, String>? {
+                // A stray closing </p> in the published table becomes an empty paragraph in Jsoup.
+                // Discard only those empty nodes, never a second paragraph containing words or markup.
+                val copy = cell.clone().apply {
+                    children().filter { it.tagName() == "p" && it.children().isEmpty() && !it.hasText() }
+                        .forEach { it.remove() }
+                }
+                val paragraph = copy.children().singleOrNull { it.tagName() == "p" } ?: return null
+                if (paragraph.select("p,table,div,blockquote,li").any { it !== paragraph }) return null
+                // Nothing may follow the petition: otherwise the two columns could be ordered differently.
+                if (paragraph.nextSibling() != null && copy.childNodes().dropWhile { it !== paragraph }.drop(1)
+                        .any { it !is TextNode || BookText.clean(it.text()).isNotEmpty() }) return null
+                val prayer = BookText.clean(paragraph.text())
+                paragraph.remove()
+                val (speaker, response) = BookText.withoutSpeaker(copy.text())
+                if (speaker != "Хор") return null
+                val responseKey = BookText.normalized(response)
+                if (responseKey !in setOf("господи помилуй", "подай господи")) return null
+                return responseKey to prayer
+            }
+            val a = parts(left) ?: return null
+            val b = parts(right) ?: return null
+            if (a.first != b.first || a.second.isBlank() || b.second.isBlank()) return null
+            if (BookText.withoutSpeaker(a.second).first != BookText.withoutSpeaker(b.second).first) return null
+            return a.second to b.second
         }
 
         /** Only whole paired Psalm rows with identical, continuous verse markers are accepted. */
@@ -261,7 +299,7 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
         }
 
         private fun speakerSegments(value: String): List<Pair<String?, String>> {
-            val starts = Regex("(?i)(?:(?:[12] )?(?:Лик|Хор)|Диакон|Священник|Иерей|Чтец|Народ|Предстоятель):\\s*")
+            val starts = Regex("(?i)${BookText.SPEAKER_LABEL}:\\s*")
                 .findAll(value).toList()
             if (starts.isEmpty()) return listOf(null to value)
             if (starts.first().range.first != 0) return listOf(null to value)

@@ -19,7 +19,7 @@ class BookPrayerConcordanceTest {
         "<tr><td>${Entities.escape(original)}</td><td>${Entities.escape(russian)}</td></tr>"
     private fun marker(case: JsonObject) = "Тестовый русский текст ${case.text("id")}"
 
-    @Test fun fullSourceOriginalsRecoverAllTwentyFiveRealBookOccurrencesWithTheirOwnProvenance() {
+    @Test fun fullSourceOriginalsRecoverAllTwentySixRealBookOccurrencesWithTheirOwnProvenance() {
         val cases = cases("translation-exact-originals")
         assertEquals(22, cases.size)
         var index = BookTranslationIndex.empty()
@@ -30,16 +30,19 @@ class BookPrayerConcordanceTest {
         val book = ServiceBookParser().parse(Jsoup.parse(BookFixtures.html()), ServiceBookKey("2026-11-11"), 12345, index)
         var found = 0
         for (case in cases) {
+            val (speaker, prayer) = BookText.withoutSpeaker(case.text("bookOriginal"))
             val matching = book.blocks.filter { it.kind == BookBlockKind.PRAYER &&
-                BookText.normalized(it.original) == BookText.normalized(case.text("bookOriginal")) }
+                BookText.normalized(it.original) == BookText.normalized(prayer) }
             assertEquals(case.text("id"), case.get("occurrences").asInt, matching.size)
+            // An editorial label is retained as the block's speaker, not silently dropped.
+            if (speaker != null) assertTrue(case.text("id"), matching.any { it.speaker == speaker })
             matching.forEach {
                 assertEquals(case.text("id"), marker(case), it.russian)
                 assertEquals(case.text("sourceUrl"), it.translationSource?.url)
             }
             found += matching.size
         }
-        assertEquals(25, found)
+        assertEquals(26, found)
         assertTrue(ServiceBookIntegrity.valid(book))
         val restored = BookTranslationIndex.decode(index.encode())
         cases.forEach { assertEquals(it.text("sourceUrl"), restored.find(it.text("bookOriginal"))?.source?.url) }

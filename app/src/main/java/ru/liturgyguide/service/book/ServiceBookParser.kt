@@ -172,8 +172,8 @@ class ServiceBookParser {
             if (blocks.any { it.kind in setOf(BookBlockKind.PRAYER, BookBlockKind.SCRIPTURE) && it.russian == null })
                 add("Русский текст есть не для всех фрагментов. Для остальных можно открыть оригинал")
         }
-        val eventTitle = listOfNotNull(selected(document, "bg_worships_mainEvent")?.text(),
-            selected(document, "bg_worships_secondEvent")?.text()).filter { it != "-" && it.isNotBlank() }.joinToString(" · ").ifBlank { null }
+        val eventTitle = listOfNotNull(selectedEventTitle(document, "bg_worships_mainEvent"),
+            selectedEventTitle(document, "bg_worships_secondEvent")).joinToString(" · ").ifBlank { null }
         val sources = (listOf(BookSource("Азбука веры: Богослужения сегодня", key.sourceUrl())) +
             blocks.mapNotNull { it.translationSource }).distinct()
         val book = ServiceBook(key = key, title = BookText.clean(title), sourceUrl = key.sourceUrl(),
@@ -186,17 +186,65 @@ class ServiceBookParser {
     private fun selected(document: Document, id: String): Element? = document.selectFirst("#$id option[selected]")
         ?: document.selectFirst("#$id option")
 
+    private fun selectedEventTitle(document: Document, id: String): String? {
+        val option = selected(document, id) ?: return null
+        val label = BookText.clean(option.text()).takeIf { it.isNotEmpty() && it != "-" } ?: return null
+        val shortened = Regex("(?:\\.\\.\\.|…)$")
+        if (!shortened.containsMatchIn(label)) return label
+        val prefix = BookText.normalized(shortened.replace(label, ""))
+        // A tiny shared label such as 'св...' cannot identify which event the tooltip names.
+        if (prefix.length < 24) return label
+        val control = document.selectFirst("#$id") ?: return label
+        val instruction = when (id) {
+            "bg_worships_mainEvent" -> "Выбрать основное событие"
+            "bg_worships_secondEvent" -> "Выбрать второе событие"
+            else -> return label
+        }
+        val tooltip = control.attr("title")
+        if (tooltip.length > 2_000 || tooltip.any { it == '<' || it == '>' || (it.isISOControl() && it !in "\r\n\t") }) return label
+        val cleaned = BookText.clean(tooltip)
+        if (!cleaned.startsWith("$instruction ")) return label
+        val full = cleaned.removePrefix("$instruction ")
+        val normalized = BookText.normalized(full)
+        if (full.length > 1_000 || shortened.containsMatchIn(full) || normalized.length <= prefix.length || !normalized.startsWith(prefix)) return label
+        // A stale tooltip may belong to another option. A full label must agree with the
+        // selected prefix and must not also identify a different entry in this control.
+        val ambiguous = control.select("option").any { other ->
+            if (other === option) false else {
+                val otherLabel = BookText.clean(other.text())
+                val otherPrefix = BookText.normalized(shortened.replace(otherLabel, ""))
+                otherPrefix.isNotEmpty() && if (shortened.containsMatchIn(otherLabel)) normalized.startsWith(otherPrefix)
+                    else normalized == otherPrefix
+            }
+        }
+        return if (ambiguous) label else full
+    }
+
     private fun options(document: Document, id: String): List<BookVariantOption> = document.select("#$id option").map {
         BookVariantOption(it.attr("value"), BookText.clean(it.text()))
     }
 
     private fun isRubric(text: String): Boolean {
         val normalized = BookText.normalized(text)
+        if (normalized in verifiedRussianRubrics) return true
         if (normalized.startsWith("в положенное время") || normalized.startsWith("по причащении же да хранит")) return true
         return Regex("^(диакон|священник|иерей|лик|чтец|хор|затем|и священник|и диакон|и читаем|по окончании|при этом) ")
             .containsMatchIn(normalized) && Regex("\\b(читает|читают|произносит|поет|поют|возглашает|говорит|поклоняется|совершает|кадит|открывает|целует|отвечает|молится|предлагает)\\b")
             .containsMatchIn(normalized) && BookText.withoutSpeaker(text).first == null
     }
+
+    // Whole Russian directions verified in the published full liturgy. Matching the entire
+    // sentence prevents a direction followed by spoken prayer from being labelled as Russian.
+    private val verifiedRussianRubrics = setOf(
+        "Диакон же, поклонившись, отходит от своего места и стоит перед иконой Спасителя, держа орарь тремя перстами правой руки.",
+        "Здесь открываются Царские врата на малый вход.",
+        "Затем диакон подает священнику для целования св. Евангелие.",
+        "И, сотворив поклон, входит в св. алтарь, а за ним и священник. Диакон кладет св. Евангелие на св. престол.",
+        "Также диакон обводит орарем стоящих во храме, возглашая к ним громогласно:",
+        "Во время пения священник и диакон и сами читают Трисвятое, совершая и три поклона перед св. престолом.",
+        "Во время пения прокимна и чтения Апостола диакон кадит престол, алтарь, служащих, а также иконостас и весь народ.",
+        "И подает ему святое Евангелие."
+    ).map(BookText::normalized).toSet()
 
     private fun genericMeaning(kind: WorshipKind): String = when (kind) {
         WorshipKind.LITURGY -> "Общая молитва литургии. Читайте следующий фрагмент и прислушивайтесь к словам священника и хора"
