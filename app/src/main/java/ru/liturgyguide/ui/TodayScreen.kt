@@ -133,7 +133,7 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                                     subtitle = service.time + " · " + date.format(format))
                             }
                         } else {
-                            Text(if (loading) "Ищем расписание" else "Расписание пока не найдено", style = MaterialTheme.typography.titleLarge,
+                            Text(scheduleEmptyTitle(ownState, schedule?.publication != null || church.schedule.isNotEmpty()), style = MaterialTheme.typography.titleLarge,
                                 modifier = Modifier.testTag("today_schedule_empty"))
                             Text(scheduleEmptyDescription(ownState), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             if (!loading) OutlinedButton(onClick = onRefresh,

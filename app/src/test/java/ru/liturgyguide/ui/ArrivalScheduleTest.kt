@@ -67,6 +67,8 @@ class ArrivalScheduleTest {
     }
 
     @Test fun emptyStatusDistinguishesFailureFromAbsenceOfActualServices() {
+        assertEquals("Нет записей на эту дату", scheduleEmptyTitle(null, hasPublication = true))
+        assertEquals("Расписание пока не найдено", scheduleEmptyTitle(null, hasPublication = false))
         assertTrue(scheduleEmptyDescription(null).contains("не означает, что служб не будет"))
         assertTrue(scheduleEmptyDescription(cached().copy(status = InternetScheduleStatus.UNAVAILABLE)).contains("Не удалось обновить"))
         assertTrue(scheduleEmptyDescription(cached().copy(loading = true)).contains("Проверяем"))

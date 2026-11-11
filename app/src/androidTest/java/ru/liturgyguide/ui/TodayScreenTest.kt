@@ -40,7 +40,7 @@ class TodayScreenTest {
         launch(withServices(future), opened = opened)
         scrollTo("today_service_date").assertTextEquals("11 ноября")
         scrollTo("today_day_today").assertIsSelected()
-        scrollTo("today_schedule_empty").assertTextEquals("Расписание пока не найдено")
+        scrollTo("today_schedule_empty").assertTextEquals("Нет записей на эту дату")
         compose.onNodeWithTag("today_choose_unknown_service").assertDoesNotExist()
         scrollTo("today_day_tomorrow").performClick()
         scrollTo("today_service_date").assertTextEquals("12 ноября")

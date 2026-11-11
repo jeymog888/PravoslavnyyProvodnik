@@ -270,7 +270,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                                 }
                             }
                         } else {
-                            Text(if (ownState?.loading == true) "Ищем расписание" else "Расписание пока не найдено",
+                            Text(scheduleEmptyTitle(ownState, schedule.publication != null || church.schedule.isNotEmpty()),
                                 style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("church_schedule_empty"))
                             Text(scheduleEmptyDescription(ownState), style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)

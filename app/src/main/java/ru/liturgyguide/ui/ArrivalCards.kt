@@ -83,6 +83,12 @@ internal fun scheduleEmptyDescription(state: InternetScheduleState?): String = w
     else -> "Пока нет подтвержденных записей на эту дату. Это не означает, что служб не будет"
 }
 
+internal fun scheduleEmptyTitle(state: InternetScheduleState?, hasPublication: Boolean): String = when {
+    state?.loading == true -> "Ищем расписание"
+    hasPublication -> "Нет записей на эту дату"
+    else -> "Расписание пока не найдено"
+}
+
 @Composable
 internal fun ArrivalCard(modifier: Modifier = Modifier, accent: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
     Surface(modifier.fillMaxWidth(), color = if (accent) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
