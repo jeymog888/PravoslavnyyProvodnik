@@ -16,6 +16,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import ru.liturgyguide.di.AppContainer
 import ru.liturgyguide.model.PlayerLine
+import ru.liturgyguide.model.ServiceBookKey
 import ru.liturgyguide.service.*
 import java.time.Clock
 import java.time.Instant
@@ -42,13 +43,27 @@ class UnifiedPlayerFlowTest {
         val encodedMarker = Gson().toJson(ServiceSession("beginning", instant.toEpochMilli()))
         check(preferences.edit().clear().putBoolean("dark", false).putString(ReadingContextStore.CONTEXT_KEY, encodedContext)
             .putString("session", encodedMarker).putString("stage_id", "beginning").putString(ServicePlaybackStore.PLAYBACK_KEY, "broken").commit())
-        compose.setContent { AppNavigation(container, Clock.fixed(instant, ZoneOffset.UTC), monotonic::get) }
+        val before = preferences.all.toMap()
+        val recoveryBooks = NavigationMigrationBooks().apply { fail = true }
+        val recoveryContainer = AppContainer(context,
+            scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules, booksOverride = recoveryBooks)
+        compose.setContent { AppNavigation(recoveryContainer, Clock.fixed(instant, ZoneOffset.UTC), monotonic::get) }
         compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("reading_restore_notice"))
         compose.onNodeWithTag("reading_restore_notice").assertIsDisplayed()
         compose.onNodeWithTag("resume_guide").assertDoesNotExist()
         assertEquals("broken", preferences.getString(ServicePlaybackStore.PLAYBACK_KEY, null))
-        compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("start_guide"))
-        compose.onNodeWithTag("start_guide").performClick()
+        // Today's published services have ended; the home card may correctly point to tomorrow.
+        // Choose the exact old date explicitly, enter BOOK, then accept its offline common-order fallback.
+        compose.onNodeWithTag("nav_church").performClick()
+        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("schedule_today"))
+        compose.onNodeWithTag("schedule_today").assertIsSelected()
+        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("church_read_liturgy"))
+        compose.onNodeWithTag("church_read_liturgy").performScrollTo().assertIsDisplayed().performClick()
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("book_load_error").fetchSemanticsNodes().isNotEmpty() }
+        assertEquals(listOf(ServiceBookKey("2026-11-08")), recoveryBooks.requests.toList())
+        assertEquals("A failed full-book load is not permission to replace the corrupt legacy snapshot", before, preferences.all)
+        compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithText("Открыть общий порядок литургии").performScrollTo().assertIsDisplayed().performClick()
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Начало литургии")
         compose.onFeedLine(plan().tracksByStage.getValue("beginning").first(), 0).assertIsDisplayed().assertIsSelected()
         assertPaused()
@@ -58,6 +73,7 @@ class UnifiedPlayerFlowTest {
         assertTrue(ServicePlaybackStore(preferences).restore(plan(), accepted) is PlaybackRestoreResult.Valid)
         compose.mainClock.advanceTimeBy(6_000)
         assertEquals(accepted, saved().context)
+        assertPaused()
         compose.onNodeWithTag("main_content").assertDoesNotExist()
     }
 

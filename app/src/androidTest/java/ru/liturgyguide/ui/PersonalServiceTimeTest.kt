@@ -142,6 +142,8 @@ class PersonalServiceTimeTest {
         compose.onNodeWithText("Поздняя литургия").assertIsDisplayed()
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("personal_start_summary"))
         compose.onNodeWithTag("personal_start_summary").assertTextEquals("10:00 · Литургия")
+        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("church_details"))
+        compose.onNodeWithTag("church_details").performScrollTo().assertIsDisplayed().performClick()
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("edit_personal_time"))
         compose.onNodeWithTag("edit_personal_time").performClick()
         click("personal_time_remove")
