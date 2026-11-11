@@ -15,12 +15,13 @@ internal object ScheduleImageContinuation {
         setOf("чт", "четверг"), setOf("пт", "пятница"), setOf("сб", "суббота"), setOf("вс", "воскресенье"))
     private val contact = Regex("(?iu)^\\s*(?:телефон(?:\\s+храма)?|тел\\.?)(?=\\s|:)")
     private val phone = Regex("(?<!\\d)\\+?\\d[\\d() .-]{8,28}\\d(?!\\d)")
-    private val cancellation = Regex("(?iu)(отмен|перенес|перенос|не\\s+(?:будет|соверша|служит|состоится|провод)|без\\s+(?:литургии|богослужения))")
+    private val cancellation = ScheduleCancellation
 
     /** Call only for consecutive, successfully fetched image links from the same HTML page. */
     fun join(first: ScheduleDocument, next: ScheduleDocument, parentUrl: String, parish: Parish): ScheduleDocument? {
         if (first.format != "image" || next.format != "image" || first.pages.size != 1 || next.pages.size != 1 ||
             ScheduleUrl.publicSource(parentUrl) == null || first.sourceUrl == next.sourceUrl) return null
+        if (first.pages.any { it.ocrFailure != null } || next.pages.any { it.ocrFailure != null }) return null
         val before = first.pages.single().lines
         val after = next.pages.single().lines
         if (before.isEmpty() || after.isEmpty() || before.size + after.size > 2_000) return null

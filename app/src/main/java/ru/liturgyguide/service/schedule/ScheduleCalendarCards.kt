@@ -16,7 +16,7 @@ internal object ScheduleCalendarCards {
     private val visibleDate = DateTimeFormatterBuilder().parseCaseInsensitive()
         .appendPattern("EEEE, d MMMM uuuu").toFormatter(Locale.forLanguageTag("ru"))
         .withResolverStyle(ResolverStyle.STRICT)
-    private val cancellation = Regex("(?iu)(отмен|перенес|перенос|не\\s+(?:будет|соверша|служит|состоится|провод)|без\\s+(?:литургии|богослужения))")
+    private val cancellation = ScheduleCancellation
 
     private val serviceName = Regex("(?iu)(богослужен|служб[ауыое]|литург|вечерн|утрен|всенощ|молеб|панихид)")
 

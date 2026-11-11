@@ -29,6 +29,14 @@ internal object ScheduleVenue {
     // Keep the parish identity, including its locality, but not the legal/diocesan suffix
     // as a fictional second building. Unknown signatures still go through strict matching.
     private val legalParish = Regex("(?iu)^(?:местная\\s+)?религиозная\\s+организация\\s+(?:православный\\s+)?приход\\s+(.+?)\\s+[а-яё-]+\\s+епархии\\s+русской\\s+православной\\s+церкви(?:\\s*\\([^)]*\\))?\\s*$")
+    private val pairedApostles = Regex("(?iu)(?<![а-яё])(?:(?:святых|свв\\.?|первоверховных|верховных|славных|всехвальных)\\s+)*(?:апостолов\\s+)?петра\\s+и\\s+павла(?![а-яё])|(?<![а-яё])петропавловск(?:ий|ого|ом|ая|ой|ую|ое|ому|ими|их)(?![а-яё])")
+    private val namedLocation = Regex("(?iu)(?:^|\\s)(?:на|в(?!\\s+честь)|при|у)\\s+")
+
+    private fun dedicationAliases(text: String): String {
+        // Only the dedication before an address/associated-site suffix is normalized.
+        val split = namedLocation.find(text)?.range?.first ?: text.length
+        return text.substring(0, split).replace(pairedApostles, "pairedapostles") + text.substring(split)
+    }
 
     private fun parishInLegalName(text: String): String? = legalParish.matchEntire(text.trim())
         ?.groupValues?.get(1)?.takeIf { building.containsMatchIn(it) && !service.containsMatchIn(it) && !clock.containsMatchIn(it) }
@@ -77,8 +85,9 @@ internal object ScheduleVenue {
     fun matches(label: String?, parish: Parish?): Boolean {
         if (label.isNullOrBlank()) return true
         if (parish == null) return false
-        val target = "${parish.name} ${parish.shortName} ${parish.city} ${parish.address}"
-        val wanted = tokens(label)
+        // The paired dedication cannot be supplied by a street or city of that name.
+        val target = "${dedicationAliases(parish.name)} ${dedicationAliases(parish.shortName)} ${parish.city} ${parish.address}"
+        val wanted = tokens(dedicationAliases(label))
         val available = tokens(target)
         // Relative building names are meaningful only when explicitly present in the selection.
         val relative = qualifiers.filter { prefix -> wanted.any { it.startsWith(prefix) } }

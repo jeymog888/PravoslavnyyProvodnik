@@ -17,7 +17,12 @@ data class ScheduleDocumentLine(val text: String, val confidence: Int = 100, val
     val serviceText: String? = null,
     // Only complete known calendar names reconstructed in a proven column may be removed.
     val venueEvidence: String? = null)
-data class ScheduleDocumentPage(val lines: List<ScheduleDocumentLine>)
+enum class ScheduleOcrFailure { UNSUPPORTED_LAYOUT, CONFLICTING_EVIDENCE }
+data class ScheduleDocumentPage(val lines: List<ScheduleDocumentLine>,
+    // Audit-only text from every completed pass, including an unsuccessful repair. Never
+    // parse it as another page of events or silently discard conflicting safety evidence.
+    val rawOcrEvidence: List<String>? = null,
+    val ocrFailure: ScheduleOcrFailure? = null)
 data class ScheduleDocument(val sourceUrl: String, val format: String, val pages: List<ScheduleDocumentPage>)
 enum class ScheduleParseDisposition { PARSED, UNSUPPORTED, REJECTED }
 data class ScheduleParseResult(
@@ -26,7 +31,9 @@ data class ScheduleParseResult(
     val withdrawnDates: Set<String> = emptySet(),
     val withdrawnStarts: Set<String> = emptySet(),
     val withdrawsAll: Boolean = false,
-    val yearInferred: Boolean = false
+    val yearInferred: Boolean = false,
+    // Scope could not be proved. Stop this source; this is not a claim of a global withdrawal.
+    val safetyConflict: Boolean = false
 )
 
 fun interface ScheduleDocumentExtractor {

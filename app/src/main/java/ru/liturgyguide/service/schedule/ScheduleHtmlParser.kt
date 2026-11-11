@@ -24,7 +24,7 @@ object ScheduleHtmlParser {
     private val exactLiturgy = Regex("(?iu)^(?:(?:божественная|ранняя|поздняя)\\s+)*литургия\\b")
     private val differentVenue = Regex("(?iu)(приписн|больнич|госпитал|придел|(?:нижн|верхн|нов|стар|мал|больш)[а-яё]{0,5}\\s+(?:храм|собор)|в\\s+(?:[а-яё-]+\\s+){0,4}(?:храме|соборе|часовне)|служб[аы]\\s+(?:соверш|проход))")
     private val globalVenue = Regex("(?iu)(?:все\\s+(?:богослужения|службы)|богослужения\\s+месяца).{0,160}(?:совершаются|проходят|служатся)")
-    private val cancelled = Regex("(?iu)(отмен|перенес|перенос|не\\s+(?:будет|соверша|служит|состоится|провод)|без\\s+(?:литургии|богослужения))")
+    private val cancelled = ScheduleCancellation
 
     fun parse(html: String, sourceUrl: String, today: LocalDate): List<InternetService> =
         parse(Jsoup.parse(html, sourceUrl), today)

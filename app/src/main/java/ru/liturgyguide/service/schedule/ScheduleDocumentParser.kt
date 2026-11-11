@@ -22,13 +22,17 @@ object ScheduleDocumentParser {
     private val weekday = Regex("(?iu)(?<![а-яё])(пн|вт|ср|чт|пт|сб|вс|понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)\\.?(?![а-яё])")
     private val weekdays = listOf(setOf("пн", "понедельник"), setOf("вт", "вторник"), setOf("ср", "среда"), setOf("чт", "четверг"), setOf("пт", "пятница"), setOf("сб", "суббота"), setOf("вс", "воскресенье"))
     private val service = Regex("(?iu)(литурги|всенощ|вечерн|утрен|исповед|молеб|панихид|часы|лития|акафист)")
-    private val cancellation = Regex("(?iu)(отмен|перенес|перенос|не\\s+(?:будет|соверша|служит|состоится|провод)|без\\s+(?:литургии|богослужения))")
+    private val cancellation = ScheduleCancellation
     private val generalServices = Regex("(?iu)(?:все\\s+(?:службы|богослужения)|богослужения|службы)")
     private val exactLiturgy = Regex("(?iu)^(?:(?:божественная|ранняя|поздняя)\\s+)*литургия\\b")
 
     fun parse(document: ScheduleDocument, today: LocalDate, parish: Parish? = null): List<InternetService> = inspect(document, today, parish).events
 
     fun inspect(document: ScheduleDocument, today: LocalDate, parish: Parish? = null): ScheduleParseResult {
+        // A supplementary pass can reveal a withdrawal whose scope is not readable. Do
+        // not revive primary-pass events, or invent which dates/buildings were withdrawn.
+        if (document.pages.any { it.ocrFailure == ScheduleOcrFailure.CONFLICTING_EVIDENCE })
+            return ScheduleParseResult(ScheduleParseDisposition.REJECTED, safetyConflict = true)
         val events = mutableListOf<InternetService>()
         val cancelledDates = mutableSetOf<LocalDate>()
         val cancelledStarts = mutableSetOf<String>()
@@ -36,6 +40,7 @@ object ScheduleDocumentParser {
         var cancelledAll = false
         val inferredMonths = ScheduleYearInference.months(document, today)
         document.pages.take(12).forEachIndexed { pageIndex, page ->
+            if (page.ocrFailure != null) return@forEachIndexed
             data class HeadingScope(val cancelled: Boolean, val venue: String?, val date: LocalDate?)
             val headings = sortedMapOf<Int, HeadingScope>()
             var sectionVenue: String? = null

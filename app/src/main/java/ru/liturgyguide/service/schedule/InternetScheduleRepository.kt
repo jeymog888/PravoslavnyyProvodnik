@@ -262,6 +262,15 @@ class InternetScheduleRepository(
                     ?: ScheduleParseResult(ScheduleParseDisposition.UNSUPPORTED)
                 format = selectedDocument?.format ?: "unknown"
             }
+            if (parsed.safetyConflict) {
+                // A newer OCR pass can contradict an already-readable page from this same
+                // source. Its unknown scope cannot be turned into global withdrawal dates,
+                // nor ignored while returning the earlier HTML as a successful publication.
+                onSafety(website, publicationSource, false)
+                rejectedPublication = true
+                bestEvents = emptyList(); source = publicationSource
+                break
+            }
             val withdraws = parsed.withdrawsAll || parsed.withdrawnDates.isNotEmpty() || parsed.withdrawnStarts.isNotEmpty()
             hasWithdrawal = hasWithdrawal || withdraws
             if (parsed.disposition == ScheduleParseDisposition.REJECTED || withdraws) {

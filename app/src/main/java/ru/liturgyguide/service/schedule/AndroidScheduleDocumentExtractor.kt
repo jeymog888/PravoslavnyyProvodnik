@@ -83,11 +83,52 @@ class AndroidScheduleDocumentExtractor(context: Context) : ScheduleDocumentExtra
                         try {
                             checkCancelled()
                             val engine = ocr()
+                            engine.setPageSegMode(TessBaseAPI.PageSegMode.PSM_AUTO)
+                            engine.setVariable("hocr_char_boxes", "0")
                             engine.setImage(bitmap)
                             // getHOCRText supports stop(), unlike the synchronous getUTF8Text convenience method.
-                            val hocr = engine.getHOCRText(0)
+                            val hocr = engine.getHOCRText(0).orEmpty()
                             if (complete.get()) throw IOException("Recognition cancelled")
-                            return ScheduleDocumentPage(ScheduleOcrLayout.fromHocr(hocr.orEmpty()))
+                            if (ScheduleSuperscriptTable.needsSupplement(hocr)) {
+                                // At most two bounded supplementary passes for a proven dated
+                                // table. Original-scale headings and enlarged minutes complement
+                                // one another; conflicting valid evidence is never voted away.
+                                val scale = minOf(1.7, sqrt(MAX_PIXELS.toDouble() / bitmap.width / bitmap.height)).coerceAtLeast(1.0)
+                                val width = (bitmap.width * scale).toInt().coerceAtLeast(bitmap.width)
+                                val height = (bitmap.height * scale).toInt().coerceAtLeast(bitmap.height)
+                                val enlarged = if (width == bitmap.width && height == bitmap.height) bitmap
+                                    else Bitmap.createScaledBitmap(bitmap, width, height, true)
+                                var sparse = ""
+                                var supplemental = ""
+                                try {
+                                    checkCancelled()
+                                    engine.clear()
+                                    if (engine.setVariable("hocr_char_boxes", "1")) {
+                                        engine.setPageSegMode(TessBaseAPI.PageSegMode.PSM_SPARSE_TEXT)
+                                        engine.setImage(bitmap)
+                                        sparse = engine.getHOCRText(0).orEmpty()
+                                        checkCancelled()
+                                        supplemental = if (enlarged === bitmap) sparse else {
+                                            engine.clear()
+                                            engine.setImage(enlarged)
+                                            engine.getHOCRText(0).orEmpty()
+                                        }
+                                        checkCancelled()
+                                    }
+                                } catch (_: Exception) {
+                                    // Preserve any completed supplementary pass, even if the next
+                                    // one fails. It may already contain a conflicting cancellation.
+                                    checkCancelled()
+                                } finally {
+                                    engine.clear()
+                                    engine.setVariable("hocr_char_boxes", "0")
+                                    engine.setPageSegMode(TessBaseAPI.PageSegMode.PSM_AUTO)
+                                    if (enlarged !== bitmap) enlarged.recycle()
+                                }
+                                return ScheduleSuperscriptTable.inspect(hocr, sparse, supplemental,
+                                    width.toDouble() / bitmap.width, height.toDouble() / bitmap.height)
+                            }
+                            return ScheduleDocumentPage(ScheduleOcrLayout.fromHocr(hocr))
                         } finally { api?.clear(); bitmap.recycle() }
                     }
                     val pages = if (pdf) {
@@ -130,7 +171,7 @@ class AndroidScheduleDocumentExtractor(context: Context) : ScheduleDocumentExtra
                             ?: throw IOException("Cannot read schedule image")
                         listOf(recognize(bitmap))
                     }
-                    if (pages.all { it.lines.isEmpty() }) throw IOException("No readable schedule text")
+                    if (pages.all { it.lines.isEmpty() && it.ocrFailure == null }) throw IOException("No readable schedule text")
                     if (complete.compareAndSet(false, true)) {
                         deadline.getAndSet(null)?.cancel(false)
                         continuation.resume(ScheduleDocument(response.url, if (pdf) "pdf" else "image", pages))

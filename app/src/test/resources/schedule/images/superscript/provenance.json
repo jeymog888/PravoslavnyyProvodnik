@@ -1,0 +1,42 @@
+{
+  "url": "https://xn--90azbbajd.xn--p1ai/wp-content/uploads/2026/11/88.-расписание-с-9-по-15-ноября_page-0001.jpg",
+  "bytes": 300092,
+  "purpose": "Public timetable OCR regression: actual bundled Russian Tesseract model on Android; no fabricated clock values",
+  "capturedAt": "2026-11-12",
+  "originalBitmap": {
+    "width": 900,
+    "height": 1274
+  },
+  "supplementalBitmap": {
+    "width": 1530,
+    "height": 2165
+  },
+  "passes": [
+    {
+      "file": "tomsk-auto.hocr",
+      "sha256": "0841a60dba5bb875fb4521f566542bd14a32da741a9baef94cad830691528058",
+      "psm": 3,
+      "characterBoxes": false
+    },
+    {
+      "file": "tomsk-sparse-enlarged.hocr",
+      "sha256": "d5c8ae40f382f6c8266e7dc98b265d6917387046bcacfaf23441dad7cfcb6389",
+      "psm": 11,
+      "characterBoxes": true
+    },
+    {
+      "file": "tomsk-sparse.hocr",
+      "sha256": "0b54e01d9b7f4a6a4f5daeefe7cf22c4d37a0552a9196d098bc6c35c4e2c8185",
+      "psm": 11,
+      "characterBoxes": true,
+      "enlarged": false
+    }
+  ],
+  "repairCoverage": "Only intervals between two explicitly printed consecutive day headings are imported. The final band has no proven closing boundary and is excluded; this fixture is not evidence of a fully imported week.",
+  "safetyRegressions": [
+    "Supplementary cancellation survives failed later pass",
+    "Missing interior date rejects repair",
+    "Missing final date never transfers its clocks to the preceding date",
+    "Ordinary HH:mm conflicts are checked in every pass"
+  ]
+}

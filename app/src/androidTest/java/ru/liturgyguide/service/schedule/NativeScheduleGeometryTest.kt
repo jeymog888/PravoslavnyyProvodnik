@@ -12,6 +12,39 @@ import org.junit.Test
 
 /** Opt-in diagnostic: retain public OCR geometry before the production layout flattens it. */
 class NativeScheduleGeometryTest {
+    @Test fun captureSuperscriptClockTableWithAlternativeSegmentation() = runBlocking {
+        assumeTrue(InstrumentationRegistry.getArguments().getString("captureTomskGeometry") == "true")
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val output = context.filesDir.resolve("tomsk-geometry-10").apply { mkdirs() }
+        val model = output.resolve("model/tessdata/rus.traineddata").apply { parentFile!!.mkdirs() }
+        context.assets.open("ocr/rus.traineddata").use { input -> model.outputStream().use { input.copyTo(it) } }
+        val url = "https://xn--90azbbajd.xn--p1ai/wp-content/uploads/2026/11/88.-расписание-с-9-по-15-ноября_page-0001.jpg"
+        val data = UrlConnectionScheduleTransport(timeoutMillis = 20_000).fetch(url).bytes
+        val bitmap = requireNotNull(BitmapFactory.decodeByteArray(data, 0, data.size))
+        val engine = TessBaseAPI()
+        try {
+            assertTrue(engine.init(model.parentFile!!.parentFile!!.absolutePath, "rus", TessBaseAPI.OEM_LSTM_ONLY))
+            for (mode in listOf(TessBaseAPI.PageSegMode.PSM_AUTO, TessBaseAPI.PageSegMode.PSM_SINGLE_BLOCK,
+                TessBaseAPI.PageSegMode.PSM_SPARSE_TEXT)) {
+                engine.setPageSegMode(mode); engine.setImage(bitmap)
+                output.resolve("psm-$mode.hocr").writeText(engine.getHOCRText(0).orEmpty())
+                engine.clear()
+            }
+            assertTrue(engine.setVariable("hocr_char_boxes", "1"))
+            engine.setPageSegMode(TessBaseAPI.PageSegMode.PSM_SPARSE_TEXT); engine.setImage(bitmap)
+            output.resolve("psm-11-characters.hocr").writeText(engine.getHOCRText(0).orEmpty())
+            engine.clear()
+            val enlarged = Bitmap.createScaledBitmap(bitmap, (bitmap.width * 1.7).toInt(), (bitmap.height * 1.7).toInt(), true)
+            try {
+                engine.setImage(enlarged)
+                output.resolve("psm-11-characters-enlarged.hocr").writeText(engine.getHOCRText(0).orEmpty())
+                engine.clear()
+            } finally { enlarged.recycle() }
+            output.resolve("source.json").writeText(Gson().toJson(mapOf("url" to url,
+                "width" to bitmap.width, "height" to bitmap.height, "bytes" to data.size)))
+        } finally { engine.recycle(); bitmap.recycle(); model.parentFile!!.parentFile!!.deleteRecursively() }
+    }
+
     @Test fun capturePublicMonthlyTablesWithTheBundledRussianModel() = runBlocking {
         assumeTrue(InstrumentationRegistry.getArguments().getString("captureScheduleGeometry") == "true")
         val context = InstrumentationRegistry.getInstrumentation().targetContext

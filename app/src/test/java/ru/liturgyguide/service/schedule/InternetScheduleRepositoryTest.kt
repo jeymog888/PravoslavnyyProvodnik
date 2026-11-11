@@ -240,6 +240,51 @@ class InternetScheduleRepositoryTest {
         assertEquals(listOf("10:00"), result.publication?.events?.map { it.time })
     }
 
+    @Test fun `new OCR conflict invalidates older HTML and cached events without inventing a global cancellation`() = runBlocking {
+        val selected = parish(site = "https://example.org/")
+        val cache = Cache()
+        var includeImage = false
+        val calls = mutableListOf<String>()
+        val repository = InternetScheduleRepository(ScheduleTransport { url ->
+            calls += url
+            if (url.endsWith("schedule.jpg")) response(url, "image bytes", "image/jpeg")
+            else response(url, html + if (includeImage) "<a href='/schedule.jpg'>Новое расписание</a>" else "")
+        }, cache, ScheduleDocumentExtractor { response -> ScheduleDocument(response.url, "image", listOf(
+            ScheduleDocumentPage(emptyList(), rawOcrEvidence = listOf("Все службы отменены"),
+                ocrFailure = ScheduleOcrFailure.CONFLICTING_EVIDENCE))) },
+            siteResolver = ScheduleSiteResolver { error("Conflicting source must not fall through to another publication") })
+        assertNotNull(repository.refresh(selected, now).publication)
+        includeImage = true
+        val rejected = repository.refresh(selected, now.plusSeconds(60), force = true)
+        assertTrue(calls.any { it.endsWith("schedule.jpg") })
+        assertNull(rejected.publication)
+        assertTrue(rejected.publicationRejected)
+        assertFalse(rejected.sourceHasWithdrawals)
+        assertEquals("https://example.org/schedule.jpg", rejected.sourceUrl)
+        assertEquals(rejected, repository.cached(selected))
+        val offline = InternetScheduleRepository(ScheduleTransport { throw IOException("offline") }, cache,
+            siteResolver = ScheduleSiteResolver { error("Persisted rejection must not search an alternative") })
+        val reopened = offline.refresh(selected, now.plusSeconds(120), force = true)
+        assertNull(reopened.publication)
+        assertTrue(reopened.publicationRejected)
+        assertFalse(reopened.sourceHasWithdrawals)
+        assertEquals(reopened, offline.cached(selected))
+    }
+
+    @Test fun `an ordinary document for another building does not erase a valid same source schedule`() = runBlocking {
+        val selected = parish(site = "https://example.org/").copy(name = "Никольский храм", shortName = "Никольский храм")
+        val repository = InternetScheduleRepository(ScheduleTransport { url ->
+            if (url.endsWith("schedule.jpg")) response(url, "image bytes", "image/jpeg")
+            else response(url, html + "<a href='/schedule.jpg'>Расписание соседнего храма</a>")
+        }, Cache(), ScheduleDocumentExtractor { response -> ScheduleDocument(response.url, "image", listOf(
+            ScheduleDocumentPage(listOf(ScheduleDocumentLine("Казанский храм", headingLevel = 1),
+                ScheduleDocumentLine("10.11.2026 10:00 Литургия"))))) })
+        val result = repository.refresh(selected, now)
+        assertEquals(InternetScheduleStatus.READY, result.status)
+        assertEquals(listOf("09:00"), result.publication?.events?.map { it.time })
+        assertFalse(result.publicationRejected)
+    }
+
     @Test fun `external PDF filename returning HTML cannot publish another site or follow its links`() = runBlocking {
         val selected = parish(site = "https://example.org/")
         val cache = Cache()
