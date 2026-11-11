@@ -303,10 +303,13 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                         pendingSearch = null
                     }
                 }.testTag("book_content"),
-                state = list, contentPadding = PaddingValues(horizontal = 24.dp, vertical = 28.dp),
+                state = list, contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 28.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)) {
                 items(items, key = { it.id }) { item ->
-                    if (item.block == null) Column(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 4.dp),
+                    // Keep the top inset inside the header: LazyColumn's leading content
+                    // padding would reveal a clipped tail of the previous prayer after a jump.
+                    if (item.block == null) Column(Modifier.fillMaxWidth().padding(
+                        top = if (item.chapter.id == items.first().chapter.id) 28.dp else 12.dp, bottom = 4.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         if (item.chapter.id == items.first().chapter.id) {
                             Text(book.title, style = MaterialTheme.typography.headlineMedium)

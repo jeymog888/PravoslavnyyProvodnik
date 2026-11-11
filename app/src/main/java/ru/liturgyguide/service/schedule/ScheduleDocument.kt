@@ -115,6 +115,10 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
             lines += ScheduleDocumentLine("", endsTable = true)
         }
         fun walk(element: Element) {
+            if (element.hasClass("sch-day-item")) {
+                lines += ScheduleCalendarCards.extract(element, document.baseUri())
+                return
+            }
             val dayContainer = element.hasAttr("data-day")
             if (dayContainer) lines += ScheduleDocumentLine(element.attr("data-day"), startsDayContainer = true)
             when (element.tagName()) {

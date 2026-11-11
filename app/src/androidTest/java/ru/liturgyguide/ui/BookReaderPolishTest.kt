@@ -120,6 +120,15 @@ class BookReaderPolishTest {
         settle()
         assertEquals("chapter-25", saved().chapterId)
         compose.onNodeWithTag("book_chapter", useUnmergedTree = true).assertTextEquals("Раздел 26")
+        compose.onNodeWithTag("book_block_block-24").assertIsNotDisplayed()
+        assertEquals(BookAnchorKind.HEADER, saved().anchorKind)
+        assertEquals(0f, saved().fraction, .001f)
+        compose.onNodeWithTag("book_mode_russian").performClick()
+        settle()
+        compose.onNodeWithTag("book_chapter", useUnmergedTree = true).assertTextEquals("Раздел 26")
+        compose.onNodeWithTag("book_block_block-24").assertIsNotDisplayed()
+        assertEquals(BookAnchorKind.HEADER, saved().anchorKind)
+        assertEquals(0f, saved().fraction, .001f)
     }
 
     @Test fun compactTwoHundredPercentFooterKeepsNamedTargetsAndUsefulReadingSpace() {

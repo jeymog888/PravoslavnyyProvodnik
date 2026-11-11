@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html xml:lang="ru" lang="ru" >
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Расписание богослужений</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+	<meta name="cmsmagazine" content="95459823dbcf7555f8494acbff5d3d05" />
+    <link rel="shortcut icon" href="/local/templates/msm/favicon1.png" type="image/png">
+
+
+    <!-- Bootstrap core CSS -->
+    <link href="/local/templates/msm/css/bootstrap.css" rel="stylesheet">
+    <link href="/local/templates/msm/css/bootstrap-theme.min.css" rel="stylesheet">
+    <link href="/local/templates/msm/css/msm.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/local/templates/msm/js/slick/slick.css"/>
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <link href="/local/templates/msm/css/grid_style.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/local/templates/msm/css/jquery-ui.min.css">
+    <link href="/local/templates/msm/js/jplayer/jplayer.blue.monday.min.css" rel="stylesheet" type="text/css" />
+    <link href="/local/templates/msm/css/template_styles.css?v=6" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="/local/templates/msm/js/bootstrap.js"></script>
+
+    <script type="text/javascript" src="/local/templates/msm/js/slick/slick.min.js"></script>
+    <script src="/local/templates/msm/js/jquery-ui.js"></script>
+    <script type="text/javascript" src="/local/templates/msm/js/script.js?95619"></script>
+    <script type="text/javascript" src="/local/templates/msm/js/booksPM.js"></script>
+    <script type="text/javascript" src="/local/templates/msm/js/share.js"></script>
+
+    <script type="text/javascript" src="/local/templates/msm/js/main-page.js"></script>
+    <script type="text/javascript" src="/local/templates/msm/js/vert.js"></script>
+    <script type="text/javascript" src="/local/templates/msm/js/jplayer/jquery.jplayer.min.js"></script>
+    <script type="text/javascript">
+        //<![CDATA[
+        $(document).ready(function(){
+            $(".jp-jplayer.content_audio").each(function(){
+                if(!$(this).hasClass('audio_test'))
+                {
+                    var dataNumber = $(this).attr('data-num');
+                    var cl = 'jquery__content_jplayer_'+dataNumber;
+                    $(this).attr('id',cl);
+                    $(this).next().attr('id',"jp_content_container_"+dataNumber);
+                    var filePath = $(".content_audio_"+dataNumber).val();
+                    $(this).jPlayer({
+                        ready: function () {
+                            $(this).jPlayer("setMedia", {
+                                title: "Stirring of a fool",
+                                mp3: filePath
+                            });
+                        },
+                        play: function() { // To avoid multiple jPlayers playing together.
+                            $(this).jPlayer("pauseOthers");
+                        },
+                        swfPath: "../../js",
+                        cssSelectorAncestor: "#"+"jp_content_container_"+dataNumber,
+                        supplied: "mp3",
+                        wmode: "window",
+                        globalVolume: true,
+                        useStateClassSkin: true,
+                        autoBlur: false,
+                        smoothPlayBar: true,
+                        keyEnabled: true
+                    });
+                }
+            });
+
+            $(".jp-video.content_video").each(function(){
+                var dataNumber = $(this).attr('data-num');
+                var cl = 'jp_content_video_container_'+dataNumber;
+                $(this).attr('id',cl);
+                $(this).find(".jp-jplayer").attr('id','jquery_jplayer_content_video_'+dataNumber);
+                var filePath = $(".content_video_"+dataNumber).val();
+
+                $('#jquery_jplayer_content_video_'+dataNumber).jPlayer({
+                    ready: function () {
+                        $(this).jPlayer("setMedia", {
+                            m4v: filePath
+                        });
+                    },
+                    play: function() { // To avoid multiple jPlayers playing together.
+                        $(this).jPlayer("pauseOthers");
+                    },
+                    swfPath: "../../dist/jplayer",
+                    supplied: "m4v",
+                    cssSelectorAncestor: "#jp_content_video_container_"+dataNumber,
+                    globalVolume: true,
+                    useStateClassSkin: true,
+                    autoBlur: false,
+                    smoothPlayBar: true,
+                    keyEnabled: true
+                });
+            });
+        });
+        //]]>
+    </script>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="keywords" content="Серафим Роуз секуляризация дух времени" />
+<link href="/local/templates/msm/styles.css?1676637956376" type="text/css"  data-template-style="true"  rel="stylesheet" />
+<link href="/local/templates/msm/template_styles.css?1665351932123" type="text/css"  data-template-style="true"  rel="stylesheet" />
+<script src="/local/templates/msm/components/bitrix/news.list/workship/script.js?1545153969198"></script>
+
+    <!-- Yandex.Metrika counter --> <script type="text/javascript" > (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)}; m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)}) (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym"); ym(51757622, "init", { id:51757622, clickmap:true, trackLinks:true, accurateTrackBounce:true }); </script> <noscript><div><img src="https://mc.yandex.ru/watch/51757622" style="position:absolute; left:-9999px;" alt="" /></div></noscript> <!-- /Yandex.Metrika counter -->
+</head>
+<body>
+<!-- Wrapper -->
+<div class="wrapper">
+    <!-- mobile-menu -->
+    <div class="mobile-menu">
+        <div class="mobile-menu-container">
+
+            <nav class="top_menu--mobile">
+                <div class="menu-over"></div>
+                <!-- accordion-menu -->
+                
+
+
+<div class="top-menu-accordion" id="accordion-menu">
+                                <h3 class="acc-title">Монастырь</h3><div class="acc-block"><ul>
+                                                <li><a href="/monastyr/istoriya-obiteli/">История обители</a></li>
+                                                <li><a href="/monastyr/svyashchennomuchenik-ilarion/">Священномученик Иларион</a></li>
+                                                <li><a href="/monastyr/predstoyatel/">Предстоятель</a></li>
+                                                <li><a href="/monastyr/namestnik/">Наместник</a></li>
+                                                <li><a href="/monastyr/naselniki/">Насельники</a></li>
+                                                <li><a href="/monastyr/khramy-obiteli/">Храмы обители</a></li>
+                                                <li><a href="/monastyr/svyatyni-obitely/">Святыни обители</a></li>
+                                                <li><a href="/monastyr/turinskaya-plashchanitsa/">Туринская Плащаница</a></li>
+                                                <li><a href="/monastyr/svyato-serafimovskiy-skit/">Свято-Серафимовский скит</a></li>
+                                                <li><a href="/shedule-events/  ">Календарь событий</a></li>
+                                                <li><a href="/monastyr/kontakty/">Контакты</a></li>
+                                        </ul></div>                        <h3 class="acc-title">Богослужение</h3><div class="acc-block"><ul>
+                                                <li><a href="/bogosluzhenie/raspisanie-bogosluzheniy/">Расписание богослужений</a></li>
+                                                <li><a href="/bogosluzhenie/propovedi/">Проповеди</a></li>
+                                                <li><a href="/bogosluzhenie/audiozapisi-bogosluzheniy/">Аудиозаписи богослужений</a></li>
+                                                <li><a href="/calendar/">Сретенский месяцеслов</a></li>
+                                                <li><a href="/bogosluzhenie/podgotovka-k-kreshcheniyu/">Подготовка к Крещению</a></li>
+                                                <li><a href="/bogosluzhenie/podat-zapisku2/">Подать записку</a></li>
+                                                <li><a href="/bogosluzhenie/pomoshch-monastyryu/">Помочь монастырю</a></li>
+                                        </ul></div>                        <h3 class="acc-title">Гостям</h3><div class="acc-block"><ul>
+                                                <li><a href="/gostyam/karta-obiteli/">План обители</a></li>
+                                                <li><a href="/monastyr/khramy-obiteli/">Храмы обители</a></li>
+                                                <li><a href="/monastyr/svyatyni-obitely/">Святыни обители</a></li>
+                                                <li><a href="/gostyam/ekskursii0/">Экскурсии</a></li>
+                                                <li><a href="/gostyam/magazin-sretenie/">Магазин «Cретение»</a></li>
+                                                <li><a href="/gostyam/trapeznaya-nesvyatye-svyatye-0/">Трапезная «Несвятые святые»</a></li>
+                                                <li><a href="/bogosluzhenie/podat-zapisku2/">Подать записку</a></li>
+                                                <li><a href="/bogosluzhenie/pomoshch-monastyryu/">Помочь монастырю</a></li>
+                                        </ul></div>                        <h3 class="acc-title">Проекты</h3><div class="acc-block"><ul>
+                                                <li><a href="/proekty/izdatelstvo-monastyrya/">Издательство монастыря</a></li>
+                                                <li><a href="/proekty/khor-sretenskogo-monastyrya/">Хор Сретенского монастыря</a></li>
+                                                <li><a href="/proekty/pravoslavie-prosvetitelskie-kursy-dlya-miryan/">Просветительские курсы. Архив</a></li>
+                                                <li><a href="/proekty/prosvet-tsentr/">Духовно-просветительский центр</a></li>
+                                                <li><a href="/proekty/proekt-rodnaya-zemlya/">«Родная земля»</a></li>
+                                                <li><a href="/proekty/shkola-internat/">Школа-интернат</a></li>
+                                                <li><a href="/proekty/voskresnaya-shkola/">Воскресная школа</a></li>
+                                                <li><a href="/proekty/besedy-s-prikhozhanami/">Беседы с прихожанами</a></li>
+                                                <li><a href="/proekty/vsegda-zhivoy-tserkovnoslavyanskiy/">Всегда живой церковнославянский</a></li>
+                                                <li><a href="/proekty/palomnicheskiy-tsentr/">Паломнический центр</a></li>
+                                                <li><a href="/proekty/vystavka-novomuchenikii-ispovedniki-tserkvi-russkoy/">Выставка «Новомученики и Исповедники Церкви Русской»</a></li>
+                                        </ul></div>                        <h3 class="acc-title">Журнал</h3><div class="acc-block"><ul>
+                                                <li><a href="/zhurnal/j-zhizn-obiteli/">Жизнь обители</a></li>
+                                                <li><a href="/zhurnal/bog-i-chelovek/">Бог и человек</a></li>
+                                                <li><a href="/zhurnal/tserkov/">Церковь</a></li>
+                                                <li><a href="/zhurnal/svyatye/">Святые и подвижники благочестия</a></li>
+                                                <li><a href="/zhurnal/monashestvo/">Монашество</a></li>
+                                                <li><a href="/zhurnal/semya/">Семья</a></li>
+                                                <li><a href="/zhurnal/obshchestvo/">Общество</a></li>
+                                                <li><a href="/zhurnal/shkola-radosti/">Школа радости</a></li>
+                                                <li><a href="/authors/">Наши авторы</a></li>
+                                                <li><a href="/zhurnal/znachimye-daty-obiteli/">Значимые даты обители</a></li>
+                                                <li><a href="/zhurnal/p-palomnicheskiy-tsentr/">Паломнический центр</a></li>
+                                                <li><a href="/novosti-obiteli/novosti/">Новости</a></li>
+                                                <li><a href="/novosti-obiteli/anonsy/">Анонсы</a></li>
+                        </ul></div></div>                <!-- \\accordion-menu -->
+            </nav>
+        </div>
+    </div>
+    <!-- \\mobile-menu -->
+
+    <!-- Header -->
+    <header>
+        <!-- header-block -->
+                    <input type="hidden" name="idheaderelement" id="idheaderelement" value="635" />
+                <div style="background-image: url(/upload/iblock/1b0/1b09ac26130ca38d52f00d8a90253948.jpg);"
+             class="header-block  type04" >
+            <!-- container -->
+            <div class="container top-menu-container">
+
+                <div class="menu-button"></div>
+
+                <span class="corner left"></span>
+                <span class="corner right"></span>
+                <div class="top-menu-block">
+                    <div class="table100">
+                        <div class="td col-md-732">
+                            <!-- top-menu-nav -->
+                            <ul id="top-menu-nav">
+                                    <li class="top-menu_item"><a href="javascript:void(0)" class="main-item"><span>Монастырь</span></a><ul>
+                                                <li><a href="/monastyr/istoriya-obiteli/">История обители</a></li>
+                                                <li><a href="/monastyr/svyashchennomuchenik-ilarion/">Священномученик Иларион</a></li>
+                                                <li><a href="/monastyr/predstoyatel/">Предстоятель</a></li>
+                                                <li><a href="/monastyr/namestnik/">Наместник</a></li>
+                                                <li><a href="/monastyr/naselniki/">Насельники</a></li>
+                                                <li><a href="/monastyr/khramy-obiteli/">Храмы обители</a></li>
+                                                <li><a href="/monastyr/svyatyni-obitely/">Святыни обители</a></li>
+                                                <li><a href="/monastyr/turinskaya-plashchanitsa/">Туринская Плащаница</a></li>
+                                                <li><a href="/monastyr/svyato-serafimovskiy-skit/">Свято-Серафимовский скит</a></li>
+                                                <li><a href="/shedule-events/  ">Календарь событий</a></li>
+                                                <li><a href="/monastyr/kontakty/">Контакты</a></li>
+                                        </ul></li>                            <li class="top-menu_item"><a href="javascript:void(0)" class="main-item"><span>Богослужение</span></a><ul>
+                                                <li><a href="/bogosluzhenie/raspisanie-bogosluzheniy/">Расписание богослужений</a></li>
+                                                <li><a href="/bogosluzhenie/propovedi/">Проповеди</a></li>
+                                                <li><a href="/bogosluzhenie/audiozapisi-bogosluzheniy/">Аудиозаписи богослужений</a></li>
+                                                <li><a href="/calendar/">Сретенский месяцеслов</a></li>
+                                                <li><a href="/bogosluzhenie/podgotovka-k-kreshcheniyu/">Подготовка к Крещению</a></li>
+                                                <li><a href="/bogosluzhenie/podat-zapisku2/">Подать записку</a></li>
+                                                <li><a href="/bogosluzhenie/pomoshch-monastyryu/">Помочь монастырю</a></li>
+                                        </ul></li>                            <li class="top-menu_item"><a href="javascript:void(0)" class="main-item"><span>Гостям</span></a><ul>
+                                                <li><a href="/gostyam/karta-obiteli/">План обители</a></li>
+                                                <li><a href="/monastyr/khramy-obiteli/">Храмы обители</a></li>
+                                                <li><a href="/monastyr/svyatyni-obitely/">Святыни обители</a></li>
+                                                <li><a href="/gostyam/ekskursii0/">Экскурсии</a></li>
+                                                <li><a href="/gostyam/magazin-sretenie/">Магазин «Cретение»</a></li>
+                                                <li><a href="/gostyam/trapeznaya-nesvyatye-svyatye-0/">Трапезная «Несвятые святые»</a></li>
+                                                <li><a href="/bogosluzhenie/podat-zapisku2/">Подать записку</a></li>
+                                                <li><a href="/bogosluzhenie/pomoshch-monastyryu/">Помочь монастырю</a></li>
+                                        </ul></li>                            <li class="top-menu_item"><a href="javascript:void(0)" class="main-item"><span>Проекты</span></a><ul>
+                                                <li><a href="/proekty/izdatelstvo-monastyrya/">Издательство монастыря</a></li>
+                                                <li><a href="/proekty/khor-sretenskogo-monastyrya/">Хор Сретенского монастыря</a></li>
+                                                <li><a href="/proekty/pravoslavie-prosvetitelskie-kursy-dlya-miryan/">Просветительские курсы. Архив</a></li>
+                                                <li><a href="/proekty/prosvet-tsentr/">Духовно-просветительский центр</a></li>
+                                                <li><a href="/proekty/proekt-rodnaya-zemlya/">«Родная земля»</a></li>
+                                                <li><a href="/proekty/shkola-internat/">Школа-интернат</a></li>
+                                                <li><a href="/proekty/voskresnaya-shkola/">Воскресная школа</a></li>
+                                                <li><a href="/proekty/besedy-s-prikhozhanami/">Беседы с прихожанами</a></li>
+                                                <li><a href="/proekty/vsegda-zhivoy-tserkovnoslavyanskiy/">Всегда живой церковнославянский</a></li>
+                                                <li><a href="/proekty/palomnicheskiy-tsentr/">Паломнический центр</a></li>
+                                                <li><a href="/proekty/vystavka-novomuchenikii-ispovedniki-tserkvi-russkoy/">Выставка «Новомученики и Исповедники Церкви Русской»</a></li>
+                                        </ul></li>                            <li class="top-menu_item"><a href="javascript:void(0)" class="main-item"><span>Журнал</span></a><ul>
+                                                <li><a href="/zhurnal/j-zhizn-obiteli/">Жизнь обители</a></li>
+                                                <li><a href="/zhurnal/bog-i-chelovek/">Бог и человек</a></li>
+                                                <li><a href="/zhurnal/tserkov/">Церковь</a></li>
+                                                <li><a href="/zhurnal/svyatye/">Святые и подвижники благочестия</a></li>
+                                                <li><a href="/zhurnal/monashestvo/">Монашество</a></li>
+                                                <li><a href="/zhurnal/semya/">Семья</a></li>
+                                                <li><a href="/zhurnal/obshchestvo/">Общество</a></li>
+                                                <li><a href="/zhurnal/shkola-radosti/">Школа радости</a></li>
+                                                <li><a href="/authors/">Наши авторы</a></li>
+                                                <li><a href="/zhurnal/znachimye-daty-obiteli/">Значимые даты обители</a></li>
+                                                <li><a href="/zhurnal/p-palomnicheskiy-tsentr/">Паломнический центр</a></li>
+                                                <li><a href="/novosti-obiteli/novosti/">Новости</a></li>
+                                                <li><a href="/novosti-obiteli/anonsy/">Анонсы</a></li>
+                        </ul></li></ul>                            <!-- \\top-menu-nav -->
+                        </div>
+                        <div class="td col-md-732min">
+							<div class="top-right-container">
+								<a href="/bogosluzhenie/pomoshch-monastyryu/?s=#donation" class="button button-help">Помочь монастырю</a>
+                            <div class="search-container">
+                                <form method="get" action="/search/">
+                                    <input type="text" name="q" class="search-inp" placeholder="Что будем искать?" />
+                                </form>
+                            </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- \\container -->
+
+            <!-- content-header -->
+            <div class="content-header">
+                <a href="/" class="logo" title="Главная"></a>
+            </div>
+            <!-- \\content-header -->
+        </div>
+        <!-- \\header-block -->
+    </header>
+    <!-- Header END-->
+
+    <!-- Content -->
+    <div class="content-container">
+
+                <div class="container" >
+                        <!-- search-mobile -->
+            <div class="search-mobile col-sm-12">
+            <div class="top-right-container">
+				<a href="/bogosluzhenie/pomoshch-monastyryu/?s=#donation" class="button button-help">Помочь монастырю</a>
+                <div class="search-container">
+                    <form method="get" action="/search/" >
+                        <input type="text" name="q" class="search-inp" placeholder="Что будем искать?">
+                        <input type="submit" class="button" value="Найти" />
+                    </form>
+                </div>
+            </div>
+            </div>
+            <!-- search-mobile -->
+            <!-- col-center -->
+            <div class="col-sm-12 col-no-right">
+                <div class="breadcrumbs"><a href="/" title="Главная" >Главная</a> &nbsp;&gt;&nbsp;<a href="javascript:void(0)" title="Богослужение" >Богослужение</a> &nbsp;&gt;&nbsp;<span class="current-page">Расписание богослужений</span></div>                <div class="h1-block">
+                    <h1>Расписание богослужений</h1>
+                </div>
+  
+
+
+
+
+<!-- detail-top -->
+<div class="detail-top">
+    <div class="row">
+        <div class="col-xs-12 col-sm-8 col-md-6">
+			<span class="share-block">
+				Поделиться:
+				<a href="" class="share-vk"></a>
+				<a href="" class="share-fb"></a>
+				<a href="" class="share-ok"></a>
+				<a href="" class="share-e"></a>
+			</span>
+        </div>
+        <div class="col-xs-12 col-sm-4 col-md-6 text-right">
+            <a href="#" class="print"><span class="icon icon-print"></span>Распечатать</a>
+        </div>
+    </div>
+</div>
+<!-- \\detail-top -->
+<!-- schedule-container -->
+<div class="row">
+    <div class="col-xs-12">
+        <div class="schedule-container">
+            <div class="schedule-nav">
+    <div class="row">
+        <div class="col-xs-12 col-sm-6 col-md-6">
+            <a href="/bogosluzhenie/raspisanie-bogosluzheniy/?day=02.11.2026" class="nav-back">Предыдущая неделя</a>
+        </div>
+        <div class="col-xs-12 col-sm-6 col-md-6">
+            <a href="/bogosluzhenie/raspisanie-bogosluzheniy/?day=16.11.2026" class="nav-forward">Следующая неделя</a>
+        </div>
+    </div>
+</div>
+<!--\\-->
+<div class="schedule-block">
+    <!-- оформление -->
+    <div class="schedule-orn-top"></div>
+    <div class="sch-top-line"></div>
+    <div class="sch-left-line"></div>
+    <div class="sch-right-line"></div>
+    <div class="sch-bottom-line"></div>
+    <div class="sch-corner c1"></div>
+    <div class="sch-corner c2"></div>
+    <div class="sch-corner c3"></div>
+    <div class="sch-corner c4"></div>
+    <!-- \\оформление -->
+
+            <div class="schedule-content">
+                                    <!-- sch-day-item -->
+                    <div class="sch-day-item" id="09112026">
+                            <div class="sch-day-title">
+                                <div class="day-new  ">Понедельник, <span class="tolower" >9 ноября</span></div>
+                                <div class="day-old">27 октября ст. ст.</div>
+                                <div class="holiday">
+                                    <a href="/calendar/?day=09.11.2026">
+                                        Мученика Нестора Солунского                                                                            </a>
+                                </div>
+                            </div>
+                                                            <div class="sch-day-row">
+                                                                            <div class="td time">06:45</div>
+                                                                        <div class="td">
+                                        <p class="place"><a href="/monastyr/khramy-obiteli/khram-voskreseniya-khristova-i-novomuchenikov-i-ispovednikov-tserkvi-russkoy/">Храм Воскресения Христова и Новомучеников и Исповедников Церкви Русской</a></p>
+                                        <p>Братский молебен </p>
+                                    </div>
+                                    <div class="td">
+                                                                                <b>Служат:</b>
+                                        <br>
+                                                                                                                                                                            <span class="name">Игумен Иоанн</span><br>
+                                                                                    
+                                                                            </div>
+                                    <div class="td">
+                                                                            </div>
+                                </div>
+                                                            <div class="sch-day-row">
+                                                                            <div class="td time">08:00</div>
+                                                                        <div class="td">
+                                        <p class="place"><a href="/monastyr/khramy-obiteli/khram-voskreseniya-khristova-i-novomuchenikov-i-ispovednikov-tserkvi-russkoy/">Храм Воскресения Христова и Новомучеников и Исповедников Церкви Русской</a></p>
+                                        <p>Божественная Литургия </p>
+                                    </div>
+                                    <div class="td">
+                                                                                <b>Служат:</b>
+                                        <br>
+                                                                                                                                                                            <span class="name">Иеромонах Никита</span><br>
+                                                                                            <span class="name">Иеродиакон Роман</span><br>
+                                                                                    
+                                                                            </div>
+                                    <div class="td">
+                                                                                <b>Исповедуют: </b>
+                                        <br>
+                                                                                                                                    <span class="name">Иеромонах Агафангел</span><br>
+                                                                                                                                                                </div>
+                                </div>
+                                                            <div class="sch-day-row">
+                                                                            <div class="td time">18:00</div>
+                                                                        <div class="td">
+                                        <p class="place"><a href="/monastyr/khramy-obiteli/khram-sreteniya-vladimirskoy-ikony-bozhiey-materi/">Храм Сретения Владимирской иконы Божией Матери</a></p>
+                                        <p>Вечернее богослужение. Полиелей</p>
+                                    </div>
+                                    <div class="td">
+                                                                                                                            <span class="name"></span><br>
+                                        
+                                                                            </div>
+                                    <div class="td">
+                                                                            </div>
+                                </div>
+                                                    </div>
+                                    <!-- sch-day-item -->
+                    <div class="sch-day-item" id="10112026">
+                            <div class="sch-day-title">
+                                <div class="day-new  ">Вторник, <span class="tolower" >10 ноября</span></div>
+                                <div class="day-old">28 октября ст. ст.</div>
+                                <div class="holiday">
+                                    <a href="/calendar/?day=10.11.2026">
+                                        Святителя Димитрия, митрополита Ростовского                                                                            </a>
+                                </div>
+                            </div>
+                                                            <div class="sch-day-row">
+                                                                            <div class="td time">08:00</div>
+                                                                        <div class="td">
+                                        <p class="place"><a href="/monastyr/khramy-obiteli/khram-sreteniya-vladimirskoy-ikony-bozhiey-materi/">Храм Сретения Владимирской иконы Божией Матери</a></p>
+                                        <p>Божественная Литургия </p>
+                                    </div>
+                                    <div class="td">
+                                                                                <b>Служат:</b>
+                                        <br>
+                                                                                                                                                                            <span class="name">Иеромонах Лука</span><br>
+                                                                                            <span class="name">Иеродиакон Даниил (веч.)</span><br>
+                                                                                            <span class="name">Иеродиакон Роман</span><br>
+                                                                                    
+                                                                                    <b>Проповедует:</b>
+                                            <br>
+                                                                                            <span class="name">Послушник Павел</span><br>
+                                                                                                                        </div>
+                                    <div class="td">
+                                                                                <b>Исповедуют: </b>
+                                        <br>
+                                                                                                                                    <span class="name">Иеромонах Сергий</span><br>
+                                                                                                                                                                </div>
+                                </div>
+                                                            <div class="sch-day-row">
+                                                                            <div class="td time">18:00</div>
+                                                                        <div class="td">
+                                        <p class="place"><a href="/monastyr/khramy-obiteli/khram-sreteniya-vladimirskoy-ikony-bozhiey-materi/">Храм Сретения Владимирской иконы Божией Матери</a></p>
+                                        <p>Вечернее богослужение</p>
+                                    </div>
+                                    <div class="td">
+                                                                                                                            <span class="name"></span><br>
+                                        
+                                                                            </div>
+                                    <div class="td">
+                                                                            </div>
+                                </div>
+                                                    </div>
+                                    <!-- sch-day-item -->
+                    <div class="sch-day-item" id="11112026">
+                            <div class="sch-day-title">
+                                <div class="day-new  ">Среда, <span class="tolower" >11 ноября</span></div>
+                                <div class="day-old">29 октября ст. ст.</div>
+                                <div class="holiday">
+                                    <a href="/calendar/?day=11.11.2026">
+                                        Преподобномученицы Анастасии Римляныни                                                                            </a>
+                                </div>
+                            </div>
+                                                            <div class="sch-day-row">
+                                                                            <div class="td time">06:45</div>
+                                                                        <div class="td">
+                                        <p class="place"><a href="/monastyr/khramy-obiteli/khram-sreteniya-vladimirskoy-ikony-bozhiey-materi/">Храм Сретения Владимирской иконы Божией Матери</a></p>
+                                        <p>Братский молебен </p>
+                                    </div>
+                                    <div class="td">
+                                                                                <b>Служат:</b>
+                                        <br>
+                                                                                                                                                                            <span class="name">Игумен Киприан</span><br>
+                                                                                    
+                                                                            </div>
+                                    <div class="td">
+                                                                            </div>
+                                </div>
+                                                            <div class="sch-day-row">
+                                                                            <div class="td time">08:00</div>
+                                                                        <div class="td">
+                                        <p class="place"><a href="/monastyr/khramy-obiteli/khram-sreteniya-vladimirskoy-ikony-bozhiey-materi/">Храм Сретения Владимирской иконы Божией Матери</a></p>
+                                        <p>Божественная Литургия </p>
+                                    </div>
+                                    <div class="td">
+                                                                                <b>Служат:</b>
+                                        <br>
+                                                                                                                                                                            <span class="name">Иеромонах Никон</span><br>
+                                                                                            <span class="name">Иеродиакон Роман</span><br>
+                                                                                    
+                                                                            </div>
+                                    <div class="td">
+                                                                                <b>Исповедуют: </b>
+                                        <br>
+                                                                                                                                    <span class="name">Иеромонах Никодим</span><br>
+                                                                                                                                                                </div>
+                                </div>
+                                                            <div class="sch-day-row">
+                                                                            <div class="td time">18:00</div>
+                                                                        <div class="td">
+                                        <p class="place"><a href="/monastyr/khramy-obiteli/khram-sreteniya-vladimirskoy-ikony-bozhiey-materi/">Храм Сретения Владимирской иконы Божией Матери</a></p>
+                                        <p>Вечернее богослужение </p>
+                                    </div>
+                                    <div class="td">
+                                                                                                                            <span class="name"></span><br>
+                                        
+                                                                            </div>
+                                    <div class="td">
+                                                                            </div>
+                                </div>
+                                                    </div>
+                                    <!-- sch-day-item -->
+                    <div class="sch-day-item" id="12112026">
+                            <div class="sch-day-title">
+                                <div class="day-new  ">Четверг, <span class="tolower" >12 ноября</span></div>
+                                <div class="day-old">30 октября ст. ст.</div>
+                                <div class="holiday">
+                                    <a href="/calendar/?day=12.11.2026">
+                                        Священномученика Зиновия и сестры его Зиновии                                                                            </a>
+                                </div>
+                            </div>
+                                                            <div class="sch-day-row">
+                                                                            <div class="td time">08:00</div>
+                                                                        <div class="td">
+                                        <p class="place"><a href="/monastyr/khramy-obiteli/khram-sreteniya-vladimirskoy-ikony-bozhiey-materi/">Храм Сретения Владимирской иконы Божией Матери</a></p>
+                                        <p>Божественная Литургия</p>
+                                    </div>
+                                    <div class="td">
+                                                                                <b>Служат:</b>
+                                        <br>
+                                                                                                                                                                            <span class="name">Игумен Иоанн</span><br>
+                                                                                            <span class="name">Игумен Киприан</span><br>
+                                                                                            <span class="name">Иеромонах Никодим</span><br>
+                                                                                            <span class="name">Иеромонах Спиридон (нач.)</span><br>
+                                                                                            <span class="name">Иеромонах Никита</span><br>
+                                                                                            <span class="name">Иеромонах Агафангел</span><br>
+                                                                                    
+                                                                            </div>
+                                    <div class="td">
+                                                                                <b>Исповедуют: </b>
+                                        <br>
+                                                                                                                                    <span class="name">Иеромонах Зосима</span><br>
+                                                                                            <span class="name">Иеромонах Никон</span><br>
+                                                                                            <span class="name">Иеромонах Иннокентий</span><br>
+                                                                                                                                                                </div>
+                                </div>
+                                                            <div class="sch-day-row">
+                                                                            <div class="td time">18:00</div>
+                                                                        <div class="td">
+                                        <p class="place"><a href="/monastyr/khramy-obiteli/khram-sreteniya-vladimirskoy-ikony-bozhiey-materi/">Храм Сретения Владимирской иконы Божией Матери</a></p>
+                                        <p>Вечернее богослужение</p>
+                                    </div>
+                                    <div class="td">
+                                                                                                                            <span class="name"></span><br>
+                                        
+                                                                            </div>
+                                    <div class="td">
+                                                                            </div>
+                                </div>
+                                                    </div>
+                                    <!-- sch-day-item -->
+                    <div class="sch-day-item" id="13112026">
+                            <div class="sch-day-title">
+                                <div class="day-new  ">Пятница, <span class="tolower" >13 ноября</span></div>
+                                <div class="day-old">31 октября ст. ст.</div>
+                                <div class="holiday">
+                                    <a href="/calendar/?day=13.11.2026">
+                                        Преподобных Спиридона и Никодима, просфорников Печерских                                                                            </a>
+                                </div>
+                            </div>
+                                                            <div class="sch-day-row">
+                                                                            <div class="td time">06:45</div>
+                                                                        <div class="td">
+                                        <p class="place"><a href="/monastyr/khramy-obiteli/khram-sreteniya-vladimirskoy-ikony-bozhiey-materi/">Храм Сретения Владимирской иконы Божией Матери</a></p>
+                                        <p>Братский молебен </p>
+                                    </div>
+                                    <div class="td">
+                                                                                <b>Служат:</b>
+                                        <br>
+                                                                                                                                                                            <span class="name">Иеромонах Афанасий</span><br>
+                                                                                    
+                                                                            </div>
+                                    <div class="td">
+                                                                            </div>
+                                </div>
+                                                            <div class="sch-day-row">
+                                                                            <div class="td time">08:00</div>
+                                                                        <div class="td">
+                                        <p class="place"><a href="/monastyr/khramy-obiteli/khram-sreteniya-vladimirskoy-ikony-bozhiey-materi/">Храм Сретения Владимирской иконы Божией Матери</a></p>
+                                        <p>Божественная Литургия </p>
+                                    </div>
+                                    <div class="td">
+                                                                                <b>Служат:</b>
+                                        <br>
+                                                                                                                                                                            <span class="name">Игумен Киприан</span><br>
+                                                                                            <span class="name">Иеродиакон Михаил</span><br>
+                                                                                    
+                                                                            </div>
+                                    <div class="td">
+                                                                                <b>Исповедуют: </b>
+                                        <br>
+                                                                                                                                    <span class="name">Иеромонах Иннокентий</span><br>
+                                                                                                                                                                </div>
+                                </div>
+                                                            <div class="sch-day-row">
+                                                                            <div class="td time">18:00</div>
+                                                                        <div class="td">
+                                        <p class="place"><a href="/monastyr/khramy-obiteli/khram-voskreseniya-khristova-i-novomuchenikov-i-ispovednikov-tserkvi-russkoy/">Храм Воскресения Христова и Новомучеников и Исповедников Церкви Русской</a></p>
+                                        <p>Вечернее богослужение. Акафист Пресвятой Богородице</p>
+                                    </div>
+                                    <div class="td">
+                                                                                                                            <span class="name"></span><br>
+                                        
+                                                                            </div>
+                                    <div class="td">
+                                                                            </div>
+                                </div>
+                                                    </div>
+                                    <!-- sch-day-item -->
+                    <div class="sch-day-item" id="14112026">
+                            <div class="sch-day-title">
+                                <div class="day-new  ">Суббота, <span class="tolower" >14 ноября</span></div>
+                                <div class="day-old">01 ноября ст. ст.</div>
+                                <div class="holiday">
+                                    <a href="/calendar/?day=14.11.2026">
+                                        Святых бессребренников Космы и Дамиана Асийских                                                                            </a>
+                                </div>
+                            </div>
+                                                            <div class="sch-day-row">
+                                                                            <div class="td time">08:00</div>
+                                                                        <div class="td">
+                                        <p class="place"><a href="/monastyr/khramy-obiteli/khram-sreteniya-vladimirskoy-ikony-bozhiey-materi/">Храм Сретения Владимирской иконы Божией Матери</a></p>
+                                        <p>Ранняя Божественная Литургия</p>
+                                    </div>
+                                    <div class="td">
+                                                                                <b>Служат:</b>
+                                        <br>
+                                                                                                                                                                            <span class="name">Иеромонах Сергий (нач.)</span><br>
+                                                                                            <span class="name">Иеродиакон Тихон</span><br>
+                                                                                    
+                                                                            </div>
+                                    <div class="td">
+                                                                                <b>Исповедуют: </b>
+                                        <br>
+                                                                                                                                    <span class="name">Иеромонах Лука</span><br>
+                                                                                            <span class="name">Иеромонах Игнатий</span><br>
+                                                                                                                                                                </div>
+                                </div>
+                                                            <div class="sch-day-row">
+                                                                            <div class="td time">09:30</div>
+                                                                        <div class="td">
+                                        <p class="place"><a href="/monastyr/khramy-obiteli/khram-voskreseniya-khristova-i-novomuchenikov-i-ispovednikov-tserkvi-russkoy/">Храм Воскресения Христова и Новомучеников и Исповедников Церкви Русской</a></p>
+                                        <p>Поздняя Божественная Литургия. Заупокойная лития</p>
+                                    </div>
+                                    <div class="td">
+                                                                                <b>Служат:</b>
+                                        <br>
+                                                                                                                                                                            <span class="name">Иеромонах Иннокентий</span><br>
+                                                                                            <span class="name">Иеродиакон Георгий</span><br>
+                                                                                    
+                                                                            </div>
+                                    <div class="td">
+                                                                                <b>Исповедуют: </b>
+                                        <br>
+                                                                                                                                    <span class="name">Иеромонах Иона</span><br>
+                                                                                            <span class="name">Иеромонах Спиридон</span><br>
+                                                                                            <span class="name">Иеромонах Никита (хор)</span><br>
+                                                                                                                                                                </div>
+                                </div>
+                                                            <div class="sch-day-row">
+                                                                            <div class="td time">18:00</div>
+                                                                        <div class="td">
+                                        <p class="place"><a href="/monastyr/khramy-obiteli/khram-voskreseniya-khristova-i-novomuchenikov-i-ispovednikov-tserkvi-russkoy/">Храм Воскресения Христова и Новомучеников и Исповедников Церкви Русской</a></p>
+                                        <p>Всенощное бдение</p>
+                                    </div>
+                                    <div class="td">
+                                                                                                                            <span class="name"></span><br>
+                                        
+                                                                            </div>
+                                    <div class="td">
+                                                                            </div>
+                                </div>
+                                                    </div>
+                                    <!-- sch-day-item -->
+                    <div class="sch-day-item" id="15112026">
+                            <div class="sch-day-title">
+                                <div class="day-new  ">Воскресенье, <span class="tolower" >15 ноября</span></div>
+                                <div class="day-old">02 ноября ст. ст.</div>
+                                <div class="holiday">
+                                    <a href="/calendar/?day=15.11.2026">
+                                        Мученика Акиндина и иже с ним                                                                            </a>
+                                </div>
+                            </div>
+                                                            <div class="sch-day-row">
+                                                                            <div class="td time">07:00</div>
+                                                                        <div class="td">
+                                        <p class="place"><a href="/monastyr/khramy-obiteli/khram-sreteniya-vladimirskoy-ikony-bozhiey-materi/">Храм Сретения Владимирской иконы Божией Матери</a></p>
+                                        <p>Ранняя Божественная Литургия </p>
+                                    </div>
+                                    <div class="td">
+                                                                                <b>Служат:</b>
+                                        <br>
+                                                                                                                                                                            <span class="name">Иеромонах Агафангел (нач.)</span><br>
+                                                                                            <span class="name">Иеродиакон Савва</span><br>
+                                                                                    
+                                                                                    <b>Проповедует:</b>
+                                            <br>
+                                                                                            <span class="name">Иеромонах Иона</span><br>
+                                                                                                                        </div>
+                                    <div class="td">
+                                                                                <b>Исповедуют: </b>
+                                        <br>
+                                                                                                                                    <span class="name">Иеромонах Лука</span><br>
+                                                                                            <span class="name">Иеромонах Никон</span><br>
+                                                                                            <span class="name">Иеромонах Иннокентий</span><br>
+                                                                                                                                                                </div>
+                                </div>
+                                                            <div class="sch-day-row">
+                                                                            <div class="td time">10:00</div>
+                                                                        <div class="td">
+                                        <p class="place"><a href="/monastyr/khramy-obiteli/khram-voskreseniya-khristova-i-novomuchenikov-i-ispovednikov-tserkvi-russkoy/">Храм Воскресения Христова и Новомучеников и Исповедников Церкви Русской</a></p>
+                                        <p>Поздняя Божественная Литургия</p>
+                                    </div>
+                                    <div class="td">
+                                                                                <b>Служат:</b>
+                                        <br>
+                                                                                                                                                                            <span class="name">Игумен Иоанн</span><br>
+                                                                                            <span class="name">Игумен Киприан</span><br>
+                                                                                            <span class="name">Иеромонах Севастиан</span><br>
+                                                                                            <span class="name">Иеромонах Афанасий</span><br>
+                                                                                            <span class="name">Иеродиаконы все</span><br>
+                                                                                    
+                                                                                    <b>Проповедует:</b>
+                                            <br>
+                                                                                            <span class="name">Иеромонах Игнатий</span><br>
+                                                                                                                        </div>
+                                    <div class="td">
+                                                                                <b>Исповедуют: </b>
+                                        <br>
+                                                                                                                                    <span class="name">Иеромонах Игнатий</span><br>
+                                                                                            <span class="name">Иеромонах Павел</span><br>
+                                                                                            <span class="name">Иеромонах Зосима</span><br>
+                                                                                            <span class="name">Иеромонах Никодим</span><br>
+                                                                                            <span class="name">Иеромонах Спиридон</span><br>
+                                                                                            <span class="name">Иеромонах Никита</span><br>
+                                                                                            <span class="name">Иеромонах Сергий</span><br>
+                                                                                                                                                                </div>
+                                </div>
+                                                            <div class="sch-day-row">
+                                                                            <div class="td time">13:00</div>
+                                                                        <div class="td">
+                                        <p class="place"><a href="/monastyr/khramy-obiteli/khram-voskreseniya-khristova-i-novomuchenikov-i-ispovednikov-tserkvi-russkoy/">Храм Воскресения Христова и Новомучеников и Исповедников Церкви Русской</a></p>
+                                        <p>Молебен с акафистом священномученику Илариону</p>
+                                    </div>
+                                    <div class="td">
+                                                                                <b>Служат:</b>
+                                        <br>
+                                                                                                                                                                            <span class="name">Иеромонах Никон</span><br>
+                                                                                    
+                                                                            </div>
+                                    <div class="td">
+                                                                            </div>
+                                </div>
+                                                            <div class="sch-day-row">
+                                                                            <div class="td time">18:00</div>
+                                                                        <div class="td">
+                                        <p class="place"><a href="/monastyr/khramy-obiteli/khram-voskreseniya-khristova-i-novomuchenikov-i-ispovednikov-tserkvi-russkoy/">Храм Воскресения Христова и Новомучеников и Исповедников Церкви Русской</a></p>
+                                        <p>Вечернее богослужение </p>
+                                    </div>
+                                    <div class="td">
+                                                                                                                            <span class="name"></span><br>
+                                        
+                                                                            </div>
+                                    <div class="td">
+                                                                            </div>
+                                </div>
+                                                    </div>
+                    </div>
+    </div>
+<!--\\-->
+<div class="schedule-nav">
+    <div class="row">
+        <div class="col-xs-12 col-sm-6 col-md-6">
+            <a href="/bogosluzhenie/raspisanie-bogosluzheniy/?day=02.11.2026" class="nav-back">Предыдущая неделя</a>
+        </div>
+        <div class="col-xs-12 col-sm-6 col-md-6">
+            <a href="/bogosluzhenie/raspisanie-bogosluzheniy/?day=16.11.2026" class="nav-forward">Следующая неделя</a>
+        </div>
+    </div>
+</div>
+<input type="hidden" class="goto" value="#">        </div>
+    </div>
+</div>
+<!-- \\schedule-container -->
+
+        </div>
+            </div>
+</div>
+<!-- Wrapper END -->
+
+<div class="clearing"></div>
+
+<div id="back-to-top">
+    <a href="#top"></a>
+</div>
+
+<!-- Footer -->
+<footer>
+
+    <div class="footer_container">
+
+        <!-- container -->
+        <div class="container">
+            <div class="row bottom-menu-container">
+                
+
+
+                                    <div class="col-sm-12 w-md-20"><h5>Монастырь</h5><div class="bottom-menu"><ul>
+                                                <li><a href="/monastyr/istoriya-obiteli/">История обители</a></li>
+                                                <li><a href="/monastyr/svyashchennomuchenik-ilarion/">Священномученик Иларион</a></li>
+                                                <li><a href="/monastyr/predstoyatel/">Предстоятель</a></li>
+                                                <li><a href="/monastyr/namestnik/">Наместник</a></li>
+                                                <li><a href="/monastyr/naselniki/">Насельники</a></li>
+                                                <li><a href="/monastyr/khramy-obiteli/">Храмы обители</a></li>
+                                                <li><a href="/monastyr/svyatyni-obitely/">Святыни обители</a></li>
+                                                <li><a href="/monastyr/turinskaya-plashchanitsa/">Туринская Плащаница</a></li>
+                                                <li><a href="/monastyr/svyato-serafimovskiy-skit/">Свято-Серафимовский скит</a></li>
+                                                <li><a href="/shedule-events/  ">Календарь событий</a></li>
+                                                <li><a href="/monastyr/kontakty/">Контакты</a></li>
+                                        </ul></div></div>                            <div class="col-sm-12 w-md-20"><h5>Богослужение</h5><div class="bottom-menu"><ul>
+                                                <li><a href="/bogosluzhenie/raspisanie-bogosluzheniy/">Расписание богослужений</a></li>
+                                                <li><a href="/bogosluzhenie/propovedi/">Проповеди</a></li>
+                                                <li><a href="/bogosluzhenie/audiozapisi-bogosluzheniy/">Аудиозаписи богослужений</a></li>
+                                                <li><a href="/calendar/">Сретенский месяцеслов</a></li>
+                                                <li><a href="/bogosluzhenie/podgotovka-k-kreshcheniyu/">Подготовка к Крещению</a></li>
+                                                <li><a href="/bogosluzhenie/podat-zapisku2/">Подать записку</a></li>
+                                                <li><a href="/bogosluzhenie/pomoshch-monastyryu/">Помочь монастырю</a></li>
+                                        </ul></div></div>                            <div class="col-sm-12 w-md-20"><h5>Гостям</h5><div class="bottom-menu"><ul>
+                                                <li><a href="/gostyam/karta-obiteli/">План обители</a></li>
+                                                <li><a href="/monastyr/khramy-obiteli/">Храмы обители</a></li>
+                                                <li><a href="/monastyr/svyatyni-obitely/">Святыни обители</a></li>
+                                                <li><a href="/gostyam/ekskursii0/">Экскурсии</a></li>
+                                                <li><a href="/gostyam/magazin-sretenie/">Магазин «Cретение»</a></li>
+                                                <li><a href="/gostyam/trapeznaya-nesvyatye-svyatye-0/">Трапезная «Несвятые святые»</a></li>
+                                                <li><a href="/bogosluzhenie/podat-zapisku2/">Подать записку</a></li>
+                                                <li><a href="/bogosluzhenie/pomoshch-monastyryu/">Помочь монастырю</a></li>
+                                        </ul></div></div>                            <div class="col-sm-12 w-md-20"><h5>Проекты</h5><div class="bottom-menu"><ul>
+                                                <li><a href="/proekty/izdatelstvo-monastyrya/">Издательство монастыря</a></li>
+                                                <li><a href="/proekty/khor-sretenskogo-monastyrya/">Хор Сретенского монастыря</a></li>
+                                                <li><a href="/proekty/pravoslavie-prosvetitelskie-kursy-dlya-miryan/">Просветительские курсы. Архив</a></li>
+                                                <li><a href="/proekty/prosvet-tsentr/">Духовно-просветительский центр</a></li>
+                                                <li><a href="/proekty/proekt-rodnaya-zemlya/">«Родная земля»</a></li>
+                                                <li><a href="/proekty/shkola-internat/">Школа-интернат</a></li>
+                                                <li><a href="/proekty/voskresnaya-shkola/">Воскресная школа</a></li>
+                                                <li><a href="/proekty/besedy-s-prikhozhanami/">Беседы с прихожанами</a></li>
+                                                <li><a href="/proekty/vsegda-zhivoy-tserkovnoslavyanskiy/">Всегда живой церковнославянский</a></li>
+                                                <li><a href="/proekty/palomnicheskiy-tsentr/">Паломнический центр</a></li>
+                                                <li><a href="/proekty/vystavka-novomuchenikii-ispovedniki-tserkvi-russkoy/">Выставка «Новомученики и Исповедники Церкви Русской»</a></li>
+                                        </ul></div></div>                            <div class="col-sm-12 w-md-20"><h5>Журнал</h5><div class="bottom-menu"><ul>
+                                                <li><a href="/zhurnal/j-zhizn-obiteli/">Жизнь обители</a></li>
+                                                <li><a href="/zhurnal/bog-i-chelovek/">Бог и человек</a></li>
+                                                <li><a href="/zhurnal/tserkov/">Церковь</a></li>
+                                                <li><a href="/zhurnal/svyatye/">Святые и подвижники благочестия</a></li>
+                                                <li><a href="/zhurnal/monashestvo/">Монашество</a></li>
+                                                <li><a href="/zhurnal/semya/">Семья</a></li>
+                                                <li><a href="/zhurnal/obshchestvo/">Общество</a></li>
+                                                <li><a href="/zhurnal/shkola-radosti/">Школа радости</a></li>
+                                                <li><a href="/authors/">Наши авторы</a></li>
+                                                <li><a href="/zhurnal/znachimye-daty-obiteli/">Значимые даты обители</a></li>
+                                                <li><a href="/zhurnal/p-palomnicheskiy-tsentr/">Паломнический центр</a></li>
+                                                <li><a href="/novosti-obiteli/novosti/">Новости</a></li>
+                                                <li><a href="/novosti-obiteli/anonsy/">Анонсы</a></li>
+                        </ul></div></div>                <!--\\-->
+            </div>
+            <div class="row copy">
+                <div class="col-div">
+                    <!-- social-icons -->
+                    <div class="social-icons">
+                        <a href="https://vk.com/sretenskymonastery" target="_blank" class="vk"></a> 
+<a href="https://ok.ru/group/54502650150989" target="_blank" class="ok"></a> 
+<a href="https://rutube.ru/channel/24188418/" target="_blank" class="youtube"></a>
+ 
+<a href="https://t.me/Sretmon" target="_blank" class="telegr"></a> <a href="/articles/monastyr/kontakty/" class="mail"></a>
+<a href="https://zen.yandex.ru/id/5f14687d49c94b2fdd0605b2" target="_blank" class="dzen"></a>
+<a href="https://www.flickr.com/people/sretensky/" target="_blank" class="fickr"></a>                    </div>
+                    <!-- \\social-icons -->
+                </div>
+                <div class="col-div">
+                    <p>© 2018 monastery.ru</p>
+<p>При перепечатке ссылка на monastery.ru обязательна</p>                </div>
+                <div class="col-div col-copy">
+					<a href="http://stepup24.ru" class="ca-logo" target="_blank"></a>
+				</div>
+            </div>
+        </div>
+        <!-- \\container -->
+
+    </div>
+
+</footer>
+<!-- Footer END -->
+
+
+
+
+
+<!-- video-modal -->
+<div class="modal fade req-modal" id="req-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">Закрыть</button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: left;padding:40px;" >
+                    <p>
+                        <b>Реквизиты счета и адреса</b>: Московский Патриархат Сретенский
+                        ставропигиальный мужской монастырь<br>
+                        107031, Москва, ул. Б. Лубянка, д. 19, стр. 1<br>
+                        Для переписки: 107031, Москва, а/я 87Тел. (495) 623-3444
+                    </p>
+                    <p>
+                        <b>Полное наименование</b>: Религиозная организация «Сретенский ставропигиальный мужской монастырь Русской Православной Церкви (Московский Патриархат)»
+                        ИНН 7702141968 КПП 770201001 ОКПО 17668920 ОГРН 1027739660520<br>
+                        Юридический адрес: Москва, Большая Лубянка, 19 стр.1<br>
+                        Почтовый адрес: 107031 Москва, а/я № 87<br>
+                        Телефон: (499) 490-12-23, (495) 621-73-58<br>
+                        E-mail:   mera@pravoslavie.ru; account@pravoslavie.ru
+                    </p>
+                    <p>
+                        <b>Для перечислений</b>:
+                        Получатель:  Религиозная организация «Сретенский ставропигиальный мужской монастырь Русской Православной Церкви (Московский Патриархат)»
+                        Расчетный счет:  40703810226800000034<br> 
+                        в ФИЛИАЛ "ЦЕНТРАЛЬНЫЙ" БАНКА ВТБ (ПАО)<br>
+						БИК   044525411,  к/с 30101810145250000411
+                    </p>
+                    <p>
+                        <b>Оформление договоров</b>:
+                        Наместник монастыря: Иеромонах Иоанн  (Лудищев Дмитрий Владимирович) на основании Устава.<br>
+                        Главный бухгалтер: Иеромонах Ириней (Пиковский Иван Витальевич)
+                    </p>                    
+                    <p>
+                        <b><a href="/docs/reqs.pdf" download="download" >Скачать PDF</a></b>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- video-modal -->
+
+
+
+<!-- video-modal -->
+<div class="modal fade req-modal" id="req-modal2" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">Закрыть</button>
+            </div>
+            <div class="modal-body">
+                <div class="container" >
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <p>
+                                <b>USD</b><br/>
+                                <i>BENEFICIARY’S BANK:</i>
+                            </p>
+                            <p>Bank «RRDB» (JSC)</p>
+                            <p> SWIFT: RRDBRUMM</p>
+                            <p>    Account № 8900613882 (USD) with</p>
+                            <p>    The Bank of New York Mellon,</p>
+                            <p>    One Wall Street, New York, NY 10286, USA</p>
+                            <p>    SWIFT: IRVTUS3N</p>
+                            <p>    ABA 021000018</p>
+                            <p>    <i>BENEFICIAR:</i></p>
+                            <p>    SRETENSKY MAN’S MONASTERY OF MOSCOW</p>
+                            <p>    Account: 40703840 7 0000 1000152</p>
+                            <p>   DONATION FOR (STATUTORY) ACTIVITIES</p>
+
+                            <p>
+                                <b><a href="/docs/source.pdf" download="requisites" >Скачать PDF</a></b>
+                            </p>
+                        </div>
+                        <div class="col-sm-6">
+                            <p>
+                                <b>EUR</b><br/>
+                                <i>BENEFICIARY’S BANK:</i>
+                            </p>
+                            <p>Bank «RRDB» (JSC)</p>
+                            <p> SWIFT: RRDBRUMM</p>
+                            <p> Account № 55.047.419</p>
+                            <p> with Raiffeisen Bank International AG,</p>
+                            <p> Am Stadtpark 9, 1030 Vienna, Austria </p>
+                            <p> SWIFT: RZBA AT WW</p>
+                            <p> IBAN: AT393100000055047419</p>
+                            <p> <i>BENEFICIAR:</i></p>
+                            <p> SRETENSKY MAN’S MONASTERY OF MOSCOW</p>
+                            <p> Account:40703 978 3 0000 1000 152</p>
+                            <p> DONATION FOR (STATUTORY) ACTIVITIES</p>
+                            <p>
+                                <b><a href="/docs/source.pdf" download="requisites" >Скачать PDF</a></b>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- video-modal -->
+<!-- video-modal -->
+<div class="modal fade video-modal" id="video-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">&nbsp;</button>
+            </div>
+            <div class="modal-body">
+            </div>
+        </div>
+    </div>
+</div>
+<!-- video-modal -->
+
+<!-- img-modal -->
+<div class="modal fade img-modal" id="img-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">Закрыть</button>
+            </div>
+            <div class="modal-body">
+
+                <!-- img-item-galary -->
+                <div class="img-item-galary-block">
+                                                        </div>
+                <!-- \\img-item-galary -->
+
+            </div>
+        </div>
+    </div>
+</div>
+<!-- img-modal -->
+
+
+</body>
+</html>

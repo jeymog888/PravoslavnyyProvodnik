@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-11-11T13:34:20.257856+00:00",
-  "git_head_at_audit": "95d679300445321b89f4bdd149829fdb5fa1e01d",
+  "generated_at_utc": "2026-11-11T14:05:23.928245+00:00",
+  "git_head_at_audit": "1ff4ef0056aaf5cfc23060112bb4bba5f8483429",
   "scope": "Native release-0.8 group/rerun logs only; no Gradle, adb, app execution or visual approval performed by this auditor",
   "inventory_source": ".local/release08/native-groups.json",
   "method": [
-    "Match class#method against current Android @Test sources, with 97 cases in each configured group",
+    "Match class#method against current Android @Test sources, with case counts verified against each configured group",
     "Count only explicit terminal instrumentation status 0 as PASS, never a START or a log summary alone",
     "Later terminal events supersede earlier results for the same exact testcase-id; all prior failures remain in history",
     "Terminal testcase PASS in an unfinished run is recorded with pass_from_incomplete_run=true, without claiming that run completed",
@@ -17,11 +17,11 @@
     "Running logs are point-in-time snapshots with byte length and SHA-256; later output is not included until the inventory is regenerated"
   ],
   "summary": {
-    "expected_unique_cases": 291,
-    "pass_observed_cases": 291,
+    "expected_unique_cases": 292,
+    "pass_observed_cases": 292,
     "pending_cases": 0,
     "status_counts": {
-      "PASS_OBSERVED": 291
+      "PASS_OBSERVED": 292
     },
     "all_tests_passed_claim": false,
     "final_release_acceptance": "NOT_ESTABLISHED_BY_THIS_LOG_INVENTORY"
@@ -38,10 +38,10 @@
     },
     {
       "group": 2,
-      "expected": 97,
-      "source_count": 97,
+      "expected": 98,
+      "source_count": 98,
       "status_counts": {
-        "PASS_OBSERVED": 97
+        "PASS_OBSERVED": 98
       },
       "pending_testcase_ids": []
     },
@@ -225,6 +225,40 @@
       "log_status": "COMPLETED_PASS",
       "summary_pass_count": 1,
       "summary_failure_count": null
+    },
+    {
+      "id": "full08-10-g2",
+      "path": ".local/toolchain/logs/full08-10-g2.log",
+      "snapshot_sha256": "700e1527f31936369ef5331cde1026fd58c13bbf9e4a7c4bed90a1b139e021c6",
+      "snapshot_bytes": 13476,
+      "instrumentation_footer": true,
+      "declared_test_count": 19,
+      "completed_event_count": 19,
+      "unique_completed_cases": 19,
+      "terminal_counts": {
+        "PASS": 19
+      },
+      "unfinished_testcase_ids": [],
+      "log_status": "COMPLETED_PASS",
+      "summary_pass_count": 19,
+      "summary_failure_count": null
+    },
+    {
+      "id": "full08-11-g2",
+      "path": ".local/toolchain/logs/full08-11-g2.log",
+      "snapshot_sha256": "eda40b9bce6d008358115181c3a7c90cbd6591cf876e40781e38f0513e2e227f",
+      "snapshot_bytes": 892,
+      "instrumentation_footer": true,
+      "declared_test_count": 1,
+      "completed_event_count": 1,
+      "unique_completed_cases": 1,
+      "terminal_counts": {
+        "PASS": 1
+      },
+      "unfinished_testcase_ids": [],
+      "log_status": "COMPLETED_PASS",
+      "summary_pass_count": 1,
+      "summary_failure_count": null
     }
   ],
   "sources": {
@@ -388,6 +422,11 @@
       "sha256": "2fbd8652b0100d1618b21a87194021010b7d76e4a558797ec66012524dacf78d",
       "test_count": 11
     },
+    "ru.liturgyguide.service.schedule.LiveSretenskySchedulesTest": {
+      "path": "app/src/androidTest/java/ru/liturgyguide/service/schedule/LiveSretenskySchedulesTest.kt",
+      "sha256": "d9bfcc0bd7029101c487790b3c585ecf8e378a7930d99fac6bee8bd194c9d212",
+      "test_count": 1
+    },
     "ru.liturgyguide.service.book.LiveServiceBookTest": {
       "path": "app/src/androidTest/java/ru/liturgyguide/service/book/LiveServiceBookTest.kt",
       "sha256": "0759716564c7f50cd61cb87a41f8d730a66bd5ada8d8aea647ff90ecf198118a",
@@ -415,7 +454,7 @@
     },
     "ru.liturgyguide.ui.BookReaderPolishTest": {
       "path": "app/src/androidTest/java/ru/liturgyguide/ui/BookReaderPolishTest.kt",
-      "sha256": "a24f552e08e47e603824e9ea77fda117d7dd60542045e27daf4ef35da35875f5",
+      "sha256": "7e876f30e42735e601449a2716a277e2229d7b637998a64d23869458894a368b",
       "test_count": 4
     },
     "ru.liturgyguide.ui.BookReaderSpeedTest": {
@@ -917,6 +956,61 @@
         }
       ],
       "pass_from_incomplete_run": true,
+      "resolved_prior_failures": []
+    },
+    {
+      "testcase_id": "ru.liturgyguide.service.schedule.LiveSretenskySchedulesTest#bothBuildingsRefreshTheirPublishedTimesWithoutFallingBackToTypicalSchedule",
+      "group": 2,
+      "status": "PASS_OBSERVED",
+      "latest_terminal": {
+        "testcase_id": "ru.liturgyguide.service.schedule.LiveSretenskySchedulesTest#bothBuildingsRefreshTheirPublishedTimesWithoutFallingBackToTypicalSchedule",
+        "run": "full08-11-g2",
+        "code": 0,
+        "status": "PASS",
+        "line": 15,
+        "bundle_start_line": 9,
+        "ordinal": 1
+      },
+      "unfinished_start": null,
+      "events": [
+        {
+          "testcase_id": "ru.liturgyguide.service.schedule.LiveSretenskySchedulesTest#bothBuildingsRefreshTheirPublishedTimesWithoutFallingBackToTypicalSchedule",
+          "run": "full08-10-g2",
+          "code": 1,
+          "status": "STARTED",
+          "line": 8,
+          "bundle_start_line": 1,
+          "ordinal": 1
+        },
+        {
+          "testcase_id": "ru.liturgyguide.service.schedule.LiveSretenskySchedulesTest#bothBuildingsRefreshTheirPublishedTimesWithoutFallingBackToTypicalSchedule",
+          "run": "full08-10-g2",
+          "code": 0,
+          "status": "PASS",
+          "line": 15,
+          "bundle_start_line": 9,
+          "ordinal": 1
+        },
+        {
+          "testcase_id": "ru.liturgyguide.service.schedule.LiveSretenskySchedulesTest#bothBuildingsRefreshTheirPublishedTimesWithoutFallingBackToTypicalSchedule",
+          "run": "full08-11-g2",
+          "code": 1,
+          "status": "STARTED",
+          "line": 8,
+          "bundle_start_line": 1,
+          "ordinal": 1
+        },
+        {
+          "testcase_id": "ru.liturgyguide.service.schedule.LiveSretenskySchedulesTest#bothBuildingsRefreshTheirPublishedTimesWithoutFallingBackToTypicalSchedule",
+          "run": "full08-11-g2",
+          "code": 0,
+          "status": "PASS",
+          "line": 15,
+          "bundle_start_line": 9,
+          "ordinal": 1
+        }
+      ],
+      "pass_from_incomplete_run": false,
       "resolved_prior_failures": []
     },
     {
@@ -1443,12 +1537,12 @@
       "status": "PASS_OBSERVED",
       "latest_terminal": {
         "testcase_id": "ru.liturgyguide.ui.BookPerChurchRestoreTest#sameBookSavedRouteRestoresEachChurchsLanguageControlsAndPositionAcrossAtoBtoA",
-        "run": "full08-04-g2",
+        "run": "full08-10-g2",
         "code": 0,
         "status": "PASS",
-        "line": 254,
-        "bundle_start_line": 248,
-        "ordinal": 18
+        "line": 115,
+        "bundle_start_line": 109,
+        "ordinal": 8
       },
       "unfinished_start": null,
       "events": [
@@ -1469,9 +1563,27 @@
           "line": 254,
           "bundle_start_line": 248,
           "ordinal": 18
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookPerChurchRestoreTest#sameBookSavedRouteRestoresEachChurchsLanguageControlsAndPositionAcrossAtoBtoA",
+          "run": "full08-10-g2",
+          "code": 1,
+          "status": "STARTED",
+          "line": 108,
+          "bundle_start_line": 101,
+          "ordinal": 8
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookPerChurchRestoreTest#sameBookSavedRouteRestoresEachChurchsLanguageControlsAndPositionAcrossAtoBtoA",
+          "run": "full08-10-g2",
+          "code": 0,
+          "status": "PASS",
+          "line": 115,
+          "bundle_start_line": 109,
+          "ordinal": 8
         }
       ],
-      "pass_from_incomplete_run": true,
+      "pass_from_incomplete_run": false,
       "resolved_prior_failures": []
     },
     {
@@ -1480,11 +1592,11 @@
       "status": "PASS_OBSERVED",
       "latest_terminal": {
         "testcase_id": "ru.liturgyguide.ui.BookReaderFlowTest#compactReaderAtTwoHundredPercentCanScrollOptionsAndRefresh",
-        "run": "full08-08-g3",
+        "run": "full08-10-g2",
         "code": 0,
         "status": "PASS",
-        "line": 243,
-        "bundle_start_line": 237,
+        "line": 230,
+        "bundle_start_line": 224,
         "ordinal": 16
       },
       "unfinished_start": null,
@@ -1506,6 +1618,24 @@
           "line": 243,
           "bundle_start_line": 237,
           "ordinal": 16
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderFlowTest#compactReaderAtTwoHundredPercentCanScrollOptionsAndRefresh",
+          "run": "full08-10-g2",
+          "code": 1,
+          "status": "STARTED",
+          "line": 223,
+          "bundle_start_line": 217,
+          "ordinal": 16
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderFlowTest#compactReaderAtTwoHundredPercentCanScrollOptionsAndRefresh",
+          "run": "full08-10-g2",
+          "code": 0,
+          "status": "PASS",
+          "line": 230,
+          "bundle_start_line": 224,
+          "ordinal": 16
         }
       ],
       "pass_from_incomplete_run": false,
@@ -1517,11 +1647,11 @@
       "status": "PASS_OBSERVED",
       "latest_terminal": {
         "testcase_id": "ru.liturgyguide.ui.BookReaderFlowTest#hiddenOpeningPrayersDoNotLeaveAnEmptyHeadingBeforeThePublicText",
-        "run": "full08-08-g3",
+        "run": "full08-10-g2",
         "code": 0,
         "status": "PASS",
-        "line": 271,
-        "bundle_start_line": 265,
+        "line": 258,
+        "bundle_start_line": 252,
         "ordinal": 18
       },
       "unfinished_start": null,
@@ -1543,6 +1673,24 @@
           "line": 271,
           "bundle_start_line": 265,
           "ordinal": 18
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderFlowTest#hiddenOpeningPrayersDoNotLeaveAnEmptyHeadingBeforeThePublicText",
+          "run": "full08-10-g2",
+          "code": 1,
+          "status": "STARTED",
+          "line": 251,
+          "bundle_start_line": 245,
+          "ordinal": 18
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderFlowTest#hiddenOpeningPrayersDoNotLeaveAnEmptyHeadingBeforeThePublicText",
+          "run": "full08-10-g2",
+          "code": 0,
+          "status": "PASS",
+          "line": 258,
+          "bundle_start_line": 252,
+          "ordinal": 18
         }
       ],
       "pass_from_incomplete_run": false,
@@ -1554,11 +1702,11 @@
       "status": "PASS_OBSERVED",
       "latest_terminal": {
         "testcase_id": "ru.liturgyguide.ui.BookReaderFlowTest#nearEndLongParagraphSurvivesMeaningAndReturnAtTheSamePlace",
-        "run": "full08-08-g3",
+        "run": "full08-10-g2",
         "code": 0,
         "status": "PASS",
-        "line": 215,
-        "bundle_start_line": 209,
+        "line": 202,
+        "bundle_start_line": 196,
         "ordinal": 14
       },
       "unfinished_start": null,
@@ -1580,6 +1728,24 @@
           "line": 215,
           "bundle_start_line": 209,
           "ordinal": 14
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderFlowTest#nearEndLongParagraphSurvivesMeaningAndReturnAtTheSamePlace",
+          "run": "full08-10-g2",
+          "code": 1,
+          "status": "STARTED",
+          "line": 195,
+          "bundle_start_line": 188,
+          "ordinal": 14
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderFlowTest#nearEndLongParagraphSurvivesMeaningAndReturnAtTheSamePlace",
+          "run": "full08-10-g2",
+          "code": 0,
+          "status": "PASS",
+          "line": 202,
+          "bundle_start_line": 196,
+          "ordinal": 14
         }
       ],
       "pass_from_incomplete_run": false,
@@ -1591,11 +1757,11 @@
       "status": "PASS_OBSERVED",
       "latest_terminal": {
         "testcase_id": "ru.liturgyguide.ui.BookReaderFlowTest#reopeningAnEarlierServiceKeepsItsAcceptedEditionAfterReadingAnotherDate",
-        "run": "full08-08-g3",
+        "run": "full08-10-g2",
         "code": 0,
         "status": "PASS",
-        "line": 285,
-        "bundle_start_line": 279,
+        "line": 272,
+        "bundle_start_line": 266,
         "ordinal": 19
       },
       "unfinished_start": null,
@@ -1617,6 +1783,24 @@
           "line": 285,
           "bundle_start_line": 279,
           "ordinal": 19
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderFlowTest#reopeningAnEarlierServiceKeepsItsAcceptedEditionAfterReadingAnotherDate",
+          "run": "full08-10-g2",
+          "code": 1,
+          "status": "STARTED",
+          "line": 265,
+          "bundle_start_line": 259,
+          "ordinal": 19
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderFlowTest#reopeningAnEarlierServiceKeepsItsAcceptedEditionAfterReadingAnotherDate",
+          "run": "full08-10-g2",
+          "code": 0,
+          "status": "PASS",
+          "line": 272,
+          "bundle_start_line": 266,
+          "ordinal": 19
         }
       ],
       "pass_from_incomplete_run": false,
@@ -1628,11 +1812,11 @@
       "status": "PASS_OBSERVED",
       "latest_terminal": {
         "testcase_id": "ru.liturgyguide.ui.BookReaderFlowTest#reopeningPinnedBookShowsSavedSupplementFailureWithoutNetwork",
-        "run": "full08-08-g3",
+        "run": "full08-10-g2",
         "code": 0,
         "status": "PASS",
-        "line": 229,
-        "bundle_start_line": 223,
+        "line": 216,
+        "bundle_start_line": 210,
         "ordinal": 15
       },
       "unfinished_start": null,
@@ -1654,6 +1838,24 @@
           "line": 229,
           "bundle_start_line": 223,
           "ordinal": 15
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderFlowTest#reopeningPinnedBookShowsSavedSupplementFailureWithoutNetwork",
+          "run": "full08-10-g2",
+          "code": 1,
+          "status": "STARTED",
+          "line": 209,
+          "bundle_start_line": 203,
+          "ordinal": 15
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderFlowTest#reopeningPinnedBookShowsSavedSupplementFailureWithoutNetwork",
+          "run": "full08-10-g2",
+          "code": 0,
+          "status": "PASS",
+          "line": 216,
+          "bundle_start_line": 210,
+          "ordinal": 15
         }
       ],
       "pass_from_incomplete_run": false,
@@ -1665,11 +1867,11 @@
       "status": "PASS_OBSERVED",
       "latest_terminal": {
         "testcase_id": "ru.liturgyguide.ui.BookReaderFlowTest#searchFromMeaningRevealsAndOpensTheExactHiddenAltarFragment",
-        "run": "full08-08-g3",
+        "run": "full08-10-g2",
         "code": 0,
         "status": "PASS",
-        "line": 257,
-        "bundle_start_line": 251,
+        "line": 244,
+        "bundle_start_line": 238,
         "ordinal": 17
       },
       "unfinished_start": null,
@@ -1691,6 +1893,24 @@
           "line": 257,
           "bundle_start_line": 251,
           "ordinal": 17
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderFlowTest#searchFromMeaningRevealsAndOpensTheExactHiddenAltarFragment",
+          "run": "full08-10-g2",
+          "code": 1,
+          "status": "STARTED",
+          "line": 237,
+          "bundle_start_line": 231,
+          "ordinal": 17
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderFlowTest#searchFromMeaningRevealsAndOpensTheExactHiddenAltarFragment",
+          "run": "full08-10-g2",
+          "code": 0,
+          "status": "PASS",
+          "line": 244,
+          "bundle_start_line": 238,
+          "ordinal": 17
         }
       ],
       "pass_from_incomplete_run": false,
@@ -1702,12 +1922,12 @@
       "status": "PASS_OBSERVED",
       "latest_terminal": {
         "testcase_id": "ru.liturgyguide.ui.BookReaderPlaybackTest#aPlainTapPausesAutoplayWithoutMovingTheReadingCursor",
-        "run": "full08-06-g3",
+        "run": "full08-10-g2",
         "code": 0,
         "status": "PASS",
-        "line": 416,
-        "bundle_start_line": 410,
-        "ordinal": 29
+        "line": 58,
+        "bundle_start_line": 52,
+        "ordinal": 4
       },
       "unfinished_start": null,
       "events": [
@@ -1728,9 +1948,27 @@
           "line": 416,
           "bundle_start_line": 410,
           "ordinal": 29
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderPlaybackTest#aPlainTapPausesAutoplayWithoutMovingTheReadingCursor",
+          "run": "full08-10-g2",
+          "code": 1,
+          "status": "STARTED",
+          "line": 51,
+          "bundle_start_line": 45,
+          "ordinal": 4
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderPlaybackTest#aPlainTapPausesAutoplayWithoutMovingTheReadingCursor",
+          "run": "full08-10-g2",
+          "code": 0,
+          "status": "PASS",
+          "line": 58,
+          "bundle_start_line": 52,
+          "ordinal": 4
         }
       ],
-      "pass_from_incomplete_run": true,
+      "pass_from_incomplete_run": false,
       "resolved_prior_failures": []
     },
     {
@@ -1739,12 +1977,12 @@
       "status": "PASS_OBSERVED",
       "latest_terminal": {
         "testcase_id": "ru.liturgyguide.ui.BookReaderPlaybackTest#changingLanguageWhilePlayingKeepsTheFragmentAndLeavesItPaused",
-        "run": "full08-06-g3",
+        "run": "full08-10-g2",
         "code": 0,
         "status": "PASS",
-        "line": 444,
-        "bundle_start_line": 438,
-        "ordinal": 31
+        "line": 86,
+        "bundle_start_line": 80,
+        "ordinal": 6
       },
       "unfinished_start": null,
       "events": [
@@ -1765,9 +2003,27 @@
           "line": 444,
           "bundle_start_line": 438,
           "ordinal": 31
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderPlaybackTest#changingLanguageWhilePlayingKeepsTheFragmentAndLeavesItPaused",
+          "run": "full08-10-g2",
+          "code": 1,
+          "status": "STARTED",
+          "line": 79,
+          "bundle_start_line": 73,
+          "ordinal": 6
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderPlaybackTest#changingLanguageWhilePlayingKeepsTheFragmentAndLeavesItPaused",
+          "run": "full08-10-g2",
+          "code": 0,
+          "status": "PASS",
+          "line": 86,
+          "bundle_start_line": 80,
+          "ordinal": 6
         }
       ],
-      "pass_from_incomplete_run": true,
+      "pass_from_incomplete_run": false,
       "resolved_prior_failures": []
     },
     {
@@ -1776,12 +2032,12 @@
       "status": "PASS_OBSERVED",
       "latest_terminal": {
         "testcase_id": "ru.liturgyguide.ui.BookReaderPlaybackTest#endPageKeepsTheLastChapterInTheHeader",
-        "run": "full08-06-g3",
+        "run": "full08-10-g2",
         "code": 0,
         "status": "PASS",
-        "line": 388,
-        "bundle_start_line": 382,
-        "ordinal": 27
+        "line": 30,
+        "bundle_start_line": 24,
+        "ordinal": 2
       },
       "unfinished_start": null,
       "events": [
@@ -1802,9 +2058,27 @@
           "line": 388,
           "bundle_start_line": 382,
           "ordinal": 27
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderPlaybackTest#endPageKeepsTheLastChapterInTheHeader",
+          "run": "full08-10-g2",
+          "code": 1,
+          "status": "STARTED",
+          "line": 23,
+          "bundle_start_line": 16,
+          "ordinal": 2
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderPlaybackTest#endPageKeepsTheLastChapterInTheHeader",
+          "run": "full08-10-g2",
+          "code": 0,
+          "status": "PASS",
+          "line": 30,
+          "bundle_start_line": 24,
+          "ordinal": 2
         }
       ],
-      "pass_from_incomplete_run": true,
+      "pass_from_incomplete_run": false,
       "resolved_prior_failures": []
     },
     {
@@ -1813,12 +2087,12 @@
       "status": "PASS_OBSERVED",
       "latest_terminal": {
         "testcase_id": "ru.liturgyguide.ui.BookReaderPlaybackTest#leavingResumedStateSavesTheCurrentPlaceAndReturningDoesNotRestartPlay",
-        "run": "full08-06-g3",
+        "run": "full08-10-g2",
         "code": 0,
         "status": "PASS",
-        "line": 458,
-        "bundle_start_line": 452,
-        "ordinal": 32
+        "line": 100,
+        "bundle_start_line": 94,
+        "ordinal": 7
       },
       "unfinished_start": null,
       "events": [
@@ -1839,9 +2113,27 @@
           "line": 458,
           "bundle_start_line": 452,
           "ordinal": 32
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderPlaybackTest#leavingResumedStateSavesTheCurrentPlaceAndReturningDoesNotRestartPlay",
+          "run": "full08-10-g2",
+          "code": 1,
+          "status": "STARTED",
+          "line": 93,
+          "bundle_start_line": 87,
+          "ordinal": 7
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderPlaybackTest#leavingResumedStateSavesTheCurrentPlaceAndReturningDoesNotRestartPlay",
+          "run": "full08-10-g2",
+          "code": 0,
+          "status": "PASS",
+          "line": 100,
+          "bundle_start_line": 94,
+          "ordinal": 7
         }
       ],
-      "pass_from_incomplete_run": true,
+      "pass_from_incomplete_run": false,
       "resolved_prior_failures": []
     },
     {
@@ -1850,12 +2142,12 @@
       "status": "PASS_OBSERVED",
       "latest_terminal": {
         "testcase_id": "ru.liturgyguide.ui.BookReaderPlaybackTest#meaningAtAnAltarOnlyChapterReturnsToTheNextVisibleChapterInsteadOfTheBeginning",
-        "run": "full08-06-g3",
+        "run": "full08-10-g2",
         "code": 0,
         "status": "PASS",
-        "line": 402,
-        "bundle_start_line": 396,
-        "ordinal": 28
+        "line": 44,
+        "bundle_start_line": 38,
+        "ordinal": 3
       },
       "unfinished_start": null,
       "events": [
@@ -1876,9 +2168,27 @@
           "line": 402,
           "bundle_start_line": 396,
           "ordinal": 28
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderPlaybackTest#meaningAtAnAltarOnlyChapterReturnsToTheNextVisibleChapterInsteadOfTheBeginning",
+          "run": "full08-10-g2",
+          "code": 1,
+          "status": "STARTED",
+          "line": 37,
+          "bundle_start_line": 31,
+          "ordinal": 3
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderPlaybackTest#meaningAtAnAltarOnlyChapterReturnsToTheNextVisibleChapterInsteadOfTheBeginning",
+          "run": "full08-10-g2",
+          "code": 0,
+          "status": "PASS",
+          "line": 44,
+          "bundle_start_line": 38,
+          "ordinal": 3
         }
       ],
-      "pass_from_incomplete_run": true,
+      "pass_from_incomplete_run": false,
       "resolved_prior_failures": []
     },
     {
@@ -1887,12 +2197,12 @@
       "status": "PASS_OBSERVED",
       "latest_terminal": {
         "testcase_id": "ru.liturgyguide.ui.BookReaderPlaybackTest#playMovesTheTextAndARealManualDragStopsAllFurtherAutomaticMotion",
-        "run": "full08-06-g3",
+        "run": "full08-10-g2",
         "code": 0,
         "status": "PASS",
-        "line": 430,
-        "bundle_start_line": 424,
-        "ordinal": 30
+        "line": 72,
+        "bundle_start_line": 66,
+        "ordinal": 5
       },
       "unfinished_start": null,
       "events": [
@@ -1913,9 +2223,27 @@
           "line": 430,
           "bundle_start_line": 424,
           "ordinal": 30
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderPlaybackTest#playMovesTheTextAndARealManualDragStopsAllFurtherAutomaticMotion",
+          "run": "full08-10-g2",
+          "code": 1,
+          "status": "STARTED",
+          "line": 65,
+          "bundle_start_line": 59,
+          "ordinal": 5
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderPlaybackTest#playMovesTheTextAndARealManualDragStopsAllFurtherAutomaticMotion",
+          "run": "full08-10-g2",
+          "code": 0,
+          "status": "PASS",
+          "line": 72,
+          "bundle_start_line": 66,
+          "ordinal": 5
         }
       ],
-      "pass_from_incomplete_run": true,
+      "pass_from_incomplete_run": false,
       "resolved_prior_failures": []
     },
     {
@@ -1924,12 +2252,12 @@
       "status": "PASS_OBSERVED",
       "latest_terminal": {
         "testcase_id": "ru.liturgyguide.ui.BookReaderPolishTest#compactTwoHundredPercentFooterKeepsNamedTargetsAndUsefulReadingSpace",
-        "run": "full08-08-g3",
+        "run": "full08-10-g2",
         "code": 0,
         "status": "PASS",
-        "line": 15,
-        "bundle_start_line": 9,
-        "ordinal": 1
+        "line": 172,
+        "bundle_start_line": 166,
+        "ordinal": 12
       },
       "unfinished_start": null,
       "events": [
@@ -1987,6 +2315,24 @@
           "line": 15,
           "bundle_start_line": 9,
           "ordinal": 1
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderPolishTest#compactTwoHundredPercentFooterKeepsNamedTargetsAndUsefulReadingSpace",
+          "run": "full08-10-g2",
+          "code": 1,
+          "status": "STARTED",
+          "line": 165,
+          "bundle_start_line": 159,
+          "ordinal": 12
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderPolishTest#compactTwoHundredPercentFooterKeepsNamedTargetsAndUsefulReadingSpace",
+          "run": "full08-10-g2",
+          "code": 0,
+          "status": "PASS",
+          "line": 172,
+          "bundle_start_line": 166,
+          "ordinal": 12
         }
       ],
       "pass_from_incomplete_run": false,
@@ -2004,12 +2350,12 @@
       "status": "PASS_OBSERVED",
       "latest_terminal": {
         "testcase_id": "ru.liturgyguide.ui.BookReaderPolishTest#continuousScrollUpdatesHeadingAndOrderOpensAtTheCorrectRepeatedSection",
-        "run": "full08-06-g3",
+        "run": "full08-10-g2",
         "code": 0,
         "status": "PASS",
-        "line": 869,
-        "bundle_start_line": 863,
-        "ordinal": 61
+        "line": 130,
+        "bundle_start_line": 124,
+        "ordinal": 9
       },
       "unfinished_start": null,
       "events": [
@@ -2048,9 +2394,27 @@
           "line": 869,
           "bundle_start_line": 863,
           "ordinal": 61
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderPolishTest#continuousScrollUpdatesHeadingAndOrderOpensAtTheCorrectRepeatedSection",
+          "run": "full08-10-g2",
+          "code": 1,
+          "status": "STARTED",
+          "line": 123,
+          "bundle_start_line": 116,
+          "ordinal": 9
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderPolishTest#continuousScrollUpdatesHeadingAndOrderOpensAtTheCorrectRepeatedSection",
+          "run": "full08-10-g2",
+          "code": 0,
+          "status": "PASS",
+          "line": 130,
+          "bundle_start_line": 124,
+          "ordinal": 9
         }
       ],
-      "pass_from_incomplete_run": true,
+      "pass_from_incomplete_run": false,
       "resolved_prior_failures": []
     },
     {
@@ -2059,12 +2423,12 @@
       "status": "PASS_OBSERVED",
       "latest_terminal": {
         "testcase_id": "ru.liturgyguide.ui.BookReaderPolishTest#findingWordsPastSeventyPercentOfALongPrayerDisplaysTheirActualLine",
-        "run": "full08-06-g3",
+        "run": "full08-10-g2",
         "code": 0,
         "status": "PASS",
-        "line": 897,
-        "bundle_start_line": 891,
-        "ordinal": 63
+        "line": 158,
+        "bundle_start_line": 152,
+        "ordinal": 11
       },
       "unfinished_start": null,
       "events": [
@@ -2103,9 +2467,27 @@
           "line": 897,
           "bundle_start_line": 891,
           "ordinal": 63
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderPolishTest#findingWordsPastSeventyPercentOfALongPrayerDisplaysTheirActualLine",
+          "run": "full08-10-g2",
+          "code": 1,
+          "status": "STARTED",
+          "line": 151,
+          "bundle_start_line": 145,
+          "ordinal": 11
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderPolishTest#findingWordsPastSeventyPercentOfALongPrayerDisplaysTheirActualLine",
+          "run": "full08-10-g2",
+          "code": 0,
+          "status": "PASS",
+          "line": 158,
+          "bundle_start_line": 152,
+          "ordinal": 11
         }
       ],
-      "pass_from_incomplete_run": true,
+      "pass_from_incomplete_run": false,
       "resolved_prior_failures": []
     },
     {
@@ -2114,12 +2496,12 @@
       "status": "PASS_OBSERVED",
       "latest_terminal": {
         "testcase_id": "ru.liturgyguide.ui.BookReaderPolishTest#meaningReturnsToRussianAtTheSameFragmentEvenAfterReaderRecreation",
-        "run": "full08-06-g3",
+        "run": "full08-10-g2",
         "code": 0,
         "status": "PASS",
-        "line": 883,
-        "bundle_start_line": 877,
-        "ordinal": 62
+        "line": 144,
+        "bundle_start_line": 138,
+        "ordinal": 10
       },
       "unfinished_start": null,
       "events": [
@@ -2158,9 +2540,27 @@
           "line": 883,
           "bundle_start_line": 877,
           "ordinal": 62
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderPolishTest#meaningReturnsToRussianAtTheSameFragmentEvenAfterReaderRecreation",
+          "run": "full08-10-g2",
+          "code": 1,
+          "status": "STARTED",
+          "line": 137,
+          "bundle_start_line": 131,
+          "ordinal": 10
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderPolishTest#meaningReturnsToRussianAtTheSameFragmentEvenAfterReaderRecreation",
+          "run": "full08-10-g2",
+          "code": 0,
+          "status": "PASS",
+          "line": 144,
+          "bundle_start_line": 138,
+          "ordinal": 10
         }
       ],
-      "pass_from_incomplete_run": true,
+      "pass_from_incomplete_run": false,
       "resolved_prior_failures": []
     },
     {
@@ -2169,11 +2569,11 @@
       "status": "PASS_OBSERVED",
       "latest_terminal": {
         "testcase_id": "ru.liturgyguide.ui.BookReaderSpeedTest#thirtyAndOneHundredTwentyWordsPerMinuteProduceFourfoldActualMotion",
-        "run": "full08-08-g3",
+        "run": "full08-10-g2",
         "code": 0,
         "status": "PASS",
-        "line": 200,
-        "bundle_start_line": 194,
+        "line": 187,
+        "bundle_start_line": 181,
         "ordinal": 13
       },
       "unfinished_start": null,
@@ -2194,6 +2594,24 @@
           "status": "PASS",
           "line": 200,
           "bundle_start_line": 194,
+          "ordinal": 13
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderSpeedTest#thirtyAndOneHundredTwentyWordsPerMinuteProduceFourfoldActualMotion",
+          "run": "full08-10-g2",
+          "code": 1,
+          "status": "STARTED",
+          "line": 180,
+          "bundle_start_line": 173,
+          "ordinal": 13
+        },
+        {
+          "testcase_id": "ru.liturgyguide.ui.BookReaderSpeedTest#thirtyAndOneHundredTwentyWordsPerMinuteProduceFourfoldActualMotion",
+          "run": "full08-10-g2",
+          "code": 0,
+          "status": "PASS",
+          "line": 187,
+          "bundle_start_line": 181,
           "ordinal": 13
         }
       ],
