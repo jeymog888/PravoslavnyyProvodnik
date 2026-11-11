@@ -34,7 +34,10 @@ class ScheduleRefreshFeedbackTest(private val churchDetails: Boolean, private va
         "Europe/Moscow", "", "", "", "", emptyList(), "", "")
 
     @Test fun repeatedUnsuccessfulRefreshShowsLoadingThenANewAccessibleReceipt() {
-        var state by mutableStateOf(InternetScheduleState(church.id, status, checkedAt = "2026-11-11T10:00:00Z"))
+        val source = if (status == InternetScheduleStatus.NO_WEBSITE) null else "https://parish.example/schedule/"
+        var state by mutableStateOf(InternetScheduleState(church.id, status, website = source.orEmpty(),
+            sourceUrl = source.orEmpty(), checkedAt = "2026-11-11T10:00:00Z"))
+        val opened = mutableListOf<String>()
         var refreshes = 0
         val refresh = { refreshes++; state = state.copy(loading = true) }
         val containerTag = if (churchDetails) "church_content" else "main_content"
@@ -51,12 +54,13 @@ class ScheduleRefreshFeedbackTest(private val churchDetails: Boolean, private va
             CompositionLocalProvider(LocalDensity provides Density(density.density, 1.5f)) {
                 GuideTheme(false) { Box(Modifier.size(320.dp, 640.dp)) {
                     if (churchDetails) ChurchScreen(listOf(church), church.id, LocalDate.of(2026, 11, 11),
-                        onSelect = { _, _ -> error("Refresh must not change the parish") }, onOpenUrl = {}, onBack = {},
+                        onSelect = { _, _ -> error("Refresh must not change the parish") }, onOpenUrl = { opened += it }, onBack = {},
                         internetSchedule = state, onRefreshSchedule = refresh,
                         searchQuery = "", onSearchQueryChange = {}, now = Instant.parse("2026-11-11T10:00:00Z"))
                     else TodayScreen(church, Instant.parse("2026-11-11T10:00:00Z"), state, null, null,
                         onFindChurch = {}, onChurchDetails = {}, onOpenBook = { _, _, _ -> }, onResumeBook = {},
-                        onRefresh = refresh, onResumeLegacy = null, bottomBar = {})
+                        onRefresh = refresh, onResumeLegacy = null, bottomBar = {},
+                        onOpenScheduleSource = source?.let { url -> { opened += url; Unit } })
                 } }
             }
         }
@@ -65,6 +69,14 @@ class ScheduleRefreshFeedbackTest(private val churchDetails: Boolean, private va
             return compose.onNodeWithTag(tag).performScrollTo().assertIsDisplayed()
         }
         scroll(receiptTag).assertTextEquals("$expected\nПопытка обновления: 11 ноября 2026, 13:00:00")
+        val sourceTag = if (churchDetails) "open_schedule_website" else "today_schedule_source"
+        if (source == null) compose.onNodeWithTag(sourceTag).assertDoesNotExist()
+        else {
+            scroll(sourceTag).assertHeightIsAtLeast(48.dp)
+                .assert(hasAnyAncestor(hasTestTag(if (churchDetails) "church_schedule_card" else "today_schedule_card")))
+                .performClick()
+            compose.runOnIdle { assertEquals(listOf(source), opened) }
+        }
         repeat(2) { attempt ->
             scroll(refreshTag).assertIsEnabled().performClick()
             scroll(loadingTag)

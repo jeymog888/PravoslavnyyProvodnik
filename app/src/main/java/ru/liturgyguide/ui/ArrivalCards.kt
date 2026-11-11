@@ -28,6 +28,7 @@ import ru.liturgyguide.service.PublishedSchedule
 import ru.liturgyguide.service.schedule.InternetScheduleState
 import ru.liturgyguide.service.schedule.InternetScheduleStatus
 import ru.liturgyguide.service.schedule.SchedulePublication
+import ru.liturgyguide.service.schedule.ScheduleUrl
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -82,12 +83,24 @@ internal fun arrivalSchedule(church: Parish, date: LocalDate, now: Instant?, sta
 }
 
 /** No data is not the same thing as no services. Keep the distinction visible beside the date. */
-internal fun scheduleEmptyDescription(state: InternetScheduleState?): String = when {
+internal fun scheduleEmptyDescription(state: InternetScheduleState?, hasWebsite: Boolean = true): String = when {
     state?.loading == true -> "Проверяем сайт храма. Тексты ниже уже можно читать"
-    state?.status == InternetScheduleStatus.UNAVAILABLE -> "Не удалось обновить расписание. Попробуйте еще раз или откройте сайт храма"
+    state?.status == InternetScheduleStatus.UNAVAILABLE -> if (hasWebsite)
+        "Не удалось обновить расписание. Попробуйте еще раз или посмотрите его на сайте"
+        else "Не удалось обновить расписание. Попробуйте еще раз. Тексты службы ниже уже можно читать"
     state?.status == InternetScheduleStatus.NO_WEBSITE -> "Пока не нашли источник расписания. Можно указать сайт в сведениях о храме"
-    state?.status == InternetScheduleStatus.UNSUPPORTED -> "На сайте не удалось прочитать даты и время. Расписание можно посмотреть на самом сайте"
+    state?.status == InternetScheduleStatus.UNSUPPORTED -> if (hasWebsite)
+        "Не удалось автоматически прочитать даты и время. Откройте источник по кнопке ниже"
+        else "Не удалось прочитать расписание. Можно повторить поиск или перейти к текстам службы"
     else -> "Пока нет подтвержденных записей на эту дату. Это не означает, что служб не будет"
+}
+
+/** Source identity from the accepted/requested parish, not the map's place-evidence URL. */
+internal fun scheduleSourceFor(church: Parish, state: InternetScheduleState?): String? {
+    val own = state?.takeIf { it.parishId == church.id }
+    return listOfNotNull(own?.sourceUrl, own?.website, church.website,
+        church.sourceUrl.takeIf { church.schedule.isNotEmpty() })
+        .firstNotNullOfOrNull(ScheduleUrl::publicSource)
 }
 
 internal fun scheduleEmptyTitle(state: InternetScheduleState?, hasPublication: Boolean): String = when {

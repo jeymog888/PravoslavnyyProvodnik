@@ -135,18 +135,22 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                         } else {
                             Text(scheduleEmptyTitle(ownState, schedule?.publication != null || church.schedule.isNotEmpty()), style = MaterialTheme.typography.titleLarge,
                                 modifier = Modifier.testTag("today_schedule_empty"))
-                            Text(scheduleEmptyDescription(ownState), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(scheduleEmptyDescription(ownState, onOpenScheduleSource != null), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             if (!loading) OutlinedButton(onClick = onRefresh,
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("today_refresh_schedule")) {
                                 Icon(Icons.Default.Refresh, null, Modifier.size(20.dp)); Spacer(Modifier.width(12.dp)); Text("Обновить расписание")
+                            }
+                            onOpenScheduleSource?.let { source ->
+                                OutlinedButton(onClick = source, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
+                                    .testTag("today_schedule_source")) {
+                                    Icon(Icons.Default.OpenInNew, null, Modifier.size(20.dp))
+                                    Spacer(Modifier.width(12.dp)); Text("Посмотреть на сайте")
+                                }
                             }
                         }
                         if (loading) Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                             Text(loadingTitle, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("today_schedule_loading"))
-                        } else if (featured != null && ownState?.status == InternetScheduleStatus.UNAVAILABLE) {
-                            Text("Обновить не удалось. Показаны ранее полученные данные", style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("today_schedule_update_error"))
                         }
                         ScheduleCheckReceipt(ownState, church.timezone, Modifier.testTag("today_schedule_checked"))
                     }
@@ -189,7 +193,7 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                     ArrivalCard(Modifier.testTag("today_details_card")) {
                         Text("О храме", style = MaterialTheme.typography.titleMedium)
                         if (!loading && featured != null) ArrivalAction("Обновить расписание", Icons.Default.Refresh, onRefresh, Modifier.testTag("today_refresh_schedule"))
-                        onOpenScheduleSource?.let { source ->
+                        onOpenScheduleSource?.takeIf { featured != null }?.let { source ->
                             ArrivalAction("Расписание на сайте", Icons.Default.OpenInNew, source, Modifier.testTag("today_schedule_source"))
                         }
                         ArrivalAction("Сайт и сведения о храме", Icons.Default.Info, onChurchDetails, Modifier.testTag("today_church_details"))
@@ -211,11 +215,11 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
 fun ServiceBookChooser(civilDate: LocalDate, onDismiss: () -> Unit, onSelect: (LocalDate, WorshipKind) -> Unit) {
     val dateTitle = remember(civilDate) { civilDate.format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru"))) }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        GuideSheetSystemBars()
         LazyColumn(Modifier.fillMaxWidth().heightIn(max = 600.dp).testTag("service_book_chooser"),
             contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        GuideSheetSystemBars()
                     Text("Тексты на " + dateTitle, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.testTag("service_chooser_date"))
                     Text("Это библиотека текстов. Время служб смотрите в расписании выбранного храма", style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)

@@ -276,19 +276,24 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                         } else {
                             Text(scheduleEmptyTitle(ownState, schedule.publication != null || church.schedule.isNotEmpty()),
                                 style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("church_schedule_empty"))
-                            Text(scheduleEmptyDescription(ownState), style = MaterialTheme.typography.bodyMedium,
+                            val source = scheduleSourceFor(church, ownState)
+                            Text(scheduleEmptyDescription(ownState, source != null), style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                             onRefreshSchedule?.let { refresh -> OutlinedButton(onClick = refresh, enabled = ownState?.loading != true,
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("refresh_schedule")) {
                                 Icon(Icons.Default.Refresh, null, Modifier.size(20.dp)); Spacer(Modifier.width(12.dp)); Text("Обновить расписание")
                             } }
+                            source?.let { url ->
+                                OutlinedButton(onClick = { onOpenUrl(url) }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
+                                    .testTag("open_schedule_website")) {
+                                    Icon(Icons.Default.OpenInNew, null, Modifier.size(20.dp))
+                                    Spacer(Modifier.width(12.dp)); Text("Посмотреть на сайте")
+                                }
+                            }
                         }
                         if (ownState?.loading == true) Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                             Text("Обновляем расписание", style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("schedule_loading_summary"))
-                        } else if (featured != null && ownState?.status == InternetScheduleStatus.UNAVAILABLE) {
-                            Text("Обновить не удалось. Показаны ранее полученные данные", style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("church_schedule_update_error"))
                         }
                         ScheduleCheckReceipt(ownState, church.timezone, Modifier.testTag("church_schedule_checked"))
                     }
@@ -322,7 +327,8 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                         Text("О храме", style = MaterialTheme.typography.titleMedium)
                         if (ownState != null && onRefreshSchedule != null) InternetScheduleControls(
                             state = ownState, timezone = church.timezone, onRefresh = onRefreshSchedule,
-                            onOpenUrl = onOpenUrl, onSetSource = onSetScheduleSource, showRefresh = featured != null)
+                            onOpenUrl = onOpenUrl, onSetSource = onSetScheduleSource, showRefresh = featured != null,
+                            showWebsite = featured != null)
                         ArrivalAction(if (details) "Скрыть сведения" else "Адрес и другие сведения", Icons.Default.Info,
                             { details = !details }, Modifier.testTag("church_details"))
                         if (details) {
@@ -372,7 +378,7 @@ internal fun churchAddressLine(church: Parish): String {
 
 @Composable
 private fun InternetScheduleControls(state: InternetScheduleState, timezone: String, onRefresh: () -> Unit,
-    onOpenUrl: (String) -> Unit, onSetSource: ((String) -> Unit)?, showRefresh: Boolean = true) {
+    onOpenUrl: (String) -> Unit, onSetSource: ((String) -> Unit)?, showRefresh: Boolean = true, showWebsite: Boolean = true) {
     var editing by rememberSaveable(state.parishId) { mutableStateOf(false) }
     var input by rememberSaveable(state.parishId) { mutableStateOf("") }
     var invalid by rememberSaveable(state.parishId) { mutableStateOf(false) }
@@ -395,7 +401,7 @@ private fun InternetScheduleControls(state: InternetScheduleState, timezone: Str
             color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (showRefresh) ArrivalAction(if (state.status == InternetScheduleStatus.UNAVAILABLE) "Повторить обновление" else "Обновить расписание",
             Icons.Default.Refresh, onRefresh, Modifier.testTag("refresh_schedule"), enabled = !state.loading)
-        if (ScheduleUrl.publicSource(source) != null) ArrivalAction("Открыть сайт храма", Icons.Default.OpenInNew,
+        if (showWebsite && ScheduleUrl.publicSource(source) != null) ArrivalAction("Открыть сайт храма", Icons.Default.OpenInNew,
             { onOpenUrl(source) }, Modifier.testTag("open_schedule_website"))
         if (onSetSource != null) {
             if (!editing) ArrivalAction(if (state.website.isBlank()) "Указать сайт храма" else "Изменить сайт", Icons.Default.Edit,

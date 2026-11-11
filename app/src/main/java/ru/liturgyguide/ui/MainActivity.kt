@@ -650,7 +650,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                             if (migrationCandidate?.migrationNote != null && player.reading == null)
                                 "Тексты дополнены. При открытии вернемся к последней сохраненной фразе" else null
                         ).joinToString(" · ") },
-                        onOpenScheduleSource = church?.sourceUrl?.takeIf { ScheduleUrl.publicSource(it) != null }?.let { url ->
+                        onOpenScheduleSource = church?.let { scheduleSourceFor(it, internetSchedule) }?.let { url ->
                             { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
                         }
                     )

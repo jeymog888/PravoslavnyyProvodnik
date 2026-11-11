@@ -32,6 +32,7 @@ class ArrivalLayoutTest(private val width: Int, private val fontScale: Float) {
             "Europe/Moscow", "", "", "", "", emptyList(), "", "")
         var refreshed = 0
         var detailsOpened = 0
+        var sourceOpened = 0
         compose.setContent {
             val native = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(native.density, fontScale)) {
@@ -40,7 +41,7 @@ class ArrivalLayoutTest(private val width: Int, private val fontScale: Float) {
                         InternetScheduleState(church.id, InternetScheduleStatus.UNAVAILABLE), null, null,
                         onFindChurch = {}, onChurchDetails = { detailsOpened++ }, onOpenBook = { _, _, _ -> },
                         onResumeBook = {}, onRefresh = { refreshed++ }, onResumeLegacy = null, bottomBar = {},
-                        onOpenScheduleSource = {})
+                        onOpenScheduleSource = { sourceOpened++ })
                 } }
             }
         }
@@ -53,15 +54,16 @@ class ArrivalLayoutTest(private val width: Int, private val fontScale: Float) {
         readable("Расписание пока не найдено")
         scroll("today_refresh_schedule").assertHeightIsAtLeast(48.dp).performClick()
         readable("Обновить расписание")
+        scroll("today_schedule_source").assertHeightIsAtLeast(48.dp).performClick()
+        readable("Посмотреть на сайте")
+        val retry = compose.onNodeWithTag("today_refresh_schedule").getUnclippedBoundsInRoot()
+        val source = compose.onNodeWithTag("today_schedule_source").getUnclippedBoundsInRoot()
+        assertTrue("The source belongs beside the failed schedule, with a separate touch target", source.top - retry.bottom >= 12.dp)
         scroll("start_guide").assertHeightIsAtLeast(48.dp).assertIsEnabled()
         readable("Открыть литургию")
         scroll("today_church_details").assertHeightIsAtLeast(48.dp).performClick()
         readable("Сайт и сведения о храме")
-        // The two independent lower actions have real space, not only separated text baselines.
-        val source = compose.onNodeWithTag("today_schedule_source").getUnclippedBoundsInRoot()
-        val details = compose.onNodeWithTag("today_church_details").getUnclippedBoundsInRoot()
-        assertTrue("Separate actions need at least 12dp", details.top - source.bottom >= 12.dp)
-        compose.runOnIdle { assertEquals(1, refreshed); assertEquals(1, detailsOpened) }
+        compose.runOnIdle { assertEquals(1, refreshed); assertEquals(1, sourceOpened); assertEquals(1, detailsOpened) }
     }
 
     private fun scroll(tag: String): SemanticsNodeInteraction {
