@@ -9,7 +9,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -24,6 +26,10 @@ import androidx.compose.ui.unit.dp
 fun SettingsScreen(dark: Boolean, textSize: Int, onDarkChange: (Boolean) -> Unit,
     onTextSizeChange: (Int) -> Unit, onSoundSettings: () -> Unit, onSources: () -> Unit,
     onBack: () -> Unit, showBack: Boolean = true, bottomBar: @Composable () -> Unit = {}) {
+    val context = LocalContext.current
+    val installedVersion = remember(context) {
+        context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty().substringBefore('-')
+    }
     Scaffold(topBar = { Column(Modifier.statusBarsPadding()) {
         if (showBack) PageHeader("Настройки", onBack)
     } }, bottomBar = bottomBar) { padding ->
@@ -72,7 +78,7 @@ fun SettingsScreen(dark: Boolean, textSize: Int, onDarkChange: (Boolean) -> Unit
                 Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
                     GuideActionRow("О Феории", "Тексты, источники и возможности", Icons.Default.Info, onSources, "open_sources")
                 }
-                Text("Феория · 0.6", Modifier.padding(top = 16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Феория · $installedVersion", Modifier.padding(top = 16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -90,18 +96,19 @@ fun SourcesScreen(sourceUrl: String?, contentNote: String?, onOpenUrl: (String) 
             item {
                 Text("Понимание начинается с точных слов", style = MaterialTheme.typography.headlineLarge)
                 Spacer(Modifier.height(16.dp))
-                Text(contentNote ?: "Это краткий путеводитель по литургии Иоанна Златоуста", style = MaterialTheme.typography.bodyLarge)
+                Text("Выберите храм, службу и дату. Феория загружает опубликованное последование и сохраняет его на телефоне. Сохраненная книга доступна без сети. Время службы берется из найденного расписания; типовое расписание не подтверждает время в вашем храме.", style = MaterialTheme.typography.bodyLarge)
             }
             item {
                 Text("Текст и объяснение", style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(8.dp))
-                Text("Основные молитвы приведены целиком, другие - характерными фрагментами. Полный текст означает полноту выбранной молитвы, а не всего этапа. Русский смысл молитв передан редакцией приложения и не является утвержденным богослужебным переводом. Источники открываются из карточек. Для открытия сайта нужен интернет.")
-                sourceUrl?.let { url -> TextButton(onClick = { onOpenUrl(url) }) { Text("Открыть чин литургии") } }
+                Text("Книга содержит последование источника на выбранную дату. Русский текст берется из опубликованных переводов и пока есть не для всех фрагментов: без перевода остается подписанный оригинал. Короткие объяснения Феории отделены от перевода. Источники доступны в настройках чтения. Для их открытия нужен интернет.")
+                contentNote?.let { Text("Прежнее сохраненное чтение использует сокращенный путеводитель и редакторское русское изложение. Оно доступно отдельно от новой книги.", Modifier.padding(top = 12.dp)) }
+                sourceUrl?.let { url -> TextButton(onClick = { onOpenUrl(url) }) { Text("Источник прежнего путеводителя") } }
             }
             item {
                 Text("Как работает текстовый плеер", style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(8.dp))
-                Text("Выберите молитву или чтение и нужную фразу. Переключение оригинала и русского текста сохраняет место. Чтения Писания даны в Синодальном переводе. Плеер приблизительно ведет по фразам, текстам и этапам. После короткого фрагмента может появиться ожидание с пояснением. Если чтения на выбранную дату нет, продолжение требует вашего действия. Плеер не подстраивается под голос или хор. Уход с экрана ставит его на паузу; возврат не запускает движение")
+                Text("Читайте вниз одной лентой: название части меняется вместе с текстом. Оригинал, русский и смысл сохраняют выбранный фрагмент. Автопрокрутка помогает читать в настроенном темпе, но не определяет реальное место службы. Касание или ручная прокрутка ставят ее на паузу. Уход с экрана также останавливает движение; возврат его не запускает. Найти услышанное место можно по словам или короткой попыткой микрофона")
             }
             item {
                 Text("Подсказка по звуку", style = MaterialTheme.typography.titleLarge)
@@ -111,12 +118,12 @@ fun SourcesScreen(sourceUrl: String?, contentNote: String?, onOpenUrl: (String) 
             item {
                 Text("Ваши данные", style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(8.dp))
-                Text("Распознавание выполняется только на устройстве, аудио не сохраняется. Микрофон включается по вашей кнопке и прекращает захват при уходе с экрана. При внешнем поиске название храма или города отправляется в Photon, округленный район поиска - в VK Maps Overpass. Кэш поиска, сохраненные храмы с координатами, место чтения и настройки хранятся на телефоне. Отслеживания местоположения в фоне нет. Без разрешения на местоположение доступны поиск по названию храма или городу, ручное добавление храма и чтение")
+                Text("Распознавание выполняется только на устройстве, аудио не сохраняется. Микрофон включается по вашей кнопке и прекращает захват при уходе с экрана. Поиск храмов использует Photon и OpenStreetMap, в том числе VK Maps Overpass: передаются поисковые слова или район поиска. Для поиска сайта храма используются также справочник Паломник Азбуки веры, Wikipedia и Wikidata. Книги загружаются с Азбуки веры, расписания - с найденного или указанного вами сайта. Кэш поиска, сохраненные храмы с координатами, место чтения и настройки хранятся на телефоне. Отслеживания местоположения в фоне нет. Без разрешения на местоположение доступны поиск по названию храма или городу, ручное добавление храма и чтение")
             }
             item {
                 Text("Живая служба может отличаться", style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(8.dp))
-                Text("Песнопения и чтения меняются по дню, а продолжительность - по ходу службы. Плеер использует приблизительные длительности и может расходиться с реальной службой. Его можно поставить на паузу и уточнить место. По вопросам участия в таинствах и местных обычаев лучше обратиться к священнику своего храма.")
+                Text("Песнопения и чтения меняются по дню, а продолжительность - по ходу службы. Темп автопрокрутки может расходиться с реальной службой. Его можно поставить на паузу и уточнить место. По вопросам участия в таинствах и местных обычаев лучше обратиться к священнику своего храма.")
             }
         }
     }
