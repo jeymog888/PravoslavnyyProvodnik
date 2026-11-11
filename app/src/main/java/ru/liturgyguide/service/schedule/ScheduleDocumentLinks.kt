@@ -14,17 +14,22 @@ object ScheduleDocumentLinks {
         val links = mutableListOf<ScheduleDocumentLink>()
         val copy = page.clone()
         copy.select("nav,footer,aside,header,.sidebar,.comments").remove()
+        val content = copy.selectFirst("main,article,.entry-content,.post-content") ?: copy.body()
+        val schedulePage = schedule.containsMatchIn(copy.select("h1,h2,h3").text())
+        // A schedule heading does not make every attachment in the site's footer a schedule.
+        // Keep all articles on the cleaned page: the schedule need not be its first article.
+        val contentLinks = copy.select("a[href]").mapNotNull {
+            ScheduleUrl.publicSource(it.absUrl("href"))
+        }.toSet()
         // Navigation often contains the only schedule link; retain anchors there, but not images.
         page.select("a[href]").take(500).forEach { anchor ->
             val url = ScheduleUrl.publicSource(anchor.absUrl("href")) ?: return@forEach
             val label = anchor.text() + " " + decoded(anchor.attr("href"))
             val binary = extension.containsMatchIn(url)
-            if (!schedule.containsMatchIn(label) && !(binary && schedule.containsMatchIn(copy.select("h1,h2,h3").text()))) return@forEach
+            if (!schedule.containsMatchIn(label) && !(binary && schedulePage && url in contentLinks)) return@forEach
             if (!binary && !sameSite(page.baseUri(), url)) return@forEach
             links += ScheduleDocumentLink(url, page.baseUri(), binary)
         }
-        val content = copy.selectFirst("main,article,.entry-content,.post-content") ?: copy.body()
-        val schedulePage = schedule.containsMatchIn(copy.select("h1,h2,h3").text())
         content.select("img[src],img[data-src]").take(30).forEach { picture ->
             val raw = picture.absUrl("data-src").ifBlank { picture.absUrl("src") }
             val url = ScheduleUrl.publicSource(raw) ?: return@forEach
