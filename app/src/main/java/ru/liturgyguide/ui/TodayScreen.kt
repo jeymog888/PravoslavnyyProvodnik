@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ru.liturgyguide.model.*
@@ -32,7 +33,8 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
     onOpenBook: (LocalDate, WorshipKind, Boolean) -> Unit,
     onResumeBook: (BookReadingPosition) -> Unit, onRefresh: () -> Unit,
     onResumeLegacy: (() -> Unit)?, bottomBar: @Composable () -> Unit,
-    userStarts: List<UserServiceStart> = emptyList(), readingNotice: String? = null) {
+    userStarts: List<UserServiceStart> = emptyList(), readingNotice: String? = null,
+    onOpenScheduleSource: (() -> Unit)? = null, legacyReadingSummary: String? = null) {
     val zone = remember(church?.timezone) { ZoneId.of(church?.timezone ?: "Europe/Moscow") }
     val today = now.atZone(zone).toLocalDate()
     var dayOffset by rememberSaveable(church?.id) { mutableIntStateOf(0) }
@@ -41,6 +43,9 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
     val personalStart = church?.let { personalStartForDate(userStarts, it, date) }
     val selection = church?.let { TodayServiceSelection.pick(it, date, now, lookAhead = dayOffset == 0) }
     val featured = selection?.service
+    val inferredYear = internetSchedule?.publication?.let {
+        it.yearInferred && it.parishId == church?.id && it.sourceUrl == church?.sourceUrl
+    } == true
     // The selector belongs to the tapped occurrence, which can be later than the visible day tab.
     var chooserDateIso by rememberSaveable(church?.id) { mutableStateOf<String?>(null) }
     val chooserDate = chooserDateIso?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
@@ -82,14 +87,26 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
             } else {
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text(church.shortName, style = MaterialTheme.typography.titleLarge)
+                        Text(church.shortName, style = MaterialTheme.typography.titleLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         Text(listOf(church.city, church.address).filter(String::isNotBlank).distinct().joinToString(" · "),
-                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis)
                         OutlinedButton(onClick = onFindChurch, modifier = Modifier.heightIn(min = 48.dp).testTag("change_church")) {
                             Icon(Icons.Default.Place, null, Modifier.size(20.dp)); Spacer(Modifier.width(12.dp)); Text("Сменить храм")
                         }
                     }
                 }
+            }
+            lastBook?.let { saved -> item(key = "resume_book") {
+                OutlinedCard(onClick = { onResumeBook(saved) }, modifier = Modifier.fillMaxWidth().testTag("resume_book")) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("Продолжить чтение", style = MaterialTheme.typography.titleMedium)
+                        Text("${saved.key.worship.title} · ${LocalDate.parse(saved.key.date).format(format)}", style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            } }
+            if (church != null) {
                 item {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         FilterChip(dayOffset == 0, { dayOffset = 0 }, label = { Text("Сегодня") }, modifier = Modifier.heightIn(min = 48.dp).weight(1f).testTag("today_day_today"))
@@ -103,8 +120,14 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                             if (featured != null) {
                                 Text(featured.time, style = MaterialTheme.typography.displaySmall.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.SansSerif), modifier = Modifier.testTag("today_service_time"))
                                 Text(featured.title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.testTag("today_service_title"))
-                                val relation = if (selection?.mayBeInProgress == true) "Возможно, идет · по времени начала" else "Ближайшая служба по расписанию"
+                                val relation = if (inferredYear) "Время из расписания храма" else if (selection?.mayBeInProgress == true) "Возможно, идет · по времени начала" else "Ближайшая служба по расписанию"
                                 Text(relation, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("today_service_relation"))
+                                if (inferredYear) {
+                                    Text("Год не указан - проверьте дату в расписании", style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("schedule_inferred_year"))
+                                    onOpenScheduleSource?.let { openSource -> TextButton(onClick = openSource,
+                                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Проверить источник") } }
+                                }
                                 if (kind != null) Button(onClick = { open(featured) }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("open_service_book")) {
                                     Text(if (kind == WorshipKind.LITURGY && featured.kind == "service_block") "Открыть литургию" else "Открыть службу")
                                 } else OutlinedButton(onClick = { open(featured) }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("today_choose_unknown_service")) { Text("Выбрать текст службы") }
@@ -118,7 +141,7 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                                     modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("today_open_personal_liturgy")) { Text("Открыть литургию") }
                             } else {
                                 Text("Тексты службы", style = MaterialTheme.typography.headlineMedium)
-                                Text("Оригинал, русский текст и объяснения. Можно читать в своем темпе", style = MaterialTheme.typography.bodyLarge)
+                                Text("Оригинал, объяснения и доступный русский перевод. Можно читать в своем темпе", style = MaterialTheme.typography.bodyLarge)
                                 Button(onClick = { onOpenBook(date, WorshipKind.LITURGY, false) }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("start_guide")) { Text("Открыть литургию") }
                             }
                             TextButton(onClick = { chooserDateIso = (selection?.date ?: date).toString() }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("today_other_services")) { Text("Другие службы") }
@@ -175,15 +198,15 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                     }
                 }
             }
-            lastBook?.let { saved -> item {
-                OutlinedCard(onClick = { onResumeBook(saved) }, modifier = Modifier.fillMaxWidth().testTag("resume_book")) {
-                    Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Продолжить чтение", style = MaterialTheme.typography.titleMedium)
-                        Text("${saved.key.worship.title} · ${LocalDate.parse(saved.key.date).format(format)}", style = MaterialTheme.typography.bodyMedium)
+            onResumeLegacy?.let { resume -> item {
+                TextButton(onClick = resume, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("resume_guide")) {
+                    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Прежнее сохраненное чтение", style = MaterialTheme.typography.titleMedium)
+                        legacyReadingSummary?.let { Text(it, style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant) }
                     }
                 }
             } }
-            onResumeLegacy?.let { resume -> item { TextButton(onClick = resume, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Прежнее сохраненное чтение") } } }
         }
     }
     if (chooserDate != null) ServiceBookChooser(chooserDate, onDismiss = { chooserDateIso = null },

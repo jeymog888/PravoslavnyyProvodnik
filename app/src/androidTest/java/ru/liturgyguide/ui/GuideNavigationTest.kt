@@ -29,6 +29,9 @@ import ru.liturgyguide.service.PrayerTrackFactory
 import ru.liturgyguide.service.ServiceSession
 import ru.liturgyguide.service.ServicePlaybackStore
 import ru.liturgyguide.service.StoredServicePlaybackCodec
+import ru.liturgyguide.model.*
+import ru.liturgyguide.service.book.*
+import java.io.File
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -41,10 +44,15 @@ class GuideNavigationTest {
         get() = InstrumentationRegistry.getInstrumentation().targetContext
             .getSharedPreferences("guide_preferences", Context.MODE_PRIVATE)
 
-    // Reset before the activity reads preferences, including saved lyric positions.
+    // These native Activity scenarios intentionally exercise the explicitly retained legacy reader.
+    // New primary BOOK routes are covered by BookNavigation/ReadingEntry/Arrival, with controlled network inputs.
     private val cleanPreferences = object : ExternalResource() {
         override fun before() {
-            check(preferences.edit().clear().putBoolean("dark", false).commit())
+            check(preferences.edit().clear().putBoolean("dark", false)
+                .putString("church_id", "elisavetinsky_opalikha")
+                .putString("stage_id", "beginning")
+                .putString("session", Gson().toJson(ServiceSession("beginning", System.currentTimeMillis())))
+                .commit())
         }
     }
 
@@ -121,6 +129,8 @@ class GuideNavigationTest {
         tapMain("open_order")
         compose.onNodeWithTag("stage_search").assertDoesNotExist()
         compose.onNodeWithTag("open_listening").assertDoesNotExist()
+        compose.onNodeWithTag("stage_beginning").assertIsDisplayed().assertIsSelected()
+        compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_preparation"))
         compose.onNodeWithTag("stage_preparation").assertIsDisplayed()
         pressBack()
         openMainSearch()
@@ -305,8 +315,7 @@ class GuideNavigationTest {
         selectOriginal()
         val before = storedReading()
         pressBack()
-        compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("start_guide"))
-        compose.onNodeWithTag("start_guide").assertTextEquals("Продолжить чтение").performClick()
+        tapMain("resume_guide")
         compose.onFeedLine(trackNamed("creed", "Символ веры"), 2).assertIsSelected().assertIsDisplayed()
         assertEquals(before, storedReading())
         assertTrue(preferences.getBoolean("lyric_original", false))
@@ -335,8 +344,13 @@ class GuideNavigationTest {
         val repository = ParishRepository(context.assets.open("churches.json").bufferedReader().use { it.readText() })
         val parish = repository.selected(null)
         assertEquals("elisavetinsky_opalikha", parish.id)
-        compose.onNodeWithTag("open_church").assertTextContains("Елисаветинский храм")
-        compose.onNodeWithText(friendlyDate(LocalDate.now(ZoneId.of(parish.timezone)))).assertIsDisplayed()
+        compose.onNodeWithTag("main_content").performScrollToNode(hasText(parish.shortName))
+        compose.onNodeWithText(parish.shortName).assertIsDisplayed()
+        compose.onNodeWithTag("nav_church").performClick()
+        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("schedule_date"))
+        compose.onNodeWithTag("schedule_date").assertTextEquals(LocalDate.now(ZoneId.of(parish.timezone))
+            .format(DateTimeFormatter.ofPattern("d MMMM uuuu, EEEE", Locale.forLanguageTag("ru"))))
+        compose.onNodeWithTag("nav_home").performClick()
         openStage("dismissal", "благодарение")
         compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Благодарение и завершение")
         assertFalse(savedSession().autoAdvance)
@@ -499,14 +513,14 @@ class GuideNavigationTest {
         compose.onNodeWithTag("schedule_date").assertTextEquals(today.plusDays(1).format(scheduleDateFormat)).assertIsDisplayed()
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("change_church"))
         compose.onNodeWithTag("change_church").performClick()
-        compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("church_vsetsaritsa_nakhabino"))
+        compose.onNodeWithTag("discovery_content").performScrollToNode(hasTestTag("discovery_saved_vsetsaritsa_nakhabino"))
         val beforeChoice = preferences.all.toMap()
-        compose.onNodeWithTag("church_vsetsaritsa_nakhabino").performClick()
+        compose.onNodeWithTag("discovery_saved_vsetsaritsa_nakhabino").performClick()
         compose.runOnIdle { assertEquals(beforeChoice, preferences.all) }
         compose.onNodeWithTag("church_change_confirmation").assertIsDisplayed()
         compose.onNodeWithTag("cancel_church_change").performClick()
         compose.runOnIdle { assertEquals(beforeChoice, preferences.all) }
-        compose.onNodeWithTag("church_vsetsaritsa_nakhabino").performClick()
+        compose.onNodeWithTag("discovery_saved_vsetsaritsa_nakhabino").performClick()
         compose.onNodeWithTag("confirm_church_change").performClick()
         assertEquals("vsetsaritsa_nakhabino", preferences.getString("church_id", null))
         assertNull(preferences.getString("stage_id", null))
@@ -515,7 +529,7 @@ class GuideNavigationTest {
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("schedule_today"))
         compose.onNodeWithTag("schedule_today").assertIsSelected()
         pressBack()
-        compose.onNodeWithTag("resume_guide").assertDoesNotExist()
+        compose.onNodeWithText("Прежнее сохраненное чтение").assertDoesNotExist()
     }
 
     @Test
@@ -577,21 +591,84 @@ class GuideNavigationTest {
         assertNull(preferences.getString("session", null))
         assertFalse(preferences.contains(ServicePlaybackStore.PLAYBACK_KEY))
         assertFalse(preferences.all.keys.any(ru.liturgyguide.service.ReadingAcceptanceStore::isBookmarkKey))
-        openStage("cherubic_hymn", "херувимы")
-        compose.onNodeWithTag("open_map").performClick()
-        compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_creed"))
-        compose.onNodeWithTag("stage_creed").performClick()
-        chooseTrack("creed", "Символ веры")
-        compose.onFeedLine(acceptedTrack(), 0).assertIsSelected()
+        // Continue through the new primary route using the actual offline file cache.
+        // This preserves native MainActivity recreation and does not depend on live network.
+        val context = compose.activity.applicationContext
+        val bookPreferences = context.getSharedPreferences("service_book_reading", Context.MODE_PRIVATE)
+        val key = ServiceBookKey(date.toString())
+        val directory = File(context.filesDir, "service-books-v2")
+        val cache = FileBookCache(directory)
+        val previous = cache.read(key)
+        val fixture = freshBook(key)
+        check(bookPreferences.edit().clear().commit())
+        assertTrue(cache.write(fixture))
+        try {
+            // Church's today action deliberately uses today's civil date even if the next service is tomorrow.
+            compose.onNodeWithTag("nav_church").performClick()
+            compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("church_read_liturgy"))
+            compose.onNodeWithTag("church_read_liturgy").performClick()
+            compose.waitUntil(5_000) { compose.onAllNodesWithTag("book_content").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithTag("book_find").performClick()
+            compose.onNodeWithTag("book_search_query").performTextInput("Верую")
+            closeSoftKeyboard()
+            compose.onNodeWithTag("book_hit_fresh-creed").performScrollTo().performClick()
+            compose.mainClock.advanceTimeBy(650)
+            compose.waitForIdle()
+            val saved = requireNotNull(BookReadingStore(bookPreferences).last("elisavetinsky_opalikha"))
+            assertEquals("fresh-creed", saved.blockId)
+            assertEquals(BookAnchorKind.BLOCK, saved.anchorKind)
+            assertEquals(0f, saved.fraction, 0.01f)
+            compose.onNodeWithTag("book_block_fresh-creed").assertIsDisplayed()
+            assertNull(preferences.getString("session", null))
+            assertFalse(preferences.all.keys.any(ru.liturgyguide.service.ReadingAcceptanceStore::isBookmarkKey))
+            compose.onNodeWithTag("book_back").performClick()
+        } finally {
+            runCatching {
+                if (compose.onAllNodesWithTag("book_content").fetchSemanticsNodes().isNotEmpty()) {
+                    if (compose.onAllNodesWithTag("book_search_query").fetchSemanticsNodes().isNotEmpty()) pressBack()
+                    compose.onNodeWithTag("book_back").performClick()
+                    compose.waitForIdle()
+                }
+            }
+            // Restore the existing cached edition; synthetic text must not leak to later live-book scenarios.
+            if (previous != null) check(cache.write(previous))
+            else File(directory, "${BookText.sha256(key.canonical()).take(32)}.latest").delete()
+            if (previous?.contentHash != fixture.contentHash)
+                File(directory, "${BookText.sha256(key.canonical()).take(32)}-${fixture.contentHash}.json").delete()
+            check(bookPreferences.edit().clear().commit())
+        }
+    }
+
+    private fun freshBook(key: ServiceBookKey): ServiceBook {
+        val chapters = listOf(BookChapter("opening", "Общая молитва", "Молимся вместе", (1..14).map {
+            BookBlock("fresh-$it", BookBlockKind.PRAYER, null, "Господи, даруй нам мир и помощь в добрых делах. ".repeat(8))
+        }), BookChapter("faith", "Символ веры", "Исповедуем веру", listOf(
+            BookBlock("fresh-creed", BookBlockKind.PRAYER, null, "Верую во единаго Бога Отца Вседержителя. ".repeat(60)))))
+        val book = ServiceBook(key = key, title = "Литургия", sourceUrl = key.sourceUrl(), sourceTitle = "Тестовый источник",
+            fetchedAtMillis = System.currentTimeMillis(), selectedEventTitle = null, chapters = chapters, contentHash = "")
+        return book.copy(contentHash = ServiceBookIntegrity.contentHash(book))
+    }
+
+    private fun openLegacyFromHome() {
+        compose.onNodeWithTag("main_content").performScrollToNode(hasText("Прежнее сохраненное чтение"))
+        compose.onNodeWithText("Прежнее сохраненное чтение").performClick()
     }
 
     private fun tapMain(tag: String) {
-        compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag(tag))
-        compose.onNodeWithTag(tag).performClick()
+        when (tag) {
+            "start_guide", "resume_guide" -> openLegacyFromHome()
+            "open_order" -> {
+                openLegacyFromHome()
+                compose.onNodeWithTag("open_map").performClick()
+            }
+            else -> error("Unmigrated former MainScreen route: $tag")
+        }
     }
 
     private fun openMainSearch() {
-        tapMain("find_stage")
+        // Search is reached from the reading the person explicitly chose to continue.
+        if (compose.onAllNodesWithTag("main_content").fetchSemanticsNodes().isNotEmpty()) openLegacyFromHome()
+        compose.onNodeWithTag("clarify_stage").performClick()
         compose.onNodeWithTag("manual_content").performScrollToNode(hasTestTag("manual_search"))
         compose.onNodeWithTag("manual_search").performClick()
     }
@@ -671,9 +748,11 @@ class GuideNavigationTest {
         Gson().fromJson(preferences.getString("session", null), ServiceSession::class.java)
     )
     private fun chooseDefaultParish() {
-        compose.onNodeWithTag("open_church").performClick()
-        compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("church_elisavetinsky_opalikha"))
-        compose.onNodeWithTag("church_elisavetinsky_opalikha").performClick()
+        compose.onNodeWithTag("nav_church").performClick()
+        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("change_church"))
+        compose.onNodeWithTag("change_church").performClick()
+        compose.onNodeWithTag("discovery_content").performScrollToNode(hasTestTag("discovery_saved_elisavetinsky_opalikha"))
+        compose.onNodeWithTag("discovery_saved_elisavetinsky_opalikha").performClick()
         compose.onNodeWithTag("nav_home").performClick()
     }
 

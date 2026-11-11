@@ -14,11 +14,15 @@ import org.junit.runner.RunWith
 import ru.liturgyguide.model.Parish
 import ru.liturgyguide.model.ParishService
 import ru.liturgyguide.model.WorshipKind
+import ru.liturgyguide.model.ServiceBookKey
 import ru.liturgyguide.service.UserServiceStart
+import ru.liturgyguide.service.book.BookReadingPosition
 import ru.liturgyguide.service.schedule.InternetScheduleState
 import ru.liturgyguide.service.schedule.InternetScheduleStatus
 import ru.liturgyguide.service.schedule.ScheduleImportPhase
 import ru.liturgyguide.service.schedule.ScheduleImportProgress
+import ru.liturgyguide.service.schedule.SchedulePublication
+import ru.liturgyguide.service.schedule.InternetService
 import java.time.Instant
 import java.time.LocalDate
 
@@ -135,6 +139,37 @@ class TodayScreenTest {
         compose.runOnIdle { assertEquals(listOf(Request(LocalDate.of(2026, 11, 11), WorshipKind.MATINS)), opened) }
     }
 
+    @Test fun savedReadingIsVisibleBeforeScheduleScrollingAtTwoHundredPercentWithALongChurchName() {
+        val selected = withServices(service("2026-11-11", "17:00", "Вечерня"), service("2026-11-12", "09:00", "Литургия"))
+            .copy(shortName = "Храм святых равноапостольных Кирилла и Мефодия при большом историческом монастыре",
+                city = "Длинное название города", address = "Очень длинное название улицы, дом 123, строение 45")
+        val position = BookReadingPosition(ServiceBookKey("2026-11-10"), "a".repeat(64), selected.id, "prayer-17", "gospel", fraction = 0.4f)
+        val resumed = mutableListOf<BookReadingPosition>()
+        val opened = mutableListOf<Request>()
+        launch(selected, opened = opened, fontScale = 2f, lastBook = position, onResumeBook = { resumed += it })
+        // No scrolling to the schedule is needed to discover or activate the saved book.
+        compose.onNodeWithTag("resume_book").assertIsDisplayed().performClick()
+        compose.runOnIdle { assertEquals(listOf(position), resumed) }
+        scrollTo("today_service_date").assertTextEquals("11 ноября")
+        scrollTo("open_service_book").assertIsEnabled().performClick()
+        scrollTo("today_day_tomorrow").performClick()
+        scrollTo("today_service_date").assertTextEquals("12 ноября")
+        scrollTo("open_service_book").assertIsEnabled().performClick()
+        compose.runOnIdle {
+            assertEquals(listOf(Request(LocalDate.of(2026, 11, 11), WorshipKind.VESPERS),
+                Request(LocalDate.of(2026, 11, 12), WorshipKind.LITURGY)), opened)
+        }
+    }
+
+    @Test fun readingWithoutASelectedChurchStillOffersTheSavedBookAfterTheIntroduction() {
+        val position = BookReadingPosition(ServiceBookKey("2026-11-10"), "b".repeat(64), null, "prayer-3", "beginning")
+        val resumed = mutableListOf<BookReadingPosition>()
+        launch(null, lastBook = position, onResumeBook = { resumed += it })
+        scrollTo("resume_book").assertIsEnabled().performClick()
+        compose.runOnIdle { assertEquals(listOf(position), resumed) }
+        scrollTo("open_church").assertIsEnabled()
+    }
+
     @Test fun tomorrowsPersonalStartKeepsItsSourceAndDateWithoutReplacingPublishedTime() {
         val tomorrow = LocalDate.of(2026, 11, 12)
         val published = service(tomorrow.toString(), "09:00", "Литургия")
@@ -170,17 +205,42 @@ class TodayScreenTest {
         compose.runOnIdle { assertEquals(listOf(Request(tomorrow, WorshipKind.LITURGY), Request(tomorrow, WorshipKind.LITURGY)), opened) }
     }
 
+    @Test fun inferredYearIsDisclosedBeforeOpeningAndNeverClaimsTheServiceIsUnderway() {
+        val url = "https://parish.example/schedule"
+        val selected = withServices(service("2026-11-11", "12:30", "Литургия")).copy(sourceUrl = url)
+        val publication = SchedulePublication(selected.id, selected.timezone, "https://parish.example", url,
+            now.toString(), listOf(InternetService("2026-11-11", "12:30", "Литургия", "liturgy")), yearInferred = true)
+        val opened = mutableListOf<Request>()
+        var sourceOpens = 0
+        compose.setContent { GuideTheme(false) {
+            TodayScreen(selected, now, InternetScheduleState(selected.id, InternetScheduleStatus.READY, publication = publication),
+                null, lastBook = null, onFindChurch = {}, onChurchDetails = {},
+                onOpenBook = { date, kind, evening -> opened += Request(date, kind, evening) },
+                onResumeBook = {}, onRefresh = {}, onResumeLegacy = null, bottomBar = {},
+                onOpenScheduleSource = { sourceOpens++ })
+        } }
+        scrollTo("schedule_inferred_year").assertTextEquals("Год не указан - проверьте дату в расписании")
+        scrollTo("today_service_relation").assertTextEquals("Время из расписания храма")
+        compose.onNodeWithText("Проверить источник").performScrollTo().performClick()
+        scrollTo("open_service_book").performClick()
+        compose.runOnIdle {
+            assertEquals(1, sourceOpens)
+            assertEquals(listOf(Request(LocalDate.of(2026, 11, 11), WorshipKind.LITURGY)), opened)
+        }
+    }
+
     private fun launch(church: Parish?, instant: Instant = now, opened: MutableList<Request> = mutableListOf(),
         schedule: () -> InternetScheduleState? = { null }, progress: ScheduleImportProgress? = null,
-        onRefresh: () -> Unit = {}, onFindChurch: () -> Unit = {}, fontScale: Float = 1f) {
+        onRefresh: () -> Unit = {}, onFindChurch: () -> Unit = {}, fontScale: Float = 1f,
+        lastBook: BookReadingPosition? = null, onResumeBook: (BookReadingPosition) -> Unit = {}) {
         compose.setContent {
             val density = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
                 GuideTheme(false) {
-                    TodayScreen(church, instant, schedule(), progress, lastBook = null,
+                    TodayScreen(church, instant, schedule(), progress, lastBook = lastBook,
                         onFindChurch = onFindChurch, onChurchDetails = {},
                         onOpenBook = { date, kind, evening -> opened += Request(date, kind, evening) },
-                        onResumeBook = {}, onRefresh = onRefresh, onResumeLegacy = null, bottomBar = {})
+                        onResumeBook = onResumeBook, onRefresh = onRefresh, onResumeLegacy = null, bottomBar = {})
                 }
             }
         }

@@ -61,7 +61,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     var adding by rememberSaveable { mutableStateOf(false) }
     val query = searchQuery
     var locate by remember { mutableStateOf(false) }
-    var dayOffset by rememberSaveable { mutableIntStateOf(0) }
+    var dayOffset by rememberSaveable(church?.id) { mutableIntStateOf(0) }
     var editingDate by rememberSaveable(church?.id) { mutableStateOf<String?>(null) }
     val formDate = editingDate?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
     var handledPickerRequest by rememberSaveable { mutableIntStateOf(0) }
@@ -262,6 +262,12 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                                     Text(featured.time, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
                                     Text(featured.title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
                                 }
+                                if (cachedPublication?.yearInferred == true && (showingCache || cachedPublication.sourceUrl == church.sourceUrl)) {
+                                    Text("Год не указан - проверьте дату в расписании", style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("schedule_inferred_year"))
+                                    TextButton(onClick = { onOpenUrl(cachedPublication.sourceUrl) },
+                                        modifier = Modifier.heightIn(min = 48.dp)) { Text("Проверить источник") }
+                                }
                                 if (onOpenService != null) Button(onClick = { onOpenService(featured) }, shape = MaterialTheme.shapes.small,
                                     modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("church_open_service")) {
                                     Icon(Icons.Default.MenuBook, null, Modifier.size(20.dp)); Spacer(Modifier.width(12.dp)); Text(serviceReadingAction(featured))
@@ -401,7 +407,7 @@ private fun InternetScheduleControls(state: InternetScheduleState, timezone: Str
                 modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("refresh_schedule")) {
                 Text(if (state.status == InternetScheduleStatus.UNAVAILABLE) "Повторить" else "Обновить")
             }
-            if (ScheduleUrl.normalized(source) != null) OutlinedButton(onClick = { onOpenUrl(source) },
+            if (ScheduleUrl.publicSource(source) != null) OutlinedButton(onClick = { onOpenUrl(source) },
                 modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("open_schedule_website")) { Text("Открыть сайт") }
         }
         if (onSetSource != null) {
@@ -411,11 +417,11 @@ private fun InternetScheduleControls(state: InternetScheduleState, timezone: Str
             } else {
                 OutlinedTextField(value = input, onValueChange = { input = it.take(2048); invalid = false },
                     label = { Text("Сайт или страница расписания") }, singleLine = true, isError = invalid,
-                    supportingText = { Text(if (invalid) "Укажите полный адрес сайта, начиная с https://" else "Ссылка на сайт выбранного храма") },
+                    supportingText = { Text(if (invalid) "Укажите полный адрес сайта, начиная с https:// или http://" else "Ссылка на сайт выбранного храма") },
                     modifier = Modifier.fillMaxWidth().testTag("schedule_website_input"))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Button(onClick = {
-                        val normalized = ScheduleUrl.normalized(input)
+                        val normalized = ScheduleUrl.publicSource(input)
                         if (normalized == null) invalid = true else { onSetSource(normalized); editing = false }
                     }, enabled = !state.loading, modifier = Modifier.heightIn(min = 48.dp).testTag("save_schedule_website")) { Text("Проверить") }
                     TextButton(onClick = { editing = false }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Отмена") }

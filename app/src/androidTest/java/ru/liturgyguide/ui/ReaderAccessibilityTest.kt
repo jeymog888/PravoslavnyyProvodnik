@@ -329,7 +329,7 @@ class ReaderAccessibilityTest {
                 val part = label.substring(layout.getLineStart(line), layout.getLineEnd(line, visibleEnd = true)).trim()
                 assertTrue("A navigation label must not leave one isolated letter: $label", part.length >= 2)
             }
-            assertEquals(12.sp, layout.layoutInput.style.fontSize)
+            assertEquals(13.sp, layout.layoutInput.style.fontSize)
             assertEquals(2.6f, layout.layoutInput.density.fontScale, .001f)
             assertNativeTextMetrics(layout, Density(layout.layoutInput.density.density, 2.6f))
             val target = compose.onNodeWithTag(tag).assertIsDisplayed().assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp)

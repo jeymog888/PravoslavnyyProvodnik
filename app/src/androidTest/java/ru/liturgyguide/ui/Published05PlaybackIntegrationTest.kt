@@ -4,7 +4,9 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.SharedPreferences
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
@@ -17,11 +19,15 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import org.junit.Assert.*
+import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import ru.liturgyguide.di.AppContainer
 import ru.liturgyguide.service.*
+import ru.liturgyguide.model.ServiceBookKey
+import ru.liturgyguide.service.book.*
+import java.util.UUID
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -33,6 +39,12 @@ class Published05PlaybackIntegrationTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
     private val preferences = context.getSharedPreferences("guide_preferences", Context.MODE_PRIVATE)
+    private val bookPreferenceName = "published05-books-${UUID.randomUUID()}"
+    private val bookPreferences = context.getSharedPreferences(bookPreferenceName, Context.MODE_PRIVATE)
+    private val bookStore = BookReadingStore(bookPreferences)
+    private val books = NavigationMigrationBooks()
+    private val mounted = mutableStateOf(true)
+    private var launched = false
     private val production = AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
     private val parish get() = production.parishes.getOrThrow().selected(null)
     private val accepted get() = ReadingContext(parish.id, "2026-11-08", parish.timezone,
@@ -44,6 +56,14 @@ class Published05PlaybackIntegrationTest {
     private lateinit var currentContainer: AppContainer
     private val futureNote = "Тексты дополнены. При открытии вернемся к последней сохраненной фразе"
     private val completedNote = "Тексты дополнены. Вернулись к последней сохраненной фразе"
+
+    @After fun cleanBookStore() {
+        if (launched) {
+            compose.runOnIdle { mounted.value = false }
+            compose.waitForIdle()
+        }
+        context.deleteSharedPreferences(bookPreferenceName)
+    }
 
     @Test fun previewUsesTheSnapshotAddressAndExplicitResumeRetriesWithoutLosingPreferences() = withCiFailureDiagnostics("migration.previewUsesTheSnapshotAddressAndExplicitResumeRetriesWithoutLosingPreferences") {
         val old = seed(stageId = "creed", speed = PlaybackSpeed.FAST, offset = 12_345L, wrongMarker = true)
@@ -179,7 +199,13 @@ class Published05PlaybackIntegrationTest {
     @Test fun choosingFromOrderKeepsTheValidatedContextAndSlowSpeedWithoutAMigrationNotice() = withCiFailureDiagnostics("migration.choosingFromOrderKeepsTheValidatedContextAndSlowSpeedWithoutAMigrationNotice") {
         seed(speed = PlaybackSpeed.SLOW)
         launch(expandedContainer())
-        main("open_order").performClick()
+        main("resume_guide").performClick()
+        assertStored(accepted, "creed", PlaybackSpeed.SLOW, 1_234L)
+        compose.onNodeWithTag("open_map").performClick()
+        val beforeChoice = preferences.all.toMap()
+        compose.onNodeWithContentDescription("Назад").performClick()
+        unchanged(beforeChoice)
+        compose.onNodeWithTag("open_map").performClick()
         stage("lords_prayer").performClick()
         assertStored(accepted, "lords_prayer", PlaybackSpeed.SLOW, 0L)
         assertNoMigrationNotice()
@@ -201,49 +227,60 @@ class Published05PlaybackIntegrationTest {
         assertNoMigrationNotice()
     }
 
-    @Test fun aNewManualMomentUsesTodayAndNormalSpeedAndLateResumeCannotReplaceIt() = withCiFailureDiagnostics("migration.aNewManualMomentUsesTodayAndNormalSpeedAndLateResumeCannotReplaceIt") {
-        seed(speed = PlaybackSpeed.FAST)
+    @Test fun aNewDatedBookKeepsThePublished05CandidateAndIgnoresALateResumeFromHome() = withCiFailureDiagnostics("migration.aNewDatedBookKeepsThePublished05CandidateAndIgnoresALateResumeFromHome") {
+        val old = seed(speed = PlaybackSpeed.FAST)
+        val before = preferences.all.toMap()
         val restoration = launch(expandedContainer())
         val lateResume = action(main("resume_guide"))
-        main("find_stage").performClick()
-        landmark("creed")
-        acceptArrival()
-        val today = requireNotNull(ReadingContextFactory.manual(parish, now))
-        assertStored(today, "creed", PlaybackSpeed.NORMAL, 0L)
-        home()
-        val before = preferences.all.toMap()
-        compose.runOnIdle { lateResume() }
-        compose.onNodeWithTag("main_content").assertIsDisplayed()
+        main("today_day_tomorrow").performClick()
+        main("open_service_book").performClick()
+        val key = ServiceBookKey("2026-11-11")
+        assertBook(key)
         unchanged(before)
+        assertEquals(old, saved())
+        val bookPosition = requireNotNull(bookStore.last(parish.id))
+        compose.runOnIdle { lateResume() }
+        compose.onNodeWithTag("book_content").assertIsDisplayed()
+        compose.onNodeWithTag("play_lyrics").assertDoesNotExist()
+        unchanged(before)
+        assertEquals(bookPosition, bookStore.last(parish.id))
         restoration.emulateSavedInstanceStateRestore()
-        main("resume_guide").performClick()
-        assertStored(today, "creed", PlaybackSpeed.NORMAL, 0L)
+        assertBook(key)
+        assertEquals(listOf(key), books.requests.toList())
+        unchanged(before)
+        compose.onNodeWithTag("book_back").performClick()
+        main("resume_guide").assertTextContains("8 ноября 2026", substring = true).performClick()
+        assertStored(accepted, "creed", PlaybackSpeed.FAST, 1_234L)
+        assertGlobalsAndOtherBookmarks()
+        assertEquals(bookPosition, bookStore.last(parish.id))
     }
 
-    @Test fun anExhaustedOccurrenceKeepsItsOwnDateAndNormalSpeedInsteadOfTheCandidateTempo() = withCiFailureDiagnostics("migration.anExhaustedOccurrenceKeepsItsOwnDateAndNormalSpeedInsteadOfTheCandidateTempo") {
-        seed(speed = PlaybackSpeed.FAST)
+    @Test fun afterMidnightTheDisplayedNextBookKeepsItsDateAndDoesNotInheritTheCandidateTempo() = withCiFailureDiagnostics("migration.afterMidnightTheDisplayedNextBookKeepsItsDateAndDoesNotInheritTheCandidateTempo") {
+        val old = seed(speed = PlaybackSpeed.FAST)
         check(UserServiceStartStore(preferences).save(UserServiceStart(parish.id, "2026-11-08", "23:00"), parish))
+        val before = preferences.all.toMap()
         val afterMidnight = Instant.parse("2026-11-08T21:50:00Z")
         launch(expandedContainer(), instant = afterMidnight)
-        main("watch_current").performClick()
-        compose.onNodeWithTag("pending_service_context").assertTextContains("8 ноября 2026", substring = true)
-        landmark("creed")
-        acceptArrival()
-        val occurrence = ReadingContext(parish.id, "2026-11-08", parish.timezone, ReadingContextSource.USER,
-            Instant.parse("2026-11-08T20:00:00Z").toEpochMilli())
-        assertStored(occurrence, "creed", PlaybackSpeed.NORMAL, 0L)
+        main("today_service_date").assertTextEquals("9 ноября")
+        main("today_service_time").assertTextEquals("08:00")
+        main("open_service_book").performClick()
+        val key = ServiceBookKey("2026-11-09")
+        assertBook(key)
+        assertEquals(listOf(key), books.requests.toList())
+        unchanged(before)
+        assertEquals(old, saved())
+        assertEquals(accepted, ReadingContextStore(preferences).restore())
+        assertGlobalsAndOtherBookmarks()
     }
 
     @Test fun aConfirmedChurchChangeClearsTheCandidateAndRejectsItsOldResumeCallback() = withCiFailureDiagnostics("migration.aConfirmedChurchChangeClearsTheCandidateAndRejectsItsOldResumeCallback") {
         seed()
         val restoration = launch(expandedContainer())
         val lateResume = action(main("resume_guide"))
-        main("open_church").performClick()
-        scroll("church_content", "change_church").performClick()
+        main("change_church").performClick()
         val other = production.parishes.getOrThrow().directory.churches.first { it.id != parish.id }
-        scroll("church_picker", "church_${other.id}").performClick()
+        scroll("discovery_content", "discovery_saved_${other.id}").performClick()
         compose.onNodeWithTag("confirm_church_change").performClick()
-        compose.onNodeWithText("Служба", useUnmergedTree = true).performClick()
         compose.onNodeWithTag("main_content").assertIsDisplayed()
         val before = preferences.all.toMap()
         assertFalse(preferences.contains(ServicePlaybackStore.PLAYBACK_KEY))
@@ -315,11 +352,11 @@ class Published05PlaybackIntegrationTest {
     }
 
     private fun asset(name: String): String = context.assets.open(name).bufferedReader(Charsets.UTF_8).use { it.readText() }
-    private fun oldContainer() = AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules, assetReader = { name ->
+    private fun oldContainer() = AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules, booksOverride = books, assetReader = { name ->
         if (name == "liturgy_stages.json") originalJson else asset(name)
     })
     private fun expandedContainer(reads: MutableList<String> = mutableListOf(), historical: ((String) -> String)? = null) =
-        AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules, assetReader = { name ->
+        AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules, booksOverride = books, assetReader = { name ->
             reads += name
             when {
                 name == "liturgy_stages.json" -> expandedJson
@@ -375,16 +412,35 @@ class Published05PlaybackIntegrationTest {
     }
     private fun launch(container: AppContainer, storage: SharedPreferences = preferences, instant: Instant = now): StateRestorationTester {
         currentContainer = container
+        launched = true
         val local = object : ContextWrapper(context) {
-            override fun getSharedPreferences(name: String, mode: Int) =
-                if (name == "guide_preferences") storage else super.getSharedPreferences(name, mode)
+            override fun getSharedPreferences(name: String, mode: Int) = when (name) {
+                "guide_preferences" -> storage
+                "service_book_reading" -> bookPreferences
+                else -> super.getSharedPreferences(name, mode)
+            }
         }
         return StateRestorationTester(compose).also { restoration -> restoration.setContent {
-            CompositionLocalProvider(LocalContext provides local) {
-                AppNavigation(currentContainer, Clock.fixed(instant, ZoneOffset.UTC), monotonicMillis = { 0L })
+            CompositionLocalProvider(LocalContext provides local, LocalActivityResultRegistryOwner provides compose.activity) {
+                if (mounted.value) AppNavigation(currentContainer, Clock.fixed(instant, ZoneOffset.UTC), monotonicMillis = { 0L })
             }
         } }
     }
+    private fun assertBook(key: ServiceBookKey) {
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("book_content").fetchSemanticsNodes().isNotEmpty() }
+        compose.mainClock.advanceTimeBy(650)
+        compose.waitForIdle()
+        val book = requireNotNull(books.cached(key))
+        assertTrue(ServiceBookIntegrity.valid(book))
+        val position = requireNotNull(bookStore.last(parish.id))
+        assertEquals(key, position.key)
+        assertEquals(BookAnchorKind.HEADER, position.anchorKind)
+        assertEquals(0f, position.fraction, 0f)
+        assertEquals(BookReadingMode.ORIGINAL, position.mode)
+        assertEquals(85, position.wordsPerMinute)
+        compose.onNodeWithTag("book_play").assertContentDescriptionEquals("Прокручивать текст")
+    }
+
     private fun scroll(parent: String, tag: String): SemanticsNodeInteraction {
         compose.onNodeWithTag(parent).performScrollToNode(hasTestTag(tag))
         return compose.onNodeWithTag(tag).performScrollTo().assertIsDisplayed()

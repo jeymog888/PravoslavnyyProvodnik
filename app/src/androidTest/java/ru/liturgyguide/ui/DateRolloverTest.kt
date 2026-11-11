@@ -11,8 +11,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import ru.liturgyguide.di.AppContainer
-import ru.liturgyguide.service.ScheduleOverview
 import java.time.LocalDate
+import java.time.ZoneId
+import org.junit.Assert.assertEquals
 
 @RunWith(AndroidJUnit4::class)
 class DateRolloverTest {
@@ -22,19 +23,26 @@ class DateRolloverTest {
     @Test
     fun mainDateUpdatesWhileTheScreenStaysOpen() {
         val currentDate = mutableStateOf(LocalDate.of(2026, 11, 8))
+        val opened = mutableListOf<LocalDate>()
+        // Keep the primary book date visible without a later published occurrence.
+        val parish = parishes.selected(null).copy(schedule = emptyList())
         compose.setContent {
             GuideTheme(dark = false) {
-                MainScreen(lastStage = null, currentDate = currentDate.value,
-                    onStart = {}, onResume = {}, onFindStage = {}, church = parishes.selected(null),
-                    onChurch = {}, overview = ScheduleOverview(), onOrder = {}, bottomBar = {})
+                TodayScreen(church = parish,
+                    now = currentDate.value.atTime(9, 0).atZone(ZoneId.of(parish.timezone)).toInstant(),
+                    internetSchedule = null, importProgress = null, lastBook = null,
+                    onFindChurch = {}, onChurchDetails = {}, onOpenBook = { date, _, _ -> opened += date },
+                    onResumeBook = {}, onRefresh = {}, onResumeLegacy = null, bottomBar = {})
             }
         }
-        compose.onNodeWithText("8 ноября, воскресенье").assertIsDisplayed()
-
+        compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("today_service_date"))
+        compose.onNodeWithTag("today_service_date").assertTextEquals("8 ноября")
         compose.runOnIdle { currentDate.value = LocalDate.of(2026, 11, 9) }
-
-        compose.onNodeWithText("9 ноября, понедельник").assertIsDisplayed()
-        compose.onNodeWithText("8 ноября, воскресенье").assertDoesNotExist()
+        compose.onNodeWithTag("today_service_date").assertTextEquals("9 ноября")
+        compose.onNodeWithText("8 ноября").assertDoesNotExist()
+        compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("start_guide"))
+        compose.onNodeWithTag("start_guide").performClick()
+        compose.runOnIdle { assertEquals(listOf(LocalDate.of(2026, 11, 9)), opened) }
     }
 
     @Test

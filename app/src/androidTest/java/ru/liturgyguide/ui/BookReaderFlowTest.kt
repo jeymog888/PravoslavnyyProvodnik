@@ -212,6 +212,53 @@ class BookReaderFlowTest {
         assertEquals("Pinned restore must not silently replace the accepted version", 0, loads.get())
     }
 
+    @Test fun reopeningAnEarlierServiceKeepsItsAcceptedEditionAfterReadingAnotherDate() {
+        val accepted = sampleBook()
+        val latest = accepted.copy(title = "Литургия с обновленным текстом", contentHash = "")
+            .let { it.copy(contentHash = ServiceBookIntegrity.contentHash(it)) }
+        val anotherKey = accepted.key.copy(date = "2026-11-12")
+        val another = accepted.copy(key = anotherKey, sourceUrl = anotherKey.sourceUrl(), contentHash = "")
+            .let { it.copy(contentHash = ServiceBookIntegrity.contentHash(it)) }
+        val chapter = accepted.chapters.last()
+        seed(accepted, chapter.id, "near-end-long", fraction = .42f, mode = BookReadingMode.RUSSIAN)
+        seed(another, "opening", "opening-1", anchor = BookAnchorKind.HEADER)
+        assertEquals("Another date must really own the last-read shortcut", another.key, saved().key)
+        val loads = AtomicInteger()
+        val pinnedLookups = AtomicInteger()
+        val books = object : ServiceBooks {
+            override fun cached(key: ServiceBookKey): ServiceBook? = latest.takeIf { it.key == key }
+            override fun cachedVersion(key: ServiceBookKey, contentHash: String): ServiceBook? {
+                pinnedLookups.incrementAndGet()
+                return accepted.takeIf { it.key == key && it.contentHash == contentHash }
+            }
+            override suspend fun load(key: ServiceBookKey, force: Boolean, onProgress: (BookLoadProgress) -> Unit): BookLoadResult {
+                loads.incrementAndGet()
+                return BookLoadResult.Ready(latest, fromCache = true)
+            }
+        }
+        content {
+            ServiceBookScreen(accepted.key, parishId, books, BookReadingStore(preferences), 0,
+                onBack = {}, onSettings = {}, onOpenUrl = {}, onOpenCommonLiturgy = {})
+        }
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("book_content").fetchSemanticsNodes().isNotEmpty() }
+        settle()
+        assertEquals("Returning to a bookmarked date must not load/adopt the latest edition", 0, loads.get())
+        assertTrue(pinnedLookups.get() > 0)
+        compose.onNodeWithTag("book_accept_update").assertIsDisplayed()
+        compose.onNodeWithTag("book_mode_russian").assertIsSelected()
+        compose.onNodeWithTag("book_chapter", useUnmergedTree = true).assertTextEquals(chapter.title)
+        val restored = saved()
+        assertEquals(accepted.key, restored.key)
+        assertEquals(accepted.contentHash, restored.contentHash)
+        assertEquals("near-end-long", restored.blockId)
+        assertEquals(BookAnchorKind.BLOCK, restored.anchorKind)
+        assertEquals(BookReadingMode.RUSSIAN, restored.mode)
+        assertEquals(.42f, restored.fraction, .001f)
+        val paragraphTop = compose.onNodeWithTag("book_block_near-end-long").assertIsDisplayed().getUnclippedBoundsInRoot().top
+        val viewportTop = compose.onNodeWithTag("book_content").getBoundsInRoot().top
+        assertTrue("The accepted paragraph must reopen inside its text", paragraphTop < viewportTop - 40.dp)
+    }
+
     private fun reader(book: ServiceBook, fontScale: Float = 1f, height: Int = 640, onRefresh: () -> Unit = {}) {
         content(fontScale, height) {
             BookReaderScreen(book, parishId, store, 0, onBack = {}, onOpenUrl = {},

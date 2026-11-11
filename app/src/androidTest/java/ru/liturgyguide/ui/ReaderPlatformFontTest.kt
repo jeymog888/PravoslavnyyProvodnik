@@ -14,9 +14,7 @@ import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.unit.width
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -59,11 +57,10 @@ class ReaderPlatformFontTest {
             ActivityScenario.launch(ComponentActivity::class.java).use { scenario ->
                 attachProductionApp(scenario)
                 assertSystemParent()
-                val expectedBrandSize = brandSize()
                 for ((step, setting) in listOf(0, 1, 2, 0, 2).withIndex()) {
                     if (step > 0) compose.onNodeWithContentDescription("К службе").performClick()
                     compose.onNodeWithTag("main_content").assertIsDisplayed()
-                    assertEquals("The decorative logo must not grow with content font size", expectedBrandSize, brandSize())
+                    assertReadableBrand(listOf(1f, 1.15f, 1.3f)[preferences.getInt("text_size", 0)])
                     compose.onNodeWithTag("open_settings").performClick()
                     compose.onNodeWithTag("settings_content").performScrollToNode(hasTestTag("text_size_$setting"))
                     compose.onNodeWithTag("text_size_$setting").performScrollTo().assertIsDisplayed().performClick()
@@ -81,6 +78,7 @@ class ReaderPlatformFontTest {
                     sample(textWithin("text_size_$setting", listOf("Обычный", "Крупный", "Очень крупный")[setting]), factor)
                     sample(textWithin("nav_home", "Служба"), factor)
                     compose.onNodeWithTag("nav_home").performClick()
+                    assertReadableBrand(factor)
                     resumeReading()
                     assertReaderAndStoredState(initial, saved, bookmarks, factor)
                     if (step < 3) {
@@ -101,7 +99,7 @@ class ReaderPlatformFontTest {
                 assertEquals(2, preferences.getInt("text_size", -1))
                 assertReaderAndStoredState(initial, saved, bookmarks, 1.3f)
                 compose.onNodeWithContentDescription("К службе").performClick()
-                assertEquals(expectedBrandSize, brandSize())
+                assertReadableBrand(1.3f)
                 sample(textWithin("nav_home", "Служба"), 1.3f)
                 assertEquals(saved, savedPlayback())
                 assertEquals(bookmarks, bookmarkValues())
@@ -110,14 +108,23 @@ class ReaderPlatformFontTest {
 
     private data class PlatformParent(val activity: ComponentActivity, val density: Density, val configurationScale: Float)
 
-    private fun brandSize(): Pair<androidx.compose.ui.unit.Dp, androidx.compose.ui.unit.Dp> {
-        compose.onNodeWithTag("main_content").performScrollToNode(hasContentDescription("Феория"))
-        val node = compose.onNodeWithContentDescription("Феория").performScrollTo().assertIsDisplayed()
-        val full = node.getUnclippedBoundsInRoot(); val visible = node.getBoundsInRoot()
-        assertTrue("Logo artwork must fit its visible bounds", visible.left <= full.left + .5.dp && visible.top <= full.top + .5.dp &&
-            visible.right >= full.right - .5.dp && visible.bottom >= full.bottom - .5.dp)
-        assertTrue("Logo is still visibly present", full.width >= 100.dp && full.height >= 40.dp)
-        return full.width to full.height
+    private fun assertReadableBrand(factor: Float) {
+        compose.onNodeWithTag("main_content").performScrollToNode(hasText("Феория"))
+        fun title(text: String) = compose.onNode(hasText(text) and
+            SemanticsMatcher.keyIsDefined(SemanticsActions.GetTextLayoutResult), useUnmergedTree = true)
+            .assertIsDisplayed().assertTextEquals(text)
+        val heading = title("Феория")
+        val greek = title("θεωρία")
+        // The brand now uses actual text. Both titles must follow the same native
+        // font curve as the content, with complete glyphs and no clipped bounds.
+        val headingLayout = sample(heading, factor)
+        val greekLayout = sample(greek, factor)
+        assertEquals("The application name must remain a whole readable heading", 1, headingLayout.lineCount)
+        assertEquals("The Greek name must remain a whole readable word", 1, greekLayout.lineCount)
+        val headingBounds = heading.getUnclippedBoundsInRoot()
+        val greekBounds = greek.getUnclippedBoundsInRoot()
+        assertTrue("The two brand titles must not overlap at the chosen native scale",
+            headingBounds.right <= greekBounds.left + .5.dp)
     }
 
     private fun attachProductionApp(scenario: ActivityScenario<ComponentActivity>) {

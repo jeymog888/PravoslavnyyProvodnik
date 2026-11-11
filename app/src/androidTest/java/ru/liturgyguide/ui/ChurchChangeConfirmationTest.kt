@@ -3,6 +3,8 @@ package ru.liturgyguide.ui
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.SharedPreferences
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -11,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.StateRestorationTester
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.*
@@ -29,7 +31,7 @@ import ru.liturgyguide.ui.closeSoftKeyboardWithCiDiagnostics as closeSoftKeyboar
 
 @RunWith(AndroidJUnit4::class)
 class ChurchChangeConfirmationTest {
-    @get:Rule val compose = createComposeRule()
+    @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
     private val preferences = context.getSharedPreferences("guide_preferences", Context.MODE_PRIVATE)
     private val container = AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
@@ -42,13 +44,13 @@ class ChurchChangeConfirmationTest {
         val before = preferences.all.toMap()
         launch()
         openPicker()
-        compose.onNodeWithTag("church_search").performTextInput("Нахабино")
+        compose.onNodeWithTag("discovery_query").performTextInput("Нахабино")
         closeSoftKeyboard()
         choose(otherId)
         assertUnchanged(before)
         compose.onNodeWithTag("cancel_church_change").performClick()
         assertUnchanged(before)
-        compose.onNodeWithTag("church_search").assertTextContains("Нахабино")
+        compose.onNodeWithTag("discovery_query").assertTextContains("Нахабино")
         choose(otherId)
         pressBack()
         compose.onNodeWithTag("church_change_confirmation").assertDoesNotExist()
@@ -67,7 +69,7 @@ class ChurchChangeConfirmationTest {
             ReadingContextStore.CONTEXT_KEY, ServicePlaybackStore.PLAYBACK_KEY) && !ReadingAcceptanceStore.isBookmarkKey(key) },
             selected - "church_id")
         compose.runOnIdle { confirm(); assertEquals(selected, preferences.all) }
-        compose.onNodeWithTag("church_picker").assertDoesNotExist()
+        compose.onNodeWithTag("discovery_content").assertDoesNotExist()
     }
 
     @Test fun firstChoiceWithoutReadingCompletesWithoutConfirmation() {
@@ -75,7 +77,7 @@ class ChurchChangeConfirmationTest {
         launch()
         compose.onNodeWithTag("open_church").performClick()
         choose(firstId, expectConfirmation = false)
-        compose.onNodeWithTag("church_picker").assertDoesNotExist()
+        compose.onNodeWithTag("discovery_content").assertDoesNotExist()
         compose.onNodeWithTag("church_change_confirmation").assertDoesNotExist()
         compose.onNodeWithTag("main_content").assertIsDisplayed()
         compose.onNodeWithTag("church_content").assertDoesNotExist()
@@ -90,17 +92,18 @@ class ChurchChangeConfirmationTest {
         compose.onNodeWithTag("open_church").performClick()
         compose.runOnIdle { failing.failNextCommit = true }
         choose(firstId, expectConfirmation = false)
-        compose.onNodeWithTag("church_picker").assertIsDisplayed()
+        compose.onNodeWithTag("discovery_content").assertIsDisplayed()
         compose.onNodeWithTag("main_content").assertDoesNotExist()
-        compose.onNodeWithTag("church_${firstId}").assertIsNotSelected()
-        compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("church_selection_error"))
-        compose.onNodeWithTag("church_selection_error").assertIsDisplayed()
+        compose.onNodeWithTag("discovery_saved_${firstId}").assertHasClickAction()
+        assertFalse("A failed choice must not select a church", preferences.contains("church_id"))
+        compose.onNodeWithTag("discovery_content").performScrollToNode(hasTestTag("discovery_message"))
+        compose.onNodeWithTag("discovery_message").assertIsDisplayed()
         assertUnchanged(before)
         restoration.emulateSavedInstanceStateRestore()
-        compose.onNodeWithTag("church_picker").assertIsDisplayed()
+        compose.onNodeWithTag("discovery_content").assertIsDisplayed()
         compose.onNodeWithTag("main_content").assertDoesNotExist()
         choose(firstId, expectConfirmation = false)
-        compose.onNodeWithTag("church_picker").assertDoesNotExist()
+        compose.onNodeWithTag("discovery_content").assertDoesNotExist()
         compose.onNodeWithTag("main_content").assertIsDisplayed()
         assertEquals(firstId, preferences.getString("church_id", null))
     }
@@ -111,7 +114,7 @@ class ChurchChangeConfirmationTest {
         launch()
         openPicker()
         choose(firstId, expectConfirmation = false)
-        compose.onNodeWithTag("church_picker").assertDoesNotExist()
+        compose.onNodeWithTag("discovery_content").assertDoesNotExist()
         compose.onNodeWithTag("church_change_confirmation").assertDoesNotExist()
         assertUnchanged(before)
     }
@@ -130,13 +133,13 @@ class ChurchChangeConfirmationTest {
         compose.onNodeWithTag("cancel_church_change").performClick()
         assertUnchanged(before)
         assertFalse(preferences.contains("church_id"))
-        compose.onNodeWithTag("church_picker").assertIsDisplayed()
+        compose.onNodeWithTag("discovery_content").assertIsDisplayed()
         compose.onNodeWithTag("main_content").assertDoesNotExist()
         choose(firstId)
         compose.onNodeWithTag("main_content").assertDoesNotExist()
         assertUnchanged(before)
         compose.onNodeWithTag("confirm_church_change").performClick()
-        compose.onNodeWithTag("church_picker").assertDoesNotExist()
+        compose.onNodeWithTag("discovery_content").assertDoesNotExist()
         compose.onNodeWithTag("church_change_confirmation").assertDoesNotExist()
         compose.onNodeWithTag("main_content").assertIsDisplayed()
         assertEquals(firstId, preferences.getString("church_id", null))
@@ -161,7 +164,7 @@ class ChurchChangeConfirmationTest {
         assertUnchanged(before)
         compose.onNodeWithTag("confirm_church_change").performClick()
         compose.onNodeWithTag("church_change_confirmation").assertDoesNotExist()
-        compose.onNodeWithTag("church_picker").assertDoesNotExist()
+        compose.onNodeWithTag("discovery_content").assertDoesNotExist()
         assertEquals(otherId, preferences.getString("church_id", null))
         assertFalse(preferences.contains(ServicePlaybackStore.PLAYBACK_KEY))
     }
@@ -181,14 +184,13 @@ class ChurchChangeConfirmationTest {
         val cancelledConfirm = confirmationAction()
         compose.onNodeWithTag("cancel_church_change").performClick()
         assertUnchanged(replacement)
-        // The sheet owns the focused dialog window; dismiss its real accessibility action.
-        compose.onNode(SemanticsMatcher.keyIsDefined(SemanticsActions.Dismiss)).assertIsDisplayed()
-            .performSemanticsAction(SemanticsActions.Dismiss) { dismiss -> assertTrue(dismiss()) }
-        compose.onNodeWithTag("church_picker").assertDoesNotExist()
+        // The unified search is a page. Leaving it must invalidate the cancelled confirmation too.
+        compose.onNodeWithContentDescription("Назад").assertIsDisplayed().performClick()
+        compose.onNodeWithTag("discovery_content").assertDoesNotExist()
         compose.onNodeWithTag("church_content").assertIsDisplayed()
         compose.runOnIdle { cancelledConfirm() }
         assertUnchanged(replacement)
-        compose.onNodeWithTag("church_picker").assertDoesNotExist()
+        compose.onNodeWithTag("discovery_content").assertDoesNotExist()
     }
 
     @Test fun recreationDropsPendingAndRejectsItsOldConfirmation() {
@@ -203,7 +205,7 @@ class ChurchChangeConfirmationTest {
         assertUnchanged(before)
         compose.runOnIdle { oldConfirm() }
         assertUnchanged(before)
-        compose.onNodeWithTag("church_picker").assertIsDisplayed()
+        compose.onNodeWithTag("discovery_content").assertIsDisplayed()
         choose(otherId)
         compose.onNodeWithTag("cancel_church_change").performClick()
         assertUnchanged(before)
@@ -218,8 +220,8 @@ class ChurchChangeConfirmationTest {
         // Combined with the saved 1.15 app text preference, this stresses the dialog at 2.99.
         launch(fontScale = 2.6f)
         openPicker()
-        compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("church_search"))
-        compose.onNodeWithTag("church_search").performTextInput("Казань")
+        compose.onNodeWithTag("discovery_content").performScrollToNode(hasTestTag("discovery_query"))
+        compose.onNodeWithTag("discovery_query").performTextInput("Казань")
         closeSoftKeyboard()
         choose(target.id)
         compose.onNodeWithTag("confirm_church_change").assertIsDisplayed()
@@ -307,6 +309,7 @@ class ChurchChangeConfirmationTest {
             restoration.setContent {
                 val density = LocalDensity.current
                 CompositionLocalProvider(LocalContext provides local,
+                    LocalActivityResultRegistryOwner provides compose.activity,
                     LocalDensity provides Density(density.density, fontScale ?: density.fontScale)) {
                     AppNavigation(container, Clock.fixed(instant, ZoneOffset.UTC))
                 }
@@ -315,16 +318,15 @@ class ChurchChangeConfirmationTest {
     }
 
     private fun openPicker() {
-        compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("open_church"))
-        compose.onNodeWithTag("open_church").assertIsDisplayed().performClick()
+        compose.onNodeWithTag("nav_church").assertIsDisplayed().performClick()
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("change_church"))
         compose.onNodeWithTag("change_church").performScrollTo().assertIsDisplayed().performClick()
-        compose.onNodeWithTag("church_picker").assertIsDisplayed()
+        compose.onNodeWithTag("discovery_content").assertIsDisplayed()
     }
 
     private fun choose(id: String, expectConfirmation: Boolean = true) {
-        compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("church_$id"))
-        compose.onNodeWithTag("church_$id").performClick()
+        compose.onNodeWithTag("discovery_content").performScrollToNode(hasTestTag("discovery_saved_$id"))
+        compose.onNodeWithTag("discovery_saved_$id").performClick()
         if (expectConfirmation) compose.onNodeWithTag("church_change_confirmation").assertIsDisplayed()
     }
 

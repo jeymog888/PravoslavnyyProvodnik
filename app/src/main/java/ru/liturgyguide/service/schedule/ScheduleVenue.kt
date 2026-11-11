@@ -13,6 +13,9 @@ internal object ScheduleVenue {
     // This complete calendar feast name is not the building word "собор". Do not exempt
     // other cathedral names, or an explicit location "в соборе ...", from identity checking.
     private val calendarFeast = Regex("(?iu)(?<![а-яё])собор\\s+архистратига\\s+михаила\\s+и\\s+прочих\\s+небесных\\s+сил\\s+бесплотных(?![а-яё])")
+    // Full name of the council commemoration, including its historical years. An
+    // explicit building marker outside this phrase remains subject to venue matching.
+    private val localCouncilFeast = Regex("(?iu)(?<![а-яё])отцов\\s+поместного\\s+собора\\s+церкви\\s+русской\\s+1917[./-]1918\\s+годов(?![а-яё])")
     private val shortMichaelFeast = Regex("(?iu)(?<![а-яё])собор(?=\\s+архистратига\\s+михаила(?![а-яё]))")
     private val martyrsFeast = Regex("(?iu)(?<![а-яё])собор(?=\\s+новомучеников(?![а-яё]))")
     private val nameWord = Regex("(?iu)[а-яёa-z-]+")
@@ -24,13 +27,13 @@ internal object ScheduleVenue {
     private val qualifiers = listOf("верхн", "нижн", "стар", "нов", "мал", "больш", "припис", "больнич", "госпитал")
 
     fun isLabel(text: String): Boolean {
-        val candidate = text.replace(calendarFeast, " ")
+        val candidate = text.replace(calendarFeast, " ").replace(localCouncilFeast, " ")
         return building.containsMatchIn(candidate) && !service.containsMatchIn(candidate) &&
             !clock.containsMatchIn(candidate) && tokens(candidate).isNotEmpty()
     }
 
     fun inlineLabel(text: String, calendarDate: LocalDate? = null, datedPreface: Boolean = false): String? {
-        var candidate = text.replace(calendarFeast, " ")
+        var candidate = text.replace(calendarFeast, " ").replace(localCouncilFeast, " ")
         // A calendar preface before the first clock in a dated service row is not a venue.
         // Standalone building headings, separate venue cells and locations after the clock
         // remain subject to identity checks, including churches dedicated to the same feast.

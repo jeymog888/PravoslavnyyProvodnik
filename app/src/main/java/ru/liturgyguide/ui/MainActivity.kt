@@ -31,6 +31,7 @@ import ru.liturgyguide.service.book.*
 import ru.liturgyguide.model.ServiceBookKey
 import ru.liturgyguide.model.WorshipKind
 import ru.liturgyguide.service.schedule.InternetScheduleState
+import ru.liturgyguide.service.schedule.ScheduleUrl
 import ru.liturgyguide.service.schedule.withInternetSchedule
 import java.time.Instant
 import com.google.gson.Gson
@@ -496,10 +497,16 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         if (preserveReading) {
             if (hasChurchSelection && churchId == id) return true
             if (!readingAcceptanceStore.confirmChurch(id)) { savingFailed(); return false }
-            churchId = id; hasChurchSelection = true
-            return true
+        } else if (!clearAcceptedReading(id)) return false
+        if (!hasChurchSelection || churchId != id) {
+            // These routes can be unmounted while the picker is open. rememberSaveable
+            // inputs alone do not invalidate their restored state for a different church.
+            screenStateHolder.removeState(Screen.CHURCH.name)
+            screenStateHolder.removeState(Screen.MAIN.name)
+            // Their consumed request counters were cleared with the saved route.
+            churchPickerRequest = 0
+            personalTimeRequest = 0
         }
-        if (!clearAcceptedReading(id)) return false
         churchId = id; hasChurchSelection = true
         return true
     }
@@ -572,6 +579,11 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
             Toast.makeText(context, "Не найдено приложение для открытия", Toast.LENGTH_SHORT).show()
         }
     }
+    LaunchedEffect(screen, bookRequestJson) {
+        // A damaged restored BOOK request displays Home. Normalize its owner too,
+        // so Home actions remain usable without weakening stale callback guards.
+        if (screen == Screen.BOOK && bookRequest == null) navigate(Screen.MAIN)
+    }
     LaunchedEffect(invalidArrival) {
         // Never render a scoped search without its draft: its selection cannot fall through
         // to the old accepted reading or silently acquire today's date.
@@ -592,6 +604,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
 
     // A callback held by an old MAIN frame cannot revive a candidate after accept/clear.
     val resumeGeneration = player.generation
+    val resumeChurchId = churchId
     val searchGeneration = player.generation
 
     val navigationBar: @Composable () -> Unit = {
@@ -615,15 +628,30 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         importProgress = scheduleImport, lastBook = lastBook,
                         onFindChurch = { churchOrigin = Screen.MAIN; churchSelectionOrigin = ChurchSelectionOrigin.FIRST_HOME; navigate(Screen.DISCOVERY) },
                         onChurchDetails = { openChurch(fromHome = false) },
-                        onOpenBook = ::openBookOnDate,
-                        onResumeBook = { openBook(it.key) },
+                        onOpenBook = { date, kind, evening ->
+                            if (screen == Screen.MAIN && churchId == resumeChurchId) openBookOnDate(date, kind, evening)
+                        },
+                        onResumeBook = { if (screen == Screen.MAIN && churchId == resumeChurchId) openBook(it.key) },
                         onRefresh = { scheduleSourceOverride = null; scheduleRefresh++ },
-                        onResumeLegacy = if (selectedStage == null) null else { { resumeLegacyReading() } },
+                        onResumeLegacy = if (selectedStage == null) null else { {
+                            if (screen == Screen.MAIN && churchId == resumeChurchId && player.generation == resumeGeneration)
+                                resumeLegacyReading()
+                        } },
                         bottomBar = navigationBar, userStarts = userStarts,
                         readingNotice = when {
                             invalidArrival || arrivalRecoveryNotice -> "Не удалось восстановить выбранную службу. Выберите ее заново"
                             invalidRecovery -> "Не удалось восстановить сохраненное чтение. Выберите службу или начните с начала"
                             else -> null
+                        },
+                        legacyReadingSummary = selectedStage?.let { stage -> listOfNotNull(
+                            stage.name,
+                            activeReadingContext?.let { "Тексты на ${LocalDate.parse(it.serviceDate).format(java.time.format.DateTimeFormatter.ofPattern("d MMMM uuuu", java.util.Locale.forLanguageTag("ru")))}" },
+                            if (readingNeedsExplicitDate) "Дата не сохранена · откроется на сегодня" else null,
+                            if (migrationCandidate?.migrationNote != null && player.reading == null)
+                                "Тексты дополнены. При открытии вернемся к последней сохраненной фразе" else null
+                        ).joinToString(" · ") },
+                        onOpenScheduleSource = church?.sourceUrl?.takeIf { ScheduleUrl.publicSource(it) != null }?.let { url ->
+                            { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
                         }
                     )
                     Screen.BOOK -> bookRequest?.let { request ->
@@ -801,6 +829,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         discovery = container.placeDiscovery,
                         savedChurches = churches,
                         onSelectSaved = ::chooseChurch,
+                        favorites = favoriteChurches,
+                        onToggleFavorite = { id -> favoriteChurches = churchStore.toggleFavorite(id, churches.map { it.id }.toSet()) },
                         query = churchSearchQuery, onQueryChange = { churchSearchQuery = it },
                         mode = churchSearchMode, onModeChange = { churchSearchMode = it },
                         onBack = ::closeDiscovery,

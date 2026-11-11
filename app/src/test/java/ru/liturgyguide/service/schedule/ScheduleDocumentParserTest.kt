@@ -209,4 +209,85 @@ class ScheduleDocumentParserTest {
         assertEquals(listOf("https://example.org/schedule.pdf", "https://cdn.example.org/schedule.pdf", "https://example.org/month.jpg"), links.map { it.url })
         assertTrue(links.all { it.document && it.linkedFrom == "https://example.org/" })
     }
+    @Test fun `ISO calendar card venue cannot suppress later days but keeps outer building binding`() {
+        // Real Kresta shape: a calendar feast and hospital ministry in earlier cards used
+        // to turn sectionVenue into a restriction on the entire following month.
+        val cards = """<article data-day="2026-10-03"><p>Собор Брянских святых.</p></article>
+            <article data-day="2026-11-10"><p>СЛУЖЕНИЕ В ПРИПИСНОМ БОЛЬНИЧНОМ ХРАМЕ</p>
+                <p>09:00 Литургия</p></article>
+            <article data-day="2026-11-11"><p>11 ноября</p><ul>
+                <li><time>08:00</time><span>Исповедь</span></li>
+                <li><time>08:30</time><span>Часы</span></li>
+                <li><time>09:00</time><span>Литургия</span><span class="who">о. Вадим</span></li></ul></article>"""
+        val page = "<main><h1>Ноябрь 2026</h1>$cards</main>"
+        val result = ScheduleHtmlParser.inspect(Jsoup.parse(page, "https://example.org/schedule/"), today, nicholas)
+        assertEquals(ScheduleParseDisposition.PARSED, result.disposition)
+        assertEquals(listOf("08:00", "08:30", "09:00"), result.events.map { it.time })
+        assertTrue(result.events.all { it.date == "2026-11-11" })
+        assertEquals("Литургия о. Вадим", result.events.last().title)
+        assertEquals("liturgy", result.events.last().kind)
+        // Resetting the inner card must never erase an external building heading.
+        val otherBuilding = page.replace("Ноябрь 2026", "Ноябрь 2026. Казанский храм")
+        assertTrue(inspect(otherBuilding, nicholas).events.isEmpty())
+    }
+
+    @Test fun `ISO calendar card cancellation does not escape its date or lose outer cancellation`() {
+        val cards = """<article data-day="2026-11-10"><p>Все богослужения отменены</p></article>
+            <article data-day="2026-11-11"><p>09:00 Литургия</p></article>
+            <article data-day="2026-11-12"><li><time>09:00</time><span>Литургия</span>
+                <span class="who">отменена</span></li></article>"""
+        val result = inspect("<main><h1>Ноябрь 2026</h1>$cards</main>", nicholas)
+        assertEquals(listOf("2026-11-11"), result.events.map { it.date })
+        assertEquals(setOf("2026-11-10"), result.withdrawnDates)
+        assertEquals(setOf("2026-11-12T09:00"), result.withdrawnStarts)
+        val outer = inspect("<main><h1>Все богослужения отменены</h1>$cards</main>", nicholas)
+        assertTrue(outer.events.isEmpty())
+        assertTrue(outer.withdrawsAll)
+    }
+
+    @Test fun `full Local Council commemoration preserves the real dated service card`() {
+        // Actual Nov 18 card from the live Kresta page. No host or current-date rule
+        // is involved: the complete historical commemoration is calendar text.
+        val card = """<main><h1>Ноябрь 2026</h1>
+            <article class="sched-dayc" data-day="2026-11-18">
+              <div class="sched-date"><b>18 ноября</b><span>среда</span></div>
+              <div class="sched-dayc-body">
+                <p class="sched-week">Седмица 25-я по Пятидесятнице.</p>
+                <p class="sched-feast">Мчч. Галактиона и Епистимии. Свт. Ионы, архиеп. Новгородского.
+                  Свт. Тихона, патриарха Московского и всея Руси.
+                  Отцов Поместного Собора Церкви Русской 1917.1918 годов.</p>
+                <ul class="sched-services">
+                  <li><time>08:00</time><span>Исповедь</span><span class="who">о. Вадим</span></li>
+                  <li><time>08:30</time><span>Часы</span></li>
+                  <li><time>09:00</time><span>Литургия</span><span class="who">о. Вадим</span></li>
+                  <li><time></time><span>Заупокойная лития</span></li>
+                </ul>
+              </div>
+            </article></main>"""
+        for (separator in listOf(".", "-", "/")) {
+            val result = parse(card.replace("1917.1918", "1917${separator}1918"), nicholas)
+            assertEquals(separator, listOf("08:00", "08:30", "09:00"), result.map { it.time })
+            assertTrue(result.all { it.date == "2026-11-18" })
+            assertEquals("liturgy", result.last().kind)
+            assertTrue(result.last().title.startsWith("Литургия о. Вадим"))
+        }
+    }
+
+    @Test fun `Local Council commemoration never hides an explicit church or cathedral location`() {
+        val feast = "Отцов Поместного Собора Церкви Русской 1917-1918 годов"
+        for (location in listOf("в храме", "в соборе")) {
+            val label = ScheduleVenue.inlineLabel("Литургия $location $feast")
+            assertNotNull(location, label)
+            assertFalse(location, ScheduleVenue.matches(label, nicholas))
+            val result = parse("""<h1>Ноябрь 2026</h1><h2>18 ноября</h2>
+                <p>09:00 Литургия $location $feast</p>""", nicholas)
+            assertTrue(location, result.isEmpty())
+        }
+        // Neither an incomplete historical phrase nor another named building is exempt.
+        assertNotNull(ScheduleVenue.inlineLabel("Собор Церкви Русской"))
+        val adjacent = parse("""<h1>Ноябрь 2026</h1><h2>18 ноября</h2><p>$feast.</p>
+            <p>09:00 Литургия в Казанском храме</p>""", nicholas)
+        assertTrue(adjacent.isEmpty())
+    }
+
 }

@@ -65,6 +65,26 @@ class ChurchDiscoveryScreenTest {
         }
     }
 
+    @Test fun nearbyNameFallbackExplainsItsLimitsWithoutMislabelingPrimaryOrOrdinaryNameSearch() {
+        val fake = FakeDiscovery()
+        launch(fake)
+        searchAndChooseKazan()
+        scrollTo("discovery_church_${church.id}").assertIsDisplayed()
+        compose.onNodeWithTag("discovery_nearby_notice").assertDoesNotExist()
+        compose.runOnIdle {
+            fake.churchResult = { DiscoveryResult.Success(listOf(church), fetchedAt, DiscoveryCacheStatus.FRESH_NETWORK,
+                DiscoveryProvider.PHOTON, kazan.center.searchAreaCenter(), 3_000) }
+        }
+        searchAndChooseKazan()
+        scrollTo("discovery_nearby_notice").assertTextContains("список может быть неполным", substring = true)
+            .assertTextContains("православный храм", substring = true)
+        compose.onNodeWithTag("discovery_name_notice").assertDoesNotExist()
+        scrollTo("discovery_mode_name").performClick()
+        search("Никольский храм Казань")
+        scrollTo("discovery_name_notice").assertIsDisplayed()
+        compose.onNodeWithTag("discovery_nearby_notice").assertDoesNotExist()
+    }
+
     @Test fun serverFailureRetainsTheNameAndOnlyRetriesAfterAnExplicitAction() {
         var attempt = 0
         val fake = FakeDiscovery().apply { nameResult = {

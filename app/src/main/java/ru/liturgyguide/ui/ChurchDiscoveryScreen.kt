@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -155,7 +157,8 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
     onSelectionCancelled: () -> Unit = {}, query: String, onQueryChange: (String) -> Unit,
     mode: ChurchSearchMode, onModeChange: (ChurchSearchMode) -> Unit,
     savedChurches: List<Parish> = emptyList(),
-    onSelectSaved: ((String, () -> Unit) -> ChurchSelectionResult)? = null) {
+    onSelectSaved: ((String, () -> Unit) -> ChurchSelectionResult)? = null,
+    favorites: Set<String> = emptySet(), onToggleFavorite: ((String) -> Unit)? = null) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val scope = rememberCoroutineScope()
@@ -231,7 +234,7 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
             })
         }
     }
-    val savedMatches = remember(savedChurches, query) { ChurchDirectory.search(savedChurches, query).take(6) }
+    val savedMatches = remember(savedChurches, query, favorites) { ChurchDirectory.search(savedChurches, query, favorites).take(6) }
     val savedIds = savedMatches.map { it.id }.toSet()
     Scaffold(containerColor = MaterialTheme.colorScheme.surface,
         topBar = { Column(Modifier.statusBarsPadding()) { PageHeader("Найти храм", ::leave) } }) { padding ->
@@ -287,13 +290,25 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                     }
                 }
             } }
+            if (onSelectSaved != null && mode == ChurchSearchMode.NAME && query.isNotBlank() && savedMatches.isEmpty()) item(key = "saved_empty") {
+                Text("В сохраненных храмах совпадений нет", style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("discovery_saved_empty"))
+            }
             if (savedMatches.isNotEmpty() && onSelectSaved != null) {
                 item(key = "saved_heading") {
                     Text(if (query.isBlank()) "Доступны без сети" else "Сохраненные совпадения", style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(top = 12.dp).semantics { heading() })
                 }
                 items(savedMatches, key = { "saved:${it.id}" }) { saved ->
-                    DiscoveryRow(saved.shortName, listOf(saved.city, saved.address).filter(String::isNotBlank).distinct().joinToString(" · "), "discovery_saved_${saved.id}") {
+                    DiscoveryRow(saved.shortName, listOf(saved.city, saved.address).filter(String::isNotBlank).distinct().joinToString(" · "), "discovery_saved_${saved.id}",
+                        trailing = {
+                            if (onToggleFavorite != null) IconButton(onClick = { onToggleFavorite(saved.id) },
+                                modifier = Modifier.size(48.dp).testTag("favorite_${saved.id}")) {
+                                Icon(if (saved.id in favorites) Icons.Default.Star else Icons.Default.StarBorder,
+                                    if (saved.id in favorites) "Убрать из избранного: ${saved.shortName}" else "В избранное: ${saved.shortName}",
+                                    tint = if (saved.id in favorites) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }) {
                         focus.clearFocus(); keyboard?.hide()
                         val result = onSelectSaved(saved.id) { onQueryChange("") }
                         if (result == ChurchSelectionResult.FAILED || result == ChurchSelectionResult.STALE) state.invalidSelection()
@@ -317,6 +332,7 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
             }
             state.churches?.let { result ->
                 val byName = result.provider == DiscoveryProvider.PHOTON && result.queryCenter == null
+                val nearbyByName = result.provider == DiscoveryProvider.PHOTON && result.queryCenter != null
                 val filtered = result.items.filter { church ->
                     val needle = nameFilter.trim().lowercase(Locale.ROOT).replace('ё', 'е')
                     (church.name + " " + church.address).lowercase(Locale.ROOT).replace('ё', 'е').contains(needle)
@@ -331,6 +347,9 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                             Text("В радиусе $radius км от выбранного центра", style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("discovery_area"))
                             if (state.approximateLocation) Text("Местоположение приблизительное. Сверьте адрес", style = MaterialTheme.typography.bodySmall)
+                            if (nearbyByName) Text("Поиск по названиям: список может быть неполным. Сверьте адрес и убедитесь, что это ваш православный храм",
+                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.testTag("discovery_nearby_notice"))
                         }
                         CacheNotice(result.cacheStatus, result.fetchedAtEpochMillis)
                         if (!byName && result.items.isNotEmpty()) OutlinedTextField(nameFilter, { nameFilter = it.take(160) },
@@ -341,7 +360,9 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                 if (filtered.isEmpty() && (result.items.isEmpty() || nameFilter.isNotBlank())) item {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(if (result.items.isEmpty()) {
-                            if (byName) "По этому названию ничего не найдено" else "В этом районе храмы не найдены"
+                            if (byName) "По этому названию ничего не найдено"
+                            else if (nearbyByName) "По названиям рядом ничего не найдено"
+                            else "В этом районе храмы не найдены"
                         } else "Нет храма с таким названием в найденном списке",
                             style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("discovery_empty"))
                         Text("Уточните город или добавьте храм вручную", style = MaterialTheme.typography.bodyMedium)
@@ -383,16 +404,23 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
 }
 
 @Composable
-private fun DiscoveryRow(title: String, subtitle: String, tag: String, onClick: () -> Unit) {
+private fun DiscoveryRow(title: String, subtitle: String, tag: String,
+    trailing: (@Composable () -> Unit)? = null, onClick: () -> Unit) {
     Column {
-        Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).clickable(onClick = onClick).semantics { role = Role.Button }
-            .testTag(tag).padding(vertical = 16.dp), verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(title, style = MaterialTheme.typography.titleMedium)
-                if (subtitle.isNotBlank()) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            // Selection and favorite are separate touch targets. A star must never
+            // choose another church or trigger the reading-reset confirmation.
+            Row(Modifier.weight(1f).heightIn(min = 64.dp).clickable(onClick = onClick).semantics { role = Role.Button }
+                .testTag(tag).padding(vertical = 16.dp), verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(title, style = MaterialTheme.typography.titleMedium)
+                    if (subtitle.isNotBlank()) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            trailing?.invoke()
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     }

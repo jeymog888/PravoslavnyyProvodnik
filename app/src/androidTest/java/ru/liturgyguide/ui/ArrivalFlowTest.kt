@@ -1,148 +1,164 @@
 package ru.liturgyguide.ui
 
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.SharedPreferences
+import androidx.activity.ComponentActivity
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.StateRestorationTester
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.gson.Gson
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import ru.liturgyguide.di.AppContainer
 import ru.liturgyguide.service.*
+import ru.liturgyguide.model.ServiceBookKey
+import ru.liturgyguide.service.book.*
+import java.util.UUID
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
 
-/** Direct entry replaces the former mandatory schedule preview. Manual confirmation remains separate. */
+/** Dated book entry and explicit legacy recovery share navigation but never overwrite each other. */
 @RunWith(AndroidJUnit4::class)
 class ArrivalFlowTest {
-    @get:Rule val compose = createComposeRule()
+    @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
-    private val container = AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
-    private val preferences get() = context.getSharedPreferences("guide_preferences", Context.MODE_PRIVATE)
+    private val prefix = "arrival-route-${UUID.randomUUID()}"
+    private val preferences = context.getSharedPreferences("$prefix-guide", Context.MODE_PRIVATE)
+    private val bookPreferences = context.getSharedPreferences("$prefix-books", Context.MODE_PRIVATE)
+    private val localContext = object : ContextWrapper(context) {
+        override fun getSharedPreferences(name: String, mode: Int): SharedPreferences = when (name) {
+            "guide_preferences" -> preferences
+            "service_book_reading" -> bookPreferences
+            else -> super.getSharedPreferences(name, mode)
+        }
+    }
+    private val mounted = mutableStateOf(true)
+    private val books = NavigationMigrationBooks()
+    private val container = AppContainer(context,
+        scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules, booksOverride = books)
     private val instant = Instant.parse("2026-11-08T04:35:20Z")
     private val parish get() = container.parishes.getOrThrow().selected(null)
     private val creedTracks = PrayerTrackFactory.build(requireNotNull(container.getStageMatcher().getStageById("creed")), null)
 
-    @Test fun watchingRecalculatesTheStageAtTheClickAndOpensTextPaused() {
-        seed()
-        val clock = AdjustableClock(instant)
-        launch(clock)
-        // The visible card still describes 07:35; no periodic UI tick has run after this clock change.
-        compose.runOnIdle { clock.current = instant.plusSeconds(600) }
-        watch("current")
-        compose.onNodeWithTag("arrival_content").assertDoesNotExist()
-        compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals("Великий вход с Дарами")
-        val saved = savedSession()
-        assertEquals("great_entrance", saved.anchorStageId)
-        assertEquals(0L, saved.elapsedInStageMillis)
-        assertEquals(0L, savedPlayback().snapshot.elapsedQuarterMillis)
-        assertEquals(clock.instant().toEpochMilli(), saved.anchorEpochMillis)
-        assertFalse(saved.autoAdvance)
-        assertTrue(saved.anchorIsApproximate)
-        assertEquals("2026-11-08", savedContext().serviceDate)
-        assertEquals(ReadingContextSource.PUBLISHED, savedContext().source)
-        assertOldPositionsCleared()
-        assertGlobals()
-        compose.onFeedLine(container.recordedFeedTrack(savedPlayback()), 0).assertIsSelected()
-        compose.onNodeWithTag("play_lyrics").assert(hasText("Автопрокрутка") or hasContentDescription("Автопрокрутка")).assertExists()
+    @After fun clean() {
+        compose.runOnIdle { mounted.value = false }
+        compose.waitForIdle()
+        context.deleteSharedPreferences("$prefix-guide")
+        context.deleteSharedPreferences("$prefix-books")
     }
 
-    @Test fun anExpiredClickDoesNotReplaceOrClearTheSavedReading() {
+    @Test fun openingACurrentServiceUsesItsDateWithoutGuessingTheReadersPlace() {
         seed()
         val before = preferences.all.toMap()
         val clock = AdjustableClock(instant)
         launch(clock)
+        home("today_service_time").assertTextEquals("07:00")
+        // No periodic tick runs between the displayed occurrence and this tap.
+        compose.runOnIdle { clock.current = instant.plusSeconds(600) }
+        openFeatured()
+        assertEquals(ServiceBookKey("2026-11-08"), savedBook().key)
+        assertEquals(BookAnchorKind.HEADER, savedBook().anchorKind)
+        assertEquals(0f, savedBook().fraction, 0f)
+        assertEquals(before, preferences.all)
+        assertGlobals()
+    }
+
+    @Test fun aStaleDisplayedOccurrenceStillOpensItsOwnDateAndLeavesTheOldReadingUntouched() {
+        seed()
+        val before = preferences.all.toMap()
+        val clock = AdjustableClock(instant)
+        launch(clock)
+        home("today_service_date").assertTextEquals("8 ноября")
         compose.runOnIdle { clock.current = instant.plusSeconds(24 * 3_600) }
-        watch("current")
-        compose.onNodeWithTag("main_content").assertExists()
+        openFeatured()
+        // The button opens the exact displayed book; it does not reinterpret the date as the new today.
+        assertEquals(ServiceBookKey("2026-11-08"), savedBook().key)
         assertEquals(before, preferences.all)
         assertNull(ReadingContextStore(preferences).restore())
     }
 
-    @Test fun aNextServiceBecomesCurrentBetweenDisplayAndClickWithoutSwitchingOccurrence() {
+    @Test fun aFutureServiceBecomingCurrentBetweenDisplayAndTapKeepsItsOwnBook() {
         seed()
+        val before = preferences.all.toMap()
         val clock = AdjustableClock(Instant.parse("2026-11-08T03:59:59Z"))
         launch(clock)
+        home("today_service_time").assertTextEquals("07:00")
         compose.runOnIdle { clock.current = Instant.parse("2026-11-08T04:00:01Z") }
-        watch("next")
-        assertEquals("beginning", savedSession().anchorStageId)
-        assertEquals(0L, savedSession().elapsedInStageMillis)
-        assertEquals(0L, savedPlayback().snapshot.elapsedQuarterMillis)
-        assertFalse(savedSession().autoAdvance)
-        assertEquals(Instant.parse("2026-11-08T04:00:00Z").toEpochMilli(), savedContext().startEpochMillis)
+        openFeatured()
+        assertEquals(listOf(ServiceBookKey("2026-11-08")), books.requests.toList())
+        assertEquals(before, preferences.all)
     }
 
-    @Test fun tomorrowsReadingKeepsItsDateAcrossCorrectionMidnightAndRestoration() {
+    @Test fun tomorrowsBookKeepsItsDateAcrossMeaningMidnightAndRestoration() {
         seed()
+        val before = preferences.all.toMap()
         val clock = AdjustableClock(Instant.parse("2026-11-08T12:00:00Z"))
         val restoration = launch(clock)
-        watch("next")
-        assertEquals("preparation", savedSession().anchorStageId)
-        assertFalse(savedSession().autoAdvance)
-        assertFalse(savedSession().anchorIsApproximate)
-        compose.openReaderDetails()
-        compose.onNodeWithTag("reading_details_date").assertTextEquals("Тексты на 9 ноября 2026")
-        compose.closeReaderDetails()
-        compose.onNodeWithTag("clarify_stage").performClick()
-        compose.onNodeWithTag("manual_content").performScrollToNode(hasTestTag("manual_creed"))
-        compose.onNodeWithTag("manual_creed").performClick()
-        compose.onNodeWithTag("arrival_content").performScrollToNode(hasTestTag("accept_arrival"))
-        compose.onNodeWithTag("accept_arrival").performClick()
-        assertEquals("creed", savedSession().anchorStageId)
-        assertEquals("2026-11-09", savedContext().serviceDate)
-        compose.onNodeWithTag("open_map").performClick()
-        compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_epistle"))
-        compose.onNodeWithTag("stage_epistle").performClick()
-        compose.onNodeWithTag("lyrics_list").performScrollToNode(hasTestTag("missing_reading_epistle"))
-        compose.onNodeWithTag("missing_reading_epistle").assertIsDisplayed()
+        home("today_service_date").assertTextEquals("9 ноября")
+        openFeatured()
+        compose.onNodeWithTag("book_mode_meaning").performClick()
+        settle()
+        assertEquals(BookReadingMode.MEANING, savedBook().mode)
         compose.runOnIdle { clock.current = Instant.parse("2026-11-09T21:05:00Z") }
         compose.mainClock.advanceTimeBy(6_000)
         restoration.emulateSavedInstanceStateRestore()
-        compose.openReaderDetails()
-        compose.onNodeWithTag("reading_details_date").assertTextEquals("Тексты на 9 ноября 2026")
-        compose.closeReaderDetails()
-        compose.onNodeWithTag("lyrics_list").performScrollToNode(hasTestTag("missing_reading_epistle"))
-        compose.onNodeWithTag("missing_reading_epistle").assertIsDisplayed()
-        assertEquals("2026-11-09", savedContext().serviceDate)
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("book_content").fetchSemanticsNodes().isNotEmpty() }
+        settle()
+        assertEquals(ServiceBookKey("2026-11-09"), savedBook().key)
+        assertEquals(BookReadingMode.MEANING, savedBook().mode)
+        compose.onNodeWithTag("book_mode_original").performClick()
+        compose.onNodeWithTag("book_saved").assertTextContains("9 ноября 2026", substring = true)
+        assertEquals(before, preferences.all)
     }
 
-    @Test fun explicitlyStartingAgainUsesTodayInsteadOfThePreviouslyOpenedFutureDate() {
+    @Test fun choosingTodayFromTheChurchAfterAFutureBookDoesNotReuseTheFutureDate() {
         seed()
+        val before = preferences.all.toMap()
         launch(AdjustableClock(Instant.parse("2026-11-08T12:00:00Z")))
-        watch("next")
-        assertEquals("2026-11-09", savedContext().serviceDate)
-        compose.onNodeWithContentDescription("К службе").performClick()
-        compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("start_guide"))
-        compose.onNodeWithTag("start_guide").performClick()
-        assertEquals("beginning", savedSession().anchorStageId)
-        assertEquals("2026-11-08", savedContext().serviceDate)
-        assertEquals(ReadingContextSource.MANUAL, savedContext().source)
-        assertNull(savedContext().startEpochMillis)
+        openFeatured()
+        assertEquals("2026-11-09", savedBook().key.date)
+        compose.onNodeWithTag("book_back").performClick()
+        compose.onNodeWithTag("nav_church").performClick()
+        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("schedule_today"))
+        compose.onNodeWithTag("schedule_today").assertIsSelected()
+        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("church_read_liturgy"))
+        compose.onNodeWithTag("church_read_liturgy").performClick()
+        awaitBook()
+        assertEquals("2026-11-08", savedBook().key.date)
+        assertEquals(listOf(ServiceBookKey("2026-11-09"), ServiceBookKey("2026-11-08")), books.requests.toList())
+        assertEquals(before, preferences.all)
     }
 
-    @Test fun aPersonalStartOpensItsOwnEstimateAndIsRecordedAsPersonal() {
+    @Test fun personalStartHasItsOwnEntryAndDoesNotReplacePublishedTimeOrLegacyReading() {
         seed()
         assertTrue(UserServiceStartStore(preferences).save(UserServiceStart(parish.id, "2026-11-08", "07:10"), parish))
+        val before = preferences.all.toMap()
         launch(AdjustableClock(instant))
-        watch("current")
-        assertEquals("epistle", savedSession().anchorStageId) // 25m20s after the personal start; Epistle starts at minute 21.
-        assertEquals(ReadingContextSource.USER, savedContext().source)
-        assertEquals(Instant.parse("2026-11-08T04:10:00Z").toEpochMilli(), savedContext().startEpochMillis)
-        assertFalse(savedSession().autoAdvance)
+        home("today_service_time").assertTextEquals("07:00")
+        home("today_personal_summary").assertTextEquals("8 ноября · 07:10 · Литургия")
+        home("today_personal_source").assertTextEquals("Начало указано вами")
+        home("today_open_personal_liturgy").performClick()
+        awaitBook()
+        assertEquals(ServiceBookKey("2026-11-08"), savedBook().key)
+        assertEquals(before, preferences.all)
         assertGlobals()
     }
 
     @Test fun resumingALegacyBookmarkPinsItsOriginalAnchorDateWithoutClearingThePhrase() {
         seed()
         launch(AdjustableClock(Instant.parse("2026-11-10T12:00:00Z")))
-        compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("resume_guide"))
-        compose.onNodeWithTag("resume_guide").performClick()
+        resumeLegacy()
         // The 0.4 bookmark has no context; its saved anchor was 7 November in the parish timezone.
         assertEquals("2026-11-07", savedContext().serviceDate)
         assertEquals(ReadingContextSource.MANUAL, savedContext().source)
@@ -154,8 +170,7 @@ class ArrivalFlowTest {
         seed()
         val clock = AdjustableClock(Instant.parse("2026-11-10T12:00:00Z"))
         val restoration = launch(clock)
-        compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("resume_guide"))
-        compose.onNodeWithTag("resume_guide").performClick()
+        resumeLegacy()
         // Simulate saved SERVICE state produced by the old app, which had no date metadata.
         compose.runOnIdle {
             check(preferences.edit().remove(ReadingContextStore.CONTEXT_KEY).remove(ServicePlaybackStore.PLAYBACK_KEY)
@@ -179,7 +194,7 @@ class ArrivalFlowTest {
         seed()
         check(preferences.edit().putString("church_id", parish.id).commit())
         val restoration = launch(AdjustableClock(instant))
-        watch("current")
+        resumeLegacy()
         val wrong = ReadingContext("another-parish", "2026-11-08", "Europe/Moscow", ReadingContextSource.MANUAL)
         for (invalid in listOf(ReadingContextCodec.encode(wrong), "broken")) {
             compose.runOnIdle { check(preferences.edit().putString(ReadingContextStore.CONTEXT_KEY, invalid).commit()) }
@@ -187,9 +202,9 @@ class ArrivalFlowTest {
             compose.onNodeWithTag("main_content").assertExists()
             compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("reading_restore_notice"))
             compose.onNodeWithTag("reading_restore_notice").assertIsDisplayed()
-            compose.onNodeWithTag("resume_guide").assertDoesNotExist()
+            compose.onNodeWithText("Прежнее сохраненное чтение").assertDoesNotExist()
             assertEquals(invalid, preferences.getString(ReadingContextStore.CONTEXT_KEY, null))
-            watch("current")
+            openCommonOrder()
             assertEquals(parish.id, savedContext().parishId)
             assertEquals("2026-11-08", savedContext().serviceDate)
         }
@@ -200,20 +215,46 @@ class ArrivalFlowTest {
         check(preferences.edit().putString("session", Gson().toJson(
             ServiceSession("creed", instant.minusSeconds(8 * 3_600).toEpochMilli(), elapsedInStageMillis = -1))).commit())
         launch(AdjustableClock(Instant.parse("2026-11-10T12:00:00Z")))
-        compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("resume_guide"))
-        compose.onNodeWithText("Символ веры · Дата не сохранена · откроется на сегодня").assertIsDisplayed()
-        compose.onNodeWithTag("resume_guide").performClick()
+        resumeLegacy()
         assertEquals("2026-11-10", savedContext().serviceDate)
         assertEquals("creed", savedSession().anchorStageId)
         assertEquals(0L, savedSession().elapsedInStageMillis)
     }
 
     private fun launch(clock: Clock) = StateRestorationTester(compose).also {
-        it.setContent { AppNavigation(container, clock) }
+        it.setContent { CompositionLocalProvider(LocalContext provides localContext) {
+            if (mounted.value) AppNavigation(container, clock, monotonicMillis = { 1_000L })
+        } }
     }
-    private fun watch(which: String) {
-        compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("watch_$which"))
-        compose.onNodeWithTag("watch_$which").performClick()
+    private fun home(tag: String): SemanticsNodeInteraction {
+        val parentTag = if (tag in setOf("today_personal_summary", "today_personal_source")) "today_open_personal_liturgy" else tag
+        compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag(parentTag))
+        return compose.onNodeWithTag(tag, useUnmergedTree = parentTag != tag)
+    }
+    private fun openFeatured() {
+        home("open_service_book").performClick()
+        awaitBook()
+    }
+    private fun resumeLegacy() {
+        compose.onNodeWithTag("main_content").performScrollToNode(hasText("Прежнее сохраненное чтение"))
+        compose.onNodeWithText("Прежнее сохраненное чтение").performClick()
+        compose.onNodeWithTag("service_book").assertIsDisplayed()
+    }
+    private fun openCommonOrder() {
+        books.fail = true
+        home("today_other_services").performClick()
+        compose.onNodeWithTag("service_book_chooser").performScrollToNode(hasTestTag("service_book_choose_liturgy"))
+        compose.onNodeWithTag("service_book_choose_liturgy").performClick()
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("book_load_error").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Открыть общий порядок литургии").performScrollTo().performClick()
+        compose.onNodeWithTag("service_book").assertIsDisplayed()
+    }
+    private fun savedBook() = requireNotNull(BookReadingStore(bookPreferences).last(parish.id))
+    private fun settle() { compose.mainClock.advanceTimeBy(650); compose.waitForIdle() }
+    private fun awaitBook() {
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("book_content").fetchSemanticsNodes().isNotEmpty() }
+        settle()
+        compose.onNodeWithTag("book_play").assertContentDescriptionEquals("Прокручивать текст")
     }
     private fun seed() {
         val track = creedTracks.single { it.title == "Символ веры" }
@@ -239,11 +280,6 @@ class ArrivalFlowTest {
         assertTrue(preferences.getBoolean("lyric_original", false))
         assertEquals(8, preferences.getInt("lyric_tempo", -1))
         assertTrue(preferences.getBoolean("lyric_intro_seen", false))
-    }
-    private fun assertOldPositionsCleared() {
-        assertFalse(preferences.contains("lyric_track_creed"))
-        assertFalse(preferences.contains("lyric_line_${creedTracks.single { it.title == "Символ веры" }.id}"))
-        assertFalse(preferences.all.keys.any { "old_track" in it || "old_stage" in it })
     }
     private class AdjustableClock(var current: Instant) : Clock() {
         override fun getZone(): ZoneId = ZoneOffset.UTC

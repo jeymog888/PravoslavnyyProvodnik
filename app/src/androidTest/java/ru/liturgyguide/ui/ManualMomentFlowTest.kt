@@ -1,6 +1,13 @@
 package ru.liturgyguide.ui
 
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.SharedPreferences
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
@@ -8,7 +15,7 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.StateRestorationTester
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import ru.liturgyguide.ui.closeSoftKeyboardWithCiDiagnostics as closeSoftKeyboard
@@ -16,10 +23,14 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.gson.Gson
 import org.junit.Assert.*
+import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import ru.liturgyguide.di.AppContainer
+import ru.liturgyguide.model.*
+import ru.liturgyguide.service.book.*
+import java.util.UUID
 import ru.liturgyguide.service.PrayerTrackFactory
 import ru.liturgyguide.service.ServiceSession
 import ru.liturgyguide.service.ServicePlaybackStore
@@ -33,66 +44,81 @@ import java.time.ZoneOffset
 
 @RunWith(AndroidJUnit4::class)
 class ManualMomentFlowTest {
-    @get:Rule val compose = createComposeRule()
+    @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
-    private val container = AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
+    private val books = NavigationMigrationBooks()
+    private val container = AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules,
+        booksOverride = books)
+    private val bookPreferenceName = "manual-moment-books-${UUID.randomUUID()}"
+    private val bookPreferences = context.getSharedPreferences(bookPreferenceName, Context.MODE_PRIVATE)
+    private val localContext = object : ContextWrapper(context) {
+        override fun getSharedPreferences(name: String, mode: Int): SharedPreferences =
+            if (name == "service_book_reading") bookPreferences else super.getSharedPreferences(name, mode)
+    }
+    private val mounted = mutableStateOf(true)
+    private val legacyParishId get() = container.parishes.getOrThrow().selected(null).id
     private val preferences get() = context.getSharedPreferences("guide_preferences", Context.MODE_PRIVATE)
     private val instant = Instant.parse("2026-12-01T12:00:00Z") // Outside the bundled schedule.
     private val creed = tracks("creed").single { it.title == "Символ веры" }
     private val other = tracks("communion").single { it.title == "Верую, Господи, и исповедую" }
     private val monotonic = AtomicLong(1_000L)
+    private val bookKey = ServiceBookKey("2026-12-01")
+    private val landmarks = listOf(
+        Triple("little_entrance", "Премудрость", "Премудрость, прости"),
+        Triple("cherubic_hymn", "Иже Херувимы", "Херувимская: до Великого входа"),
+        Triple("creed", "Верую во единаго Бога", "Символ веры"),
+        Triple("lords_prayer", "Отче наш", "Отче наш"),
+        Triple("communion", "Со страхом Божиим", "Со страхом Божиим и верою")
+    )
 
-    @Test
-    fun allFiveLandmarksWithoutAScheduleOpenTheExpectedTextAndPhraseAfterVerification() {
-        check(preferences.edit().clear().putBoolean("dark", false).commit())
-        val restoration = launch()
-        compose.onNodeWithTag("join_service").assertDoesNotExist()
-        compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("find_stage"))
-        compose.onNodeWithTag("find_stage").assertIsDisplayed()
-        compose.onAllNodesWithTag("find_stage").assertCountEquals(1)
-        compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("start_guide"))
-        compose.onNodeWithTag("start_guide").assertTextEquals("Открыть текст")
-        val cases = listOf(
-            Triple("little_entrance", "Выносят Евангелие", "Премудрость, прости"),
-            Triple("cherubic_hymn", "Слышно \"Иже Херувимы\"", "Херувимская: до Великого входа"),
-            Triple("creed", "Слышно \"Верую во единаго Бога\"", "Символ веры"),
-            Triple("lords_prayer", "Слышно \"Отче наш\"", "Отче наш"),
-            Triple("communion", "Выносят чашу: \"Со страхом Божиим\"", "Со страхом Божиим и верою")
-        )
-        cases.forEach { (stageId, label, trackTitle) ->
-            check(preferences.edit().putString("lyric_phrase_old_track", "old_phrase").commit())
-            val before = preferences.all.toMap()
-            findFromMain()
-            compose.onNodeWithTag("manual_content").performScrollToNode(hasText(label))
-            compose.onNodeWithText(label).assertIsDisplayed().performClick()
-            val stage = requireNotNull(container.getStageMatcher().getStageById(stageId))
-            compose.onNodeWithText("Вы выбрали ориентир").assertIsDisplayed()
-            compose.onNodeWithText("Предположение по времени").assertDoesNotExist()
-            compose.onNodeWithTag("arrival_stage").assertTextEquals(stage.name)
-            compose.onNodeWithText(requireNotNull(stage.cue)).assertIsDisplayed()
-            if (stageId == "creed") restoration.emulateSavedInstanceStateRestore()
-            assertEquals(before, preferences.all)
-            accept()
-            val expectedTrack = tracks(stageId).single { it.title == trackTitle }
-            compose.onNodeWithTag("current_stage_title", useUnmergedTree = true).assertTextEquals(stage.name)
-            compose.openReaderDetails()
-            compose.onNodeWithTag("reading_details_track").performScrollTo().assertTextEquals(expectedTrack.title)
-            compose.closeReaderDetails()
-            compose.onFeedLine(expectedTrack, 0).assertIsSelected().assertIsDisplayed().assertTextEquals(expectedTrack.lines[0].russian)
-            assertEquals(expectedTrack.id, preferences.getString("lyric_track_$stageId", null))
-            assertEquals(expectedTrack.lines[0].id, preferences.getString("lyric_phrase_${expectedTrack.id}", null))
-            assertFalse(preferences.contains("lyric_phrase_old_track"))
-            assertManualSession(stageId)
-            compose.onNodeWithContentDescription("К службе").performClick()
-            // Complete navigation before comparing the next unaccepted draft.
-            compose.waitForIdle()
-        }
+    @After fun cleanBooks() {
+        compose.runOnIdle { mounted.value = false }
+        compose.waitForIdle()
+        context.deleteSharedPreferences(bookPreferenceName)
     }
 
     @Test
-    fun choosingAnotherLandmarkShowsItsNewCueBeforeConfirmation() {
+    fun allFiveKnownPhrasesWithoutAScheduleOpenTheirExactPlaceInTheDatedFullBook() {
+        check(preferences.edit().clear().putBoolean("dark", false).commit())
+        books.publish(searchFixture(bookKey))
+        val before = preferences.all.toMap()
+        val restoration = launch()
+        home("today_choose_without_church").performClick()
+        compose.onNodeWithTag("service_chooser_date").assertTextEquals("Тексты на 1 декабря 2026")
+        compose.onNodeWithTag("service_book_chooser").performScrollToNode(hasTestTag("service_book_choose_liturgy"))
+        compose.onNodeWithTag("service_book_choose_liturgy").performClick()
+        awaitBook()
+        assertNull(bookPosition(null).parishId)
+        landmarks.forEach { (stageId, query, _) ->
+            if (stageId == "creed") {
+                restoration.emulateSavedInstanceStateRestore()
+                awaitBook()
+                assertEquals(bookKey, bookPosition(null).key)
+            }
+            compose.onNodeWithTag("book_find").performClick()
+            typeBookSearch(query)
+            val stage = requireNotNull(container.getStageMatcher().getStageById(stageId))
+            compose.onNodeWithTag("book_hit_target-$stageId").performScrollTo().assertIsDisplayed()
+                .assert(hasText(stage.name)).performClick()
+            settleBook()
+            compose.onNodeWithTag("book_chapter", useUnmergedTree = true).assertTextEquals(stage.name)
+            compose.onNodeWithTag("book_text_target-$stageId", useUnmergedTree = true)
+                .assertIsDisplayed().assertTextEquals(requireNotNull(books.cached(bookKey)).blocks.single { it.id == "target-$stageId" }.original)
+            val saved = bookPosition(null)
+            assertEquals(bookKey, saved.key)
+            assertEquals("target-$stageId", saved.blockId)
+            assertEquals("chapter-$stageId", saved.chapterId)
+            assertEquals(BookAnchorKind.BLOCK, saved.anchorKind)
+            compose.onNodeWithTag("book_play").assertContentDescriptionEquals("Прокручивать текст")
+            assertEquals("Searching a full book must not create or erase legacy bookmarks", before, preferences.all)
+        }
+        assertEquals(listOf(bookKey), books.requests.toList())
+    }
+
+    @Test
+    fun changingTheSearchPhrasePreviewsAndOpensTheNewMatchOnACompactScreen() {
         var beforeFindClick = "Not reached"
-        withCiFailureDiagnostics("ManualMomentFlowTest.changingLandmark", additionalEvidence = { directory, deadline, phase ->
+        withCiFailureDiagnostics("ManualMomentFlowTest.changingBookQuery", additionalEvidence = { directory, deadline, phase ->
             if (phase == CiEvidencePhase.AFTER_SCREENSHOT) {
                 writeCiFailureEvidence(directory, "before-find-click.txt", deadline) { beforeFindClick }
                 writeCiFailureEvidence(directory, "compose-roots.txt", deadline) {
@@ -102,25 +128,46 @@ class ManualMomentFlowTest {
                 }
             }
         }) {
-        seed()
-        compose.setContent {
-            Box(Modifier.size(width = 320.dp, height = 320.dp)) {
-                AppNavigation(container, Clock.fixed(instant, ZoneOffset.UTC))
+            seed()
+            books.publish(searchFixture(bookKey))
+            val before = preferences.all.toMap()
+            launch(compact = true)
+            // Scroll the button itself into view: its containing card is taller than this viewport.
+            val openBook = home("start_guide").performScrollTo().assertIsDisplayed()
+            val visible = openBook.getBoundsInRoot()
+            val full = openBook.getUnclippedBoundsInRoot()
+            val pixel = with(compose.density) { 1f.toDp() }
+            assertTrue("The actual book button must be fully visible before a pointer click: visible=$visible, full=$full",
+                visible.left <= full.left + pixel && visible.top <= full.top + pixel &&
+                    visible.right >= full.right - pixel && visible.bottom >= full.bottom - pixel)
+            openBook.performClick()
+            awaitBook()
+            val old = bookPosition()
+            compose.onNodeWithTag("book_find").assertIsDisplayed()
+            beforeFindClick = compose.onAllNodes(isRoot(), useUnmergedTree = true).fetchSemanticsNodes().indices.joinToString("\n\n") { index ->
+                compose.onAllNodes(isRoot(), useUnmergedTree = true)[index].printToString(maxDepth = 100)
             }
-        }
-        compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("find_stage"))
-        compose.onNodeWithTag("find_stage").performScrollTo().assertIsDisplayed()
-        beforeFindClick = compose.onAllNodes(isRoot(), useUnmergedTree = true).fetchSemanticsNodes().indices.joinToString("\n\n") { index ->
-                        compose.onAllNodes(isRoot(), useUnmergedTree = true)[index].printToString(maxDepth = 100)
-                    }
-        compose.onNodeWithTag("find_stage").performClick()
-        landmark("little_entrance")
-        compose.onNodeWithTag("arrival_content").performScrollToNode(hasTestTag("arrival_search"))
-        compose.onNodeWithTag("arrival_stage").assertIsNotDisplayed()
-        back()
-        landmark("communion")
-        compose.onNodeWithTag("arrival_stage").assertIsDisplayed().assertTextEquals("Причащение верующих")
-        compose.onNodeWithText("Чашу выносят со словами \"Со страхом Божиим и верою приступите\"").assertIsDisplayed()
+            compose.onNodeWithTag("book_find").performClick()
+            typeBookSearch("Премудрость")
+            compose.onNodeWithTag("book_hit_target-little_entrance").performScrollTo().assertIsDisplayed()
+            assertEquals("A search preview is not an accepted reading position", old, bookPosition())
+            dismissBookSearch()
+            assertEquals(old, bookPosition())
+            compose.onNodeWithTag("book_find").performClick()
+            typeBookSearch("Со страхом Божиим")
+            compose.onNodeWithTag("book_hit_target-little_entrance").assertDoesNotExist()
+            compose.onNodeWithTag("book_hit_target-communion").performScrollTo().assertIsDisplayed()
+                .assert(hasText("Причащение верующих")).performClick()
+            settleBook()
+            compose.onNodeWithTag("book_chapter", useUnmergedTree = true).assertTextEquals("Причащение верующих")
+            val readingArea = compose.onNodeWithTag("book_content").getBoundsInRoot()
+            assertTrue("The compact reader must keep a useful reading area: $readingArea",
+                readingArea.bottom - readingArea.top >= 80.dp)
+            compose.onNodeWithTag("book_text_target-communion", useUnmergedTree = true).assertIsDisplayed()
+            assertEquals(bookKey, bookPosition().key)
+            assertEquals("target-communion", bookPosition().blockId)
+            assertEquals(before, preferences.all)
+            assertOtherBookmark()
         }
     }
 
@@ -285,42 +332,96 @@ class ManualMomentFlowTest {
     }
 
     @Test
-    fun aFreshManualEntryResetsSearchListeningAndScrollButBackPreservesThem() {
+    fun cancellingBookSearchKeepsBothReadingsAndANewDateSearchesOnlyItsOwnText() {
         seed()
+        books.publish(searchFixture(bookKey))
+        val tomorrow = bookKey.copy(date = "2026-12-02")
+        books.publish(searchFixture(tomorrow))
         val before = preferences.all.toMap()
-        val restoration = launch()
-        findFromMain()
-        searchFromManual()
-        typeSearch("верую")
-        restoration.emulateSavedInstanceStateRestore()
-        back()
-        compose.onNodeWithTag("manual_content").assertExists()
-        searchFromManual()
-        compose.onNodeWithTag("stage_search").assertTextContains("верую")
-        back()
-        back()
-        findFromMain()
-        searchFromManual()
-        compose.onNodeWithTag("stage_search").assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("")))
-        compose.onNodeWithTag("open_listening").performClick()
-        compose.onNodeWithTag("listening_screen").assertIsDisplayed()
-        compose.onNodeWithTag("stage_search").assertDoesNotExist()
-        back()
-        compose.onNodeWithTag("stage_search").assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("")))
-        compose.onNodeWithTag("stage_list").performScrollToNode(hasTestTag("stage_dismissal"))
-        back()
-        back()
-        findFromMain()
-        searchFromManual()
-        compose.onNodeWithTag("open_listening").assertIsDisplayed().assertTextEquals("Микрофон")
-        compose.onNodeWithTag("listening_screen").assertDoesNotExist()
-        compose.onNodeWithTag("stage_preparation").assertIsDisplayed().assertIsNotSelected()
-        compose.onNodeWithTag("stage_dismissal").assertIsNotDisplayed()
+        launch()
+        home("start_guide").performClick()
+        awaitBook()
+        val accepted = bookPosition()
+        compose.onNodeWithTag("book_find").performClick()
+        typeBookSearch("второго декабря")
+        compose.onNodeWithText("Совпадений в этой книге нет. Попробуйте два-три других слова").performScrollTo().assertIsDisplayed()
+        dismissBookSearch()
+        assertEquals(accepted, bookPosition())
         assertEquals(before, preferences.all)
+        compose.onNodeWithTag("book_find").performClick()
+        compose.onNodeWithTag("book_search_query").assert(
+            SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("")))
+        compose.onNodeWithTag("book_listen").performScrollTo().assertIsDisplayed().assertTextEquals("Послушать службу")
+        dismissBookSearch()
+        assertEquals(accepted, bookPosition())
+        compose.onNodeWithTag("book_back").performClick()
+        home("today_day_tomorrow").performClick()
+        home("start_guide").performClick()
+        awaitBook()
+        assertEquals(tomorrow, bookPosition().key)
+        compose.onNodeWithTag("book_find").performClick()
+        compose.onNodeWithTag("book_search_query").assert(
+            SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("")))
+        typeBookSearch("первого декабря")
+        compose.onNodeWithText("Совпадений в этой книге нет. Попробуйте два-три других слова").performScrollTo().assertIsDisplayed()
+        typeBookSearch("второго декабря")
+        compose.onNodeWithTag("book_hit_day-marker").performScrollTo().assertIsDisplayed().performClick()
+        settleBook()
+        assertEquals(tomorrow, bookPosition().key)
+        assertEquals("day-marker", bookPosition().blockId)
+        assertEquals(accepted, BookReadingStore(bookPreferences).restore(requireNotNull(books.cached(bookKey)), legacyParishId))
+        assertEquals(listOf(bookKey, tomorrow), books.requests.toList())
+        assertEquals(before, preferences.all)
+        assertOtherBookmark()
     }
 
-    private fun launch(clock: Clock = Clock.fixed(instant, ZoneOffset.UTC)) = StateRestorationTester(compose).also {
-        it.setContent { AppNavigation(container, clock, monotonic::get) }
+    private fun launch(clock: Clock = Clock.fixed(instant, ZoneOffset.UTC), compact: Boolean = false) = StateRestorationTester(compose).also {
+        it.setContent { CompositionLocalProvider(LocalContext provides localContext,
+            LocalActivityResultRegistryOwner provides compose.activity) {
+            if (mounted.value) {
+                if (compact) Box(Modifier.size(width = 320.dp, height = 320.dp)) { AppNavigation(container, clock, monotonic::get) }
+                else AppNavigation(container, clock, monotonic::get)
+            }
+        } }
+    }
+
+    private fun home(tag: String): SemanticsNodeInteraction {
+        compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag(tag))
+        return compose.onNodeWithTag(tag)
+    }
+    private fun bookPosition(parishId: String? = legacyParishId) = requireNotNull(BookReadingStore(bookPreferences).last(parishId))
+    private fun awaitBook() {
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("book_content").fetchSemanticsNodes().isNotEmpty() }
+        settleBook()
+    }
+    private fun settleBook() { compose.waitForIdle(); compose.mainClock.advanceTimeBy(650); compose.waitForIdle() }
+    private fun typeBookSearch(query: String) {
+        // A preceding result list may have scrolled the field off screen.
+        compose.onNodeWithTag("book_search_query").performScrollTo().performTextReplacement(query)
+        closeSoftKeyboard()
+    }
+    private fun dismissBookSearch() {
+        compose.onNode(SemanticsMatcher.keyIsDefined(SemanticsActions.Dismiss))
+            .performSemanticsAction(SemanticsActions.Dismiss) { dismiss -> assertTrue(dismiss()) }
+        compose.waitForIdle()
+        compose.onNodeWithTag("book_search_query").assertDoesNotExist()
+    }
+
+    /** Exact original prayer phrases are reused only in test fixtures; the day marker is explicitly synthetic. */
+    private fun searchFixture(key: ServiceBookKey): ServiceBook {
+        val chapters = landmarks.mapIndexed { index, (stageId, _, title) ->
+            val stage = requireNotNull(container.getStageMatcher().getStageById(stageId))
+            val text = tracks(stageId).single { it.title == title }.lines.joinToString("\n") { requireNotNull(it.original) }
+            val day = if (key.date == "2026-12-02") "второго декабря" else "первого декабря"
+            BookChapter("chapter-$stageId", stage.name, "Пояснение тестового раздела", listOf(
+                BookBlock(if (index == 0) "day-marker" else "before-$stageId", BookBlockKind.RUBRIC, null,
+                    "Тестовый фрагмент $day. ".repeat(30)),
+                BookBlock("target-$stageId", BookBlockKind.PRAYER, null, text),
+                BookBlock("after-$stageId", BookBlockKind.RUBRIC, null, "Продолжение тестового раздела. ".repeat(30))))
+        }
+        val book = ServiceBook(key = key, title = "Литургия", sourceUrl = key.sourceUrl(), sourceTitle = "Источник теста",
+            fetchedAtMillis = 1, selectedEventTitle = null, chapters = chapters, contentHash = "")
+        return book.copy(contentHash = ServiceBookIntegrity.contentHash(book)).also { assertTrue(ServiceBookIntegrity.valid(it)) }
     }
 
     private fun seed(session: ServiceSession = ServiceSession("creed", instant.toEpochMilli())) {
@@ -340,11 +441,6 @@ class ManualMomentFlowTest {
         compose.onNodeWithTag("resume_guide").performClick()
         compose.onFeedLine(creed, 12).assertIsSelected()
         compose.onNodeWithTag("player_meaning_tab").performClick()
-    }
-
-    private fun findFromMain() {
-        compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("find_stage"))
-        compose.onNodeWithTag("find_stage").performClick()
     }
 
     private fun clarify() { compose.onNodeWithTag("clarify_stage").performClick() }

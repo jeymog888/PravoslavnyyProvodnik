@@ -2,6 +2,7 @@ package ru.liturgyguide.service.book
 
 import android.content.SharedPreferences
 import com.google.gson.Gson
+import ru.liturgyguide.service.SinglePreferenceCommit
 import ru.liturgyguide.model.ServiceBook
 import ru.liturgyguide.model.ServiceBookKey
 
@@ -18,7 +19,9 @@ data class BookReadingPosition(
     val mode: BookReadingMode = BookReadingMode.ORIGINAL,
     val wordsPerMinute: Int = 85,
     val showAltar: Boolean = false,
-    val anchorKind: BookAnchorKind = BookAnchorKind.BLOCK
+    val anchorKind: BookAnchorKind = BookAnchorKind.BLOCK,
+    /** Last actual text language, including when a saved reader is in Meaning. */
+    val lastTextMode: BookReadingMode? = null
 )
 
 object BookReadingCodec {
@@ -28,6 +31,7 @@ object BookReadingCodec {
         return runCatching {
             gson.fromJson(json, BookReadingPosition::class.java).takeIf {
                 it.key.isValid() && it.key.worship != null && it.mode != null && it.anchorKind != null &&
+                    it.lastTextMode != BookReadingMode.MEANING &&
                     it.contentHash.matches(Regex("[0-9a-f]{64}")) &&
                     it.blockId.length in 1..180 && it.chapterId.length in 1..180 &&
                     (it.parishId == null || it.parishId.length in 1..160) &&
@@ -72,8 +76,10 @@ object BookPositionUpdate {
             ?: next.chapters.firstOrNull { it.id == position.chapterId } ?: next.chapters.first()
         val block = exact ?: chapter.blocks.first()
         val old = previous.blocks.firstOrNull { it.id == position.blockId }
+        val textMode = if (position.mode == BookReadingMode.MEANING)
+            position.lastTextMode ?: BookReadingMode.ORIGINAL else position.mode
         fun visibleText(value: ru.liturgyguide.model.BookBlock) =
-            if (position.mode == BookReadingMode.RUSSIAN) value.russian ?: value.original else value.original
+            if (textMode == BookReadingMode.RUSSIAN) value.russian ?: value.original else value.original
         val unchanged = old != null && exact != null && visibleText(old) == visibleText(exact)
         return position.copy(contentHash = next.contentHash, chapterId = chapter.id, blockId = block.id,
             fraction = if (unchanged && position.anchorKind == BookAnchorKind.BLOCK) position.fraction else 0f,
@@ -86,26 +92,36 @@ class BookReadingStore(private val preferences: SharedPreferences) {
     fun last(parishId: String?): BookReadingPosition? =
         BookReadingCodec.decode(preferences.getString(lastKey(parishId), null))?.takeIf { it.parishId == parishId }
 
+    /** The selected date has its own accepted edition, even after reading another service. */
+    fun positionFor(key: ServiceBookKey, parishId: String?): BookReadingPosition? =
+        BookReadingCodec.decode(preferences.getString(positionKey(key, parishId), null))?.takeIf {
+            it.parishId == parishId && it.key == key
+        }
+
     fun restore(book: ServiceBook, parishId: String?): BookReadingPosition? =
-        BookReadingCodec.decode(preferences.getString(positionKey(book.key, parishId), null))?.takeIf {
-            it.parishId == parishId && it.key == book.key && book.blocks.any { block -> block.id == it.blockId }
+        positionFor(book.key, parishId)?.takeIf {
+            book.blocks.any { block -> block.id == it.blockId }
         }?.let {
             // An explicit source refresh can retain the fragment, but not an offset in changed prose.
             if (it.contentHash == book.contentHash) it else it.copy(contentHash = book.contentHash, fraction = 0f)
         }
 
-    fun save(position: BookReadingPosition): Boolean = runCatching {
-        val json = BookReadingCodec.encode(position)
-        val key = positionKey(position.key, position.parishId)
-        val edit = preferences.edit()
-        val keys = preferences.all.keys.filter { it.startsWith("position:") }
-        if (key !in keys && keys.size >= 32) keys.firstOrNull()?.let(edit::remove)
-        edit.putString(key, json).putString(lastKey(position.parishId), json).commit()
-    }.getOrDefault(false)
+    fun save(position: BookReadingPosition): Boolean = synchronized(preferences) {
+        runCatching {
+            val json = BookReadingCodec.encode(position)
+            val key = positionKey(position.key, position.parishId)
+            val changes = linkedMapOf<String, Any?>(key to json, lastKey(position.parishId) to json)
+            val keys = preferences.all.keys.filter { it.startsWith("position:") }
+            if (key !in keys && keys.size >= 32) keys.firstOrNull()?.let { changes[it] = null }
+            // Two reading pointers (and at most one evicted old position) form one
+            // acceptance. A failed disk report must not leave the new hash in memory.
+            SinglePreferenceCommit.write(preferences, changes)
+        }.getOrDefault(false)
+    }
 
-    fun acceptVersion(previous: ServiceBook, next: ServiceBook, parishId: String?): Boolean {
-        val position = restore(previous, parishId) ?: return true
-        return runCatching { save(BookPositionUpdate.rebase(position, previous, next)) }.getOrDefault(false)
+    fun acceptVersion(previous: ServiceBook, next: ServiceBook, parishId: String?): Boolean = synchronized(preferences) {
+        val position = restore(previous, parishId) ?: return@synchronized true
+        runCatching { save(BookPositionUpdate.rebase(position, previous, next)) }.getOrDefault(false)
     }
 
     private fun positionKey(key: ServiceBookKey, parishId: String?) =
@@ -113,29 +129,28 @@ class BookReadingStore(private val preferences: SharedPreferences) {
     private fun lastKey(parishId: String?) = "last:" + BookText.sha256(parishId.orEmpty())
 }
 
-data class BookSearchHit(val chapterId: String, val chapterTitle: String, val blockId: String, val excerpt: String)
+data class BookSearchHit(val chapterId: String, val chapterTitle: String, val blockId: String, val excerpt: String,
+    val mode: BookReadingMode = BookReadingMode.ORIGINAL, val matchStart: Int = 0, val matchEndExclusive: Int = 0)
 
 object BookSearch {
-    fun find(book: ServiceBook, query: String): List<BookSearchHit> {
-        val needle = BookText.normalized(query)
-        if (needle.length < 2) return emptyList()
-        val words = needle.split(' ').filter { it.length >= 2 }
-        return book.chapters.flatMap { chapter -> chapter.blocks.mapNotNull { block ->
-            val original = BookText.normalized(block.original)
-            val russian = BookText.normalized(block.russian.orEmpty())
-            fun matches(text: String) = text.contains(needle) || (words.size >= 2 && words.all(text::contains))
-            val inRussian = matches(russian)
-            if (inRussian || matches(original)) BookSearchHit(chapter.id, chapter.title, block.id,
-                excerpt(if (inRussian) block.russian.orEmpty() else block.original, words)) else null
-        } }.take(30)
+    fun find(book: ServiceBook, query: String, preferredMode: BookReadingMode = BookReadingMode.RUSSIAN): List<BookSearchHit> {
+        if (BookText.normalized(query).length < 2) return emptyList()
+        return book.chapters.asSequence().flatMap { chapter -> chapter.blocks.asSequence().mapNotNull { block ->
+            val original = BookSearchText.find(block.original, query)
+            val russian = block.russian?.let { BookSearchText.find(it, query) }
+            val inRussian = russian != null && (preferredMode == BookReadingMode.RUSSIAN || original == null)
+            val match = (if (inRussian) russian else original) ?: return@mapNotNull null
+            val text = if (inRussian) block.russian.orEmpty() else block.original
+            BookSearchHit(chapter.id, chapter.title, block.id, excerpt(text, match.start),
+                if (inRussian) BookReadingMode.RUSSIAN else BookReadingMode.ORIGINAL, match.start, match.endExclusive)
+        } }.take(30).toList()
     }
 
-    /** Show the words that caused the hit, including matches late in a long prayer. */
-    private fun excerpt(text: String, words: List<String>): String {
+    /** Show the same source occurrence that the reader will open, including accents. */
+    private fun excerpt(text: String, matchStart: Int): String {
         if (text.length <= 240) return text
         val tokens = Regex("[\\p{L}\\p{N}\\p{M}]+").findAll(text).toList()
-        val match = tokens.firstOrNull { token -> words.any { BookText.normalized(token.value).contains(it) } }
-        val desiredStart = ((match?.range?.first ?: 0) - 60).coerceAtLeast(0)
+        val desiredStart = (matchStart - 60).coerceAtLeast(0)
         val start = tokens.lastOrNull { it.range.first <= desiredStart }?.range?.first ?: 0
         val limit = (start + 236).coerceAtMost(text.length)
         val end = if (limit == text.length) limit else tokens.lastOrNull { it.range.last < limit }?.range?.last?.plus(1) ?: limit

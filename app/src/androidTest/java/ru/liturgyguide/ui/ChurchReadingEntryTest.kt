@@ -13,6 +13,8 @@ import ru.liturgyguide.service.ChurchSelectionResult
 import ru.liturgyguide.service.UserServiceStart
 import ru.liturgyguide.service.schedule.InternetScheduleState
 import ru.liturgyguide.service.schedule.InternetScheduleStatus
+import ru.liturgyguide.service.schedule.SchedulePublication
+import ru.liturgyguide.service.schedule.InternetService
 import java.time.Instant
 import java.time.LocalDate
 
@@ -38,6 +40,21 @@ class ChurchReadingEntryTest {
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("church_read_liturgy"))
         compose.onNodeWithTag("church_read_liturgy").performClick()
         compose.runOnIdle { assertEquals(listOf(LocalDate.of(2027, 1, 1)), opened) }
+    }
+
+    @Test fun inferredYearKeepsTheActualSourceOneTapAwayOnTheChurchPage() {
+        val url = "https://parish.example/schedule"
+        val publication = SchedulePublication(parish.id, parish.timezone, "https://parish.example", url,
+            "2026-11-11T07:00:00Z", listOf(InternetService("2026-11-11", "10:00", "Литургия", "liturgy")), yearInferred = true)
+        val opened = mutableListOf<String>()
+        compose.setContent { GuideTheme(false) { ChurchScreen(listOf(parish), parish.id, LocalDate.of(2026, 11, 11),
+            onSelect = { _, selected -> selected(); ChurchSelectionResult.SELECTED }, onOpenUrl = { opened += it },
+            onBack = {}, searchQuery = "", onSearchQueryChange = {}, onReadLiturgy = {},
+            internetSchedule = InternetScheduleState(parish.id, InternetScheduleStatus.READY, publication = publication)) } }
+        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("schedule_inferred_year"))
+        compose.onNodeWithTag("schedule_inferred_year").assertTextEquals("Год не указан - проверьте дату в расписании")
+        compose.onNodeWithText("Проверить источник").performScrollTo().performClick()
+        compose.runOnIdle { assertEquals(listOf(url), opened) }
     }
 
     @Test fun loadingTheWebsiteDoesNotBlockReadingAndCannotStartADuplicateRefresh() {

@@ -69,6 +69,31 @@ class BookReaderPlaybackTest {
         assertEquals(stopped.fraction, saved().fraction, .001f)
     }
 
+    @Test fun aPlainTapPausesAutoplayWithoutMovingTheReadingCursor() {
+        launch()
+        compose.mainClock.autoAdvance = false
+        play()
+        advance(2_000)
+        val beforeTap = paragraphTop()
+        compose.onNodeWithTag("book_content").performTouchInput {
+            down(center)
+            advanceEventTime(80)
+            up()
+        }
+        advance(700)
+        assertPaused()
+        val stoppedTop = paragraphTop()
+        val stopped = saved()
+        assertEquals("long-prayer", stopped.blockId)
+        assertTrue("A tap must not scroll or replace the visible line", abs((stoppedTop - beforeTap).value) <= 1f)
+
+        advance(3_000)
+        assertPaused()
+        assertTrue("Text must stay still after the touch ends", abs((paragraphTop() - stoppedTop).value) <= 1f)
+        assertEquals(stopped.blockId, saved().blockId)
+        assertEquals(stopped.fraction, saved().fraction, .001f)
+    }
+
     @Test fun leavingResumedStateSavesTheCurrentPlaceAndReturningDoesNotRestartPlay() {
         launch()
         compose.mainClock.autoAdvance = false

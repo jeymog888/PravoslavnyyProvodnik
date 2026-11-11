@@ -11,7 +11,8 @@ import kotlin.math.max
 data class ScheduleWord(val text: String, val left: Int, val top: Int, val right: Int, val bottom: Int,
     val confidence: Int = 100)
 data class ScheduleDocumentLine(val text: String, val confidence: Int = 100, val struck: Boolean = false,
-    val temporalConfidence: Int = 100, val headingLevel: Int = 0, val venue: String? = null, val endsTable: Boolean = false)
+    val temporalConfidence: Int = 100, val headingLevel: Int = 0, val venue: String? = null, val endsTable: Boolean = false,
+    val startsDayContainer: Boolean = false, val endsDayContainer: Boolean = false)
 data class ScheduleDocumentPage(val lines: List<ScheduleDocumentLine>)
 data class ScheduleDocument(val sourceUrl: String, val format: String, val pages: List<ScheduleDocumentPage>)
 enum class ScheduleParseDisposition { PARSED, UNSUPPORTED, REJECTED }
@@ -46,6 +47,11 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
             .forEach { lines += ScheduleDocumentLine(it.text(), headingLevel = 1) }
         fun plain(element: Element): List<ScheduleDocumentLine> {
             val clone = element.clone()
+            // Known ISO calendar cards render the celebrant separately. Keep every word,
+            // including cancellation notices, without joining it to the service name.
+            if (element.closest("[data-day]") != null) clone.select(".who").forEach {
+                it.before(" "); it.after(" ")
+            }
             clone.select("br").forEach { it.before("\n") }
             return clone.wholeText().lines().map { it.replace(Regex("[\\t ]+"), " ").trim() }
                 .filter(String::isNotBlank).map { ScheduleDocumentLine(it, struck = element.select("s,del,strike").isNotEmpty(),
@@ -109,7 +115,8 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
             lines += ScheduleDocumentLine("", endsTable = true)
         }
         fun walk(element: Element) {
-            if (element.hasAttr("data-day")) lines += ScheduleDocumentLine(element.attr("data-day"))
+            val dayContainer = element.hasAttr("data-day")
+            if (dayContainer) lines += ScheduleDocumentLine(element.attr("data-day"), startsDayContainer = true)
             when (element.tagName()) {
                 "table" -> table(element)
                 "p", "li", "h1", "h2", "h3", "h4", "h5", "h6", "pre" -> lines.addAll(plain(element))
@@ -125,6 +132,7 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
                     flush()
                 }
             }
+            if (dayContainer) lines += ScheduleDocumentLine("", endsDayContainer = true)
         }
         walk(body)
         return ScheduleDocument(document.baseUri(), "html", listOf(ScheduleDocumentPage(lines.take(2_000))))

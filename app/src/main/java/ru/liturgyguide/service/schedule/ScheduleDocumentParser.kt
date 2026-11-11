@@ -46,6 +46,9 @@ object ScheduleDocumentParser {
             var pendingDate: LocalDate? = null
             var pendingVenue: String? = null
             var rejected = false
+            data class DayContainerScope(val venue: String?, val month: YearMonth?, val date: LocalDate?,
+                val headings: Map<Int, HeadingScope>)
+            val dayContainers = ArrayDeque<DayContainerScope>()
             fun flush() {
                 val day = pendingDate
                 val time = pendingClock
@@ -57,6 +60,21 @@ object ScheduleDocumentParser {
                 pendingDate = null; pendingClock = null; pendingTitle = ""; pendingVenue = null; rejected = false
             }
             page.lines.take(2_000).forEachIndexed lineLoop@{ lineIndex, line ->
+                // A named venue inside one ISO calendar card belongs to that card. Keep all
+                // outer restrictions, then restore them before reading its sibling card.
+                if (line.startsDayContainer) {
+                    flush()
+                    dayContainers.addLast(DayContainerScope(sectionVenue, scope, currentDate, headings.toMap()))
+                    currentDate = null
+                }
+                if (line.endsDayContainer) {
+                    flush()
+                    dayContainers.removeLastOrNull()?.let { outer ->
+                        sectionVenue = outer.venue; scope = outer.month; currentDate = outer.date
+                        headings.clear(); headings.putAll(outer.headings)
+                    }
+                    return@lineLoop
+                }
                 if (line.endsTable) {
                     flush()
                     currentDate = headings.values.mapNotNull { it.date }.lastOrNull()

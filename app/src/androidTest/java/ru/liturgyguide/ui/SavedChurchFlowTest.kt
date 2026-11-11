@@ -2,6 +2,7 @@ package ru.liturgyguide.ui
 
 import android.content.Context
 import androidx.compose.ui.test.*
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import ru.liturgyguide.ui.closeSoftKeyboardWithCiDiagnostics as closeSoftKeyboard
 import ru.liturgyguide.ui.pressBackWithCiDiagnostics as pressBack
@@ -28,7 +29,7 @@ class SavedChurchFlowTest {
 
     @Test fun aTempleInAnotherCityAndItsTimeZoneSurviveRecreation() {
         openPicker()
-        compose.onNodeWithTag("add_church").performClick()
+        discovery("discovery_manual").performClick()
         compose.onNodeWithTag("save_new_church").performScrollTo().performClick()
         compose.onNodeWithTag("new_church_error").assertTextEquals("Введите название храма")
         compose.onNodeWithTag("new_church_name").performScrollTo().performTextInput("Храм в поездке")
@@ -65,46 +66,70 @@ class SavedChurchFlowTest {
 
     @Test fun cancellingANewTempleAndAnEmptySearchKeepTheCurrentParish() {
         openPicker()
-        compose.onNodeWithTag("church_search").performTextInput("Томск")
+        compose.onNodeWithTag("discovery_query").performTextInput("Томск")
         closeSoftKeyboard()
-        compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("church_search_empty"))
-        compose.onNodeWithTag("church_search_empty").assertIsDisplayed()
-        compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("add_church"))
-        compose.onNodeWithTag("add_church").performClick()
+        // Typing filters the offline directory without starting an internet search.
+        // The old picker-empty oracle concerns this local list, not remote results.
+        discovery("discovery_saved_empty").assertTextEquals("В сохраненных храмах совпадений нет")
+        compose.onNodeWithTag("discovery_loading").assertDoesNotExist()
+        discovery("discovery_manual").performClick()
         compose.onNodeWithTag("new_church_name").performTextInput("Незавершенный храм")
         closeSoftKeyboard()
         compose.onNodeWithTag("cancel_new_church").performScrollTo().performClick()
-        compose.onNodeWithTag("church_search").assertTextContains("Томск")
+        discovery("discovery_query").assertTextContains("Томск")
         assertTrue(ChurchDirectoryStore(preferences).records().isEmpty())
         assertNull(preferences.getString("church_id", null))
         assertEquals("creed", preferences.getString("stage_id", null))
-        compose.onNodeWithContentDescription("Очистить поиск храмов").performClick()
-        compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("church_elisavetinsky_opalikha"))
-        compose.onNodeWithTag("church_elisavetinsky_opalikha").assertIsSelected()
+        compose.onNodeWithContentDescription("Очистить поисковый запрос").performClick()
+        discovery("discovery_saved_elisavetinsky_opalikha").assertIsDisplayed()
+        // The unified result row is a button, without selected semantics. Clearing
+        // the filter must still leave the actual selected church and reading intact.
+        assertNull(preferences.getString("church_id", null))
+        assertEquals("creed", preferences.getString("stage_id", null))
     }
 
     @Test fun favoriteDoesNotChooseAnotherParishOrEraseTheSavedStage() {
         openPicker()
-        compose.onNodeWithTag("church_search").performTextInput("Нахабино")
+        compose.onNodeWithTag("discovery_query").performTextInput("Нахабино")
         closeSoftKeyboard()
-        compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("favorite_vsetsaritsa_nakhabino"))
-        compose.onNodeWithTag("favorite_vsetsaritsa_nakhabino").performClick()
+        val favorite = discovery("favorite_vsetsaritsa_nakhabino")
+        val row = compose.onNodeWithTag("discovery_saved_vsetsaritsa_nakhabino").assertIsDisplayed()
+        val rowBounds = row.getBoundsInRoot()
+        val favoriteBounds = favorite.getBoundsInRoot()
+        assertTrue("Favorite must be a separate touch target", favoriteBounds.left - rowBounds.right >= 12.dp)
+        assertTrue(favoriteBounds.right - favoriteBounds.left >= 48.dp)
+        assertTrue(favoriteBounds.bottom - favoriteBounds.top >= 48.dp)
+        val beforeFavorite = preferences.all.toMap()
+        favorite.performClick()
         assertEquals(setOf("vsetsaritsa_nakhabino"), ChurchDirectoryStore(preferences).favorites())
         assertNull(preferences.getString("church_id", null))
         assertEquals("creed", preferences.getString("stage_id", null))
-        compose.onNodeWithTag("church_vsetsaritsa_nakhabino").assertIsNotSelected()
+        compose.onNodeWithTag("church_change_confirmation").assertDoesNotExist()
+        compose.onNodeWithTag("favorite_vsetsaritsa_nakhabino").assert(hasContentDescription("Убрать из избранного:", substring = true))
+        compose.onNodeWithTag("discovery_saved_vsetsaritsa_nakhabino").assertHasClickAction()
+        assertEquals(beforeFavorite, preferences.all - ChurchDirectoryStore.FAVORITES_KEY)
         compose.activityRule.scenario.recreate()
+        discovery("discovery_query").assertTextContains("Нахабино")
         assertEquals(setOf("vsetsaritsa_nakhabino"), ChurchDirectoryStore(preferences).favorites())
-        compose.onNodeWithTag("church_picker").performScrollToNode(hasTestTag("favorite_vsetsaritsa_nakhabino"))
-        compose.onNodeWithTag("favorite_vsetsaritsa_nakhabino").performClick()
+        discovery("favorite_vsetsaritsa_nakhabino").assertHasClickAction().performClick()
         assertTrue(ChurchDirectoryStore(preferences).favorites().isEmpty())
         assertEquals("creed", preferences.getString("stage_id", null))
+        assertNull(preferences.getString("church_id", null))
+        assertEquals(beforeFavorite, preferences.all - ChurchDirectoryStore.FAVORITES_KEY)
+        compose.onNodeWithTag("church_change_confirmation").assertDoesNotExist()
         pressBack()
         compose.onNodeWithTag("church_content").assertIsDisplayed()
     }
 
     private fun openPicker() {
-        compose.onNodeWithTag("open_church").performClick()
+        compose.onNodeWithTag("nav_church").assertIsDisplayed().performClick()
+        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("change_church"))
         compose.onNodeWithTag("change_church").performClick()
+        compose.onNodeWithTag("discovery_content").assertIsDisplayed()
+    }
+
+    private fun discovery(tag: String): SemanticsNodeInteraction {
+        compose.onNodeWithTag("discovery_content").performScrollToNode(hasTestTag(tag))
+        return compose.onNodeWithTag(tag).assertIsDisplayed()
     }
 }

@@ -32,7 +32,7 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
         refreshing = true
         try {
             val pinned = withContext(Dispatchers.IO) {
-                readingStore.last(parishId)?.takeIf { it.key == requested }?.let { books.cachedVersion(requested, it.contentHash) }
+                readingStore.positionFor(requested, parishId)?.let { books.cachedVersion(requested, it.contentHash) }
             }
             if (retry == 0 && pinned != null) {
                 result = BookLoadResult.Ready(pinned, fromCache = true, warning = BookWarnings.supplementWarning(pinned))
@@ -63,7 +63,9 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
         is BookLoadResult.Failed -> state.cachedBook
         else -> null
     }
-    if (loaded != null) key(loaded.contentHash) {
+    // Saved BOOK routes can reopen the same text for another church. Language and
+    // visibility controls must share the same identity as the persisted reading cursor.
+    if (loaded != null) key(loaded.key.canonical(), loaded.contentHash, parishId) {
         BookReaderScreen(loaded, parishId, readingStore, textSize, onBack, onOpenUrl,
             onChooseVersion = { requested = it; onRequestChanged(it) }, onSettings = onSettings,
             onRefresh = { retry++ }, refreshing = refreshing,

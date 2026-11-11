@@ -85,4 +85,25 @@ class BookReadingTest {
         assertEquals(0f, BookPositionUpdate.rebase(position, before, translated).fraction)
         assertEquals(.45f, BookPositionUpdate.rebase(position.copy(mode = BookReadingMode.ORIGINAL), before, translated).fraction)
     }
+
+    @Test fun updateWhileInMeaningUsesTheTextLanguageWhoseOffsetWasSaved() {
+        val block = BookBlock("block-2", BookBlockKind.PRAYER, null, "Отче наш", "Отец наш")
+        val before = ServiceBook(key = key, title = "Литургия", sourceUrl = key.sourceUrl(), sourceTitle = "Источник",
+            fetchedAtMillis = 1, selectedEventTitle = null,
+            chapters = listOf(BookChapter("chapter-1", "Молитва", "Смысл", listOf(block))), contentHash = "a".repeat(64))
+        val translated = before.copy(contentHash = "b".repeat(64), chapters = listOf(before.chapters.single().copy(
+            blocks = listOf(block.copy(russian = "Отче наш, сущий на небесах")))))
+        val fromRussian = position.copy(mode = BookReadingMode.MEANING, lastTextMode = BookReadingMode.RUSSIAN)
+        val rebased = BookPositionUpdate.rebase(fromRussian, before, translated)
+        assertEquals(0f, rebased.fraction)
+        assertEquals(BookReadingMode.MEANING, rebased.mode)
+        assertEquals(BookReadingMode.RUSSIAN, rebased.lastTextMode)
+        assertEquals("block-2", rebased.blockId)
+        // Meaning itself is temporary; an unchanged original remains at its former offset
+        assertEquals(.45f, BookPositionUpdate.rebase(fromRussian.copy(lastTextMode = BookReadingMode.ORIGINAL), before, translated).fraction)
+        // Positions written before lastTextMode existed retain the original-language fallback
+        assertEquals(.45f, BookPositionUpdate.rebase(fromRussian.copy(lastTextMode = null), before, translated).fraction)
+        assertEquals(.45f, BookPositionUpdate.rebase(fromRussian, before, before.copy(contentHash = "c".repeat(64))).fraction)
+    }
+
 }

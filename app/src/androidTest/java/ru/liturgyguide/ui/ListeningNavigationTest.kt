@@ -58,9 +58,11 @@ class ListeningNavigationTest {
         withCiFailureDiagnostics("listening.searchBack") {
             seed()
             val speech = launch()
+            resume()
             val before = preferences.all.toMap()
-            compose.onNodeWithTag("main_content").performScrollToNode(hasTestTag("find_stage"))
-            compose.onNodeWithTag("find_stage").performScrollTo().performClick()
+            // This verifies correction of an explicitly saved legacy reading. The
+            // primary Home route now opens the dated book, which has its own search.
+            compose.onNodeWithTag("clarify_stage").performClick()
             compose.onNodeWithTag("manual_content").performScrollToNode(hasTestTag("manual_search"))
             compose.onNodeWithTag("manual_search").performClick()
             compose.onNodeWithTag("stage_search").performTextReplacement("верую")
