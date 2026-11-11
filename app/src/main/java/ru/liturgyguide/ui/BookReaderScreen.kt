@@ -87,7 +87,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     textSize: Int, onBack: () -> Unit, onOpenUrl: (String) -> Unit,
     onChooseVersion: (ServiceBookKey) -> Unit, onSettings: () -> Unit,
     isSaved: Boolean = true, loadWarning: String? = null,
-    onRefresh: () -> Unit = {}, refreshing: Boolean = false, onAcceptUpdate: (() -> Boolean)? = null) {
+    onRefresh: () -> Unit = {}, refreshing: Boolean = false, onAcceptUpdate: (() -> Boolean)? = null,
+    churchTypeInfo: String? = null) {
     val initial = remember(book.contentHash, parishId) { readingStore.restore(book, parishId) }
     var mode by rememberSaveable(book.contentHash) { mutableStateOf(initial?.mode ?: BookReadingMode.ORIGINAL) }
     var lastTextMode by rememberSaveable(book.contentHash) {
@@ -412,8 +413,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     }
     }
     if (sheet != null) ModalBottomSheet(onDismissRequest = { sheet = null }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-        when (sheet) {
         GuideSheetSystemBars()
+        when (sheet) {
             "search" -> BookSearchSheet(book, microphoneFirst, lastTextMode, onSelect = { hit ->
                 positioning = true
                 cursor.seek(hit.chapterId, hit.blockId)
@@ -471,6 +472,10 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             "sources" -> LazyColumn(Modifier.heightIn(max = 600.dp), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 item {
                     Text("Состав книги", style = MaterialTheme.typography.headlineSmall)
+                    churchTypeInfo?.let {
+                        Spacer(Modifier.height(12.dp))
+                        Text(it, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("book_church_type"))
+                    }
                     Spacer(Modifier.height(12.dp))
                     Text("Полное последование источника. На приходе отдельные молитвы и песнопения могут сокращаться или отличаться")
                     Spacer(Modifier.height(12.dp))

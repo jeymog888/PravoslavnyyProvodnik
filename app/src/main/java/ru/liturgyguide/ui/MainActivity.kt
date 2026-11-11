@@ -656,6 +656,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                     )
                     Screen.BOOK -> bookRequest?.let { request ->
                         ServiceBookScreen(request, bookParishId, container.serviceBooks, bookStore, textSize,
+                            parish = church,
                             onBack = { navigate(Screen.MAIN) },
                             onSettings = { settingsOrigin = Screen.BOOK; navigate(Screen.SETTINGS) },
                             onOpenUrl = { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(it))) },

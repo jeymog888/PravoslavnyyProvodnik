@@ -12,6 +12,8 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import ru.liturgyguide.model.Parish
+import ru.liturgyguide.model.ServiceBook
 import ru.liturgyguide.model.ServiceBookKey
 import ru.liturgyguide.model.WorshipKind
 import ru.liturgyguide.service.book.*
@@ -20,7 +22,9 @@ import ru.liturgyguide.service.book.*
 @Composable
 fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: ServiceBooks,
     readingStore: BookReadingStore, textSize: Int, onBack: () -> Unit, onSettings: () -> Unit,
-    onOpenUrl: (String) -> Unit, onRequestChanged: (ServiceBookKey) -> Unit = {}, onOpenCommonLiturgy: () -> Unit) {
+    onOpenUrl: (String) -> Unit, onRequestChanged: (ServiceBookKey) -> Unit = {}, parish: Parish? = null,
+    onOpenCommonLiturgy: () -> Unit) {
+    val ownParish = parish?.takeIf { it.id == parishId }
     var requested by remember(initialKey, parishId) { mutableStateOf(initialKey) }
     var retry by remember(requested) { mutableIntStateOf(0) }
     var result by remember(requested, parishId) { mutableStateOf<BookLoadResult?>(null) }
@@ -28,6 +32,7 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
     var refreshing by remember(requested, parishId) { mutableStateOf(false) }
     var refreshWarning by remember(requested, parishId) { mutableStateOf<String?>(null) }
     var progress by remember(requested) { mutableStateOf(BookLoadProgress.SOURCE) }
+    var recovery by remember(requested, parishId) { mutableStateOf<ServiceBook?>(null) }
     LaunchedEffect(books, requested, parishId, retry) {
         refreshing = true
         try {
@@ -58,6 +63,19 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
             else refreshWarning = "Не удалось обновить. Открытая книга осталась на месте"
         } finally { refreshing = false }
     }
+    LaunchedEffect(books, requested, parishId, ownParish, result, refreshing) {
+        recovery = null
+        val failed = result as? BookLoadResult.Failed
+        if (!refreshing && failed != null && failed.cachedBook == null &&
+            failed.reason in setOf(BookFailure.NETWORK, BookFailure.INVALID_SOURCE)) {
+            recovery = try {
+                withContext(Dispatchers.IO) {
+                    BookVariantRecovery.candidate(requested, parishId, ownParish, readingStore::positionFor, books::cachedVersion)
+                }
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { null }
+        }
+    }
     val loaded = when (val state = result) {
         is BookLoadResult.Ready -> state.book
         is BookLoadResult.Failed -> state.cachedBook
@@ -80,6 +98,7 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
                 }
             } },
             isSaved = (result as? BookLoadResult.Ready)?.saved != false,
+            churchTypeInfo = ChurchTypeClassifier.description(loaded.key.churchType, ChurchTypeClassifier.classify(ownParish)),
             loadWarning = refreshWarning ?: when (val state = result) {
                 is BookLoadResult.Ready -> state.warning
                 is BookLoadResult.Failed -> state.message
@@ -99,6 +118,14 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
                     Text((result as? BookLoadResult.Failed)?.message.orEmpty(), style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.testTag("book_load_error"))
                     Button(onClick = { result = null; retry++ }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Попробовать еще раз") }
+                    recovery?.let { saved ->
+                        Text("На телефоне есть текст этой службы с прежним вариантом храма", style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.testTag("book_previous_variant_notice"))
+                        OutlinedButton(onClick = { requested = saved.key; onRequestChanged(saved.key) },
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_open_previous_variant")) {
+                            Text("Открыть сохраненный текст")
+                        }
+                    }
                     if (requested.worship == WorshipKind.LITURGY) OutlinedButton(onClick = onOpenCommonLiturgy,
                         modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Открыть общий порядок литургии") }
                 }

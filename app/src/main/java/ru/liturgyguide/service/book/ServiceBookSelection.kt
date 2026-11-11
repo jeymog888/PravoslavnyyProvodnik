@@ -33,8 +33,10 @@ object ServiceBookSelection {
         return ServiceBookKey((if (tomorrow) date.plusDays(1) else date).toString(), kind, churchType(parish))
     }
 
-    /** Only explicit dedications supported by the source. The chosen variant is visible in the reader. */
-    fun churchType(parish: Parish?): String {
+    fun churchType(parish: Parish?): String = ChurchTypeClassifier.classify(parish).requestType
+
+    /** Only for finding a previously accepted v0.8/v0.9 book; never classify a new request with this. */
+    internal fun legacyChurchType(parish: Parish?): String {
         val name = BookText.normalized(parish?.name.orEmpty())
         return when {
             "крестовоздвиж" in name || "воздвижения креста" in name -> "12"

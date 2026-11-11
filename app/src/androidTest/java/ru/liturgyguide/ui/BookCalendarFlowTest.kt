@@ -104,7 +104,7 @@ class BookCalendarFlowTest {
             compose.onNodeWithTag("book_calendar").assertIsDisplayed()
             calendarText("11 ноября 2026")
             calendarText(day.weekTitle)
-            calendarText("Глас 6 - один из восьми напевов церковного круга")
+            calendarText("Глас 6 - одна из восьми групп церковных напевов")
             calendarNode("book_calendar_commemorations").performClick()
             calendarNode("book_calendar_expand_0").performClick()
             calendarText(day.commemorations.single().title)
