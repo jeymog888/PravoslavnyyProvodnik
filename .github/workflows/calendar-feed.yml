@@ -1,0 +1,42 @@
+name: Refresh public calendar supplements
+
+on:
+  schedule:
+    - cron: '23 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-calendar-feed
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    if: github.repository == 'jeymog888/PravoslavnyyProvodnik' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      # v4.2.2, immutable upstream release. No code is checked out from calendar-cache.
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Install parser
+        run: |
+          python3 -m venv "$RUNNER_TEMP/calendar-venv"
+          "$RUNNER_TEMP/calendar-venv/bin/python" -m pip install --disable-pip-version-check -r scripts/calendar_feed/requirements.txt
+      - name: Verify adapter offline
+        run: |
+          "$RUNNER_TEMP/calendar-venv/bin/python" -B -m unittest discover -s scripts/calendar_feed/tests -p 'test_*.py'
+      - name: Stage existing verified data
+        run: |
+          "$RUNNER_TEMP/calendar-venv/bin/python" -B scripts/calendar_feed/publish.py prepare --root "$RUNNER_TEMP/calendar-feed"
+      - name: Fetch and verify today plus seven following days
+        env:
+          AZBYKA_API_TOKEN: ${{ secrets.AZBYKA_API_TOKEN }}
+        run: |
+          "$RUNNER_TEMP/calendar-venv/bin/python" -B scripts/calendar_feed/generate.py --out "$RUNNER_TEMP/calendar-feed/days" --token-state "$RUNNER_TEMP/calendar-feed/token.enc.json" --days 8
+      - name: Publish only validated JSON
+        run: |
+          "$RUNNER_TEMP/calendar-venv/bin/python" -B scripts/calendar_feed/publish.py publish --root "$RUNNER_TEMP/calendar-feed"
