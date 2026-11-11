@@ -21,10 +21,13 @@ import java.util.concurrent.Executor
 internal data class SpeechSupport(val installed: List<String>, val supported: List<String>, val pending: List<String>)
 internal interface SpeechEvents {
     fun ready()
+    fun beginning() = Unit
+    fun level(rmsDb: Float) = Unit
     fun end()
     fun error(code: Int)
     fun partial(text: String)
     fun result(text: String)
+    fun alternatives(texts: List<String>) = result(texts.firstOrNull().orEmpty())
 }
 internal interface SpeechAttempt {
     fun checkSupport(result: (SpeechSupport) -> Unit, error: (Int) -> Unit)
@@ -62,13 +65,13 @@ internal class AndroidSpeechBackend(private val context: Context) : SpeechBacken
         try {
             recognizer.setRecognitionListener(object : RecognitionListener {
                 override fun onReadyForSpeech(params: Bundle?) = events.ready()
-                override fun onBeginningOfSpeech() = Unit
-                override fun onRmsChanged(rmsdB: Float) = Unit
+                override fun onBeginningOfSpeech() = events.beginning()
+                override fun onRmsChanged(rmsdB: Float) = events.level(rmsdB)
                 override fun onBufferReceived(buffer: ByteArray?) = Unit
                 override fun onEndOfSpeech() = events.end()
                 override fun onError(error: Int) = events.error(error)
-                override fun onResults(results: Bundle?) = events.result(transcript(results))
-                override fun onPartialResults(partialResults: Bundle?) = events.partial(transcript(partialResults))
+                override fun onResults(results: Bundle?) = events.alternatives(transcripts(results))
+                override fun onPartialResults(partialResults: Bundle?) = events.partial(transcripts(partialResults).firstOrNull().orEmpty())
                 override fun onEvent(eventType: Int, params: Bundle?) = Unit
             })
         } catch (failure: RuntimeException) {
@@ -80,7 +83,7 @@ internal class AndroidSpeechBackend(private val context: Context) : SpeechBacken
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ru-RU")
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
             putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
         }
         return object : SpeechAttempt {
@@ -99,8 +102,8 @@ internal class AndroidSpeechBackend(private val context: Context) : SpeechBacken
             }
         }
     }
-    private fun transcript(bundle: Bundle?) = bundle?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-        ?.firstOrNull().orEmpty()
+    private fun transcripts(bundle: Bundle?) = bundle?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+        ?.take(5)?.map { it.take(300) }.orEmpty()
 }
 
 /** Keep API 33 callback types out of the attempt used on Android 12. */

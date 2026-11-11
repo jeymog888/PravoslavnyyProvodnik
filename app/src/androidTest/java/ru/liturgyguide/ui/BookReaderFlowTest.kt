@@ -67,26 +67,31 @@ class BookReaderFlowTest {
         assertEquals(BookAnchorKind.BLOCK, before.anchorKind)
         assertEquals("near-end-long", before.blockId)
 
-        compose.onNodeWithTag("book_mode_meaning").performClick()
-        settle()
-        compose.onNodeWithTag("book_chapter", useUnmergedTree = true).assertTextEquals(target.title)
-        compose.onNodeWithText(target.meaning).assertIsDisplayed()
-        val meaning = saved()
-        assertEquals(BookReadingMode.MEANING, meaning.mode)
-        assertEquals(before.blockId, meaning.blockId)
-        assertEquals(before.fraction, meaning.fraction, .001f)
+        repeat(5) { cycle ->
+            compose.onNodeWithTag("book_mode_meaning").performClick()
+            settle()
+            compose.onNodeWithTag("book_chapter", useUnmergedTree = true).assertTextEquals(target.title)
+            compose.onNodeWithText(target.meaning).assertIsDisplayed()
+            val meaning = saved()
+            assertEquals("Meaning mode, cycle $cycle: $meaning", BookReadingMode.MEANING, meaning.mode)
+            assertEquals("Meaning block, cycle $cycle: $meaning", before.blockId, meaning.blockId)
+            assertEquals(before.chapterId, meaning.chapterId)
+            assertEquals(BookAnchorKind.BLOCK, meaning.anchorKind)
+            assertEquals(before.fraction, meaning.fraction, .001f)
 
-        compose.onNodeWithTag("book_mode_original").performClick()
-        settle()
-        compose.onNodeWithTag("book_mode_original").assertIsSelected()
-        val restored = saved()
-        assertEquals(BookReadingMode.ORIGINAL, restored.mode)
-        assertEquals(before.blockId, restored.blockId)
-        assertEquals(before.chapterId, restored.chapterId)
-        assertEquals(BookAnchorKind.BLOCK, restored.anchorKind)
-        assertEquals(before.fraction, restored.fraction, .001f)
-        val afterTop = compose.onNodeWithTag("book_block_near-end-long").assertIsDisplayed().getUnclippedBoundsInRoot().top
-        assertTrue("Returning from Meaning must retain the visible line, allowing pixel rounding", abs((afterTop - beforeTop).value) <= 2f)
+            compose.onNodeWithTag("book_mode_original").performClick()
+            settle()
+            compose.onNodeWithTag("book_mode_original").assertIsSelected()
+            val restored = saved()
+            assertEquals(BookReadingMode.ORIGINAL, restored.mode)
+            assertEquals("Returned block, cycle $cycle: $restored", before.blockId, restored.blockId)
+            assertEquals(before.chapterId, restored.chapterId)
+            assertEquals(BookAnchorKind.BLOCK, restored.anchorKind)
+            assertEquals(before.fraction, restored.fraction, .001f)
+            val afterTop = compose.onNodeWithTag("book_block_near-end-long").assertIsDisplayed().getUnclippedBoundsInRoot().top
+            assertTrue("Returning from Meaning must retain the visible line, cycle $cycle: before=$beforeTop after=$afterTop saved=$restored",
+                abs((afterTop - beforeTop).value) <= 2f)
+        }
     }
 
     @Test fun searchFromMeaningRevealsAndOpensTheExactHiddenAltarFragment() {
@@ -102,7 +107,7 @@ class BookReaderFlowTest {
         compose.onNodeWithTag("book_search_query").performTextInput("тайная молитва испытания")
         closeSoftKeyboard()
         compose.waitForIdle()
-        compose.onNodeWithTag("book_hit_altar-target").performScrollTo().assertIsDisplayed().performClick()
+        compose.scrollToBookHit("altar-target").assertIsDisplayed().performClick()
         settle()
 
         compose.onNodeWithTag("book_mode_original").assertIsSelected()

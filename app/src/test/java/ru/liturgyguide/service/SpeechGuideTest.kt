@@ -5,6 +5,58 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class SpeechGuideTest {
+    @Test fun `sound feedback is real bounded and only applies to the current capture`() {
+        val h = Harness(31)
+        h.guide.start()
+        val old = h.last
+        assertNull(h.guide.state.audioLevel)
+        old.events.level(Float.NaN)
+        assertNull(h.guide.state.audioLevel)
+        old.events.ready()
+        assertFalse(h.guide.state.heardSpeech)
+        old.events.level(-20f)
+        assertEquals(0f, h.guide.state.audioLevel!!, 0f)
+        old.events.beginning()
+        assertTrue(h.guide.state.heardSpeech)
+        old.events.level(20f)
+        assertEquals(1f, h.guide.state.audioLevel!!, 0f)
+        old.events.partial("Иже Херувимы")
+        h.guide.finishListening()
+        assertEquals(1, old.finishes)
+        assertEquals("Иже Херувимы", h.guide.state.transcript)
+        assertNull(h.guide.state.audioLevel)
+        val processing = h.guide.state
+        old.events.level(3f); old.events.beginning()
+        assertEquals(processing, h.guide.state)
+        h.guide.stop(); h.guide.start()
+        val replacement = h.guide.state
+        old.events.level(8f); old.events.beginning(); old.events.alternatives(listOf("старые слова"))
+        assertEquals(replacement, h.guide.state)
+        assertNull(h.guide.state.audioLevel)
+        assertFalse(h.guide.state.heardSpeech)
+    }
+
+    @Test fun `finish preserves partial until final bounded alternatives arrive without restarting microphone`() {
+        val h = Harness(31)
+        h.guide.start()
+        val a = h.last
+        a.events.ready(); a.events.partial("Иже")
+        h.guide.finishListening(); h.guide.finishListening()
+        assertEquals(1, a.finishes)
+        assertEquals(SpeechStatus.PROCESSING, h.guide.state.status)
+        assertEquals("Иже", h.guide.state.transcript)
+        a.events.alternatives(listOf("  ниже херувимы  ", "Иже Херувимы", "Иже Херувимы", " ", "x".repeat(400), "шестой вариант"))
+        assertEquals(SpeechStatus.RESULT, h.guide.state.status)
+        assertEquals(listOf("ниже херувимы", "Иже Херувимы", "x".repeat(300)), h.guide.state.alternatives)
+        assertEquals("ниже херувимы", h.guide.state.transcript)
+        assertNull(h.guide.state.audioLevel)
+        assertEquals(1, a.releases)
+        assertEquals(1, a.starts)
+        val result = h.guide.state
+        a.events.partial("поздняя фраза"); a.events.level(4f); a.events.beginning()
+        assertEquals(result, h.guide.state)
+    }
+
     @Test fun `availability refresh neither checks permission nor creates a recognizer and old APIs cannot capture`() {
         for (api in listOf(26, 30, 31, 32, 33, 35)) {
             val h = Harness(api)

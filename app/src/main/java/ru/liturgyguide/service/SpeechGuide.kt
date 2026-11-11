@@ -4,6 +4,7 @@ import android.content.Context
 import android.speech.SpeechRecognizer
 import androidx.annotation.MainThread
 import java.util.Locale
+import kotlin.math.roundToInt
 
 enum class SpeechStatus { IDLE, CHECKING, STARTING, LISTENING, PROCESSING, RESULT, ERROR, UNAVAILABLE }
 
@@ -11,10 +12,14 @@ data class SpeechGuideState(
     val status: SpeechStatus = SpeechStatus.IDLE,
     val transcript: String = "",
     val message: String = "Коротко послушать службу на этом телефоне",
-    val canTryWithoutSupport: Boolean = false
+    val canTryWithoutSupport: Boolean = false,
+    val audioLevel: Float? = null,
+    val heardSpeech: Boolean = false,
+    val alternatives: List<String> = emptyList()
 ) {
     val isActive: Boolean get() = status == SpeechStatus.CHECKING || status == SpeechStatus.STARTING ||
         status == SpeechStatus.LISTENING || status == SpeechStatus.PROCESSING
+    val isCapturing: Boolean get() = status == SpeechStatus.STARTING || status == SpeechStatus.LISTENING
 }
 
 /** One explicit on-device attempt. No network fallback, saved audio or automatic restart. */
@@ -133,25 +138,38 @@ class SpeechGuide internal constructor(
     private fun events(attempt: Attempt) = object : SpeechEvents {
         override fun ready() {
             if (current(attempt) && state.status == SpeechStatus.STARTING) update(state.copy(
-                status = SpeechStatus.LISTENING, message = "Слушаем короткую фразу. Микрофон включен"))
+                status = SpeechStatus.LISTENING, message = "Слушаю службу"))
+        }
+        override fun beginning() {
+            if (capturing(attempt)) update(state.copy(status = SpeechStatus.LISTENING,
+                heardSpeech = true, message = "Слушаю службу"))
+        }
+        override fun level(rmsDb: Float) {
+            if (!capturing(attempt) || !rmsDb.isFinite()) return
+            // Relative feedback from the recognizer, not a calibrated sound meter.
+            // Quantization avoids recomposing the sheet for every tiny callback change.
+            val level = (((rmsDb + 2f) / 12f).coerceIn(0f, 1f) * 20).roundToInt() / 20f
+            if (state.audioLevel != level) update(state.copy(audioLevel = level))
         }
         override fun end() { if (capturing(attempt)) beginProcessing(attempt) }
         override fun error(code: Int) { if (recognizing(attempt)) fail(errorMessage(code)) }
         override fun partial(text: String) {
-            if (recognizing(attempt) && text.isNotBlank()) update(state.copy(transcript = text.trim()))
+            if (recognizing(attempt) && text.isNotBlank()) update(state.copy(transcript = text.trim().take(300)))
         }
-        override fun result(text: String) {
+        override fun result(text: String) = alternatives(listOf(text))
+        override fun alternatives(texts: List<String>) {
             if (!recognizing(attempt)) return
-            val final = text.trim()
+            val candidates = texts.take(5).map { it.trim().take(300) }.filter(String::isNotBlank).distinct()
             release()
-            if (final.isBlank()) update(SpeechGuideState(SpeechStatus.ERROR, message = noFinalMessage))
-            else update(SpeechGuideState(SpeechStatus.RESULT, final, "Распознанная фраза может содержать ошибки"))
+            if (candidates.isEmpty()) update(SpeechGuideState(SpeechStatus.ERROR, message = noFinalMessage))
+            else update(SpeechGuideState(SpeechStatus.RESULT, candidates.first(),
+                "Проверьте услышанные слова и выберите подходящий фрагмент", alternatives = candidates))
         }
     }
 
     private fun beginProcessing(attempt: Attempt) {
         if (!capturing(attempt)) return
-        update(state.copy(status = SpeechStatus.PROCESSING, message = "Проверяем услышанную фразу"))
+        update(state.copy(status = SpeechStatus.PROCESSING, audioLevel = null, message = "Распознаю фразу"))
         if (current(attempt)) arm(attempt, 5_000) { fail(noFinalMessage) }
     }
 

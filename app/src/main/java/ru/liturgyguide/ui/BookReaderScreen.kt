@@ -33,13 +33,22 @@ import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontFamily
@@ -49,6 +58,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
@@ -64,6 +77,9 @@ import java.util.Locale
 
 private data class BookPageItem(val id: String, val chapter: BookChapter, val block: BookBlock?)
 private data class BookSearchLine(val hit: BookSearchHit, val offset: Int)
+private data class BookSearchResult(val bookKey: ServiceBookKey, val bookHash: String, val query: String,
+    val mode: BookReadingMode, val hits: List<BookSearchHit>)
+private class BookPositioningOwner(var job: Job? = null)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,6 +106,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     var saveError by remember { mutableStateOf(false) }
     var superseded by remember { mutableStateOf(false) }
     var positioning by remember { mutableStateOf(true) }
+    val positioningOwner = remember { BookPositioningOwner() }
     var seekRevision by remember { mutableIntStateOf(0) }
     val density = LocalDensity.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -102,21 +119,30 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         }
     }
     val list = rememberLazyListState()
-    val currentItem by remember(items, list) { derivedStateOf { items.getOrNull(list.firstVisibleItemIndex) ?: items.last() } }
+    // These are presentation keys only. Published block IDs and saved bookmarks stay unchanged.
+    // A list measured in Meaning must never be interpreted with the indices of Original.
+    val layoutPrefix = "${book.contentHash}:${mode.name}:$showAltar:"
+    val itemKeys = remember(items, layoutPrefix) { items.associateBy { "${layoutPrefix}page:${it.id}" } }
+    val endKey = "${layoutPrefix}end"
+    val currentItem by remember(items, itemKeys, endKey, list) { derivedStateOf {
+        val measured = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == list.firstVisibleItemIndex }
+        (measured?.key as? String)?.let(itemKeys::get) ?: if (measured?.key == endKey) items.last()
+        else items.firstOrNull { it.chapter.id == cursor.value.chapterId } ?: items.first()
+    } }
     val currentChapter = currentItem.chapter
 
-    fun viewport(): BookViewport {
+    fun viewport(): BookViewport? {
         val index = list.firstVisibleItemIndex
-        val visible = items.getOrNull(index) ?: items.last()
-        val kind = when { index >= items.size -> BookAnchorKind.END; visible.block == null -> BookAnchorKind.HEADER; else -> BookAnchorKind.BLOCK }
+        val measured = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index && it.size > 0 } ?: return null
+        val visible = (measured.key as? String)?.let(itemKeys::get) ?: if (measured.key == endKey) items.last() else return null
+        val kind = when { measured.key == endKey -> BookAnchorKind.END; visible.block == null -> BookAnchorKind.HEADER; else -> BookAnchorKind.BLOCK }
         val blockId = visible.block?.id ?: visible.chapter.blocks.firstOrNull { showAltar || !it.isAltarText }?.id ?: visible.chapter.blocks.first().id
-        val height = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }?.size ?: 1
-        val fraction = (list.firstVisibleItemScrollOffset.toFloat() / height.coerceAtLeast(1)).coerceIn(0f, 1f)
+        val fraction = (-measured.offset.toFloat() / measured.size).coerceIn(0f, 1f)
         return BookViewport(visible.chapter.id, blockId, fraction, kind)
     }
     fun snapshot() = cursor.snapshot(mode, wordsPerMinute, showAltar).copy(lastTextMode = lastTextMode)
     fun position(): BookReadingPosition {
-        if (!positioning) cursor.observe(viewport(), mode)
+        if (!positioning) viewport()?.let { cursor.observe(it, mode) }
         return snapshot()
     }
     suspend fun scrollToCursor() {
@@ -139,11 +165,22 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             else -> items.indexOfFirst { it.block?.id == anchor.blockId }.takeIf { it >= 0 }
                 ?: items.indexOfFirst { it.chapter.id == anchor.chapterId }
         }.coerceAtLeast(0)
+        val targetKey = if (index == items.size) endKey else "${layoutPrefix}page:${items[index].id}"
+        // Composition and Android measure need not complete in one frame. First wait for this
+        // edition/mode's item provider, then wait for the requested fragment's actual geometry.
+        snapshotFlow { list.layoutInfo.visibleItemsInfo.any {
+            (it.key as? String)?.let(itemKeys::containsKey) == true || it.key == endKey
+        } }.first { it }
         list.scrollToItem(index)
-        withFrameNanos { }
-        val height = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }?.size ?: 0
-        if (mode != BookReadingMode.MEANING && height > 0 && anchor.fraction > 0f)
-            list.scrollToItem(index, (height * anchor.fraction).toInt())
+        suspend fun measuredTarget() = snapshotFlow {
+            list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index && it.key == targetKey && it.size > 0 }
+        }.first { it != null }!!
+        val height = measuredTarget().size
+        var targetOffset = 0
+        if (mode != BookReadingMode.MEANING && anchor.anchorKind != BookAnchorKind.END && anchor.fraction > 0f) {
+            targetOffset = (height * anchor.fraction).toInt().coerceIn(0, height - 1)
+            list.scrollToItem(index, targetOffset)
+        }
         val target = pendingSearch?.takeIf { it.mode == mode && it.blockId == anchor.blockId }
         if (target != null) {
             // First compose this block, then use its real line layout and the text's
@@ -151,15 +188,32 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             val line = withTimeoutOrNull(1_500) {
                 snapshotFlow { pendingSearch to searchLine }.first { (pending, line) -> pending != target || line?.hit == target }.second
             }
-            if (line != null && pendingSearch == target) list.scrollToItem(index,
-                (line.offset - with(density) { 12.dp.roundToPx() }).coerceAtLeast(0))
+            if (line != null && pendingSearch == target) {
+                targetOffset = (line.offset - with(density) { 12.dp.roundToPx() }).coerceIn(0, height - 1)
+                list.scrollToItem(index, targetOffset)
+            }
             if (pendingSearch == target) pendingSearch = null
         }
+        snapshotFlow {
+            val measured = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == list.firstVisibleItemIndex }
+            measured != null && measured.key == targetKey && kotlin.math.abs(measured.offset + targetOffset) <= 1
+        }.first { it }
     }
+    val positioningRequest = layoutPrefix to seekRevision
+    val latestPositioningRequest by rememberUpdatedState(positioningRequest)
     LaunchedEffect(book.contentHash, mode, showAltar, seekRevision) {
+        val work = currentCoroutineContext()[Job]!!
+        positioningOwner.job = work
         positioning = true
         playing = false
-        try { scrollToCursor() } finally { positioning = false }
+        try { scrollToCursor() } finally {
+            if (positioningOwner.job === work) {
+                positioningOwner.job = null
+                // A superseded job cannot declare the new layout ready. A manual drag can
+                // cancel this request and resume saving the actual visible reading position.
+                if (latestPositioningRequest == positioningRequest) positioning = false
+            }
+        }
     }
     val latestPosition by rememberUpdatedState(newValue = { position() })
     LaunchedEffect(book.contentHash, mode, showAltar, wordsPerMinute) {
@@ -188,7 +242,11 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     val manualScroll = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                if (source == NestedScrollSource.Drag) { playing = false; pendingSearch = null }
+                if (source == NestedScrollSource.Drag) {
+                    playing = false
+                    pendingSearch = null
+                    positioningOwner.job?.cancel()
+                }
                 return Offset.Zero
             }
         }
@@ -266,7 +324,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                             Icon(Icons.Default.TextFields, "Настроить чтение")
                         }
                     }
-                    if (!shortViewport) BookModePicker(mode, ::changeMode, onOpen = { playing = false }, compact = compactLabels)
+                    if (!shortViewport) BookModePicker(mode, ::changeMode, onOpen = { playing = false })
                     if (saveError) Text("Не удалось сохранить место. Проверьте свободное место на телефоне",
                         color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp).testTag("book_save_error"))
@@ -305,7 +363,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 }.testTag("book_content"),
                 state = list, contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 28.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                items(items, key = { it.id }) { item ->
+                items(items, key = { "${layoutPrefix}page:${it.id}" }) { item ->
                     // Keep the top inset inside the header: LazyColumn's leading content
                     // padding would reveal a clipped tail of the previous prayer after a jump.
                     if (item.block == null) Column(Modifier.fillMaxWidth().padding(
@@ -319,6 +377,12 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                             loadWarning?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
                             book.selectedEventTitle?.takeIf(String::isNotBlank)?.let {
                                 Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            if (mode == BookReadingMode.MEANING && book.calendarDay != null) {
+                                OutlinedButton(onClick = { playing = false; sheet = "calendar" },
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_open_calendar")) {
+                                    Text("О церковном дне")
+                                }
                             }
                         }
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -334,7 +398,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                         searchHit = pendingSearch?.takeIf { it.blockId == item.block.id && it.mode == mode },
                         onSearchLine = { line -> if (pendingSearch == line.hit) searchLine = line })
                 }
-                item {
+                item(key = endKey) {
                     // A full end page lets the last short chapter align at the top too.
                     // Otherwise switching to Meaning near the end would silently select
                     // an earlier visible chapter and overwrite the reading position.
@@ -403,6 +467,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 }
                 loadWarning?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
             }
+            "calendar" -> book.calendarDay?.let { BookCalendarContent(it, onOpenUrl) }
             "sources" -> LazyColumn(Modifier.heightIn(max = 600.dp), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 item {
                     Text("Состав книги", style = MaterialTheme.typography.headlineSmall)
@@ -416,6 +481,11 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                     }
                 }
                 items(book.notices) { Text(it, style = MaterialTheme.typography.bodyMedium) }
+                if (book.calendarDay != null) item {
+                    OutlinedButton(onClick = { sheet = "calendar" }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
+                        Text("О церковном дне")
+                    }
+                }
                 items((listOf(BookSource(book.sourceTitle, book.sourceUrl)) + book.sources).distinctBy { it.url }) { source ->
                     TextButton(onClick = { onOpenUrl(source.url) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(source.title) }
                 }
@@ -432,21 +502,46 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
 }
 
 @Composable
-private fun BookModePicker(mode: BookReadingMode, onSelect: (BookReadingMode) -> Unit, onOpen: () -> Unit, compact: Boolean, iconOnly: Boolean = false) {
+internal fun BookModePicker(mode: BookReadingMode, onSelect: (BookReadingMode) -> Unit, onOpen: () -> Unit,
+    compact: Boolean = false, iconOnly: Boolean = false) {
     var expanded by remember { mutableStateOf(false) }
-    if (compact) Box(if (iconOnly) Modifier else Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)) {
-        if (iconOnly) IconButton(onClick = { onOpen(); expanded = true }, modifier = Modifier.size(48.dp)) {
-            Icon(Icons.Default.Translate, "Режим чтения: ${mode.title}")
-        } else OutlinedButton(onClick = { onOpen(); expanded = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
-            Text(mode.title); Spacer(Modifier.width(12.dp)); Icon(Icons.Default.ExpandMore, null)
-        }
-        DropdownMenu(expanded, { expanded = false }) {
-            BookReadingMode.entries.forEach { value -> DropdownMenuItem(text = { Text(value.title) }, onClick = { expanded = false; onSelect(value) }) }
-        }
-    } else Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        BookReadingMode.entries.forEach { value ->
-            FilterChip(selected = mode == value, onClick = { onSelect(value) }, label = { Text(value.title) },
-                modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("book_mode_${value.name.lowercase()}"))
+    val density = LocalDensity.current
+    val measurer = rememberTextMeasurer()
+    val style = MaterialTheme.typography.labelLarge
+    // Measure the actual font, including the user's scale, before allocating touch targets.
+    val minimumWidths = BookReadingMode.entries.map { value ->
+        val measured = measurer.measure(AnnotatedString(value.title), style = style, softWrap = false, maxLines = 1)
+        with(density) { measured.size.width.toDp() + 18.dp }.coerceAtLeast(48.dp)
+    }
+    BoxWithConstraints(if (iconOnly) Modifier else Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        val needsMenu = compact || minimumWidths.fold(24.dp) { total, width -> total + width } > maxWidth
+        if (needsMenu) {
+            if (iconOnly) IconButton(onClick = { onOpen(); expanded = true }, modifier = Modifier.size(48.dp).testTag("book_mode_menu")) {
+                Icon(Icons.Default.Translate, "Режим чтения: ${mode.title}")
+            } else OutlinedButton(onClick = { onOpen(); expanded = true },
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_mode_menu")) {
+                Text(mode.title, style = style, maxLines = 1, softWrap = false, modifier = Modifier.testTag("book_mode_menu_label"))
+                Spacer(Modifier.width(12.dp)); Icon(Icons.Default.ExpandMore, null)
+            }
+            DropdownMenu(expanded, { expanded = false }) {
+                BookReadingMode.entries.forEach { value -> DropdownMenuItem(
+                    text = { Text(value.title, modifier = Modifier.testTag("book_mode_menu_label_${value.name.lowercase()}")) },
+                    modifier = Modifier.testTag("book_mode_${value.name.lowercase()}").semantics { selected = mode == value },
+                    onClick = { expanded = false; onSelect(value) }) }
+            }
+        } else Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            BookReadingMode.entries.forEachIndexed { index, value ->
+                Surface(onClick = { onSelect(value) }, shape = MaterialTheme.shapes.small,
+                    color = if (mode == value) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
+                    contentColor = if (mode == value) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(minimumWidths[index].value).heightIn(min = 48.dp)
+                        .testTag("book_mode_${value.name.lowercase()}").semantics { selected = mode == value; role = Role.Tab }) {
+                    Box(Modifier.padding(horizontal = 8.dp, vertical = 12.dp), contentAlignment = Alignment.Center) {
+                        Text(value.title, style = style, maxLines = 1, softWrap = false,
+                            modifier = Modifier.testTag("book_mode_label_${value.name.lowercase()}"))
+                    }
+                }
+            }
         }
     }
 }
@@ -494,60 +589,202 @@ private fun BookReaderAction(label: String, icon: ImageVector, description: Stri
 }
 
 @Composable
-private fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, preferredMode: BookReadingMode, onSelect: (BookSearchHit) -> Unit) {
+internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, preferredMode: BookReadingMode,
+    onSelect: (BookSearchHit) -> Unit,
+    speechFactory: SpeechGuideFactory = { context, changed -> SpeechGuide(context, changed) },
+    hasMicrophonePermission: (() -> Boolean)? = null,
+    speechQuerySelector: (suspend (ServiceBook, List<String>) -> String)? = null) {
     var query by rememberSaveable { mutableStateOf("") }
     var speechState by remember { mutableStateOf(SpeechGuideState()) }
     var permissionMessage by remember { mutableStateOf<String?>(null) }
+    var pendingPermission by remember { mutableStateOf<Long?>(null) }
+    var mounted by remember { mutableStateOf(true) }
+    var initialRequestMade by remember { mutableStateOf(false) }
+    var resolvingSpeech by remember { mutableStateOf(false) }
+    var searchResult by remember { mutableStateOf<BookSearchResult?>(null) }
+    val scope = rememberCoroutineScope()
+    val resolver = remember(scope) { BookSpeechQueryResolver(scope, speechQuerySelector) }
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    val guide = remember(context) { SpeechGuide(context) { state ->
+    val focus = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    val currentBook by rememberUpdatedState(book)
+    val guide = remember(context) { speechFactory(context) { state ->
+        resolver.cancel()
+        resolvingSpeech = false
         speechState = state
-        if (state.status == SpeechStatus.RESULT && state.transcript.isNotBlank()) query = state.transcript
+        if (state.status == SpeechStatus.RESULT && state.transcript.isNotBlank()) {
+            // Show the engine's words immediately. Refining alternatives must never block input.
+            query = state.transcript
+            val sourceBook = currentBook
+            resolvingSpeech = true
+            resolver.resolve(sourceBook, state.alternatives.ifEmpty { listOf(state.transcript) }) { chosen ->
+                if (mounted && speechState === state && currentBook.key == sourceBook.key && currentBook.contentHash == sourceBook.contentHash) {
+                    query = chosen
+                    resolvingSpeech = false
+                }
+            }
+        }
     } }
-    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) { permissionMessage = null; guide.stop(); guide.start() }
-        else permissionMessage = "Микрофон не разрешен. Можно найти место по словам"
+    val request = remember(guide, lifecycle) { ListeningRequestOwner(
+        isCurrent = { mounted }, isForeground = { lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) },
+        start = { guide.start(skipSupportCheck = it) }, cancel = { pendingPermission = null; guide.stop() },
+        denied = { permissionMessage = "Микрофон не разрешен. Можно найти место по словам" }) }
+    pendingPermission?.let { token -> key(token) {
+        val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (pendingPermission == token) pendingPermission = null
+            request.permissionResult(token, granted)
+        }
+        LaunchedEffect(token) {
+            if (pendingPermission != token || !mounted) return@LaunchedEffect
+            try { permission.launch(Manifest.permission.RECORD_AUDIO) }
+            catch (_: RuntimeException) {
+                request.stop()
+                permissionMessage = "Не удалось запросить микрофон. Можно найти место по словам"
+            }
+        }
+    } }
+    fun listen(unchecked: Boolean = false) {
+        focus.clearFocus()
+        keyboard?.hide()
+        permissionMessage = null
+        val permitted = hasMicrophonePermission?.invoke()
+            ?: (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)
+        pendingPermission = request.request(permitted, unchecked)
     }
-    fun listen() {
-        if (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-            guide.stop(); guide.start()
-        } else permission.launch(Manifest.permission.RECORD_AUDIO)
+    fun initialListen() {
+        if (startMicrophone && !initialRequestMade && lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            initialRequestMade = true
+            listen()
+        }
     }
-    LaunchedEffect(Unit) { speechState = guide.initialState; if (startMicrophone) listen() }
-    DisposableEffect(guide, lifecycle) {
-        val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_STOP) guide.stop() }
+    LaunchedEffect(guide) { speechState = guide.initialState; initialListen() }
+    DisposableEffect(guide, lifecycle, request) {
+        val observer = LifecycleEventObserver { _, event -> when (event) {
+            Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> request.stop()
+            Lifecycle.Event.ON_PAUSE -> request.foregroundChanged()
+            Lifecycle.Event.ON_RESUME -> { guide.refreshAvailability(); request.foregroundChanged(); initialListen() }
+            else -> Unit
+        } }
         lifecycle.addObserver(observer)
-        onDispose { lifecycle.removeObserver(observer); guide.destroy() }
+        onDispose { mounted = false; resolver.cancel(); lifecycle.removeObserver(observer); request.dispose(); guide.destroy() }
     }
-    val hits = remember(book.contentHash, query, preferredMode) { BookSearch.find(book, query, preferredMode) }
-    LazyColumn(Modifier.fillMaxWidth().heightIn(max = 620.dp).imePadding(), contentPadding = PaddingValues(24.dp),
+    DisposableEffect(book.key, book.contentHash, resolver) { onDispose { resolver.cancel(); resolvingSpeech = false } }
+    val searchAllowed = !speechState.isActive && pendingPermission == null && !resolvingSpeech && query.trim().length >= 2
+    val requestedQuery = query
+    LaunchedEffect(book.key, book.contentHash, requestedQuery, preferredMode, searchAllowed) {
+        if (!searchAllowed) return@LaunchedEffect
+        // Avoid competing full-book scans while a person is still typing.
+        delay(100)
+        val found = withContext(Dispatchers.Default) { BookSearch.find(book, requestedQuery, preferredMode) }
+        searchResult = BookSearchResult(book.key, book.contentHash, requestedQuery, preferredMode, found)
+    }
+    val currentResult = searchResult?.takeIf { it.bookKey == book.key && it.bookHash == book.contentHash && it.query == query && it.mode == preferredMode }
+    val searching = resolvingSpeech || (searchAllowed && currentResult == null)
+    val hits = if (searchAllowed) currentResult?.hits.orEmpty() else emptyList()
+    LazyColumn(Modifier.fillMaxWidth().heightIn(max = 620.dp).imePadding().testTag("book_search_sheet")
+        .semantics { stateDescription = if (searching) "Ищу в тексте службы" else "Поиск готов" }, contentPadding = PaddingValues(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
             Text("Найти место", style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.height(20.dp))
-            OutlinedTextField(query, { query = it.take(300) }, label = { Text("Какие слова вы услышали?") },
-                modifier = Modifier.fillMaxWidth().testTag("book_search_query"), singleLine = true)
+            OutlinedTextField(query, {
+                resolver.cancel()
+                resolvingSpeech = false
+                query = it.take(300)
+            }, label = { Text("Какие слова вы услышали?") },
+                modifier = Modifier.fillMaxWidth().testTag("book_search_query"), singleLine = true,
+                enabled = !speechState.isActive && pendingPermission == null)
         }
         item {
-            OutlinedButton(onClick = { if (speechState.isActive) guide.stop() else listen() },
-                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_listen")) {
-                Icon(if (speechState.isActive) Icons.Default.Stop else Icons.Default.Mic, null)
-                Spacer(Modifier.width(12.dp)); Text(if (speechState.isActive) "Остановить микрофон" else "Послушать службу")
-            }
-            permissionMessage?.let { Text(it, Modifier.padding(top = 12.dp), style = MaterialTheme.typography.bodySmall) }
-            if (speechState.status != SpeechStatus.IDLE) Text(speechState.message, Modifier.padding(top = 12.dp), style = MaterialTheme.typography.bodySmall)
-            if (speechState.canTryWithoutSupport) TextButton(onClick = { guide.start(skipSupportCheck = true) }) { Text("Попробовать распознавание") }
+            BookSpeechPanel(speechState, pendingPermission != null, permissionMessage,
+                onListen = { if (speechState.status == SpeechStatus.UNAVAILABLE) guide.refreshAvailability() else listen() },
+                onFinish = guide::finishListening, onCancel = request::stop,
+                onTryWithoutSupport = { listen(true) })
         }
-        if (query.trim().length >= 2 && hits.isEmpty()) item { Text("Совпадений в этой книге нет. Попробуйте два-три других слова") }
-        if (query.isBlank()) item { Text("Например: Иже Херувимы, Верую, Отче наш", color = MaterialTheme.colorScheme.onSurfaceVariant) }
-        items(hits, key = { it.blockId }) { hit ->
-            OutlinedCard(onClick = { onSelect(hit) }, modifier = Modifier.fillMaxWidth().testTag("book_hit_${hit.blockId}")) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(hit.chapterTitle, style = MaterialTheme.typography.titleMedium)
-                    Text(hit.mode.title, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(hit.excerpt, style = MaterialTheme.typography.bodyMedium)
+        if (!speechState.isActive && pendingPermission == null) {
+            if (searching) item {
+                Text("Ищу в тексте службы", modifier = Modifier.testTag("book_search_progress"),
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            if (!searching && query.trim().length >= 2 && hits.isEmpty()) item {
+                Text("Совпадений в этой книге нет. Исправьте услышанные слова или попробуйте другую короткую фразу")
+            }
+            if (query.isBlank()) item { Text("Например: Иже Херувимы, Верую, Отче наш", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            items(hits, key = { it.blockId }) { hit ->
+                OutlinedCard(onClick = { onSelect(hit) }, modifier = Modifier.fillMaxWidth().testTag("book_hit_${hit.blockId}")) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(hit.chapterTitle, style = MaterialTheme.typography.titleMedium)
+                        Text(hit.mode.title, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(hit.excerpt, style = MaterialTheme.typography.bodyMedium)
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun BookSpeechPanel(state: SpeechGuideState, pendingPermission: Boolean, permissionMessage: String?,
+    onListen: () -> Unit, onFinish: () -> Unit, onCancel: () -> Unit, onTryWithoutSupport: () -> Unit) {
+    Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
+        Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            val title = when {
+                pendingPermission -> "Нужно разрешение на микрофон"
+                state.status == SpeechStatus.CHECKING -> "Проверяю распознавание"
+                state.status == SpeechStatus.STARTING -> "Включаю микрофон"
+                state.status == SpeechStatus.LISTENING -> "Слушаю службу"
+                state.status == SpeechStatus.PROCESSING -> "Распознаю фразу"
+                state.status == SpeechStatus.RESULT -> "Фраза распознана"
+                state.status == SpeechStatus.ERROR -> "Не получилось распознать"
+                state.status == SpeechStatus.UNAVAILABLE -> "Микрофон недоступен"
+                else -> "Найти по микрофону"
+            }
+            Text(title, style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.testTag("book_listening_status").semantics { liveRegion = LiveRegionMode.Polite })
+            if (state.isCapturing || state.status == SpeechStatus.PROCESSING) {
+                if (state.status == SpeechStatus.LISTENING) {
+                    Text(if (state.heardSpeech || state.transcript.isNotBlank()) "Слышу фразу. Можно нажать \"Готово\"" else "Микрофон включен. Послушаем короткую фразу",
+                        style = MaterialTheme.typography.bodyMedium)
+                    state.audioLevel?.let { level ->
+                        LinearProgressIndicator(progress = { level }, modifier = Modifier.fillMaxWidth().height(6.dp).testTag("book_microphone_level"))
+                    }
+                } else if (state.status == SpeechStatus.PROCESSING) {
+                    Text("Микрофон выключен. Ждем результат от телефона", style = MaterialTheme.typography.bodyMedium)
+                }
+                if (state.transcript.isNotBlank()) {
+                    Text("Предварительно", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(state.transcript, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.testTag("book_listening_partial"))
+                }
+            } else if (state.status == SpeechStatus.IDLE) {
+                Text("Послушаем до 15 секунд. Затем вы выберете подходящий фрагмент", style = MaterialTheme.typography.bodyMedium)
+            } else if (!pendingPermission) {
+                Text(state.message, style = MaterialTheme.typography.bodyMedium)
+            }
+            when {
+                state.isCapturing -> {
+                    Button(onClick = onFinish, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_listen")) {
+                        Icon(Icons.Default.Check, null); Spacer(Modifier.width(12.dp)); Text("Готово")
+                    }
+                    OutlinedButton(onClick = onCancel, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_listening_cancel")) { Text("Отменить запись") }
+                }
+                state.isActive || pendingPermission -> {
+                    OutlinedButton(onClick = onCancel, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_listening_cancel")) { Text("Отмена") }
+                }
+                else -> {
+                    OutlinedButton(onClick = onListen, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_listen")) {
+                        Icon(Icons.Default.Mic, null); Spacer(Modifier.width(12.dp))
+                        Text(when (state.status) {
+                            SpeechStatus.IDLE -> "Послушать службу"
+                            SpeechStatus.UNAVAILABLE -> "Проверить микрофон"
+                            else -> "Послушать еще раз"
+                        })
+                    }
+                }
+            }
+            permissionMessage?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error) }
+            if (state.canTryWithoutSupport) TextButton(onClick = onTryWithoutSupport,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Попробовать без проверки") }
         }
     }
 }

@@ -57,7 +57,7 @@ class BookReaderPolishTest {
         compose.onNodeWithTag("book_find").performClick()
         compose.onNodeWithTag("book_search_query").performTextInput("Иже Херувимы")
         closeSoftKeyboard()
-        compose.onNodeWithTag("book_hit_long").performScrollTo().performClick()
+        compose.scrollToBookHit("long").assertIsDisplayed().performClick()
         settle()
         val text = compose.onNodeWithTag("book_text_long", useUnmergedTree = true).assertIsDisplayed()
         val layouts = mutableListOf<TextLayoutResult>()
