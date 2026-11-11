@@ -17,7 +17,17 @@ data class BookTranslation(val russian: String, val source: BookSource, val mean
 class BookTranslationIndex private constructor(private val entries: Map<String, BookTranslation>) {
     fun find(original: String): BookTranslation? = entries[normal(original)]
 
-    fun plus(other: BookTranslationIndex): BookTranslationIndex = BookTranslationIndex(other.entries + entries)
+    fun plus(other: BookTranslationIndex): BookTranslationIndex {
+        val merged = other.entries.toMutableMap()
+        entries.forEach { (original, incoming) ->
+            // A partial refresh may load the short edition while the full edition is offline.
+            // Keep the previously verified full rendering of this exact prayer in that case.
+            val previous = merged[original]
+            if (incoming.source.url != TIMROT_SOURCE.url || previous?.source?.url != TIMROT_FULL_SOURCE.url)
+                merged[original] = incoming
+        }
+        return BookTranslationIndex(merged)
+    }
 
     val size: Int get() = entries.size
 
@@ -112,7 +122,7 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
         )): BookTranslationIndex {
             if (source.url == PSALTER_SOURCE.url) return fromPsalterPage(document)
             val result = linkedMapOf<String, BookTranslation>()
-            val responseParagraphs = linkedMapOf<String, BookTranslation>()
+            val structuralBodies = linkedMapOf<String, BookTranslation>()
             for (row in document.select("table tr")) {
                 val cells = row.children().filter { it.tagName() == "td" }
                 if (cells.size != 2) continue
@@ -130,7 +140,13 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
                 }
                 addParallel(result, original, russian, source)
                 pairedResponseParagraph(cells[0], cells[1])?.let { (left, right) ->
-                    addParallel(responseParagraphs, left, right, source)
+                    addParallel(structuralBodies, left, right, source)
+                }
+                pairedHeadingBody(cells[0], cells[1])?.let { (left, right) ->
+                    addParallel(structuralBodies, left, right, source)
+                }
+                pairedLeadingNumber(cells[0], cells[1])?.let { (left, right) ->
+                    addParallel(structuralBodies, left, right, source)
                 }
                 // A Psalm heading belongs to the edition's structure. Keep the original pair too,
                 // and add a body-only pair only when both leading DOM headings name the same Psalm.
@@ -141,7 +157,7 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
             }
             // Preserve an already available whole-cell edition even when a derived pair occurs
             // earlier on the page. New boundaries should only fill missing concordance entries.
-            responseParagraphs.forEach { (key, value) -> result.putIfAbsent(key, value) }
+            structuralBodies.forEach { (key, value) -> result.putIfAbsent(key, value) }
             return BookTranslationIndex(result)
         }
 
@@ -149,7 +165,8 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
          * Accept that boundary only when both columns have the same, complete response first.
          * Arbitrary paragraph counts or similar words do not establish a translation pair. */
         private fun pairedResponseParagraph(left: Element, right: Element): Pair<String, String>? {
-            fun parts(cell: Element): Pair<String, String>? {
+            data class Response(val words: String, val repeats: Int)
+            fun parts(cell: Element): Pair<Response, String>? {
                 // A stray closing </p> in the published table becomes an empty paragraph in Jsoup.
                 // Discard only those empty nodes, never a second paragraph containing words or markup.
                 val copy = cell.clone().apply {
@@ -163,17 +180,77 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
                         .any { it !is TextNode || BookText.clean(it.text()).isNotEmpty() }) return null
                 val prayer = BookText.clean(paragraph.text())
                 paragraph.remove()
+                // Count only the edition's separate, trailing prefix marker. Do not erase
+                // span.k inside the petition: it may contain names or other prayer words.
+                val counters = copy.select("span.k").filter {
+                    BookText.clean(it.text()).lowercase() in setOf("трижды.", "трижды", "(3)")
+                }
+                if (counters.size > 1) return null
+                val counter = counters.singleOrNull()
+                if (counter != null) {
+                    if (counter.parent() !== copy || counter.children().isNotEmpty() ||
+                        copy.childNodes().dropWhile { it !== counter }.drop(1).any {
+                            it !is TextNode || BookText.normalized(it.text()).isNotEmpty()
+                        }) return null
+                    counter.remove()
+                }
                 val (speaker, response) = BookText.withoutSpeaker(copy.text())
                 if (speaker != "Хор") return null
                 val responseKey = BookText.normalized(response)
-                if (responseKey !in setOf("господи помилуй", "подай господи")) return null
-                return responseKey to prayer
+                if (responseKey !in setOf("господи помилуй", "подай господи", "аминь")) return null
+                // The verified threefold marker belongs to this response only.
+                if (counter != null && responseKey != "господи помилуй") return null
+                return Response(responseKey, if (counter == null) 1 else 3) to prayer
             }
             val a = parts(left) ?: return null
             val b = parts(right) ?: return null
             if (a.first != b.first || a.second.isBlank() || b.second.isBlank()) return null
             if (BookText.withoutSpeaker(a.second).first != BookText.withoutSpeaker(b.second).first) return null
             return a.second to b.second
+        }
+
+        // Reviewed hymn labels in the short edition (rows 400/402). Identical arbitrary
+        // headings are not evidence of a prayer boundary; Psalms retain their separate number guard.
+        private val pairedHymnHeadings = setOf("и ныне богородичен", "отпустительный тропарь глас 8")
+
+        /** Remove only a reviewed hymn heading that leads both columns with the same words.
+         * The prayer bodies are still indexed whole and must match every original word. */
+        private fun pairedHeadingBody(left: Element, right: Element): Pair<String, String>? {
+            fun body(cell: Element): Pair<String, String>? {
+                val heading = cell.select("h1,h2,h3,h4,h5,h6").singleOrNull() ?: return null
+                if (heading.tagName() != "h3" || heading.parent() !== cell || firstMeaningfulNode(cell) !== heading) return null
+                val title = BookText.normalized(heading.text()).takeIf { it in pairedHymnHeadings } ?: return null
+                val copy = cell.clone().apply { select("h3").single().remove() }
+                val prayer = BookText.clean(copy.text()).takeIf(String::isNotBlank) ?: return null
+                return title to prayer
+            }
+            val a = body(left) ?: return null
+            val b = body(right) ?: return null
+            if (a.first != b.first || BookText.withoutSpeaker(a.second).first != BookText.withoutSpeaker(b.second).first) return null
+            return a.second to b.second
+        }
+
+        /** The antiphon edition alternates 1./2. markers; these are not Bible verse numbers.
+         * Only the two verified, standalone leading span.n forms may be separated. */
+        private fun pairedLeadingNumber(left: Element, right: Element): Pair<String, String>? {
+            fun body(cell: Element): Pair<String, String>? {
+                val marker = firstMeaningfulNode(cell) as? Element ?: return null
+                if (marker.tagName() != "span" || marker.classNames() != setOf("n") ||
+                    marker.children().isNotEmpty() || cell.select("span.n").size != 1 ||
+                    cell.select("h1,h2,h3,h4,h5,h6").isNotEmpty()) return null
+                val number = BookText.clean(marker.text()).takeIf { it == "1." || it == "2." } ?: return null
+                val copy = cell.clone().apply { select("span.n").single().remove() }
+                val prayer = BookText.clean(copy.text()).takeIf(String::isNotBlank) ?: return null
+                return number to prayer
+            }
+            val a = body(left) ?: return null
+            val b = body(right) ?: return null
+            if (a.first != b.first || BookText.withoutSpeaker(a.second).first != BookText.withoutSpeaker(b.second).first) return null
+            return a.second to b.second
+        }
+
+        private fun firstMeaningfulNode(cell: Element) = cell.childNodes().firstOrNull { node ->
+            node is Element || node is TextNode && BookText.clean(node.text()).isNotEmpty()
         }
 
         /** Only whole paired Psalm rows with identical, continuous verse markers are accepted. */
