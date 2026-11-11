@@ -103,6 +103,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
         churchDraft.removeState("new_church"); picker = false; adding = false; locate = false
     },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        GuideSheetSystemBars()
         if (adding && onAddChurch != null) churchDraft.SaveableStateProvider("new_church") {
             SavedChurchForm(
                 onCancel = { onSelectionCancelled(); churchDraft.removeState("new_church"); adding = false },
@@ -176,6 +177,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     }
     if (church != null && formDate != null && onSaveStart != null) ModalBottomSheet(
         onDismissRequest = { editingDate = null }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        GuideSheetSystemBars()
         PersonalServiceTimeForm(church = church, currentDate = currentDate, initialDate = formDate,
             userStarts = userStarts, onCancel = { editingDate = null },
             onSave = { record ->

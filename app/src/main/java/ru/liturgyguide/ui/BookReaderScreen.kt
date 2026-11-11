@@ -413,6 +413,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     }
     if (sheet != null) ModalBottomSheet(onDismissRequest = { sheet = null }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         when (sheet) {
+        GuideSheetSystemBars()
             "search" -> BookSearchSheet(book, microphoneFirst, lastTextMode, onSelect = { hit ->
                 positioning = true
                 cursor.seek(hit.chapterId, hit.blockId)

@@ -215,6 +215,7 @@ fun ServiceBookChooser(civilDate: LocalDate, onDismiss: () -> Unit, onSelect: (L
             contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        GuideSheetSystemBars()
                     Text("Тексты на " + dateTitle, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.testTag("service_chooser_date"))
                     Text("Это библиотека текстов. Время служб смотрите в расписании выбранного храма", style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
