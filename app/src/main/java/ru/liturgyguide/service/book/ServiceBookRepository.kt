@@ -80,19 +80,8 @@ class ServiceBookRepository(
                 }
             }
             val russian = async {
-                if (!downloadRussian) BookTranslationIndex.empty() to BookSupplementStatus.NOT_REQUESTED else {
-                    val saved = withContext(Dispatchers.IO) { BookTranslationIndex.decode(cache.readTranslationCorpus()) }
-                    if (saved.size > 0 && !refreshRussian) saved to BookSupplementStatus.AVAILABLE else {
-                        progress(BookLoadProgress.RUSSIAN)
-                        val loaded = safely {
-                            transport.fetch(BookTranslationIndex.TIMROT_SOURCE.url).html()?.let(BookTranslationIndex::fromParallelPage)
-                        } ?: BookTranslationIndex.empty()
-                        if (loaded.size > 0) {
-                            withContext(Dispatchers.IO) { safely { cache.writeTranslationCorpus(loaded.encode()) } }
-                            loaded to BookSupplementStatus.AVAILABLE
-                        } else saved to BookSupplementStatus.RETRY_NEEDED
-                    }
-                }
+                if (!downloadRussian) BookTranslationIndex.empty() to BookSupplementStatus.NOT_REQUESTED
+                else loadRussianCorpus(refreshRussian, progress)
             }
             verses.await() to russian.await()
         }
@@ -119,6 +108,32 @@ class ServiceBookRepository(
             it.copy(contentHash = ServiceBookIntegrity.contentHash(it))
         }
         return save(book, progress)
+    }
+
+    private suspend fun loadRussianCorpus(refresh: Boolean, progress: (BookLoadProgress) -> Unit): Pair<BookTranslationIndex, BookSupplementStatus> {
+        val saved = withContext(Dispatchers.IO) { BookTranslationCorpus.decode(cache.readTranslationCorpus()) }
+        if (saved.complete && !refresh) return saved.index to BookSupplementStatus.AVAILABLE
+        var merged = saved.index
+        val completed = if (saved.current && saved.index.size > 0 && !refresh) saved.completedSources.toMutableSet()
+            else mutableSetOf()
+        progress(BookLoadProgress.RUSSIAN)
+        // Keep one Russian request in flight alongside Scripture. Map/schedule requests share the
+        // bounded transport pool, so launching all three sources concurrently can reject a request.
+        for (source in BookTranslationIndex.PARALLEL_SOURCES.filterNot { it.url in completed }) {
+            val loaded = safely {
+                val response = transport.fetch(source.url)
+                response.html()?.let { BookTranslationIndex.fromParallelPage(it, source.copy(url = response.url)) }
+            } ?: BookTranslationIndex.empty()
+            if (loaded.size > 0) {
+                merged = loaded.plus(merged)
+                completed += source.url
+            }
+        }
+        val corpus = BookTranslationCorpus(merged, completed)
+        // Even an unsuccessful forced refresh retains all previously verified exact pairs, while
+        // incomplete source metadata makes the next network load retry what could not be refreshed.
+        if (merged.size > 0) withContext(Dispatchers.IO) { safely { cache.writeTranslationCorpus(corpus.encode()) } }
+        return merged to if (corpus.complete) BookSupplementStatus.AVAILABLE else BookSupplementStatus.RETRY_NEEDED
     }
 
     private suspend fun loadVigil(key: ServiceBookKey, force: Boolean, progress: (BookLoadProgress) -> Unit): BookLoadResult.Ready {

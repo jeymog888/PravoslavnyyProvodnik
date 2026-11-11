@@ -10,6 +10,7 @@ import org.junit.runner.RunWith
 import ru.liturgyguide.model.Parish
 import ru.liturgyguide.model.ParishService
 import ru.liturgyguide.service.ChurchSelectionResult
+import ru.liturgyguide.service.UserServiceStart
 import ru.liturgyguide.service.schedule.InternetScheduleState
 import ru.liturgyguide.service.schedule.InternetScheduleStatus
 import java.time.Instant
@@ -101,6 +102,25 @@ class ChurchReadingEntryTest {
         compose.onNodeWithTag("schedule_source").assertDoesNotExist()
         compose.onNodeWithTag("church_content").performScrollToNode(hasText("Еще в этот день"))
         compose.onNodeWithText("Еще в этот день").assertIsDisplayed()
+    }
+
+    @Test fun personalStartOpensItsExactTomorrowDateInsteadOfReturningToToday() {
+        val today = LocalDate.of(2026, 12, 31)
+        val tomorrow = LocalDate.of(2027, 1, 1)
+        val opened = mutableListOf<LocalDate>()
+        compose.setContent { GuideTheme(false) { ChurchScreen(listOf(parish), parish.id, today,
+            onSelect = { _, selected -> selected(); ChurchSelectionResult.SELECTED },
+            onOpenUrl = {}, onBack = {}, searchQuery = "", onSearchQueryChange = {},
+            userStarts = listOf(UserServiceStart(parish.id, tomorrow.toString(), "09:30")),
+            onReadLiturgy = { opened += it }, onGoToService = { error("An undated Home route would lose the chosen service") }) } }
+        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("schedule_tomorrow"))
+        compose.onNodeWithTag("schedule_tomorrow").performClick()
+        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("personal_start_summary"))
+        compose.onNodeWithTag("personal_start_summary").assertTextEquals("09:30 · Литургия")
+        compose.onNodeWithTag("personal_start_source").assertTextContains("Начало указано вами", substring = true)
+        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("personal_time_to_service"))
+        compose.onNodeWithTag("personal_time_to_service").assertTextEquals("Открыть литургию").performClick()
+        compose.runOnIdle { assertEquals(listOf(tomorrow), opened) }
     }
 
     private fun openDetails() {

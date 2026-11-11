@@ -1,6 +1,7 @@
 package ru.liturgyguide.service.schedule
 
 import ru.liturgyguide.model.Parish
+import java.time.LocalDate
 import java.util.Locale
 
 /** A building named in a table or heading is evidence, not part of the service title. */
@@ -12,6 +13,8 @@ internal object ScheduleVenue {
     // This complete calendar feast name is not the building word "собор". Do not exempt
     // other cathedral names, or an explicit location "в соборе ...", from identity checking.
     private val calendarFeast = Regex("(?iu)(?<![а-яё])собор\\s+архистратига\\s+михаила\\s+и\\s+прочих\\s+небесных\\s+сил\\s+бесплотных(?![а-яё])")
+    private val shortMichaelFeast = Regex("(?iu)(?<![а-яё])собор(?=\\s+архистратига\\s+михаила(?![а-яё]))")
+    private val martyrsFeast = Regex("(?iu)(?<![а-яё])собор(?=\\s+новомучеников(?![а-яё]))")
     private val nameWord = Regex("(?iu)[а-яёa-z-]+")
     private val nameBoundary = setOf("в", "во", "или", "при", "на", "у", "для", "после", "перед")
     private val generic = listOf("храм", "церк", "собор", "часов", "придел", "свят", "право", "русск", "имени", "честь",
@@ -26,8 +29,19 @@ internal object ScheduleVenue {
             !clock.containsMatchIn(candidate) && tokens(candidate).isNotEmpty()
     }
 
-    fun inlineLabel(text: String): String? {
-        val candidate = text.replace(calendarFeast, " ")
+    fun inlineLabel(text: String, calendarDate: LocalDate? = null): String? {
+        var candidate = text.replace(calendarFeast, " ")
+        // A calendar preface before the first clock in a dated service row is not a venue.
+        // Standalone building headings, separate venue cells and locations after the clock
+        // remain subject to identity checks, including churches dedicated to the same feast.
+        if (calendarDate != null) {
+            val firstClock = clock.find(candidate)?.range?.first
+            if (firstClock != null) {
+                val prefix = candidate.substring(0, firstClock).replace(martyrsFeast, " ")
+                candidate = (if (calendarDate.monthValue == 11 && calendarDate.dayOfMonth == 21)
+                    prefix.replace(shortMichaelFeast, " ") else prefix) + candidate.substring(firstClock)
+            }
+        }
         val labels = location.findAll(candidate).map { it.value }.toMutableList()
         fun namePart(word: String): Boolean = nameWord.matches(word) && !service.containsMatchIn(word) &&
             !building.containsMatchIn(word) && word.lowercase(Locale.ROOT) !in nameBoundary

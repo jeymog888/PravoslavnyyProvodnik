@@ -46,6 +46,22 @@ class BookReadingTest {
         assertEquals(saved, BookReadingCodec.decode(BookReadingCodec.encode(saved)))
     }
 
+    @Test fun searchShowsMatchingWordsDeepInRussianAndAccentedOriginalParagraphs() {
+        val block = BookBlock("long", BookBlockKind.PRAYER, null,
+            "Начало молитвы ".repeat(40) + "И́же Херуви́мы та́йно образу́юще" + " Продолжение".repeat(20),
+            "Начало перевода ".repeat(40) + "Мы таинственно изображаем херувимов" + " Продолжение".repeat(20))
+        val book = ServiceBook(key = key, title = "Литургия", sourceUrl = key.sourceUrl(), sourceTitle = "Источник",
+            fetchedAtMillis = 1, selectedEventTitle = null,
+            chapters = listOf(BookChapter("chapter", "Херувимская", "Смысл", listOf(block))), contentHash = "a".repeat(64))
+        val russian = BookSearch.find(book, "херувимов изображаем").single().excerpt
+        assertTrue(russian.contains("изображаем херувимов"))
+        assertTrue(russian.startsWith("… "))
+        val original = BookSearch.find(book, "Иже Херувимы").single().excerpt
+        assertTrue(original.contains("И́же Херуви́мы"))
+        assertTrue(original.length <= 240)
+        assertFalse(russian.contains("И́же"))
+    }
+
     @Test fun headingOffsetNeverBecomesAnOffsetInsideAPrayer() {
         val cursor = BookReadingCursor(position)
         cursor.observe(BookViewport("chapter-1", "first-block", .7f, BookAnchorKind.HEADER), BookReadingMode.ORIGINAL)
@@ -53,5 +69,20 @@ class BookReadingTest {
         assertEquals(BookAnchorKind.HEADER, saved.anchorKind)
         assertEquals(.7f, saved.fraction)
         assertEquals(BookAnchorKind.HEADER, BookReadingCodec.decode(BookReadingCodec.encode(saved))!!.anchorKind)
+    }
+
+    @Test fun explicitUpdateKeepsUnchangedVisibleTextButResetsChangedTranslationOffset() {
+        val block = BookBlock("block-2", BookBlockKind.PRAYER, null, "Отче наш", "Отец наш")
+        val before = ServiceBook(key = key, title = "Литургия", sourceUrl = key.sourceUrl(), sourceTitle = "Источник",
+            fetchedAtMillis = 1, selectedEventTitle = null,
+            chapters = listOf(BookChapter("chapter-1", "Молитва", "Смысл", listOf(block))), contentHash = "a".repeat(64))
+        val metadataUpdate = before.copy(contentHash = "b".repeat(64), notices = listOf("Новый источник"))
+        val kept = BookPositionUpdate.rebase(position, before, metadataUpdate)
+        assertEquals(.45f, kept.fraction)
+        assertEquals(BookReadingMode.RUSSIAN, kept.mode)
+        assertEquals("b".repeat(64), kept.contentHash)
+        val translated = metadataUpdate.copy(chapters = listOf(before.chapters.single().copy(blocks = listOf(block.copy(russian = "Отче наш, сущий на небесах")))))
+        assertEquals(0f, BookPositionUpdate.rebase(position, before, translated).fraction)
+        assertEquals(.45f, BookPositionUpdate.rebase(position.copy(mode = BookReadingMode.ORIGINAL), before, translated).fraction)
     }
 }

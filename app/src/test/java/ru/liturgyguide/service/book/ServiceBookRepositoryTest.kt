@@ -58,7 +58,7 @@ class ServiceBookRepositoryTest {
         val cached = repository.load(key) as BookLoadResult.Ready
         assertTrue(cached.fromCache)
         assertNotNull(cached.warning)
-        assertEquals(1, russianRequests)
+        assertEquals(3, russianRequests)
         assertEquals(1, scriptureRequests)
 
         available = true
@@ -68,7 +68,7 @@ class ServiceBookRepositoryTest {
         assertFalse(refreshed.book.enrichment.needsRetry)
         assertNull(refreshed.warning)
         assertTrue(refreshed.book.translatedPrayerCount > first.book.translatedPrayerCount)
-        assertEquals(2, russianRequests)
+        assertEquals(6, russianRequests)
         assertEquals(2, scriptureRequests)
         assertTrue(ServiceBookIntegrity.valid(refreshed.book))
     }
@@ -87,7 +87,7 @@ class ServiceBookRepositoryTest {
         val original = (repository.load(key) as BookLoadResult.Ready).book
         available = false
         val refreshed = repository.load(key, force = true) as BookLoadResult.Ready
-        assertEquals(2, russianRequests) // Force must not be swallowed by the corpus cache.
+        assertEquals(6, russianRequests) // Force must not be swallowed by the corpus cache.
         assertEquals(original.blocks.map { it.russian }, refreshed.book.blocks.map { it.russian })
         assertEquals(original.blocks.map { it.translationSource }, refreshed.book.blocks.map { it.translationSource })
         assertTrue(refreshed.book.enrichment.needsRetry)

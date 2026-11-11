@@ -47,12 +47,13 @@ class FileBookCache(private val directory: File) : BookCache {
     }.getOrDefault(false)
 
     @Synchronized override fun readTranslationCorpus(): String? = runCatching {
-        File(directory, "russian-concordance.json").takeIf { it.isFile && it.length() in 1..1_500_000 }
-            ?.readText(Charsets.UTF_8)
+        File(directory, "russian-concordance.json").takeIf { it.isFile && it.length() in 1..BookTranslationCorpus.MAX_BYTES }
+            ?.readText(Charsets.UTF_8)?.takeIf { BookTranslationCorpus.decode(it).index.size > 0 }
     }.getOrNull()
 
     @Synchronized override fun writeTranslationCorpus(json: String): Boolean = runCatching {
-        require(json.toByteArray(Charsets.UTF_8).size <= 1_500_000)
+        require(json.toByteArray(Charsets.UTF_8).size <= BookTranslationCorpus.MAX_BYTES)
+        require(BookTranslationCorpus.decode(json).index.size > 0)
         atomicWrite(File(directory, "russian-concordance.json"), json)
         true
     }.getOrDefault(false)

@@ -28,6 +28,9 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
         val EDITORIAL_SOURCE = BookSource("Русское изложение: редакция Феории", "https://github.com/jeymog888/PravoslavnyyProvodnik")
         val TIMROT_SOURCE = BookSource("Перевод иеромонаха Амвросия (Тимрота), Азбука веры",
             "https://azbyka.ru/bogosluzhenie/liturgiya-svt-ioanna-zlatousta/")
+        val TIMROT_FULL_SOURCE = TIMROT_SOURCE.copy(url = "https://azbyka.ru/bogosluzhenie/liturgiya-ioanna-zlatousta/")
+        val TIMROT_THANKSGIVING_SOURCE = TIMROT_SOURCE.copy(url = "https://azbyka.ru/bogosluzhenie/molitvy-posle-svyatogo-prichashheniya/")
+        val PARALLEL_SOURCES = listOf(TIMROT_SOURCE, TIMROT_FULL_SOURCE, TIMROT_THANKSGIVING_SOURCE)
 
         fun empty(): BookTranslationIndex = BookTranslationIndex(emptyMap())
 
@@ -74,7 +77,9 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
         }
 
         /** The public bilingual edition is downloaded for this reading, never bundled into the APK. */
-        fun fromParallelPage(document: Document): BookTranslationIndex {
+        fun fromParallelPage(document: Document, source: BookSource = TIMROT_SOURCE.copy(
+            url = document.location().ifBlank { TIMROT_SOURCE.url }
+        )): BookTranslationIndex {
             val result = linkedMapOf<String, BookTranslation>()
             for (row in document.select("table tr")) {
                 val cells = row.children().filter { it.tagName() == "td" }
@@ -88,10 +93,10 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
                 // to one shorter original reply would change its meaning and is not allowed.
                 if (sourceParts.size == russianParts.size && sourceParts.size > 1) {
                     sourceParts.zip(russianParts).forEach { (left, right) ->
-                        if (left.first == right.first) addParallel(result, left.second, right.second)
+                        if (left.first == right.first) addParallel(result, left.second, right.second, source)
                     }
                 }
-                addParallel(result, original, russian)
+                addParallel(result, original, russian, source)
             }
             return BookTranslationIndex(result)
         }
@@ -110,11 +115,18 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
             BookTranslationIndex(result)
         }.getOrElse { empty() }
 
-        private fun addParallel(target: MutableMap<String, BookTranslation>, original: String, russian: String) {
+        private fun addParallel(target: MutableMap<String, BookTranslation>, original: String, russian: String, source: BookSource) {
             val left = BookText.withoutSpeaker(original).second
             val right = BookText.withoutSpeaker(russian).second
             val key = normal(left)
-            if (key.isNotBlank() && right.isNotBlank()) target.putIfAbsent(key, BookTranslation(right, TIMROT_SOURCE))
+            val speechLeft = BookPrayerMetadata.split(left)
+            val speechRight = BookPrayerMetadata.split(right)
+            if (speechLeft.rubric != null || speechRight.rubric != null) {
+                val speechKey = normal(speechLeft.prayer)
+                if (speechKey.isNotBlank() && speechRight.prayer.isNotBlank())
+                    target.putIfAbsent(speechKey, BookTranslation(speechRight.prayer, source))
+            }
+            if (key.isNotBlank() && right.isNotBlank()) target.putIfAbsent(key, BookTranslation(right, source))
         }
 
         private fun speakerSegments(value: String): List<Pair<String?, String>> {

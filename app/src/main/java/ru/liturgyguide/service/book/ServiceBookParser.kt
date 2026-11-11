@@ -126,7 +126,11 @@ class ServiceBookParser {
                         add("Текст песнопения этого храма здесь не указан. В этот момент поют тропарь или кондак в честь его святого или праздника",
                             BookBlockKind.LOCAL_VARIATION, altar)
                     } else {
-                        add(text, if (isRubric(text)) BookBlockKind.RUBRIC else BookBlockKind.PRAYER, altar)
+                        val speech = BookPrayerMetadata.split(text)
+                        if (speech.rubric != null) {
+                            add(speech.rubric, BookBlockKind.RUBRIC, altar)
+                            add(speech.prayer, BookBlockKind.PRAYER, altar)
+                        } else add(text, if (isRubric(text)) BookBlockKind.RUBRIC else BookBlockKind.PRAYER, altar)
                     }
                 }
                 if (node.selectFirst("label.bg_worships_info") == null) paragraph(node.text()) else {

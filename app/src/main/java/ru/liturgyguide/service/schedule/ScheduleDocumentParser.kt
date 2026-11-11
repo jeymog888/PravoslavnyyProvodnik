@@ -81,7 +81,10 @@ object ScheduleDocumentParser {
                     currentDate = headings.values.mapNotNull { it.date }.lastOrNull()
                     if (!cancellation.containsMatchIn(clean)) return@lineLoop
                 }
-                val scopedVenue = line.venue ?: ScheduleVenue.inlineLabel(clean) ?:
+                val locatedRowDate = dateIn(clean, scope)
+                val rowDate = locatedRowDate?.first ?: currentDate
+                val venueText = locatedRowDate?.let { clean.removeRange(it.second) } ?: clean
+                val scopedVenue = line.venue ?: ScheduleVenue.inlineLabel(venueText, rowDate) ?:
                     headings.values.mapNotNull { it.venue }.lastOrNull() ?: sectionVenue
                 val scopedCancellation = headings.values.any { it.cancelled }
                 if (!ScheduleVenue.matches(scopedVenue, parish)) { flush(); currentDate = null; rejectedScope = true; return@lineLoop }
@@ -182,7 +185,8 @@ object ScheduleDocumentParser {
     }
 
     private fun looksLikeDateHeading(text: String): Boolean =
-        Regex("(?iu)^\\s*\\d{1,2}\\s*(?:[./-]|[а-яё]{2,}|\\|)").containsMatchIn(text) && !clocks.find(text).let { it?.range?.first == 0 }
+        !Regex("(?iu)^\\s*\\d+\\s*[-‐‑–—]\\s*лети[еяю]\\b").containsMatchIn(text) &&
+            Regex("(?iu)^\\s*\\d{1,2}\\s*(?:[./-]|[а-яё]{2,}|\\|)").containsMatchIn(text) && !clocks.find(text).let { it?.range?.first == 0 }
 
     private fun event(date: LocalDate, clock: String, raw: String, today: LocalDate, parish: Parish?, scopedVenue: String?): InternetService? {
         if (date !in today.minusDays(1)..today.plusDays(45)) return null

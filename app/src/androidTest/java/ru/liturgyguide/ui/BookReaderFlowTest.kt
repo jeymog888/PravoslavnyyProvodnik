@@ -117,6 +117,19 @@ class BookReaderFlowTest {
         assertEquals(0f, accepted.fraction, .001f)
     }
 
+    @Test fun hiddenOpeningPrayersDoNotLeaveAnEmptyHeadingBeforeThePublicText() {
+        val original = sampleBook()
+        val hidden = BookChapter("private-opening", "Приготовление в алтаре", "Подготовка священника",
+            listOf(BookBlock("private-first", BookBlockKind.PRAYER, null, "Молитва перед началом", isAltarText = true)))
+        val book = original.copy(chapters = listOf(hidden) + original.chapters).let { it.copy(contentHash = ServiceBookIntegrity.contentHash(it)) }
+        reader(book)
+        settle()
+        compose.onNodeWithTag("book_saved").assertIsDisplayed()
+        compose.onNodeWithText(hidden.title).assertDoesNotExist()
+        compose.onNodeWithTag("book_chapter", useUnmergedTree = true).assertTextEquals("Начальные молитвы")
+        compose.onNodeWithTag("book_block_opening-1").assertIsDisplayed()
+    }
+
     @Test fun compactReaderAtTwoHundredPercentCanScrollOptionsAndRefresh() {
         // ModalBottomSheet owns an Android window. A small parent Box/LocalDensity
         // cannot constrain it, so exercise and restore a real compact display profile.

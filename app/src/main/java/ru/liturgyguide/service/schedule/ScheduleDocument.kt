@@ -35,7 +35,10 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
         copy.select("script,style,nav,footer,aside,header,[hidden],.sidebar,.comments,.comment-list").remove()
         // Sibling headings may identify the building for each of several articles. Selecting only
         // the first article would lose that scope and silently discard the selected church's section.
-        val body = copy.selectFirst("main") ?: copy.body()
+        // Older parish sites use a named content div instead of semantic HTML. Only select
+        // it when it contains the page heading, so a nested widget cannot hide parish scope.
+        val body = copy.selectFirst("main,[role=main]") ?: copy.select("#content").singleOrNull()
+            ?.takeIf { it.select("h1").size == 1 } ?: copy.body()
         val lines = mutableListOf<ScheduleDocumentLine>()
         // An article's date heading may be its sibling. Only headings, never copyright/sidebar years.
         if (body != copy.body()) copy.select("h1").filter { it !in body.getAllElements() }.take(2)
@@ -124,7 +127,8 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
     }
 
     private val clockCell = Regex("(?<![\\d./:-])\\d{1,2}\\s*[.:]\\s*\\d{2}(?![\\d./])")
-    private val dateCell = Regex("(?iu)^\\d{1,2}\\s*[./]\\s*\\d{1,2}(?:[./](?:20\\d{2}|\\d{2}))?\\s*,?\\s*(?:(?:пн|вт|ср|чт|пт|сб|вс|понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)\\.?)?$")
+    private val monthWord = "(?:январ[ьяе]|феврал[ьяе]|март[ае]?|апрел[ьяе]|ма[йяе]|июн[ьяе]|июл[ьяе]|август[ае]?|сентябр[ьяе]|октябр[ьяе]|ноябр[ьяе]|декабр[ьяе])"
+    private val dateCell = Regex("(?iu)^\\d{1,2}(?:\\s*[./]\\s*\\d{1,2}(?:[./](?:20\\d{2}|\\d{2}))?|\\s+$monthWord(?:\\s+20\\d{2})?)\\s*,?\\s*(?:(?:пн|вт|ср|чт|пт|сб|вс|понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)\\.?)?$")
 }
 
 object ScheduleOcrLayout {

@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.sp
 import ru.liturgyguide.model.*
 import ru.liturgyguide.service.PublishedSchedule
 import ru.liturgyguide.service.TodayServiceSelection
+import ru.liturgyguide.service.UserServiceStart
 import ru.liturgyguide.service.book.*
 import ru.liturgyguide.service.schedule.*
 import java.time.*
@@ -30,12 +31,14 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
     onFindChurch: () -> Unit, onChurchDetails: () -> Unit,
     onOpenBook: (LocalDate, WorshipKind, Boolean) -> Unit,
     onResumeBook: (BookReadingPosition) -> Unit, onRefresh: () -> Unit,
-    onResumeLegacy: (() -> Unit)?, bottomBar: @Composable () -> Unit) {
+    onResumeLegacy: (() -> Unit)?, bottomBar: @Composable () -> Unit,
+    userStarts: List<UserServiceStart> = emptyList(), readingNotice: String? = null) {
     val zone = remember(church?.timezone) { ZoneId.of(church?.timezone ?: "Europe/Moscow") }
     val today = now.atZone(zone).toLocalDate()
     var dayOffset by rememberSaveable(church?.id) { mutableIntStateOf(0) }
     val date = today.plusDays(dayOffset.toLong())
     val services = church?.let { PublishedSchedule.forDate(it, date) }.orEmpty()
+    val personalStart = church?.let { personalStartForDate(userStarts, it, date) }
     val selection = church?.let { TodayServiceSelection.pick(it, date, now, lookAhead = dayOffset == 0) }
     val featured = selection?.service
     // The selector belongs to the tapped occurrence, which can be later than the visible day tab.
@@ -60,6 +63,10 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                     Text("θεωρία", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
+            readingNotice?.let { notice -> item {
+                Text(notice, style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("reading_restore_notice"))
+            } }
             if (church == null) {
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
@@ -101,6 +108,14 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                                 if (kind != null) Button(onClick = { open(featured) }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("open_service_book")) {
                                     Text(if (kind == WorshipKind.LITURGY && featured.kind == "service_block") "Открыть литургию" else "Открыть службу")
                                 } else OutlinedButton(onClick = { open(featured) }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("today_choose_unknown_service")) { Text("Выбрать текст службы") }
+                            } else if (personalStart != null) {
+                                Text(personalStart.time, style = MaterialTheme.typography.displaySmall,
+                                    modifier = Modifier.testTag("today_service_time"))
+                                Text("Литургия", style = MaterialTheme.typography.headlineSmall)
+                                Text("Начало указано вами", style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("today_personal_source"))
+                                Button(onClick = { onOpenBook(LocalDate.parse(personalStart.date), WorshipKind.LITURGY, false) },
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("today_open_personal_liturgy")) { Text("Открыть литургию") }
                             } else {
                                 Text("Тексты службы", style = MaterialTheme.typography.headlineMedium)
                                 Text("Оригинал, русский текст и объяснения. Можно читать в своем темпе", style = MaterialTheme.typography.bodyLarge)
@@ -110,7 +125,21 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                         }
                     }
                 }
-                if (services.isEmpty() && featured == null) item {
+                // A personal start is a separate source; it never replaces a published occurrence.
+                if (personalStart != null && featured != null) item {
+                    TextButton(onClick = { onOpenBook(LocalDate.parse(personalStart.date), WorshipKind.LITURGY, false) },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).testTag("today_open_personal_liturgy")) {
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text("${date.format(format)} · ${personalStart.time} · Литургия", style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.testTag("today_personal_summary"))
+                            Text("Начало указано вами", style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("today_personal_source"))
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Icon(Icons.Default.ChevronRight, null)
+                    }
+                }
+                if (services.isEmpty() && featured == null && personalStart == null) item {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text("Обычный порядок", style = MaterialTheme.typography.titleMedium)
                         Text("Суббота вечером · вечернее богослужение\nВоскресенье утром · литургия", style = MaterialTheme.typography.bodyLarge)

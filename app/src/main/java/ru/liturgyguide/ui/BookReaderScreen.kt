@@ -55,7 +55,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     textSize: Int, onBack: () -> Unit, onOpenUrl: (String) -> Unit,
     onChooseVersion: (ServiceBookKey) -> Unit, onSettings: () -> Unit,
     isSaved: Boolean = true, loadWarning: String? = null,
-    onRefresh: () -> Unit = {}, refreshing: Boolean = false, onAcceptUpdate: (() -> Unit)? = null) {
+    onRefresh: () -> Unit = {}, refreshing: Boolean = false, onAcceptUpdate: (() -> Boolean)? = null) {
     val initial = remember(book.contentHash, parishId) { readingStore.restore(book, parishId) }
     var mode by rememberSaveable(book.contentHash) { mutableStateOf(initial?.mode ?: BookReadingMode.ORIGINAL) }
     var wordsPerMinute by rememberSaveable(book.contentHash) { mutableIntStateOf(initial?.wordsPerMinute ?: 85) }
@@ -67,20 +67,21 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         book.key, book.contentHash, parishId, book.blocks.first().id, book.chapters.first().id,
         anchorKind = BookAnchorKind.HEADER)) }
     var saveError by remember { mutableStateOf(false) }
+    var superseded by remember { mutableStateOf(false) }
     var positioning by remember { mutableStateOf(true) }
     var seekRevision by remember { mutableIntStateOf(0) }
     val density = LocalDensity.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val view = LocalView.current
     val items = remember(book.contentHash, showAltar, mode) {
-        book.chapters.flatMap { chapter ->
+        book.chapters.filter { chapter -> mode == BookReadingMode.MEANING || showAltar || chapter.blocks.any { !it.isAltarText } }.flatMap { chapter ->
             listOf(BookPageItem("chapter:${chapter.id}", chapter, null)) +
                 if (mode == BookReadingMode.MEANING) emptyList() else chapter.blocks.filter { showAltar || !it.isAltarText }
                     .map { BookPageItem(it.id, chapter, it) }
         }
     }
     val list = rememberLazyListState()
-    val currentItem by remember(items, list) { derivedStateOf { items.getOrNull(list.firstVisibleItemIndex) ?: items.first() } }
+    val currentItem by remember(items, list) { derivedStateOf { items.getOrNull(list.firstVisibleItemIndex) ?: items.last() } }
     val currentChapter = currentItem.chapter
 
     fun viewport(): BookViewport {
@@ -98,8 +99,14 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     }
     suspend fun scrollToCursor() {
         var anchor = cursor.value
-        if (mode != BookReadingMode.MEANING && anchor.anchorKind == BookAnchorKind.BLOCK && items.none { it.block?.id == anchor.blockId }) {
-            val chapter = book.chapters.firstOrNull { it.id == anchor.chapterId } ?: book.chapters.first()
+        val hiddenAnchor = when (anchor.anchorKind) {
+            BookAnchorKind.BLOCK -> items.none { it.block?.id == anchor.blockId }
+            BookAnchorKind.HEADER -> items.none { it.chapter.id == anchor.chapterId }
+            BookAnchorKind.END -> false
+        }
+        if (mode != BookReadingMode.MEANING && hiddenAnchor) {
+            val oldIndex = book.chapters.indexOfFirst { it.id == anchor.chapterId }.coerceAtLeast(0)
+            val chapter = items.firstOrNull { item -> book.chapters.indexOf(item.chapter) >= oldIndex }?.chapter ?: items.last().chapter
             cursor.seek(chapter.id, chapter.blocks.firstOrNull { showAltar || !it.isAltarText }?.id ?: chapter.blocks.first().id,
                 BookAnchorKind.HEADER)
             anchor = cursor.value
@@ -129,7 +136,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             delay(400)
             // Small cursor writes are serialized on the owner thread. A late IO job cannot
             // overwrite the more recent synchronous lifecycle snapshot.
-            saveError = !readingStore.save(cursor.snapshot(mode, wordsPerMinute, showAltar))
+            if (!superseded) saveError = !readingStore.save(cursor.snapshot(mode, wordsPerMinute, showAltar))
         }
     }
     DisposableEffect(lifecycle, book.contentHash, view) {
@@ -139,11 +146,11 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             if (event == Lifecycle.Event.ON_PAUSE || event == Lifecycle.Event.ON_STOP) {
                 view.keepScreenOn = false
                 playing = false
-                if (!positioning) readingStore.save(latestPosition())
+                if (!positioning && !superseded) readingStore.save(latestPosition())
             }
         }
         lifecycle.addObserver(observer)
-        onDispose { playing = false; view.keepScreenOn = false; if (!positioning) readingStore.save(latestPosition()); lifecycle.removeObserver(observer) }
+        onDispose { playing = false; view.keepScreenOn = false; if (!positioning && !superseded) readingStore.save(latestPosition()); lifecycle.removeObserver(observer) }
     }
     val manualScroll = remember {
         object : NestedScrollConnection {
@@ -158,6 +165,9 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         var previous = withFrameNanos { it }
         while (playing && lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
             val frame = withFrameNanos { it }
+            // Pause can arrive while awaiting this frame. Do not move one last pixel
+            // after the lifecycle observer has already saved the visible line.
+            if (!playing || !lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) break
             val elapsed = ((frame - previous) / 1_000_000_000f).coerceIn(0f, .1f)
             previous = frame
             val visible = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == list.firstVisibleItemIndex }
@@ -178,14 +188,22 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         mode = value
     }
     fun openSearch(useMicrophone: Boolean) { playing = false; microphoneFirst = useMicrophone; sheet = "search" }
+    fun acceptUpdate() {
+        playing = false
+        if (!readingStore.save(position())) {
+            saveError = true
+            return
+        }
+        sheet = null
+        superseded = onAcceptUpdate?.invoke() == true
+    }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
             Surface(color = MaterialTheme.colorScheme.surface, shadowElevation = 1.dp) {
                 Column(Modifier.statusBarsPadding()) {
-                    if (onAcceptUpdate != null) TextButton(onClick = {
-                        playing = false; readingStore.save(position()); onAcceptUpdate()
-                    }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_accept_update")) { Text("Обновленный текст готов · Открыть") }
+                    if (onAcceptUpdate != null) TextButton(onClick = ::acceptUpdate,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_accept_update")) { Text("Обновленный текст готов · Открыть") }
                     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         IconButton(onClick = onBack, modifier = Modifier.size(48.dp).testTag("book_back")) {
@@ -203,6 +221,9 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                         }
                     }
                     BookModePicker(mode, ::changeMode)
+                    if (saveError) Text("Не удалось сохранить место. Проверьте свободное место на телефоне",
+                        color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp).testTag("book_save_error"))
                 }
             }
         },
@@ -236,7 +257,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 items(items, key = { it.id }) { item ->
                     if (item.block == null) Column(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 4.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        if (item.chapter.id == book.chapters.first().id) {
+                        if (item.chapter.id == items.first().chapter.id) {
                             Text(book.title, style = MaterialTheme.typography.headlineMedium)
                             Text(LocalDate.parse(book.key.date).format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru"))) +
                                 if (isSaved) " · Сохранено на телефоне" else " · Пока не сохранено", style = MaterialTheme.typography.bodySmall,
@@ -261,7 +282,6 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                     HorizontalDivider()
                     Text("Конец последования", style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("book_end"))
                     TextButton(onClick = { sheet = "sources" }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Источники и состав текста") }
-                    if (saveError) Text("Не удалось сохранить место. Проверьте свободное место на телефоне", color = MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -283,6 +303,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 items(book.chapters, key = { it.id }) { chapter ->
                     OutlinedButton(onClick = {
                         cursor.seek(chapter.id, chapter.blocks.firstOrNull { showAltar || !it.isAltarText }?.id ?: chapter.blocks.first().id, BookAnchorKind.HEADER)
+                        if (mode != BookReadingMode.MEANING && chapter.blocks.all { it.isAltarText }) showAltar = true
                         positioning = true; sheet = null
                         seekRevision++
                     }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text(chapter.title, Modifier.fillMaxWidth()) }
@@ -300,6 +321,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 }
                 OutlinedButton(onClick = { sheet = null; onSettings() }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Размер текста и тема") }
                 TextButton(onClick = { sheet = "sources" }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Источники и вариант службы") }
+                if (onAcceptUpdate != null) Button(onClick = ::acceptUpdate,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_options_accept_update")) { Text("Открыть обновленный текст") }
                 OutlinedButton(onClick = onRefresh, enabled = !refreshing, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_refresh")) {
                     Text(if (refreshing) "Обновляем текст" else "Обновить текст и перевод")
                 }

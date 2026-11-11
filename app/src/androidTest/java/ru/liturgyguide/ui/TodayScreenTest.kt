@@ -14,6 +14,7 @@ import org.junit.runner.RunWith
 import ru.liturgyguide.model.Parish
 import ru.liturgyguide.model.ParishService
 import ru.liturgyguide.model.WorshipKind
+import ru.liturgyguide.service.UserServiceStart
 import ru.liturgyguide.service.schedule.InternetScheduleState
 import ru.liturgyguide.service.schedule.InternetScheduleStatus
 import ru.liturgyguide.service.schedule.ScheduleImportPhase
@@ -132,6 +133,41 @@ class TodayScreenTest {
         compose.onNodeWithTag("service_book_choose_matins").assertIsDisplayed().performClick()
         compose.onNodeWithTag("service_book_chooser").assertDoesNotExist()
         compose.runOnIdle { assertEquals(listOf(Request(LocalDate.of(2026, 11, 11), WorshipKind.MATINS)), opened) }
+    }
+
+    @Test fun tomorrowsPersonalStartKeepsItsSourceAndDateWithoutReplacingPublishedTime() {
+        val tomorrow = LocalDate.of(2026, 11, 12)
+        val published = service(tomorrow.toString(), "09:00", "Литургия")
+        val displayedParish = mutableStateOf(withServices(published))
+        val starts = listOf(UserServiceStart(parish.id, tomorrow.toString(), "10:30"),
+            UserServiceStart("another-parish", "2026-11-11", "12:00"))
+        val opened = mutableListOf<Request>()
+        compose.setContent { GuideTheme(false) {
+            TodayScreen(displayedParish.value, now, null, null, lastBook = null,
+                onFindChurch = {}, onChurchDetails = {},
+                onOpenBook = { date, kind, evening -> opened += Request(date, kind, evening) },
+                onResumeBook = {}, onRefresh = {}, onResumeLegacy = null, bottomBar = {}, userStarts = starts)
+        } }
+        scrollTo("today_day_today").assertIsSelected()
+        compose.onNodeWithTag("today_personal_source").assertDoesNotExist()
+        scrollTo("today_day_tomorrow").performClick()
+        scrollTo("today_service_time").assertTextEquals("09:00")
+        scrollTo("today_service_relation").assertTextEquals("Ближайшая служба по расписанию")
+        scrollTo("today_open_personal_liturgy")
+        compose.onNodeWithTag("today_personal_summary", useUnmergedTree = true).assertTextEquals("12 ноября · 10:30 · Литургия")
+        compose.onNodeWithTag("today_personal_source", useUnmergedTree = true).assertTextEquals("Начало указано вами")
+        scrollTo("today_open_personal_liturgy").performClick()
+        compose.runOnIdle {
+            assertEquals(listOf(Request(tomorrow, WorshipKind.LITURGY)), opened)
+            displayedParish.value = parish
+        }
+        // With no published schedule, the personal time stays usable and is still not called published.
+        scrollTo("today_service_time").assertTextEquals("10:30")
+        scrollTo("today_personal_source").assertTextEquals("Начало указано вами")
+        compose.onNodeWithTag("today_service_relation").assertDoesNotExist()
+        compose.onNodeWithTag("open_service_book").assertDoesNotExist()
+        scrollTo("today_open_personal_liturgy").performClick()
+        compose.runOnIdle { assertEquals(listOf(Request(tomorrow, WorshipKind.LITURGY), Request(tomorrow, WorshipKind.LITURGY)), opened) }
     }
 
     private fun launch(church: Parish?, instant: Instant = now, opened: MutableList<Request> = mutableListOf(),

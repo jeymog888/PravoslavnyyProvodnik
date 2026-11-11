@@ -311,8 +311,9 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                         Text("Начало указано вами · ${parishTimeZoneLabel(church, date, personalStart.time)}",
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.testTag("personal_start_source"))
-                        if (onGoToService != null) OutlinedButton(onClick = onGoToService, shape = MaterialTheme.shapes.small,
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("personal_time_to_service")) { Text("К службе") }
+                        if (onReadLiturgy != null) OutlinedButton(onClick = { onReadLiturgy(LocalDate.parse(personalStart.date)) },
+                            shape = MaterialTheme.shapes.small,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("personal_time_to_service")) { Text("Открыть литургию") }
                     }
                 }
                 item {

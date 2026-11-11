@@ -619,7 +619,12 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         onResumeBook = { openBook(it.key) },
                         onRefresh = { scheduleSourceOverride = null; scheduleRefresh++ },
                         onResumeLegacy = if (selectedStage == null) null else { { resumeLegacyReading() } },
-                        bottomBar = navigationBar
+                        bottomBar = navigationBar, userStarts = userStarts,
+                        readingNotice = when {
+                            invalidArrival || arrivalRecoveryNotice -> "Не удалось восстановить выбранную службу. Выберите ее заново"
+                            invalidRecovery -> "Не удалось восстановить сохраненное чтение. Выберите службу или начните с начала"
+                            else -> null
+                        }
                     )
                     Screen.BOOK -> bookRequest?.let { request ->
                         ServiceBookScreen(request, bookParishId, container.serviceBooks, bookStore, textSize,

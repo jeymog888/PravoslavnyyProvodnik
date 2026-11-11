@@ -34,9 +34,14 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
             val pinned = withContext(Dispatchers.IO) {
                 readingStore.last(parishId)?.takeIf { it.key == requested }?.let { books.cachedVersion(requested, it.contentHash) }
             }
-            if (retry == 0 && pinned != null) result = BookLoadResult.Ready(pinned, fromCache = true,
-                warning = BookWarnings.supplementWarning(pinned))
-            else {
+            if (retry == 0 && pinned != null) {
+                result = BookLoadResult.Ready(pinned, fromCache = true, warning = BookWarnings.supplementWarning(pinned))
+                // A downloaded update remains available after leaving the reader or going offline.
+                // Keep the accepted text fixed until the reader explicitly chooses the new version.
+                val latest = withContext(Dispatchers.IO) { books.cached(requested) }
+                if (latest != null && latest.contentHash != pinned.contentHash)
+                    update = BookLoadResult.Ready(latest, fromCache = true, warning = BookWarnings.supplementWarning(latest))
+            } else {
                 val fetched = books.load(requested, force = retry > 0) { progress = it }
                 val accepted = (result as? BookLoadResult.Ready)?.book ?: (result as? BookLoadResult.Failed)?.cachedBook
                 if (accepted != null && retry > 0) when (fetched) {
@@ -62,7 +67,16 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
         BookReaderScreen(loaded, parishId, readingStore, textSize, onBack, onOpenUrl,
             onChooseVersion = { requested = it; onRequestChanged(it) }, onSettings = onSettings,
             onRefresh = { retry++ }, refreshing = refreshing,
-            onAcceptUpdate = if (update == null) null else { { result = update; update = null; refreshWarning = null } },
+            onAcceptUpdate = if (update == null) null else { {
+                val candidate = update
+                if (candidate != null && readingStore.acceptVersion(loaded, candidate.book, parishId)) {
+                    result = candidate; update = null; refreshWarning = null
+                    true
+                } else {
+                    refreshWarning = "Не удалось сохранить место. Открытый текст остался на месте"
+                    false
+                }
+            } },
             isSaved = (result as? BookLoadResult.Ready)?.saved != false,
             loadWarning = refreshWarning ?: when (val state = result) {
                 is BookLoadResult.Ready -> state.warning

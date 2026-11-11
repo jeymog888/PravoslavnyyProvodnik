@@ -64,6 +64,23 @@ class BookReadingCursor(initial: BookReadingPosition) {
         value.copy(mode = mode, wordsPerMinute = wordsPerMinute, showAltar = showAltar).also { value = it }
 }
 
+object BookPositionUpdate {
+    fun rebase(position: BookReadingPosition, previous: ServiceBook, next: ServiceBook): BookReadingPosition {
+        require(position.key == previous.key && previous.key == next.key)
+        val exact = next.blocks.firstOrNull { it.id == position.blockId }
+        val chapter = next.chapters.firstOrNull { item -> exact?.let { it in item.blocks } == true }
+            ?: next.chapters.firstOrNull { it.id == position.chapterId } ?: next.chapters.first()
+        val block = exact ?: chapter.blocks.first()
+        val old = previous.blocks.firstOrNull { it.id == position.blockId }
+        fun visibleText(value: ru.liturgyguide.model.BookBlock) =
+            if (position.mode == BookReadingMode.RUSSIAN) value.russian ?: value.original else value.original
+        val unchanged = old != null && exact != null && visibleText(old) == visibleText(exact)
+        return position.copy(contentHash = next.contentHash, chapterId = chapter.id, blockId = block.id,
+            fraction = if (unchanged && position.anchorKind == BookAnchorKind.BLOCK) position.fraction else 0f,
+            anchorKind = if (exact != null) position.anchorKind else BookAnchorKind.HEADER)
+    }
+}
+
 /** Separate from the published 0.5-0.7 playback formats: old bookmarks remain recoverable. */
 class BookReadingStore(private val preferences: SharedPreferences) {
     fun last(parishId: String?): BookReadingPosition? =
@@ -86,6 +103,11 @@ class BookReadingStore(private val preferences: SharedPreferences) {
         edit.putString(key, json).putString(lastKey(position.parishId), json).commit()
     }.getOrDefault(false)
 
+    fun acceptVersion(previous: ServiceBook, next: ServiceBook, parishId: String?): Boolean {
+        val position = restore(previous, parishId) ?: return true
+        return runCatching { save(BookPositionUpdate.rebase(position, previous, next)) }.getOrDefault(false)
+    }
+
     private fun positionKey(key: ServiceBookKey, parishId: String?) =
         "position:" + BookText.sha256("${parishId.orEmpty()}|${key.canonical()}")
     private fun lastKey(parishId: String?) = "last:" + BookText.sha256(parishId.orEmpty())
@@ -101,10 +123,22 @@ object BookSearch {
         return book.chapters.flatMap { chapter -> chapter.blocks.mapNotNull { block ->
             val original = BookText.normalized(block.original)
             val russian = BookText.normalized(block.russian.orEmpty())
-            val exact = original.contains(needle) || russian.contains(needle)
-            val allWords = words.size >= 2 && (words.all(original::contains) || words.all(russian::contains))
-            if (exact || allWords) BookSearchHit(chapter.id, chapter.title, block.id,
-                (if (russian.contains(needle)) block.russian else block.original).orEmpty().take(240)) else null
+            fun matches(text: String) = text.contains(needle) || (words.size >= 2 && words.all(text::contains))
+            val inRussian = matches(russian)
+            if (inRussian || matches(original)) BookSearchHit(chapter.id, chapter.title, block.id,
+                excerpt(if (inRussian) block.russian.orEmpty() else block.original, words)) else null
         } }.take(30)
+    }
+
+    /** Show the words that caused the hit, including matches late in a long prayer. */
+    private fun excerpt(text: String, words: List<String>): String {
+        if (text.length <= 240) return text
+        val tokens = Regex("[\\p{L}\\p{N}\\p{M}]+").findAll(text).toList()
+        val match = tokens.firstOrNull { token -> words.any { BookText.normalized(token.value).contains(it) } }
+        val desiredStart = ((match?.range?.first ?: 0) - 60).coerceAtLeast(0)
+        val start = tokens.lastOrNull { it.range.first <= desiredStart }?.range?.first ?: 0
+        val limit = (start + 236).coerceAtMost(text.length)
+        val end = if (limit == text.length) limit else tokens.lastOrNull { it.range.last < limit }?.range?.last?.plus(1) ?: limit
+        return (if (start > 0) "… " else "") + text.substring(start, end).trim() + if (end < text.length) " …" else ""
     }
 }
