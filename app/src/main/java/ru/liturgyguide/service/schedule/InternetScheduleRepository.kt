@@ -208,8 +208,11 @@ class InternetScheduleRepository(
         currentCoroutineContext().ensureActive()
         // Failed refresh preserves usable data or a rejection. An explicit new source starts a new binding.
         val rejection = publication == null && (rejectedPublication || (!changedSource && previous.publicationRejected))
-        val result = InternetScheduleState(parish.id, status, website, source, now.toString(),
-            publication ?: previous.publication.takeUnless { changedSource || rejectedPublication }, configuredWebsite = configured,
+        val retainedPublication = publication ?: previous.publication.takeUnless { changedSource || rejectedPublication }
+        // Keep the accepted document binding on failure too. Resetting sourceUrl to the
+        // attempted homepage makes the reader reject a preserved child-page/image cache.
+        val result = InternetScheduleState(parish.id, status, website, retainedPublication?.sourceUrl ?: source, now.toString(),
+            retainedPublication, configuredWebsite = configured,
             customSource = custom, siteEvidenceUrl = evidence, publicationRejected = rejection)
         runCatching { cache.write(parish.id, ScheduleCacheCodec.encode(result)) }
         result

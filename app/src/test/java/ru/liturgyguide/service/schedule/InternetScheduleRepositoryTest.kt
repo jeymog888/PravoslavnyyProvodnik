@@ -5,8 +5,10 @@ import org.junit.Assert.*
 import org.junit.Test
 import ru.liturgyguide.model.Parish
 import ru.liturgyguide.model.ParishService
+import ru.liturgyguide.ui.arrivalSchedule
 import java.io.IOException
 import java.time.Instant
+import java.time.LocalDate
 
 class InternetScheduleRepositoryTest {
     private val now = Instant.parse("2026-11-10T06:00:00Z")
@@ -256,6 +258,24 @@ class InternetScheduleRepositoryTest {
         assertEquals(state, repo.cached(selected))
     }
 
+    @Test fun `lazy original image returning foreign HTML cannot become a parish schedule`() = runBlocking {
+        val selected = parish(site = "https://example.org/")
+        val documentUrl = "https://cdn.example.org/current.jpg"
+        val calls = mutableListOf<String>()
+        val repo = InternetScheduleRepository(ScheduleTransport { url ->
+            calls += url
+            response(url, when (url) {
+                selected.website -> "<title>Расписание</title><img data-original='$documentUrl'>"
+                documentUrl -> html + "<a href='/schedule/'>Расписание</a>"
+                else -> error("Foreign HTML navigation must not be followed")
+            })
+        }, Cache(), ScheduleDocumentExtractor { error("An HTML response must never enter OCR") })
+        val state = repo.refresh(selected, now)
+        assertEquals(listOf(selected.website, documentUrl), calls)
+        assertEquals(InternetScheduleStatus.UNSUPPORTED, state.status)
+        assertNull(state.publication)
+    }
+
     @Test fun `same site document filename returning HTML still has a valid parish binding`() = runBlocking {
         val selected = parish(site = "https://example.org/")
         val documentUrl = "https://example.org/schedule.pdf"
@@ -297,5 +317,38 @@ class InternetScheduleRepositoryTest {
         assertEquals(1, calls)
         repo.refresh(selected, now.plusSeconds(301))
         assertEquals(2, calls)
+    }
+
+    @Test fun `failed refresh retains the accepted child document binding and visible stale schedule`() = runBlocking {
+        for (externalImage in listOf(false, true)) {
+            val selected = parish(site = "https://example.org/")
+            val source = if (externalImage) "https://cdn.example.org/november.jpg" else "https://example.org/schedule/"
+            val cache = Cache()
+            val transport = ScheduleTransport { url ->
+                when (url) {
+                    selected.website -> response(url, "<h1>Расписание</h1><a href='$source'>Расписание</a>")
+                    source -> if (externalImage) response(url, "fixture", "image/jpeg") else response(url,
+                        "<article data-day='2026-11-12'><li><time>08:00</time><span>Литургия</span></li></article>")
+                    else -> throw IOException("Unexpected URL")
+                }
+            }
+            val extractor = ScheduleDocumentExtractor { data -> ScheduleDocument(data.url, "image", listOf(
+                ScheduleDocumentPage(listOf(ScheduleDocumentLine("Ноябрь 2026"),
+                    ScheduleDocumentLine("12 Чт. 08:00 Литургия"))))) }
+            val ready = InternetScheduleRepository(transport, cache, extractor).refresh(selected, now)
+            assertEquals(InternetScheduleStatus.READY, ready.status)
+            val later = now.plusSeconds(90_000)
+            val offline = InternetScheduleRepository(ScheduleTransport { throw IOException("Offline") }, cache)
+            val failed = offline.refresh(selected, later, force = true)
+            assertEquals(InternetScheduleStatus.UNAVAILABLE, failed.status)
+            assertEquals(source, failed.sourceUrl)
+            assertEquals(ready.publication, failed.publication)
+            assertEquals(failed, offline.cached(selected))
+            val display = arrivalSchedule(selected.withInternetSchedule(failed, later),
+                LocalDate.parse("2026-11-12"), later, failed)
+            assertEquals(listOf("08:00"), display.entries.map { it.time })
+            assertTrue(display.saved)
+            assertEquals("Сохраненное расписание - проверьте изменения", display.relation)
+        }
     }
 }
