@@ -24,6 +24,7 @@ object ServiceBookIntegrity {
             (it.russian == null || it.russian.length in 1..80_000) &&
             (it.meaning == null || it.meaning.length <= 10_000) && it.scriptureReferences.size <= 20 })
         require(book.notices.size <= 30 && book.notices.all { it.length <= 2_000 })
+        require(book.calendarDay == null || PublishedCalendarSupplements.valid(book.calendarDay, book.key.date))
         require(book.contentHash.matches(Regex("[a-f0-9]{64}")) && book.contentHash == contentHash(book))
         true
     }.getOrDefault(false)

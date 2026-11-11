@@ -53,6 +53,13 @@ data class BookEnrichment(
 data class BookSource(val title: String, val url: String)
 data class BookVariantOption(val value: String, val title: String)
 
+/** Calendar context belongs to a date, not to a parish's choice of service or its order. */
+data class BookCommemoration(val title: String, val description: String?, val sourceUrl: String)
+data class BookCalendarDay(
+    val date: String, val weekTitle: String, val voice: Int?,
+    val commemorations: List<BookCommemoration>, val sourceUrl: String
+)
+
 data class BookBlock(
     val id: String,
     val kind: BookBlockKind,
@@ -86,7 +93,9 @@ data class ServiceBook(
     val sources: List<BookSource> = emptyList(),
     val mainEventOptions: List<BookVariantOption> = emptyList(),
     val secondEventOptions: List<BookVariantOption> = emptyList(),
-    val enrichment: BookEnrichment = BookEnrichment()
+    val enrichment: BookEnrichment = BookEnrichment(),
+    // Null is omitted by Gson, preserving the hash of previously downloaded v0.8 books.
+    val calendarDay: BookCalendarDay? = null
 ) {
     val blocks: List<BookBlock> get() = chapters.flatMap { it.blocks }
     val translatedPrayerCount: Int get() = blocks.count { it.kind in setOf(BookBlockKind.PRAYER, BookBlockKind.SCRIPTURE) && it.russian != null }

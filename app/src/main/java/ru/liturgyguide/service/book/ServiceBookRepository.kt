@@ -37,7 +37,8 @@ class ServiceBookRepository(
     private val transport: ScheduleTransport = UrlConnectionScheduleTransport(timeoutMillis = 15_000),
     private val translations: BookTranslationIndex = BookTranslationIndex.empty(),
     private val clock: Clock = Clock.systemUTC(),
-    private val downloadRussian: Boolean = true
+    private val downloadRussian: Boolean = true,
+    private val calendar: CalendarSupplements? = null
 ) : ServiceBooks {
     private val mutex = Mutex()
     private val parser = ServiceBookParser()
@@ -71,6 +72,7 @@ class ServiceBookRepository(
         val refresh: Boolean,
         val attempted: MutableSet<String> = mutableSetOf(),
         val daily: MutableMap<String, Pair<BookTranslationIndex, BookSupplementStatus>> = mutableMapOf(),
+        val calendars: MutableMap<String, CalendarSupplement?> = mutableMapOf(),
         var corpus: BookTranslationCorpus? = null
     )
 
@@ -95,10 +97,18 @@ class ServiceBookRepository(
                     common.first.plus(daily.first) to combineStatus(listOf(common.second, daily.second))
                 }
             }
-            verses.await() to russian.await()
+            // The two primary sources own the bounded transport first. Optional context must
+            // not consume a worker or a request deadline needed for the actual service text.
+            val scripture = verses.await()
+            val russianText = russian.await()
+            if (!russianSession.calendars.containsKey(key.date))
+                russianSession.calendars[key.date] = safely { calendar?.load(key.date) }
+                    ?.takeIf { PublishedCalendarSupplements.valid(it.day, key.date) }
+            Triple(scripture, russianText, russianSession.calendars[key.date])
         }
         val parsed = withContext(Dispatchers.Default) {
-            parser.parse(page, key, plainBook.fetchedAtMillis, extras.second.first.plus(translations), extras.first ?: BookScripture.empty())
+            val exactPairs = extras.second.first.plus(extras.third?.translations ?: BookTranslationIndex.empty()).plus(translations)
+            parser.parse(page, key, plainBook.fetchedAtMillis, exactPairs, extras.first ?: BookScripture.empty())
         }
         val scriptureStatus = when {
             !hasScripture -> BookSupplementStatus.NOT_NEEDED
@@ -107,7 +117,8 @@ class ServiceBookRepository(
         }
         // An unsuccessful refresh of a supplement must not erase an exact, previously
         // verified translation. Never carry translations across changed original text.
-        val previous = withContext(Dispatchers.IO) { cache.read(key) }?.blocks?.associateBy { it.id }.orEmpty()
+        val previousBook = withContext(Dispatchers.IO) { cache.read(key) }
+        val previous = previousBook?.blocks?.associateBy { it.id }.orEmpty()
         val chapters = parsed.chapters.map { chapter -> chapter.copy(blocks = chapter.blocks.map { block ->
             val old = previous[block.id]
             if (block.russian == null && old != null && old.original == block.original && old.russian != null &&
@@ -115,8 +126,10 @@ class ServiceBookRepository(
                 block.copy(russian = old.russian, translationSource = old.translationSource, meaning = old.meaning ?: block.meaning)
             else block
         }) }
-        val book = parsed.copy(chapters = chapters,
-            sources = (parsed.sources + chapters.flatMap { it.blocks }.mapNotNull { it.translationSource }).distinct(),
+        val day = extras.third?.day ?: previousBook?.calendarDay
+        val book = parsed.copy(chapters = chapters, calendarDay = day,
+            sources = (parsed.sources + chapters.flatMap { it.blocks }.mapNotNull { it.translationSource } +
+                listOfNotNull(day?.let { BookSource("Азбука веры · церковный день", it.sourceUrl) })).distinct(),
             enrichment = BookEnrichment(extras.second.second, scriptureStatus)).let {
             it.copy(contentHash = ServiceBookIntegrity.contentHash(it))
         }
@@ -190,7 +203,8 @@ class ServiceBookRepository(
             notices = (listOf("Собраны вечерня, утреня и первый час на одну церковную дату. Переходы и сокращения в вашем храме могут отличаться") +
                 parts.flatMap { it.notices }).distinct(), sources = parts.flatMap { it.sources }.distinct(),
             mainEventOptions = parts.first().mainEventOptions, secondEventOptions = parts.first().secondEventOptions,
-            enrichment = BookEnrichment(combineStatus(parts.map { it.enrichment.russian }), combineStatus(parts.map { it.enrichment.scripture })))
+            enrichment = BookEnrichment(combineStatus(parts.map { it.enrichment.russian }), combineStatus(parts.map { it.enrichment.scripture })),
+            calendarDay = parts.firstNotNullOfOrNull { it.calendarDay })
         return save(preliminary.copy(contentHash = ServiceBookIntegrity.contentHash(preliminary)), progress)
     }
 
