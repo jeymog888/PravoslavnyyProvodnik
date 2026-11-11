@@ -69,6 +69,10 @@ class ChurchDiscoveryScreenTest {
         var selected: SavedChurchRecord? = null
         launch(fake, initialMode = ChurchSearchMode.NAME, onSave = { selected = it; true })
         search("метро сухаревская троицы")
+        scrollTo("discovery_nearby_notice").assertTextContains("список может быть неполным", substring = true)
+        compose.onNodeWithTag("discovery_saved_empty").assertDoesNotExist()
+        compose.onNodeWithTag("discovery_name_filter").assertDoesNotExist()
+        compose.onNodeWithTag("discovery_result_notice").assertDoesNotExist()
         scrollTo("discovery_church_${other.id}").assertIsDisplayed()
         scrollTo("discovery_church_${listy.id}").performClick()
         compose.runOnIdle {
@@ -117,7 +121,7 @@ class ChurchDiscoveryScreenTest {
         }
         searchAndChooseKazan()
         scrollTo("discovery_nearby_notice").assertTextContains("список может быть неполным", substring = true)
-            .assertTextContains("православный храм", substring = true)
+            .assertTextContains("православного храма", substring = true)
         compose.onNodeWithTag("discovery_name_notice").assertDoesNotExist()
         scrollTo("discovery_mode_name").performClick()
         search("Никольский храм Казань")
@@ -365,7 +369,9 @@ class ChurchDiscoveryScreenTest {
     }
 
     @Test fun filteringAndCancellingManualEntryDoNotSaveAnythingOrStartAnotherNetworkSearch() {
-        val fake = FakeDiscovery()
+        val fake = FakeDiscovery().apply { churchResult = {
+            success((1..6).map { index -> church.copy(id = "osm:way:$index", name = "Храм $index") }, DiscoveryProvider.VK_MAPS)
+        } }
         var saved = false
         launch(fake, onSave = { saved = true; true })
         searchAndChooseKazan()

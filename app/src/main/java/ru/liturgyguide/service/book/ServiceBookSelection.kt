@@ -6,8 +6,14 @@ import ru.liturgyguide.model.WorshipKind
 import java.time.LocalDate
 
 object ServiceBookSelection {
+    // "A memorial service after the liturgy" names the memorial service, not another liturgy.
+    // Remove only dependent timing references; a separately named service remains eligible.
+    private val timingReference = Regex("\\b(?:после(?: окончания| завершения)?|по окончании|по завершении|перед|до)\\s+" +
+        "(?:(?:(?:ранн|поздн|божественн|праздничн|архиерейск)[а-я]*|(?:утренн|вечерн)(?:ей|его|юю|ее|яя|ий|ем))\\s+){0,3}" +
+        "(?:литурги[а-я]*|вечерн[а-я]*|утрен[а-я]*|всенощ[а-я]*(?:\\s+бдени[а-я]*)?|бдени[а-я]*)\\b")
+
     fun kindFor(title: String): WorshipKind? {
-        val value = BookText.normalized(title)
+        val value = timingReference.replace(BookText.normalized(title), " ")
         return when {
             "всенощ" in value || "бдение" in value -> WorshipKind.VIGIL
             "литург" in value -> WorshipKind.LITURGY

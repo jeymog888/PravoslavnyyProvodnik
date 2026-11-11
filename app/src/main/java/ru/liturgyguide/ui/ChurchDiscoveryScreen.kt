@@ -297,7 +297,8 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                     }
                 }
             } }
-            if (onSelectSaved != null && mode == ChurchSearchMode.NAME && query.isNotBlank() && savedMatches.isEmpty()) item(key = "saved_empty") {
+            if (onSelectSaved != null && mode == ChurchSearchMode.NAME && query.isNotBlank() && savedMatches.isEmpty() &&
+                state.churches == null) item(key = "saved_empty") {
                 Text("В сохраненных храмах совпадений нет", style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("discovery_saved_empty"))
             }
@@ -364,22 +365,15 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                 item(key = "results_heading") {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(state.areaLabel, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
-                        result.notice?.let { Text(it, style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("discovery_result_notice")) }
-                        if (byName) {
-                            if (result.notice == null) Text("Сверьте название и адрес храма", style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("discovery_name_notice"))
-                        } else {
-                            val radius = (result.radiusMeters ?: 3_000) / 1_000
-                            Text("В радиусе $radius км от выбранного центра", style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("discovery_area"))
-                            if (state.approximateLocation) Text("Местоположение приблизительное. Сверьте адрес", style = MaterialTheme.typography.bodySmall)
-                            if (nearbyByName) Text("Поиск по названиям: список может быть неполным. Сверьте адрес и убедитесь, что это ваш православный храм",
-                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.testTag("discovery_nearby_notice"))
-                        }
+                        Text(discoveryResultCaption(result, state.approximateLocation), style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag(when {
+                                nearbyByName -> "discovery_nearby_notice"
+                                byName && result.notice != null -> "discovery_result_notice"
+                                byName -> "discovery_name_notice"
+                                else -> "discovery_area"
+                            }))
                         CacheNotice(result.cacheStatus, result.fetchedAtEpochMillis)
-                        if (!byName && result.items.isNotEmpty()) OutlinedTextField(nameFilter, { nameFilter = it.take(160) },
+                        if (!byName && (result.items.size > 5 || nameFilter.isNotBlank())) OutlinedTextField(nameFilter, { nameFilter = it.take(160) },
                             label = { Text("Название среди найденных") }, singleLine = true,
                             modifier = Modifier.fillMaxWidth().testTag("discovery_name_filter"))
                     }
@@ -479,4 +473,18 @@ private fun discoveryError(reason: DiscoveryFailure): String = when (reason) {
     DiscoveryFailure.TOO_LARGE, DiscoveryFailure.INVALID_RESPONSE -> "Не удалось прочитать данные карты. Можно выбрать храм вручную"
     DiscoveryFailure.SERVER_UNAVAILABLE -> "Сервис поиска временно недоступен. Попробуйте еще раз или добавьте храм вручную"
     DiscoveryFailure.UNAVAILABLE -> "Не удалось связаться с сервисом поиска. Проверьте подключение или добавьте храм вручную"
+}
+
+/** Keep source limitations in one caption; a failed station lookup must not disappear. */
+internal fun discoveryResultCaption(result: DiscoveryResult.Success<DiscoveredChurch>, approximate: Boolean): String {
+    val area = buildList {
+        if (result.queryCenter != null) add("В радиусе ${(result.radiusMeters ?: 3_000) / 1_000} км")
+        if (approximate) add("местоположение приблизительное")
+        if (result.provider == DiscoveryProvider.PHOTON && result.queryCenter != null) add("список может быть неполным")
+    }.joinToString("; ")
+    val sourceNotice = result.notice?.takeUnless { it in setOf(
+        "Рядом может быть несколько храмов с похожим названием. Сверьте адрес", "Сверьте название и адрес храма") }
+    val verification = if (result.provider == DiscoveryProvider.PHOTON && result.queryCenter != null)
+        "Сверьте название и адрес православного храма" else "Сверьте название и адрес храма"
+    return listOf(area, sourceNotice ?: verification).filter(String::isNotBlank).joinToString(". ")
 }

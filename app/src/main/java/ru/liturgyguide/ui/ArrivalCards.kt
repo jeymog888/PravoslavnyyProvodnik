@@ -19,6 +19,9 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import ru.liturgyguide.model.Parish
 import ru.liturgyguide.model.ParishService
+import ru.liturgyguide.model.WorshipKind
+import ru.liturgyguide.service.book.BookText
+import ru.liturgyguide.service.book.ServiceBookSelection
 import ru.liturgyguide.service.PublishedSchedule
 import ru.liturgyguide.service.schedule.InternetScheduleState
 import ru.liturgyguide.service.schedule.InternetScheduleStatus
@@ -145,6 +148,46 @@ internal fun TypicalScheduleContent(date: LocalDate) {
                 }
                 Text("Службы в будни и точное время зависят от прихода", style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+/** A reading kind is a visual heading only; the original occurrence still owns navigation. */
+internal fun serviceKindTitle(title: String): String? {
+    val words = BookText.normalized(title).split(' ')
+    return when (val kind = ServiceBookSelection.kindFor(title)) {
+        WorshipKind.LITURGY -> if (words.any { it == "часы" || it == "час" || it == "часов" }) "Часы и литургия" else "Литургия"
+        WorshipKind.VESPERS -> if (words.any { it.startsWith("утрен") }) "Вечерня и утреня" else "Вечерня"
+        null -> null
+        else -> kind.title
+    }
+}
+
+internal fun serviceSourceTitle(title: String): String? = serviceKindTitle(title)?.let { heading ->
+    title.takeUnless { BookText.normalized(it) == BookText.normalized(heading) }
+}
+
+internal fun serviceActionSubtitle(title: String, detail: String): String =
+    listOfNotNull(detail, serviceSourceTitle(title)?.let { "В расписании храма: " + it }).joinToString("\n")
+
+@Composable
+internal fun ArrivalServiceTitle(title: String, tagPrefix: String) {
+    val heading = serviceKindTitle(title)
+    val original = serviceSourceTitle(title)
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (heading != null && original != null) {
+            Text(heading, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.testTag(tagPrefix + "_kind"))
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("В расписании храма", style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(original, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag(tagPrefix + "_title"))
+            }
+        } else {
+            // A short source title is shown once. Unknown kinds keep their own wording.
+            Box(if (heading != null) Modifier.testTag(tagPrefix + "_kind") else Modifier) {
+                Text(title, style = if (heading != null) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.testTag(tagPrefix + "_title"))
             }
         }
     }

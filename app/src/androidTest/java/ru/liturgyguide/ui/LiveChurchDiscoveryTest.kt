@@ -442,8 +442,8 @@ class LiveChurchDiscoveryTest {
             // featured item changes with real wall time, so do not assume it is always 08:00.
             for (event in events) {
                 val withinCard = hasAnyAncestor(hasTestTag("church_schedule_card"))
-                compose.onNode(hasText(event.time) and withinCard).performScrollTo().assertIsDisplayed()
-                compose.onNode(hasText(event.title) and withinCard).performScrollTo().assertIsDisplayed()
+                compose.onNode(hasText(event.time, substring = true) and withinCard).performScrollTo().assertIsDisplayed()
+                compose.onNode(hasText(event.title, substring = true) and withinCard).performScrollTo().assertIsDisplayed()
             }
             compose.onNodeWithTag("church_service_time").performScrollTo().assertIsDisplayed()
             capture("$label-schedule-${if (offset == 0L) "today" else "tomorrow"}")

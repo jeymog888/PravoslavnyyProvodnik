@@ -245,7 +245,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                         if (featured != null) {
                             Text(featured.time, style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.testTag("church_service_time"))
-                            Text(featured.title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.testTag("church_service_title"))
+                            ArrivalServiceTitle(featured.title, "church_service")
                             Text(schedule.relation.orEmpty(), style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("church_service_relation"))
                             if (cachedPublication?.yearInferred == true && (schedule.saved || cachedPublication.sourceUrl == church.sourceUrl)) {
@@ -262,10 +262,12 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                 Text("Еще в этот день", style = MaterialTheme.typography.titleMedium)
                                 entries.filterNot { it == featured }.forEach { service ->
-                                    if (onOpenService != null) ArrivalAction(service.title, Icons.Default.Schedule, { onOpenService(service) }, subtitle = service.time)
+                                    if (onOpenService != null) ArrivalAction(serviceKindTitle(service.title) ?: service.title, Icons.Default.Schedule, { onOpenService(service) },
+                                        subtitle = serviceActionSubtitle(service.title, service.time))
                                     else Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                         Text(service.time, style = MaterialTheme.typography.labelLarge)
-                                        Text(service.title, style = MaterialTheme.typography.bodyLarge)
+                                        Text(serviceKindTitle(service.title) ?: service.title, style = MaterialTheme.typography.bodyLarge)
+                                        serviceSourceTitle(service.title)?.let { Text("В расписании храма: " + it, style = MaterialTheme.typography.bodyMedium) }
                                     }
                                 }
                             }

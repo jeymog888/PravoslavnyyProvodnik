@@ -113,7 +113,7 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                         if (featured != null) {
                             Text(featured.time, style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.testTag("today_service_time"))
-                            Text(featured.title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.testTag("today_service_title"))
+                            ArrivalServiceTitle(featured.title, "today_service")
                             Text(schedule?.relation.orEmpty(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.testTag("today_service_relation"))
                             if (inferredYear) {
@@ -129,8 +129,8 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                             }
                             schedule?.entries.orEmpty().filterNot { it == featured }.forEach { service ->
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                ArrivalAction(service.title, Icons.Default.Schedule, { open(service) },
-                                    subtitle = service.time + " · " + date.format(format))
+                                ArrivalAction(serviceKindTitle(service.title) ?: service.title, Icons.Default.Schedule, { open(service) },
+                                    subtitle = serviceActionSubtitle(service.title, service.time + " · " + date.format(format)))
                             }
                         } else {
                             Text(scheduleEmptyTitle(ownState, schedule?.publication != null || church.schedule.isNotEmpty()), style = MaterialTheme.typography.titleLarge,
