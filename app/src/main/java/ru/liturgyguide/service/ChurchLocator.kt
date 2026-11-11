@@ -10,61 +10,58 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import androidx.core.location.LocationManagerCompat
 
-/** A single foreground request. The caller decides whether an explicit user action should save the point. */
-class ChurchLocator(context: Context) {
-    private val appContext = context.applicationContext
-    private val manager = appContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+/** A foreground request, stopped by success, deadline or the screen's lifecycle. */
+class ChurchLocator(context: Context) : ChurchLocationSource {
+    private val request = ForegroundLocationRequest(AndroidLocationGateway(context.applicationContext))
+    override fun hasPermission(): Boolean = request.hasPermission()
+    override fun locateResult(maxAccuracyMeters: Float, maxLocationAgeMillis: Long,
+        onResult: (ForegroundLocationResult) -> Unit) = request.locateResult(maxAccuracyMeters, maxLocationAgeMillis, onResult)
+
+    // Preserve callers that pin a church or search only the local directory.
+    fun locate(maxAccuracyMeters: Float = 10_000f, maxLocationAgeMillis: Long = 120_000L,
+        onResult: (Location?, String?) -> Unit) = locateResult(maxAccuracyMeters, maxLocationAgeMillis) { result ->
+        when (result) {
+            is ForegroundLocationResult.Failed -> onResult(null, result.reason.message)
+            is ForegroundLocationResult.Located -> onResult(Location("feoria").apply {
+                latitude = result.fix.latitude; longitude = result.fix.longitude
+                result.fix.accuracyMeters?.let { accuracy = it }
+                elapsedRealtimeNanos = result.fix.elapsedRealtimeNanos
+            }, null)
+        }
+    }
+    override fun stop() = request.stop()
+}
+
+internal class AndroidLocationGateway(private val context: Context) : ForegroundLocationGateway {
+    private val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     private val handler = Handler(Looper.getMainLooper())
-    private var active: LocationListener? = null
-    private var deadline: Runnable? = null
-
-    @Suppress("DEPRECATION")
-    fun locate(maxAccuracyMeters: Float = 10_000f, maxLocationAgeMillis: Long = 120_000L, onResult: (Location?, String?) -> Unit) {
-        stop()
-        require(maxAccuracyMeters.isFinite() && maxAccuracyMeters in 1f..10_000f)
-        require(maxLocationAgeMillis in 0L..120_000L)
-        fun acceptable(location: Location): Boolean = location.hasAccuracy() && LocationFixPolicy.accepts(
-            location.latitude, location.longitude, location.accuracy, location.elapsedRealtimeNanos,
-            SystemClock.elapsedRealtimeNanos(), maxAccuracyMeters, maxLocationAgeMillis)
-        val fine = appContext.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        val coarse = appContext.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        if (!fine && !coarse) { onResult(null, "Разрешите доступ к местоположению или выберите храм вручную"); return }
-        val providers = runCatching {
-            listOf(LocationManager.NETWORK_PROVIDER, LocationManager.GPS_PROVIDER)
-                .filter { (it != LocationManager.GPS_PROVIDER || fine) && manager.isProviderEnabled(it) }
-        }.getOrElse { onResult(null, "Определение местоположения недоступно. Выберите храм вручную"); return }
-        if (providers.isEmpty()) { onResult(null, "На телефоне выключено определение местоположения. Можно выбрать храм вручную"); return }
+    override fun hasPermission(): Boolean =
+        context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+    override fun isLocationEnabled(): Boolean = LocationManagerCompat.isLocationEnabled(manager)
+    override fun providers(): List<String> = manager.allProviders
+    override fun isProviderEnabled(provider: String): Boolean = manager.isProviderEnabled(provider)
+    override fun lastKnown(provider: String): ForegroundLocationFix? = manager.getLastKnownLocation(provider)?.asFix()
+    override fun elapsedRealtimeNanos(): Long = SystemClock.elapsedRealtimeNanos()
+    override fun after(delayMillis: Long, action: () -> Unit): LocationCancellation {
+        val pending = Runnable(action)
+        check(handler.postDelayed(pending, delayMillis))
+        return LocationCancellation { handler.removeCallbacks(pending) }
+    }
+    override fun subscribe(provider: String, onFix: (ForegroundLocationFix) -> Unit): LocationCancellation {
         val listener = object : LocationListener {
-            override fun onLocationChanged(location: Location) {
-                if (active !== this) return
-                if (!acceptable(location)) return
-                stop()
-                onResult(location, null)
-            }
+            override fun onLocationChanged(location: Location) = onFix(location.asFix())
             override fun onProviderEnabled(provider: String) = Unit
             override fun onProviderDisabled(provider: String) = Unit
             @Deprecated("Legacy Android callback")
             override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
         }
-        try {
-            val cached = providers.mapNotNull { manager.getLastKnownLocation(it) }
-                .filter(::acceptable)
-                .minByOrNull { it.accuracy }
-            if (cached != null) { onResult(cached, null); return }
-            active = listener
-            providers.forEach { manager.requestSingleUpdate(it, listener, Looper.getMainLooper()) }
-            deadline = Runnable {
-                if (active === listener) { stop(); onResult(null, "Не удалось определить местоположение. Выберите храм вручную") }
-            }.also { handler.postDelayed(it, 20_000L) }
-        } catch (_: SecurityException) { stop(); onResult(null, "Доступ к местоположению недоступен. Выберите храм вручную") }
-        catch (_: IllegalArgumentException) { stop(); onResult(null, "Определение местоположения недоступно. Выберите храм вручную") }
+        // A rejected first fix must not consume a one-shot request.
+        try { manager.requestLocationUpdates(provider, 1_000L, 0f, listener, Looper.getMainLooper()) }
+        catch (failure: Exception) { runCatching { manager.removeUpdates(listener) }; throw failure }
+        return LocationCancellation { manager.removeUpdates(listener) }
     }
-
-    fun stop() {
-        deadline?.let(handler::removeCallbacks)
-        deadline = null
-        active?.let { listener -> runCatching { manager.removeUpdates(listener) } }
-        active = null
-    }
+    private fun Location.asFix() = ForegroundLocationFix(latitude, longitude, accuracy.takeIf { hasAccuracy() }, elapsedRealtimeNanos)
 }

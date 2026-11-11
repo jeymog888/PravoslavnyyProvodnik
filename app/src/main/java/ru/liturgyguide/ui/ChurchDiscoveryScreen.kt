@@ -1,8 +1,9 @@
 package ru.liturgyguide.ui
 
 import android.Manifest
-import android.content.pm.PackageManager
+import android.content.Intent
 import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -45,6 +46,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import ru.liturgyguide.service.ChurchLocator
+import ru.liturgyguide.service.ChurchLocationSource
+import ru.liturgyguide.service.ForegroundLocationResult
+import ru.liturgyguide.service.LocationFailure
 import ru.liturgyguide.service.ChurchSelectionResult
 import ru.liturgyguide.service.SavedChurchCodec
 import ru.liturgyguide.service.SavedChurchOrigin
@@ -65,6 +69,7 @@ enum class ChurchSearchMode { NAME, CITY }
 private class ChurchDiscoveryState(private val discovery: PlaceDiscovery, private val scope: CoroutineScope) {
     var busy by mutableStateOf<String?>(null); private set
     var message by mutableStateOf<String?>(null); private set
+    var locationFailure by mutableStateOf<LocationFailure?>(null); private set
     var cities by mutableStateOf<DiscoveryResult.Success<DiscoveryCity>?>(null); private set
     var churches by mutableStateOf<DiscoveryResult.Success<DiscoveredChurch>?>(null); private set
     var areaLabel by mutableStateOf(""); private set
@@ -81,6 +86,7 @@ private class ChurchDiscoveryState(private val discovery: PlaceDiscovery, privat
         generation++
         job?.cancel(); job = null; busy = null
         this.message = message
+        locationFailure = null
         if (clearResults) { cities = null; churches = null; areaLabel = ""; cityName = ""; approximateLocation = false; lastAttempt = null }
     }
     fun current(token: Int) = token == generation
@@ -89,10 +95,10 @@ private class ChurchDiscoveryState(private val discovery: PlaceDiscovery, privat
         busy = label; resultVersion++
         return generation
     }
-    fun beginLocation(): Int = begin("Определяем местоположение")
-    fun locationFailed(token: Int, explanation: String) {
+    fun beginLocation(onRetry: () -> Unit): Int = begin("Определяем местоположение").also { lastAttempt = onRetry }
+    fun locationFailed(token: Int, failure: LocationFailure) {
         if (!current(token)) return
-        busy = null; message = explanation; resultVersion++
+        busy = null; message = failure.message; locationFailure = failure; resultVersion++
     }
     fun invalidSelection() {
         message = "Не удалось открыть данные этого храма. Можно выбрать другой или добавить храм вручную"
@@ -165,12 +171,13 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
     mode: ChurchSearchMode, onModeChange: (ChurchSearchMode) -> Unit,
     savedChurches: List<Parish> = emptyList(),
     onSelectSaved: ((String, () -> Unit) -> ChurchSelectionResult)? = null,
-    favorites: Set<String> = emptySet(), onToggleFavorite: ((String) -> Unit)? = null) {
+    favorites: Set<String> = emptySet(), onToggleFavorite: ((String) -> Unit)? = null,
+    locationSource: ChurchLocationSource? = null) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val scope = rememberCoroutineScope()
     val state = remember(discovery, scope) { ChurchDiscoveryState(discovery, scope) }
-    val locator = remember(context) { ChurchLocator(context) }
+    val locator = remember(context, locationSource) { locationSource ?: ChurchLocator(context) }
     val focus = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
     val scroll = rememberLazyListState()
@@ -187,17 +194,21 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
     fun leave() { onSelectionCancelled(); cancelSearch(); onBack() }
     fun locate(token: Int) {
         if (!state.current(token)) return
-        locator.locate locationResult@{ location, error ->
+        locator.locateResult(maxAccuracyMeters = 5_000f) locationResult@{ result ->
             if (!state.current(token)) return@locationResult
-            when {
-                location == null -> state.locationFailed(token, error ?: "Не удалось определить место. Найдите храм по названию или добавьте вручную")
-                location.accuracy > 5_000f -> state.locationFailed(token,
-                    "Местоположение слишком приблизительное для поиска рядом. Найдите храм по названию или разрешите точное местоположение в настройках телефона")
-                else -> {
+            when (result) {
+                is ForegroundLocationResult.Failed -> state.locationFailed(token, result.reason)
+                is ForegroundLocationResult.Located -> {
+                    val location = result.fix
+                    val accuracy = location.accuracyMeters
+                    if (accuracy == null || !accuracy.isFinite() || accuracy <= 0f || accuracy > 5_000f) {
+                        state.locationFailed(token, LocationFailure.INACCURATE)
+                        return@locationResult
+                    }
                     nameFilter = ""
-                    val radius = maxOf(3_000, ceil(location.accuracy / 1_000.0).toInt() * 1_000).coerceAtMost(5_000)
+                    val radius = maxOf(3_000, ceil(accuracy / 1_000.0).toInt() * 1_000).coerceAtMost(5_000)
                     state.searchChurches(GeoPoint(location.latitude, location.longitude), "Рядом с вами", "", radius,
-                        approximate = location.accuracy > 500f)
+                        approximate = accuracy > 500f)
                 }
             }
         }
@@ -207,8 +218,14 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
         pendingPermission = null
         if (token != null && state.current(token)) {
             if (result.values.any { it }) locate(token)
-            else state.locationFailed(token, "Можно продолжить без геолокации: найдите храм по названию или добавьте вручную")
+            else state.locationFailed(token, LocationFailure.PERMISSION)
         }
+    }
+    fun startNearby() {
+        focus.clearFocus(); keyboard?.hide(); nameFilter = ""; pendingPermission = null; locator.stop()
+        val token = state.beginLocation(::startNearby)
+        if (locator.hasPermission()) locate(token)
+        else { pendingPermission = token; permission.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)) }
     }
     fun submitSearch() {
         if (query.trim().length < 2 || state.busy != null) return
@@ -235,6 +252,7 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
 
     if (adding) ModalBottomSheet(onDismissRequest = ::cancelImport,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        GuideSheetSystemBars()
         manualDraft.SaveableStateProvider("manual_church") {
             SavedChurchForm(onCancel = ::cancelImport, onSave = { record ->
                 onSave(record) { adding = false; manualDraft.removeState("manual_church"); onQueryChange("") }
@@ -248,7 +266,6 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
         LazyColumn(Modifier.fillMaxSize().padding(padding).navigationBarsPadding().imePadding().testTag("discovery_content"), state = scroll,
             contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item(key = "search_controls") {
-        GuideSheetSystemBars()
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(query, { value ->
                         if (value != query) { cancelSearch(clear = true); onQueryChange(value.take(DefaultPlaceDiscovery.MAX_QUERY_LENGTH)); nameFilter = "" }
@@ -270,12 +287,7 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                         Icon(Icons.Default.Search, null, Modifier.size(20.dp)); Spacer(Modifier.width(12.dp))
                         Text(if (mode == ChurchSearchMode.NAME) "Найти" else "Найти город")
                     }
-                    OutlinedButton(onClick = {
-                        focus.clearFocus(); keyboard?.hide(); nameFilter = ""; pendingPermission = null; locator.stop()
-                        val token = state.beginLocation()
-                        if (context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) locate(token)
-                        else { pendingPermission = token; permission.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)) }
-                    }, enabled = state.busy == null, shape = MaterialTheme.shapes.small,
+                    OutlinedButton(onClick = ::startNearby, enabled = state.busy == null, shape = MaterialTheme.shapes.small,
                         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("discovery_nearby")) {
                         Icon(Icons.Default.MyLocation, null, Modifier.size(20.dp)); Spacer(Modifier.width(12.dp)); Text("Рядом со мной")
                     }
@@ -294,6 +306,11 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                 Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.small) {
                     Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(message, modifier = Modifier.testTag("discovery_message"), style = MaterialTheme.typography.bodyMedium)
+                        if (state.locationFailure == LocationFailure.DISABLED) Button(onClick = {
+                            runCatching { context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)) }.onFailure {
+                                state.cancel("Не удалось открыть настройки телефона. Можно найти храм по названию")
+                            }
+                        }, modifier = Modifier.heightIn(min = 48.dp).testTag("discovery_location_settings")) { Text("Включить местоположение") }
                         if (state.canRetry) OutlinedButton(onClick = { state.retry() }, modifier = Modifier.heightIn(min = 48.dp).testTag("discovery_retry")) { Text("Повторить поиск") }
                     }
                 }
