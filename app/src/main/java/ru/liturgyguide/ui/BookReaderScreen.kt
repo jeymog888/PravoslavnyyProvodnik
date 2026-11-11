@@ -376,13 +376,12 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("book_saved"))
                             loadWarning?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
                             book.selectedEventTitle?.takeIf(String::isNotBlank)?.let {
-                                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("Праздник и памяти дня: $it", style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("book_selected_event"))
                             }
-                            if (mode == BookReadingMode.MEANING && book.calendarDay != null) {
-                                OutlinedButton(onClick = { playing = false; sheet = "calendar" },
-                                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_open_calendar")) {
-                                    Text("О церковном дне")
-                                }
+                            OutlinedButton(onClick = { playing = false; sheet = "calendar" },
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_open_calendar")) {
+                                Text("О дне и службе")
                             }
                         }
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -467,7 +466,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 }
                 loadWarning?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
             }
-            "calendar" -> book.calendarDay?.let { BookCalendarContent(it, onOpenUrl) }
+            "calendar" -> BookCalendarContent(book, onOpenUrl)
             "sources" -> LazyColumn(Modifier.heightIn(max = 600.dp), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 item {
                     Text("Состав книги", style = MaterialTheme.typography.headlineSmall)
@@ -481,9 +480,9 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                     }
                 }
                 items(book.notices) { Text(it, style = MaterialTheme.typography.bodyMedium) }
-                if (book.calendarDay != null) item {
+                item {
                     OutlinedButton(onClick = { sheet = "calendar" }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
-                        Text("О церковном дне")
+                        Text("О дне и службе")
                     }
                 }
                 items((listOf(BookSource(book.sourceTitle, book.sourceUrl)) + book.sources).distinctBy { it.url }) { source ->

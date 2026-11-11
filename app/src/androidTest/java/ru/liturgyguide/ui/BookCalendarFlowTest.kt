@@ -105,6 +105,8 @@ class BookCalendarFlowTest {
             calendarText("11 ноября 2026")
             calendarText(day.weekTitle)
             calendarText("Глас 6 - один из восьми напевов церковного круга")
+            calendarNode("book_calendar_commemorations").performClick()
+            calendarNode("book_calendar_expand_0").performClick()
             calendarText(day.commemorations.single().title)
             calendarText(description)
             val sourceButton = compose.onNodeWithTag("book_calendar").performScrollToNode(hasText("Открыть источник в Азбуке веры"))
@@ -142,6 +144,99 @@ class BookCalendarFlowTest {
             assertEquals(0, calendarRequests.get())
             assertEquals(book, FileBookCache(directory).readVersion(book.key, book.contentHash))
         }
+    }
+
+    @Test fun dayAndServiceOpenInEveryModeWithoutAssigningTheFirstCalendarSaintToTheService() {
+        val book = contextualBook()
+        val originalHash = book.contentHash
+        mounted.value = true
+        compose.setContent { GuideTheme(false) {
+            if (mounted.value) BookReaderScreen(book, parish, BookReadingStore(preferences), 0,
+                onBack = {}, onOpenUrl = {}, onChooseVersion = { fail("Context must not change the service") }, onSettings = {})
+        } }
+        settle()
+        for (mode in BookReadingMode.entries) {
+            selectMode(mode)
+            settle()
+            compose.onNodeWithTag("book_content").performScrollToNode(hasTestTag("book_open_calendar"))
+            compose.onNodeWithTag("book_selected_event").assertTextEquals("Праздник и памяти дня: ${book.selectedEventTitle}")
+            compose.onNodeWithTag("book_open_calendar").performScrollTo().assertIsDisplayed().performClick()
+            calendarNode("book_calendar_service_title").assertTextEquals("Литургия Иоанна Златоуста")
+            calendarNode("book_calendar_selected_event").assertTextEquals(requireNotNull(book.selectedEventTitle))
+            calendarNode("book_calendar_commemorations").assertIsDisplayed()
+            compose.onNodeWithTag("book_calendar_commemoration_0").assertDoesNotExist()
+            compose.onAllNodesWithText("Тертий Иконийский").assertCountEquals(0)
+            pressBack()
+            settle()
+            assertEquals(mode, saved().mode)
+            assertEquals(book.key, saved().key)
+            assertEquals(originalHash, saved().contentHash)
+        }
+    }
+
+    @Test fun calendarDescriptionsAreCollapsedAndOnlyTheExplicitlyChosenEntryOpensAtLargeFont() {
+        val book = contextualBook()
+        withCompactNativeDisplay {
+            mounted.value = true
+            compose.setContent { GuideTheme(false) {
+                if (mounted.value) BookCalendarContent(book, onOpenUrl = {})
+            } }
+            calendarNode("book_calendar_selected_event").assertTextEquals(requireNotNull(book.selectedEventTitle))
+            compose.onNodeWithTag("book_calendar_commemoration_0").assertDoesNotExist()
+            calendarNode("book_calendar_commemorations").assertTextEquals("Памяти дня (12)").performClick()
+            calendarNode("book_calendar_expand_0").performClick()
+            calendarText("Описание Тертия из тестового календаря")
+            compose.onNodeWithTag("book_calendar_description_1").assertDoesNotExist()
+            calendarNode("book_calendar_expand_1").performClick()
+            calendarText("Описание Марка из тестового календаря")
+            compose.onNodeWithTag("book_calendar_description_0").assertDoesNotExist()
+            calendarNode("book_calendar_commemoration_2").assertIsDisplayed()
+            compose.onNodeWithTag("book_calendar_expand_2").assertDoesNotExist()
+            compose.onNodeWithTag("book_calendar_description_2").assertDoesNotExist()
+            calendarNode("book_calendar_commemorations").performClick()
+            compose.onNodeWithTag("book_calendar_commemoration_0").assertDoesNotExist()
+            compose.onNodeWithTag("book_calendar_description_1").assertDoesNotExist()
+        }
+    }
+
+    @Test fun eveningBookWithoutCalendarStillExplainsTheServiceUsingItsOwnDateAndSource() {
+        val original = contextualBook()
+        val key = original.key.copy(worship = WorshipKind.VESPERS)
+        val changed = original.copy(key = key, title = "Вечерня", calendarDay = null, sourceUrl = key.sourceUrl(), contentHash = "")
+        val book = changed.copy(contentHash = ServiceBookIntegrity.contentHash(changed))
+        val opened = mutableListOf<String>()
+        mounted.value = true
+        compose.setContent { GuideTheme(false) {
+            if (mounted.value) BookCalendarContent(book, onOpenUrl = { opened += it })
+        } }
+        calendarNode("book_calendar_date").assertTextEquals("12 ноября 2026")
+        calendarNode("book_calendar_service_title").assertTextEquals("Вечерня")
+        calendarNode("book_calendar_selected_event").assertTextEquals(requireNotNull(book.selectedEventTitle))
+        compose.onNodeWithTag("book_calendar_commemorations").assertDoesNotExist()
+        compose.onAllNodesWithText("Тертий Иконийский").assertCountEquals(0)
+        calendarNode("book_calendar_source").assertTextEquals("Открыть последование в Азбуке веры").performClick()
+        compose.runOnIdle { assertEquals(listOf(book.sourceUrl), opened) }
+    }
+
+    private fun calendarNode(tag: String): SemanticsNodeInteraction {
+        compose.onNodeWithTag("book_calendar").performScrollToNode(hasTestTag(tag))
+        return compose.onNodeWithTag(tag).performScrollTo().assertIsDisplayed()
+    }
+
+    private fun contextualBook(): ServiceBook {
+        val date = "2026-11-12"
+        val source = "https://azbyka.ru/days/$date"
+        // An intentionally different first calendar entry catches accidental 'primary'
+        // inference. churchType is a source parameter, never a saint's identity.
+        val key = ServiceBookKey(date, churchType = "34")
+        val day = BookCalendarDay(date, "Седмица 24-я по Пятидесятнице", 6,
+            listOf(BookCommemoration("Тертий Иконийский", "Описание Тертия из тестового календаря", source),
+                BookCommemoration("Марк Аполлониадский", "Описание Марка из тестового календаря", source),
+                BookCommemoration("Священномученик Зиновий и мученица Зиновия", null, source)) +
+                (4..12).map { BookCommemoration("Память из тестового календаря $it", "Описание $it", source) }, source)
+        val changed = fixture().copy(key = key, title = "Литургия Иоанна Златоуста", sourceUrl = key.sourceUrl(),
+            selectedEventTitle = "Священномученик Зиновий и мученица Зиновия", calendarDay = day, contentHash = "")
+        return changed.copy(contentHash = ServiceBookIntegrity.contentHash(changed))
     }
 
     private fun selectMode(mode: BookReadingMode) {
