@@ -39,7 +39,10 @@ data class InternetScheduleState(
     val configuredWebsite: String = "", val customSource: String = "",
     val siteEvidenceUrl: String = "",
     // A cancellation or conflicting building invalidated old data; this does not assert all services were cancelled.
-    val publicationRejected: Boolean = false
+    val publicationRejected: Boolean = false,
+    // A partial withdrawal can coexist with valid events. Keep its source authoritative
+    // across failed refreshes instead of reviving cancelled events from another website.
+    val sourceHasWithdrawals: Boolean = false
 )
 
 interface ScheduleCacheStore {
@@ -91,18 +94,31 @@ class InternetScheduleRepository(
         val configured = ScheduleUrl.publicSource(parish.website).orEmpty()
         val custom = sourceOverride?.let(ScheduleUrl::publicSource) ?: previous.customSource
         val changedSource = sourceOverride != null && custom != previous.customSource
-        var website = custom.takeIf(String::isNotBlank) ?: configured.takeIf(String::isNotBlank) ?: previous.website
+        // Cache validation already requires the configured source to be unchanged. Reuse a
+        // confirmed resolved source instead of retrying the same obsolete configured URL.
+        // A withdrawal has no publication, but its source must still be retried: returning to
+        // the old configured page could resurrect events that the new source cancelled.
+        val resolved = previous.website.takeIf { it.isNotBlank() && custom.isBlank() && previous.siteEvidenceUrl.isNotBlank() &&
+            (previous.publication?.website == it || previous.publicationRejected) }
+        var website = custom.takeIf(String::isNotBlank) ?: resolved ?: configured.takeIf(String::isNotBlank) ?: previous.website
         var source = website
-        var evidence = previous.siteEvidenceUrl
+        var evidence = previous.siteEvidenceUrl.takeUnless { changedSource }.orEmpty()
         var status = InternetScheduleStatus.UNAVAILABLE
         var publication: SchedulePublication? = null
         var rejectedPublication = false
+        var sourceHasWithdrawals = previous.sourceHasWithdrawals && !changedSource
         fun phase(value: ScheduleImportPhase) { importProgress.value = ScheduleImportProgress(parish.id, value) }
+        fun accept(attempt: SourceAttempt, siteEvidence: String) {
+            website = attempt.website; source = attempt.sourceUrl; evidence = siteEvidence
+            publication = attempt.publication; status = attempt.status
+            rejectedPublication = attempt.rejected || attempt.hasWithdrawal
+            if (attempt.hasWithdrawal || attempt.publication != null) sourceHasWithdrawals = attempt.hasWithdrawal
+        }
         try {
             val completed = withTimeoutOrNull(180_000) {
                 if (website.isBlank()) {
                     phase(ScheduleImportPhase.FINDING_SITE)
-                    val site = siteResolver.resolve(parish)
+                    val site = lookup(parish, emptySet())
                     website = site?.url.orEmpty()
                     evidence = site?.evidenceUrl.orEmpty()
                 }
@@ -111,105 +127,30 @@ class InternetScheduleRepository(
                     status = InternetScheduleStatus.NO_WEBSITE
                     return@withTimeoutOrNull true
                 }
-                val pending = ArrayDeque<ScheduleDocumentLink>()
-                pending += ScheduleDocumentLink(website, "", false)
-                val visited = mutableSetOf<String>()
-                var htmlPages = 0
-                var documents = 0
-                var anyResponse = false
-                var bestEvents = emptyList<InternetService>()
-                var bestFormat = "html"
-                var bestLinkedFrom = ""
-                var bestDedicated = false
-                var bestYearInferred = false
-                var previousImage: ScheduleDocument? = null
-                var previousImageParent = ""
-                val withdrawnDates = mutableSetOf<String>()
-                val withdrawnStarts = mutableSetOf<String>()
-                fun retained(values: List<InternetService>) = values.filterNot {
-                    it.date in withdrawnDates || "${it.date}T${it.time}" in withdrawnStarts
+                val primaryEvidence = evidence
+                val primary = importSource(parish, website, date, now) { checkedWebsite, checkedSource, withdrawal ->
+                    rejectedPublication = true; website = checkedWebsite; source = checkedSource
+                    if (withdrawal) sourceHasWithdrawals = true
                 }
-                while (pending.isNotEmpty()) {
-                    currentCoroutineContext().ensureActive()
-                    val next = pending.removeFirst()
-                    if (!visited.add(next.url)) continue
-                    if (next.document && documents >= 3 || !next.document && htmlPages >= 3) continue
-                    if (next.document) documents++ else htmlPages++
-                    phase(if (next.document) ScheduleImportPhase.READING_DOCUMENT else ScheduleImportPhase.LOADING_PAGE)
-                    val response = try { transport.fetch(next.url) }
-                    catch (cancelled: CancellationException) { throw cancelled }
-                    catch (_: Exception) { previousImage = null; previousImageParent = ""; continue }
-                    anyResponse = true
-                    val html = response.html()
-                    if (html != null) { previousImage = null; previousImageParent = "" }
-                    // External hosts are authorized only for a directly linked PDF/image. A
-                    // filename ending in .pdf cannot turn a foreign HTML page into this parish.
-                    if (html != null && !ScheduleDocumentLinks.sameSite(website, response.url)) continue
-                    if (visited.size == 1 && html != null) website = response.url
-                    val format: String
-                    val parsed: ScheduleParseResult
-                    var publicationSource = response.url
-                    if (html != null) {
-                        val existing = ScheduleHtmlParser.inspect(html, date, parish)
-                        parsed = if (existing.disposition != ScheduleParseDisposition.UNSUPPORTED) existing else
-                            ScheduleDocumentParser.inspect(HtmlScheduleDocumentExtractor.fromHtml(html), date, parish)
-                        format = "html"
-                        ScheduleDocumentLinks.find(html).filter { it.url !in visited }.forEach(pending::addLast)
-                    } else {
-                        phase(ScheduleImportPhase.READING_DOCUMENT)
-                        val document = try { documentExtractor.extract(response) }
-                        catch (cancelled: CancellationException) { throw cancelled }
-                        catch (_: Exception) { null }
-                        val continuation = document?.takeIf { next.linkedFrom.isNotBlank() && next.linkedFrom == previousImageParent }
-                            ?.let { current -> previousImage?.let { previous ->
-                                ScheduleImageContinuation.join(previous, current, next.linkedFrom, parish)
-                            } }
-                        val selectedDocument = continuation ?: document
-                        previousImage = selectedDocument?.takeIf { it.format == "image" }
-                        previousImageParent = next.linkedFrom.takeIf { previousImage != null }.orEmpty()
-                        if (continuation != null) publicationSource = continuation.sourceUrl
-                        parsed = selectedDocument?.let { ScheduleDocumentParser.inspect(it, date, parish) }
-                            ?: ScheduleParseResult(ScheduleParseDisposition.UNSUPPORTED)
-                        format = selectedDocument?.format ?: "unknown"
+                accept(primary, primaryEvidence)
+                // Neither a manual source nor an explicit rejection/withdrawal is a reason to
+                // shop for a different answer. This also protects persisted prior rejections.
+                if (primary.publication == null && custom.isBlank() && !previous.publicationRejected && !sourceHasWithdrawals &&
+                    !primary.rejected && !primary.hasWithdrawal) {
+                    phase(ScheduleImportPhase.FINDING_SITE)
+                    val alternative = lookup(parish, primary.attemptedUrls + configured)
+                    if (alternative != null) {
+                        val next = importSource(parish, alternative.url, date, now) { checkedWebsite, checkedSource, withdrawal ->
+                            // A different building at a new candidate cannot invalidate an
+                            // older accepted source. Actual withdrawals of this parish can.
+                            if (withdrawal) {
+                                rejectedPublication = true; website = checkedWebsite; source = checkedSource
+                                evidence = alternative.evidenceUrl
+                                sourceHasWithdrawals = true
+                            }
+                        }
+                        if (next.publication != null || next.hasWithdrawal) accept(next, alternative.evidenceUrl)
                     }
-                    withdrawnDates += parsed.withdrawnDates
-                    withdrawnStarts += parsed.withdrawnStarts
-                    bestEvents = retained(bestEvents)
-                    if (parsed.disposition == ScheduleParseDisposition.REJECTED) {
-                        rejectedPublication = true
-                        if (bestEvents.isEmpty()) source = publicationSource
-                    }
-                    if (parsed.withdrawsAll) {
-                        // Only a truly unscoped withdrawal stops the lookup. A cancelled day must
-                        // not hide another day's schedule on a linked page.
-                        bestEvents = emptyList(); source = publicationSource
-                        break
-                    }
-                    val events = retained(parsed.events)
-                    val dedicated = next.linkedFrom.isNotBlank() || next.document ||
-                        Regex("(?iu)(schedule|raspisan|расписан)").containsMatchIn(response.url)
-                    fun nearest(values: List<InternetService>) = values.filter { it.date >= date.toString() }
-                        .minOfOrNull { "${it.date}T${it.time}" }
-                    val candidateNext = nearest(events)
-                    val bestNext = nearest(bestEvents)
-                    val prefer = bestEvents.isEmpty() || when {
-                        candidateNext != null && bestNext == null -> true
-                        candidateNext == null && bestNext != null -> false
-                        parsed.yearInferred != bestYearInferred -> !parsed.yearInferred
-                        candidateNext != bestNext -> requireNotNull(candidateNext) < requireNotNull(bestNext)
-                        dedicated != bestDedicated -> dedicated
-                        else -> events.size > bestEvents.size
-                    }
-                    if (events.isNotEmpty() && prefer) {
-                        bestEvents = events; source = publicationSource; bestFormat = format; bestLinkedFrom = next.linkedFrom; bestDedicated = dedicated
-                        bestYearInferred = parsed.yearInferred
-                    }
-                }
-                if (bestEvents.isEmpty()) status = if (anyResponse) InternetScheduleStatus.UNSUPPORTED else InternetScheduleStatus.UNAVAILABLE
-                else {
-                    publication = SchedulePublication(parish.id, parish.timezone, website, source, now.toString(), bestEvents,
-                        documentFormat = bestFormat, linkedFrom = bestLinkedFrom, yearInferred = bestYearInferred)
-                    status = InternetScheduleStatus.READY
                 }
                 true
             }
@@ -218,17 +159,158 @@ class InternetScheduleRepository(
         catch (_: Exception) { status = InternetScheduleStatus.UNAVAILABLE }
         finally { phase(ScheduleImportPhase.FINISHED) }
         currentCoroutineContext().ensureActive()
-        // Failed refresh preserves usable data or a rejection. An explicit new source starts a new binding.
         val rejection = publication == null && (rejectedPublication || (!changedSource && previous.publicationRejected))
         val retainedPublication = publication ?: previous.publication.takeUnless { changedSource || rejectedPublication }
-        // Keep the accepted document binding on failure too. Resetting sourceUrl to the
-        // attempted homepage makes the reader reject a preserved child-page/image cache.
+        // A failed alternative must preserve every part of the accepted binding, not attach
+        // a new homepage/evidence to cached events from a different source.
+        if (publication == null && retainedPublication != null) {
+            website = retainedPublication.website; source = retainedPublication.sourceUrl
+            evidence = previous.siteEvidenceUrl
+        }
         val result = InternetScheduleState(parish.id, status, website, retainedPublication?.sourceUrl ?: source, now.toString(),
             retainedPublication, configuredWebsite = configured,
-            customSource = custom, siteEvidenceUrl = evidence, publicationRejected = rejection)
+            customSource = custom, siteEvidenceUrl = evidence, publicationRejected = rejection,
+            sourceHasWithdrawals = sourceHasWithdrawals)
         runCatching { cache.write(parish.id, ScheduleCacheCodec.encode(result)) }
         result
     }
+
+    private data class SourceAttempt(val website: String, val sourceUrl: String,
+        val status: InternetScheduleStatus, val publication: SchedulePublication?, val attemptedUrls: Set<String>,
+        val rejected: Boolean, val hasWithdrawal: Boolean)
+
+    private suspend fun lookup(parish: Parish, excludedUrls: Set<String>): ScheduleSite? = try {
+        val excluded = ScheduleSourceExclusions(excludedUrls)
+        siteResolver.resolve(parish, excludedUrls)?.let { site ->
+            val url = ScheduleUrl.publicSource(site.url)
+            val evidence = ScheduleUrl.publicSource(site.evidenceUrl)
+            if (url == null || evidence == null || excluded.contains(url)) null
+            else site.copy(url = url, evidenceUrl = evidence)
+        }
+    } catch (cancelled: CancellationException) { throw cancelled }
+    catch (_: Exception) { null }
+
+    /** Each attempt has the same small crawl budget; refresh owns the single shared deadline. */
+    private suspend fun importSource(parish: Parish, root: String, date: LocalDate, now: Instant,
+        onSafety: (website: String, sourceUrl: String, withdrawal: Boolean) -> Unit): SourceAttempt {
+        var website = root
+        var source = root
+        var rejectedPublication = false
+        var hasWithdrawal = false
+        fun phase(value: ScheduleImportPhase) { importProgress.value = ScheduleImportProgress(parish.id, value) }
+        val pending = ArrayDeque<ScheduleDocumentLink>()
+        pending += ScheduleDocumentLink(website, "", false)
+        val visited = mutableSetOf<String>()
+        val attempted = mutableSetOf<String>()
+        var htmlPages = 0
+        var documents = 0
+        var anyResponse = false
+        var bestEvents = emptyList<InternetService>()
+        var bestFormat = "html"
+        var bestLinkedFrom = ""
+        var bestDedicated = false
+        var bestYearInferred = false
+        var previousImage: ScheduleDocument? = null
+        var previousImageParent = ""
+        val withdrawnDates = mutableSetOf<String>()
+        val withdrawnStarts = mutableSetOf<String>()
+        fun retained(values: List<InternetService>) = values.filterNot {
+            it.date in withdrawnDates || "${it.date}T${it.time}" in withdrawnStarts
+        }
+        while (pending.isNotEmpty()) {
+            currentCoroutineContext().ensureActive()
+            val next = pending.removeFirst()
+            if (!visited.add(next.url)) continue
+            if (next.document && documents >= 3 || !next.document && htmlPages >= 3) continue
+            if (next.document) documents++ else htmlPages++
+            phase(if (next.document) ScheduleImportPhase.READING_DOCUMENT else ScheduleImportPhase.LOADING_PAGE)
+            attempted += next.url
+            val response = try { transport.fetch(next.url) }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { previousImage = null; previousImageParent = ""; continue }
+            attempted += response.url
+            anyResponse = true
+            val html = response.html()
+            if (html != null) { previousImage = null; previousImageParent = "" }
+            // External hosts are authorized only for a directly linked PDF/image. A
+            // filename ending in .pdf cannot turn a foreign HTML page into this parish.
+            if (html != null && !ScheduleDocumentLinks.sameSite(website, response.url)) continue
+            if (visited.size == 1 && html != null) website = response.url
+            val format: String
+            val parsed: ScheduleParseResult
+            var publicationSource = response.url
+            if (html != null) {
+                val existing = ScheduleHtmlParser.inspect(html, date, parish)
+                parsed = if (existing.disposition != ScheduleParseDisposition.UNSUPPORTED) existing else
+                    ScheduleDocumentParser.inspect(HtmlScheduleDocumentExtractor.fromHtml(html), date, parish)
+                format = "html"
+                ScheduleDocumentLinks.find(html).filter { it.url !in visited }.forEach(pending::addLast)
+            } else {
+                phase(ScheduleImportPhase.READING_DOCUMENT)
+                val document = try { documentExtractor.extract(response) }
+                catch (cancelled: CancellationException) { throw cancelled }
+                catch (_: Exception) { null }
+                val continuation = document?.takeIf { next.linkedFrom.isNotBlank() && next.linkedFrom == previousImageParent }
+                    ?.let { current -> previousImage?.let { previous ->
+                        ScheduleImageContinuation.join(previous, current, next.linkedFrom, parish)
+                    } }
+                val selectedDocument = continuation ?: document
+                previousImage = selectedDocument?.takeIf { it.format == "image" }
+                previousImageParent = next.linkedFrom.takeIf { previousImage != null }.orEmpty()
+                if (continuation != null) publicationSource = continuation.sourceUrl
+                parsed = selectedDocument?.let { ScheduleDocumentParser.inspect(it, date, parish) }
+                    ?: ScheduleParseResult(ScheduleParseDisposition.UNSUPPORTED)
+                format = selectedDocument?.format ?: "unknown"
+            }
+            val withdraws = parsed.withdrawsAll || parsed.withdrawnDates.isNotEmpty() || parsed.withdrawnStarts.isNotEmpty()
+            hasWithdrawal = hasWithdrawal || withdraws
+            if (parsed.disposition == ScheduleParseDisposition.REJECTED || withdraws) {
+                // Report safety evidence immediately: a later timeout must not restore an
+                // earlier cached service after this attempt already observed its withdrawal.
+                onSafety(website, publicationSource, withdraws)
+            }
+            withdrawnDates += parsed.withdrawnDates
+            withdrawnStarts += parsed.withdrawnStarts
+            bestEvents = retained(bestEvents)
+            if (parsed.disposition == ScheduleParseDisposition.REJECTED) {
+                rejectedPublication = true
+                if (bestEvents.isEmpty()) source = publicationSource
+            }
+            if (parsed.withdrawsAll) {
+                // Only a truly unscoped withdrawal stops the lookup. A cancelled day must
+                // not hide another day's schedule on a linked page.
+                bestEvents = emptyList(); source = publicationSource
+                break
+            }
+            val events = retained(parsed.events)
+            val dedicated = next.linkedFrom.isNotBlank() || next.document ||
+                Regex("(?iu)(schedule|raspisan|расписан)").containsMatchIn(response.url)
+            fun nearest(values: List<InternetService>) = values.filter { it.date >= date.toString() }
+                .minOfOrNull { "${it.date}T${it.time}" }
+            val candidateNext = nearest(events)
+            val bestNext = nearest(bestEvents)
+            val prefer = bestEvents.isEmpty() || when {
+                candidateNext != null && bestNext == null -> true
+                candidateNext == null && bestNext != null -> false
+                parsed.yearInferred != bestYearInferred -> !parsed.yearInferred
+                candidateNext != bestNext -> requireNotNull(candidateNext) < requireNotNull(bestNext)
+                dedicated != bestDedicated -> dedicated
+                else -> events.size > bestEvents.size
+            }
+            if (events.isNotEmpty() && prefer) {
+                bestEvents = events; source = publicationSource; bestFormat = format; bestLinkedFrom = next.linkedFrom; bestDedicated = dedicated
+                bestYearInferred = parsed.yearInferred
+            }
+        }
+        val publication = bestEvents.takeIf { it.isNotEmpty() }?.let {
+            SchedulePublication(parish.id, parish.timezone, website, source, now.toString(), it,
+                documentFormat = bestFormat, linkedFrom = bestLinkedFrom, yearInferred = bestYearInferred)
+        }
+        val status = if (publication != null) InternetScheduleStatus.READY else
+            if (anyResponse) InternetScheduleStatus.UNSUPPORTED else InternetScheduleStatus.UNAVAILABLE
+        return SourceAttempt(website, source, status, publication, attempted, rejectedPublication, hasWithdrawal)
+    }
+
 }
 
 /** Validated cache, including binding and age. Gson constructor bypass must not admit malformed data. */
@@ -247,6 +329,11 @@ internal object ScheduleCacheCodec {
         val checked = field("checkedAt").also { Instant.parse(it) }
         val evidence = field("siteEvidenceUrl").also { require(it.isEmpty() || ScheduleUrl.publicSource(it) == it) }
         val rejected = root.get("publicationRejected")?.takeUnless { it.isJsonNull }?.asBoolean ?: false
+        val sourceHasWithdrawals = root.get("sourceHasWithdrawals")?.takeUnless { it.isJsonNull }?.let { flag ->
+            require(flag.isJsonPrimitive && flag.asJsonPrimitive.isBoolean)
+            require(!flag.asBoolean || website.isNotBlank())
+            flag.asBoolean
+        } ?: false
         val publication = root.get("publication")?.takeUnless { it.isJsonNull }?.asJsonObject?.let { value ->
             fun part(key: String) = value.get(key)?.takeUnless { it.isJsonNull }?.asString.orEmpty()
             require(part("parishId") == parish.id && part("timezone") == parish.timezone)
@@ -279,7 +366,8 @@ internal object ScheduleCacheCodec {
         }
         require(!rejected || publication == null)
         InternetScheduleState(parish.id, InternetScheduleStatus.valueOf(field("status")), website, source, checked, publication,
-            configuredWebsite = configured, customSource = custom, siteEvidenceUrl = evidence, publicationRejected = rejected)
+            configuredWebsite = configured, customSource = custom, siteEvidenceUrl = evidence, publicationRejected = rejected,
+            sourceHasWithdrawals = sourceHasWithdrawals)
     }.getOrNull()
 }
 

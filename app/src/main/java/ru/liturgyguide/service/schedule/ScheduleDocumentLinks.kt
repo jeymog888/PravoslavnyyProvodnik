@@ -30,6 +30,14 @@ object ScheduleDocumentLinks {
         // Navigation often contains the only schedule link; retain anchors there, but not images.
         page.select("a[href]").take(500).forEach { anchor ->
             val url = ScheduleUrl.publicSource(anchor.absUrl("href")) ?: return@forEach
+            // WordPress sharing buttons repeat the schedule pathname but perform a share
+            // action. Require both explicit button metadata and its action parameter; normal
+            // date/page queries and public share-token document links remain eligible.
+            val sharingButton = anchor.hasAttr("data-shared") || anchor.classNames().any { it.startsWith("share-") }
+            val sharingAction = url.substringAfter('?', "").split('&').any {
+                decoded(it.substringBefore('=')).equals("share", ignoreCase = true)
+            }
+            if (sharingButton && sharingAction) return@forEach
             val label = anchor.text() + " " + decoded(anchor.attr("href"))
             val binary = extension.containsMatchIn(url)
             if (!schedule.containsMatchIn(label) && !(binary && schedulePage && url in contentLinks)) return@forEach

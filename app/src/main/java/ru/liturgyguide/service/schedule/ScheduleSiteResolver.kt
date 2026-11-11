@@ -9,12 +9,19 @@ import java.util.Locale
 import kotlin.math.*
 
 data class ScheduleSite(val url: String, val evidenceUrl: String, val matchedName: String)
-fun interface ScheduleSiteResolver { suspend fun resolve(parish: Parish): ScheduleSite? }
+fun interface ScheduleSiteResolver {
+    suspend fun resolve(parish: Parish): ScheduleSite?
+    suspend fun resolve(parish: Parish, excludedUrls: Set<String>): ScheduleSite? =
+        resolve(parish)?.takeUnless { ScheduleSourceExclusions(excludedUrls).contains(it.url) }
+}
 
 /** Exact OSM identity first, then an identified encyclopedia entity, never the first search hit. */
 class OpenScheduleSiteResolver(private val transport: ScheduleTransport) : ScheduleSiteResolver {
-    override suspend fun resolve(parish: Parish): ScheduleSite? {
-        ScheduleUrl.publicSource(parish.website)?.let { return ScheduleSite(it, parish.sourceUrl, parish.name) }
+    override suspend fun resolve(parish: Parish): ScheduleSite? = resolve(parish, emptySet())
+
+    override suspend fun resolve(parish: Parish, excludedUrls: Set<String>): ScheduleSite? {
+        val excluded = ScheduleSourceExclusions(excludedUrls)
+        ScheduleUrl.publicSource(parish.website)?.takeUnless(excluded::contains)?.let { return ScheduleSite(it, parish.sourceUrl, parish.name) }
         var tags: JsonObject? = null
         val osm = Regex("^osm:(node|way|relation):([1-9][0-9]{0,18})$").matchEntire(parish.id)
         if (osm != null) {
@@ -25,19 +32,19 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport) : Sched
                 value?.get("type")?.asString == osm.groupValues[1] && value.get("id")?.asString == osm.groupValues[2]
             }?.asJsonObject?.getAsJsonObject("tags")
             listOf("website", "contact:website").firstNotNullOfOrNull { key ->
-                tags?.string(key)?.let(ScheduleUrl::publicSource)
+                tags?.string(key)?.let(ScheduleUrl::publicSource)?.takeUnless(excluded::contains)
             }?.let { return ScheduleSite(it, url, tags?.string("name") ?: parish.name) }
         }
         // These links belong to the exact selected map object and need no broad search inference.
         tags?.string("wikidata")?.takeIf { Regex("Q[1-9][0-9]{0,12}").matches(it) }?.let { id ->
-            fromWikidata(id, parish.name)?.let { return it }
+            fromWikidata(id, parish.name, excluded)?.let { return it }
         }
         tags?.string("wikipedia")?.takeIf { it.startsWith("ru:") }?.substringAfter(':')?.let { title ->
             val api = "https://ru.wikipedia.org/w/api.php?action=query&format=json&prop=pageprops&titles=${encode(title)}"
             pages(json(api)).firstNotNullOfOrNull { it.getAsJsonObject("pageprops")?.string("wikibase_item") }
-                ?.let { id -> fromWikidata(id, title)?.let { return it } }
+                ?.let { id -> fromWikidata(id, title, excluded)?.let { return it } }
         }
-        PalomnikScheduleSiteResolver(transport).resolve(parish)?.let { return it }
+        PalomnikScheduleSiteResolver(transport).resolve(parish, excludedUrls)?.let { return it }
         val latitude = parish.latitude ?: return null
         val longitude = parish.longitude ?: return null
         val distinctive = nameTokens(parish.name)
@@ -57,11 +64,13 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport) : Sched
         }.sortedBy { it.third }
         // Near-identical nearby names are ambiguous; do not select one by search ranking.
         if (candidates.size > 1 && candidates[1].third - candidates[0].third < 150) return null
-        for (candidate in candidates.take(2)) fromWikidata(candidate.first, candidate.second)?.let { return it }
-        return null
+        // Select the building before excluding endpoints. A failed website cannot turn a
+        // farther namesake into the selected church merely because its website responds.
+        val candidate = candidates.firstOrNull() ?: return null
+        return fromWikidata(candidate.first, candidate.second, excluded)
     }
 
-    private suspend fun fromWikidata(id: String, title: String): ScheduleSite? {
+    private suspend fun fromWikidata(id: String, title: String, excluded: ScheduleSourceExclusions): ScheduleSite? {
         if (!Regex("Q[1-9][0-9]{0,12}").matches(id)) return null
         val url = "https://www.wikidata.org/wiki/Special:EntityData/$id.json"
         val claims = json(url)?.getAsJsonObject("entities")?.getAsJsonObject(id)?.getAsJsonObject("claims")
@@ -72,7 +81,7 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport) : Sched
         val sites = active.mapNotNull { claim ->
             claim.getAsJsonObject("mainsnak")?.getAsJsonObject("datavalue")?.string("value")?.let(ScheduleUrl::publicSource)
         }.distinct()
-        val chosen = sites.firstOrNull() ?: return null
+        val chosen = sites.firstOrNull { !excluded.contains(it) } ?: return null
         return ScheduleSite(chosen, "https://www.wikidata.org/wiki/$id", title)
     }
 

@@ -10,12 +10,14 @@ import java.util.Locale
 
 /** Public catalog discovery only: no domain guessing, HTML navigation scraping or redirect relaxation. */
 internal class PalomnikScheduleSiteResolver(private val transport: ScheduleTransport) : ScheduleSiteResolver {
-    override suspend fun resolve(parish: Parish): ScheduleSite? = try {
-        resolveSafely(parish)
+    override suspend fun resolve(parish: Parish): ScheduleSite? = resolve(parish, emptySet())
+
+    override suspend fun resolve(parish: Parish, excludedUrls: Set<String>): ScheduleSite? = try {
+        resolveSafely(parish, ScheduleSourceExclusions(excludedUrls))
     } catch (cancelled: CancellationException) { throw cancelled }
     catch (_: Exception) { null }
 
-    private suspend fun resolveSafely(parish: Parish): ScheduleSite? {
+    private suspend fun resolveSafely(parish: Parish, excluded: ScheduleSourceExclusions): ScheduleSite? {
         val city = parish.city.trim().takeIf { it.length in 2..100 } ?: return null
         val latitude = parish.latitude?.takeIf { it.isFinite() && it in -90.0..90.0 } ?: return null
         val longitude = parish.longitude?.takeIf { it.isFinite() && it in -180.0..180.0 } ?: return null
@@ -52,7 +54,7 @@ internal class PalomnikScheduleSiteResolver(private val transport: ScheduleTrans
             if (page.string("pageid") != id || page.string("title") != candidates[id]) return null
             val revision = page.getAsJsonArray("revisions")?.singleOrNull()?.takeIf { it.isJsonObject }?.asJsonObject ?: return null
             val content = revision.getAsJsonObject("slots")?.getAsJsonObject("main")?.string("*") ?: return null
-            val source = sourceFor(parish, candidates.getValue(id), content, latitude, longitude) ?: continue
+            val source = sourceFor(parish, candidates.getValue(id), content, latitude, longitude, excluded) ?: continue
             matched += source.url?.let { ScheduleSite(it, "https://azbyka.ru/palomnik/index.php?curid=$id", candidates.getValue(id)) }
         }
         return matched.singleOrNull()
@@ -67,7 +69,7 @@ internal class PalomnikScheduleSiteResolver(private val transport: ScheduleTrans
 
     private data class MatchingIdentity(val url: String?)
 
-    private fun sourceFor(parish: Parish, title: String, text: String, latitude: Double, longitude: Double): MatchingIdentity? {
+    private fun sourceFor(parish: Parish, title: String, text: String, latitude: Double, longitude: Double, excluded: ScheduleSourceExclusions): MatchingIdentity? {
         if (text.length > 160_000 || !OpenScheduleSiteResolver.namesMatch(parish.name, title)) return null
         val locations = LOCATION.findAll(text).toList()
         if (locations.size != 1) return null
@@ -104,7 +106,11 @@ internal class PalomnikScheduleSiteResolver(private val transport: ScheduleTrans
             }
         }
         // An explicit schedule on this exact church's page takes precedence over a stale homepage field
-        return MatchingIdentity((schedules.takeIf { it.isNotEmpty() } ?: sites).singleOrNull())
+        // Exclusions cannot disambiguate different matching churches or competing published
+        // schedule links. A uniquely identified church may fall back to its unique homepage.
+        val preferred = schedules.singleOrNull()?.takeUnless(excluded::contains)
+        val chosen = if (schedules.size > 1) null else preferred ?: sites.singleOrNull()?.takeUnless(excluded::contains)
+        return MatchingIdentity(chosen)
     }
 
     private fun https(value: String): String? {

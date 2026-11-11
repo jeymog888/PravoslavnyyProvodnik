@@ -148,12 +148,14 @@ class InternetScheduleRepositoryTest {
 
     @Test fun `a lookup is bounded to three same origin HTML pages and never follows external links`() = runBlocking {
         val calls = mutableListOf<String>()
+        var lookups = 0
         val repo = InternetScheduleRepository(ScheduleTransport { url ->
             calls += url
             response(url, "<a href='/schedule/1'>Расписание</a><a href='/schedule/2'>Расписание</a><a href='https://outside.org/schedule'>Расписание</a>")
-        }, Cache())
+        }, Cache(), siteResolver = ScheduleSiteResolver { lookups++; null })
         assertEquals(InternetScheduleStatus.UNSUPPORTED, repo.refresh(parish(site = "https://example.org/"), now).status)
         assertEquals(3, calls.size)
+        assertEquals(1, lookups)
         assertTrue(calls.all { it.startsWith("https://example.org/") })
     }
 
@@ -243,6 +245,7 @@ class InternetScheduleRepositoryTest {
         val cache = Cache()
         val documentUrl = "https://outside.org/schedule.pdf"
         val calls = mutableListOf<String>()
+        var lookups = 0
         val repo = InternetScheduleRepository(ScheduleTransport { url ->
             calls += url
             response(url, when (url) {
@@ -250,9 +253,10 @@ class InternetScheduleRepositoryTest {
                 documentUrl -> html + "<a href='/schedule/'>Еще расписание</a>"
                 else -> error("Foreign HTML navigation must not be followed")
             })
-        }, cache)
+        }, cache, siteResolver = ScheduleSiteResolver { lookups++; null })
         val state = repo.refresh(selected, now)
         assertEquals(listOf(selected.website, documentUrl), calls)
+        assertEquals(1, lookups)
         assertEquals(InternetScheduleStatus.UNSUPPORTED, state.status)
         assertNull(state.publication)
         assertEquals(state, repo.cached(selected))
@@ -262,6 +266,7 @@ class InternetScheduleRepositoryTest {
         val selected = parish(site = "https://example.org/")
         val documentUrl = "https://cdn.example.org/current.jpg"
         val calls = mutableListOf<String>()
+        var lookups = 0
         val repo = InternetScheduleRepository(ScheduleTransport { url ->
             calls += url
             response(url, when (url) {
@@ -269,9 +274,11 @@ class InternetScheduleRepositoryTest {
                 documentUrl -> html + "<a href='/schedule/'>Расписание</a>"
                 else -> error("Foreign HTML navigation must not be followed")
             })
-        }, Cache(), ScheduleDocumentExtractor { error("An HTML response must never enter OCR") })
+        }, Cache(), ScheduleDocumentExtractor { error("An HTML response must never enter OCR") },
+            siteResolver = ScheduleSiteResolver { lookups++; null })
         val state = repo.refresh(selected, now)
         assertEquals(listOf(selected.website, documentUrl), calls)
+        assertEquals(1, lookups)
         assertEquals(InternetScheduleStatus.UNSUPPORTED, state.status)
         assertNull(state.publication)
     }
@@ -309,14 +316,19 @@ class InternetScheduleRepositoryTest {
 
     @Test fun `an unsuccessful lookup can retry after five minutes instead of hiding for six hours`() = runBlocking {
         var calls = 0
-        val repo = InternetScheduleRepository(ScheduleTransport { calls++; throw IOException() }, Cache())
+        var lookups = 0
+        val repo = InternetScheduleRepository(ScheduleTransport { calls++; throw IOException() }, Cache(),
+            siteResolver = ScheduleSiteResolver { lookups++; null })
         val selected = parish(site = "https://example.org/")
         repo.refresh(selected, now)
         assertEquals(1, calls)
+        assertEquals(1, lookups)
         repo.refresh(selected, now.plusSeconds(60))
         assertEquals(1, calls)
+        assertEquals(1, lookups)
         repo.refresh(selected, now.plusSeconds(301))
         assertEquals(2, calls)
+        assertEquals(2, lookups)
     }
 
     @Test fun `failed refresh retains the accepted child document binding and visible stale schedule`() = runBlocking {

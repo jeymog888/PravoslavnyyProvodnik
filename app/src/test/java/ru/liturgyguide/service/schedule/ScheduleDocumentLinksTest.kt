@@ -6,6 +6,28 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ScheduleDocumentLinksTest {
+    @Test fun realWordPressSharingButtonsDoNotConsumeSchedulePageBudget() {
+        val source = "https://nskmonastyr.cerkov.ru/raspisanie-bogosluzhenij/"
+        val html = requireNotNull(javaClass.getResource("/schedule/weekly/novosibirsk.html")).readText()
+        val page = Jsoup.parse(html, source)
+        assertEquals(4, page.select("a[data-shared]").size)
+        assertTrue(ScheduleDocumentLinks.find(page).none { "share=" in it.url })
+    }
+
+    @Test fun sharingActionExclusionPreservesCalendarPaginationAndPublicShareTokenLinks() {
+        val page = Jsoup.parse("""
+            <h1>Расписание</h1>
+            <a class='share-twitter' href='/schedule/?share=twitter'>Twitter</a>
+            <a data-shared='sharing-vk-42' href='/schedule/?%73hare=vk'>ВКонтакте</a>
+            <a class='share-icon' href='/schedule/?date=2026-11-12'>Расписание на дату</a>
+            <a href='/schedule/?page=2'>Следующая страница</a>
+            <a data-shared='public-document' href='/schedule.pdf?share_token=abc'>Расписание PDF</a>
+        """.trimIndent(), "https://parish.example/")
+        assertEquals(listOf("https://parish.example/schedule/?date=2026-11-12",
+            "https://parish.example/schedule/?page=2", "https://parish.example/schedule.pdf?share_token=abc"),
+            ScheduleDocumentLinks.find(page).map { it.url })
+    }
+
     @Test fun scheduleImagesInALaterArticleAreFoundWithoutBorrowingNewsImages() {
         val page = Jsoup.parse("""
             <article><h2>Новости прихода</h2><img data-src='/photos/procession.jpg'></article>
