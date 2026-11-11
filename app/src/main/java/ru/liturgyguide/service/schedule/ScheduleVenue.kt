@@ -25,14 +25,22 @@ internal object ScheduleVenue {
         "отмен", "перене", "перено", "будет", "состо", "провод", "январ", "феврал", "март", "апрел", "июн", "июл",
         "август", "сентябр", "октябр", "ноябр", "декабр", "года")
     private val qualifiers = listOf("верхн", "нижн", "стар", "нов", "мал", "больш", "припис", "больнич", "госпитал")
+    // Older parish sites put the registered organisation's name in non-semantic menus.
+    // Keep the parish identity, including its locality, but not the legal/diocesan suffix
+    // as a fictional second building. Unknown signatures still go through strict matching.
+    private val legalParish = Regex("(?iu)^(?:местная\\s+)?религиозная\\s+организация\\s+(?:православный\\s+)?приход\\s+(.+?)\\s+[а-яё-]+\\s+епархии\\s+русской\\s+православной\\s+церкви(?:\\s*\\([^)]*\\))?\\s*$")
+
+    private fun parishInLegalName(text: String): String? = legalParish.matchEntire(text.trim())
+        ?.groupValues?.get(1)?.takeIf { building.containsMatchIn(it) && !service.containsMatchIn(it) && !clock.containsMatchIn(it) }
 
     fun isLabel(text: String): Boolean {
-        val candidate = text.replace(calendarFeast, " ").replace(localCouncilFeast, " ")
+        val candidate = (parishInLegalName(text) ?: text).replace(calendarFeast, " ").replace(localCouncilFeast, " ")
         return building.containsMatchIn(candidate) && !service.containsMatchIn(candidate) &&
             !clock.containsMatchIn(candidate) && tokens(candidate).isNotEmpty()
     }
 
     fun inlineLabel(text: String, calendarDate: LocalDate? = null, datedPreface: Boolean = false): String? {
+        parishInLegalName(text)?.let { return it }
         var candidate = text.replace(calendarFeast, " ").replace(localCouncilFeast, " ")
         // A calendar preface before the first clock in a dated service row is not a venue.
         // Standalone building headings, separate venue cells and locations after the clock

@@ -38,6 +38,46 @@ class ChurchDiscoveryScreenTest {
         "улица Баумана, 5", "", "https://example.com/", false, "https://www.openstreetmap.org/way/42")
     private val fetchedAt = 1_794_096_000_000L
 
+    @Test fun ambiguousStationRequiresExplicitChoiceBeforeNearbySearch() {
+        val first = DiscoveryLandmark("osm:node:10", "Центральная", kazan.center, "Казань", "Татарстан", "Россия")
+        val second = first.copy(id = "osm:node:11", center = GeoPoint(51.6, 39.2), city = "Воронеж", region = "Воронежская область")
+        val fake = FakeDiscovery().apply { nameResult = { success(emptyList<DiscoveredChurch>(), DiscoveryProvider.PHOTON)
+            .copy(landmarkChoices = listOf(first, second), landmarkChurchQuery = "Никольский") } }
+        launch(fake, initialMode = ChurchSearchMode.NAME)
+        search("метро Центральная Никольский храм")
+        scrollTo("discovery_landmark_heading").assertIsDisplayed()
+        scrollTo("discovery_landmark_${second.id}").assertIsDisplayed()
+        compose.runOnIdle { assertTrue(fake.centers.isEmpty()); assertTrue(fake.queries.isEmpty()) }
+        scrollTo("discovery_landmark_${second.id}").performClick()
+        scrollTo("discovery_church_${church.id}").assertIsDisplayed()
+        compose.runOnIdle {
+            assertEquals(listOf(second.center), fake.centers)
+            assertEquals(listOf("метро Центральная Никольский храм"), fake.nameQueries)
+        }
+        compose.onNodeWithTag("discovery_landmark_heading").assertDoesNotExist()
+    }
+
+    @Test fun resolvedLandmarkRetainsDistinctChurchAddressesAndDoesNotTriggerGps() {
+        val station = DiscoveryLandmark("osm:node:277499849", "Сухаревская", GeoPoint(55.7729551, 37.6312038), "Москва", "Москва", "Россия")
+        val listy = church.copy(id = "osm:relation:19595736", name = "Храм Троицы Живоначальной в Листах", address = "улица Сретенка, 27/29",
+            city = "Москва", center = GeoPoint(55.772, 37.632), sourceUrl = "https://www.openstreetmap.org/relation/19595736")
+        val other = listy.copy(id = "osm:node:5053943230", name = "Храм Троицы Живоначальной", address = "Большая Сухаревская площадь, 3")
+        val fake = FakeDiscovery().apply { nameResult = {
+            DiscoveryResult.Success(listOf(listy, other), fetchedAt, DiscoveryCacheStatus.FRESH_NETWORK, DiscoveryProvider.PHOTON,
+                station.center, 2_000, landmark = station)
+        } }
+        var selected: SavedChurchRecord? = null
+        launch(fake, initialMode = ChurchSearchMode.NAME, onSave = { selected = it; true })
+        search("метро сухаревская троицы")
+        scrollTo("discovery_church_${other.id}").assertIsDisplayed()
+        scrollTo("discovery_church_${listy.id}").performClick()
+        compose.runOnIdle {
+            assertEquals(listy.id, selected?.id)
+            assertEquals(listy.address, selected?.address)
+            assertTrue(fake.centers.isEmpty()); assertTrue(fake.queries.isEmpty())
+        }
+    }
+
     @Test fun nameSearchSelectsAMonasteryInOneTapAndDerivesItsTimeZoneFromCoordinates() {
         val monastery = church.copy(id = "osm:relation:3325777", name = "Сретенский монастырь", city = "Москва",
             center = GeoPoint(55.766, 37.628), address = "улица Большая Лубянка", kind = DiscoveredPlaceKind.MONASTERY,

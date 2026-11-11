@@ -81,7 +81,7 @@ private class ChurchDiscoveryState(private val discovery: PlaceDiscovery, privat
         generation++
         job?.cancel(); job = null; busy = null
         this.message = message
-        if (clearResults) { cities = null; churches = null; areaLabel = ""; cityName = ""; lastAttempt = null }
+        if (clearResults) { cities = null; churches = null; areaLabel = ""; cityName = ""; approximateLocation = false; lastAttempt = null }
     }
     fun current(token: Int) = token == generation
     private fun begin(label: String): Int {
@@ -115,7 +115,7 @@ private class ChurchDiscoveryState(private val discovery: PlaceDiscovery, privat
         }
     }
     fun searchPlaces(query: String) {
-        val token = begin("Ищем по названию")
+        val token = begin(if (LandmarkSearch.parse(query) != null) "Ищем станцию и храмы рядом" else "Ищем по названию")
         lastAttempt = { searchPlaces(query) }
         areaLabel = "Найденные места"
         job = scope.launch {
@@ -123,7 +123,10 @@ private class ChurchDiscoveryState(private val discovery: PlaceDiscovery, privat
                 val response = discovery.searchPlaces(query)
                 if (!current(token)) return@launch
                 when (response) {
-                    is DiscoveryResult.Success -> churches = response
+                    is DiscoveryResult.Success -> {
+                        churches = response
+                        response.landmark?.let { areaLabel = it.label; cityName = it.city }
+                    }
                     is DiscoveryResult.Failure -> message = discoveryError(response.reason)
                 }
             } catch (cancelled: CancellationException) { throw cancelled }
@@ -131,16 +134,20 @@ private class ChurchDiscoveryState(private val discovery: PlaceDiscovery, privat
             finally { if (current(token)) { busy = null; resultVersion++ } }
         }
     }
-    fun searchChurches(center: GeoPoint, label: String, city: String, radius: Int = 3_000, approximate: Boolean = false) {
+    fun searchChurches(center: GeoPoint, label: String, city: String, radius: Int = 3_000, approximate: Boolean = false,
+        landmark: DiscoveryLandmark? = null, churchQuery: String = "") {
         val token = begin("Ищем храмы")
-        lastAttempt = { searchChurches(center, label, city, radius, approximate) }
+        lastAttempt = { searchChurches(center, label, city, radius, approximate, landmark, churchQuery) }
         areaLabel = label; cityName = city; approximateLocation = approximate
         job = scope.launch {
             try {
-                val response = discovery.findChurches(center, radius)
+                val response = if (landmark == null) discovery.findChurches(center, radius)
+                    else discovery.findChurchesNearLandmark(landmark, churchQuery)
                 if (!current(token)) return@launch
                 when (response) {
-                    is DiscoveryResult.Success -> churches = response
+                    is DiscoveryResult.Success -> churches = if (landmark == null) response else response.copy(
+                        items = LandmarkSearch.rank(response.items, churchQuery, landmark.center), landmark = landmark,
+                        landmarkChurchQuery = churchQuery, notice = "Сверьте название и адрес храма")
                     is DiscoveryResult.Failure -> message = discoveryError(response.reason)
                 }
             } catch (cancelled: CancellationException) { throw cancelled }
@@ -337,12 +344,32 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                     val needle = nameFilter.trim().lowercase(Locale.ROOT).replace('ё', 'е')
                     (church.name + " " + church.address).lowercase(Locale.ROOT).replace('ё', 'е').contains(needle)
                 }.filterNot { onSelectSaved != null && it.id in savedIds }
+                if (result.landmarkChoices.isNotEmpty()) {
+                    item(key = "landmark_heading") {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Уточните станцию", style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.testTag("discovery_landmark_heading").semantics { heading() })
+                            Text("Выберите нужное место, чтобы найти храмы вокруг него", style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                    items(result.landmarkChoices, key = { "landmark:${it.id}" }) { landmark ->
+                        DiscoveryRow(landmark.name, listOf(landmark.city, landmark.region, landmark.country)
+                            .filter(String::isNotBlank).distinct().joinToString(" · "), "discovery_landmark_${landmark.id}") {
+                            focus.clearFocus(); keyboard?.hide(); nameFilter = ""
+                            state.searchChurches(landmark.center, landmark.label, landmark.city,
+                                DefaultPlaceDiscovery.LANDMARK_RADIUS_METERS, landmark = landmark, churchQuery = result.landmarkChurchQuery)
+                        }
+                    }
+                }
                 item(key = "results_heading") {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(state.areaLabel, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
-                        if (byName) Text("Сверьте название и адрес храма", style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("discovery_name_notice"))
-                        else {
+                        result.notice?.let { Text(it, style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("discovery_result_notice")) }
+                        if (byName) {
+                            if (result.notice == null) Text("Сверьте название и адрес храма", style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("discovery_name_notice"))
+                        } else {
                             val radius = (result.radiusMeters ?: 3_000) / 1_000
                             Text("В радиусе $radius км от выбранного центра", style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("discovery_area"))
@@ -357,7 +384,7 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                             modifier = Modifier.fillMaxWidth().testTag("discovery_name_filter"))
                     }
                 }
-                if (filtered.isEmpty() && (result.items.isEmpty() || nameFilter.isNotBlank())) item {
+                if (result.landmarkChoices.isEmpty() && filtered.isEmpty() && (result.items.isEmpty() || nameFilter.isNotBlank())) item {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(if (result.items.isEmpty()) {
                             if (byName) "По этому названию ничего не найдено"

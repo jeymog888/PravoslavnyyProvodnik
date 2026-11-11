@@ -6,6 +6,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.net.URI
 import java.net.URLEncoder
@@ -71,7 +72,11 @@ sealed interface DiscoveryResult<out T> {
         val queryCenter: GeoPoint? = null,
         val radiusMeters: Int? = null,
         /** Non-null only when a failed network request fell back to old cached data. */
-        val fallbackReason: DiscoveryFailure? = null
+        val fallbackReason: DiscoveryFailure? = null,
+        val landmark: DiscoveryLandmark? = null,
+        val landmarkChoices: List<DiscoveryLandmark> = emptyList(),
+        val landmarkChurchQuery: String = "",
+        val notice: String? = null
     ) : DiscoveryResult<T>
 
     data class Failure(val reason: DiscoveryFailure) : DiscoveryResult<Nothing>
@@ -81,6 +86,8 @@ interface PlaceDiscovery {
     suspend fun searchPlaces(query: String): DiscoveryResult<DiscoveredChurch>
     suspend fun searchCities(query: String): DiscoveryResult<DiscoveryCity>
     suspend fun findChurches(center: GeoPoint, radiusMeters: Int = 3_000): DiscoveryResult<DiscoveredChurch>
+    suspend fun findChurchesNearLandmark(landmark: DiscoveryLandmark, churchQuery: String): DiscoveryResult<DiscoveredChurch> =
+        findChurches(landmark.center, DefaultPlaceDiscovery.LANDMARK_RADIUS_METERS)
 }
 
 /** Fixed slots are used by the client; the store must not turn query keys into location history. */
@@ -111,16 +118,66 @@ class DefaultPlaceDiscovery(
     private val transport: DiscoveryTransport = UrlConnectionDiscoveryTransport(),
     private val cache: DiscoveryCacheStore = NoDiscoveryCache,
     private val endpoints: DiscoveryEndpoints = DiscoveryEndpoints(),
-    private val clock: Clock = Clock.systemUTC()
+    private val clock: Clock = Clock.systemUTC(),
+    private val relatedRequestPause: suspend () -> Unit = { delay(1_050) }
 ) : PlaceDiscovery {
     override suspend fun searchPlaces(query: String): DiscoveryResult<DiscoveredChurch> = withContext(Dispatchers.IO) {
         val cleaned = query.trim().replace(Regex("\\s+"), " ")
         if (cleaned.length !in 2..MAX_QUERY_LENGTH || cleaned.any { it.isISOControl() }) {
             return@withContext DiscoveryResult.Failure(DiscoveryFailure.INVALID_QUERY)
         }
+        val landmarkQuery = LandmarkSearch.parse(cleaned)
         val url = endpoints.cities + "?q=" + encode(cleaned) + "&limit=$MAX_PLACES&lang=default" +
             "&include=osm.amenity.place_of_worship,osm.amenity.monastery"
-        search("places", url, DiscoveryRequest(url), DiscoveryProvider.PHOTON, parser = DiscoveryJson::places)
+        val direct = search("places", url, DiscoveryRequest(url, timeoutMillis = if (landmarkQuery == null) 25_000 else 10_000),
+            DiscoveryProvider.PHOTON, parser = DiscoveryJson::places)
+        if (landmarkQuery == null) return@withContext direct
+        // Never bypass an upstream rate limit or cancellation by issuing another Photon request.
+        if (direct is DiscoveryResult.Failure || direct is DiscoveryResult.Success &&
+            direct.fallbackReason in setOf(DiscoveryFailure.RATE_LIMITED, DiscoveryFailure.BUSY)) return@withContext direct
+        direct as DiscoveryResult.Success<DiscoveredChurch>
+        currentCoroutineContext().ensureActive()
+        if (direct.cacheStatus != DiscoveryCacheStatus.FRESH_CACHE) relatedRequestPause()
+        val stationUrl = endpoints.cities + "?q=" + encode(landmarkQuery.stationQuery) + "&limit=$MAX_PLACES&lang=default"
+        val stations = search("landmarks", stationUrl, DiscoveryRequest(stationUrl, timeoutMillis = 10_000),
+            DiscoveryProvider.PHOTON, parser = DiscoveryJson::landmarks)
+        if (stations is DiscoveryResult.Failure) return@withContext direct.copy(
+            notice = "Не удалось проверить станцию. Ниже результаты по названию - сверьте адрес")
+        stations as DiscoveryResult.Success<DiscoveryLandmark>
+        if (stations.fallbackReason in setOf(DiscoveryFailure.RATE_LIMITED, DiscoveryFailure.BUSY)) return@withContext direct.copy(
+            notice = "Сервис ограничил поиск станции. Ниже результаты по названию; повторите поиск позже")
+        val choices = LandmarkSearch.stationChoices(stations.items, landmarkQuery.stationQuery)
+        if (choices.isEmpty()) return@withContext direct.copy(
+            notice = "Станция не найдена. Уточните ее название и город; ниже результаты по названию")
+        if (landmarkQuery.requiresChoice || choices.size != 1 || !LandmarkSearch.exactName(choices.single(), landmarkQuery.stationQuery)) return@withContext direct.copy(
+            landmarkChoices = choices, landmarkChurchQuery = landmarkQuery.churchQuery,
+            notice = if (stations.cacheStatus == DiscoveryCacheStatus.STALE_CACHE) "Показан сохраненный список станций. Проверьте город" else null)
+        val station = choices.single()
+        currentCoroutineContext().ensureActive()
+        // Nearby's optional Photon fallback shares a host with the station lookup.
+        if (stations.cacheStatus != DiscoveryCacheStatus.FRESH_CACHE) relatedRequestPause()
+        when (val nearby = findChurchesNearLandmark(station, landmarkQuery.churchQuery)) {
+            is DiscoveryResult.Failure -> direct.copy(notice = "Не удалось найти храмы рядом со станцией ${station.name}. Ниже результаты по названию")
+            is DiscoveryResult.Success -> {
+                val directNearby = direct.items.filter { station.center.distanceMeters(it.center) <= LANDMARK_RADIUS_METERS }
+                val combined = (nearby.items + directNearby).groupBy { it.id }.values.map { copies ->
+                    val preferred = copies.first()
+                    preferred.copy(address = copies.firstOrNull { it.address.isNotBlank() }?.address.orEmpty(),
+                        city = copies.firstOrNull { it.city.isNotBlank() }?.city ?: station.city,
+                        region = copies.firstOrNull { it.region.isNotBlank() }?.region ?: station.region,
+                        country = copies.firstOrNull { it.country.isNotBlank() }?.country ?: station.country)
+                }
+                val statuses = listOf(direct.cacheStatus, stations.cacheStatus, nearby.cacheStatus)
+                nearby.copy(items = LandmarkSearch.rank(combined, landmarkQuery.churchQuery, station.center).take(MAX_CHURCHES),
+                    fetchedAtEpochMillis = minOf(direct.fetchedAtEpochMillis, stations.fetchedAtEpochMillis, nearby.fetchedAtEpochMillis),
+                    cacheStatus = when {
+                        DiscoveryCacheStatus.STALE_CACHE in statuses -> DiscoveryCacheStatus.STALE_CACHE
+                        DiscoveryCacheStatus.FRESH_NETWORK in statuses -> DiscoveryCacheStatus.FRESH_NETWORK
+                        else -> DiscoveryCacheStatus.FRESH_CACHE
+                    }, landmark = station, landmarkChurchQuery = landmarkQuery.churchQuery,
+                    notice = "Рядом может быть несколько храмов с похожим названием. Сверьте адрес")
+            }
+        }
     }
 
     override suspend fun searchCities(query: String): DiscoveryResult<DiscoveryCity> = withContext(Dispatchers.IO) {
@@ -133,7 +190,13 @@ class DefaultPlaceDiscovery(
         search("cities", url, DiscoveryRequest(url), DiscoveryProvider.PHOTON, parser = DiscoveryJson::cities)
     }
 
-    override suspend fun findChurches(center: GeoPoint, radiusMeters: Int): DiscoveryResult<DiscoveredChurch> = withContext(Dispatchers.IO) {
+    override suspend fun findChurches(center: GeoPoint, radiusMeters: Int): DiscoveryResult<DiscoveredChurch> =
+        nearbyChurches(center, radiusMeters, "храм")
+
+    override suspend fun findChurchesNearLandmark(landmark: DiscoveryLandmark, churchQuery: String): DiscoveryResult<DiscoveredChurch> =
+        nearbyChurches(landmark.center, LANDMARK_RADIUS_METERS, LandmarkSearch.nearbyName(churchQuery))
+
+    private suspend fun nearbyChurches(center: GeoPoint, radiusMeters: Int, nameQuery: String): DiscoveryResult<DiscoveredChurch> = withContext(Dispatchers.IO) {
         if (!center.isValid || radiusMeters !in MIN_RADIUS_METERS..MAX_RADIUS_METERS) {
             return@withContext DiscoveryResult.Failure(DiscoveryFailure.INVALID_QUERY)
         }
@@ -142,7 +205,7 @@ class DefaultPlaceDiscovery(
         val queryRadius = radiusMeters + ROUNDING_PADDING_METERS
         val query = churchQuery(area, queryRadius)
         val key = endpoints.churches + query
-        val nearbyUrl = nearbyPlacesUrl(endpoints.cities, area, queryRadius)
+        val nearbyUrl = nearbyPlacesUrl(endpoints.cities, area, queryRadius, nameQuery)
         val now = clock.millis()
         val parseOrthodox: (String) -> List<DiscoveredChurch> = { DiscoveryJson.churches(it, area, queryRadius) }
         // The one fixed slot stores only one area. The full endpoint+query key binds data to its parser/provider.
@@ -253,6 +316,7 @@ class DefaultPlaceDiscovery(
         const val MAX_CITIES = 5
         const val MAX_PLACES = 10
         const val MAX_CHURCHES = 60
+        internal const val LANDMARK_RADIUS_METERS = 2_000
         const val MAX_RESPONSE_BYTES = 1_048_576
         const val MIN_RADIUS_METERS = 500
         const val MAX_RADIUS_METERS = 5_000
@@ -280,7 +344,7 @@ class DefaultPlaceDiscovery(
                 |out center tags $MAX_CHURCHES;""".trimMargin()
         }
 
-        internal fun nearbyPlacesUrl(endpoint: String, area: GeoPoint, queryRadius: Int): String {
+        internal fun nearbyPlacesUrl(endpoint: String, area: GeoPoint, queryRadius: Int, nameQuery: String = "храм"): String {
             require(area.isValid && queryRadius in MIN_RADIUS_METERS..MAX_RADIUS_METERS + ROUNDING_PADDING_METERS)
             val angularRadius = queryRadius / 6_371_000.0
             val latitudeDelta = Math.toDegrees(angularRadius)
@@ -293,7 +357,7 @@ class DefaultPlaceDiscovery(
             val minLon = if (wraps) -180.0 else area.longitude - longitudeDelta
             val maxLon = if (wraps) 180.0 else area.longitude + longitudeDelta
             val bbox = listOf(minLon, minLat, maxLon, maxLat).joinToString(",") { String.format(Locale.ROOT, "%.6f", it) }
-            return endpoint + "?q=" + encode("храм") + "&lat=" + String.format(Locale.ROOT, "%.2f", area.latitude) +
+            return endpoint + "?q=" + encode(nameQuery) + "&lat=" + String.format(Locale.ROOT, "%.2f", area.latitude) +
                 "&lon=" + String.format(Locale.ROOT, "%.2f", area.longitude) + "&bbox=" + encode(bbox) +
                 "&limit=$MAX_PLACES&lang=default&include=osm.amenity.place_of_worship,osm.amenity.monastery"
         }
@@ -303,6 +367,32 @@ class DefaultPlaceDiscovery(
 /** Responses are untrusted data. Unknown fields (including service_times) never become a schedule. */
 internal object DiscoveryJson {
     val DENOMINATIONS = listOf("orthodox", "russian_orthodox", "greek_orthodox", "serbian_orthodox", "georgian_orthodox")
+    fun landmarks(body: String): List<DiscoveryLandmark> = parse {
+        val root = JsonParser.parseString(body).asJsonObject
+        require(root.string("type") == "FeatureCollection")
+        val features = root.getAsJsonArray("features") ?: error("Missing features")
+        features.take(DefaultPlaceDiscovery.MAX_PLACES).mapNotNull { element -> runCatching {
+            val feature = element.asJsonObject
+            if (feature.string("type") != "Feature") return@runCatching null
+            val props = feature.getAsJsonObject("properties") ?: return@runCatching null
+            val station = props.string("osm_key") == "railway" && props.string("osm_value") in setOf("station", "halt", "subway_entrance") ||
+                props.string("osm_key") == "public_transport" && props.string("osm_value") == "station"
+            if (!station) return@runCatching null
+            val geometry = feature.getAsJsonObject("geometry") ?: return@runCatching null
+            if (geometry.string("type") != "Point") return@runCatching null
+            val coordinates = geometry.getAsJsonArray("coordinates") ?: return@runCatching null
+            if (coordinates.size() != 2 || coordinates.any { !it.isJsonPrimitive || !it.asJsonPrimitive.isNumber }) return@runCatching null
+            val center = GeoPoint(coordinates[1].asDouble, coordinates[0].asDouble)
+            if (!center.isValid) return@runCatching null
+            val name = props.string("name", 200).takeIf(String::isNotBlank) ?: return@runCatching null
+            val type = when (props.string("osm_type")) { "N" -> "node"; "W" -> "way"; "R" -> "relation"; else -> return@runCatching null }
+            val id = props.positiveId() ?: return@runCatching null
+            DiscoveryLandmark("osm:$type:$id", name, center, props.string("city", 200),
+                listOf(props.string("state", 200), props.string("county", 200)).filter(String::isNotBlank).distinct().joinToString(", "),
+                props.string("country", 200))
+        }.getOrNull() }.distinctBy { it.id }
+    }
+
     fun places(body: String): List<DiscoveredChurch> = parse {
         val root = JsonParser.parseString(body).asJsonObject
         require(root.string("type") == "FeatureCollection")

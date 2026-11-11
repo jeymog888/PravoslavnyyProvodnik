@@ -50,10 +50,10 @@ class AppContainer(context: Context, private val discoveryOverride: PlaceDiscove
     val placeDiscovery: PlaceDiscovery by lazy {
         discoveryOverride ?: DefaultPlaceDiscovery(cache = object : DiscoveryCacheStore {
             private val cache = appContext.getSharedPreferences("place_discovery_cache", Context.MODE_PRIVATE)
-            override fun read(slot: String): String? = if (slot in setOf("cities", "churches", "places"))
+            override fun read(slot: String): String? = if (slot in setOf("cities", "churches", "places", "landmarks"))
                 runCatching { cache.getString(slot, null) }.getOrNull() else null
             override fun write(slot: String, value: String) {
-                if (slot in setOf("cities", "churches", "places")) cache.edit().putString(slot, value).apply()
+                if (slot in setOf("cities", "churches", "places", "landmarks")) cache.edit().putString(slot, value).apply()
             }
         })
     }
