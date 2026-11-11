@@ -229,7 +229,7 @@ class ReaderAccessibilityTest {
             val text = compose.onNode(hasText(label) and hasAnyAncestor(hasTestTag(tag)), useUnmergedTree = true)
             assertReadable(text)
             assertEquals(1, textLayout(text).lineCount)
-            assertEquals(12.sp, textLayout(text).layoutInput.style.fontSize)
+            assertEquals(13.sp, textLayout(text).layoutInput.style.fontSize)
             targets += compose.onNodeWithTag(tag).assertIsDisplayed().assertWidthIsAtLeast(48.dp)
                 .assertHeightIsAtLeast(48.dp).getUnclippedBoundsInRoot()
             icons += compose.onNodeWithTag(if (tag == "open_settings") "nav_settings_icon" else "${tag}_icon", useUnmergedTree = true)

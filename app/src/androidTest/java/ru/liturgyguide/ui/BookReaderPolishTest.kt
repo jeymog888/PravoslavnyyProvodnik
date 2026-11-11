@@ -40,7 +40,11 @@ class BookReaderPolishTest {
     private val book = fixture()
 
     @After fun clean() {
-        compose.runOnIdle { mounted.value = false }
+        // Failed autoplay assertions must still unmount without advancing an endless reader.
+        compose.mainClock.autoAdvance = false
+        compose.runOnUiThread { mounted.value = false }
+        compose.mainClock.advanceTimeBy(64)
+        compose.mainClock.autoAdvance = true
         compose.waitForIdle()
         context.deleteSharedPreferences(preferenceName)
     }
@@ -133,14 +137,33 @@ class BookReaderPolishTest {
             compose.onRoot().captureToImage().asAndroidBitmap().compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
         }
         assertTrue("Reader must retain useful space above the controls: ${content.bottom - content.top}", content.bottom - content.top >= 160.dp)
+        // Exercise real movement in a long prayer, not only the Play icon's state.
+        compose.onNodeWithTag("book_content").performScrollToIndex(12 * 2 + 1)
+        settle()
+        fun paragraphTop() = compose.onNodeWithTag("book_text_long", useUnmergedTree = true)
+            .assertIsDisplayed().getUnclippedBoundsInRoot().top
+        val before = paragraphTop()
+        compose.mainClock.autoAdvance = false
         compose.onNodeWithTag("book_play").performClick()
+        compose.mainClock.advanceTimeBy(64)
+        compose.waitForIdle()
+        compose.onNodeWithTag("book_play").assertContentDescriptionEquals("Остановить прокрутку")
+        compose.mainClock.advanceTimeBy(2_000)
+        compose.waitForIdle()
+        assertTrue("Autoplay must actually move the text before the menu pauses it", paragraphTop() < before - 4.dp)
         compose.onNodeWithText("Оригинал", useUnmergedTree = true).performClick()
+        compose.mainClock.advanceTimeBy(700)
+        compose.waitForIdle()
         compose.onNodeWithTag("book_play").assertContentDescriptionEquals("Прокручивать текст")
         val paused = saved()
+        val pausedTop = paragraphTop()
         compose.mainClock.advanceTimeBy(3_000)
         compose.waitForIdle()
         assertEquals("Reading must stay still while the language menu is open", paused, saved())
+        assertEquals("Visible text must also stay still", pausedTop, paragraphTop())
         androidx.test.espresso.Espresso.pressBack()
+        compose.mainClock.advanceTimeBy(400)
+        compose.waitForIdle()
         compose.onNodeWithTag("book_play").assertContentDescriptionEquals("Прокручивать текст")
     }
 
