@@ -96,7 +96,7 @@ class DateRolloverTest {
     }
 
     private fun assertNoConfirmedSchedule() {
-        assertScheduleText("Типовой порядок")
+        assertScheduleText("Как обычно проходят службы")
         compose.onNodeWithText("07:00").assertDoesNotExist()
         compose.onNodeWithText("08:00").assertDoesNotExist()
         compose.onNodeWithText("09:30").assertDoesNotExist()

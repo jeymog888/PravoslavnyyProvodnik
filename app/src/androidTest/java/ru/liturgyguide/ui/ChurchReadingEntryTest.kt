@@ -35,7 +35,7 @@ class ChurchReadingEntryTest {
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("schedule_tomorrow"))
         compose.onNodeWithTag("schedule_tomorrow").performClick()
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("typical_schedule"))
-        compose.onNodeWithTag("typical_schedule").assertTextEquals("Типовой порядок")
+        compose.onNodeWithTag("typical_schedule").assertTextContains("не расписание храма", substring = true)
         compose.onNodeWithTag("published_schedule_empty").assertDoesNotExist()
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("church_read_liturgy"))
         compose.onNodeWithTag("church_read_liturgy").performClick()
@@ -87,7 +87,7 @@ class ChurchReadingEntryTest {
         compose.onNodeWithTag("save_schedule_website").performClick()
         compose.runOnIdle { assertEquals(listOf("https://example.org/schedule/"), sites) }
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("typical_schedule"))
-        compose.onNodeWithTag("typical_schedule").assertTextEquals("Типовой порядок")
+        compose.onNodeWithTag("typical_schedule").assertTextContains("не расписание храма", substring = true)
         compose.onNodeWithText("Расписание прихода").assertDoesNotExist()
     }
 
@@ -138,6 +138,25 @@ class ChurchReadingEntryTest {
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("personal_time_to_service"))
         compose.onNodeWithTag("personal_time_to_service").assertTextEquals("Открыть литургию").performClick()
         compose.runOnIdle { assertEquals(listOf(tomorrow), opened) }
+    }
+
+    @Test fun afterAllStartsTheChurchPageShowsTheLastStartAsPastAndKeepsReadingAvailable() {
+        val today = LocalDate.of(2026, 11, 11)
+        val morning = ParishService(today.toString(), "08:00", "Литургия", "service_block")
+        val evening = ParishService(today.toString(), "17:00", "Вечерня", "service_block")
+        val scheduled = parish.copy(scheduleValidFrom = today.toString(), scheduleValidUntil = today.toString(),
+            schedule = listOf(morning, evening))
+        val opened = mutableListOf<ParishService>()
+        compose.setContent { GuideTheme(false) { ChurchScreen(listOf(scheduled), scheduled.id, today,
+            onSelect = { _, selected -> selected(); ChurchSelectionResult.SELECTED }, onOpenUrl = {}, onBack = {},
+            searchQuery = "", onSearchQueryChange = {}, onReadLiturgy = {}, onOpenService = { opened += it },
+            now = Instant.parse("2026-11-11T19:00:00Z")) } }
+        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("church_service_time"))
+        compose.onNodeWithTag("church_service_time").assertTextEquals("17:00")
+        compose.onNodeWithTag("church_service_relation").assertTextEquals("Начало уже прошло")
+        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("church_open_service"))
+        compose.onNodeWithTag("church_open_service").performClick()
+        compose.runOnIdle { assertEquals(listOf(evening), opened) }
     }
 
     private fun openDetails() {

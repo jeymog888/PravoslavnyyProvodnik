@@ -34,12 +34,16 @@ class TodayScreenTest {
         "Europe/Moscow", "", "", "2026-11-01", "2026-11-30", emptyList(), "", "")
     private data class Request(val date: LocalDate, val kind: WorshipKind, val eveningMatins: Boolean = false)
 
-    @Test fun anUnknownFutureServiceChoosesTextForItsActualDate() {
+    @Test fun anUnknownTomorrowServiceIsOnlyShownAfterSelectingTomorrow() {
         val future = service("2026-11-12", "09:00", "Панихида")
         val opened = mutableListOf<Request>()
         launch(withServices(future), opened = opened)
-        scrollTo("today_service_date").assertTextEquals("12 ноября")
+        scrollTo("today_service_date").assertTextEquals("11 ноября")
         scrollTo("today_day_today").assertIsSelected()
+        scrollTo("today_schedule_empty").assertTextEquals("Расписание пока не найдено")
+        compose.onNodeWithTag("today_choose_unknown_service").assertDoesNotExist()
+        scrollTo("today_day_tomorrow").performClick()
+        scrollTo("today_service_date").assertTextEquals("12 ноября")
         scrollTo("today_choose_unknown_service").performClick()
         compose.onNodeWithTag("service_chooser_date").assertTextEquals("Тексты на 12 ноября 2026")
         choose(WorshipKind.LITURGY)
@@ -47,16 +51,16 @@ class TodayScreenTest {
         compose.runOnIdle { assertEquals(listOf(Request(LocalDate.of(2026, 11, 12), WorshipKind.LITURGY)), opened) }
     }
 
-    @Test fun otherTextsUseTheFutureFeaturedDateRatherThanTheTodayTab() {
+    @Test fun libraryKeepsTheChosenDayEvenWhenOnlyALaterServiceIsPublished() {
         val future = service("2026-11-14", "17:00", "Всенощное бдение")
         val opened = mutableListOf<Request>()
         launch(withServices(future), opened = opened)
-        scrollTo("today_service_date").assertTextEquals("14 ноября")
+        scrollTo("today_service_date").assertTextEquals("11 ноября")
         scrollTo("today_other_services").performClick()
-        compose.onNodeWithTag("service_chooser_date").assertTextEquals("Тексты на 14 ноября 2026")
+        compose.onNodeWithTag("service_chooser_date").assertTextEquals("Тексты на 11 ноября 2026")
         choose(WorshipKind.VESPERS)
         // Today passes the civil date; the navigation owner performs the evening liturgical-day conversion once.
-        compose.runOnIdle { assertEquals(listOf(Request(LocalDate.of(2026, 11, 14), WorshipKind.VESPERS)), opened) }
+        compose.runOnIdle { assertEquals(listOf(Request(LocalDate.of(2026, 11, 11), WorshipKind.VESPERS)), opened) }
     }
 
     @Test fun todayAndTomorrowFollowTheParishTimeZoneAcrossTheYearBoundary() {
@@ -139,7 +143,7 @@ class TodayScreenTest {
         compose.runOnIdle { assertEquals(listOf(Request(LocalDate.of(2026, 11, 11), WorshipKind.MATINS)), opened) }
     }
 
-    @Test fun savedReadingIsVisibleBeforeScheduleScrollingAtTwoHundredPercentWithALongChurchName() {
+    @Test fun todaysScheduleAndSavedReadingStayReachableAtTwoHundredPercentWithALongChurchName() {
         val selected = withServices(service("2026-11-11", "17:00", "Вечерня"), service("2026-11-12", "09:00", "Литургия"))
             .copy(shortName = "Храм святых равноапостольных Кирилла и Мефодия при большом историческом монастыре",
                 city = "Длинное название города", address = "Очень длинное название улицы, дом 123, строение 45")
@@ -147,11 +151,11 @@ class TodayScreenTest {
         val resumed = mutableListOf<BookReadingPosition>()
         val opened = mutableListOf<Request>()
         launch(selected, opened = opened, fontScale = 2f, lastBook = position, onResumeBook = { resumed += it })
-        // No scrolling to the schedule is needed to discover or activate the saved book.
-        compose.onNodeWithTag("resume_book").assertIsDisplayed().performClick()
-        compose.runOnIdle { assertEquals(listOf(position), resumed) }
+        // Today's service takes precedence; resuming an older book is an independent action below it.
         scrollTo("today_service_date").assertTextEquals("11 ноября")
         scrollTo("open_service_book").assertIsEnabled().performClick()
+        scrollTo("resume_book").assertIsDisplayed().performClick()
+        compose.runOnIdle { assertEquals(listOf(position), resumed) }
         scrollTo("today_day_tomorrow").performClick()
         scrollTo("today_service_date").assertTextEquals("12 ноября")
         scrollTo("open_service_book").assertIsEnabled().performClick()
@@ -227,6 +231,29 @@ class TodayScreenTest {
             assertEquals(1, sourceOpens)
             assertEquals(listOf(Request(LocalDate.of(2026, 11, 11), WorshipKind.LITURGY)), opened)
         }
+    }
+
+    @Test fun pastStartsStayOnTodayWithAnExplicitStatusInsteadOfJumpingToTomorrow() {
+        val opened = mutableListOf<Request>()
+        launch(withServices(service("2026-11-11", "08:00", "Литургия"), service("2026-11-11", "17:00", "Вечерня"),
+            service("2026-11-12", "08:00", "Литургия")), Instant.parse("2026-11-11T19:00:00Z"), opened)
+        scrollTo("today_service_date").assertTextEquals("11 ноября")
+        scrollTo("today_service_time").assertTextEquals("17:00")
+        scrollTo("today_service_relation").assertTextEquals("Начало уже прошло")
+        scrollTo("open_service_book").performClick()
+        compose.runOnIdle { assertEquals(listOf(Request(LocalDate.of(2026, 11, 11), WorshipKind.VESPERS)), opened) }
+    }
+
+    @Test fun typicalOrderIsCollapsedAndCannotBeMistakenForTodaysPublishedSchedule() {
+        launch(parish)
+        scrollTo("today_schedule_empty").assertTextEquals("Расписание пока не найдено")
+        scrollTo("typical_schedule").assertTextContains("не расписание храма", substring = true)
+        compose.onNodeWithText("Суббота вечером").assertDoesNotExist()
+        scrollTo("typical_schedule").performClick()
+        compose.onNodeWithText("Суббота вечером").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Воскресенье утром").performScrollTo().assertIsDisplayed()
+        scrollTo("typical_schedule").performClick()
+        compose.onNodeWithText("Суббота вечером").assertDoesNotExist()
     }
 
     private fun launch(church: Parish?, instant: Instant = now, opened: MutableList<Request> = mutableListOf(),
