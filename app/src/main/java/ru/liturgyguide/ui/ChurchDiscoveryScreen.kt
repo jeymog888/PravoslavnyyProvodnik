@@ -260,7 +260,14 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
         }
     }
     val savedMatches = remember(savedChurches, query, favorites) { ChurchDirectory.search(savedChurches, query, favorites).take(6) }
-    val savedIds = savedMatches.map { it.id }.toSet()
+    // Once a search answers, its results replace the initial preview instead of appearing
+    // below six tall saved rows. Empty/failed searches keep the saved path available.
+    val showSavedPreview = state.busy == null && state.cities?.items.isNullOrEmpty() &&
+        state.churches?.items.isNullOrEmpty() && state.churches?.landmarkChoices.isNullOrEmpty()
+    val visibleSavedIds = if (showSavedPreview && onSelectSaved != null) savedMatches.map { it.id }.toSet() else emptySet()
+    // The preview is limited to six rows; the identity check must include the whole directory.
+    // Reimporting a sparse map record could erase its saved website and invalidate its schedule cache.
+    val savedById = remember(savedChurches) { savedChurches.associateBy { it.id } }
     Scaffold(containerColor = MaterialTheme.colorScheme.surface,
         topBar = { Column(Modifier.statusBarsPadding()) { PageHeader("Найти храм", ::leave) } }) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding).navigationBarsPadding().imePadding().testTag("discovery_content"), state = scroll,
@@ -315,12 +322,12 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                     }
                 }
             } }
-            if (onSelectSaved != null && mode == ChurchSearchMode.NAME && query.isNotBlank() && savedMatches.isEmpty() &&
+            if (showSavedPreview && onSelectSaved != null && mode == ChurchSearchMode.NAME && query.isNotBlank() && savedMatches.isEmpty() &&
                 state.churches == null) item(key = "saved_empty") {
                 Text("В сохраненных храмах совпадений нет", style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("discovery_saved_empty"))
             }
-            if (savedMatches.isNotEmpty() && onSelectSaved != null) {
+            if (showSavedPreview && savedMatches.isNotEmpty() && onSelectSaved != null) {
                 item(key = "saved_heading") {
                     Text(if (query.isBlank()) "Доступны без сети" else "Сохраненные совпадения", style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(top = 12.dp).semantics { heading() })
@@ -357,12 +364,13 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                 }
             }
             state.churches?.let { result ->
-                val byName = result.provider == DiscoveryProvider.PHOTON && result.queryCenter == null
+                val byName = result.provider in setOf(DiscoveryProvider.PHOTON, DiscoveryProvider.LOCAL_CATALOG) && result.queryCenter == null
                 val nearbyByName = result.provider == DiscoveryProvider.PHOTON && result.queryCenter != null
                 val filtered = result.items.filter { church ->
                     val needle = nameFilter.trim().lowercase(Locale.ROOT).replace('ё', 'е')
                     (church.name + " " + church.address).lowercase(Locale.ROOT).replace('ё', 'е').contains(needle)
-                }.filterNot { onSelectSaved != null && it.id in savedIds }
+                }.filterNot { nameFilter.isBlank() && onSelectSaved != null &&
+                    KnownChurchIdentity.existingFor(it, savedById)?.id in visibleSavedIds }
                 if (result.landmarkChoices.isNotEmpty()) {
                     item(key = "landmark_heading") {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -385,6 +393,7 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                         Text(state.areaLabel, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
                         Text(discoveryResultCaption(result, state.approximateLocation), style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag(when {
+                                result.provider == DiscoveryProvider.LOCAL_CATALOG -> "discovery_catalog_notice"
                                 nearbyByName -> "discovery_nearby_notice"
                                 byName && result.notice != null -> "discovery_result_notice"
                                 byName -> "discovery_name_notice"
@@ -399,12 +408,14 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                 if (result.landmarkChoices.isEmpty() && filtered.isEmpty() && (result.items.isEmpty() || nameFilter.isNotBlank())) item {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(if (result.items.isEmpty()) {
-                            if (byName) "По этому названию ничего не найдено"
+                            if (visibleSavedIds.isNotEmpty()) "Поиск не дал новых результатов"
+                            else if (byName) "По этому названию ничего не найдено"
                             else if (nearbyByName) "По названиям рядом ничего не найдено"
                             else "В этом районе храмы не найдены"
                         } else "Нет храма с таким названием в найденном списке",
                             style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("discovery_empty"))
-                        Text("Уточните город или добавьте храм вручную", style = MaterialTheme.typography.bodyMedium)
+                        Text(if (visibleSavedIds.isNotEmpty()) "Выберите сохраненный храм выше или уточните поиск"
+                            else "Уточните город или добавьте храм вручную", style = MaterialTheme.typography.bodyMedium)
                     }
                 }
                 items(filtered, key = { "network:${it.id}" }) { church ->
@@ -412,11 +423,14 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                         church.region, church.country, church.address).filter(String::isNotBlank).distinct().joinToString(" · ")
                     DiscoveryRow(church.name, location, "discovery_church_${church.id}") {
                         focus.clearFocus(); keyboard?.hide()
-                        val record = church.toSavedChurch(state.cityName)
-                        if (record != null) {
-                            val result = onSave(record) { onQueryChange("") }
-                            if (result == ChurchSelectionResult.FAILED || result == ChurchSelectionResult.STALE) state.invalidSelection()
-                        } else state.invalidSelection()
+                        val saved = KnownChurchIdentity.existingFor(church, savedById)
+                        val selection = if (saved != null && onSelectSaved != null) {
+                            onSelectSaved(saved.id) { onQueryChange("") }
+                        } else {
+                            church.toSavedChurch()?.let { record -> onSave(record) { onQueryChange("") } }
+                                ?: ChurchSelectionResult.FAILED
+                        }
+                        if (selection == ChurchSelectionResult.FAILED || selection == ChurchSelectionResult.STALE) state.invalidSelection()
                     }
                 }
             }
@@ -433,7 +447,7 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                         onOpenUrl("geo:0,0?q=" + Uri.encode(mapQuery))
                     }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("discovery_maps")) { Text("Посмотреть в картах") }
                     Text(DefaultPlaceDiscovery.ATTRIBUTION, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("Название отправляется сервису поиска. Поиск рядом использует район местоположения", style = MaterialTheme.typography.bodySmall,
+                    Text("Для поиска в интернете отправляется название или район местоположения. Поиск в каталоге на телефоне работает без сети", style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("discovery_privacy"))
                     TextButton(onClick = { onOpenUrl(DefaultPlaceDiscovery.COPYRIGHT_URL) }, modifier = Modifier.heightIn(min = 48.dp).testTag("discovery_attribution")) { Text("Об источнике данных") }
                 }
@@ -469,16 +483,22 @@ private fun DiscoveryRow(title: String, subtitle: String, tag: String,
 private fun CacheNotice(status: DiscoveryCacheStatus, fetchedAt: Long) {
     if (status == DiscoveryCacheStatus.FRESH_NETWORK) return
     val date = runCatching { Instant.ofEpochMilli(fetchedAt).atZone(ZoneId.systemDefault())
-        .format(DateTimeFormatter.ofPattern("d MMMM, HH:mm", Locale.forLanguageTag("ru"))) }.getOrDefault("")
-    Text((if (status == DiscoveryCacheStatus.STALE_CACHE) "Не удалось обновить. Сохраненные результаты" else "Сохраненные результаты") +
+        .format(DateTimeFormatter.ofPattern(if (status == DiscoveryCacheStatus.LOCAL_SNAPSHOT) "d MMMM uuuu" else "d MMMM, HH:mm",
+            Locale.forLanguageTag("ru"))) }.getOrDefault("")
+    Text((when (status) {
+        DiscoveryCacheStatus.LOCAL_SNAPSHOT -> "Каталог на телефоне. Данные"
+        DiscoveryCacheStatus.STALE_CACHE -> "Не удалось обновить. Сохраненные результаты"
+        else -> "Сохраненные результаты"
+    }) +
         if (date.isBlank()) "" else " от $date", style = MaterialTheme.typography.bodySmall,
         modifier = Modifier.padding(top = 8.dp).testTag("discovery_cache_notice"), color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
-private fun DiscoveredChurch.toSavedChurch(fallbackCity: String): SavedChurchRecord? {
+internal fun DiscoveredChurch.toSavedChurch(): SavedChurchRecord? {
     fun clean(value: String): String = value.replace(Regex("\\s+"), " ").trim()
     val churchTimezone = ChurchTimeZone.at(center) ?: return null
-    return SavedChurchCodec.validated(SavedChurchRecord(id, clean(name), clean(city.ifBlank { fallbackCity }),
+    // The center of a search area is not evidence that every nearby church is in that city.
+    return SavedChurchCodec.validated(SavedChurchRecord(id, clean(name), clean(city),
         clean(address), churchTimezone, center.latitude, center.longitude,
         origin = SavedChurchOrigin.OPEN_STREET_MAP, website = website.orEmpty(), sourceUrl = sourceUrl))
 }

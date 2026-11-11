@@ -27,6 +27,12 @@ import org.junit.runner.RunWith
 import ru.liturgyguide.model.Parish
 import ru.liturgyguide.service.SavedChurchOrigin
 import ru.liturgyguide.service.SavedChurchRecord
+import ru.liturgyguide.service.ChurchDirectoryStore
+import ru.liturgyguide.service.ParishRepository
+import ru.liturgyguide.service.ChurchLocationSource
+import ru.liturgyguide.service.ForegroundLocationFix
+import ru.liturgyguide.service.ForegroundLocationResult
+import java.time.Instant
 import ru.liturgyguide.service.discovery.*
 
 @RunWith(AndroidJUnit4::class)
@@ -401,6 +407,159 @@ class ChurchDiscoveryScreenTest {
         compose.runOnIdle {
             assertEquals(listOf(saved.first().id), selected)
             assertTrue(fake.nameQueries.isEmpty()); assertTrue(fake.queries.isEmpty()); assertTrue(fake.centers.isEmpty())
+        }
+    }
+
+    @Test fun nearbyResultsReplaceTheSavedPreviewAndAreVisibleWithoutScrolling() {
+        val saved = (1..6).map { index -> SavedChurchRecord.create(
+            "Сохраненный храм Святой Живоначальной Троицы в большом городе $index", "Москва",
+            "Длинная улица с подробным адресом, дом $index", "Europe/Moscow").asParish() }
+        val answer = CompletableDeferred<DiscoveryResult<DiscoveredChurch>>()
+        val fake = FakeDiscovery().apply { churchResult = { answer.await() } }
+        val location = object : ChurchLocationSource {
+            override fun hasPermission() = true
+            override fun locateResult(maxAccuracyMeters: Float, maxLocationAgeMillis: Long,
+                onResult: (ForegroundLocationResult) -> Unit) {
+                onResult(ForegroundLocationResult.Located(ForegroundLocationFix(
+                    kazan.center.latitude, kazan.center.longitude, 20f, SystemClock.elapsedRealtimeNanos())))
+            }
+            override fun stop() = Unit
+        }
+        compose.setContent {
+            GuideTheme(dark = false) {
+                ChurchDiscoveryScreen(fake, onBack = {}, onSave = { _, _ -> ChurchSelectionResult.FAILED }, onOpenUrl = {},
+                    query = "", onQueryChange = {}, mode = ChurchSearchMode.NAME, onModeChange = {}, savedChurches = saved,
+                    onSelectSaved = { _, _ -> ChurchSelectionResult.SELECTED }, locationSource = location)
+            }
+        }
+        // No scroll helpers: this must work in the visible viewport (root acceptance uses 360 dp).
+        compose.onNodeWithTag("discovery_nearby").assertIsDisplayed().performClick()
+        compose.onNodeWithTag("discovery_loading").assertIsDisplayed()
+        saved.forEach { compose.onNodeWithTag("discovery_saved_${it.id}").assertDoesNotExist() }
+        compose.runOnIdle { answer.complete(DiscoveryResult.Success(
+            listOf(church) + (100..252).map { church.copy(id = "osm:way:$it", name = "Другой храм $it") }, fetchedAt,
+            DiscoveryCacheStatus.LOCAL_SNAPSHOT, DiscoveryProvider.LOCAL_CATALOG, kazan.center, 3_000)) }
+        compose.waitForIdle()
+        compose.onNodeWithTag("discovery_church_${church.id}").assertIsDisplayed()
+        saved.forEach { compose.onNodeWithTag("discovery_saved_${it.id}").assertDoesNotExist() }
+    }
+
+    @Test fun emptyAndFailedSearchesRestoreSavedChoicesWithoutClaimingNoChurchExists() {
+        val saved = SavedChurchRecord.create("Никольский храм", "Казань", "Улица, 1", "Europe/Moscow").asParish()
+        val fake = FakeDiscovery().apply { nameResult = { success(emptyList(), DiscoveryProvider.PHOTON) } }
+        launch(fake, initialMode = ChurchSearchMode.NAME, savedChurches = listOf(saved))
+        search("Никольский")
+        scrollTo("discovery_saved_${saved.id}").assertIsDisplayed()
+        scrollTo("discovery_empty").assertTextEquals("Поиск не дал новых результатов")
+        compose.runOnIdle { fake.nameResult = { DiscoveryResult.Failure(DiscoveryFailure.UNAVAILABLE) } }
+        search("Никольский храм")
+        scrollTo("discovery_message").assertIsDisplayed()
+        scrollTo("discovery_saved_${saved.id}").assertIsDisplayed()
+        compose.onNodeWithTag("discovery_empty").assertDoesNotExist()
+    }
+
+    @Test fun aSavedResultOutsideTheSixRowPreviewIsSelectedWithoutReplacingItsWebsiteOrCity() {
+        val savedRecord = requireNotNull(church.copy(name = "Яковлевский храм", city = "Казань",
+            website = "http://parish.example/raspisanie/").toSavedChurch())
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val preferences = context.getSharedPreferences("discovery-preserve-saved-test", 0)
+        check(preferences.edit().clear().commit())
+        val store = ChurchDirectoryStore(preferences)
+        assertTrue(store.save(savedRecord))
+        val saved = (1..6).map { index -> SavedChurchRecord.create("Храм $index", "Казань", "Улица $index", "Europe/Moscow").asParish() } +
+            savedRecord.asParish()
+        val fake = FakeDiscovery().apply { churchResult = {
+            success(listOf(church.copy(website = null, city = "")), DiscoveryProvider.LOCAL_CATALOG)
+        } }
+        val selected = mutableListOf<String>()
+        var saves = 0
+        try {
+            launch(fake, savedChurches = saved, onSelectSaved = { selected += it }, onSave = {
+                saves++; store.save(it)
+            })
+            searchAndChooseKazan()
+            compose.onNodeWithTag("discovery_saved_${savedRecord.id}").assertDoesNotExist()
+            scrollTo("discovery_church_${savedRecord.id}").performClick()
+            compose.runOnIdle {
+                assertEquals(listOf(savedRecord.id), selected)
+                assertEquals(0, saves)
+                assertEquals(listOf(savedRecord), ChurchDirectoryStore(preferences).records())
+            }
+        } finally { check(preferences.edit().clear().commit()) }
+    }
+
+    @Test fun theVerifiedOpalikhaMapObjectSelectsItsPreparedParishWithoutCreatingAnEmptyDuplicate() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val prepared = context.assets.open("churches.json").bufferedReader().use { ParishRepository(it.readText()) }
+            .directory.churches
+        val place = context.assets.open(BundledChurchCatalog.ASSET_PATH).bufferedReader().use {
+            LocalChurchCatalog.decode(it, Instant.parse("2026-11-12T06:00:00Z"))
+        }.nearby(GeoPoint(55.82553, 37.24345), 500) {}.single { it.id == "osm:way:186160039" }
+        val fake = FakeDiscovery().apply { nameResult = {
+            success(listOf(place), DiscoveryProvider.LOCAL_CATALOG).copy(cacheStatus = DiscoveryCacheStatus.LOCAL_SNAPSHOT)
+        } }
+        var saves = 0
+        val selected = mutableListOf<String>()
+        launch(fake, initialMode = ChurchSearchMode.NAME, savedChurches = prepared,
+            onSelectSaved = { selected += it }, onSave = { saves++; true })
+        search("Святой Преподобномученицы Елисаветы")
+        scrollTo("discovery_church_${place.id}").performClick()
+        compose.runOnIdle {
+            assertEquals(listOf("elisavetinsky_opalikha"), selected)
+            assertEquals(0, saves)
+            assertTrue(prepared.single { it.id == selected.single() }.schedule.isNotEmpty())
+        }
+    }
+
+    @Test fun filteringNearbyKeepsTheMatchingPreparedChurchVisibleUnderItsMapName() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val prepared = context.assets.open("churches.json").bufferedReader().use { ParishRepository(it.readText()) }
+            .directory.churches
+        val point = GeoPoint(55.82553, 37.24345)
+        val places = context.assets.open(BundledChurchCatalog.ASSET_PATH).bufferedReader().use {
+            LocalChurchCatalog.decode(it, Instant.parse("2026-11-12T06:00:00Z"))
+        }.nearby(point, 5_000) {}
+        assertTrue("The real nearby list must expose its name filter", places.size > 5)
+        val place = places.single { it.id == "osm:way:186160039" }
+        val fake = FakeDiscovery().apply { churchResult = {
+            success(places, DiscoveryProvider.LOCAL_CATALOG).copy(cacheStatus = DiscoveryCacheStatus.LOCAL_SNAPSHOT,
+                queryCenter = point.searchAreaCenter(), radiusMeters = 5_000)
+        } }
+        // Declared test position: this regression exercises filtering and selection, not GPS accuracy.
+        val location = object : ChurchLocationSource {
+            override fun hasPermission() = true
+            override fun locateResult(maxAccuracyMeters: Float, maxLocationAgeMillis: Long,
+                onResult: (ForegroundLocationResult) -> Unit) {
+                onResult(ForegroundLocationResult.Located(ForegroundLocationFix(
+                    point.latitude, point.longitude, 4_500f, SystemClock.elapsedRealtimeNanos())))
+            }
+            override fun stop() = Unit
+        }
+        val query = mutableStateOf("")
+        val selected = mutableListOf<String>()
+        var saves = 0
+        compose.setContent {
+            GuideTheme(dark = false) {
+                ChurchDiscoveryScreen(fake, onBack = {}, onSave = { _, _ -> saves++; ChurchSelectionResult.FAILED },
+                    onOpenUrl = {}, query = query.value, onQueryChange = { query.value = it },
+                    mode = ChurchSearchMode.NAME, onModeChange = {}, savedChurches = prepared,
+                    onSelectSaved = { id, done -> selected += id; done(); ChurchSelectionResult.SELECTED },
+                    locationSource = location)
+            }
+        }
+        scrollTo("discovery_saved_elisavetinsky_opalikha").assertIsDisplayed()
+        scrollTo("discovery_nearby").performClick()
+        compose.onNodeWithTag("discovery_saved_elisavetinsky_opalikha").assertDoesNotExist()
+        scrollTo("discovery_church_${place.id}").assertIsDisplayed()
+        scrollTo("discovery_name_filter").performTextReplacement("Елисаветы")
+        scrollTo("discovery_church_${place.id}").assertIsDisplayed()
+        compose.onNodeWithTag("discovery_empty").assertDoesNotExist()
+        compose.onNodeWithTag("discovery_church_${place.id}").performClick()
+        compose.runOnIdle {
+            assertEquals("", query.value)
+            assertEquals(listOf(point), fake.centers)
+            assertEquals(listOf("elisavetinsky_opalikha"), selected)
+            assertEquals(0, saves)
         }
     }
 

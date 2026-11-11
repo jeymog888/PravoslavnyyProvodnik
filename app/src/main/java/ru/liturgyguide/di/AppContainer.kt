@@ -10,6 +10,8 @@ import ru.liturgyguide.model.DailyReadings
 import ru.liturgyguide.service.discovery.DefaultPlaceDiscovery
 import ru.liturgyguide.service.discovery.DiscoveryCacheStore
 import ru.liturgyguide.service.discovery.PlaceDiscovery
+import ru.liturgyguide.service.discovery.BundledChurchCatalog
+import ru.liturgyguide.service.discovery.CatalogPlaceDiscovery
 import ru.liturgyguide.service.schedule.InternetSchedules
 import ru.liturgyguide.service.schedule.InternetScheduleRepository
 import ru.liturgyguide.service.schedule.ScheduleCacheStore
@@ -50,14 +52,17 @@ class AppContainer(context: Context, private val discoveryOverride: PlaceDiscove
             calendar = PublishedCalendarSupplements())
     }
     val placeDiscovery: PlaceDiscovery by lazy {
-        discoveryOverride ?: DefaultPlaceDiscovery(cache = object : DiscoveryCacheStore {
+        discoveryOverride ?: CatalogPlaceDiscovery(BundledChurchCatalog(open = {
+            assetReader?.invoke(BundledChurchCatalog.ASSET_PATH)?.reader()
+                ?: appContext.assets.open(BundledChurchCatalog.ASSET_PATH).bufferedReader(Charsets.UTF_8)
+        }), DefaultPlaceDiscovery(cache = object : DiscoveryCacheStore {
             private val cache = appContext.getSharedPreferences("place_discovery_cache", Context.MODE_PRIVATE)
             override fun read(slot: String): String? = if (slot in setOf("cities", "churches", "places", "landmarks"))
                 runCatching { cache.getString(slot, null) }.getOrNull() else null
             override fun write(slot: String, value: String) {
                 if (slot in setOf("cities", "churches", "places", "landmarks")) cache.edit().putString(slot, value).apply()
             }
-        })
+        }))
     }
     private var stageMatcherResult: Result<StageMatcher>? = null
     val parishes: Result<ParishRepository> by lazy {

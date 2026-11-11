@@ -3,7 +3,7 @@ package ru.liturgyguide.service
 import com.google.gson.Gson
 import com.google.gson.JsonParser
 import ru.liturgyguide.model.Parish
-import java.net.URI
+import ru.liturgyguide.service.schedule.ScheduleUrl
 import java.time.ZoneId
 import java.util.Locale
 import java.util.UUID
@@ -59,8 +59,10 @@ object SavedChurchCodec {
     private val gson = Gson()
 
     fun validated(record: SavedChurchRecord): SavedChurchRecord? = runCatching {
+        // Keep the published protocol. An HTTP-only parish must remain selectable after a restart.
+        val website = record.website.trim().let { if (it.isEmpty()) "" else requireNotNull(ScheduleUrl.publicSource(it)) }
         val clean = record.copy(name = record.name.trim(), city = record.city.trim(), address = record.address.trim(),
-            timezone = record.timezone.trim(), website = record.website.trim(), sourceUrl = record.sourceUrl.trim())
+            timezone = record.timezone.trim(), website = website, sourceUrl = record.sourceUrl.trim())
         require(clean.name.length in 1..MAX_NAME_LENGTH && clean.city.length <= MAX_CITY_LENGTH && clean.address.length <= MAX_ADDRESS_LENGTH)
         require(clean.origin != SavedChurchOrigin.USER || clean.city.isNotBlank())
         require(listOf(clean.name, clean.city, clean.address).none { value -> value.any(Char::isISOControl) })
@@ -69,7 +71,6 @@ object SavedChurchCodec {
         clean.latitude?.let { require(it.isFinite() && it in -90.0..90.0) }
         clean.longitude?.let { require(it.isFinite() && it in -180.0..180.0) }
         clean.locationAccuracyMeters?.let { require(clean.latitude != null && it.isFinite() && it > 0f && it <= 10_000f) }
-        require(clean.website.isEmpty() || isSafeWebsite(clean.website))
         when (clean.origin) {
             SavedChurchOrigin.USER -> {
                 require(clean.id.startsWith("custom:"))
@@ -116,10 +117,7 @@ object SavedChurchCodec {
         return encoded
     }
 
-    fun isSafeWebsite(value: String): Boolean = runCatching {
-        val uri = URI(value)
-        uri.scheme == "https" && !uri.host.isNullOrBlank() && uri.userInfo == null && value.length <= 2048
-    }.getOrDefault(false)
+    fun isSafeWebsite(value: String): Boolean = ScheduleUrl.publicSource(value) != null
 }
 
 object ChurchDirectory {

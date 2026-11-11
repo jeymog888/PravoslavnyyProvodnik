@@ -8,6 +8,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import ru.liturgyguide.service.schedule.ScheduleUrl
 import java.net.URI
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -59,9 +60,9 @@ data class DiscoveredChurch(
 /** A map category is not a denomination or a published service schedule. */
 enum class DiscoveredPlaceKind { CHURCH, CHAPEL, MONASTERY, WORSHIP_PLACE }
 
-enum class DiscoveryCacheStatus { FRESH_NETWORK, FRESH_CACHE, STALE_CACHE }
+enum class DiscoveryCacheStatus { FRESH_NETWORK, FRESH_CACHE, STALE_CACHE, LOCAL_SNAPSHOT }
 enum class DiscoveryFailure { INVALID_QUERY, UNAVAILABLE, SERVER_UNAVAILABLE, TIMEOUT, TOO_LARGE, INVALID_RESPONSE, RATE_LIMITED, BUSY }
-enum class DiscoveryProvider { PHOTON, VK_MAPS }
+enum class DiscoveryProvider { PHOTON, VK_MAPS, LOCAL_CATALOG }
 
 sealed interface DiscoveryResult<out T> {
     data class Success<T>(
@@ -478,10 +479,7 @@ internal object DiscoveryJson {
         }.getOrNull() }.distinctBy { it.id }.sortedBy { center.distanceMeters(it.center) }
     }
 
-    private fun safeWebsite(value: String): String? = runCatching {
-        val uri = URI(value)
-        if (uri.scheme == "https" && !uri.host.isNullOrBlank() && uri.userInfo == null && !value.any { it.isISOControl() }) value else null
-    }.getOrNull()
+    private fun safeWebsite(value: String): String? = ScheduleUrl.publicSource(value)?.takeIf { it.startsWith("https://") }
 
     private fun JsonObject.string(key: String, maxLength: Int = 512): String = runCatching {
         val value = get(key)?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isString }?.asString.orEmpty().trim()

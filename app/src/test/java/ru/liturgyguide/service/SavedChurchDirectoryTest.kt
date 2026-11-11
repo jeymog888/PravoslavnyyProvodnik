@@ -3,6 +3,9 @@ package ru.liturgyguide.service
 import android.content.SharedPreferences
 import org.junit.Assert.*
 import org.junit.Test
+import ru.liturgyguide.service.discovery.DiscoveredChurch
+import ru.liturgyguide.service.discovery.GeoPoint
+import ru.liturgyguide.ui.toSavedChurch
 import java.time.LocalDate
 
 class SavedChurchDirectoryTest {
@@ -51,6 +54,73 @@ class SavedChurchDirectoryTest {
         assertEquals(record, SavedChurchCodec.decode(SavedChurchCodec.encode(listOf(record))).single())
         assertTrue(record.asParish().schedule.isEmpty())
         assertNull(SavedChurchCodec.validated(record.copy(sourceUrl = "https://example.com/way/123")))
+    }
+
+    @Test fun `a discovered HTTP church remains selectable after saving and restarting`() {
+        for (website in listOf("http://church.example/", "http://ппсобор.рф/")) {
+            val discovered = DiscoveredChurch(id = "osm:node:42", name = "Петропавловский собор",
+                center = GeoPoint(55.753, 37.623), address = "Москва", city = "Москва",
+                website = website, isChapel = false, sourceUrl = "https://www.openstreetmap.org/node/42")
+            val record = requireNotNull(discovered.toSavedChurch())
+            val canonical = if (website.contains("ппсобор")) "http://xn--90azbbajd.xn--p1ai/" else website
+            assertEquals(canonical, record.website)
+            assertEquals(discovered.sourceUrl, record.sourceUrl)
+            val preferences = MemoryPreferences()
+            assertTrue(ChurchDirectoryStore(preferences).save(record))
+            val reopened = ChurchDirectoryStore(preferences).records()
+            assertEquals(listOf(record), reopened)
+            val selected = ChurchSelection.resolve(ChurchDirectory.merge(emptyList(), reopened),
+                hasExplicitSelection = true, selectedId = discovered.id, hasReadingContext = false,
+                readingContext = null, hasPlaybackSnapshot = false, hasLegacyReading = false, legacyDefaultId = null)
+            assertNotNull(selected)
+            assertEquals(discovered.id, selected?.id)
+            assertEquals(canonical, selected?.website)
+            assertEquals(discovered.sourceUrl, selected?.sourceUrl)
+            assertTrue(requireNotNull(selected).schedule.isEmpty())
+        }
+    }
+
+    @Test fun `manual IDN website is canonicalized once without changing escaped query or protocol`() {
+        val canonical = "https://xn--90azbbajd.xn--p1ai/%D1%85%D1%80%D0%B0%D0%BC?service=a%26b"
+        val record = requireNotNull(SavedChurchCodec.validated(church().copy(
+            website = " https://ппсобор.рф/храм?service=a%26b ")))
+        assertEquals(canonical, record.website)
+        assertTrue(SavedChurchCodec.isSafeWebsite("https://ппсобор.рф/"))
+        assertEquals(listOf(record), SavedChurchCodec.decode(SavedChurchCodec.encode(listOf(record))))
+        assertEquals("http://xn--90azbbajd.xn--p1ai/",
+            SavedChurchCodec.validated(record.copy(website = "http://ппсобор.рф/"))?.website)
+        val preferences = MemoryPreferences()
+        val store = ChurchDirectoryStore(preferences)
+        assertTrue(store.save(record))
+        assertFalse(store.save(record.copy(website = "https://ппсобор.рф/" + "х".repeat(400))))
+        assertEquals(listOf(record), store.records())
+    }
+
+    @Test fun `a discovered church with no city keeps that fact after selection and restart`() {
+        val discovered = DiscoveredChurch("osm:relation:19595736", "Храм Троицы Живоначальной в Листах",
+            GeoPoint(55.7716959, 37.63184935), "улица Сретенка, 27с3", "", null, false,
+            "https://www.openstreetmap.org/relation/19595736")
+        val saved = requireNotNull(discovered.toSavedChurch())
+        assertEquals("", saved.city)
+        assertEquals(saved, SavedChurchCodec.decode(SavedChurchCodec.encode(listOf(saved))).single())
+    }
+
+    @Test fun `published website support never relaxes unsafe destinations or OSM provenance`() {
+        val record = church()
+        for (website in listOf("http://user:pass@example.com/", "https://логин@ппсобор.рф/",
+            "http://127.0.0.1/", "https://192.168.1.1/", "https://[::1]/", "http://храм.local/",
+            "http://localhost/", "https://храм.localhost/", "https://ппсобор.рф:8443/", "//ппсобор.рф/")) {
+            assertFalse(website, SavedChurchCodec.isSafeWebsite(website))
+            assertNull(website, SavedChurchCodec.validated(record.copy(website = website)))
+        }
+        val osm = record.copy(id = "osm:way:123", origin = SavedChurchOrigin.OPEN_STREET_MAP,
+            latitude = 55.7, longitude = 37.6, website = "http://church.example/",
+            sourceUrl = "https://www.openstreetmap.org/way/123")
+        assertNotNull(SavedChurchCodec.validated(osm))
+        for (source in listOf("http://www.openstreetmap.org/way/123", "https://www.openstreetmap.org/way/124",
+            "https://www.openstreetmap.org@evil.example/way/123", "https://ппсобор.рф/"))
+            assertNull(source, SavedChurchCodec.validated(osm.copy(sourceUrl = source)))
+        assertNull(SavedChurchCodec.validated(record.copy(sourceUrl = "http://church.example/")))
     }
 
     @Test fun `complete map names and addresses survive storage without silent truncation`() {

@@ -8,9 +8,11 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.net.CookieHandler
 import java.net.HttpURLConnection
+import java.net.IDN
 import java.net.InetAddress
 import java.net.URI
 import java.net.URL
+import java.util.Locale
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -25,30 +27,33 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 object ScheduleUrl {
-    fun normalized(value: String): String? = runCatching {
+    fun normalized(value: String): String? {
         val trimmed = value.trim()
-        val uri = URI(if (trimmed.startsWith("http://")) "https://" + trimmed.removePrefix("http://") else trimmed)
-        require(uri.scheme == "https" && uri.userInfo == null && uri.port in setOf(-1, 443))
-        val host = requireNotNull(uri.host).lowercase()
-        require(host.contains('.') && host != "localhost" && !host.endsWith(".local") && !host.endsWith(".localhost"))
-        require(!Regex("^[0-9.]+$").matches(host) && !host.contains(':'))
-        require(trimmed.length <= 2_048 && trimmed.none(Char::isISOControl))
-        // Preserve escaped query delimiters; decoding then rebuilding would change ?page=a%26b.
-        URI("https://$host${uri.rawPath.ifEmpty { "/" }}${uri.rawQuery?.let { "?$it" }.orEmpty()}").toASCIIString()
-    }.getOrNull()
+        val https = if (trimmed.startsWith("http://")) "https://" + trimmed.removePrefix("http://") else trimmed
+        return publicSource(https)?.takeIf { it.startsWith("https://") }
+    }
 
     /** Preserve an explicitly published protocol; HTTP is never inferred from an HTTPS failure. */
     fun publicSource(value: String): String? = runCatching {
         val trimmed = value.trim()
+        require(trimmed.length <= 2_048 && trimmed.none { it.isISOControl() || Character.getType(it) == Character.FORMAT.toInt() })
         val uri = URI(trimmed)
-        val scheme = uri.scheme?.lowercase() ?: error("Missing scheme")
-        require(scheme in setOf("http", "https") && uri.userInfo == null)
-        require(uri.port == -1 || uri.port == if (scheme == "http") 80 else 443)
-        val host = requireNotNull(uri.host).lowercase().removeSuffix(".")
+        val scheme = uri.scheme?.lowercase(Locale.ROOT) ?: error("Missing scheme")
+        require(scheme in setOf("http", "https") && uri.rawUserInfo == null)
+        // URI.host is null for a valid Cyrillic domain. Parse only an explicit hostname
+        // and optional standard port; encoded authorities, userinfo and IP literals remain forbidden.
+        val authority = requireNotNull(uri.rawAuthority)
+        require(authority.none { it in "@%\\[]" })
+        val parts = requireNotNull(Regex("^([^:]+)(?::([0-9]{1,5}))?$").matchEntire(authority))
+        val port = parts.groupValues[2].takeIf(String::isNotEmpty)?.toInt()
+        require(port == null || port == if (scheme == "http") 80 else 443)
+        val host = IDN.toASCII(parts.groupValues[1], IDN.USE_STD3_ASCII_RULES)
+            .lowercase(Locale.ROOT).removeSuffix(".")
         require(host.contains('.') && host != "localhost" && !host.endsWith(".local") && !host.endsWith(".localhost"))
         require(!Regex("^[0-9.]+$").matches(host) && !host.contains(':'))
-        require(trimmed.length <= 2_048 && trimmed.none(Char::isISOControl))
-        URI("$scheme://$host${uri.rawPath.ifEmpty { "/" }}${uri.rawQuery?.let { "?$it" }.orEmpty()}").toASCIIString()
+        // Preserve raw escapes: decoding/rebuilding would change ?page=a%26b into another query.
+        URI("$scheme://$host${uri.rawPath.ifEmpty { "/" }}${uri.rawQuery?.let { "?$it" }.orEmpty()}")
+            .toASCIIString().also { require(it.length <= 2_048) }
     }.getOrNull()
 
     fun sameOrigin(first: String, second: String): Boolean = runCatching {
