@@ -78,12 +78,11 @@ class ChurchReadingEntryTest {
             onOpenUrl = {}, onBack = {}, searchQuery = "", onSearchQueryChange = {}, onReadLiturgy = {},
             internetSchedule = InternetScheduleState(parish.id, InternetScheduleStatus.NO_WEBSITE),
             onRefreshSchedule = {}, onSetScheduleSource = { sites += it }) } }
-        openDetails()
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("edit_schedule_website"))
-        compose.onNodeWithTag("edit_schedule_website").performClick()
-        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("schedule_website_input"))
+        compose.onNodeWithTag("edit_schedule_website").assert(hasAnyAncestor(hasTestTag("church_schedule_card"))).performClick()
+        compose.onNodeWithTag("schedule_source_content").performScrollToIndex(2)
         compose.onNodeWithTag("schedule_website_input").performTextInput("https://example.org/schedule/")
-        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("save_schedule_website"))
+        compose.onNodeWithTag("schedule_source_content").performScrollToIndex(3)
         compose.onNodeWithTag("save_schedule_website").performClick()
         compose.runOnIdle { assertEquals(listOf("https://example.org/schedule/"), sites) }
         compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("typical_schedule"))

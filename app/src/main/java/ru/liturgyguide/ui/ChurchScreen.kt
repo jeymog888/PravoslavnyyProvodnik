@@ -53,7 +53,8 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     internetSchedule: InternetScheduleState? = null, onRefreshSchedule: (() -> Unit)? = null,
     onSetScheduleSource: ((String) -> Unit)? = null,
     onSelectionCancelled: () -> Unit = {}, searchQuery: String, onSearchQueryChange: (String) -> Unit,
-    onOpenService: ((ParishService) -> Unit)? = null, now: Instant? = null) {
+    onOpenService: ((ParishService) -> Unit)? = null, now: Instant? = null,
+    onReadServiceText: ((LocalDate, WorshipKind) -> Unit)? = null) {
     val church = churches.firstOrNull { it.id == selectedId }
     var picker by rememberSaveable { mutableStateOf(false) }
     var adding by rememberSaveable { mutableStateOf(false) }
@@ -66,6 +67,10 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     var handledTimeRequest by rememberSaveable { mutableIntStateOf(0) }
     var selectionFailed by remember { mutableStateOf(false) }
     var details by rememberSaveable(church?.id) { mutableStateOf(false) }
+    var editingSource by rememberSaveable(church?.id) { mutableStateOf(false) }
+    var chooserDateIso by rememberSaveable(church?.id) { mutableStateOf<String?>(null) }
+    val currentChurchId by rememberUpdatedState(church?.id)
+    val openSourceEditor: () -> Unit = { editingSource = true }
     // The draft belongs to this screen, even while the sheet uses a separate dialog registry.
     // There is at most one draft, and every explicit close/new attempt removes it.
     val churchDraft = rememberSaveableStateHolder()
@@ -287,7 +292,14 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                                 OutlinedButton(onClick = { onOpenUrl(url) }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                                     .testTag("open_schedule_website")) {
                                     Icon(Icons.Default.OpenInNew, null, Modifier.size(20.dp))
-                                    Spacer(Modifier.width(12.dp)); Text("Посмотреть на сайте")
+                                    Spacer(Modifier.width(12.dp)); Text("Открыть сайт")
+                                }
+                            }
+                            if (source == null && onSetScheduleSource != null) {
+                                OutlinedButton(onClick = openSourceEditor,
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("edit_schedule_website")) {
+                                    Icon(Icons.Default.Edit, null, Modifier.size(20.dp))
+                                    Spacer(Modifier.width(12.dp)); Text("Указать сайт")
                                 }
                             }
                         }
@@ -319,6 +331,10 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                             Text(readingEntryLabel(date))
                         } else OutlinedButton(onClick = { onReadLiturgy(date) },
                             modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("church_read_liturgy")) { Text("Текст литургии на этот день") }
+                        if (featured == null && onReadServiceText != null) OutlinedButton(onClick = { chooserDateIso = date.toString() },
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("church_other_services")) {
+                            Text("Выбрать другой текст")
+                        }
                     }
                 }
                 if (entries.isEmpty()) item { TypicalScheduleContent(date) }
@@ -327,8 +343,11 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                         Text("О храме", style = MaterialTheme.typography.titleMedium)
                         if (ownState != null && onRefreshSchedule != null) InternetScheduleControls(
                             state = ownState, timezone = church.timezone, onRefresh = onRefreshSchedule,
-                            onOpenUrl = onOpenUrl, onSetSource = onSetScheduleSource, showRefresh = featured != null,
-                            showWebsite = featured != null)
+                            onOpenUrl = onOpenUrl,
+                            onEditSource = openSourceEditor.takeIf {
+                                onSetScheduleSource != null && (featured != null || scheduleSourceFor(church, ownState) != null)
+                            },
+                            showRefresh = featured != null, showWebsite = featured != null)
                         ArrivalAction(if (details) "Скрыть сведения" else "Адрес и другие сведения", Icons.Default.Info,
                             { details = !details }, Modifier.testTag("church_details"))
                         if (details) {
@@ -355,6 +374,25 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
             }
         }
     }
+    if (church != null) {
+        val ownerId = church.id
+        val chooserDate = chooserDateIso?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+        if (chooserDate != null && onReadServiceText != null) ServiceBookChooser(chooserDate,
+            onDismiss = { chooserDateIso = null }, onSelect = { selectedDate, worship ->
+                if (currentChurchId == ownerId) onReadServiceText(selectedDate, worship)
+            })
+        if (editingSource && onSetScheduleSource != null) {
+            val ownState = internetSchedule?.takeIf { it.parishId == ownerId }
+            ScheduleSourceSheet(churchId = ownerId, churchName = church.shortName,
+                initialUrl = ownState?.website.orEmpty().ifBlank { church.website }, loading = ownState?.loading == true,
+                onDismiss = { editingSource = false }, onSubmit = { url ->
+                    if (currentChurchId == ownerId) {
+                        editingSource = false
+                        onSetScheduleSource(url)
+                    }
+                })
+        }
+    }
 }
 
 internal fun serviceReadingAction(service: ParishService): String = when (ServiceBookSelection.kindFor(service.title)) {
@@ -378,10 +416,7 @@ internal fun churchAddressLine(church: Parish): String {
 
 @Composable
 private fun InternetScheduleControls(state: InternetScheduleState, timezone: String, onRefresh: () -> Unit,
-    onOpenUrl: (String) -> Unit, onSetSource: ((String) -> Unit)?, showRefresh: Boolean = true, showWebsite: Boolean = true) {
-    var editing by rememberSaveable(state.parishId) { mutableStateOf(false) }
-    var input by rememberSaveable(state.parishId) { mutableStateOf("") }
-    var invalid by rememberSaveable(state.parishId) { mutableStateOf(false) }
+    onOpenUrl: (String) -> Unit, onEditSource: (() -> Unit)?, showRefresh: Boolean = true, showWebsite: Boolean = true) {
     val source = state.sourceUrl.ifBlank { state.website }
     val fetched = state.publication?.fetchedAt?.let { timestamp -> runCatching {
         Instant.parse(timestamp).atZone(ZoneId.of(timezone)).format(DateTimeFormatter.ofPattern("d MMM, HH:mm", Locale.forLanguageTag("ru")))
@@ -403,21 +438,9 @@ private fun InternetScheduleControls(state: InternetScheduleState, timezone: Str
             Icons.Default.Refresh, onRefresh, Modifier.testTag("refresh_schedule"), enabled = !state.loading)
         if (showWebsite && ScheduleUrl.publicSource(source) != null) ArrivalAction("Открыть сайт храма", Icons.Default.OpenInNew,
             { onOpenUrl(source) }, Modifier.testTag("open_schedule_website"))
-        if (onSetSource != null) {
-            if (!editing) ArrivalAction(if (state.website.isBlank()) "Указать сайт храма" else "Изменить сайт", Icons.Default.Edit,
-                { input = state.website; invalid = false; editing = true }, Modifier.testTag("edit_schedule_website")) else {
-                OutlinedTextField(value = input, onValueChange = { input = it.take(2048); invalid = false },
-                    label = { Text("Сайт или страница расписания") }, singleLine = true, isError = invalid,
-                    supportingText = { Text(if (invalid) "Укажите полный адрес сайта, начиная с https:// или http://" else "Ссылка на сайт выбранного храма") },
-                    modifier = Modifier.fillMaxWidth().testTag("schedule_website_input"))
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Button(onClick = {
-                        val normalized = ScheduleUrl.publicSource(input)
-                        if (normalized == null) invalid = true else { onSetSource(normalized); editing = false }
-                    }, enabled = !state.loading, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("save_schedule_website")) { Text("Проверить") }
-                    OutlinedButton(onClick = { editing = false }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Отмена") }
-                }
-            }
+        onEditSource?.let { edit ->
+            ArrivalAction(if (state.website.isBlank()) "Указать сайт" else "Изменить сайт", Icons.Default.Edit,
+                edit, Modifier.testTag("edit_schedule_website"))
         }
     }
 }

@@ -55,7 +55,7 @@ class ArrivalLayoutTest(private val width: Int, private val fontScale: Float) {
         scroll("today_refresh_schedule").assertHeightIsAtLeast(48.dp).performClick()
         readable("Обновить расписание")
         scroll("today_schedule_source").assertHeightIsAtLeast(48.dp).performClick()
-        readable("Посмотреть на сайте")
+        readable("Открыть сайт")
         val retry = compose.onNodeWithTag("today_refresh_schedule").getUnclippedBoundsInRoot()
         val source = compose.onNodeWithTag("today_schedule_source").getUnclippedBoundsInRoot()
         assertTrue("The source belongs beside the failed schedule, with a separate touch target", source.top - retry.bottom >= 12.dp)

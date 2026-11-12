@@ -92,7 +92,7 @@ internal fun scheduleEmptyDescription(state: InternetScheduleState?, hasWebsite:
     state?.status == InternetScheduleStatus.UNAVAILABLE -> if (hasWebsite)
         "Не удалось обновить расписание. Попробуйте еще раз или посмотрите его на сайте"
         else "Не удалось обновить расписание. Попробуйте еще раз. Тексты службы ниже уже можно читать"
-    state?.status == InternetScheduleStatus.NO_WEBSITE -> "Пока не нашли источник расписания. Можно указать сайт в сведениях о храме"
+    state?.status == InternetScheduleStatus.NO_WEBSITE -> "Пока не нашли источник расписания. Если знаете сайт храма, укажите его"
     state?.status == InternetScheduleStatus.UNSUPPORTED -> if (hasWebsite)
         "Не удалось автоматически прочитать даты и время. Откройте источник по кнопке ниже"
         else "Не удалось прочитать расписание. Можно повторить поиск или перейти к текстам службы"

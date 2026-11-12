@@ -633,6 +633,11 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         },
                         onResumeBook = { if (screen == Screen.MAIN && churchId == resumeChurchId) openBook(it.key) },
                         onRefresh = { scheduleSourceOverride = null; scheduleRefresh++ },
+                        onSetScheduleSource = { url ->
+                            if (screen == Screen.MAIN && churchId == resumeChurchId) {
+                                scheduleSourceOverride = url; scheduleRefresh++
+                            }
+                        },
                         onResumeLegacy = if (selectedStage == null) null else { {
                             if (screen == Screen.MAIN && churchId == resumeChurchId && player.generation == resumeGeneration)
                                 resumeLegacyReading()
@@ -786,7 +791,11 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         churches = churches, selectedId = church?.id,
                         internetSchedule = internetSchedule,
                         onRefreshSchedule = { scheduleSourceOverride = null; scheduleRefresh++ },
-                        onSetScheduleSource = { url -> scheduleSourceOverride = url; scheduleRefresh++ },
+                        onSetScheduleSource = { url ->
+                            if (screen == Screen.CHURCH && churchId == resumeChurchId) {
+                                scheduleSourceOverride = url; scheduleRefresh++
+                            }
+                        },
                         favorites = favoriteChurches,
                         onToggleFavorite = { id -> favoriteChurches = churchStore.toggleFavorite(id, churches.map { it.id }.toSet()) },
                         onAddChurch = { record ->
@@ -800,6 +809,9 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         personalTimeRequest = personalTimeRequest,
                         onGoToService = { navigate(Screen.MAIN) },
                         onReadLiturgy = { openBookOnDate(it, WorshipKind.LITURGY) },
+                        onReadServiceText = { date, kind ->
+                            if (screen == Screen.CHURCH && churchId == resumeChurchId) openBookOnDate(date, kind)
+                        },
                         onOpenService = { service ->
                             val kind = ServiceBookSelection.kindFor(service.title)
                             if (kind != null) openBookOnDate(LocalDate.parse(service.date), kind,

@@ -31,7 +31,8 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
     onResumeBook: (BookReadingPosition) -> Unit, onRefresh: () -> Unit,
     onResumeLegacy: (() -> Unit)?, bottomBar: @Composable () -> Unit,
     userStarts: List<UserServiceStart> = emptyList(), readingNotice: String? = null,
-    onOpenScheduleSource: (() -> Unit)? = null, legacyReadingSummary: String? = null) {
+    onOpenScheduleSource: (() -> Unit)? = null, legacyReadingSummary: String? = null,
+    onSetScheduleSource: ((String) -> Unit)? = null) {
     val zone = remember(church?.timezone) {
         runCatching { ZoneId.of(church?.timezone ?: "Europe/Moscow") }.getOrDefault(ZoneId.of("Europe/Moscow"))
     }
@@ -46,6 +47,8 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
         it.yearInferred && (schedule?.saved == true || it.sourceUrl == church?.sourceUrl)
     } == true
     var chooserDateIso by rememberSaveable(church?.id) { mutableStateOf<String?>(null) }
+    var editingSource by rememberSaveable(church?.id) { mutableStateOf(false) }
+    val currentChurchId by rememberUpdatedState(church?.id)
     val chooserDate = chooserDateIso?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
     val kind = featured?.let { ServiceBookSelection.kindFor(it.title) }
     val format = remember { DateTimeFormatter.ofPattern("d MMMM", Locale.forLanguageTag("ru")) }
@@ -144,7 +147,14 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                                 OutlinedButton(onClick = source, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                                     .testTag("today_schedule_source")) {
                                     Icon(Icons.Default.OpenInNew, null, Modifier.size(20.dp))
-                                    Spacer(Modifier.width(12.dp)); Text("Посмотреть на сайте")
+                                    Spacer(Modifier.width(12.dp)); Text("Открыть сайт")
+                                }
+                            }
+                            if (onOpenScheduleSource == null && onSetScheduleSource != null) {
+                                OutlinedButton(onClick = { editingSource = true },
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("today_edit_schedule_website")) {
+                                    Icon(Icons.Default.Edit, null, Modifier.size(20.dp))
+                                    Spacer(Modifier.width(12.dp)); Text("Указать сайт")
                                 }
                             }
                         }
@@ -208,6 +218,17 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
     }
     if (chooserDate != null) ServiceBookChooser(chooserDate, onDismiss = { chooserDateIso = null },
         onSelect = { selectedDate, worship -> onOpenBook(selectedDate, worship, false) })
+    if (editingSource && church != null && onSetScheduleSource != null) {
+        val editorChurchId = church.id
+        ScheduleSourceSheet(churchId = editorChurchId, churchName = church.shortName,
+            initialUrl = ownState?.website.orEmpty().ifBlank { church.website }, loading = loading,
+            onDismiss = { editingSource = false }, onSubmit = { url ->
+                if (currentChurchId == editorChurchId) {
+                    editingSource = false
+                    onSetScheduleSource(url)
+                }
+            })
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
