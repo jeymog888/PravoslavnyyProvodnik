@@ -15,7 +15,7 @@ internal object NovosibirskSourceFixture {
         "", "", "", emptyList(), "", "", 54.9755397, 82.9086203)
     fun fixture(name: String) = requireNotNull(javaClass.getResource("/schedule/$name")).readText()
     fun category(ids: List<Int> = listOf(6081)) = Gson().toJson(mapOf("query" to mapOf("categorymembers" to ids.map { mapOf("pageid" to it, "title" to title) })))
-    fun revisions(contents: Map<Int, String> = mapOf(6081 to fixture("palomnik/novosibirsk.wiki"))) = Gson().toJson(mapOf("query" to mapOf("pages" to
+    fun revisions(contents: Map<Int, String> = mapOf(6081 to fixture("palomnik/cityless/novosibirsk-complex.wiki"))) = Gson().toJson(mapOf("query" to mapOf("pages" to
         contents.mapKeys { it.key.toString() }.mapValues { (id, content) -> mapOf("pageid" to id.toInt(), "title" to title,
             "revisions" to listOf(mapOf("slots" to mapOf("main" to mapOf("*" to content))))) })))
     fun response(url: String, body: String) = ScheduleResponse(url, body.toByteArray(), "application/json")
@@ -24,6 +24,7 @@ internal object NovosibirskSourceFixture {
 class ScheduleExcludedSourceResolverTest {
     private fun response(url: String, body: String) = NovosibirskSourceFixture.response(url, body)
     private val parish = NovosibirskSourceFixture.parish
+    private val monastery = parish.copy(id = "catalog:novosibirsk-monastery", name = NovosibirskSourceFixture.title)
     private val old = NovosibirskSourceFixture.old
     private val current = NovosibirskSourceFixture.current
     private fun osm(tags: Map<String, String>) = Gson().toJson(mapOf("elements" to listOf(mapOf("type" to "way", "id" to 55228075, "tags" to tags))))
@@ -55,7 +56,7 @@ class ScheduleExcludedSourceResolverTest {
             "categorymembers" in url -> NovosibirskSourceFixture.category()
             else -> NovosibirskSourceFixture.revisions()
         }) })
-        val site = resolver.resolve(parish.copy(website = website), setOf(website))
+        val site = resolver.resolve(monastery.copy(website = website), setOf(website))
         assertEquals(current, site?.url)
         assertEquals("https://azbyka.ru/palomnik/index.php?curid=6081", site?.evidenceUrl)
     }
@@ -66,7 +67,7 @@ class ScheduleExcludedSourceResolverTest {
             val resolver = OpenScheduleSiteResolver(ScheduleTransport { url ->
                 calls += url
                 response(url, when {
-                    "openstreetmap" in url -> osm(mapOf("website" to old) + if (wikiTag) mapOf("wikipedia" to "ru:Монастырь") else mapOf("wikidata" to "Q42"))
+                    "openstreetmap" in url -> osm(mapOf("website" to old) + if (wikiTag) mapOf("wikipedia" to "ru:Храм Новомучеников") else mapOf("wikidata" to "Q42"))
                     "wikipedia.org" in url -> """{"query":{"pages":{"1":{"pageprops":{"wikibase_item":"Q42"}}}}}"""
                     else -> """{"entities":{"Q42":{"claims":{"P856":[
                         {"rank":"preferred","mainsnak":{"datavalue":{"value":"$old"}}},
@@ -86,7 +87,7 @@ class ScheduleExcludedSourceResolverTest {
         val resolver = PalomnikScheduleSiteResolver(ScheduleTransport { url -> response(url,
             if ("categorymembers" in url) NovosibirskSourceFixture.category(listOf(6081, 6082))
             else NovosibirskSourceFixture.revisions(mapOf(6081 to first, 6082 to second))) })
-        assertNull(resolver.resolve(parish, setOf(current)))
+        assertNull(resolver.resolve(monastery, setOf(current)))
     }
 
     @Test fun multiplePublishedScheduleLinksRemainAmbiguousEvenAfterOneWasExcluded() = runBlocking {
@@ -95,7 +96,7 @@ class ScheduleExcludedSourceResolverTest {
         val resolver = PalomnikScheduleSiteResolver(ScheduleTransport { url -> response(url,
             if ("categorymembers" in url) NovosibirskSourceFixture.category()
             else NovosibirskSourceFixture.revisions(mapOf(6081 to content))) })
-        assertNull(resolver.resolve(parish, setOf(current)))
+        assertNull(resolver.resolve(monastery, setOf(current)))
     }
 
     @Test fun catalogMayUseItsUniqueHomepageWhenItsUniqueScheduleEndpointWasExcluded() = runBlocking {
@@ -104,8 +105,8 @@ class ScheduleExcludedSourceResolverTest {
         val resolver = PalomnikScheduleSiteResolver(ScheduleTransport { url -> response(url,
             if ("categorymembers" in url) NovosibirskSourceFixture.category()
             else NovosibirskSourceFixture.revisions(mapOf(6081 to content))) })
-        assertEquals(homepage, resolver.resolve(parish, setOf(current))?.url)
-        assertNull(resolver.resolve(parish, setOf(current, homepage)))
+        assertEquals(homepage, resolver.resolve(monastery, setOf(current))?.url)
+        assertNull(resolver.resolve(monastery, setOf(current, homepage)))
     }
 
     @Test fun excludingTheClosestIdentityWebsiteCannotSelectAFartherNamesake() = runBlocking {

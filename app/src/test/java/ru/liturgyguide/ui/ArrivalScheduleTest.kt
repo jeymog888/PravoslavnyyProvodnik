@@ -12,6 +12,18 @@ import java.time.Instant
 import java.time.LocalDate
 
 class ArrivalScheduleTest {
+    @Test fun pendingSourceIdentityIsDifferentFromAbsentServicesOrAnActiveNetworkRequest() {
+        val state = ru.liturgyguide.service.schedule.InternetScheduleState("pending",
+            status = ru.liturgyguide.service.schedule.InternetScheduleStatus.UNAVAILABLE,
+            checkedAt = "2026-11-12T06:00:00Z", sourceNeedsVerification = true)
+        assertEquals("Нужно уточнить расписание", scheduleEmptyTitle(state, false))
+        assertTrue(scheduleEmptyDescription(state, true).contains("относится к этому храму"))
+        assertTrue(scheduleEmptyDescription(state, true).contains("на сайте"))
+        assertFalse(scheduleEmptyDescription(state, false).contains("на сайте"))
+        assertEquals("Проверяем источник расписания", scheduleEmptyTitle(state.copy(loading = true), false))
+        assertNull(scheduleCheckReceipt(state.copy(loading = true), "Europe/Moscow"))
+        assertTrue(scheduleCheckReceipt(state, "Europe/Moscow")!!.startsWith("Источник требует проверки"))
+    }
     private val date = LocalDate.of(2026, 11, 11)
     private val now = Instant.parse("2026-11-11T10:00:00Z")
     private val church = Parish("trip", "Троицкий храм", "Троицкий храм", "Москва", "Сретенка, 27", "", "",
@@ -52,12 +64,17 @@ class ArrivalScheduleTest {
     }
 
     @Test fun rejectedPublicationAndOtherChurchOrSourceCannotLeakIntoTheDay() {
-        for (state in listOf(cached().copy(publicationRejected = true), cached().copy(parishId = "other"),
+        for (state in listOf(cached().copy(publicationRejected = true), cached().copy(sourceNeedsVerification = true), cached().copy(parishId = "other"),
             cached().copy(sourceUrl = "https://different.example/schedule"),
             cached().copy(publication = cached().publication!!.copy(parishId = "other")),
             cached().copy(publication = cached().publication!!.copy(timezone = "Asia/Vladivostok")))) {
             assertTrue(arrivalSchedule(church, date, now, state).entries.isEmpty())
         }
+    }
+
+    @Test fun pendingSourceDoesNotBorrowBundledRowsFromTheSameUnconfirmedBinding() {
+        val pending = cached().copy(sourceNeedsVerification = true)
+        assertTrue(arrivalSchedule(church.copy(schedule = listOf(service("08:00"))), date, now, pending).entries.isEmpty())
     }
 
     @Test fun anInferredYearNeverClaimsAnOngoingService() {

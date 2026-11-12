@@ -32,7 +32,8 @@ class ScheduleSourceRecoveryTest {
         }
     }
     private fun response(url: String, body: String = html) = ScheduleResponse(url, body.toByteArray(), "text/html")
-    private fun site(url: String = alternative) = ScheduleSite(url, proof, parish.name)
+    private fun site(url: String = alternative) = ScheduleSite(url, proof, parish.name,
+        ScheduleEntityIdentity.bind(parish, url, proof, parish.name, ScheduleBindingMethod.ARTICLE_SCOPE))
     private suspend fun seed(cache: Cache): InternetScheduleState = InternetScheduleRepository(ScheduleTransport { response(it) }, cache)
         .refresh(parish, now, force = true)
 

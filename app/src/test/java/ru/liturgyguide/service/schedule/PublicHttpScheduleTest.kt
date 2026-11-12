@@ -130,7 +130,11 @@ class PublicHttpScheduleTest {
         val repo = InternetScheduleRepository(ScheduleTransport { url ->
             ScheduleResponse(url, (if (url == root) "<a href='/raspisanie/'>Расписание</a>" else
                 "<article data-day='2026-11-11'><li><time>08:00</time><span>Литургия</span></li></article>").toByteArray(), "text/html")
-        }, cache, siteResolver = ScheduleSiteResolver { ScheduleSite(root, "https://directory.example/card/42", "Никольский храм") })
+        }, cache, siteResolver = ScheduleSiteResolver { selected ->
+            val evidence = "https://directory.example/card/42"
+            ScheduleSite(root, evidence, "Никольский храм",
+                ScheduleEntityIdentity.bind(selected, root, evidence, "Никольский храм", ScheduleBindingMethod.ARTICLE_SCOPE))
+        })
         val p = parish(); val now = Instant.parse("2026-11-11T06:00:00Z")
         val state = repo.refresh(p, now)
         assertEquals(InternetScheduleStatus.READY, state.status)

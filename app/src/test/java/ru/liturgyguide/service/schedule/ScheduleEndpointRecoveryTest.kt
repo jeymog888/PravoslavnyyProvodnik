@@ -10,8 +10,9 @@ import java.time.LocalDate
 
 /** Real public identity + weekly HTML fixtures; only the obsolete endpoint failure is simulated. */
 class ScheduleEndpointRecoveryTest {
-    @Test fun oldConfiguredAndRepeatedOsmUrlRecoverThroughVerifiedCatalogToReadableOfflineSchedule() = runBlocking {
-        val selected = NovosibirskSourceFixture.parish
+    @Test fun selectedMonasteryRecoversItsGeneralTimetableThroughCatalogAndReopensOffline() = runBlocking {
+        val selected = NovosibirskSourceFixture.parish.copy(id = "catalog:novosibirsk-monastery",
+            name = "Мужской монастырь Новомучеников Российских (Новосибирск)")
         val now = Instant.parse("2026-11-12T03:00:00Z")
         val requests = mutableListOf<String>()
         var saved: String? = null
@@ -36,7 +37,7 @@ class ScheduleEndpointRecoveryTest {
         val ready = repository.refresh(selected, now, force = true)
         assertEquals(InternetScheduleStatus.READY, ready.status)
         assertEquals(1, requests.count { it == NovosibirskSourceFixture.old })
-        assertEquals(5, requests.size)
+        assertEquals(4, requests.size)
         assertEquals(NovosibirskSourceFixture.current, ready.website)
         assertEquals("https://azbyka.ru/palomnik/index.php?curid=6081", ready.siteEvidenceUrl)
         val publication = requireNotNull(ready.publication)

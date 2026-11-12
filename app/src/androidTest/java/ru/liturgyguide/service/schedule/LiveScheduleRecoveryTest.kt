@@ -18,13 +18,12 @@ class LiveScheduleRecoveryTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
     private val now = Instant.parse("2026-11-12T03:00:00Z")
 
-    @Test fun obsoleteConfiguredWebsiteFindsTheSameNovosibirskChurchAndReopensOffline() = runBlocking {
+    @Test fun selectedNovosibirskMonasteryFindsItsGeneralTimetableAndReopensOffline() = runBlocking {
         assumeTrue(InstrumentationRegistry.getArguments().getString("liveScheduleRecovery") == "true")
-        // This verifies source recovery and the published monastery timetable. Whether
-        // every unlabelled event belongs to this building needs separate shared-site acceptance.
-        val parish = Parish("osm:way:55228075", "Храм в честь Святых Новомучеников и Исповедников Российских", "Новомучеников",
+        // Select the monastery entity explicitly, not the OSM object of its individual church.
+        val parish = Parish("live:novosibirsk-monastery", "Мужской монастырь Новомучеников Российских", "Новомучеников",
             "Новосибирск", "улица Немировича-Данченко, 120/1", "", "http://neomartires.prihod.ru/", "Asia/Novosibirsk",
-            "https://www.openstreetmap.org/way/55228075", "", "", "", emptyList(), "", "", 54.9755397, 82.9086203)
+            "https://azbyka.ru/palomnik/index.php?curid=6081", "", "", "", emptyList(), "", "", 54.975263, 82.908625)
         val result = checkSource("novosibirsk", parish)
         assertEquals("https://nskmonastyr.cerkov.ru/raspisanie-bogosluzhenij/", result.website)
         assertEquals("https://azbyka.ru/palomnik/index.php?curid=6081", result.siteEvidenceUrl)

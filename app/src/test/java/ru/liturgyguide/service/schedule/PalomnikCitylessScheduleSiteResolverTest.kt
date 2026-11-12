@@ -110,12 +110,14 @@ class PalomnikCitylessScheduleSiteResolverTest {
 
     @Test fun `missing address details or coordinates never fall back to a namesake`() = runBlocking {
         for (selected in listOf(parish().copy(address = "улица Сретенка"), parish().copy(address = "Сретенка 27 с3"),
-            parish().copy(latitude = null), parish().copy(longitude = Double.NaN), parish().copy(name = "Часовня Троицы Живоначальной в Листах"))) {
+            parish().copy(latitude = null), parish().copy(longitude = Double.NaN))) {
             val calls = mutableListOf<String>()
             assertNull(resolver(calls = calls).resolve(selected))
             assertTrue(calls.isEmpty())
         }
         assertNull(resolver().resolve(parish().copy(address = "улица Сретенка, 27")))
+        // A selected chapel may be searched, but a church article still cannot stand in for it.
+        assertNull(resolver().resolve(parish().copy(name = "Часовня Троицы Живоначальной в Листах")))
     }
 
     @Test fun `city if present must still match through existing category branch`() = runBlocking {

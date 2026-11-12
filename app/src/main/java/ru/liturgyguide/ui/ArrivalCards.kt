@@ -46,11 +46,11 @@ internal data class ArrivalSchedule(
 internal fun arrivalSchedule(church: Parish, date: LocalDate, now: Instant?, state: InternetScheduleState?): ArrivalSchedule {
     val ownState = state?.takeIf { it.parishId == church.id }
     val currentSource = ownState?.sourceUrl.orEmpty()
-    val publication = ownState?.takeUnless { it.publicationRejected }?.publication?.takeIf {
+    val publication = ownState?.takeUnless { it.publicationRejected || it.sourceNeedsVerification }?.publication?.takeIf {
         it.parishId == church.id && it.timezone == church.timezone &&
             (currentSource.isBlank() || currentSource == it.sourceUrl)
     }
-    val published = PublishedSchedule.forDate(church, date)
+    val published = if (ownState?.sourceNeedsVerification == true) emptyList() else PublishedSchedule.forDate(church, date)
     val cached = publication?.forDate(date).orEmpty().filter { it.title.isNotBlank() && runCatching { LocalTime.parse(it.time) }.isSuccess }
         .map { ParishService(it.date, it.time, it.title, it.kind) }
     val entries = published.ifEmpty { cached }.distinctBy { "${it.date}|${it.time}|${it.title}" }.sortedBy { it.time }
@@ -84,7 +84,11 @@ internal fun arrivalSchedule(church: Parish, date: LocalDate, now: Instant?, sta
 
 /** No data is not the same thing as no services. Keep the distinction visible beside the date. */
 internal fun scheduleEmptyDescription(state: InternetScheduleState?, hasWebsite: Boolean = true): String = when {
+    state?.sourceNeedsVerification == true && state.loading -> "Проверяем, относится ли расписание к выбранному храму. Тексты ниже уже можно читать"
     state?.loading == true -> "Проверяем сайт храма. Тексты ниже уже можно читать"
+    state?.sourceNeedsVerification == true -> if (hasWebsite)
+        "Пока не удалось подтвердить, что расписание относится к этому храму. Можно проверить на сайте или повторить поиск"
+        else "Пока не удалось подтвердить, что расписание относится к этому храму. Можно повторить поиск. Тексты ниже уже можно читать"
     state?.status == InternetScheduleStatus.UNAVAILABLE -> if (hasWebsite)
         "Не удалось обновить расписание. Попробуйте еще раз или посмотрите его на сайте"
         else "Не удалось обновить расписание. Попробуйте еще раз. Тексты службы ниже уже можно читать"
@@ -104,7 +108,9 @@ internal fun scheduleSourceFor(church: Parish, state: InternetScheduleState?): S
 }
 
 internal fun scheduleEmptyTitle(state: InternetScheduleState?, hasPublication: Boolean): String = when {
+    state?.sourceNeedsVerification == true && state.loading -> "Проверяем источник расписания"
     state?.loading == true -> "Ищем расписание"
+    state?.sourceNeedsVerification == true -> "Нужно уточнить расписание"
     hasPublication -> "Нет записей на эту дату"
     else -> "Расписание пока не найдено"
 }
@@ -116,7 +122,7 @@ internal fun scheduleCheckReceipt(state: InternetScheduleState?, timezone: Strin
         Instant.parse(state.checkedAt).atZone(ZoneId.of(timezone))
             .format(DateTimeFormatter.ofPattern("d MMMM yyyy, HH:mm:ss", Locale.forLanguageTag("ru")))
     }.getOrNull() ?: return null
-    val result = if (state.publicationRejected) "Расписание не подтверждено источником" else when (state.status) {
+    val result = if (state.sourceNeedsVerification) "Источник требует проверки" else if (state.publicationRejected) "Расписание не подтверждено источником" else when (state.status) {
         InternetScheduleStatus.READY -> if (state.publication != null) "Расписание получено" else "Расписание не получено"
         InternetScheduleStatus.NO_WEBSITE -> "Источник расписания не найден"
         InternetScheduleStatus.UNSUPPORTED -> "Не удалось прочитать даты и время"

@@ -57,7 +57,6 @@ internal class PalomnikScheduleSiteResolver(
     private suspend fun resolveWithoutCity(parish: Parish, latitude: Double, longitude: Double, excluded: ScheduleSourceExclusions): ScheduleSite? {
         val address = PalomnikStreetAddress.parse(parish.address) ?: return null
         if (parish.name.length !in 3..300) return null
-        if (COMPLEX_TITLE.containsMatchIn(normalize(parish.name)) && !directChurchTitle(parish.name)) return null
         val words = SEARCH_WORD.findAll(parish.name).map { it.value }.toList()
         val fullName = words.joinToString(" ").takeIf { it.isNotBlank() } ?: return null
         val distinctive = words.filter { OpenScheduleSiteResolver.nameTokens(it).isNotEmpty() && normalize(it) !in SEARCH_FILLER }
@@ -116,7 +115,12 @@ internal class PalomnikScheduleSiteResolver(
             val revision = page.getAsJsonArray("revisions")?.singleOrNull()?.takeIf { it.isJsonObject }?.asJsonObject ?: return null
             val content = revision.getAsJsonObject("slots")?.getAsJsonObject("main")?.string("*") ?: return null
             val source = sourceFor(parish, candidates.getValue(id), content, latitude, longitude, excluded, strictAddress) ?: continue
-            matched += source.url?.let { ScheduleSite(it, "https://azbyka.ru/palomnik/index.php?curid=$id", candidates.getValue(id)) }
+            matched += source.url?.let {
+                val evidence = "https://azbyka.ru/palomnik/index.php?curid=$id"
+                val title = candidates.getValue(id)
+                ScheduleSite(it, evidence, title, ScheduleEntityIdentity.bind(parish, it, evidence, title,
+                    ScheduleBindingMethod.ARTICLE_SCOPE, source.scope))
+            }
         }
         return matched.singleOrNull()
     }
@@ -128,13 +132,18 @@ internal class PalomnikScheduleSiteResolver(
     } catch (cancelled: CancellationException) { throw cancelled }
     catch (_: Exception) { null }
 
-    private data class MatchingIdentity(val url: String?)
+    private data class MatchingIdentity(val url: String?, val scope: ScheduleEntityScope)
 
     private fun sourceFor(parish: Parish, title: String, text: String, latitude: Double, longitude: Double, excluded: ScheduleSourceExclusions, strictAddress: PalomnikStreetAddress?): MatchingIdentity? {
         if (text.length > 160_000 || !OpenScheduleSiteResolver.namesMatch(parish.name, title)) return null
         val locations = LOCATION.findAll(text).toList()
         if (locations.size != 1) return null
-        if (strictAddress != null && LOCATION_TEMPLATE.findAll(text).count() != 1) return null
+        if (LOCATION_TEMPLATE.findAll(text).count() != 1) return null
+        val kinds = LOCATION_KIND.findAll(locations.single().value).map { it.groupValues[1].trim() }.toList()
+        if (kinds.size > 1) return null
+        val kind = kinds.singleOrNull()?.let(ScheduleEntityIdentity::scope) ?: ScheduleEntityScope.UNKNOWN
+        if (!ScheduleEntityIdentity.compatible(parish.name, title, kind)) return null
+        val scope = ScheduleEntityIdentity.articleScope(title, kind) ?: return null
         val lat = locations.single().groupValues[1].toDoubleOrNull()?.takeIf { it.isFinite() && it in -90.0..90.0 } ?: return null
         val lon = locations.single().groupValues[2].toDoubleOrNull()?.takeIf { it.isFinite() && it in -180.0..180.0 } ?: return null
         val distance = OpenScheduleSiteResolver.distanceMeters(latitude, longitude, lat, lon)
@@ -145,7 +154,7 @@ internal class PalomnikScheduleSiteResolver(
         if (strictAddress != null) {
             // A monastery article may describe several churches and one shared schedule.
             // Website ownership alone does not assign those services to the selected building.
-            if (!directChurchTitle(title) || COMPLEX_KIND.containsMatchIn(locations.single().value) || distance > 150) return null
+            if (distance > 150) return null
             val sourceAddress = PalomnikStreetAddress.parse(address) ?: return null
             if (!strictAddress.sameBuilding(sourceAddress)) return null
         } else {
@@ -180,7 +189,7 @@ internal class PalomnikScheduleSiteResolver(
         // schedule links. A uniquely identified church may fall back to its unique homepage.
         val preferred = schedules.singleOrNull()?.takeUnless(excluded::contains)
         val chosen = if (schedules.size > 1) null else preferred ?: sites.singleOrNull()?.takeUnless(excluded::contains)
-        return MatchingIdentity(chosen)
+        return MatchingIdentity(chosen, scope)
     }
 
     private fun https(value: String): String? {
@@ -198,9 +207,7 @@ internal class PalomnikScheduleSiteResolver(
         private val PAGE_ID = Regex("[1-9][0-9]{0,12}")
         private val LOCATION = Regex("\\{\\{Местоположение(?: святыни)?\\|[^{}]*?локация\\s*=\\s*([0-9.-]+)\\s*,\\s*([0-9.-]+)[^{}]*\\}\\}")
         private val LOCATION_TEMPLATE = Regex("\\{\\{Местоположение(?: святыни)?\\|")
-        private val COMPLEX_KIND = Regex("вид\\s*=\\s*(?:монастырь|часовня|комплекс)", RegexOption.IGNORE_CASE)
-        private val CHURCH_TITLE = Regex("(?<![а-яa-z])(?:храм|церковь|собор)(?![а-яa-z])")
-        private val COMPLEX_TITLE = Regex("монастыр|лавра|часовн|комплекс")
+        private val LOCATION_KIND = Regex("(?:\\||\\n)\\s*вид\\s*=\\s*([^|}\\n]*)", RegexOption.IGNORE_CASE)
         private val SEARCH_WORD = Regex("[А-Яа-яЁёA-Za-z0-9]+(?:-[А-Яа-яЁёA-Za-z0-9]+)*")
         private val SEARCH_FILLER = setOf("честь", "имени")
         private val HEADING = Regex("={2,6}\\s*(.*?)\\s*={2,6}")
@@ -214,11 +221,5 @@ internal class PalomnikScheduleSiteResolver(
         private fun normalize(value: String) = value.lowercase(Locale.ROOT).replace('ё', 'е')
         private fun streetWords(value: String): Set<String> = Regex("[а-яёa-z]{3,}").findAll(normalize(value)).map { it.value }.filter { it !in STREET_TYPES }.toSet()
         private fun house(value: String): String? = HOUSE.find(normalize(value))?.groupValues?.get(1)?.replace(Regex("[\\s-]"), "")
-        private fun directChurchTitle(value: String): Boolean {
-            val name = normalize(value)
-            val church = CHURCH_TITLE.find(name) ?: return false
-            val complex = COMPLEX_TITLE.find(name)
-            return complex == null || church.range.first < complex.range.first
-        }
     }
 }

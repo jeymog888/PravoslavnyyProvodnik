@@ -8,7 +8,8 @@ import java.net.URLEncoder
 import java.util.Locale
 import kotlin.math.*
 
-data class ScheduleSite(val url: String, val evidenceUrl: String, val matchedName: String)
+data class ScheduleSite(val url: String, val evidenceUrl: String, val matchedName: String,
+    val binding: ScheduleSiteBinding? = null)
 fun interface ScheduleSiteResolver {
     suspend fun resolve(parish: Parish): ScheduleSite?
     suspend fun resolve(parish: Parish, excludedUrls: Set<String>): ScheduleSite? =
@@ -33,16 +34,22 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport) : Sched
             }?.asJsonObject?.getAsJsonObject("tags")
             listOf("website", "contact:website").firstNotNullOfOrNull { key ->
                 tags?.string(key)?.let(ScheduleUrl::publicSource)?.takeUnless(excluded::contains)
-            }?.let { return ScheduleSite(it, url, tags?.string("name") ?: parish.name) }
+            }?.let { site ->
+                val name = tags?.string("name") ?: parish.name
+                return ScheduleSite(site, url, name,
+                    ScheduleEntityIdentity.bind(parish, site, url, name, ScheduleBindingMethod.EXACT_MAP_LINK))
+            }
         }
         // These links belong to the exact selected map object and need no broad search inference.
-        tags?.string("wikidata")?.takeIf { Regex("Q[1-9][0-9]{0,12}").matches(it) }?.let { id ->
-            fromWikidata(id, parish.name, excluded)?.let { return it }
+        val linkedTitle = tags?.string("wikipedia")?.takeIf { it.startsWith("ru:") }?.substringAfter(':')
+        val linkedTitleCompatible = linkedTitle == null || !ScheduleEntityIdentity.hasExplicitConflict(parish.name, linkedTitle)
+        tags?.string("wikidata")?.takeIf { linkedTitleCompatible && Regex("Q[1-9][0-9]{0,12}").matches(it) }?.let { id ->
+            fromWikidata(parish, id, parish.name, excluded, ScheduleBindingMethod.EXACT_MAP_LINK)?.let { return it }
         }
-        tags?.string("wikipedia")?.takeIf { it.startsWith("ru:") }?.substringAfter(':')?.let { title ->
+        linkedTitle?.takeIf { linkedTitleCompatible }?.let { title ->
             val api = "https://ru.wikipedia.org/w/api.php?action=query&format=json&prop=pageprops&titles=${encode(title)}"
             pages(json(api)).firstNotNullOfOrNull { it.getAsJsonObject("pageprops")?.string("wikibase_item") }
-                ?.let { id -> fromWikidata(id, title, excluded)?.let { return it } }
+                ?.let { id -> fromWikidata(parish, id, title, excluded, ScheduleBindingMethod.EXACT_MAP_LINK)?.let { return it } }
         }
         PalomnikScheduleSiteResolver(transport).resolve(parish, excludedUrls)?.let { return it }
         val latitude = parish.latitude ?: return null
@@ -54,6 +61,7 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport) : Sched
         val candidates = pages(json(url)).mapNotNull { page ->
             val title = page.string("title") ?: return@mapNotNull null
             if (!namesMatch(parish.name, title)) return@mapNotNull null
+            if (!ScheduleEntityIdentity.compatible(parish.name, title)) return@mapNotNull null
             val coordinate = page.getAsJsonArray("coordinates")?.firstOrNull()?.asJsonObject ?: return@mapNotNull null
             val lat = coordinate.get("lat")?.asDouble ?: return@mapNotNull null
             val lon = coordinate.get("lon")?.asDouble ?: return@mapNotNull null
@@ -67,10 +75,11 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport) : Sched
         // Select the building before excluding endpoints. A failed website cannot turn a
         // farther namesake into the selected church merely because its website responds.
         val candidate = candidates.firstOrNull() ?: return null
-        return fromWikidata(candidate.first, candidate.second, excluded)
+        return fromWikidata(parish, candidate.first, candidate.second, excluded, ScheduleBindingMethod.ARTICLE_SCOPE)
     }
 
-    private suspend fun fromWikidata(id: String, title: String, excluded: ScheduleSourceExclusions): ScheduleSite? {
+    private suspend fun fromWikidata(parish: Parish, id: String, title: String, excluded: ScheduleSourceExclusions,
+        method: ScheduleBindingMethod): ScheduleSite? {
         if (!Regex("Q[1-9][0-9]{0,12}").matches(id)) return null
         val url = "https://www.wikidata.org/wiki/Special:EntityData/$id.json"
         val claims = json(url)?.getAsJsonObject("entities")?.getAsJsonObject(id)?.getAsJsonObject("claims")
@@ -82,7 +91,8 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport) : Sched
             claim.getAsJsonObject("mainsnak")?.getAsJsonObject("datavalue")?.string("value")?.let(ScheduleUrl::publicSource)
         }.distinct()
         val chosen = sites.firstOrNull { !excluded.contains(it) } ?: return null
-        return ScheduleSite(chosen, "https://www.wikidata.org/wiki/$id", title)
+        val evidence = "https://www.wikidata.org/wiki/$id"
+        return ScheduleSite(chosen, evidence, title, ScheduleEntityIdentity.bind(parish, chosen, evidence, title, method))
     }
 
     private suspend fun json(url: String): JsonObject? = try {
@@ -99,7 +109,7 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport) : Sched
         private fun encode(text: String) = URLEncoder.encode(text, "UTF-8")
         private val common = setOf("храм", "храме", "церк", "собор", "монас", "свято", "святы", "свято", "свят", "препо", "имени", "право", "русск", "мужск", "женск", "москов", "москв")
         internal fun nameTokens(text: String): Set<String> = Regex("[а-яёa-z]{3,}").findAll(text.lowercase(Locale.ROOT))
-            .map { it.value.replace('ё', 'е').take(5) }.filter { token -> common.none { token.startsWith(it) } }.toSet()
+            .map { it.value.replace('ё', 'е').take(5) }.filter { token -> token != "при" && common.none { token.startsWith(it) } }.toSet()
         internal fun namesMatch(selected: String, candidate: String): Boolean {
             val wanted = nameTokens(selected)
             val found = nameTokens(candidate)

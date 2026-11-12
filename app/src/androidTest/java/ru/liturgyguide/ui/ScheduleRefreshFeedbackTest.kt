@@ -28,7 +28,8 @@ import java.time.Instant
 import java.time.LocalDate
 
 @RunWith(Parameterized::class)
-class ScheduleRefreshFeedbackTest(private val churchDetails: Boolean, private val status: InternetScheduleStatus) {
+class ScheduleRefreshFeedbackTest(private val churchDetails: Boolean, private val status: InternetScheduleStatus,
+    private val needsVerification: Boolean) {
     @get:Rule val compose = createComposeRule()
     private val church = Parish("refresh", "Елисаветинский храм", "Елисаветинский храм", "Опалиха", "Пушкина, 2", "", "",
         "Europe/Moscow", "", "", "", "", emptyList(), "", "")
@@ -36,7 +37,7 @@ class ScheduleRefreshFeedbackTest(private val churchDetails: Boolean, private va
     @Test fun repeatedUnsuccessfulRefreshShowsLoadingThenANewAccessibleReceipt() {
         val source = if (status == InternetScheduleStatus.NO_WEBSITE) null else "https://parish.example/schedule/"
         var state by mutableStateOf(InternetScheduleState(church.id, status, website = source.orEmpty(),
-            sourceUrl = source.orEmpty(), checkedAt = "2026-11-11T10:00:00Z"))
+            sourceUrl = source.orEmpty(), checkedAt = "2026-11-11T10:00:00Z", sourceNeedsVerification = needsVerification))
         val opened = mutableListOf<String>()
         var refreshes = 0
         val refresh = { refreshes++; state = state.copy(loading = true) }
@@ -44,7 +45,7 @@ class ScheduleRefreshFeedbackTest(private val churchDetails: Boolean, private va
         val refreshTag = if (churchDetails) "refresh_schedule" else "today_refresh_schedule"
         val loadingTag = if (churchDetails) "schedule_loading_summary" else "today_schedule_loading"
         val receiptTag = if (churchDetails) "church_schedule_checked" else "today_schedule_checked"
-        val expected = when (status) {
+        val expected = if (needsVerification) "Источник требует проверки" else when (status) {
             InternetScheduleStatus.NO_WEBSITE -> "Источник расписания не найден"
             InternetScheduleStatus.UNSUPPORTED -> "Не удалось прочитать даты и время"
             else -> "Обновление не удалось"
@@ -67,6 +68,11 @@ class ScheduleRefreshFeedbackTest(private val churchDetails: Boolean, private va
         fun scroll(tag: String): SemanticsNodeInteraction {
             compose.onNodeWithTag(containerTag).performScrollToNode(hasTestTag(tag))
             return compose.onNodeWithTag(tag).performScrollTo().assertIsDisplayed()
+        }
+        if (needsVerification) {
+            compose.onNodeWithTag(containerTag).performScrollToNode(hasText("Нужно уточнить расписание"))
+            compose.onNodeWithText("Нужно уточнить расписание").assertIsDisplayed()
+            compose.onNodeWithText("Расписание пока не найдено").assertDoesNotExist()
         }
         scroll(receiptTag).assertTextEquals("$expected\nПопытка обновления: 11 ноября 2026, 13:00:00")
         val sourceTag = if (churchDetails) "open_schedule_website" else "today_schedule_source"
@@ -96,10 +102,11 @@ class ScheduleRefreshFeedbackTest(private val churchDetails: Boolean, private va
     }
 
     companion object {
-        @JvmStatic @Parameterized.Parameters(name = "details={0} result={1}")
+        @JvmStatic @Parameterized.Parameters(name = "details={0} result={1} verification={2}")
         fun screens() = listOf(false, true).flatMap { details ->
             listOf(InternetScheduleStatus.NO_WEBSITE, InternetScheduleStatus.UNSUPPORTED, InternetScheduleStatus.UNAVAILABLE)
-                .map { arrayOf<Any>(details, it) }
+                .map { arrayOf<Any>(details, it, false) } +
+                listOf(arrayOf<Any>(details, InternetScheduleStatus.UNAVAILABLE, true))
         }
     }
 }

@@ -12,6 +12,7 @@ class PalomnikScheduleSiteResolverTest {
     private val title = "Мужской монастырь Новомучеников Российских (Новосибирск)"
     private fun parish() = Parish("osm:way:55228075", "Храм в честь Святых Новомучеников и Исповедников Российских", "Новомучеников", "Новосибирск",
         "улица Немировича-Данченко, 120/1", "", "", "Asia/Novosibirsk", "https://www.openstreetmap.org/way/55228075", "", "", "", emptyList(), "", "", 54.9755397, 82.9086203)
+    private fun monastery() = parish().copy(id = "catalog:novosibirsk-monastery", name = title)
     private fun fixture(name: String = "novosibirsk") = javaClass.classLoader!!.getResourceAsStream("schedule/palomnik/$name.wiki")!!.bufferedReader().use { it.readText() }
     private fun category(members: List<Pair<Int, String>> = listOf(6081 to title), more: String? = null): String = gson.toJson(buildMap<String, Any> {
         put("query", mapOf("categorymembers" to members.map { mapOf("pageid" to it.first, "title" to it.second) }))
@@ -25,15 +26,17 @@ class PalomnikScheduleSiteResolverTest {
         response(url, if (url.contains("categorymembers")) category() else revisions(text))
     })
 
-    @Test fun `real Novosibirsk identity and explicit current schedule need no HTTP or wikipedia radius relaxation`() = runBlocking {
+    @Test fun `selected Novosibirsk monastery resolves its general timetable without assigning it to a church`() = runBlocking {
         val calls = mutableListOf<String>()
-        val result = resolver(calls = calls).resolve(parish())
+        val result = resolver(fixture("cityless/novosibirsk-complex"), calls).resolve(monastery())
         assertEquals("https://nskmonastyr.cerkov.ru/raspisanie-bogosluzhenij/", result?.url)
         assertEquals("https://azbyka.ru/palomnik/index.php?curid=6081", result?.evidenceUrl)
         assertEquals(title, result?.matchedName)
         assertEquals(2, calls.size)
         assertTrue(calls.all { it.startsWith("https://azbyka.ru/palomnik/api.php?") })
         assertFalse(calls.any { "54.975" in it || "82.908" in it })
+        assertTrue(result!!.binding!!.validFor(monastery(), result.url, result.evidenceUrl))
+        assertNull(resolver(fixture("cityless/novosibirsk-complex")).resolve(parish()))
     }
 
     @Test fun `exact address field does not rescue wrong geography city house or dedication`() = runBlocking {
@@ -45,22 +48,22 @@ class PalomnikScheduleSiteResolverTest {
             text.replace("Адрес:", "Исторический адрес:"),
             text.replace("локация=", "другое="),
             text + "\n'''Адрес:''' Россия, Новосибирск, другой корпус\n"
-        )) assertNull(resolver(bad).resolve(parish()))
-        assertNull(resolver().resolve(parish().copy(city = "Калуга")))
+        )) assertNull(resolver(bad).resolve(monastery()))
+        assertNull(resolver().resolve(monastery().copy(city = "Калуга")))
         assertNull(resolver().resolve(parish().copy(name = "Храм Александра Невского")))
-        assertNull(resolver().resolve(parish().copy(latitude = null)))
-        assertNull(resolver().resolve(parish().copy(address = "улица Немировича-Данченко", latitude = 54.9770)))
+        assertNull(resolver().resolve(monastery().copy(latitude = null)))
+        assertNull(resolver().resolve(monastery().copy(address = "улица Немировича-Данченко", latitude = 54.9770)))
     }
 
     @Test fun `external navigation and archive labels never become church schedule`() = runBlocking {
         val text = fixture()
-        assertNull(resolver(text.replace("=== Богослужения ===", "=== Ссылки ===")).resolve(parish()))
-        assertNull(resolver(text.replace("Актуальное расписание", "Архивное расписание")).resolve(parish()))
-        assertNull(resolver(text.replace("https://nskmonastyr", "http://nskmonastyr")).resolve(parish()))
+        assertNull(resolver(text.replace("=== Богослужения ===", "=== Ссылки ===")).resolve(monastery()))
+        assertNull(resolver(text.replace("Актуальное расписание", "Архивное расписание")).resolve(monastery()))
+        assertNull(resolver(text.replace("https://nskmonastyr", "http://nskmonastyr")).resolve(monastery()))
         val withNavigation = text + "\n== Ссылки ==\n[https://unrelated.example/ Расписание на сайте храма]\n"
-        assertEquals("https://nskmonastyr.cerkov.ru/raspisanie-bogosluzhenij/", resolver(withNavigation).resolve(parish())?.url)
-        assertNull(resolver(text + "\n[https://second.example/ Расписание на сайте храма]\n").resolve(parish()))
-        assertNull(resolver(text.replace("https://nskmonastyr.cerkov.ru", "https://azbyka.ru")).resolve(parish()))
+        assertEquals("https://nskmonastyr.cerkov.ru/raspisanie-bogosluzhenij/", resolver(withNavigation).resolve(monastery())?.url)
+        assertNull(resolver(text + "\n[https://second.example/ Расписание на сайте храма]\n").resolve(monastery()))
+        assertNull(resolver(text.replace("https://nskmonastyr.cerkov.ru", "https://azbyka.ru")).resolve(monastery()))
     }
 
     @Test fun `catalog identifies Yaroslavl but does not invent replacement domain for stale website`() = runBlocking {
@@ -85,7 +88,7 @@ class PalomnikScheduleSiteResolverTest {
                 else -> revisions()
             })
         })
-        assertNotNull(resolver.resolve(parish()))
+        assertNotNull(resolver.resolve(monastery()))
         assertEquals(3, calls.size)
         assertTrue(calls[1].contains("cmcontinue=page%7Ctwo%26unexpected%3Dvalue"))
     }
@@ -114,11 +117,11 @@ class PalomnikScheduleSiteResolverTest {
         pages.add("6082", duplicate)
         val resolver = PalomnikScheduleSiteResolver(ScheduleTransport { url -> response(url,
             if ("categorymembers" in url) category(listOf(6081 to title, 6082 to title)) else one.toString()) })
-        assertNull(resolver.resolve(parish()))
+        assertNull(resolver.resolve(monastery()))
         // Missing site is not proof that the second matching building does not exist
         duplicate.getAsJsonArray("revisions")[0].asJsonObject.getAsJsonObject("slots").getAsJsonObject("main")
             .addProperty("*", fixture().replace("https://nskmonastyr", "http://nskmonastyr"))
-        assertNull(resolver.resolve(parish()))
+        assertNull(resolver.resolve(monastery()))
     }
 
     @Test fun `malformed response foreign response origin and unknown page IDs cannot inject a source`() = runBlocking {
