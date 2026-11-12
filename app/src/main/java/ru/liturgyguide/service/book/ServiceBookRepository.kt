@@ -158,6 +158,9 @@ class ServiceBookRepository(
                 else fetchBook(key, russianSession, onProgress)
             } catch (cancelled: CancellationException) {
                 throw cancelled
+            } catch (_: UnsupportedMatinsRank) {
+                BookLoadResult.Failed(BookFailure.INVALID_SOURCE,
+                    "Источник предлагает другой праздничный порядок на эту дату. Полиелейный вариант пока не подтвержден. Вернитесь к выбору службы", previous)
             } catch (_: InvalidServiceBook) {
                 BookLoadResult.Failed(BookFailure.INVALID_SOURCE,
                     "Не удалось получить целую службу на эту дату. Сохраненный текст остался на телефоне", previous)
@@ -178,9 +181,18 @@ class ServiceBookRepository(
 
     private suspend fun fetchBook(key: ServiceBookKey, russianSession: RussianLoadSession, progress: (BookLoadProgress) -> Unit): BookLoadResult.Ready {
         progress(BookLoadProgress.SOURCE)
-        val page = transport.fetch(key.sourceUrl()).html() ?: throw InvalidServiceBook("Источник вернул не страницу службы")
+        val rankRequest = if (key.topLevel == null) null else {
+            val preflight = transport.fetch(key.copy(topLevel = null).sourceUrl()).html()
+                ?: throw InvalidServiceBook("Источник вернул не страницу службы")
+            currentCoroutineContext().ensureActive()
+            withContext(Dispatchers.Default) { MatinsRankSource.resolve(preflight, key) }
+        }
+        currentCoroutineContext().ensureActive()
+        val page = transport.fetch(rankRequest?.url ?: key.sourceUrl()).html()
+            ?: throw InvalidServiceBook("Источник вернул не страницу службы")
+        currentCoroutineContext().ensureActive()
         // Validate completeness before extra requests and before touching any cache.
-        val plainBook = withContext(Dispatchers.Default) { parser.parse(page, key, clock.millis(), translations) }
+        val plainBook = withContext(Dispatchers.Default) { parser.parse(page, key, clock.millis(), translations, rankRequest = rankRequest) }
         val hasScripture = plainBook.blocks.any { it.kind == BookBlockKind.SCRIPTURE && it.scriptureReferences.isNotEmpty() }
         val extras = coroutineScope {
             val verses = async {
@@ -212,7 +224,7 @@ class ServiceBookRepository(
         }
         val parsed = withContext(Dispatchers.Default) {
             val exactPairs = extras.second.first.plus(extras.third?.translations ?: BookTranslationIndex.empty()).plus(translations)
-            parser.parse(page, key, plainBook.fetchedAtMillis, exactPairs, extras.first ?: BookScripture.empty())
+            parser.parse(page, key, plainBook.fetchedAtMillis, exactPairs, extras.first ?: BookScripture.empty(), rankRequest)
         }
         val scriptureStatus = when {
             !hasScripture -> BookSupplementStatus.NOT_NEEDED

@@ -15,9 +15,17 @@ class ServiceBookParser {
         key: ServiceBookKey,
         fetchedAtMillis: Long,
         translations: BookTranslationIndex = BookTranslationIndex.empty(),
-        scripture: BookScripture = BookScripture.empty()
+        scripture: BookScripture = BookScripture.empty(),
+        rankRequest: ResolvedMatinsRankRequest? = null
     ): ServiceBook {
         if (!key.isValid() || key.worship == WorshipKind.VIGIL) throw InvalidServiceBook("Неизвестная служба")
+        val rankSelection = if (key.topLevel != null) {
+            val resolved = rankRequest ?: throw InvalidServiceBook("Не определена основная память полиелейного варианта")
+            MatinsRankSource.validate(document, key, resolved)
+        } else {
+            if (rankRequest != null) throw InvalidServiceBook("Полиелейный вариант не относится к выбранной книге")
+            null
+        }
         if (document.selectFirst("#bg_worships_setDay")?.attr("value") != key.date)
             throw InvalidServiceBook("Источник вернул другую дату")
         if (selected(document, "bg_worship_type")?.attr("value") != key.worship.queryValue)
@@ -31,7 +39,8 @@ class ServiceBookParser {
         if (key.secondEvent != null && selected(document, "bg_worships_secondEvent")?.attr("value") != key.secondEvent)
             throw InvalidServiceBook("Источник вернул другой дополнительный праздник")
 
-        val content = document.selectFirst(".article-single-content.main-page-content")?.clone()
+        val content = (if (rankSelection == null) document.selectFirst(".article-single-content.main-page-content")
+            else document.select(".article-single-content.main-page-content").singleOrNull())?.clone()
             ?: throw InvalidServiceBook("Не найден текст службы")
         content.select(".worship_menu,.bg_data_tooltip,script,style,button,input,select,iframe,nav").remove()
         val title = document.select("section.worship h1, .main-area-content.worship h1").lastOrNull()?.text()
@@ -173,21 +182,25 @@ class ServiceBookParser {
             if (blocks.any { it.kind in setOf(BookBlockKind.PRAYER, BookBlockKind.SCRIPTURE) && it.russian == null })
                 add("Русский текст есть не для всех фрагментов. Для остальных можно открыть оригинал")
         }
-        val eventTitle = listOfNotNull(selectedEventTitle(document, "bg_worships_mainEvent"),
-            selectedEventTitle(document, "bg_worships_secondEvent")).joinToString(" · ").ifBlank { null }
-        val sources = (listOf(BookSource("Азбука веры: Богослужения сегодня", key.sourceUrl())) +
+        val eventTitle = listOfNotNull(selectedEventTitle(document, "bg_worships_mainEvent", rankSelection != null),
+            selectedEventTitle(document, "bg_worships_secondEvent", rankSelection != null)).joinToString(" · ").ifBlank { null }
+        val sourceUrl = rankRequest?.url ?: key.sourceUrl()
+        val sources = (listOf(BookSource("Азбука веры: Богослужения сегодня", sourceUrl)) +
             blocks.mapNotNull { it.translationSource }).distinct()
-        val book = ServiceBook(key = key, title = BookText.clean(title), sourceUrl = key.sourceUrl(),
+        val book = ServiceBook(key = key, title = BookText.clean(title), sourceUrl = sourceUrl,
             sourceTitle = "Азбука веры: Богослужения сегодня", fetchedAtMillis = fetchedAtMillis,
             selectedEventTitle = eventTitle, chapters = chapters, contentHash = "", notices = notices, sources = sources,
-            mainEventOptions = options(document, "bg_worships_mainEvent"), secondEventOptions = options(document, "bg_worships_secondEvent"))
+            mainEventOptions = options(document, "bg_worships_mainEvent"), secondEventOptions = options(document, "bg_worships_secondEvent"),
+            rankSelection = rankSelection)
+        if (rankSelection != null && !MatinsRankSource.validBook(book))
+            throw InvalidServiceBook("Источник не вернул полный полиелейный порядок")
         return book.copy(contentHash = ServiceBookIntegrity.contentHash(book))
     }
 
     private fun selected(document: Document, id: String): Element? = document.selectFirst("#$id option[selected]")
         ?: document.selectFirst("#$id option")
 
-    private fun selectedEventTitle(document: Document, id: String): String? {
+    private fun selectedEventTitle(document: Document, id: String, strictTooltip: Boolean = false): String? {
         val option = selected(document, id) ?: return null
         val label = BookText.clean(option.text()).takeIf { it.isNotEmpty() && it != "-" } ?: return null
         val shortened = Regex("(?:\\.\\.\\.|…)$")
@@ -206,6 +219,9 @@ class ServiceBookParser {
         val cleaned = BookText.clean(tooltip)
         if (!cleaned.startsWith("$instruction ")) return label
         val full = cleaned.removePrefix("$instruction ")
+        // Some ranked responses contain an unclosed title attribute. Keep the
+        // published shortened label instead of inventing the missing event name.
+        if (strictTooltip && !balancedParentheses(full)) return label
         val normalized = BookText.normalized(full)
         if (full.length > 1_000 || shortened.containsMatchIn(full) || normalized.length <= prefix.length || !normalized.startsWith(prefix)) return label
         // A stale tooltip may belong to another option. A full label must agree with the
@@ -219,6 +235,15 @@ class ServiceBookParser {
             }
         }
         return if (ambiguous) label else full
+    }
+
+    private fun balancedParentheses(value: String): Boolean {
+        var depth = 0
+        for (character in value) {
+            if (character == '(') depth++
+            if (character == ')' && --depth < 0) return false
+        }
+        return depth == 0
     }
 
     private fun options(document: Document, id: String): List<BookVariantOption> = document.select("#$id option").map {
