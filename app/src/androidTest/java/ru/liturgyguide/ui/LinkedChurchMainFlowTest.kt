@@ -23,8 +23,13 @@ import ru.liturgyguide.service.ChurchDirectoryStore
 import ru.liturgyguide.service.SavedChurchOrigin
 import ru.liturgyguide.service.SavedChurchRecord
 import ru.liturgyguide.service.discovery.CatalogPlaceDiscovery
+import ru.liturgyguide.service.schedule.InternetScheduleStatus
 import java.io.File
 import java.security.MessageDigest
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -212,6 +217,126 @@ class LinkedChurchMainFlowTest {
         } finally {
             receipt["selectedUnchanged"] = preferences.getString("church_id", null) == selectedBefore
             receipt["recordsUnchanged"] = preferences.getString(ChurchDirectoryStore.RECORDS_KEY, null) == recordsBefore
+            writeJson("preferences-after.json", snapshotPreferences())
+            writeJson("receipt.json", receipt)
+        }
+    }
+
+    @Test fun realMaryinaQuerySelectsTheExactChurchAndLoadsItsPublishedSchedule() {
+        val arguments = InstrumentationRegistry.getArguments()
+        assumeTrue("Requires explicit real-state selection opt-in", arguments.getString("feoriaMaryinaMain") == "true")
+        check(Build.HARDWARE == "ranchu" && Build.FINGERPRINT.contains("/sdk_gphone") && Build.VERSION.SDK_INT >= 29)
+        val run = requireNotNull(arguments.getString("maryinaMainRun"))
+        require(run.matches(Regex("[A-Za-z0-9_-]{1,100}")))
+        evidence = File(requireNotNull(context.getExternalFilesDir("linked-church-main")), run)
+        check(!evidence.exists() && evidence.mkdirs()) { "Use a unique evidence run ID" }
+        val id = "osm:way:207742244"
+        val name = "Храм Иконы Божией Матери Нечаянная Радость в Марьиной Роще"
+        val query = "Нечаянная Радость Марьина Роща"
+        val zone = ZoneId.of("Europe/Moscow")
+        val date = LocalDate.of(2026, 11, 12)
+        val selectedBefore = preferences.getString("church_id", null)
+        val serializedBefore = preferences.getString(ChurchDirectoryStore.RECORDS_KEY, null)
+        val recordsBefore = ChurchDirectoryStore(preferences).records()
+        val scheduleCache = context.getSharedPreferences("internet_schedule_cache", Context.MODE_PRIVATE)
+        val cachedBefore = scheduleCache.getString(id, null)
+        val repository = (context.applicationContext as LiturgyGuideApplication).container.internetSchedules
+        val receipt = linkedMapOf<String, Any?>("passed" to false, "run" to run, "query" to query,
+            "expectedId" to id, "beforeSelectedId" to selectedBefore, "captures" to captures,
+            "apkSha256" to sha256(File(context.applicationInfo.sourceDir).readBytes()),
+            "statePolicy" to "Real selection retained; no seed, clear, preference restoration, source override or fake providers",
+            "limits" to "Actual MainActivity flow; existing cache may be used; no offline, cold-launch or fresh-HTTP claim")
+        writeJson("preferences-before.json", snapshotPreferences())
+        writeJson("schedule-before.json", cachedBefore)
+        try {
+            assertEquals("Run against the real displayed 12/13 November dates; do not inject a test clock", date, LocalDate.now(zone))
+            ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+                try {
+                    awaitTag("nav_church")
+                    compose.onNodeWithTag("nav_church").assertIsDisplayed().performClick()
+                    awaitTag("church_content")
+                    reveal("change_church", "church_content").performClick()
+                    awaitTag("discovery_content")
+                    reveal("discovery_mode_name", "discovery_content").performClick().assertIsSelected()
+                    reveal("discovery_query", "discovery_content").performTextReplacement(query)
+                    closeSoftKeyboardWithCiDiagnostics()
+                    compose.onNodeWithTag("discovery_query").assertTextContains(query)
+                    assertUnselected(selectedBefore, serializedBefore)
+                    reveal("discovery_submit", "discovery_content").performClick()
+                    compose.waitUntil(timeoutMillis = 60_000) {
+                        compose.onAllNodes(hasTestTag("discovery_submit") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
+                    }
+                    val target = reveal("discovery_church_$id", "discovery_content")
+                    target.assertTextContains(name, substring = true).assertTextContains("Шереметьевская улица, 33 с1", substring = true)
+                    assertUnselected(selectedBefore, serializedBefore)
+                    capture("maryina-results", scenario)
+                    val selectedAt = SystemClock.elapsedRealtime()
+                    target.performClick()
+                    compose.waitUntil(timeoutMillis = 10_000) {
+                        exists("church_change_confirmation") || preferences.getString("church_id", null) == id
+                    }
+                    receipt["normalReadingResetConfirmationShown"] = exists("church_change_confirmation")
+                    if (exists("church_change_confirmation")) compose.onNodeWithTag("confirm_church_change").assertIsDisplayed().performClick()
+                    compose.waitUntil(timeoutMillis = 10_000) { preferences.getString("church_id", null) == id }
+                    awaitTag("church_content")
+                    val record = ChurchDirectoryStore(preferences).records().single { it.id == id }
+                    assertEquals(name, record.name)
+                    assertEquals("", record.website)
+                    assertEquals(recordsBefore.filterNot { it.id == id }, ChurchDirectoryStore(preferences).records().filterNot { it.id == id })
+                    val parish = record.asParish()
+                    compose.waitUntil(timeoutMillis = 180_000) {
+                        val state = repository.cached(parish)
+                        state.status == InternetScheduleStatus.READY ||
+                            (scheduleCache.getString(id, null) != cachedBefore && state.status != InternetScheduleStatus.IDLE)
+                    }
+                    val state = repository.cached(parish)
+                    writeJson("schedule-result.json", state)
+                    receipt["selectionToScheduleMillis"] = SystemClock.elapsedRealtime() - selectedAt
+                    receipt["scheduleCacheChanged"] = scheduleCache.getString(id, null) != cachedBefore
+                    assertEquals("Automatic production import must produce a schedule", InternetScheduleStatus.READY, state.status)
+                    assertEquals("No manually supplied source", "", state.customSource)
+                    val publication = requireNotNull(state.publication)
+                    assertEquals(id, publication.parishId)
+                    assertFalse(publication.yearInferred)
+                    for ((offset, tag) in listOf(0L to "schedule_today", 1L to "schedule_tomorrow")) {
+                        val selectedDate = date.plusDays(offset)
+                        val events = publication.forDate(selectedDate).sortedBy { it.time }
+                        assertEquals("Printed starts on $selectedDate", listOf("08:00", "17:00"), events.map { it.time })
+                        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag(tag))
+                        compose.onNodeWithTag(tag).performClick().assertIsSelected()
+                        compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("schedule_date"))
+                        compose.waitUntil(timeoutMillis = 10_000) { exists("church_service_time") }
+                        compose.onNodeWithTag("schedule_date").assertTextEquals(selectedDate.format(
+                            DateTimeFormatter.ofPattern("d MMMM uuuu, EEEE", Locale.forLanguageTag("ru"))))
+                        for (event in events) {
+                            val time = hasText(event.time, substring = true) and hasAnyAncestor(hasTestTag("church_schedule_card"))
+                            compose.onNodeWithTag("church_content").performScrollToNode(time)
+                            compose.onNode(time).performScrollTo().assertIsDisplayed()
+                        }
+                        compose.onNodeWithTag("church_service_time").performScrollTo().assertIsDisplayed()
+                        capture("maryina-$selectedDate", scenario)
+                    }
+                    assertEquals("A midnight rollover needs another run", date, LocalDate.now(zone))
+                    compose.onNodeWithTag("church_content").performScrollToNode(hasTestTag("church_open_service"))
+                    compose.onNodeWithTag("church_open_service").performScrollTo().assertIsDisplayed().performClick()
+                    compose.waitUntil(timeoutMillis = 180_000) { exists("book_content") || exists("book_load_error") }
+                    compose.onNodeWithTag("book_content").assertExists().performScrollToNode(hasTestTag("book_saved"))
+                    compose.onNodeWithTag("book_saved").assertTextContains("Тексты на 13 ноября 2026", substring = true)
+                    capture("maryina-opened-service", scenario)
+                    receipt["openedServiceDate"] = date.plusDays(1).toString()
+                } catch (failure: Throwable) {
+                    runCatching { capture("maryina-main-failure", scenario) }.onFailure { receipt["captureFailure"] = it.toString() }
+                    throw failure
+                }
+            }
+            receipt["passed"] = true
+        } catch (failure: Throwable) {
+            receipt["failureType"] = failure.javaClass.name
+            receipt["failureMessage"] = failure.message.orEmpty()
+            throw failure
+        } finally {
+            receipt["selectedAtEnd"] = preferences.getString("church_id", null)
+            writeJson("schedule-after.json", scheduleCache.getString(id, null))
             writeJson("preferences-after.json", snapshotPreferences())
             writeJson("receipt.json", receipt)
         }

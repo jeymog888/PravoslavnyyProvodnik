@@ -429,6 +429,11 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                             Text("Тексты на " + LocalDate.parse(book.key.date).format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru"))) +
                                 if (isSaved) " · Сохранено на телефоне" else " · Пока не сохранено", style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("book_saved"))
+                            if (journey == null && book.key.worship in setOf(WorshipKind.VESPERS, WorshipKind.VIGIL)) {
+                                Text("Вечерняя служба относится к следующему церковному дню",
+                                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.testTag("book_evening_date_note"))
+                            }
                             journey?.let {
                                 BookJourneyDescription(it, book.key)
                                 BookJourneyParts(it, book.key, ::choosePart, "book_intro_parts", switchingPart)
