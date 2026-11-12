@@ -2,6 +2,14 @@ package ru.liturgyguide.ui
 
 import ru.liturgyguide.service.ChurchSelectionResult
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.text.TextLayoutResult
 import android.graphics.Rect
 import android.os.SystemClock
 import androidx.core.view.ViewCompat
@@ -449,13 +457,18 @@ class ChurchDiscoveryScreenTest {
         val fake = FakeDiscovery().apply { nameResult = { success(emptyList(), DiscoveryProvider.PHOTON) } }
         launch(fake, initialMode = ChurchSearchMode.NAME, savedChurches = listOf(saved))
         search("Никольский")
+        compose.onNodeWithTag("discovery_empty").assertTextEquals("Поиск не дал новых результатов").assertIsDisplayed()
         scrollTo("discovery_saved_${saved.id}").assertIsDisplayed()
-        scrollTo("discovery_empty").assertTextEquals("Поиск не дал новых результатов")
         compose.runOnIdle { fake.nameResult = { DiscoveryResult.Failure(DiscoveryFailure.UNAVAILABLE) } }
         search("Никольский храм")
         scrollTo("discovery_message").assertIsDisplayed()
         scrollTo("discovery_saved_${saved.id}").assertIsDisplayed()
         compose.onNodeWithTag("discovery_empty").assertDoesNotExist()
+        compose.runOnIdle { fake.nameResult = { success<DiscoveredChurch>(emptyList(), DiscoveryProvider.PHOTON)
+            .copy(notice = "Не удалось проверить станцию. Попробуйте еще раз") } }
+        search("метро Сухаревская Троицы")
+        compose.onNodeWithTag("discovery_empty").assertIsDisplayed()
+        compose.onNodeWithTag("discovery_result_notice").assertTextEquals("Не удалось проверить станцию. Попробуйте еще раз").assertIsDisplayed()
     }
 
     @Test fun aSavedResultOutsideTheSixRowPreviewIsSelectedWithoutReplacingItsWebsiteOrCity() {
@@ -563,6 +576,81 @@ class ChurchDiscoveryScreenTest {
         }
     }
 
+    @Test fun searchButtonUsesTheCurrentQueryAfterEditingAndSwitchingModesBothWays() {
+        val fake = FakeDiscovery()
+        launch(fake, initialMode = ChurchSearchMode.NAME)
+        fun submit(value: String) {
+            compose.onNodeWithTag("discovery_content").performScrollToIndex(0)
+            scrollTo("discovery_query").performTextReplacement(value)
+            waitForVisibleKeyboard()
+            androidx.test.espresso.Espresso.pressBack()
+            waitForHiddenKeyboard(requireUnfocused = false)
+            scrollTo("discovery_submit").assertIsEnabled().assertIsDisplayed().performClick()
+            waitForHiddenKeyboard()
+        }
+        submit("Никольский")
+        submit("Троицы")
+        compose.onNodeWithTag("discovery_content").performScrollToIndex(0)
+        compose.onNodeWithTag("discovery_mode_city").assertIsDisplayed().performClick()
+        submit("Казань")
+        compose.onNodeWithTag("discovery_content").performScrollToIndex(0)
+        compose.onNodeWithTag("discovery_mode_name").assertIsDisplayed().performClick()
+        submit("Сретенский")
+        compose.runOnIdle {
+            assertEquals(listOf("Никольский", "Троицы", "Сретенский"), fake.nameQueries)
+            assertEquals(listOf("Казань"), fake.queries)
+        }
+    }
+
+    @Test fun largeTextKeepsSearchModeWordsWholeAndActionsSeparate() {
+        val fake = FakeDiscovery()
+        val saved = (1..6).map { SavedChurchRecord.create("Никольский храм $it", "Казань", "Улица, $it", "Europe/Moscow").asParish() }
+        val mode = mutableStateOf(ChurchSearchMode.NAME)
+        val query = mutableStateOf("")
+        compose.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, 2f)) {
+                GuideTheme(dark = false) {
+                    Box(Modifier.requiredWidth(320.dp)) {
+                        ChurchDiscoveryScreen(fake, onBack = {}, onSave = { _, _ -> ChurchSelectionResult.FAILED },
+                            onOpenUrl = {}, query = query.value, onQueryChange = { query.value = it }, mode = mode.value,
+                            onModeChange = { mode.value = it }, savedChurches = saved,
+                            onSelectSaved = { _, _ -> ChurchSelectionResult.SELECTED })
+                    }
+                }
+            }
+        }
+        for (tag in listOf("discovery_mode_name", "discovery_mode_city")) {
+            scrollTo(tag).assertHeightIsAtLeast(48.dp)
+            val layouts = mutableListOf<TextLayoutResult>()
+            compose.onNodeWithTag("${tag}_label", useUnmergedTree = true)
+                .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+            val expected = if (tag == "discovery_mode_name") "По названию" else "По городу"
+            assertTextFitsLayout(layouts.single(), expected, singleLine = true)
+        }
+        val first = compose.onNodeWithTag("discovery_mode_name").fetchSemanticsNode().boundsInRoot
+        val second = compose.onNodeWithTag("discovery_mode_city").fetchSemanticsNode().boundsInRoot
+        val spacing = with(compose.density) { 12.dp.toPx() }
+        assertTrue("Large text requires separate full-width rows", second.top >= first.bottom + spacing - 1)
+        scrollTo("discovery_mode_city").performClick()
+        compose.runOnIdle { assertEquals(ChurchSearchMode.CITY, mode.value) }
+        scrollTo("discovery_query").assertTextContains("Город или село")
+        search("Казань")
+        // Do not scroll to the answer: the form otherwise occupies the entire large-text viewport.
+        compose.onNodeWithTag("discovery_city_osm:relation:1").assertIsDisplayed()
+        // The large form is one lazy item taller than some viewports. Return to its start
+        // before tapping, rather than injecting a tap into a node clipped by the fixed header.
+        compose.onNodeWithTag("discovery_content").performScrollToIndex(0)
+        compose.onNodeWithTag("discovery_mode_name").assertIsDisplayed().performClick()
+        compose.runOnIdle {
+            assertEquals(ChurchSearchMode.NAME, mode.value)
+            fake.nameResult = { success(emptyList(), DiscoveryProvider.PHOTON) }
+        }
+        search("Никольский")
+        compose.onNodeWithTag("discovery_empty").assertTextEquals("Поиск не дал новых результатов").assertIsDisplayed()
+        scrollTo("discovery_saved_${saved.first().id}").assertIsDisplayed()
+    }
+
     private fun launch(fake: FakeDiscovery, onBack: () -> Unit = {}, onSave: (SavedChurchRecord) -> Boolean = { true },
         initialMode: ChurchSearchMode = ChurchSearchMode.CITY, savedChurches: List<Parish> = emptyList(), onSelectSaved: (String) -> Unit = {}) {
         compose.setContent {
@@ -606,7 +694,7 @@ class ChurchDiscoveryScreenTest {
         }
     }
 
-    private fun waitForHiddenKeyboard() = withCiFailureDiagnostics("discovery.waitForHiddenKeyboard") {
+    private fun waitForHiddenKeyboard(requireUnfocused: Boolean = true) = withCiFailureDiagnostics("discovery.waitForHiddenKeyboard") {
         compose.waitUntil(timeoutMillis = 10_000) {
             var hidden = false
             compose.activityRule.scenario.onActivity { activity ->
@@ -618,7 +706,9 @@ class ChurchDiscoveryScreenTest {
         }
         InstrumentationRegistry.getInstrumentation().uiAutomation.waitForIdle(200, 5_000)
         compose.waitForIdle()
-        compose.onNodeWithTag("discovery_query").assertIsNotFocused()
+        if (requireUnfocused) compose.onAllNodesWithTag("discovery_query").fetchSemanticsNodes().forEach {
+            compose.onNodeWithTag("discovery_query").assertIsNotFocused()
+        }
     }
 
     private fun scrollTo(tag: String): SemanticsNodeInteraction {

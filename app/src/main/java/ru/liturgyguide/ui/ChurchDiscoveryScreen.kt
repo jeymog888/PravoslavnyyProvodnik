@@ -28,6 +28,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -268,6 +271,12 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
     // The preview is limited to six rows; the identity check must include the whole directory.
     // Reimporting a sparse map record could erase its saved website and invalidate its schedule cache.
     val savedById = remember(savedChurches) { savedChurches.associateBy { it.id } }
+    LaunchedEffect(state.resultVersion) {
+        // A large-font search form may fill the viewport. Bring the response (including
+        // loading, permission errors and an empty result) into view after an explicit search.
+        // Editing/filtering does not change resultVersion and must not move the reader.
+        if (state.resultVersion > 0) scroll.animateScrollToItem(1)
+    }
     Scaffold(containerColor = MaterialTheme.colorScheme.surface,
         topBar = { Column(Modifier.statusBarsPadding()) { PageHeader("Найти храм", ::leave) } }) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding).navigationBarsPadding().imePadding().testTag("discovery_content"), state = scroll,
@@ -276,18 +285,15 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(query, { value ->
                         if (value != query) { cancelSearch(clear = true); onQueryChange(value.take(DefaultPlaceDiscovery.MAX_QUERY_LENGTH)); nameFilter = "" }
-                    }, label = { Text(if (mode == ChurchSearchMode.NAME) "Храм, монастырь или адрес" else "Город или населенный пункт") },
+                    }, label = { Text(if (mode == ChurchSearchMode.NAME) "Храм или адрес" else "Город или село") },
                         placeholder = { if (mode == ChurchSearchMode.NAME) Text("Сретенский монастырь, Москва") }, singleLine = true,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { submitSearch() }),
                         trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { cancelSearch(clear = true); onQueryChange("") }) {
                             Icon(Icons.Default.Close, "Очистить поисковый запрос")
                         } }, modifier = Modifier.fillMaxWidth().testTag("discovery_query"))
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                        FilterChip(selected = mode == ChurchSearchMode.NAME, onClick = { changeMode(ChurchSearchMode.NAME) },
-                            label = { Text("По названию") }, modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("discovery_mode_name"))
-                        FilterChip(selected = mode == ChurchSearchMode.CITY, onClick = { changeMode(ChurchSearchMode.CITY) },
-                            label = { Text("По городу") }, modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("discovery_mode_city"))
-                    }
+                    // A local function reference compares equal across captured mode changes.
+                    // Keep the current mode in the callback passed to remembered chip actions.
+                    ChurchSearchModePicker(mode) { value -> changeMode(value) }
                     Button(onClick = ::submitSearch, enabled = query.trim().length >= 2 && state.busy == null,
                         shape = MaterialTheme.shapes.small,
                         modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("discovery_submit")) {
@@ -322,32 +328,6 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                     }
                 }
             } }
-            if (showSavedPreview && onSelectSaved != null && mode == ChurchSearchMode.NAME && query.isNotBlank() && savedMatches.isEmpty() &&
-                state.churches == null) item(key = "saved_empty") {
-                Text("В сохраненных храмах совпадений нет", style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("discovery_saved_empty"))
-            }
-            if (showSavedPreview && savedMatches.isNotEmpty() && onSelectSaved != null) {
-                item(key = "saved_heading") {
-                    Text(if (query.isBlank()) "Доступны без сети" else "Сохраненные совпадения", style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(top = 12.dp).semantics { heading() })
-                }
-                items(savedMatches, key = { "saved:${it.id}" }) { saved ->
-                    DiscoveryRow(saved.shortName, listOf(saved.city, saved.address).filter(String::isNotBlank).distinct().joinToString(" · "), "discovery_saved_${saved.id}",
-                        trailing = {
-                            if (onToggleFavorite != null) IconButton(onClick = { onToggleFavorite(saved.id) },
-                                modifier = Modifier.size(48.dp).testTag("favorite_${saved.id}")) {
-                                Icon(if (saved.id in favorites) Icons.Default.Star else Icons.Default.StarBorder,
-                                    if (saved.id in favorites) "Убрать из избранного: ${saved.shortName}" else "В избранное: ${saved.shortName}",
-                                    tint = if (saved.id in favorites) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                        }) {
-                        focus.clearFocus(); keyboard?.hide()
-                        val result = onSelectSaved(saved.id) { onQueryChange("") }
-                        if (result == ChurchSelectionResult.FAILED || result == ChurchSelectionResult.STALE) state.invalidSelection()
-                    }
-                }
-            }
             state.cities?.let { result ->
                 item(key = "cities_heading") {
                     Text(if (result.items.isEmpty()) "Город не найден" else "Выберите город", style = MaterialTheme.typography.titleMedium,
@@ -388,7 +368,7 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                         }
                     }
                 }
-                item(key = "results_heading") {
+                if (result.items.isNotEmpty() || result.landmarkChoices.isNotEmpty()) item(key = "results_heading") {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(state.areaLabel, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
                         Text(discoveryResultCaption(result, state.approximateLocation), style = MaterialTheme.typography.bodySmall,
@@ -414,7 +394,11 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                             else "В этом районе храмы не найдены"
                         } else "Нет храма с таким названием в найденном списке",
                             style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("discovery_empty"))
-                        Text(if (visibleSavedIds.isNotEmpty()) "Выберите сохраненный храм выше или уточните поиск"
+                        if (result.items.isEmpty()) result.notice?.takeIf(String::isNotBlank)?.let { notice ->
+                            Text(notice, style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.testTag("discovery_result_notice"))
+                        }
+                        Text(if (visibleSavedIds.isNotEmpty()) "Выберите сохраненный храм ниже или уточните поиск"
                             else "Уточните город или добавьте храм вручную", style = MaterialTheme.typography.bodyMedium)
                     }
                 }
@@ -431,6 +415,32 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                                 ?: ChurchSelectionResult.FAILED
                         }
                         if (selection == ChurchSelectionResult.FAILED || selection == ChurchSelectionResult.STALE) state.invalidSelection()
+                    }
+                }
+            }
+            if (showSavedPreview && onSelectSaved != null && mode == ChurchSearchMode.NAME && query.isNotBlank() && savedMatches.isEmpty() &&
+                state.churches == null) item(key = "saved_empty") {
+                Text("В сохраненных храмах совпадений нет", style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("discovery_saved_empty"))
+            }
+            if (showSavedPreview && savedMatches.isNotEmpty() && onSelectSaved != null) {
+                item(key = "saved_heading") {
+                    Text(if (query.isBlank()) "Доступны без сети" else "Сохраненные совпадения", style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(top = 12.dp).semantics { heading() })
+                }
+                items(savedMatches, key = { "saved:${it.id}" }) { saved ->
+                    DiscoveryRow(saved.shortName, listOf(saved.city, saved.address).filter(String::isNotBlank).distinct().joinToString(" · "), "discovery_saved_${saved.id}",
+                        trailing = {
+                            if (onToggleFavorite != null) IconButton(onClick = { onToggleFavorite(saved.id) },
+                                modifier = Modifier.size(48.dp).testTag("favorite_${saved.id}")) {
+                                Icon(if (saved.id in favorites) Icons.Default.Star else Icons.Default.StarBorder,
+                                    if (saved.id in favorites) "Убрать из избранного: ${saved.shortName}" else "В избранное: ${saved.shortName}",
+                                    tint = if (saved.id in favorites) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }) {
+                        focus.clearFocus(); keyboard?.hide()
+                        val result = onSelectSaved(saved.id) { onQueryChange("") }
+                        if (result == ChurchSelectionResult.FAILED || result == ChurchSelectionResult.STALE) state.invalidSelection()
                     }
                 }
             }
@@ -525,4 +535,31 @@ internal fun discoveryResultCaption(result: DiscoveryResult.Success<DiscoveredCh
     val verification = if (result.provider == DiscoveryProvider.PHOTON && result.queryCenter != null)
         "Сверьте название и адрес православного храма" else "Сверьте название и адрес храма"
     return listOf(area, sourceNotice ?: verification).filter(String::isNotBlank).joinToString(". ")
+}
+
+/** Preserve whole labels at accessibility text sizes instead of splitting a word into letters. */
+@Composable
+private fun ChurchSearchModePicker(mode: ChurchSearchMode, onChange: (ChurchSearchMode) -> Unit) {
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val style = MaterialTheme.typography.labelLarge
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val cellWidth = (constraints.maxWidth - with(density) { 12.dp.roundToPx() }) / 2
+        val textWidth = (cellWidth - with(density) { 32.dp.roundToPx() }).coerceAtLeast(1)
+        val stacked = listOf("По названию", "По городу").any {
+            measurer.measure(it, style, constraints = Constraints(maxWidth = textWidth)).lineCount > 1
+        }
+        @Composable fun choice(value: ChurchSearchMode, label: String, tag: String, modifier: Modifier) {
+            FilterChip(selected = mode == value, onClick = { onChange(value) },
+                label = { Text(label, style = style, modifier = Modifier.testTag("${tag}_label")) },
+                modifier = modifier.heightIn(min = 48.dp).testTag(tag))
+        }
+        if (stacked) Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            choice(ChurchSearchMode.NAME, "По названию", "discovery_mode_name", Modifier.fillMaxWidth())
+            choice(ChurchSearchMode.CITY, "По городу", "discovery_mode_city", Modifier.fillMaxWidth())
+        } else Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            choice(ChurchSearchMode.NAME, "По названию", "discovery_mode_name", Modifier.weight(1f))
+            choice(ChurchSearchMode.CITY, "По городу", "discovery_mode_city", Modifier.weight(1f))
+        }
+    }
 }
