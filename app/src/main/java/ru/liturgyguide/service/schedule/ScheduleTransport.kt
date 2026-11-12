@@ -78,7 +78,13 @@ data class ScheduleResponse(val url: String, val bytes: ByteArray, val contentTy
     }
 }
 
-fun interface ScheduleTransport { suspend fun fetch(url: String): ScheduleResponse }
+fun interface ScheduleTransport {
+    suspend fun fetch(url: String): ScheduleResponse
+    suspend fun fetchBounded(url: String, maximumBytes: Int): ScheduleResponse {
+        require(maximumBytes > 0)
+        return fetch(url).also { if (it.bytes.size > maximumBytes) throw IOException("Response too large") }
+    }
+}
 
 /** Separate from map search: accepts HTML and its charset, with bounded same-site redirects. */
 class UrlConnectionScheduleTransport(
@@ -90,7 +96,14 @@ class UrlConnectionScheduleTransport(
 ) : ScheduleTransport {
     init { require(timeoutMillis in 1..20_000); require(limitBytes in 1..12_582_912) }
 
-    override suspend fun fetch(url: String): ScheduleResponse = suspendCancellableCoroutine { continuation ->
+    override suspend fun fetch(url: String): ScheduleResponse = fetchBounded(url, limitBytes)
+
+    override suspend fun fetchBounded(url: String, maximumBytes: Int): ScheduleResponse {
+        require(maximumBytes > 0)
+        return fetchWithLimit(url, minOf(limitBytes, maximumBytes))
+    }
+
+    private suspend fun fetchWithLimit(url: String, byteLimit: Int): ScheduleResponse = suspendCancellableCoroutine { continuation ->
         val complete = AtomicBoolean(false)
         val socket = AtomicReference<HttpURLConnection?>(null)
         val worker = AtomicReference<Future<*>?>(null)
@@ -156,18 +169,18 @@ class UrlConnectionScheduleTransport(
                             continue
                         }
                         fallbackHttp = null // A valid HTTPS response is never downgraded after a body/parser error
-                        if (current.contentLengthLong > limitBytes) throw IOException()
+                        if (current.contentLengthLong > byteLimit) throw IOException()
                         val output = ByteArrayOutputStream()
                         current.inputStream.use { input ->
                             val buffer = ByteArray(8_192)
                             while (!complete.get()) {
                                 val count = input.read(buffer)
                                 if (count == -1) break
-                                if (count > limitBytes - output.size()) throw IOException()
+                                if (count > byteLimit - output.size()) throw IOException()
                                 output.write(buffer, 0, count)
                             }
                         }
-                        val bytes = decodeBody(output.toByteArray(), current.getHeaderField("Content-Encoding"))
+                        val bytes = decodeBody(output.toByteArray(), current.getHeaderField("Content-Encoding"), byteLimit)
                         if (complete.compareAndSet(false, true)) {
                             deadline.getAndSet(null)?.cancel(false)
                             continuation.resume(ScheduleResponse(target, bytes, current.contentType.orEmpty()))
@@ -184,7 +197,7 @@ class UrlConnectionScheduleTransport(
         if (complete.get()) task.cancel(true)
     }
 
-    private fun decodeBody(bytes: ByteArray, contentEncoding: String?): ByteArray {
+    private fun decodeBody(bytes: ByteArray, contentEncoding: String?, byteLimit: Int): ByteArray {
         // Some sources send gzip even after Accept-Encoding: identity. Bound the
         // expanded body too, so a tiny compressed response cannot exhaust memory.
         val encoding = contentEncoding.orEmpty().trim().lowercase()
@@ -202,7 +215,7 @@ class UrlConnectionScheduleTransport(
                 if (Thread.currentThread().isInterrupted) throw IOException("Response cancelled")
                 val count = decoded.read(buffer)
                 if (count == -1) break
-                if (count > limitBytes - output.size()) throw IOException("Expanded response too large")
+                if (count > byteLimit - output.size()) throw IOException("Expanded response too large")
                 output.write(buffer, 0, count)
             }
             output.toByteArray()

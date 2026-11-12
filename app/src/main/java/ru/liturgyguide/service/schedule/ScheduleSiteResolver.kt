@@ -14,13 +14,30 @@ fun interface ScheduleSiteResolver {
     suspend fun resolve(parish: Parish): ScheduleSite?
     suspend fun resolve(parish: Parish, excludedUrls: Set<String>): ScheduleSite? =
         resolve(parish)?.takeUnless { ScheduleSourceExclusions(excludedUrls).contains(it.url) }
+    /** One scope for primary/alternative lookup; test/custom resolvers keep their existing behavior. */
+    fun forRefresh(): ScheduleSiteResolver = this
 }
 
 /** Exact OSM identity first, then an identified encyclopedia entity, never the first search hit. */
-class OpenScheduleSiteResolver(private val transport: ScheduleTransport) : ScheduleSiteResolver {
+class OpenScheduleSiteResolver(private val transport: ScheduleTransport,
+    directoryCache: OfficialDirectoryCacheStore = MemoryOfficialDirectoryCacheStore()) : ScheduleSiteResolver {
+    private val directories = OfficialDirectoryResolver(transport, directoryCache)
     override suspend fun resolve(parish: Parish): ScheduleSite? = resolve(parish, emptySet())
 
-    override suspend fun resolve(parish: Parish, excludedUrls: Set<String>): ScheduleSite? {
+    override suspend fun resolve(parish: Parish, excludedUrls: Set<String>): ScheduleSite? =
+        resolveInSession(parish, excludedUrls, mutableMapOf())
+
+    override fun forRefresh(): ScheduleSiteResolver {
+        val directoryMemo = mutableMapOf<String, OfficialDirectorySnapshot?>()
+        return object : ScheduleSiteResolver {
+            override suspend fun resolve(parish: Parish): ScheduleSite? = resolve(parish, emptySet())
+            override suspend fun resolve(parish: Parish, excludedUrls: Set<String>): ScheduleSite? =
+                resolveInSession(parish, excludedUrls, directoryMemo)
+        }
+    }
+
+    private suspend fun resolveInSession(parish: Parish, excludedUrls: Set<String>,
+        directoryMemo: MutableMap<String, OfficialDirectorySnapshot?>): ScheduleSite? {
         val excluded = ScheduleSourceExclusions(excludedUrls)
         ScheduleUrl.publicSource(parish.website)?.takeUnless(excluded::contains)?.let { return ScheduleSite(it, parish.sourceUrl, parish.name) }
         var tags: JsonObject? = null
@@ -52,6 +69,7 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport) : Sched
                 ?.let { id -> fromWikidata(parish, id, title, excluded, ScheduleBindingMethod.EXACT_MAP_LINK)?.let { return it } }
         }
         PalomnikScheduleSiteResolver(transport).resolve(parish, excludedUrls)?.let { return it }
+        directories.resolve(parish, excluded, directoryMemo)?.let { return it }
         val latitude = parish.latitude ?: return null
         val longitude = parish.longitude ?: return null
         val distinctive = nameTokens(parish.name)

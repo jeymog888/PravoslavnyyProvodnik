@@ -18,6 +18,7 @@ import ru.liturgyguide.service.schedule.InternetScheduleRepository
 import ru.liturgyguide.service.schedule.ScheduleCacheStore
 import ru.liturgyguide.service.schedule.UrlConnectionScheduleTransport
 import ru.liturgyguide.service.schedule.AndroidScheduleDocumentExtractor
+import ru.liturgyguide.service.schedule.FileOfficialDirectoryCacheStore
 import ru.liturgyguide.service.book.FileBookCache
 import ru.liturgyguide.service.book.ServiceBookRepository
 import ru.liturgyguide.service.book.ServiceBooks
@@ -44,7 +45,8 @@ class AppContainer(context: Context, private val discoveryOverride: PlaceDiscove
                 if (!preferences.contains(parishId) && preferences.all.size >= 100) preferences.all.keys.firstOrNull()?.let(edit::remove)
                 edit.apply()
             }
-        }, AndroidScheduleDocumentExtractor(appContext))
+        }, AndroidScheduleDocumentExtractor(appContext),
+            directoryCache = FileOfficialDirectoryCacheStore(File(appContext.cacheDir, "official-parish-directories")))
     }
     val serviceBooks: ServiceBooks by lazy {
         // The complete book uses published, exactly matched translations. Editorial paraphrases

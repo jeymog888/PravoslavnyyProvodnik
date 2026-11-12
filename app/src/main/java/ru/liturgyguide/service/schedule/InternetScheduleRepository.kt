@@ -77,8 +77,10 @@ class InternetScheduleRepository(
     private val transport: ScheduleTransport,
     private val cache: ScheduleCacheStore,
     private val documentExtractor: ScheduleDocumentExtractor = HtmlScheduleDocumentExtractor,
-    private val siteResolver: ScheduleSiteResolver = OpenScheduleSiteResolver(transport)
+    siteResolver: ScheduleSiteResolver? = null,
+    directoryCache: OfficialDirectoryCacheStore = MemoryOfficialDirectoryCacheStore()
 ) : InternetSchedules {
+    private val siteResolver = siteResolver ?: OpenScheduleSiteResolver(transport, directoryCache)
     private val importProgress = MutableStateFlow(ScheduleImportProgress("", ScheduleImportPhase.IDLE))
     override val progress: StateFlow<ScheduleImportProgress> = importProgress
 
@@ -94,6 +96,7 @@ class InternetScheduleRepository(
         val date = runCatching { now.atZone(ZoneId.of(parish.timezone)).toLocalDate() }.getOrNull()
             ?: return@withContext previous.copy(status = InternetScheduleStatus.UNAVAILABLE)
         if (sourceOverride != null && ScheduleUrl.publicSource(sourceOverride) == null) return@withContext previous.copy(status = InternetScheduleStatus.UNAVAILABLE)
+        val resolverSession = siteResolver.forRefresh()
         val configured = ScheduleUrl.publicSource(parish.website).orEmpty()
         val custom = sourceOverride?.let(ScheduleUrl::publicSource) ?: previous.customSource
         val changedSource = sourceOverride != null && custom != previous.customSource
@@ -126,7 +129,7 @@ class InternetScheduleRepository(
                 if (website.isBlank()) {
                     phase(ScheduleImportPhase.FINDING_SITE)
                     // A stale configured website must not bypass the source-identity check.
-                    val site = lookup(if (needsVerification) parish.copy(website = "") else parish, emptySet())
+                    val site = lookup(if (needsVerification) parish.copy(website = "") else parish, emptySet(), resolverSession)
                         ?.takeUnless { needsVerification && (previous.publicationRejected || previous.sourceHasWithdrawals) &&
                             !ScheduleDocumentLinks.sameSite(previous.website, it.url) }
                     if (site == null && needsVerification) {
@@ -155,7 +158,7 @@ class InternetScheduleRepository(
                 if (primary.publication == null && custom.isBlank() && !previous.publicationRejected && !sourceHasWithdrawals &&
                     !primary.rejected && !primary.hasWithdrawal) {
                     phase(ScheduleImportPhase.FINDING_SITE)
-                    val alternative = lookup(parish, primary.attemptedUrls + configured)
+                    val alternative = lookup(parish, primary.attemptedUrls + configured, resolverSession)
                     if (alternative != null) {
                         val next = importSource(parish, alternative.url, date, now) { checkedWebsite, checkedSource, withdrawal ->
                             // A different building at a new candidate cannot invalidate an
@@ -199,9 +202,9 @@ class InternetScheduleRepository(
         val status: InternetScheduleStatus, val publication: SchedulePublication?, val attemptedUrls: Set<String>,
         val rejected: Boolean, val hasWithdrawal: Boolean)
 
-    private suspend fun lookup(parish: Parish, excludedUrls: Set<String>): ScheduleSite? = try {
+    private suspend fun lookup(parish: Parish, excludedUrls: Set<String>, resolver: ScheduleSiteResolver): ScheduleSite? = try {
         val excluded = ScheduleSourceExclusions(excludedUrls)
-        siteResolver.resolve(parish, excludedUrls)?.let { site ->
+        resolver.resolve(parish, excludedUrls)?.let { site ->
             val url = ScheduleUrl.publicSource(site.url)
             val evidence = ScheduleUrl.publicSource(site.evidenceUrl)
             if (url == null || evidence == null || excluded.contains(url) || site.binding?.validFor(parish, url, evidence) != true) null
