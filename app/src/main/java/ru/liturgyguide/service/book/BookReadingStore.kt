@@ -5,6 +5,7 @@ import com.google.gson.Gson
 import ru.liturgyguide.service.SinglePreferenceCommit
 import ru.liturgyguide.model.ServiceBook
 import ru.liturgyguide.model.ServiceBookKey
+import ru.liturgyguide.model.BookBlockKind
 
 enum class BookReadingMode(val title: String) { ORIGINAL("Оригинал"), RUSSIAN("Русский"), MEANING("Смысл") }
 enum class BookAnchorKind { HEADER, BLOCK, END }
@@ -72,18 +73,33 @@ object BookPositionUpdate {
     fun rebase(position: BookReadingPosition, previous: ServiceBook, next: ServiceBook): BookReadingPosition {
         require(position.key == previous.key && previous.key == next.key)
         val exact = next.blocks.firstOrNull { it.id == position.blockId }
-        val chapter = next.chapters.firstOrNull { item -> exact?.let { it in item.blocks } == true }
-            ?: next.chapters.firstOrNull { it.id == position.chapterId } ?: next.chapters.first()
-        val block = exact ?: chapter.blocks.first()
         val old = previous.blocks.firstOrNull { it.id == position.blockId }
+        val oldChapter = previous.chapters.firstOrNull { old != null && old in it.blocks }
+        val sameChapter = next.chapters.firstOrNull { it.id == oldChapter?.id }
+        // Correcting a rubric changes its content-derived ID. Match only an unambiguous,
+        // verbatim original in the same chapter and altar/public scope, never a similar prayer.
+        val migrated = if (exact == null && old != null && sameChapter != null &&
+            oldChapter?.blocks?.count { it.original == old.original && it.isAltarText == old.isAltarText } == 1) {
+            val whole = sameChapter.blocks.filter { it.original == old.original && it.isAltarText == old.isAltarText }
+            val split = sameChapter.blocks.zipWithNext().filter { (rubric, prayer) ->
+                rubric.kind == BookBlockKind.RUBRIC && prayer.kind == BookBlockKind.PRAYER &&
+                    rubric.isAltarText == old.isAltarText && prayer.isAltarText == old.isAltarText &&
+                    "${rubric.original} ${prayer.original}" == old.original
+            }.map { it.first }
+            (whole + split).singleOrNull()
+        } else null
+        val matched = exact ?: migrated
+        val chapter = next.chapters.firstOrNull { item -> matched?.let { it in item.blocks } == true }
+            ?: next.chapters.firstOrNull { it.id == position.chapterId } ?: next.chapters.first()
+        val block = matched ?: chapter.blocks.first()
         val textMode = if (position.mode == BookReadingMode.MEANING)
             position.lastTextMode ?: BookReadingMode.ORIGINAL else position.mode
         fun visibleText(value: ru.liturgyguide.model.BookBlock) =
             if (textMode == BookReadingMode.RUSSIAN) value.russian ?: value.original else value.original
-        val unchanged = old != null && exact != null && visibleText(old) == visibleText(exact)
+        val unchanged = old != null && matched != null && visibleText(old) == visibleText(matched)
         return position.copy(contentHash = next.contentHash, chapterId = chapter.id, blockId = block.id,
             fraction = if (unchanged && position.anchorKind == BookAnchorKind.BLOCK) position.fraction else 0f,
-            anchorKind = if (exact != null) position.anchorKind else BookAnchorKind.HEADER)
+            anchorKind = if (matched != null) position.anchorKind else BookAnchorKind.HEADER)
     }
 }
 
