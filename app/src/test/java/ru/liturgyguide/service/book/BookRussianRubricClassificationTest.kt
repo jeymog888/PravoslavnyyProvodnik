@@ -30,7 +30,8 @@ class BookRussianRubricClassificationTest {
             val key = ServiceBookKey(date)
             assertEquals(source.text("sourceUrl"), key.sourceUrl())
             val book = ServiceBookParser().parse(document, key, 12345)
-            assertEquals(date, source.get("blockCount").asInt, book.blocks.size)
+            // Later verified metadata splits add blocks; the original baseline remains in provenance.
+            // Their exact counts and lossless boundaries are checked by BookLeadingMetadataTest.
             assertEquals("No removed, inserted or reordered original words: $date", source.text("originalTextSha256"),
                 BookText.sha256(book.blocks.joinToString(" ") { it.original }))
             for (direction in directions) {

@@ -82,8 +82,8 @@ class BookTranslationCorpusTest {
         assertEquals(3, saved.index.size)
     }
 
-    @Test fun obsoleteVersionWithAllSourceFlagsStillRechecksEverySourceAndKeepsOldPairs() = runBlocking {
-        assertTrue(cache.writeTranslationCorpus(BookTranslationCorpus(oldIndex(), allUrls, version = 1).encode()))
+    @Test fun versionSixWithAllSourceFlagsStillRechecksEverySourceAndKeepsOldPairs() = runBlocking {
+        assertTrue(cache.writeTranslationCorpus(BookTranslationCorpus(oldIndex(), allUrls, version = 6).encode()))
         val requests = mutableListOf<String>()
         val repository = ServiceBookRepository(cache, ScheduleTransport { url ->
             basePage(url)?.let { return@ScheduleTransport response(url, it) }
