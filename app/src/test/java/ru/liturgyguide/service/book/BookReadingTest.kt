@@ -23,6 +23,11 @@ class BookReadingTest {
             assertEquals(inSpace, BookReadingCodec.decode(BookReadingCodec.encode(inSpace)))
         }
         val json = com.google.gson.JsonParser.parseString(BookReadingCodec.encode(position)).asJsonObject
+        assertFalse("An ordinary position retains its legacy serialized form", json.has("followingGapFraction"))
+        val escapedPosition = position.copy(parishId = "temple&chapel")
+        val escaped = BookReadingCodec.encode(escapedPosition)
+        assertTrue("The legacy Gson escaping is retained too", escaped.contains("temple\\u0026chapel"))
+        assertEquals(escapedPosition, BookReadingCodec.decode(escaped))
         json.remove("followingGapFraction")
         assertEquals(position, BookReadingCodec.decode(json.toString()))
         for (invalid in listOf("null", "\"0.5\"", "-0.1", "1.1")) {

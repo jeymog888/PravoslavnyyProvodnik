@@ -54,9 +54,11 @@ object BookReadingCodec {
             position.copy(journeyContext = BookJourneyCodec.decode(journey, position.key, position.parishId))
         }.getOrNull()
     }
-    fun encode(position: BookReadingPosition): String = gson.toJson(position).also {
-        require(decode(it) != null)
-    }
+    fun encode(position: BookReadingPosition): String = gson.toJsonTree(position).asJsonObject.apply {
+        // A new gap coordinate is optional. Ordinary legacy positions retain their
+        // exact serialized form, avoiding a rewrite merely because the app was updated.
+        if (position.followingGapFraction == 0f) remove("followingGapFraction")
+    }.let { gson.toJson(it) }.also { require(decode(it) != null) }
 }
 
 data class BookViewport(val chapterId: String, val blockId: String, val fraction: Float, val kind: BookAnchorKind,
