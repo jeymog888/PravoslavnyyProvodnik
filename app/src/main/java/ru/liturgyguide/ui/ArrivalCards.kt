@@ -221,22 +221,34 @@ internal fun serviceActionSubtitle(title: String, detail: String): String =
 
 @Composable
 internal fun ArrivalServiceTitle(title: String, tagPrefix: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        ArrivalServiceHeading(title, tagPrefix)
+        ArrivalServiceSourceTitle(title, tagPrefix)
+    }
+}
+
+@Composable
+internal fun ArrivalServiceHeading(title: String, tagPrefix: String) {
     val heading = serviceKindTitle(title)
     val original = serviceSourceTitle(title)
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (heading != null && original != null) {
-            Text(heading, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.testTag(tagPrefix + "_kind"))
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("В расписании храма", style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(original, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag(tagPrefix + "_title"))
-            }
-        } else {
-            // A short source title is shown once. Unknown kinds keep their own wording.
-            Box(if (heading != null) Modifier.testTag(tagPrefix + "_kind") else Modifier) {
-                Text(title, style = if (heading != null) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.testTag(tagPrefix + "_title"))
-            }
+    if (heading != null && original != null) {
+        Text(heading, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.testTag(tagPrefix + "_kind"))
+    } else {
+        // A short source title is shown once. Unknown kinds keep their own wording.
+        Box(if (heading != null) Modifier.testTag(tagPrefix + "_kind") else Modifier) {
+            Text(title, style = if (heading != null) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleMedium,
+                modifier = Modifier.testTag(tagPrefix + "_title"))
+        }
+    }
+}
+
+@Composable
+internal fun ArrivalServiceSourceTitle(title: String, tagPrefix: String) {
+    serviceSourceTitle(title)?.let { original ->
+        Column(Modifier.testTag(tagPrefix + "_source"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("В расписании храма", style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(original, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag(tagPrefix + "_title"))
         }
     }
 }

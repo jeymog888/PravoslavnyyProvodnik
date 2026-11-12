@@ -252,18 +252,23 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                         if (featured != null) {
                             Text(featured.time, style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.testTag("church_service_time"))
-                            ArrivalServiceTitle(featured.title, "church_service")
+                            ArrivalServiceHeading(featured.title, "church_service")
                             Text(schedule.relation.orEmpty(), style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("church_service_relation"))
                             if (cachedPublication?.yearInferred == true && (schedule.saved || cachedPublication.sourceUrl == church.sourceUrl)) {
                                 Text("Год не указан - проверьте дату в расписании", style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("schedule_inferred_year"))
-                                OutlinedButton(onClick = { onOpenUrl(cachedPublication.sourceUrl) },
-                                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Проверить источник") }
                             }
                             if (onOpenService != null) Button(onClick = { onOpenService(featured) }, shape = MaterialTheme.shapes.small,
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("church_open_service")) {
                                 Text(serviceReadingAction(featured))
+                            }
+                            ArrivalServiceSourceTitle(featured.title, "church_service")
+                            if (cachedPublication?.yearInferred == true && (schedule.saved || cachedPublication.sourceUrl == church.sourceUrl)) {
+                                OutlinedButton(onClick = { onOpenUrl(cachedPublication.sourceUrl) },
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("church_verify_schedule_source")) {
+                                    Text("Проверить источник")
+                                }
                             }
                             if (entries.size > 1) {
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)

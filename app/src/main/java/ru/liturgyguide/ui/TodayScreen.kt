@@ -116,20 +116,23 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                         if (featured != null) {
                             Text(featured.time, style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.testTag("today_service_time"))
-                            ArrivalServiceTitle(featured.title, "today_service")
+                            ArrivalServiceHeading(featured.title, "today_service")
                             Text(schedule?.relation.orEmpty(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.testTag("today_service_relation"))
                             if (inferredYear) {
                                 Text("Год не указан - проверьте дату в расписании", style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("schedule_inferred_year"))
-                                onOpenScheduleSource?.let { source -> OutlinedButton(onClick = source,
-                                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Проверить источник") } }
                             }
                             if (kind != null) Button(onClick = { open(featured) }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("open_service_book")) {
                                 Text(if (kind == WorshipKind.LITURGY && featured.kind == "service_block") "Открыть литургию" else "Открыть службу")
                             } else OutlinedButton(onClick = { open(featured) }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("today_choose_unknown_service")) {
                                 Text("Выбрать текст службы")
                             }
+                            ArrivalServiceSourceTitle(featured.title, "today_service")
+                            if (inferredYear) onOpenScheduleSource?.let { source -> OutlinedButton(onClick = source,
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("today_verify_schedule_source")) {
+                                Text("Проверить источник")
+                            } }
                             schedule?.entries.orEmpty().filterNot { it == featured }.forEach { service ->
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                 ArrivalAction(serviceKindTitle(service.title) ?: service.title, Icons.Default.Schedule, { open(service) },
