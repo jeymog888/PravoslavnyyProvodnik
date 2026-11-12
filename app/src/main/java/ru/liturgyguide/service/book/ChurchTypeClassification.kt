@@ -10,6 +10,7 @@ data class ChurchTypeClassification(val type: String?, val evidence: ChurchTypeE
 }
 
 object ChurchTypeClassifier {
+    private val terminalCity = Regex("^([^()]*)\\s+\\(([^()]+)\\)$")
     private val building = Regex("\\b(?:храм|храма|церковь|церкви|собор|собора|часовня|часовни|придел|придела)\\b")
     private val location = Regex("(?:^|\\s+)(?:в|на|при|у)\\s+")
     private val lord = Regex("(?:живоначальной троицы|(?:святой |пресвятой )?троицы(?: живоначальной)?|" +
@@ -24,7 +25,16 @@ object ChurchTypeClassifier {
     private val unknown = ChurchTypeClassification(null, ChurchTypeEvidence.UNKNOWN)
     private val ambiguous = ChurchTypeClassification(null, ChurchTypeEvidence.AMBIGUOUS)
 
-    fun classify(parish: Parish?): ChurchTypeClassification = classifyName(parish?.name.orEmpty())
+    fun classify(parish: Parish?): ChurchTypeClassification {
+        val original = parish?.name.orEmpty()
+        val city = parish?.city.orEmpty().trim()
+        val suffix = terminalCity.matchEntire(original.trimEnd())
+        // Only an independently supplied, exact city can remove this locator. Do not
+        // normalize punctuation or peel an inner suffix out of malformed parentheses.
+        val name = if (suffix != null && city.isNotEmpty() && suffix.groupValues[2].trim().equals(city, ignoreCase = true))
+            suffix.groupValues[1].trimEnd() else original
+        return classifyName(name)
+    }
 
     /** Match the named building, never its address or an associated monastery in the suffix. */
     fun classifyName(name: String): ChurchTypeClassification {
