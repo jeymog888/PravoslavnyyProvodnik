@@ -40,7 +40,9 @@ data class DiscoveryCity(
     val name: String,
     val region: String,
     val country: String,
-    val center: GeoPoint
+    val center: GeoPoint,
+    /** Published district/is_in text, separate from administrative region and country. */
+    val contextLabel: String = ""
 )
 
 data class DiscoveredChurch(
@@ -150,7 +152,8 @@ class DefaultPlaceDiscovery(
         val choices = LandmarkSearch.stationChoices(stations.items, landmarkQuery.stationQuery)
         if (choices.isEmpty()) return@withContext direct.copy(
             notice = "Станция не найдена. Уточните ее название и город; ниже результаты по названию")
-        if (landmarkQuery.requiresChoice || choices.size != 1 || !LandmarkSearch.exactName(choices.single(), landmarkQuery.stationQuery)) return@withContext direct.copy(
+        if (landmarkQuery.requiresChoice || !LandmarkSearch.onlyChurchWords(landmarkQuery.churchQuery) || choices.size != 1 ||
+            !LandmarkSearch.exactName(choices.single(), landmarkQuery.stationQuery)) return@withContext direct.copy(
             landmarkChoices = choices, landmarkChurchQuery = landmarkQuery.churchQuery,
             notice = if (stations.cacheStatus == DiscoveryCacheStatus.STALE_CACHE) "Показан сохраненный список станций. Проверьте город" else null)
         val station = choices.single()
@@ -164,9 +167,10 @@ class DefaultPlaceDiscovery(
                 val combined = (nearby.items + directNearby).groupBy { it.id }.values.map { copies ->
                     val preferred = copies.first()
                     preferred.copy(address = copies.firstOrNull { it.address.isNotBlank() }?.address.orEmpty(),
-                        city = copies.firstOrNull { it.city.isNotBlank() }?.city ?: station.city,
-                        region = copies.firstOrNull { it.region.isNotBlank() }?.region ?: station.region,
-                        country = copies.firstOrNull { it.country.isNotBlank() }?.country ?: station.country)
+                        // A nearby station does not establish the church's administrative address.
+                        city = copies.firstOrNull { it.city.isNotBlank() }?.city.orEmpty(),
+                        region = copies.firstOrNull { it.region.isNotBlank() }?.region.orEmpty(),
+                        country = copies.firstOrNull { it.country.isNotBlank() }?.country.orEmpty())
                 }
                 val statuses = listOf(direct.cacheStatus, stations.cacheStatus, nearby.cacheStatus)
                 nearby.copy(items = LandmarkSearch.rank(combined, landmarkQuery.churchQuery, station.center).take(MAX_CHURCHES),

@@ -11,6 +11,7 @@ import ru.liturgyguide.service.discovery.DefaultPlaceDiscovery
 import ru.liturgyguide.service.discovery.DiscoveryCacheStore
 import ru.liturgyguide.service.discovery.PlaceDiscovery
 import ru.liturgyguide.service.discovery.BundledChurchCatalog
+import ru.liturgyguide.service.discovery.BundledPlaceGazetteer
 import ru.liturgyguide.service.discovery.CatalogPlaceDiscovery
 import ru.liturgyguide.service.schedule.InternetSchedules
 import ru.liturgyguide.service.schedule.InternetScheduleRepository
@@ -62,6 +63,9 @@ class AppContainer(context: Context, private val discoveryOverride: PlaceDiscove
             override fun write(slot: String, value: String) {
                 if (slot in setOf("cities", "churches", "places", "landmarks")) cache.edit().putString(slot, value).apply()
             }
+        }), places = BundledPlaceGazetteer(open = {
+            assetReader?.invoke(BundledPlaceGazetteer.ASSET_PATH)?.reader()
+                ?: appContext.assets.open(BundledPlaceGazetteer.ASSET_PATH).bufferedReader(Charsets.UTF_8)
         }))
     }
     private var stageMatcherResult: Result<StageMatcher>? = null

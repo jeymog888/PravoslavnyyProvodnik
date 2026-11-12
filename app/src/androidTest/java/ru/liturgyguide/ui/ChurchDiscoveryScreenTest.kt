@@ -576,6 +576,50 @@ class ChurchDiscoveryScreenTest {
         }
     }
 
+    @Test fun citylessMetroNamesakesShowTheirNetworksAndRequireTheChosenStation() {
+        val lower = DiscoveryLandmark("osm:node:442018472", "Кировская", GeoPoint(56.2477056, 43.8769644), "", "", "",
+            network = "Нижегородский метрополитен")
+        val samara = DiscoveryLandmark("osm:node:6986625318", "Кировская", GeoPoint(53.2112906, 50.2695324), "", "", "",
+            network = "Самарский метрополитен")
+        val fake = FakeDiscovery().apply { nameResult = { success<DiscoveredChurch>(emptyList(), DiscoveryProvider.LOCAL_CATALOG)
+            .copy(landmarkChoices = listOf(lower, samara), landmarkChurchQuery = "Троицы",
+                cacheStatus = DiscoveryCacheStatus.LOCAL_SNAPSHOT) } }
+        launch(fake, initialMode = ChurchSearchMode.NAME)
+        search("метро Кировская Троицы")
+        scrollTo("discovery_landmark_${lower.id}").assertTextContains("Нижегородский метрополитен", substring = true)
+        scrollTo("discovery_landmark_${samara.id}").assertTextContains("Самарский метрополитен", substring = true)
+        compose.onNodeWithTag("discovery_catalog_notice").assertDoesNotExist()
+        compose.onNodeWithTag("discovery_empty").assertDoesNotExist()
+        compose.runOnIdle { assertTrue(fake.centers.isEmpty()) }
+        compose.onNodeWithTag("discovery_landmark_${samara.id}").performClick()
+        compose.runOnIdle { assertEquals(listOf(samara.center), fake.centers) }
+    }
+
+    @Test fun sameMetroNetworkNamesakesShowPublishedMapColours() {
+        val blue = DiscoveryLandmark("osm:node:242546476", "Арбатская", GeoPoint(55.752095, 37.6069779), "", "", "",
+            network = "Московский метрополитен", mapColour = "blue")
+        val light = blue.copy(id = "osm:node:253043175", center = GeoPoint(55.7518523, 37.6006567), mapColour = "lightblue")
+        val fake = FakeDiscovery().apply { nameResult = { success<DiscoveredChurch>(emptyList(), DiscoveryProvider.LOCAL_CATALOG)
+            .copy(landmarkChoices = listOf(blue, light)) } }
+        launch(fake, initialMode = ChurchSearchMode.NAME)
+        search("метро Арбатская")
+        scrollTo("discovery_landmark_${blue.id}").assertTextContains("На схеме: синий", substring = true)
+        scrollTo("discovery_landmark_${light.id}").assertTextContains("На схеме: голубой", substring = true).performClick()
+        compose.runOnIdle { assertEquals(listOf(light.center), fake.centers) }
+    }
+
+    @Test fun identicalCitySubtitlesKeepBothChoicesAndShowTheirPublicCoordinates() {
+        val first = kazan.copy(id = "osm:node:704304024", name = "Высокая Гора", center = GeoPoint(55.9101814, 49.3072048),
+            contextLabel = "Высокогорский район")
+        val second = first.copy(id = "osm:node:704304026", center = GeoPoint(55.9334601, 49.3074759))
+        val fake = FakeDiscovery().apply { cityResult = { success(listOf(first, second), DiscoveryProvider.LOCAL_CATALOG) } }
+        launch(fake)
+        search("Высокая Гора")
+        scrollTo("discovery_city_${first.id}").assertTextContains("55.91018, 49.30720", substring = true)
+        scrollTo("discovery_city_${second.id}").assertTextContains("55.93346, 49.30748", substring = true).performClick()
+        compose.runOnIdle { assertEquals(listOf(second.center), fake.centers) }
+    }
+
     @Test fun searchButtonUsesTheCurrentQueryAfterEditingAndSwitchingModesBothWays() {
         val fake = FakeDiscovery()
         launch(fake, initialMode = ChurchSearchMode.NAME)

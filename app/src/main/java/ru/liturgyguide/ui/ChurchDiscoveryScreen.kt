@@ -329,6 +329,10 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                 }
             } }
             state.cities?.let { result ->
+                val subtitles = discoveryChoiceSubtitles(result.items.map { city ->
+                    DiscoveryPlaceLabel(city.id, city.name, discoveryPlaceContext(
+                        listOf(city.region, city.contextLabel), city.country, city.center), city.center)
+                })
                 item(key = "cities_heading") {
                     Text(if (result.items.isEmpty()) "Город не найден" else "Выберите город", style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.testTag("discovery_city_heading").semantics { heading() })
@@ -336,8 +340,7 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                     if (result.items.isEmpty()) Text("Уточните название или добавьте храм вручную", style = MaterialTheme.typography.bodyMedium)
                 }
                 items(result.items, key = { "city:${it.id}" }) { city ->
-                    DiscoveryRow(city.name, listOf(city.region, city.country).filter(String::isNotBlank).distinct().joinToString(" · "),
-                        "discovery_city_${city.id}") {
+                    DiscoveryRow(city.name, subtitles.getValue(city.id), "discovery_city_${city.id}") {
                         focus.clearFocus(); keyboard?.hide(); nameFilter = ""
                         state.searchChurches(city.center, listOf(city.name, city.region).filter(String::isNotBlank).distinct().joinToString(" · "), city.name)
                     }
@@ -352,6 +355,11 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                 }.filterNot { nameFilter.isBlank() && onSelectSaved != null &&
                     KnownChurchIdentity.existingFor(it, savedById)?.id in visibleSavedIds }
                 if (result.landmarkChoices.isNotEmpty()) {
+                    val subtitles = discoveryChoiceSubtitles(result.landmarkChoices.map { landmark ->
+                        DiscoveryPlaceLabel(landmark.id, landmark.name, discoveryPlaceContext(
+                            listOf(landmark.city, landmark.network, landmark.region, landmark.contextLabel,
+                                discoveryMapColour(landmark.mapColour)), landmark.country, landmark.center), landmark.center)
+                    })
                     item(key = "landmark_heading") {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text("Уточните станцию", style = MaterialTheme.typography.titleMedium,
@@ -360,15 +368,14 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
                         }
                     }
                     items(result.landmarkChoices, key = { "landmark:${it.id}" }) { landmark ->
-                        DiscoveryRow(landmark.name, listOf(landmark.city, landmark.region, landmark.country)
-                            .filter(String::isNotBlank).distinct().joinToString(" · "), "discovery_landmark_${landmark.id}") {
+                        DiscoveryRow(landmark.name, subtitles.getValue(landmark.id), "discovery_landmark_${landmark.id}") {
                             focus.clearFocus(); keyboard?.hide(); nameFilter = ""
                             state.searchChurches(landmark.center, landmark.label, landmark.city,
                                 DefaultPlaceDiscovery.LANDMARK_RADIUS_METERS, landmark = landmark, churchQuery = result.landmarkChurchQuery)
                         }
                     }
                 }
-                if (result.items.isNotEmpty() || result.landmarkChoices.isNotEmpty()) item(key = "results_heading") {
+                if (result.items.isNotEmpty()) item(key = "results_heading") {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(state.areaLabel, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
                         Text(discoveryResultCaption(result, state.approximateLocation), style = MaterialTheme.typography.bodySmall,
@@ -562,4 +569,38 @@ private fun ChurchSearchModePicker(mode: ChurchSearchMode, onChange: (ChurchSear
             choice(ChurchSearchMode.CITY, "По городу", "discovery_mode_city", Modifier.weight(1f))
         }
     }
+}
+
+private val discoveryCountryCodes = Locale.getISOCountries().toSet()
+
+/** A transport network is an orientation label, never an inferred administrative city. */
+private fun discoveryPlaceContext(labels: List<String>, country: String, center: GeoPoint): String {
+    val published = labels.filter(String::isNotBlank).distinct()
+    val code = country.uppercase(Locale.ROOT)
+    val countryName = if (code in discoveryCountryCodes) Locale("", code).getDisplayCountry(Locale.forLanguageTag("ru")) else country
+    val location = if (published.isEmpty()) listOf(String.format(Locale.US,
+        "Координаты: %.3f, %.3f", center.latitude, center.longitude)) else published
+    return (location + countryName).filter(String::isNotBlank).distinct().joinToString(" · ")
+}
+
+private data class DiscoveryPlaceLabel(val id: String, val name: String, val context: String, val center: GeoPoint)
+
+/** Only identical visible choices need a precise public map position. Never request phone location. */
+private fun discoveryChoiceSubtitles(items: List<DiscoveryPlaceLabel>): Map<String, String> {
+    val counts = items.groupingBy { it.name to it.context }.eachCount()
+    return items.associate { item -> item.id to if (counts.getValue(item.name to item.context) > 1)
+        listOf(item.context, String.format(Locale.US, "Координаты: %.5f, %.5f", item.center.latitude, item.center.longitude))
+            .filter(String::isNotBlank).joinToString(" · ") else item.context }
+}
+
+/** Describe the published colour itself, without inventing a route name or number. */
+private fun discoveryMapColour(raw: String): String {
+    val names = raw.lowercase(Locale.ROOT).split(';').map { value -> when (value.trim()) {
+        "red" -> "красный"; "green" -> "зеленый"; "blue" -> "синий"; "orange" -> "оранжевый"
+        "yellow" -> "желтый"; "violet" -> "фиолетовый"; "purple" -> "пурпурный"; "brown" -> "коричневый"
+        "lightblue" -> "голубой"; "#82c0c0" -> "бирюзовый"; "#b4d445" -> "салатовый"; "#a0a2a3" -> "серый"
+        "#03795f" -> "темно-зеленый"; "#ffcbdb" -> "розовый"; "#bac8e8" -> "светло-сиреневый"; "#474a51" -> "темно-серый"
+        else -> return ""
+    } }.distinct()
+    return "На схеме: " + names.joinToString(", ")
 }

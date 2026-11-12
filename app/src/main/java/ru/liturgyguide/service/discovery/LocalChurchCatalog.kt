@@ -46,15 +46,38 @@ class BundledChurchCatalog(private val open: () -> Reader, private val clock: Cl
 }
 
 /** Successful local searches never contact a public map server. Empty results make no coverage claim. */
-class CatalogPlaceDiscovery(private val local: BundledChurchCatalog, private val network: PlaceDiscovery) : PlaceDiscovery {
-    override suspend fun searchCities(query: String): DiscoveryResult<DiscoveryCity> = network.searchCities(query)
+class CatalogPlaceDiscovery(private val local: BundledChurchCatalog, private val network: PlaceDiscovery,
+    private val places: BundledPlaceGazetteer? = null) : PlaceDiscovery {
+    override suspend fun searchCities(query: String): DiscoveryResult<DiscoveryCity> {
+        val cleaned = query.trim().replace(Regex("\\s+"), " ")
+        if (!validQuery(cleaned)) return DiscoveryResult.Failure(DiscoveryFailure.INVALID_QUERY)
+        val found = withContext(Dispatchers.IO) {
+            val catalog = places?.get() ?: return@withContext null
+            val context = currentCoroutineContext()
+            catalog.searchCities(cleaned) { context.ensureActive() }.takeIf { it.items.isNotEmpty() }
+        }
+        return found ?: network.searchCities(cleaned)
+    }
 
     override suspend fun searchPlaces(query: String): DiscoveryResult<DiscoveredChurch> {
         val cleaned = query.trim().replace(Regex("\\s+"), " ")
         if (!validQuery(cleaned)) return DiscoveryResult.Failure(DiscoveryFailure.INVALID_QUERY)
         // Resolving a metro station is a different operation. Never drop its name and return
         // a same-named church in another city as an offline substitute.
-        if (LandmarkSearch.parse(cleaned) != null) return network.searchPlaces(cleaned)
+        LandmarkSearch.parse(cleaned)?.let { query ->
+            val resolved = withContext(Dispatchers.IO) {
+                val catalog = places?.get() ?: return@withContext null
+                val context = currentCoroutineContext()
+                val choices = catalog.stationChoices(query.stationQuery) { context.ensureActive() }
+                if (choices.isEmpty()) return@withContext null
+                val automatic = choices.size == 1 && !query.requiresChoice &&
+                    LandmarkSearch.onlyChurchWords(query.churchQuery) && catalog.isExactPrimary(choices.single(), query.stationQuery)
+                if (automatic) findChurchesNearLandmark(choices.single(), query.churchQuery)
+                else catalog.result<DiscoveredChurch>(emptyList()).copy(landmarkChoices = choices,
+                    landmarkChurchQuery = query.churchQuery)
+            }
+            return resolved ?: network.searchPlaces(cleaned)
+        }
         val found = withContext(Dispatchers.IO) {
             val catalog = local.get() ?: return@withContext null
             val context = currentCoroutineContext()

@@ -79,6 +79,36 @@ class LandmarkSearchTest {
         assertTrue(DiscoveryJson.landmarks(altered.toString()).isEmpty())
     }
 
+    @Test fun `station address never becomes church address but same church records can complete each other`() = runBlocking {
+        fun withoutAdministration(json: String): String = JsonParser.parseString(json).asJsonObject.apply {
+            getAsJsonArray("features").forEach { feature ->
+                feature.asJsonObject.getAsJsonObject("properties").apply {
+                    listOf("city", "state", "country", "countrycode").forEach(::remove)
+                }
+            }
+        }.toString()
+        val citylessNearby = withoutAdministration(nearby)
+        for (keepDirectAddress in listOf(false, true)) {
+            val directResponse = if (keepDirectAddress) direct else withoutAdministration(direct)
+            val result = DefaultPlaceDiscovery(DiscoveryTransport { request ->
+                when {
+                    request.postBody != null -> throw DiscoveryException(DiscoveryFailure.TIMEOUT)
+                    query(request).contains("bbox=") -> citylessNearby
+                    query(request).contains("include=") -> directResponse
+                    else -> stations
+                }
+            }, relatedRequestPause = {}).searchPlaces("метро Сухаревская Троицы").success()
+            assertEquals("Москва", result.landmark?.city)
+            assertTrue(result.items.isNotEmpty())
+            result.items.forEach { church ->
+                val expectedCity = if (keepDirectAddress && church.id == "osm:node:5053943230") "Москва" else ""
+                assertEquals(church.id, expectedCity, church.city)
+                assertEquals(church.id, expectedCity, church.region)
+                assertEquals(church.id, if (expectedCity.isBlank()) "" else "Россия", church.country)
+            }
+        }
+    }
+
     @Test fun `a single station from another city must still require explicit selection`() = runBlocking {
         val wrongCity = JsonParser.parseString(stations).asJsonObject
         wrongCity.getAsJsonArray("features")[0].asJsonObject.getAsJsonObject("properties").apply {
@@ -130,6 +160,21 @@ class LandmarkSearchTest {
         val cancelled = DefaultPlaceDiscovery(DiscoveryTransport { count++; direct }, relatedRequestPause = { throw CancellationException() })
         try { cancelled.searchPlaces("метро Сухаревская троицы"); fail("Cancellation must propagate") }
         catch (_: CancellationException) { assertEquals(1, count) }
+    }
+
+    @Test fun `network fallback keeps explicit geographic words and separate close station identities`() = runBlocking {
+        for (search in listOf("Никольск метро Сухаревская храм", "Покров метро Сухаревская", "метро Сухаревская Троицы Казань")) {
+            var requests = 0
+            val result = DefaultPlaceDiscovery(DiscoveryTransport {
+                requests++; if (requests == 1) direct else stations
+            }, relatedRequestPause = {}).searchPlaces(search).success()
+            assertEquals(search, 2, requests)
+            assertNull(search, result.landmark)
+            assertEquals(search, 1, result.landmarkChoices.size)
+        }
+        val first = DiscoveryJson.landmarks(stations).single()
+        val second = first.copy(id = "osm:node:42")
+        assertEquals(listOf(first, second), LandmarkSearch.stationChoices(listOf(first, second, first), "Сухаревская"))
     }
 
     @Test fun `fresh and offline landmark caches remain bounded and keep original dates`() = runBlocking {
