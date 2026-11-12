@@ -508,12 +508,25 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                     targetError?.let { message ->
                         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).testTag("book_search_jump_error")) {
                             Text(message, color = MaterialTheme.colorScheme.error)
-                            Row {
-                                TextButton(onClick = { targetError = null; searchLine = null; seekRevision++ },
-                                    modifier = Modifier.testTag("book_search_jump_retry")) { Text("Повторить переход") }
-                                TextButton(onClick = {
-                                    if (cancelPendingTarget()) { pendingSearch = null; positioningOwner.job?.cancel() }
-                                }, modifier = Modifier.testTag("book_search_jump_cancel")) { Text("Читать вручную") }
+                            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                                val retryButton: @Composable (Modifier) -> Unit = { modifier ->
+                                    TextButton(onClick = { targetError = null; searchLine = null; seekRevision++ },
+                                        modifier = modifier.heightIn(min = 48.dp).testTag("book_search_jump_retry")) { Text("Повторить переход") }
+                                }
+                                val manualButton: @Composable (Modifier) -> Unit = { modifier ->
+                                    TextButton(onClick = {
+                                        if (cancelPendingTarget()) { pendingSearch = null; positioningOwner.job?.cancel() }
+                                    }, modifier = modifier.heightIn(min = 48.dp).testTag("book_search_jump_cancel")) { Text("Читать вручную") }
+                                }
+                                if (maxWidth < 340.dp || density.fontScale > 1.3f) {
+                                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        retryButton(Modifier.fillMaxWidth())
+                                        manualButton(Modifier.fillMaxWidth())
+                                    }
+                                } else Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    retryButton(Modifier.weight(1f))
+                                    manualButton(Modifier.weight(1f))
+                                }
                             }
                         }
                     }
@@ -582,20 +595,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                             Text("Тексты на " + LocalDate.parse(book.key.date).format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru"))) +
                                 if (isSaved) " · Сохранено на телефоне" else " · Пока не сохранено", style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("book_saved"))
-                            if (journey == null && book.key.worship in setOf(WorshipKind.VESPERS, WorshipKind.VIGIL)) {
-                                Text("Вечерняя служба относится к следующему церковному дню",
-                                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.testTag("book_evening_date_note"))
-                            }
-                            journey?.let {
-                                BookJourneyDescription(it, book.key)
-                                BookJourneyParts(it, book.key, ::choosePart, "book_intro_parts", switchingPart)
-                            }
                             loadWarning?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
-                            book.selectedEventTitle?.takeIf(String::isNotBlank)?.let {
-                                Text("Праздник и памяти дня: $it", style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("book_selected_event"))
-                            }
                             OutlinedButton(onClick = { playing = false; sheet = "calendar" },
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_open_calendar")) {
                                 Text("О дне и службе")
@@ -692,7 +692,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 }
                 loadWarning?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
             }
-            "calendar" -> BookCalendarContent(book, onOpenUrl)
+            "calendar" -> BookCalendarContent(book, onOpenUrl, journey)
             "sources" -> LazyColumn(Modifier.heightIn(max = 600.dp), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 item {
                     Text("Состав книги", style = MaterialTheme.typography.headlineSmall)

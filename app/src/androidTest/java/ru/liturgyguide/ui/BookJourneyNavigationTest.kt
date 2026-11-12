@@ -339,11 +339,12 @@ class BookJourneyNavigationTest {
         books.publish(fixture(vespers)); books.publish(fixture(matins))
         launch()
         openFromHome()
-        assertIntro()
+        assertIntro(leaveDetailsOpen = true)
         for (tag in listOf("book_journey_schedule", "book_journey_date")) {
-            reveal(tag, "book_content")
+            reveal(tag, "book_calendar")
             assertReadable(tag)
         }
+        dismissSheet()
         compose.onNodeWithTag("book_order").assertHeightIsAtLeast(48.dp).performClick()
         compose.onNodeWithTag("book_order_list").performScrollToNode(hasTestTag("book_part_vespers"))
         compose.onNodeWithTag("book_part_vespers").assertIsSelected().assertHeightIsAtLeast(48.dp)
@@ -385,9 +386,13 @@ class BookJourneyNavigationTest {
 
         compose.onNodeWithTag("book_find").performClick()
         compose.onNodeWithTag("book_search_query").performTextReplacement("несуществующая проверочная фраза")
-        waitForTag("book_search_other_part")
-        compose.onNodeWithTag("book_search_sheet").performScrollToNode(hasTestTag("book_search_other_part"))
-        compose.onNodeWithTag("book_search_other_part").assertTextContains("Открыть вечерню").performClick()
+        compose.waitUntil(5_000) {
+            compose.onAllNodesWithText("Совпадений в обеих книгах нет", substring = true).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("book_search_sheet").performScrollToNode(hasText("Совпадений в обеих книгах нет", substring = true))
+        compose.onNodeWithText("Совпадений в обеих книгах нет", substring = true).assertIsDisplayed()
+        dismissSheet()
+        compose.onNodeWithTag("book_open_other_part").assertTextContains("Открыть вечерню").performClick()
         waitForBook(vespers)
         val preservedMatins = requireNotNull(store.positionFor(matins, parishId))
         assertTrue(preservedMatins.journeyContext!!.isEveningTexts)
@@ -439,11 +444,13 @@ class BookJourneyNavigationTest {
         if (expectSaved) waitForBook(vespers) else { waitForTag("book_content"); settle() }
     }
 
-    private fun assertIntro() {
+    private fun assertIntro(leaveDetailsOpen: Boolean = false) {
         compose.onNodeWithTag("book_content").performScrollToIndex(0)
-        reveal("book_journey_schedule", "book_content").assertTextContains("12 ноября", substring = true)
+        reveal("book_open_calendar", "book_content").performClick()
+        reveal("book_journey_schedule", "book_calendar").assertTextContains("12 ноября", substring = true)
             .assertTextContains("17:00", substring = true)
-        reveal("book_journey_date", "book_content").assertTextContains("13 ноября", substring = true)
+        reveal("book_journey_date", "book_calendar").assertTextContains("13 ноября", substring = true)
+        if (!leaveDetailsOpen) dismissSheet()
     }
 
     private fun choosePart(kind: WorshipKind, expectLoaded: Boolean = true) {

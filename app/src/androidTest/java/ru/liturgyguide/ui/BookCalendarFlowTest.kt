@@ -25,6 +25,7 @@ import ru.liturgyguide.service.book.*
 import ru.liturgyguide.service.schedule.ScheduleTransport
 import java.io.File
 import java.util.UUID
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -56,10 +57,10 @@ class BookCalendarFlowTest {
         val target = book.blocks.first { it.original.length > 1_000 }
         assertTrue(ServiceBookIntegrity.valid(book))
         assertTrue(FileBookCache(directory).write(book))
-        val networkRequests = AtomicInteger()
+        val networkRequests = CopyOnWriteArrayList<String>()
         val calendarRequests = AtomicInteger()
         fun offlineRepository() = ServiceBookRepository(FileBookCache(directory), ScheduleTransport {
-            networkRequests.incrementAndGet()
+            networkRequests += it
             error("Network is unavailable in this scenario")
         }, calendar = CalendarSupplements {
             calendarRequests.incrementAndGet()
@@ -140,7 +141,13 @@ class BookCalendarFlowTest {
             settle()
             assertSameAnchor(before, saved())
             compose.onNodeWithTag("book_text_${target.id}", useUnmergedTree = true).assertIsDisplayed().assertTextEquals(originalText)
-            assertEquals(0, networkRequests.get())
+            // Optional parallel-translation enrichment may try and fail in the background.
+            // Reading the accepted original and its saved calendar must never fetch them again.
+            val parallelSources = (BookTranslationIndex.requiredSources(book.key.worship) + BookSharedRussianSources.forBook(book))
+                .map { it.url }.toSet()
+            assertFalse("The accepted original must come only from disk", book.sourceUrl in networkRequests)
+            assertTrue("Only optional published translation sources may be attempted: $networkRequests",
+                networkRequests.all { it in parallelSources })
             assertEquals(0, calendarRequests.get())
             assertEquals(book, FileBookCache(directory).readVersion(book.key, book.contentHash))
         }
@@ -159,7 +166,7 @@ class BookCalendarFlowTest {
             selectMode(mode)
             settle()
             compose.onNodeWithTag("book_content").performScrollToNode(hasTestTag("book_open_calendar"))
-            compose.onNodeWithTag("book_selected_event").assertTextEquals("Праздник и памяти дня: ${book.selectedEventTitle}")
+            compose.onNodeWithTag("book_selected_event").assertDoesNotExist()
             compose.onNodeWithTag("book_open_calendar").performScrollTo().assertIsDisplayed().performClick()
             calendarNode("book_calendar_service_title").assertTextEquals("Литургия Иоанна Златоуста")
             calendarNode("book_calendar_selected_event").assertTextEquals(requireNotNull(book.selectedEventTitle))

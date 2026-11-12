@@ -18,14 +18,17 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import ru.liturgyguide.model.ServiceBook
 import ru.liturgyguide.model.WorshipKind
+import ru.liturgyguide.service.book.BookJourneyContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /** Kept outside the prayer stream: a commemoration is not an extra part of this service. */
 @Composable
-internal fun BookCalendarContent(book: ServiceBook, onOpenUrl: (String) -> Unit) {
+internal fun BookCalendarContent(book: ServiceBook, onOpenUrl: (String) -> Unit,
+    journeyContext: BookJourneyContext? = null) {
     val day = book.calendarDay
+    val journey = journeyContext?.validatedFor(book.key, journeyContext.parishId)
     var showCommemorations by rememberSaveable(book.contentHash) { mutableStateOf(false) }
     var expandedIndex by rememberSaveable(book.contentHash) { mutableStateOf<Int?>(null) }
     LazyColumn(Modifier.fillMaxWidth().heightIn(max = 600.dp).testTag("book_calendar"),
@@ -36,6 +39,21 @@ internal fun BookCalendarContent(book: ServiceBook, onOpenUrl: (String) -> Unit)
                 Text(LocalDate.parse(book.key.date).format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru"))),
                     style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("book_calendar_date"))
             }
+        }
+        if (journey != null) item {
+            Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
+                Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("В расписании храма", style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(journey.title, style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.testTag("book_calendar_schedule_title"))
+                    BookJourneyDescription(journey, book.key)
+                }
+            }
+        } else if (book.key.worship in setOf(WorshipKind.VESPERS, WorshipKind.VIGIL)) item {
+            Text("Вечерняя служба относится к следующему церковному дню",
+                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.testTag("book_evening_date_note"))
         }
         item {
             Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
