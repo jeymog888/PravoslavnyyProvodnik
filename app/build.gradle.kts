@@ -12,8 +12,8 @@ android {
         applicationId = "ru.liturgyguide"
         minSdk = 26
         targetSdk = 35
-        versionCode = 9
-        versionName = "0.9.0-guide"
+        versionCode = 10
+        versionName = "1.0.0-rc1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
