@@ -2,6 +2,7 @@ package ru.liturgyguide.service.book
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
@@ -14,6 +15,8 @@ import ru.liturgyguide.model.*
 import ru.liturgyguide.service.schedule.ScheduleTransport
 import ru.liturgyguide.service.schedule.UrlConnectionScheduleTransport
 import java.time.Clock
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 
 enum class BookLoadProgress(val label: String) {
     SOURCE("Загружаем службу"), READINGS("Подбираем чтения дня"),
@@ -47,14 +50,26 @@ class ServiceBookRepository(
 ) : ServiceBooks {
     private val mutex = Mutex()
     private val parser = ServiceBookParser()
-    private val backgroundAttemptAt = mutableMapOf<WorshipKind, Long>()
+    private val backgroundAttemptAt = mutableMapOf<String, Long>()
+    private val backgroundJob = AtomicReference<Job?>(null)
+    private val foregroundLoads = AtomicInteger(0)
 
     override fun cached(key: ServiceBookKey): ServiceBook? = if (key.isValid()) cache.read(key) else null
     override fun cachedVersion(key: ServiceBookKey, contentHash: String): ServiceBook? =
         if (key.isValid()) cache.readVersion(key, contentHash) else null
 
-    override suspend fun enrichSaved(accepted: ServiceBook, allowNetwork: Boolean): BookLoadResult.Ready? = try {
+    override suspend fun enrichSaved(accepted: ServiceBook, allowNetwork: Boolean): BookLoadResult.Ready? = coroutineScope {
+        // A private child scope lets a foreground load cancel optional work without cancelling
+        // the caller's UI/test parent. The second foreground check closes the claim/lock race.
+        val job = currentCoroutineContext()[Job]!!
+        if (foregroundLoads.get() > 0 || !backgroundJob.compareAndSet(null, job)) return@coroutineScope null
+        try { enrichSavedLocked(accepted, allowNetwork) }
+        finally { backgroundJob.compareAndSet(job, null) }
+    }
+
+    private suspend fun enrichSavedLocked(accepted: ServiceBook, allowNetwork: Boolean): BookLoadResult.Ready? = try {
         mutex.withLock {
+            if (foregroundLoads.get() > 0) return@withLock null
             if (!accepted.key.isValid()) return@withLock null
             val pinned = withContext(Dispatchers.IO) {
                 cache.readVersion(accepted.key, accepted.contentHash)?.takeIf {
@@ -63,17 +78,29 @@ class ServiceBookRepository(
             } ?: return@withLock null
             val corpus = withContext(Dispatchers.IO) { BookTranslationCorpus.decode(cache.readTranslationCorpus()) }
             // Cached exact pairs are useful offline, even when the corpus version is old.
-            publishEnrichment(pinned, corpus.index)?.let { return@withLock it }
-            if (!allowNetwork || !downloadRussian || corpus.completeFor(pinned.key.worship)) return@withLock null
+            val local = publishEnrichment(pinned, corpus.index)
+            val available = local?.book ?: pinned
+            if (!allowNetwork || !downloadRussian) return@withLock local
+            val additional = withContext(Dispatchers.Default) {
+                if (available.blocks.none { it.kind == BookBlockKind.PRAYER && it.russian == null }) null
+                else BookSharedRussianSources.forBook(available)
+            } ?: return@withLock local
+            val required = (BookTranslationIndex.requiredSources(available.key.worship) + additional).distinctBy { it.url }
+            if (corpus.completeFor(required)) return@withLock local
             val now = clock.millis()
-            val last = backgroundAttemptAt[pinned.key.worship]
-            if (last != null && now - last in 0 until BACKGROUND_RETRY_MILLIS) return@withLock null
-            backgroundAttemptAt[pinned.key.worship] = now
+            val completed = if (corpus.current && corpus.index.size > 0) corpus.completedSources else emptySet()
+            // Unattempted sources go first: repeated failures must not starve later pages.
+            val pending = required.filter { source -> source.url !in completed &&
+                backgroundAttemptAt[source.url]?.let { now - it !in 0 until BACKGROUND_RETRY_MILLIS } != false
+            }.sortedBy { backgroundAttemptAt[it.url] ?: Long.MIN_VALUE }
+            if (pending.isEmpty()) return@withLock local
             val session = RussianLoadSession(refresh = false, corpus = corpus)
             // Only shared published parallel pages. Original, daily readings and calendar
             // remain unchanged and are never requested by this optional background path.
             withTimeoutOrNull(BACKGROUND_BUDGET_MILLIS) {
-                loadRussianCorpus(pinned.key.worship, session, {}, sourceTimeoutMillis = 8_000)
+                loadRussianCorpus(pinned.key.worship, session, {}, sourceTimeoutMillis = 8_000,
+                    sources = pending, preserveExistingFor = additional.map { it.url }.toSet(),
+                    onAttempt = { backgroundAttemptAt[it.url] = clock.millis() }, persistEachSource = true)
             }
             currentCoroutineContext().ensureActive()
             val refreshed = session.corpus ?: corpus
@@ -81,7 +108,13 @@ class ServiceBookRepository(
             if (refreshed.index.size > 0) withContext(Dispatchers.IO) {
                 safely { cache.writeTranslationCorpus(refreshed.encode()) }
             }
-            publishEnrichment(pinned, refreshed.index)
+            val updated = publishEnrichment(pinned, refreshed.index)
+            // Another publisher may have advanced latest during the network wait. A local
+            // candidate saved before that wait must not be offered as a newer edition again.
+            if (updated != null) updated
+            else if (local != null && withContext(Dispatchers.IO) {
+                    cache.read(pinned.key)?.contentHash == local.book.contentHash
+                }) local else null
         }
     } catch (cancelled: CancellationException) { throw cancelled }
     catch (_: Exception) { null }
@@ -113,7 +146,10 @@ class ServiceBookRepository(
 
     override suspend fun load(key: ServiceBookKey, force: Boolean, onProgress: (BookLoadProgress) -> Unit): BookLoadResult {
         if (!key.isValid()) return BookLoadResult.Failed(BookFailure.INVALID_KEY, "Не удалось выбрать дату или вид службы")
-        return mutex.withLock {
+        foregroundLoads.incrementAndGet()
+        backgroundJob.get()?.cancel()
+        try { return mutex.withLock {
+            if (force) backgroundAttemptAt.clear()
             val previous = withContext(Dispatchers.IO) { cache.read(key) }
             if (previous != null && !force) return@withLock BookLoadResult.Ready(previous, fromCache = true, warning = BookWarnings.supplementWarning(previous))
             try {
@@ -129,7 +165,7 @@ class ServiceBookRepository(
                 BookLoadResult.Failed(BookFailure.NETWORK,
                     "Не удалось загрузить службу. Проверьте связь и попробуйте еще раз", previous)
             }
-        }
+        } } finally { foregroundLoads.decrementAndGet() }
     }
 
     private class RussianLoadSession(
@@ -158,7 +194,11 @@ class ServiceBookRepository(
                 else {
                     val common = loadRussianCorpus(key.worship, russianSession, progress)
                     val daily = loadDailyRussian(key.date, russianSession, progress)
-                    common.first.plus(daily.first) to combineStatus(listOf(common.second, daily.second))
+                    // A shared cache may already include other orders. Keep dated HTML/API
+                    // ahead of these optional pages, both on cold and subsequent liturgy loads.
+                    val primary = if (key.worship == WorshipKind.LITURGY)
+                        common.first.fromSources(BookTranslationIndex.PARALLEL_SOURCES) else common.first
+                    primary.plus(daily.first) to combineStatus(listOf(common.second, daily.second))
                 }
             }
             // The two primary sources own the bounded transport first. Optional context must
@@ -197,16 +237,22 @@ class ServiceBookRepository(
             enrichment = BookEnrichment(extras.second.second, scriptureStatus)).let {
             it.copy(contentHash = ServiceBookIntegrity.contentHash(it))
         }
-        return save(book, progress)
+        val withShared = if (key.worship == WorshipKind.LITURGY) withContext(Dispatchers.Default) {
+            russianSession.corpus?.index?.let { SavedBookEnrichment.apply(book, it) } ?: book
+        } else book
+        return save(withShared, progress)
     }
 
     private suspend fun loadRussianCorpus(worship: WorshipKind, session: RussianLoadSession,
-        progress: (BookLoadProgress) -> Unit, sourceTimeoutMillis: Long? = null): Pair<BookTranslationIndex, BookSupplementStatus> {
+        progress: (BookLoadProgress) -> Unit, sourceTimeoutMillis: Long? = null,
+        sources: List<BookSource> = BookTranslationIndex.requiredSources(worship),
+        preserveExistingFor: Set<String> = emptySet(), onAttempt: (BookSource) -> Unit = {},
+        persistEachSource: Boolean = false): Pair<BookTranslationIndex, BookSupplementStatus> {
         val saved = session.corpus ?: withContext(Dispatchers.IO) {
             BookTranslationCorpus.decode(cache.readTranslationCorpus())
         }.also { session.corpus = it }
-        if (saved.completeFor(worship) && !session.refresh) return saved.index to BookSupplementStatus.AVAILABLE
-        val required = BookTranslationIndex.requiredSources(worship)
+        if (saved.completeFor(sources) && !session.refresh) return saved.index to BookSupplementStatus.AVAILABLE
+        val required = sources
         var merged = saved.index
         val completed = if (saved.current && saved.index.size > 0) saved.completedSources.toMutableSet() else mutableSetOf()
         // A forced refresh of one order cannot invalidate successful sources for another order.
@@ -219,9 +265,11 @@ class ServiceBookRepository(
             // Vespers, Matins and the first hour share sources. Attempt each once per user load,
             // including failures, rather than repeating a failed shared request for every part.
             session.attempted += source.url
+            onAttempt(source)
             val loaded = safely {
                 suspend fun fetch(): BookTranslationIndex? {
                     val response = transport.fetch(source.url)
+                    if (source.url in preserveExistingFor && response.url != source.url) return null
                     return withContext(Dispatchers.Default) {
                         response.html()?.let { BookTranslationIndex.fromParallelPage(it, source.copy(url = response.url)) }
                     }
@@ -229,10 +277,13 @@ class ServiceBookRepository(
                 if (sourceTimeoutMillis == null) fetch() else withTimeoutOrNull(sourceTimeoutMillis) { fetch() }
             } ?: BookTranslationIndex.empty()
             if (loaded.size > 0) {
-                merged = loaded.plus(merged)
+                merged = if (source.url in preserveExistingFor) merged.fillingMissing(loaded) else loaded.plus(merged)
                 completed += source.url
             }
             session.corpus = BookTranslationCorpus(merged, completed.toSet())
+            if (persistEachSource && loaded.size > 0) withContext(Dispatchers.IO) {
+                safely { cache.writeTranslationCorpus(session.corpus!!.encode()) }
+            }
         }
         val corpus = BookTranslationCorpus(merged, completed)
         // Shared sources are attempted once per load. Preserve their successful pairs in this
@@ -241,7 +292,7 @@ class ServiceBookRepository(
         // Even an unsuccessful forced refresh retains all previously verified exact pairs, while
         // incomplete source metadata makes the next network load retry what could not be refreshed.
         if (merged.size > 0) withContext(Dispatchers.IO) { safely { cache.writeTranslationCorpus(corpus.encode()) } }
-        return merged to if (corpus.completeFor(worship)) BookSupplementStatus.AVAILABLE else BookSupplementStatus.RETRY_NEEDED
+        return merged to if (corpus.completeFor(sources)) BookSupplementStatus.AVAILABLE else BookSupplementStatus.RETRY_NEEDED
     }
 
     private suspend fun loadDailyRussian(date: String, session: RussianLoadSession,

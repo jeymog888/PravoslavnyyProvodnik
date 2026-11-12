@@ -62,13 +62,13 @@ class SavedBookEnrichmentTest {
             response(url, target.original, "Новый точный перевод")
         })
         val result = requireNotNull(repository.enrichSaved(original))
-        assertEquals(BookTranslationIndex.requiredSources(original.key.worship).map { it.url }, requests)
+        assertEquals((BookTranslationIndex.requiredSources(original.key.worship) + BookSharedRussianSources.forBook(original)).map { it.url }, requests)
         assertOnlyMissingRussianChanged(original, result.book)
         assertEquals("Новый точный перевод", result.book.blocks.first { it.id == target.id }.russian)
         assertTrue(BookTranslationCorpus.decode(disk.readTranslationCorpus()).completeFor(original.key.worship))
         val files = directory.listFiles()!!.map { it.name }.sorted()
         assertNull(repository.enrichSaved(result.book))
-        assertEquals(3, requests.size)
+        assertEquals(6, requests.size)
         assertEquals(files, directory.listFiles()!!.map { it.name }.sorted())
     }
 
@@ -78,13 +78,13 @@ class SavedBookEnrichmentTest {
         val requests = mutableListOf<String>()
         val repository = ServiceBookRepository(disk, ScheduleTransport { url -> requests += url; error("Offline") }, clock = clock)
         repeat(3) { assertNull(repository.enrichSaved(original)) }
-        assertEquals(3, requests.size)
+        assertEquals(6, requests.size)
         assertEquals(original, disk.read(original.key))
         assertTrue(repository.load(original.key, force = true) is BookLoadResult.Failed)
         assertTrue(requests.last().contains("/worships/"))
         clock.now += 5 * 60_000
         assertNull(repository.enrichSaved(original))
-        assertEquals(7, requests.size)
+        assertEquals(13, requests.size)
         assertNull(disk.readTranslationCorpus())
     }
 

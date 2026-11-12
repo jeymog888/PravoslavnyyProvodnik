@@ -17,13 +17,39 @@ data class BookTranslation(val russian: String, val source: BookSource, val mean
 class BookTranslationIndex private constructor(private val entries: Map<String, BookTranslation>) {
     fun find(original: String): BookTranslation? = entries[normal(original)]
 
+    /** Supplemental editions may fill a missing exact key, never replace an accepted pair. */
+    internal fun fillingMissing(other: BookTranslationIndex): BookTranslationIndex =
+        BookTranslationIndex(other.entries + entries)
+
+    internal fun fromSources(sources: Collection<BookSource>): BookTranslationIndex {
+        val pages = sources.mapNotNull { sourcePage(it.url) }
+        return BookTranslationIndex(entries.filterValues { translation ->
+            val actual = sourcePage(translation.source.url)
+            pages.any { samePublishedPage(actual, it) }
+        })
+    }
+
+    private fun sourcePage(url: String?): URI? = url?.let { runCatching { URI(it) }.getOrNull() }
+
+    // The primary loader records the response URL. Query/fragment aliases retain their
+    // attribution and page priority, but never normalize a path or admit another origin.
+    private fun samePublishedPage(actual: URI?, published: URI): Boolean =
+        actual != null && actual.scheme.equals("https", ignoreCase = true) && actual.rawUserInfo == null &&
+            actual.host != null && published.scheme.equals("https", ignoreCase = true) && published.rawUserInfo == null &&
+            actual.host.equals(published.host, ignoreCase = true) &&
+            (if (actual.port == -1) 443 else actual.port) == (if (published.port == -1) 443 else published.port) &&
+            actual.rawPath == published.rawPath
+
     fun plus(other: BookTranslationIndex): BookTranslationIndex {
         val merged = other.entries.toMutableMap()
+        val shortPage = URI(TIMROT_SOURCE.url)
+        val fullPage = URI(TIMROT_FULL_SOURCE.url)
         entries.forEach { (original, incoming) ->
             // A partial refresh may load the short edition while the full edition is offline.
             // Keep the previously verified full rendering of this exact prayer in that case.
             val previous = merged[original]
-            if (incoming.source.url != TIMROT_SOURCE.url || previous?.source?.url != TIMROT_FULL_SOURCE.url)
+            if (!samePublishedPage(sourcePage(incoming.source.url), shortPage) ||
+                !samePublishedPage(sourcePage(previous?.source?.url), fullPage))
                 merged[original] = incoming
         }
         return BookTranslationIndex(merged)
@@ -53,11 +79,15 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
         val HOUR3_SOURCE = TIMROT_SOURCE.copy(url = "https://azbyka.ru/bogosluzhenie/chas-tretij/")
         val HOUR6_SOURCE = TIMROT_SOURCE.copy(url = "https://azbyka.ru/bogosluzhenie/chas-shestoj/")
         val HOUR9_SOURCE = TIMROT_SOURCE.copy(url = "https://azbyka.ru/bogosluzhenie/chas-devyatyj/")
-        // This page publishes paired Psalms, but does not name their translator. Do not credit Timrot by inheritance.
+        val PANIKHIDA_SOURCE = TIMROT_SOURCE.copy(url = "https://azbyka.ru/bogosluzhenie/posledovanie-panihidy/")
+        val OCTOECHOS7_SOURCE = TIMROT_SOURCE.copy(url = "https://azbyka.ru/bogosluzhenie/oktoih-voskresnyj-glas-7/")
+        // The page credits E.N. Biryukova and I.I. Biryukov for its Psalter translation.
+        // Do not attribute the entire page, including its other prayers, to Timrot.
         val PSALTER_SOURCE = BookSource("Азбука веры · Псалтирь с переводом",
             "https://azbyka.ru/molitvoslov/psaltir-po-kafizmam-s-perevodom.html")
         val ALL_PARALLEL_SOURCES = PARALLEL_SOURCES + listOf(VESPERS_SOURCE, VIGIL_SOURCE,
-            HOUR1_SOURCE, HOUR3_SOURCE, HOUR6_SOURCE, HOUR9_SOURCE, PSALTER_SOURCE)
+            HOUR1_SOURCE, HOUR3_SOURCE, HOUR6_SOURCE, HOUR9_SOURCE, PSALTER_SOURCE,
+            PANIKHIDA_SOURCE, OCTOECHOS7_SOURCE)
 
         fun requiredSources(worship: WorshipKind): List<BookSource> = when (worship) {
             WorshipKind.LITURGY -> PARALLEL_SOURCES

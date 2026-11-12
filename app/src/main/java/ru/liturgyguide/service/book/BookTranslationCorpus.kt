@@ -4,6 +4,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import ru.liturgyguide.model.WorshipKind
+import ru.liturgyguide.model.BookSource
 
 /** Old pairs remain useful, but an old or partially loaded corpus is never declared complete. */
 internal data class BookTranslationCorpus(
@@ -12,8 +13,9 @@ internal data class BookTranslationCorpus(
     val version: Int = VERSION
 ) {
     val current: Boolean get() = version == VERSION
-    fun completeFor(worship: WorshipKind): Boolean = current && index.size > 0 &&
-        completedSources.containsAll(BookTranslationIndex.requiredSources(worship).map { it.url })
+    fun completeFor(worship: WorshipKind): Boolean = completeFor(BookTranslationIndex.requiredSources(worship))
+    fun completeFor(sources: Collection<BookSource>): Boolean = current && index.size > 0 &&
+        completedSources.containsAll(sources.map { it.url })
 
     fun encode(): String = JsonObject().apply {
         addProperty("version", version)
@@ -23,7 +25,7 @@ internal data class BookTranslationCorpus(
 
     companion object {
         // Bump when the required source set or exact extraction rules change.
-        const val VERSION = 8
+        const val VERSION = 9
         const val MAX_BYTES = 2_000_000
 
         fun decode(json: String?): BookTranslationCorpus = runCatching {
