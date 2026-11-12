@@ -19,7 +19,10 @@ object BookSearchCorpusLoader {
             ?: return@withContext BookSearchCorpus(listOf(current))
         fun unavailable(message: String) = BookSearchCorpus(listOf(current), neighbour.worship, message)
         try {
-            val accepted = readingStore.positionFor(neighbour, parishId)
+            val reading = readingStore.lookup(neighbour, parishId)
+            if (reading == BookReadingLookup.Unreadable)
+                return@withContext unavailable("Не удалось проверить сохраненное место ${partName(neighbour.worship)}. Эта часть не проверена")
+            val accepted = (reading as? BookReadingLookup.Found)?.position
             val exact = if (accepted != null) {
                 // A saved cursor pins an edition. Its absence is never permission to substitute latest.
                 books.cachedVersion(neighbour, accepted.contentHash)

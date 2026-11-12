@@ -66,6 +66,38 @@ class BookSearchCorpusLoaderTest {
         assertEquals(before, preferences.values)
     }
 
+    @Test fun aDamagedAcceptedPointerCannotBecomePermissionToSearchTheLatestEdition() = runBlocking {
+        assertTrue(store.save(position(other)))
+        val storedKey = preferences.values.keys.single { it.startsWith("position:") }
+        for (damaged in listOf<Any>(17, "{broken-json")) {
+            preferences.values[storedKey] = damaged
+            val before = preferences.values.toMap()
+            val books = FakeBooks(other)
+            val corpus = BookSearchCorpusLoader.load(current, journey, "temple", books, store)
+            assertEquals(listOf(current), corpus.books)
+            assertNotNull(corpus.error)
+            assertEquals(WorshipKind.MATINS, corpus.otherPart)
+            assertEquals(0, books.latestReads)
+            assertEquals(0, books.loads)
+            assertEquals(before, preferences.values)
+        }
+    }
+
+    @Test fun aReadingStorageFailureDoesNotOpenTheNeighbourAsAnUnacceptedBook() = runBlocking {
+        assertTrue(store.save(position(other)))
+        val before = preferences.values.toMap()
+        val books = FakeBooks(other)
+        preferences.throwOnRead = true
+        val corpus = try {
+            BookSearchCorpusLoader.load(current, journey, "temple", books, store)
+        } finally { preferences.throwOnRead = false }
+        assertEquals(listOf(current), corpus.books)
+        assertNotNull(corpus.error)
+        assertEquals(0, books.latestReads)
+        assertEquals(0, books.loads)
+        assertEquals(before, preferences.values)
+    }
+
     @Test fun newOtherBookMustHaveAnExactDurableEditionAndSavedFalseIsNeverOpenable() = runBlocking {
         for (saved in listOf(false, true)) {
             val books = FakeBooks(null).apply {

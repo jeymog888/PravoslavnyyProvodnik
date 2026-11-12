@@ -123,6 +123,13 @@ object BookPositionUpdate {
     }
 }
 
+/** A damaged stored pointer is not the same as a book which has never been opened. */
+sealed interface BookReadingLookup {
+    data object Absent : BookReadingLookup
+    data class Found(val position: BookReadingPosition) : BookReadingLookup
+    data object Unreadable : BookReadingLookup
+}
+
 /** Separate from the published 0.5-0.7 playback formats: old bookmarks remain recoverable. */
 class BookReadingStore(private val preferences: SharedPreferences) {
     fun last(parishId: String?): BookReadingPosition? =
@@ -130,9 +137,26 @@ class BookReadingStore(private val preferences: SharedPreferences) {
 
     /** The selected date has its own accepted edition, even after reading another service. */
     fun positionFor(key: ServiceBookKey, parishId: String?): BookReadingPosition? =
-        BookReadingCodec.decode(preferences.getString(positionKey(key, parishId), null))?.takeIf {
-            it.parishId == parishId && it.key == key
-        }
+        (lookup(key, parishId) as? BookReadingLookup.Found)?.position
+
+    /** One snapshot distinguishes absence, malformed data, a wrong stored type and read failure. */
+    fun lookup(key: ServiceBookKey, parishId: String?): BookReadingLookup = synchronized(preferences) {
+        runCatching {
+            val values = preferences.all
+            val storageKey = positionKey(key, parishId)
+            if (!values.containsKey(storageKey)) {
+                // The bounded per-book index can evict a pointer while this parish's last
+                // reading still proves its accepted edition. Never borrow another book's last.
+                val last = (values[lastKey(parishId)] as? String)?.let(BookReadingCodec::decode)
+                    ?.takeIf { it.parishId == parishId && it.key == key }
+                return@runCatching last?.let { BookReadingLookup.Found(it) } ?: BookReadingLookup.Absent
+            }
+            val raw = values[storageKey] as? String ?: return@runCatching BookReadingLookup.Unreadable
+            val position = BookReadingCodec.decode(raw)?.takeIf { it.parishId == parishId && it.key == key }
+                ?: return@runCatching BookReadingLookup.Unreadable
+            BookReadingLookup.Found(position)
+        }.getOrDefault(BookReadingLookup.Unreadable)
+    }
 
     fun restore(book: ServiceBook, parishId: String?): BookReadingPosition? =
         positionFor(book.key, parishId)?.takeIf {

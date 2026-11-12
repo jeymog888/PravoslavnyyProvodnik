@@ -22,6 +22,8 @@ import ru.liturgyguide.model.ServiceBookKey
 import ru.liturgyguide.model.WorshipKind
 import ru.liturgyguide.service.book.*
 
+private enum class AcceptedEditionAction { CHECK, DOWNLOAD, OPEN_NEW }
+
 /** Owns a single requested book. A cancelled response can never replace another route's text. */
 @Composable
 fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: ServiceBooks,
@@ -51,6 +53,12 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
     var refreshWarning by remember(requested, parishId) { mutableStateOf<String?>(null) }
     var progress by remember(requested) { mutableStateOf(BookLoadProgress.SOURCE) }
     var recovery by remember(requested, parishId) { mutableStateOf<ServiceBook?>(null) }
+    var acceptedRecovery by remember(requested, parishId, journey) { mutableStateOf<BookReadingLookup?>(null) }
+    var acceptedAction by remember(requested, parishId, journey) { mutableStateOf(AcceptedEditionAction.CHECK) }
+    var acceptedCandidate by remember(requested, parishId, journey) { mutableStateOf<BookLoadResult.Ready?>(null) }
+    // Only a durable candidate's hash survives recreation. Its text is reverified before offering it.
+    var acceptedCandidateHash by rememberSaveable(requested.canonical(), parishId, journey) { mutableStateOf<String?>(null) }
+    var acceptedRecoveryWarning by remember(requested, parishId, journey) { mutableStateOf<String?>(null) }
     val returnCandidate = ownedRoute?.returnToLastSuccessful()?.takeIf { it.activeKey != requested }
     var savedReturn by remember(returnCandidate, parishId) { mutableStateOf<BookRoute?>(null) }
     suspend fun verifiedReturn(candidate: BookRoute): BookRoute? = withContext(Dispatchers.IO) {
@@ -79,11 +87,19 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (_: Exception) { /* Do not advertise a return to an unverified saved edition. */ }
     }
-    LaunchedEffect(books, requested, parishId, retry) {
+    LaunchedEffect(books, requested, parishId, journey, ownedRoute?.pendingSearchTarget, retry) {
         refreshing = true
+        val action = acceptedAction
+        acceptedAction = AcceptedEditionAction.CHECK
+        val previousRecovery = acceptedRecovery
+        var checkedReading: BookReadingLookup? = null
         try {
             val target = ownedRoute?.pendingSearchTarget
             if (target != null) {
+                acceptedRecovery = null
+                acceptedCandidate = null
+                acceptedCandidateHash = null
+                acceptedRecoveryWarning = null
                 // Search navigation pins the edition from its session. Neither retry nor
                 // recreation is permission to load a newer text under these coordinates.
                 val exact = withContext(Dispatchers.IO) { books.cachedVersion(requested, target.contentHash) }
@@ -95,14 +111,143 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
                 update = null
                 return@LaunchedEffect
             }
-            val pinned = withContext(Dispatchers.IO) {
-                readingStore.positionFor(requested, parishId)?.let { books.cachedVersion(requested, it.contentHash) }
+            val reading = withContext(Dispatchers.IO) { readingStore.lookup(requested, parishId) }
+            checkedReading = reading
+            fun stopIfReadingChanged(): Boolean {
+                if (readingStore.lookup(requested, parishId) == reading) return false
+                acceptedRecovery = reading
+                acceptedCandidate = null
+                acceptedCandidateHash = null
+                acceptedRecoveryWarning = "Сохраненное место изменилось. Проверьте его еще раз"
+                result = BookLoadResult.Failed(BookFailure.STORAGE,
+                    "Открытие остановлено, чтобы сохранить ваше место чтения")
+                update = null
+                return true
             }
-            if (retry == 0 && pinned != null) {
-                result = BookLoadResult.Ready(pinned, fromCache = true, warning = BookWarnings.supplementWarning(pinned))
+            val position = (reading as? BookReadingLookup.Found)?.position
+            val pinned = position?.let { accepted -> withContext(Dispatchers.IO) {
+                books.cachedVersion(requested, accepted.contentHash)?.takeIf {
+                    it.key == requested && it.contentHash == accepted.contentHash && ServiceBookIntegrity.valid(it)
+                }
+            } }
+            currentCoroutineContext().ensureActive()
+            val opened = (result as? BookLoadResult.Ready)?.book ?: (result as? BookLoadResult.Failed)?.cachedBook
+            if (action == AcceptedEditionAction.OPEN_NEW && previousRecovery != null) {
+                // A button click does not authorize replacing a cursor changed by another owner.
+                if (reading != previousRecovery) {
+                    acceptedRecoveryWarning = "Сохраненное место изменилось. Проверьте его еще раз"
+                    return@LaunchedEffect
+                }
+                val hash = acceptedCandidateHash
+                val candidate = if (hash == null) null else withContext(Dispatchers.IO) {
+                    books.cachedVersion(requested, hash)?.takeIf {
+                        it.key == requested && it.contentHash == hash && ServiceBookIntegrity.valid(it)
+                    }
+                }
+                currentCoroutineContext().ensureActive()
+                if (candidate == null) {
+                    acceptedCandidate = null
+                    acceptedCandidateHash = null
+                    acceptedRecoveryWarning = "Загруженная редакция недоступна на телефоне. Загрузите текст еще раз"
+                    return@LaunchedEffect
+                }
+                val previous = (previousRecovery as? BookReadingLookup.Found)?.position
+                val firstChapter = candidate.chapters.firstOrNull { chapter ->
+                    chapter.blocks.any { previous?.showAltar == true || !it.isAltarText }
+                }
+                val firstBlock = firstChapter?.blocks?.firstOrNull { previous?.showAltar == true || !it.isAltarText }
+                val freshPosition = if (firstChapter == null || firstBlock == null) null else BookReadingPosition(
+                    requested, candidate.contentHash, parishId, firstBlock.id, firstChapter.id,
+                    mode = previous?.mode ?: BookReadingMode.ORIGINAL,
+                    wordsPerMinute = previous?.wordsPerMinute ?: BookAutoScroll.DEFAULT_RATE,
+                    showAltar = previous?.showAltar ?: false, anchorKind = BookAnchorKind.HEADER,
+                    lastTextMode = previous?.lastTextMode, journeyContext = journey)
+                // The small atomic preference commit stays on this active UI turn: no suspension
+                // may separate the final owner check from accepting the new reading pointer.
+                if (freshPosition == null || readingStore.lookup(requested, parishId) != previousRecovery ||
+                    !readingStore.save(freshPosition)) {
+                    acceptedRecoveryWarning = "Не удалось сохранить новое место. Прежнее сохраненное место не изменено"
+                    return@LaunchedEffect
+                }
+                result = BookLoadResult.Ready(candidate, fromCache = true, warning = BookWarnings.supplementWarning(candidate))
+                acceptedRecovery = null
+                acceptedCandidate = null
+                acceptedCandidateHash = null
+                acceptedRecoveryWarning = null
+                update = null
+                return@LaunchedEffect
+            }
+            if ((reading == BookReadingLookup.Unreadable || position != null && pinned == null) && opened == null) {
+                acceptedRecovery = reading
+                update = null
+                result = BookLoadResult.Failed(BookFailure.STORAGE, if (reading == BookReadingLookup.Unreadable)
+                    "Сохраненное место повреждено или недоступно. Его можно проверить еще раз или загрузить текст заново"
+                    else "Книга, в которой вы читали, недоступна на телефоне. Место чтения сохранено")
+                if (action != AcceptedEditionAction.DOWNLOAD) {
+                    val hash = acceptedCandidateHash
+                    acceptedCandidate = if (hash == null) null else withContext(Dispatchers.IO) {
+                        books.cachedVersion(requested, hash)?.takeIf {
+                            it.key == requested && it.contentHash == hash && ServiceBookIntegrity.valid(it)
+                        }?.let { BookLoadResult.Ready(it, fromCache = true) }
+                    }
+                    currentCoroutineContext().ensureActive()
+                    return@LaunchedEffect
+                }
+                acceptedCandidate = null
+                acceptedCandidateHash = null
+                acceptedRecoveryWarning = null
+                val fetched = books.load(requested, force = true) { progress = it }
+                currentCoroutineContext().ensureActive()
+                if (readingStore.lookup(requested, parishId) != reading) {
+                    acceptedRecoveryWarning = "Сохраненное место изменилось. Проверьте его еще раз"
+                    return@LaunchedEffect
+                }
+                val durable = (fetched as? BookLoadResult.Ready)?.takeIf { ready ->
+                    ready.saved && ready.book.key == requested && ServiceBookIntegrity.valid(ready.book)
+                }?.let { ready -> withContext(Dispatchers.IO) {
+                    ready.takeIf { books.cachedVersion(requested, ready.book.contentHash) == ready.book }
+                } }
+                currentCoroutineContext().ensureActive()
+                // Durability verification suspends too. A different reader may accept another
+                // edition in that last IO; never mount this one under its newer coordinates.
+                if (stopIfReadingChanged()) return@LaunchedEffect
+                when {
+                    durable == null -> acceptedRecoveryWarning = (fetched as? BookLoadResult.Failed)?.message
+                        ?: "Не удалось сохранить загруженную редакцию на телефоне. Сохраненное место не изменено"
+                    position != null && durable.book.contentHash == position.contentHash -> {
+                        // Exact content can restore the existing coordinates; no new edition is accepted.
+                        result = durable
+                        acceptedRecovery = null
+                        acceptedRecoveryWarning = null
+                    }
+                    else -> {
+                        acceptedCandidate = durable
+                        acceptedCandidateHash = durable.book.contentHash
+                    }
+                }
+                return@LaunchedEffect
+            }
+            if (reading == BookReadingLookup.Unreadable) {
+                // A storage problem during a refresh must not take an already readable book away.
+                refreshWarning = "Не удалось проверить сохраненное место. Открытая книга осталась на месте"
+                return@LaunchedEffect
+            }
+            acceptedRecovery = null
+            acceptedCandidate = null
+            acceptedCandidateHash = null
+            acceptedRecoveryWarning = null
+            if ((retry == 0 || previousRecovery != null) && pinned != null) {
                 // A downloaded update remains available after leaving the reader or going offline.
                 // Keep the accepted text fixed until the reader explicitly chooses the new version.
-                val latest = withContext(Dispatchers.IO) { books.cached(requested) }
+                var latestReadFailed = false
+                val latest = try { withContext(Dispatchers.IO) { books.cached(requested) } }
+                catch (cancelled: CancellationException) { throw cancelled }
+                catch (_: Exception) { latestReadFailed = true; null }
+                currentCoroutineContext().ensureActive()
+                // No suspension may separate this final owner check from mounting the reader.
+                if (stopIfReadingChanged()) return@LaunchedEffect
+                result = BookLoadResult.Ready(pinned, fromCache = true, warning = BookWarnings.supplementWarning(pinned))
+                if (latestReadFailed) refreshWarning = "Не удалось проверить обновления. Сохраненная книга открыта"
                 if (latest != null && latest.contentHash != pinned.contentHash)
                     update = BookLoadResult.Ready(latest, fromCache = true, warning = BookWarnings.supplementWarning(latest))
             } else {
@@ -128,7 +273,13 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
             }
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (_: Exception) {
-            if (result == null) result = BookLoadResult.Failed(BookFailure.NETWORK, "Не удалось открыть службу. Попробуйте еще раз")
+            if (acceptedRecovery != null) acceptedRecoveryWarning = "Не удалось проверить или загрузить книгу. Сохраненное место не изменено"
+            else if (checkedReading != null && checkedReading != BookReadingLookup.Absent &&
+                result !is BookLoadResult.Ready && (result as? BookLoadResult.Failed)?.cachedBook == null) {
+                acceptedRecovery = checkedReading
+                result = BookLoadResult.Failed(BookFailure.STORAGE, "Не удалось проверить сохраненную редакцию. Сохраненное место не изменено")
+                update = null
+            } else if (result == null) result = BookLoadResult.Failed(BookFailure.NETWORK, "Не удалось открыть службу. Попробуйте еще раз")
             else refreshWarning = "Не удалось обновить. Открытая книга осталась на месте"
         } finally { refreshing = false }
     }
@@ -223,6 +374,41 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
                     Text(progress.label, style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("book_loading"))
                     Text("Сохраним текст для чтения без сети", style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
+                } else if (acceptedRecovery != null) {
+                    Text(if (acceptedRecovery == BookReadingLookup.Unreadable) "Сохраненное место недоступно"
+                        else "Сохраненная редакция недоступна", style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.testTag("book_accepted_edition_missing"))
+                    Text((result as? BookLoadResult.Failed)?.message.orEmpty(), style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.testTag("book_load_error"))
+                    if (acceptedCandidate != null) {
+                        Text("Загружена другая редакция. Ее можно открыть с начала. Прежнее сохраненное место пока не изменено",
+                            style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("book_new_edition_notice"))
+                        Button(onClick = { acceptedAction = AcceptedEditionAction.OPEN_NEW; retry++ }, enabled = !refreshing,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_open_new_edition")) {
+                            Text("Открыть новую редакцию")
+                        }
+                    } else {
+                        Button(onClick = { acceptedAction = AcceptedEditionAction.DOWNLOAD; retry++ }, enabled = !refreshing,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_download_edition")) {
+                            Text("Загрузить текст заново")
+                        }
+                    }
+                    OutlinedButton(onClick = {
+                        acceptedAction = AcceptedEditionAction.CHECK
+                        acceptedRecoveryWarning = null
+                        retry++
+                    }, enabled = !refreshing,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_check_accepted_edition")) {
+                        Text("Проверить сохраненную редакцию")
+                    }
+                    if (refreshing) {
+                        LinearProgressIndicator(Modifier.fillMaxWidth().testTag("book_accepted_recovery_progress"))
+                        Text(progress.label, style = MaterialTheme.typography.bodyMedium)
+                    }
+                    acceptedRecoveryWarning?.let {
+                        Text(it, style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.testTag("book_accepted_recovery_warning"))
+                    }
                 } else {
                     Text("Текст пока не загружен", style = MaterialTheme.typography.headlineSmall)
                     Text((result as? BookLoadResult.Failed)?.message.orEmpty(), style = MaterialTheme.typography.bodyLarge,

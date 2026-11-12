@@ -235,7 +235,7 @@ class BookCorpusSearchFlowTest {
         val layouts = mutableListOf<TextLayoutResult>()
         text.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { assertTrue(it(layouts)) }
         val layout = layouts.single()
-        assertEquals(morning.blocks.single().original, layout.layoutInput.text.text)
+        assertEquals(morning.blocks.single { it.id == target.hit.blockId }.original, layout.layoutInput.text.text)
         val viewport = compose.onNodeWithTag("book_content").getBoundsInRoot()
         val textTop = text.getUnclippedBoundsInRoot().top
         val density = compose.activity.resources.displayMetrics.density
@@ -552,11 +552,18 @@ class BookCorpusSearchFlowTest {
             originalTarget + ". " + "Помоги сохранить мир в сердце. ".repeat(10) + edition
         val russian = "Просим Бога помочь нам внимательно слушать молитву и хранить мир в сердцах. ".repeat(130) +
             russianTarget + ". " + "Просим помощи для каждого человека. ".repeat(10) + edition
+        // Keep the measured public paragraph unchanged while meeting the repository's
+        // full-book contract. These test-only altar blocks are hidden by default.
+        val altarPadding = List(14) { index -> BookBlock("integrity-altar-padding-$index",
+            BookBlockKind.PRAYER, "Священник", "Синтетический алтарный фрагмент $index для проверки целостности книги.",
+            "Синтетический русский алтарный фрагмент $index для проверки целостности книги.", isAltarText = true) }
         val book = ServiceBook(key = key, title = "Синтетическая ${key.worship.title}: $edition", sourceUrl = key.sourceUrl(),
             sourceTitle = "Синтетический источник UI-тестов", fetchedAtMillis = 12345, selectedEventTitle = null,
             chapters = listOf(BookChapter("opening", "Синтетический общий раздел", "Синтетическое пояснение для UI-теста",
-                listOf(BookBlock("long", BookBlockKind.PRAYER, "Хор", original, russian)))), contentHash = "",
+                listOf(BookBlock("long", BookBlockKind.PRAYER, "Хор", original, russian)) + altarPadding)), contentHash = "",
             enrichment = BookEnrichment(BookSupplementStatus.AVAILABLE, BookSupplementStatus.NOT_NEEDED))
-        return book.copy(contentHash = ServiceBookIntegrity.contentHash(book))
+        return book.copy(contentHash = ServiceBookIntegrity.contentHash(book)).also {
+            assertTrue("The synthetic search fixture must satisfy the production book contract", ServiceBookIntegrity.valid(it))
+        }
     }
 }

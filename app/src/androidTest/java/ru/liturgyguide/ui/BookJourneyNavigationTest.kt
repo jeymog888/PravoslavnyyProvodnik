@@ -698,17 +698,25 @@ class BookJourneyNavigationTest {
 
     /** Two chapters and long prose are a test fixture, not a representation of the published book. */
     private fun fixture(key: ServiceBookKey, title: String? = null): ServiceBook {
-        val chapters = listOf("a", "b").map { id -> BookChapter("chapter-$id", "Раздел $id", "Молимся вместе и благодарим Бога",
+        val publicChapters = listOf("a", "b").map { id -> BookChapter("chapter-$id", "Раздел $id", "Молимся вместе и благодарим Бога",
             listOf(BookBlock("long-$id", BookBlockKind.PRAYER, "Хор",
                 "Господи, помоги нам внимательно слушать молитву и сохранять мир в наших сердцах. ".repeat(120),
                 "Просим Бога помочь нам внимательно слушать молитву и хранить мир в сердцах. ".repeat(120)),
                 BookBlock("altar-$id", BookBlockKind.PRAYER, "Священник", "Молитва священника о мире. ".repeat(10),
                     "Просим о мире для всех людей. ".repeat(10), isAltarText = true))) }
+        // Append only after the existing final block, so both measured chapter starts
+        // keep their geometry even when a test explicitly shows altar prayers.
+        val altarPadding = List(11) { index -> BookBlock("integrity-altar-padding-$index",
+            BookBlockKind.PRAYER, "Священник", "Синтетический алтарный фрагмент $index для проверки целостности книги.",
+            "Синтетический русский алтарный фрагмент $index для проверки целостности книги.", isAltarText = true) }
+        val chapters = publicChapters.dropLast(1) + publicChapters.last().let { it.copy(blocks = it.blocks + altarPadding) }
         val book = ServiceBook(key = key, title = title ?: key.worship.title, sourceUrl = key.sourceUrl(),
             sourceTitle = "Тестовый источник", fetchedAtMillis = instant.toEpochMilli(), selectedEventTitle = null,
             chapters = chapters, contentHash = "", mainEventOptions = listOf(BookVariantOption("100", "Первый вариант дня"),
                 BookVariantOption("200", "Второй вариант дня")),
             enrichment = BookEnrichment(BookSupplementStatus.AVAILABLE, BookSupplementStatus.NOT_NEEDED))
-        return book.copy(contentHash = ServiceBookIntegrity.contentHash(book))
+        return book.copy(contentHash = ServiceBookIntegrity.contentHash(book)).also {
+            assertTrue("The synthetic journey fixture must satisfy the production book contract", ServiceBookIntegrity.valid(it))
+        }
     }
 }
