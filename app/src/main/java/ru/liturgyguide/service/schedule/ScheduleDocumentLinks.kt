@@ -14,7 +14,8 @@ object ScheduleDocumentLinks {
     fun find(page: Document): List<ScheduleDocumentLink> {
         val links = mutableListOf<ScheduleDocumentLink>()
         val copy = page.clone()
-        copy.select("nav,footer,aside,header,[role=navigation],.sidebar,.comments,#t-header,#t-footer,.t-tildalabel").remove()
+        ScheduleHtmlDiscussion.removeFrom(copy)
+        copy.select("nav,footer,aside,header,[role=navigation],.sidebar,#t-header,#t-footer,.t-tildalabel").remove()
         val content = copy.selectFirst("main,[role=main]") ?: copy.body()
         // Some site builders publish their visible page heading as a div. Page metadata is
         // a fallback only: a news heading must not inherit a site's generic schedule title.
@@ -28,7 +29,7 @@ object ScheduleDocumentLinks {
             ScheduleUrl.publicSource(it.absUrl("href"))
         }.toSet()
         // Navigation often contains the only schedule link; retain anchors there, but not images.
-        page.select("a[href]").take(500).forEach { anchor ->
+        page.select("a[href]").filterNot(ScheduleHtmlDiscussion::contains).take(500).forEach { anchor ->
             val url = ScheduleUrl.publicSource(anchor.absUrl("href")) ?: return@forEach
             // WordPress sharing buttons repeat the schedule pathname but perform a share
             // action. Require both explicit button metadata and its action parameter; normal

@@ -45,7 +45,8 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
 
     fun fromHtml(document: Document): ScheduleDocument {
         val copy = document.clone()
-        copy.select("script,style,nav,footer,aside,header,[hidden],.sidebar,.comments,.comment-list").remove()
+        ScheduleHtmlDiscussion.removeFrom(copy)
+        copy.select("script,style,nav,footer,aside,header,[hidden],.sidebar").remove()
         // Sibling headings may identify the building for each of several articles. Selecting only
         // the first article would lose that scope and silently discard the selected church's section.
         // Older parish sites use a named content div instead of semantic HTML. Only select
@@ -155,7 +156,7 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
 
     private val clockCell = ScheduleClocks.pattern
     private val monthWord = "(?:январ[ьяе]|феврал[ьяе]|март[ае]?|апрел[ьяе]|ма[йяе]|июн[ьяе]|июл[ьяе]|август[ае]?|сентябр[ьяе]|октябр[ьяе]|ноябр[ьяе]|декабр[ьяе])"
-    private val dateCell = Regex("(?iu)^\\d{1,2}(?:\\s*[./]\\s*\\d{1,2}(?:[./](?:20\\d{2}|\\d{2}))?|\\s+$monthWord(?:\\s+20\\d{2})?)\\s*,?\\s*(?:(?:пн|вт|ср|чт|пт|сб|вс|понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)\\.?)?$")
+    private val dateCell = Regex("(?iu)^\\d{1,2}(?:\\s*[./]\\s*\\d{1,2}(?:[./](?:20\\d{2}|\\d{2}))?|\\s+$monthWord(?:\\s+20\\d{2})?)\\s*,?\\s*(?:(?:${ScheduleWeekdays.dateWords})\\.?)?$")
 }
 
 object ScheduleOcrLayout {

@@ -17,10 +17,9 @@ object ScheduleHtmlParser {
         "июль|июля", "август|августа", "сентябрь|сентября", "октябрь|октября", "ноябрь|ноября", "декабрь|декабря")
     private val fullDate = Regex("(?iu)(\\d{1,2})\\s+([а-яё]+)\\s+(20\\d{2})(?:\\s*г(?:ода)?\\.?)?")
     private val monthYear = Regex("(?iu)^\\s*([а-яё]+)\\s+(20\\d{2})(?:\\s*г(?:ода)?\\.?)?\\s*$")
-    private val timedLine = Regex("^\\s*(\\d{1,2})\\s+(Пн|Вт|Ср|Чт|Пт|Сб|Вс)\\.?\\s+(\\d{1,2}[.:]\\d{2})\\s+(.+)$", RegexOption.IGNORE_CASE)
-    private val weekdays = listOf("пн", "вт", "ср", "чт", "пт", "сб", "вс")
+    private val timedLine = Regex("(?iu)^\\s*(\\d{1,2})\\s+(${ScheduleWeekdays.dateWords})\\.?\\s+(\\d{1,2}[.:]\\d{2})\\s+(.+)$")
     private val weekdayNames = listOf("понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье")
-    private val serviceWord = Regex("(?iu)(литурги|всенощ|вечерн|утрен|исповед|молеб|панихид|часы|лития|акафист)")
+    private val serviceWord = Regex("(?iu)(литурги|всенощ|вечерн|утрен|исповед|молеб|панихид|часы|лития|акафист|^заупокойное\\s+богослужение(?![а-яё]))")
     private val exactLiturgy = Regex("(?iu)^(?:(?:божественная|ранняя|поздняя)\\s+)*литургия\\b")
     private val differentVenue = Regex("(?iu)(приписн|больнич|госпитал|придел|(?:нижн|верхн|нов|стар|мал|больш)[а-яё]{0,5}\\s+(?:храм|собор)|в\\s+(?:[а-яё-]+\\s+){0,4}(?:храме|соборе|часовне)|служб[аы]\\s+(?:соверш|проход))")
     private val globalVenue = Regex("(?iu)(?:все\\s+(?:богослужения|службы)|богослужения\\s+месяца).{0,160}(?:совершаются|проходят|служатся)")
@@ -38,16 +37,17 @@ object ScheduleHtmlParser {
             it.venue != null || ScheduleVenue.isLabel(it.text) || cancelled.containsMatchIn(it.text)
         } }) return ScheduleDocumentParser.inspect(structured, today, parish)
         val events = parse(document, today)
-        val known = document.select("[data-day],.bg_ortcal_schedule").isNotEmpty()
+        val known = document.select("[data-day],.bg_ortcal_schedule").any { !ScheduleHtmlDiscussion.contains(it) }
         return ScheduleParseResult(if (events.isNotEmpty() || known) ScheduleParseDisposition.PARSED else ScheduleParseDisposition.UNSUPPORTED, events)
     }
 
     fun parse(document: Document, today: LocalDate): List<InternetService> {
-        if (globalVenue.containsMatchIn(document.text()) || document.select("h1,h2,h3").any {
+        val content = document.clone().also(ScheduleHtmlDiscussion::removeFrom)
+        if (globalVenue.containsMatchIn(content.text()) || content.select("h1,h2,h3").any {
                 differentVenue.containsMatchIn(it.text()) || cancelled.containsMatchIn(it.text()) }) return emptyList()
         val found = mutableListOf<InternetService>()
         // ISO day containers (e.g. hramkresta.ru). Nested date labels are not another day.
-        document.select("[data-day]").take(120).forEach { day ->
+        content.select("[data-day]").take(120).forEach { day ->
             val date = runCatching { LocalDate.parse(day.attr("data-day")) }.getOrNull() ?: return@forEach
             if (differentVenue.containsMatchIn(day.text()) || cancelled.containsMatchIn(day.text()) || day.select("s, del, strike").isNotEmpty()) return@forEach
             day.select("li").take(30).forEach { row ->
@@ -57,10 +57,10 @@ object ScheduleHtmlParser {
             }
         }
         // Shared WordPress bg-orthodox-calendar: civil date only, never .bg_ortcal_old.
-        val calendars = document.select(".bg_ortcal_schedule")
+        val calendars = content.select(".bg_ortcal_schedule")
         // Multiple calendars may belong to different buildings on one monastery site.
         val tables = if (calendars.size == 1 && !differentVenue.containsMatchIn(calendars.single().text()) &&
-            !document.select("h1, h2, h3").any { differentVenue.containsMatchIn(it.text()) }) calendars.single().select("table") else emptyList()
+            !content.select("h1, h2, h3").any { differentVenue.containsMatchIn(it.text()) }) calendars.single().select("table") else emptyList()
         tables.take(12).forEach { table ->
             var date: LocalDate? = null
             table.select("tr").take(500).forEach { row ->
@@ -77,7 +77,7 @@ object ScheduleHtmlParser {
         }
         // A self-contained monthly WordPress article with an explicit month AND year.
         // A copyright year, sidebar calendar or page URL is deliberately insufficient.
-        document.select(".hentry, article").take(20).forEach { article ->
+        content.select(".hentry, article").take(20).forEach { article ->
             val heading = article.selectFirst("h1.entry-title, h1") ?: return@forEach
             val match = monthYear.matchEntire(heading.text()) ?: return@forEach
             val month = monthNumber(match.groupValues[1]) ?: return@forEach
@@ -91,7 +91,7 @@ object ScheduleHtmlParser {
                 copy.wholeText().lines().forEach { line ->
                     val parts = timedLine.matchEntire(line.trim()) ?: return@forEach
                     val date = runCatching { yearMonth.atDay(parts.groupValues[1].toInt()) }.getOrNull() ?: return@forEach
-                    if (weekdays.indexOf(parts.groupValues[2].lowercase(Locale.ROOT)) + 1 != date.dayOfWeek.value) return@forEach
+                    if (!ScheduleWeekdays.agrees(parts.groupValues[2], date)) return@forEach
                     event(date, parts.groupValues[3], parts.groupValues[4], today)?.let(found::add)
                 }
             }
@@ -105,7 +105,9 @@ object ScheduleHtmlParser {
         val month = monthNumber(parts.groupValues[2]) ?: return null
         val date = runCatching { LocalDate.of(parts.groupValues[3].toInt(), month, parts.groupValues[1].toInt()) }.getOrNull() ?: return null
         val namedDay = weekdayNames.indexOfFirst { text.lowercase(Locale.ROOT).contains(it) }
-        return date.takeIf { namedDay < 0 || namedDay + 1 == date.dayOfWeek.value }
+        val positionedDay = ScheduleWeekdays.prefix.find(text.substring(parts.range.last + 1))?.groupValues?.get(1)
+        return date.takeIf { (namedDay < 0 || namedDay + 1 == date.dayOfWeek.value) &&
+            (positionedDay == null || ScheduleWeekdays.agrees(positionedDay, date)) }
     }
 
     private fun monthNumber(value: String): Int? = months.indexOfFirst { value.lowercase(Locale.ROOT) in it.split('|') }.takeIf { it >= 0 }?.plus(1)
@@ -121,7 +123,7 @@ object ScheduleHtmlParser {
         return InternetService(date.toString(), time.toString(), title, if (!anotherLiturgy && exactLiturgy.containsMatchIn(title)) "liturgy" else "service_block")
     }
 
-    fun scheduleLinks(document: Document): List<String> = document.select("a[href]").mapNotNull { link ->
+    fun scheduleLinks(document: Document): List<String> = document.select("a[href]").filterNot(ScheduleHtmlDiscussion::contains).mapNotNull { link ->
         val url = ScheduleUrl.normalized(link.absUrl("href")) ?: return@mapNotNull null
         if (!ScheduleUrl.sameOrigin(document.baseUri(), url)) return@mapNotNull null
         val label = "${link.text()} ${link.attr("href")}".lowercase(Locale.ROOT)

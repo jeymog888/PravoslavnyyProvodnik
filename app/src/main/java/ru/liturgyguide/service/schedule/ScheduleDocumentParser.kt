@@ -14,14 +14,12 @@ object ScheduleDocumentParser {
     private val namedDate = Regex("(?iu)(?<![\\d.-])(\\d{1,2})\\s+$monthPattern(?:\\s+(20\\d{2}))?")
     private val numericDate = Regex("(?<!\\d)(\\d{1,2})[./](\\d{1,2})[./](20\\d{2})(?!\\d)")
     private val shortYearDate = Regex("(?<![\\d./-])(\\d{1,2})\\s*[./]\\s*(\\d{1,2})\\s*[./]\\s*(\\d{2})(?![\\d./])")
-    private val scopedNumericDate = Regex("(?iu)^\\s*(\\d{1,2})\\s*[./]\\s*(\\d{1,2})(?![\\d./])(?=\\s*,?\\s*(?:\\||(?:пн|вт|ср|чт|пт|сб|вс|понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)\\b))")
+    private val scopedNumericDate = Regex("(?iu)^\\s*(\\d{1,2})\\s*[./]\\s*(\\d{1,2})(?![\\d./])(?=\\s*,?\\s*(?:\\||(?:${ScheduleWeekdays.dateWords})\\b))")
     private val isoDate = Regex("(?<!\\d)(20\\d{2}-\\d{2}-\\d{2})(?!\\d)")
-    private val dayPrefix = Regex("(?iu)^\\s*(\\d{1,2})\\s*[| ]*\\s*(пн|вт|ср|чт|пт|сб|вс|понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)\\.?\\b")
+    private val dayPrefix = Regex("(?iu)^\\s*(\\d{1,2})\\s*[| ]*\\s*(${ScheduleWeekdays.dateWords})\\.?\\b")
     private val simpleDay = Regex("^\\s*(\\d{1,2})\\s*\\|")
     private val clocks = ScheduleClocks.pattern
-    private val weekday = Regex("(?iu)(?<![а-яё])(пн|вт|ср|чт|пт|сб|вс|понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)\\.?(?![а-яё])")
-    private val weekdays = listOf(setOf("пн", "понедельник"), setOf("вт", "вторник"), setOf("ср", "среда"), setOf("чт", "четверг"), setOf("пт", "пятница"), setOf("сб", "суббота"), setOf("вс", "воскресенье"))
-    private val service = Regex("(?iu)(литурги|всенощ|вечерн|утрен|исповед|молеб|панихид|часы|лития|акафист)")
+    private val service = Regex("(?iu)(литурги|всенощ|вечерн|утрен|исповед|молеб|панихид|часы|лития|акафист|^заупокойное\\s+богослужение(?![а-яё]))")
     private val cancellation = ScheduleCancellation
     private val generalServices = Regex("(?iu)(?:все\\s+(?:службы|богослужения)|богослужения|службы)")
     private val exactLiturgy = Regex("(?iu)^(?:(?:божественная|ранняя|поздняя)\\s+)*литургия\\b")
@@ -141,13 +139,13 @@ object ScheduleDocumentParser {
                         flush()
                         currentDate = located.first
                         text = text.removeRange(located.second).trim(' ', '|', ',', '.', '-')
-                        val stated = weekday.find(text)?.groupValues?.get(1)?.lowercase(Locale.ROOT)
-                        if (stated != null && stated !in weekdays[currentDate!!.dayOfWeek.value - 1]) currentDate = null
-                        text = text.replace(weekday, " ").trim(' ', '|', ',', '.')
+                        val stated = ScheduleWeekdays.inDateRemainder(text)?.groupValues?.get(1)
+                        if (stated != null && !ScheduleWeekdays.agrees(stated, currentDate!!)) currentDate = null
+                        text = ScheduleWeekdays.removeFromDateRemainder(text).trim(' ', '|', ',', '.')
                         titleText = titleText?.let { title ->
                             val titleDate = dateIn(title, scope)
-                            (titleDate?.let { title.removeRange(it.second) } ?: title)
-                                .replace(weekday, " ").trim(' ', '|', ',', '.', '-')
+                            ScheduleWeekdays.removeFromDateRemainder(titleDate?.let { title.removeRange(it.second) } ?: title)
+                                .trim(' ', '|', ',', '.', '-')
                         }
                     } else if (looksLikeDateHeading(text)) {
                         flush(); currentDate = null

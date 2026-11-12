@@ -17,9 +17,6 @@ internal object ScheduleYearInference {
     private val namedDay = Regex("(?iu)^\\s*(\\d{1,2})\\s+($monthWord)(?=\\s|[,|.]|$)")
     private val numericDay = Regex("^\\s*(\\d{1,2})\\s*[./]\\s*(\\d{1,2})(?![\\d./])")
     private val simpleDay = Regex("^\\s*(\\d{1,2})(?=\\s|\\|)")
-    private val weekday = Regex("(?iu)^[\\s,|.-]*(пн|вт|ср|чт|пт|сб|вс|понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)\\.?(?![а-яё])")
-    private val weekdayNames = listOf(setOf("пн", "понедельник"), setOf("вт", "вторник"), setOf("ср", "среда"),
-        setOf("чт", "четверг"), setOf("пт", "пятница"), setOf("сб", "суббота"), setOf("вс", "воскресенье"))
 
     fun months(document: ScheduleDocument, today: LocalDate): Map<Int, Month> {
         val pages = document.pages.take(12)
@@ -51,7 +48,7 @@ internal object ScheduleYearInference {
             val simple = if (named == null && numeric == null) simpleDay.find(text) else null
             val match = named ?: numeric ?: simple ?: continue
             val day = match.groupValues[1].toInt()
-            val statedWeekday = weekday.find(text.substring(match.range.last + 1))?.groupValues?.get(1)?.lowercase(Locale.ROOT)
+            val statedWeekday = ScheduleWeekdays.prefix.find(text.substring(match.range.last + 1))?.groupValues?.get(1)
             // A bare number can be a feast/anniversary description. It supplies no date evidence.
             if (simple != null && statedWeekday == null) continue
             val month = when {
@@ -62,7 +59,7 @@ internal object ScheduleYearInference {
             if (month != today.monthValue || !reliable(line)) return null
             val date = runCatching { LocalDate.of(today.year, month, day) }.getOrNull() ?: return null
             if (statedWeekday != null) {
-                if (statedWeekday !in weekdayNames[date.dayOfWeek.value - 1]) return null
+                if (!ScheduleWeekdays.agrees(statedWeekday, date)) return null
                 distinctDays += day
             }
         }
@@ -81,7 +78,7 @@ internal object ScheduleYearInference {
             val numeric = if (named == null) numericDay.find(text) else null
             val match = named ?: numeric ?: continue
             val month = if (named != null) monthNumber(named.groupValues[2]) else numeric!!.groupValues[2].toInt()
-            val stated = weekday.find(text.substring(match.range.last + 1))?.groupValues?.get(1)?.lowercase(Locale.ROOT)
+            val stated = ScheduleWeekdays.prefix.find(text.substring(match.range.last + 1))?.groupValues?.get(1)
             if (stated == null) {
                 // A dotted clock (8.30) is not a date. Other printed date headings without
                 // a weekday cannot be silently assigned the inferred year of nearby rows.
@@ -90,7 +87,7 @@ internal object ScheduleYearInference {
             }
             if (month != today.monthValue || !reliable(line)) return null
             val date = runCatching { LocalDate.of(today.year, month, match.groupValues[1].toInt()) }.getOrNull() ?: return null
-            if (date !in weekStart..weekEnd || stated !in weekdayNames[date.dayOfWeek.value - 1]) return null
+            if (date !in weekStart..weekEnd || !ScheduleWeekdays.agrees(stated, date)) return null
             anchors[index] = date
         }
         if (anchors.values.distinct().size < 3) return null
