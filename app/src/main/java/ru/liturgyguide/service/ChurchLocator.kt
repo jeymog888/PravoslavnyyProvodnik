@@ -43,7 +43,11 @@ internal class AndroidLocationGateway(private val context: Context) : Foreground
     override fun isLocationEnabled(): Boolean = LocationManagerCompat.isLocationEnabled(manager)
     override fun providers(): List<String> = manager.allProviders
     override fun isProviderEnabled(provider: String): Boolean = manager.isProviderEnabled(provider)
-    override fun lastKnown(provider: String): ForegroundLocationFix? = manager.getLastKnownLocation(provider)?.asFix()
+    override fun lastKnown(provider: String): ForegroundLocationFix? {
+        if (context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) return null
+        return manager.getLastKnownLocation(provider)?.asFix()
+    }
     override fun elapsedRealtimeNanos(): Long = SystemClock.elapsedRealtimeNanos()
     override fun after(delayMillis: Long, action: () -> Unit): LocationCancellation {
         val pending = Runnable(action)
@@ -51,6 +55,10 @@ internal class AndroidLocationGateway(private val context: Context) : Foreground
         return LocationCancellation { handler.removeCallbacks(pending) }
     }
     override fun subscribe(provider: String, onFix: (ForegroundLocationFix) -> Unit): LocationCancellation {
+        if (context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            throw SecurityException("Location permission is no longer granted")
+        }
         val listener = object : LocationListener {
             override fun onLocationChanged(location: Location) = onFix(location.asFix())
             override fun onProviderEnabled(provider: String) = Unit
