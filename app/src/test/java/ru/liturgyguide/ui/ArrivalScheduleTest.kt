@@ -36,6 +36,69 @@ class ArrivalScheduleTest {
         assertTrue(result.entries.isEmpty())
         assertNull(result.featured)
         assertNull(result.relation)
+        assertSame(tomorrow, result.next?.service)
+        assertFalse(requireNotNull(result.next).saved)
+        assertFalse(requireNotNull(result.next).yearInferred)
+    }
+
+    @Test fun nextOfferUsesTheEarliestValidFutureStartInTheParishZoneAndNeverReplacesAPopulatedDay() {
+        val selected = LocalDate.of(2026, 12, 31)
+        val nextDay = selected.plusDays(1)
+        val first = service("03:00", "Вечернее богослужение", nextDay)
+        val earlier = service("01:30", day = nextDay)
+        val scheduled = church.copy(timezone = "Asia/Vladivostok", scheduleValidFrom = selected.toString(),
+            scheduleValidUntil = "2027-01-02", schedule = listOf(
+                service("08:00", day = nextDay.plusDays(1)), service("00:30", day = selected.minusDays(1)),
+                service("00:30", day = nextDay).copy(date = "2027-13-01"), service("25:00", day = nextDay),
+                service("02:45", "", nextDay), first, earlier))
+        // In Vladivostok it is already January 1, 02:30. The 01:30 start has passed.
+        val current = Instant.parse("2026-12-31T16:30:00Z")
+        val result = arrivalSchedule(scheduled, selected, current, null)
+        assertTrue(result.entries.isEmpty())
+        assertNull(result.featured)
+        assertSame(first, result.next?.service)
+        assertNull(arrivalSchedule(scheduled.copy(scheduleValidUntil = selected.toString()), selected, current, null).next)
+        assertNull(arrivalSchedule(scheduled.copy(timezone = "not/a-zone"), selected, current, null).next)
+        val onSelectedDay = service("12:00", day = selected)
+        val populated = arrivalSchedule(scheduled.copy(schedule = scheduled.schedule + onSelectedDay), selected, current, null)
+        assertEquals(listOf(onSelectedDay), populated.entries)
+        assertEquals(onSelectedDay, populated.featured)
+        assertNull(populated.next)
+        val beforeClockChange = LocalDate.of(2026, 3, 28)
+        val nonexistentLocalStart = church.copy(timezone = "Europe/Berlin", scheduleValidFrom = "2026-03-28",
+            scheduleValidUntil = "2026-03-29", schedule = listOf(service("02:30", day = beforeClockChange.plusDays(1))))
+        assertNull(arrivalSchedule(nonexistentLocalStart, beforeClockChange, null, null).next)
+    }
+
+    @Test fun futureSavedAndInferredWarningsBelongToTheOfferRatherThanTheEmptySelectedDay() {
+        val future = service("18:00", "Вечернее богослужение. Акафист Пресвятой Богородице", date.plusDays(2))
+        val state = cached().copy(publication = cached().publication!!.copy(yearInferred = true,
+            events = listOf(InternetService(future.date, future.time, future.title, future.kind))))
+        val result = arrivalSchedule(church, date, now, state)
+        assertTrue(result.entries.isEmpty())
+        assertNull(result.featured)
+        assertFalse(result.saved)
+        assertEquals(ArrivalScheduleOffer(future, saved = true, yearInferred = true), result.next)
+        val laterBundled = service("08:00", day = date.plusDays(3))
+        assertEquals(future, arrivalSchedule(church.copy(schedule = listOf(laterBundled)), date, now, state).next?.service)
+    }
+
+    @Test fun futureOfferRejectsForeignUnverifiedWithdrawnAndMalformedPublications() {
+        val event = InternetService(date.plusDays(1).toString(), "18:00", "Вечерня", "service_block")
+        val state = cached().copy(publication = cached().publication!!.copy(events = listOf(event)))
+        for (rejected in listOf(state.copy(publicationRejected = true), state.copy(sourceNeedsVerification = true),
+            state.copy(parishId = "other"), state.copy(sourceUrl = "https://different.example/schedule"),
+            state.copy(publication = state.publication!!.copy(parishId = "other")),
+            state.copy(publication = state.publication!!.copy(timezone = "Asia/Vladivostok")),
+            state.copy(publication = state.publication!!.copy(events = listOf(event.copy(date = "tomorrow")))),
+            state.copy(publication = state.publication!!.copy(events = listOf(event.copy(time = "25:00")))),
+            state.copy(publication = state.publication!!.copy(events = listOf(event.copy(title = "")))))) {
+            assertNull(rejected.toString(), arrivalSchedule(church, date, now, rejected).next)
+        }
+        val bundled = church.copy(schedule = listOf(service("18:00", day = date.plusDays(1))))
+        assertNull(arrivalSchedule(bundled, date, now, state.copy(publicationRejected = true)).next)
+        assertNull(arrivalSchedule(bundled, date, now, state.copy(sourceNeedsVerification = true)).next)
+        assertNull(arrivalSchedule(church, date, Instant.parse("2026-11-12T16:00:00Z"), state).next)
     }
 
     @Test fun afterAllStartsTheLastEntryIsNotPresentedAsUpcomingOrTheFirstEntry() {

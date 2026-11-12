@@ -26,6 +26,7 @@ import ru.liturgyguide.model.WorshipKind
 import ru.liturgyguide.service.book.BookText
 import ru.liturgyguide.service.book.ServiceBookSelection
 import ru.liturgyguide.service.PublishedSchedule
+import ru.liturgyguide.service.ScheduleTime
 import ru.liturgyguide.service.schedule.InternetScheduleState
 import ru.liturgyguide.service.schedule.InternetScheduleStatus
 import ru.liturgyguide.service.schedule.SchedulePublication
@@ -67,8 +68,10 @@ internal fun rememberReadingBeforeSchedule(
 /** A selected day stays a selected day. A future occurrence never silently replaces its date. */
 internal data class ArrivalSchedule(
     val entries: List<ParishService>, val featured: ParishService?, val relation: String?,
-    val saved: Boolean, val publication: SchedulePublication?
+    val saved: Boolean, val publication: SchedulePublication?, val next: ArrivalScheduleOffer? = null
 )
+
+internal data class ArrivalScheduleOffer(val service: ParishService, val saved: Boolean, val yearInferred: Boolean)
 
 internal fun arrivalSchedule(church: Parish, date: LocalDate, now: Instant?, state: InternetScheduleState?): ArrivalSchedule {
     val ownState = state?.takeIf { it.parishId == church.id }
@@ -106,7 +109,57 @@ internal fun arrivalSchedule(church: Parish, date: LocalDate, now: Instant?, sta
             else -> "Ближайшая служба по расписанию"
         }
     }
-    return ArrivalSchedule(entries, featured, relation, saved, publication)
+    val next = if (entries.isEmpty() && ownState?.publicationRejected != true && ownState?.sourceNeedsVerification != true)
+        nextScheduleOffer(church, date, now, publication) else null
+    return ArrivalSchedule(entries, featured, relation, saved, publication, next)
+}
+
+/** Inspect only known dates, retaining the same per-day source priority and validity checks. */
+private fun nextScheduleOffer(church: Parish, selectedDate: LocalDate, now: Instant?,
+    publication: SchedulePublication?): ArrivalScheduleOffer? {
+    val zone = runCatching { ZoneId.of(church.timezone) }.getOrNull() ?: return null
+    val dates = (church.schedule.map { it.date } + publication?.events.orEmpty().map { it.date })
+        .mapNotNull(ScheduleTime::date)
+        .filter { it > selectedDate }.distinct().sorted()
+    for (date in dates) {
+        val published = PublishedSchedule.forDate(church, date)
+        val cached = publication?.forDate(date).orEmpty()
+            .filter { it.title.isNotBlank() && runCatching { LocalTime.parse(it.time) }.isSuccess }
+            .map { ParishService(it.date, it.time, it.title, it.kind) }
+        val service = published.ifEmpty { cached }.sortedBy { LocalTime.parse(it.time) }.firstOrNull {
+            val start = ScheduleTime.instant(date, LocalTime.parse(it.time), zone)
+            start != null && (now == null || start > now)
+        } ?: continue
+        val saved = published.isEmpty()
+        return ArrivalScheduleOffer(service, saved,
+            publication?.yearInferred == true && (saved || publication.sourceUrl == church.sourceUrl))
+    }
+    return null
+}
+
+@Composable
+internal fun UpcomingScheduleOffer(offer: ArrivalScheduleOffer, tagPrefix: String,
+    onOpen: ((ParishService) -> Unit)?) {
+    val service = offer.service
+    val date = LocalDate.parse(service.date).format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru")))
+    Column(Modifier.fillMaxWidth().testTag("${tagPrefix}_next_service"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        Text("Ближайшая служба", style = MaterialTheme.typography.titleMedium)
+        Text("$date · ${service.time}", style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.testTag("${tagPrefix}_next_date_time"))
+        Text(service.title, style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.testTag("${tagPrefix}_next_title"))
+        if (offer.saved) Text("Сохраненное расписание - проверьте изменения", style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("${tagPrefix}_next_saved"))
+        if (offer.yearInferred) Text("Год не указан - проверьте дату в расписании", style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("${tagPrefix}_next_inferred_year"))
+        onOpen?.let { open ->
+            OutlinedButton(onClick = { open(service) }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
+                .testTag("${tagPrefix}_open_next_service")) {
+                Text(if (ServiceBookSelection.kindFor(service.title) == null) "Выбрать текст службы" else "Открыть службу")
+            }
+        }
+    }
 }
 
 /** No data is not the same thing as no services. Keep the distinction visible beside the date. */

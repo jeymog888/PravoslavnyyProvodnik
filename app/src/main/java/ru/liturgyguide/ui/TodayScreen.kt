@@ -192,6 +192,9 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                             Text(scheduleEmptyTitle(ownState, schedule?.publication != null || church.schedule.isNotEmpty()), style = MaterialTheme.typography.titleLarge,
                                 modifier = Modifier.testTag("today_schedule_empty"))
                             Text(scheduleEmptyDescription(ownState, onOpenScheduleSource != null), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            schedule?.next?.let { offer ->
+                                UpcomingScheduleOffer(offer, "today", onOpenService ?: { open(it) })
+                            }
                             if (!loading) OutlinedButton(onClick = onRefresh,
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("today_refresh_schedule")) {
                                 Icon(Icons.Default.Refresh, null, Modifier.size(20.dp)); Spacer(Modifier.width(12.dp)); Text("Обновить расписание")

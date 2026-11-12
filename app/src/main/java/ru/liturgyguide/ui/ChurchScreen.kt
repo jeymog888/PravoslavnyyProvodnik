@@ -347,6 +347,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                             val source = scheduleSourceFor(church, ownState)
                             Text(scheduleEmptyDescription(ownState, source != null), style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            schedule.next?.let { offer -> UpcomingScheduleOffer(offer, "church", onOpenService) }
                             onRefreshSchedule?.let { refresh -> OutlinedButton(onClick = refresh, enabled = ownState?.loading != true,
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("refresh_schedule")) {
                                 Icon(Icons.Default.Refresh, null, Modifier.size(20.dp)); Spacer(Modifier.width(12.dp)); Text("Обновить расписание")
