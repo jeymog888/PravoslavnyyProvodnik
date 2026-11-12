@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -198,14 +199,20 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     fun changeChurch() {
         if (onDiscover != null) onDiscover() else picker = true
     }
+    val date = currentDate.plusDays(dayOffset.toLong())
+    val ownState = internetSchedule?.takeIf { it.parishId == church?.id }
+    val arrival = church?.let { arrivalSchedule(it, date, now, ownState) }
+    val listState = rememberLazyListState()
+    val readingBeforeSchedule = rememberReadingBeforeSchedule(listState, church?.id, date, arrival?.featured != null,
+        readingKey = "church_reading", personalKey = "church_personal")
     Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = { Column(Modifier.statusBarsPadding()) {
         if (showBack) PageHeader("Храм", onBack)
     } }, bottomBar = bottomBar) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("church_content"), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            if (!showBack) item {
+        LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("church_content"), state = listState, contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+            if (!showBack) item(key = "church_header") {
                 Text("Мой храм", Modifier.testTag("church_title").semantics { heading() }, style = MaterialTheme.typography.titleLarge)
             }
-            if (church == null) item {
+            if (church == null) item(key = "church_find") {
                 Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
                     Text("Найдите свой храм", style = MaterialTheme.typography.headlineMedium)
                     Text("По названию, городу или рядом с вами", style = MaterialTheme.typography.bodyLarge,
@@ -217,14 +224,59 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                 }
             }
             else {
-                val date = currentDate.plusDays(dayOffset.toLong())
-                val ownState = internetSchedule?.takeIf { it.parishId == church.id }
-                val schedule = arrivalSchedule(church, date, now, ownState)
+                val schedule = requireNotNull(arrival)
                 val entries = schedule.entries
                 val featured = schedule.featured
                 val cachedPublication = schedule.publication
                 val personalStart = personalStartForDate(userStarts, church, date)
-                item {
+                fun personalItem() {
+                    val start = personalStart ?: return
+                    item(key = "church_personal") {
+                        ArrivalCard(Modifier.testTag("church_personal_card")) {
+                            Text(start.time + " · Литургия", style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("personal_start_summary"))
+                            Text("Начало указано вами · " + parishTimeZoneLabel(church, date, start.time),
+                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.testTag("personal_start_source"))
+                            onReadLiturgy?.let { read ->
+                                val openPersonal = { read(LocalDate.parse(start.date)) }
+                                if (featured == null || onOpenService == null) Button(onClick = openPersonal,
+                                    shape = MaterialTheme.shapes.small,
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("personal_time_to_service")) { Text("Открыть литургию") }
+                                else OutlinedButton(onClick = openPersonal, shape = MaterialTheme.shapes.small,
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("personal_time_to_service")) { Text("Открыть литургию") }
+                            }
+                        }
+                    }
+                }
+                fun readingItem() {
+                    val read = onReadLiturgy
+                    val hasPersonalReading = personalStart != null && read != null
+                    val showLiturgy = read != null && !hasPersonalReading
+                    val showChooser = (readingBeforeSchedule || onOpenService == null) && onReadServiceText != null
+                    if (!showLiturgy && !showChooser) return
+                    item(key = "church_reading") {
+                        ArrivalCard(Modifier.testTag("church_reading_card"), accent = featured == null && !hasPersonalReading) {
+                            Text("Читать службу", style = MaterialTheme.typography.titleLarge)
+                            Text("Оригинал, доступный русский перевод и объяснения. Можно читать в своем темпе", style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            if (read != null && !hasPersonalReading) {
+                                if (featured == null || onOpenService == null) Button(onClick = { read(date) }, shape = MaterialTheme.shapes.small,
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("church_read_liturgy")) {
+                                    Text(readingEntryLabel(date))
+                                } else OutlinedButton(onClick = { read(date) },
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("church_read_liturgy")) { Text("Текст литургии на этот день") }
+                            }
+                            if (showChooser) {
+                                val choose = { chooserDateIso = date.toString() }
+                                if (read == null && (featured == null || onOpenService == null)) Button(onClick = choose, shape = MaterialTheme.shapes.small,
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("church_other_services")) { Text("Выбрать другой текст") }
+                                else OutlinedButton(onClick = choose,
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("church_other_services")) { Text("Выбрать другой текст") }
+                            }
+                        }
+                    }
+                }
+                item(key = "church_identity") {
                     ArrivalCard(Modifier.testTag("church_identity_card")) {
                         Text(church.shortName, style = MaterialTheme.typography.titleLarge)
                         Text(churchAddressLine(church), style = MaterialTheme.typography.bodySmall,
@@ -235,7 +287,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                         }
                     }
                 }
-                item {
+                item(key = "church_days") {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         FilterChip(selected = dayOffset == 0, onClick = { dayOffset = 0 }, label = { Text("Сегодня") },
                             modifier = Modifier.heightIn(min = 48.dp).testTag("schedule_today"))
@@ -243,7 +295,13 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                             modifier = Modifier.heightIn(min = 48.dp).testTag("schedule_tomorrow"))
                     }
                 }
-                item {
+                // Once reached, this group stays in place even if a publication arrives.
+                // The published service still receives the primary action.
+                if (readingBeforeSchedule) {
+                    personalItem()
+                    readingItem()
+                }
+                item(key = "church_schedule") {
                     ArrivalCard(Modifier.testTag("church_schedule_card")) {
                         Text(if (schedule.saved) "Сохраненное расписание" else "Расписание", style = MaterialTheme.typography.titleMedium)
                         Text(date.format(DateTimeFormatter.ofPattern("d MMMM uuuu, EEEE", Locale.forLanguageTag("ru"))),
@@ -315,35 +373,12 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                         ScheduleCheckReceipt(ownState, church.timezone, Modifier.testTag("church_schedule_checked"))
                     }
                 }
-                if (personalStart != null) item {
-                    ArrivalCard(Modifier.testTag("church_personal_card")) {
-                        Text(personalStart.time + " · Литургия", style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("personal_start_summary"))
-                        Text("Начало указано вами · " + parishTimeZoneLabel(church, date, personalStart.time),
-                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.testTag("personal_start_source"))
-                        if (onReadLiturgy != null) OutlinedButton(onClick = { onReadLiturgy(LocalDate.parse(personalStart.date)) },
-                            shape = MaterialTheme.shapes.small,
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("personal_time_to_service")) { Text("Открыть литургию") }
-                    }
+                if (!readingBeforeSchedule) {
+                    personalItem()
+                    readingItem()
                 }
-                if (onReadLiturgy != null) item {
-                    ArrivalCard(Modifier.testTag("church_reading_card"), accent = featured == null && personalStart == null) {
-                        Text("Читать службу", style = MaterialTheme.typography.titleLarge)
-                        Text("Оригинал, доступный русский перевод и объяснения. Можно читать в своем темпе", style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        if (featured == null || onOpenService == null) Button(onClick = { onReadLiturgy(date) }, shape = MaterialTheme.shapes.small,
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("church_read_liturgy")) {
-                            Text(readingEntryLabel(date))
-                        } else OutlinedButton(onClick = { onReadLiturgy(date) },
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("church_read_liturgy")) { Text("Текст литургии на этот день") }
-                        if (featured == null && onReadServiceText != null) OutlinedButton(onClick = { chooserDateIso = date.toString() },
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("church_other_services")) {
-                            Text("Выбрать другой текст")
-                        }
-                    }
-                }
-                if (entries.isEmpty()) item { TypicalScheduleContent(date) }
-                item {
+                if (entries.isEmpty()) item(key = "church_typical") { TypicalScheduleContent(date) }
+                item(key = "church_information") {
                     ArrivalCard(Modifier.testTag("church_information_card")) {
                         Text("О храме", style = MaterialTheme.typography.titleMedium)
                         if (ownState != null && onRefreshSchedule != null) InternetScheduleControls(

@@ -3,6 +3,7 @@ package ru.liturgyguide.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -43,6 +44,9 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
     val schedule = church?.let { arrivalSchedule(it, date, now, ownState) }
     val featured = schedule?.featured
     val personalStart = church?.let { personalStartForDate(userStarts, it, date) }
+    val listState = rememberLazyListState()
+    val readingBeforeSchedule = rememberReadingBeforeSchedule(listState, church?.id, date, featured != null,
+        readingKey = "today_reading", personalKey = "today_personal")
     val inferredYear = schedule?.publication?.let {
         it.yearInferred && (schedule?.saved == true || it.sourceUrl == church?.sourceUrl)
     } == true
@@ -66,20 +70,55 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
             selectedKind == WorshipKind.MATINS && runCatching { LocalTime.parse(service.time).hour >= 12 }.getOrDefault(false))
     }
     Scaffold(containerColor = MaterialTheme.colorScheme.background, bottomBar = bottomBar) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("main_content"), contentPadding = PaddingValues(20.dp),
+        LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("main_content"), state = listState, contentPadding = PaddingValues(20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            item {
+            fun personalItem() {
+                val start = personalStart ?: return
+                item(key = "today_personal") {
+                    ArrivalCard(Modifier.testTag("today_personal_card")) {
+                        if (featured == null) Text(start.time, style = MaterialTheme.typography.displaySmall,
+                            modifier = Modifier.testTag("today_service_time"))
+                        Text(date.format(format) + " · " + start.time + " · Литургия", style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.testTag("today_personal_summary"))
+                        Text("Начало указано вами", style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("today_personal_source"))
+                        val openPersonal = { onOpenBook(LocalDate.parse(start.date), WorshipKind.LITURGY, false) }
+                        if (featured == null) Button(onClick = openPersonal,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("today_open_personal_liturgy")) { Text("Открыть литургию") }
+                        else OutlinedButton(onClick = openPersonal,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("today_open_personal_liturgy")) { Text("Открыть литургию") }
+                    }
+                }
+            }
+            fun readingItems() {
+                item(key = "today_reading") {
+                    ArrivalCard(Modifier.testTag("today_reading_card"), accent = featured == null && personalStart == null) {
+                        Text("Читать службу", style = MaterialTheme.typography.titleLarge)
+                        Text("Тексты на " + date.format(format) + ": оригинал, доступный русский перевод и объяснения",
+                            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (featured == null && personalStart == null) Button(onClick = { onOpenBook(date, WorshipKind.LITURGY, false) },
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("start_guide")) { Text("Открыть литургию") }
+                        if (featured != null || personalStart != null) OutlinedButton(onClick = { chooserDateIso = date.toString() },
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("today_other_services")) { Text("Выбрать другой текст") }
+                    }
+                }
+                if (featured == null && personalStart == null) item(key = "today_other_texts") {
+                    ArrivalAction("Выбрать другой текст", Icons.Default.MenuBook, { chooserDateIso = date.toString() },
+                        Modifier.testTag("today_other_services"))
+                }
+            }
+            item(key = "today_header") {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("Феория", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold))
                     Text("θεωρία", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            readingNotice?.let { notice -> item {
+            readingNotice?.let { notice -> item(key = "today_reading_notice") {
                 Text(notice, style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("reading_restore_notice"))
             } }
             if (church == null) {
-                item {
+                item(key = "today_find_church") {
                     ArrivalCard(accent = true) {
                         Text("Понимать\nслужбу", style = MaterialTheme.typography.headlineLarge.copy(fontSize = 36.sp, lineHeight = 42.sp))
                         Text("Выберите храм, чтобы увидеть расписание и открыть текст богослужения", style = MaterialTheme.typography.bodyLarge)
@@ -88,12 +127,12 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                         }
                     }
                 }
-                item {
+                item(key = "today_without_church") {
                     ArrivalAction("Открыть тексты без выбора храма", Icons.Default.MenuBook, { chooserDateIso = date.toString() },
                         Modifier.testTag("today_choose_without_church"))
                 }
             } else {
-                item {
+                item(key = "today_church") {
                     ArrivalCard(Modifier.testTag("today_church_card")) {
                         Text(church.shortName, style = MaterialTheme.typography.titleLarge)
                         Text(churchAddressLine(church), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -102,13 +141,19 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                         }
                     }
                 }
-                item {
+                item(key = "today_days") {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         FilterChip(dayOffset == 0, { dayOffset = 0 }, label = { Text("Сегодня") }, modifier = Modifier.heightIn(min = 48.dp).testTag("today_day_today"))
                         FilterChip(dayOffset == 1, { dayOffset = 1 }, label = { Text("Завтра") }, modifier = Modifier.heightIn(min = 48.dp).testTag("today_day_tomorrow"))
                     }
                 }
-                item {
+                // Once reached, this group stays in place even if a publication arrives.
+                // The published service still receives the primary action.
+                if (readingBeforeSchedule) {
+                    personalItem()
+                    readingItems()
+                }
+                item(key = "today_schedule") {
                     ArrivalCard(Modifier.testTag("today_schedule_card")) {
                         Text(if (schedule?.saved == true) "Сохраненное расписание" else "Расписание", style = MaterialTheme.typography.titleMedium)
                         Text(date.format(format), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -168,41 +213,16 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                         ScheduleCheckReceipt(ownState, church.timezone, Modifier.testTag("today_schedule_checked"))
                     }
                 }
-                if (personalStart != null) item {
-                    ArrivalCard(Modifier.testTag("today_personal_card")) {
-                        if (featured == null) Text(personalStart.time, style = MaterialTheme.typography.displaySmall,
-                            modifier = Modifier.testTag("today_service_time"))
-                        Text(date.format(format) + " · " + personalStart.time + " · Литургия", style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.testTag("today_personal_summary"))
-                        Text("Начало указано вами", style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("today_personal_source"))
-                        OutlinedButton(onClick = { onOpenBook(LocalDate.parse(personalStart.date), WorshipKind.LITURGY, false) },
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("today_open_personal_liturgy")) { Text("Открыть литургию") }
-                    }
-                }
+                if (!readingBeforeSchedule) personalItem()
             }
             lastBook?.let { saved -> item(key = "resume_book") {
                 ArrivalAction("Продолжить чтение", Icons.Default.Bookmark, { onResumeBook(saved) }, Modifier.testTag("resume_book"),
                     subtitle = saved.key.worship.title + " · " + LocalDate.parse(saved.key.date).format(format))
             } }
             if (church != null) {
-                item {
-                    ArrivalCard(Modifier.testTag("today_reading_card"), accent = featured == null && personalStart == null) {
-                        Text("Читать службу", style = MaterialTheme.typography.titleLarge)
-                        Text("Тексты на " + date.format(format) + ": оригинал, доступный русский перевод и объяснения",
-                            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        if (featured == null && personalStart == null) Button(onClick = { onOpenBook(date, WorshipKind.LITURGY, false) },
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("start_guide")) { Text("Открыть литургию") }
-                        if (featured != null || personalStart != null) OutlinedButton(onClick = { chooserDateIso = date.toString() },
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("today_other_services")) { Text("Выбрать другой текст") }
-                    }
-                }
-                if (featured == null && personalStart == null) item {
-                    ArrivalAction("Выбрать другой текст", Icons.Default.MenuBook, { chooserDateIso = date.toString() },
-                        Modifier.testTag("today_other_services"))
-                }
-                if (schedule?.entries.isNullOrEmpty()) item { TypicalScheduleContent(date) }
-                item {
+                if (!readingBeforeSchedule) readingItems()
+                if (schedule?.entries.isNullOrEmpty()) item(key = "today_typical") { TypicalScheduleContent(date) }
+                item(key = "today_details") {
                     ArrivalCard(Modifier.testTag("today_details_card")) {
                         Text("О храме", style = MaterialTheme.typography.titleMedium)
                         if (!loading && featured != null) ArrivalAction("Обновить расписание", Icons.Default.Refresh, onRefresh, Modifier.testTag("today_refresh_schedule"))
@@ -213,7 +233,7 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                     }
                 }
             }
-            onResumeLegacy?.let { resume -> item {
+            onResumeLegacy?.let { resume -> item(key = "today_legacy") {
                 ArrivalAction("Прежнее сохраненное чтение", Icons.Default.BookmarkBorder, resume,
                     Modifier.testTag("resume_guide"), subtitle = legacyReadingSummary)
             } }

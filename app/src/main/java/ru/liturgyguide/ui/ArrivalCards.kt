@@ -2,6 +2,7 @@ package ru.liturgyguide.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ExpandLess
@@ -36,6 +37,32 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlinx.coroutines.flow.collect
+
+/** Keep the group a person has reached in place when a schedule arrives asynchronously. */
+@Composable
+internal fun rememberReadingBeforeSchedule(
+    listState: LazyListState, parishId: String?, date: LocalDate, hasPublishedService: Boolean,
+    readingKey: String, personalKey: String
+): Boolean {
+    val owner = parishId.orEmpty() + "\u0000" + date.toString()
+    // Save the owner too: rememberSaveable inputs alone are not checked against
+    // a value restored after process death, which may happen on a different day.
+    var reachedOwner by rememberSaveable(parishId, date.toString()) { mutableStateOf<String?>(null) }
+    val currentHasPublishedService by rememberUpdatedState(hasPublishedService)
+    LaunchedEffect(listState, parishId, date, readingKey, personalKey) {
+        snapshotFlow {
+            val firstKey = listState.layoutInfo.visibleItemsInfo.firstOrNull()?.key
+            listState.isScrollInProgress && !currentHasPublishedService &&
+                (firstKey == readingKey || firstKey == personalKey)
+        }.collect { reached ->
+            if (reached) reachedOwner = owner
+        }
+    }
+    // Moving an already visible reading item behind a publication can make its old
+    // offset impossible at the end of the list. Stable keys alone cannot prevent that clamp.
+    return !hasPublishedService || reachedOwner == owner
+}
 
 /** A selected day stays a selected day. A future occurrence never silently replaces its date. */
 internal data class ArrivalSchedule(
@@ -84,14 +111,14 @@ internal fun arrivalSchedule(church: Parish, date: LocalDate, now: Instant?, sta
 
 /** No data is not the same thing as no services. Keep the distinction visible beside the date. */
 internal fun scheduleEmptyDescription(state: InternetScheduleState?, hasWebsite: Boolean = true): String = when {
-    state?.sourceNeedsVerification == true && state.loading -> "Проверяем, относится ли расписание к выбранному храму. Тексты ниже уже можно читать"
-    state?.loading == true -> "Проверяем сайт храма. Тексты ниже уже можно читать"
+    state?.sourceNeedsVerification == true && state.loading -> "Проверяем, относится ли расписание к выбранному храму. Тексты службы уже можно читать"
+    state?.loading == true -> "Проверяем сайт храма. Тексты службы уже можно читать"
     state?.sourceNeedsVerification == true -> if (hasWebsite)
         "Пока не удалось подтвердить, что расписание относится к этому храму. Можно проверить на сайте или повторить поиск"
-        else "Пока не удалось подтвердить, что расписание относится к этому храму. Можно повторить поиск. Тексты ниже уже можно читать"
+        else "Пока не удалось подтвердить, что расписание относится к этому храму. Можно повторить поиск. Тексты службы уже можно читать"
     state?.status == InternetScheduleStatus.UNAVAILABLE -> if (hasWebsite)
         "Не удалось обновить расписание. Попробуйте еще раз или посмотрите его на сайте"
-        else "Не удалось обновить расписание. Попробуйте еще раз. Тексты службы ниже уже можно читать"
+        else "Не удалось обновить расписание. Попробуйте еще раз. Тексты службы уже можно читать"
     state?.status == InternetScheduleStatus.NO_WEBSITE -> "Пока не нашли источник расписания. Если знаете сайт храма, укажите его"
     state?.status == InternetScheduleStatus.UNSUPPORTED -> if (hasWebsite)
         "Не удалось автоматически прочитать даты и время. Откройте источник по кнопке ниже"
