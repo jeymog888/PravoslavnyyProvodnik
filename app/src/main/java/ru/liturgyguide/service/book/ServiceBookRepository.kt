@@ -77,12 +77,16 @@ class ServiceBookRepository(
                 }
             } ?: return@withLock null
             val corpus = withContext(Dispatchers.IO) { BookTranslationCorpus.decode(cache.readTranslationCorpus()) }
-            // Cached exact pairs are useful offline, even when the corpus version is old.
-            val local = publishEnrichment(pinned, corpus.index)
+            // Offer newly added own translations immediately. Published-only cached changes
+            // retain the existing optional-source continuation and its latest-edition check.
+            val localPublication = publishEnrichment(pinned, corpus.index.plus(translations))
+            val local = localPublication?.result
+            if (localPublication?.addedOwnTranslations == true) return@withLock local
             val available = local?.book ?: pinned
             if (!allowNetwork || !downloadRussian) return@withLock local
             val additional = withContext(Dispatchers.Default) {
-                if (available.blocks.none { it.kind == BookBlockKind.PRAYER && it.russian == null }) null
+                if (available.blocks.none { it.kind == BookBlockKind.PRAYER &&
+                        (it.russian == null || it.translationSource == BookTranslationIndex.FEORIA_TRANSLATION_SOURCE) }) null
                 else BookSharedRussianSources.forBook(available)
             } ?: return@withLock local
             val required = (BookTranslationIndex.requiredSources(available.key.worship) + additional).distinctBy { it.url }
@@ -108,9 +112,9 @@ class ServiceBookRepository(
             if (refreshed.index.size > 0) withContext(Dispatchers.IO) {
                 safely { cache.writeTranslationCorpus(refreshed.encode()) }
             }
-            val updated = publishEnrichment(pinned, refreshed.index)
-            // Another publisher may have advanced latest during the network wait. A local
-            // candidate saved before that wait must not be offered as a newer edition again.
+            val updated = publishEnrichment(pinned, refreshed.index.plus(translations))?.result
+            // A concurrent publisher may have advanced latest during the network wait.
+            // Do not offer the earlier local candidate as a newer edition in that case.
             if (updated != null) updated
             else if (local != null && withContext(Dispatchers.IO) {
                     cache.read(pinned.key)?.contentHash == local.book.contentHash
@@ -119,7 +123,9 @@ class ServiceBookRepository(
     } catch (cancelled: CancellationException) { throw cancelled }
     catch (_: Exception) { null }
 
-    private suspend fun publishEnrichment(pinned: ServiceBook, index: BookTranslationIndex): BookLoadResult.Ready? {
+    private data class EnrichmentPublication(val result: BookLoadResult.Ready, val addedOwnTranslations: Boolean)
+
+    private suspend fun publishEnrichment(pinned: ServiceBook, index: BookTranslationIndex): EnrichmentPublication? {
         // Retry one competing publication, always rebasing onto latest, never onto old pinned text.
         repeat(2) {
             currentCoroutineContext().ensureActive()
@@ -130,16 +136,24 @@ class ServiceBookRepository(
                         throw InvalidServiceBook("Некорректная сохраненная редакция")
                 }
             }
-            val candidate = withContext(Dispatchers.Default) {
-                SavedBookEnrichment.apply(latest ?: pinned, index)?.takeIf(ServiceBookIntegrity::valid)
+            val (candidate, addedOwnTranslations) = withContext(Dispatchers.Default) {
+                val before = latest ?: pinned
+                val enriched = SavedBookEnrichment.apply(before, index)?.takeIf(ServiceBookIntegrity::valid)
+                    ?: return@withContext null
+                val previous = before.blocks.associateBy { it.id }
+                val addedOwn = enriched.blocks.any { block ->
+                    block.russian != null && block.translationSource == BookTranslationIndex.FEORIA_TRANSLATION_SOURCE &&
+                        previous[block.id]?.let { it.russian == null } == true
+                }
+                enriched to addedOwn
             } ?: return null
             val verified = withContext(Dispatchers.IO) {
                 currentCoroutineContext().ensureActive()
                 cache.writeIfLatest(latest?.contentHash, candidate) &&
                     cache.readVersion(candidate.key, candidate.contentHash) == candidate
             }
-            if (verified) return BookLoadResult.Ready(candidate, fromCache = true,
-                warning = BookWarnings.supplementWarning(candidate))
+            if (verified) return EnrichmentPublication(BookLoadResult.Ready(candidate, fromCache = true,
+                warning = BookWarnings.supplementWarning(candidate)), addedOwnTranslations)
         }
         return null
     }
@@ -237,9 +251,11 @@ class ServiceBookRepository(
         val previous = previousBook?.blocks?.associateBy { it.id }.orEmpty()
         val chapters = parsed.chapters.map { chapter -> chapter.copy(blocks = chapter.blocks.map { block ->
             val old = previous[block.id]
-            if (block.russian == null && old != null && old.kind == block.kind && old.original == block.original && !old.russian.isNullOrBlank() &&
+            val localFallback = block.translationSource == BookTranslationIndex.FEORIA_TRANSLATION_SOURCE
+            if ((block.russian == null || localFallback) && old != null && old.kind == block.kind && old.original == block.original && !old.russian.isNullOrBlank() &&
                 (block.kind != BookBlockKind.SCRIPTURE || old.scriptureReferences == block.scriptureReferences) &&
-                old.translationSource != null && old.translationSource != BookTranslationIndex.EDITORIAL_SOURCE)
+                old.translationSource != null && old.translationSource != BookTranslationIndex.EDITORIAL_SOURCE &&
+                old.translationSource != BookTranslationIndex.FEORIA_TRANSLATION_SOURCE)
                 block.copy(russian = old.russian, translationSource = old.translationSource, meaning = old.meaning ?: block.meaning)
             else block
         }) }

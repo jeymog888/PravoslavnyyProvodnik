@@ -563,7 +563,14 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                         Text("О дне и службе")
                     }
                 }
-                items((listOf(BookSource(book.sourceTitle, book.sourceUrl)) + book.sources).distinctBy { it.url }) { source ->
+                if (book.blocks.any { it.russian != null && it.translationSource == BookTranslationIndex.FEORIA_TRANSLATION_SOURCE }) {
+                    item {
+                        Text("Перевод Феории: отдельные фрагменты переведены нами с церковнославянского оригинала. Это русский текст молитв, а не краткие пояснения раздела \"Смысл\"",
+                            style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("book_feoria_translation_origin"))
+                    }
+                }
+                items((listOf(BookSource(book.sourceTitle, book.sourceUrl)) + book.sources)
+                    .filterNot { it == BookTranslationIndex.FEORIA_TRANSLATION_SOURCE }.distinctBy { it.url }) { source ->
                     TextButton(onClick = { onOpenUrl(source.url) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(source.title) }
                 }
                 if (book.key.topLevel == null && book.mainEventOptions.size > 1) {
@@ -686,6 +693,9 @@ private fun BookTextBlock(block: BookBlock, mode: BookReadingMode, textSize: Int
             color = MaterialTheme.colorScheme.primary)
         if (mode == BookReadingMode.RUSSIAN && block.russian == null && !rubric)
             Text("Этот фрагмент пока в оригинале", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (mode == BookReadingMode.RUSSIAN && block.russian != null && block.translationSource == BookTranslationIndex.FEORIA_TRANSLATION_SOURCE && !rubric)
+            Text("Перевод Феории", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.testTag("book_feoria_translation_${block.id}"))
         val text = if (mode == BookReadingMode.RUSSIAN) block.russian ?: block.original else block.original
         Text(text, style = if (rubric) MaterialTheme.typography.bodyMedium else
             MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Serif, fontSize = (21 + textSize * 2).sp, lineHeight = (32 + textSize * 3).sp),

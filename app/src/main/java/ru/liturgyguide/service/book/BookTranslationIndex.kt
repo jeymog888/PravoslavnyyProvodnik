@@ -15,7 +15,9 @@ data class BookTranslation(val russian: String, val source: BookSource, val mean
 
 /** A lexical concordance, not a machine translator. Absent matches deliberately remain absent. */
 class BookTranslationIndex private constructor(private val entries: Map<String, BookTranslation>) {
-    fun find(original: String): BookTranslation? = entries[normal(original)]
+    fun find(original: String): BookTranslation? = entries[normal(original)]?.takeIf {
+        it.source != FEORIA_TRANSLATION_SOURCE || FeoriaTranslationCatalog.recognizes(original, it)
+    }
 
     /** Supplemental editions may fill a missing exact key, never replace an accepted pair. */
     internal fun fillingMissing(other: BookTranslationIndex): BookTranslationIndex =
@@ -67,6 +69,8 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
 
     companion object {
         val EDITORIAL_SOURCE = BookSource("Русское изложение: редакция Феории", "https://github.com/jeymog888/PravoslavnyyProvodnik")
+        // The project URL identifies the local edition, not a web publication of these translations.
+        val FEORIA_TRANSLATION_SOURCE = BookSource("Перевод Феории", "https://github.com/jeymog888/PravoslavnyyProvodnik")
         val TIMROT_SOURCE = BookSource("Перевод иеромонаха Амвросия (Тимрота), Азбука веры",
             "https://azbyka.ru/bogosluzhenie/liturgiya-svt-ioanna-zlatousta/")
         val TIMROT_FULL_SOURCE = TIMROT_SOURCE.copy(url = "https://azbyka.ru/bogosluzhenie/liturgiya-ioanna-zlatousta/")
@@ -104,7 +108,11 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
 
         fun empty(): BookTranslationIndex = BookTranslationIndex(emptyMap())
 
-        private fun normal(value: String): String = BookText.normalized(BookText.withoutSpeaker(value).second)
+        internal fun normal(value: String): String = BookText.normalized(BookText.withoutSpeaker(value).second)
+
+        fun fromFeoriaCatalog(): BookTranslationIndex = BookTranslationIndex(FeoriaTranslationCatalog.entries.associate {
+            normal(it.original) to BookTranslation(it.russian, FEORIA_TRANSLATION_SOURCE)
+        })
 
         fun fromAssets(legacyStagesJson: String?, commonJson: String? = null): BookTranslationIndex {
             val result = linkedMapOf<String, BookTranslation>()

@@ -23,6 +23,7 @@ import ru.liturgyguide.service.book.FileBookCache
 import ru.liturgyguide.service.book.ServiceBookRepository
 import ru.liturgyguide.service.book.ServiceBooks
 import ru.liturgyguide.service.book.PublishedCalendarSupplements
+import ru.liturgyguide.service.book.BookTranslationIndex
 import java.io.File
 
 class AppContainer(context: Context, private val discoveryOverride: PlaceDiscovery? = null,
@@ -49,9 +50,10 @@ class AppContainer(context: Context, private val discoveryOverride: PlaceDiscove
             directoryCache = FileOfficialDirectoryCacheStore(File(appContext.cacheDir, "official-parish-directories")))
     }
     val serviceBooks: ServiceBooks by lazy {
-        // The complete book uses published, exactly matched translations. Editorial paraphrases
-        // from the older short guide are explanations, not a substitute for a sourced prayer.
+        // Only the small reviewed translation catalog supplements published exact pairs.
+        // The older short guide's explanatory paraphrases remain separate.
         booksOverride ?: ServiceBookRepository(FileBookCache(File(appContext.filesDir, "service-books-v2")),
+            translations = BookTranslationIndex.fromFeoriaCatalog(),
             calendar = PublishedCalendarSupplements())
     }
     val placeDiscovery: PlaceDiscovery by lazy {
