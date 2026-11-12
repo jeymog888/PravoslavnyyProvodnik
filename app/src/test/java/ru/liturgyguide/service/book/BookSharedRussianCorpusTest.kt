@@ -353,9 +353,10 @@ class BookSharedRussianCorpusTest {
         val good = BookTranslationCorpus(pair("Краткая молитва", "Перевод", vigil), setOf(vigil.url)).encode()
         assertTrue(disk.writeTranslationCorpus(good))
         val entries = JsonArray()
-        repeat(130) { i -> entries.add(JsonObject().apply {
+        val russian = "я".repeat(8_000)
+        repeat(BookTranslationCorpus.MAX_BYTES / russian.toByteArray(Charsets.UTF_8).size + 1) { i -> entries.add(JsonObject().apply {
             addProperty("original", "Уникальная молитва $i")
-            addProperty("russian", "я".repeat(8_000))
+            addProperty("russian", russian)
             addProperty("source", vigil.title); addProperty("url", vigil.url)
         }) }
         val large = BookTranslationCorpus(BookTranslationIndex.decode(entries.toString()), setOf(vigil.url)).encode()

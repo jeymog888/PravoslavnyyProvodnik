@@ -25,8 +25,8 @@ internal data class BookTranslationCorpus(
 
     companion object {
         // Bump when the required source set or exact extraction rules change.
-        const val VERSION = 10
-        const val MAX_BYTES = 2_000_000
+        const val VERSION = 11
+        const val MAX_BYTES = 4_000_000
 
         fun decode(json: String?): BookTranslationCorpus = runCatching {
             require(json != null && json.length <= MAX_BYTES)

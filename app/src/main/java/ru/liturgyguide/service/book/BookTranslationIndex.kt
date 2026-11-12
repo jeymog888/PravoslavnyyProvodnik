@@ -15,8 +15,24 @@ data class BookTranslation(val russian: String, val source: BookSource, val mean
 
 /** A lexical concordance, not a machine translator. Absent matches deliberately remain absent. */
 class BookTranslationIndex private constructor(private val entries: Map<String, BookTranslation>) {
-    fun find(original: String): BookTranslation? = entries[normal(original)]?.takeIf {
-        it.source != FEORIA_TRANSLATION_SOURCE || FeoriaTranslationCatalog.recognizes(original, it)
+    fun find(original: String): BookTranslation? {
+        entries[normal(original)]?.let {
+            return it.takeIf { it.source != FEORIA_TRANSLATION_SOURCE || FeoriaTranslationCatalog.recognizes(original, it) }
+        }
+        // A refrain remains one original block. Only a single leading label may be restored
+        // around an exact published body; do not remove counts or recurse through labels.
+        val prefix = "Припев:"
+        val text = BookText.clean(original)
+        if (!text.startsWith(prefix, ignoreCase = true)) return null
+        val body = text.substring(prefix.length).trim()
+        if (body.isEmpty() || body.startsWith(prefix, ignoreCase = true)) return null
+        // normal() also strips a speaker. Do not silently remove a second label here.
+        if (BookText.withoutSpeaker(body).first != null) return null
+        val pair = entries[normal(body)] ?: return null
+        if (pair.source.title != VIGIL_SOURCE.title || !samePublishedPage(sourcePage(pair.source.url), URI(VIGIL_SOURCE.url))) return null
+        val russian = BookText.clean(pair.russian)
+        if (russian.isEmpty() || russian.startsWith(prefix, ignoreCase = true)) return null
+        return pair.copy(russian = "$prefix $russian")
     }
 
     /** Supplemental editions may fill a missing exact key, never replace an accepted pair. */
@@ -358,11 +374,13 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
             node is Element || node is TextNode && BookText.clean(node.text()).isNotEmpty()
         }
 
-        /** Only whole paired Psalm rows with identical, continuous verse markers are accepted. */
+        /** Preserve whole paired rows, adding only unambiguous separately numbered verses. */
         private fun fromPsalterPage(document: Document): BookTranslationIndex {
             if (document.select("link[rel=canonical]").singleOrNull()?.attr("href") != PSALTER_SOURCE.url ||
                 document.select("h1").singleOrNull()?.text()?.let(BookText::clean) != "Псалтирь по кафизмам с переводом и молитвами") return empty()
             val result = linkedMapOf<String, BookTranslation>()
+            val verses = linkedMapOf<String, BookTranslation>()
+            val conflicted = mutableSetOf<String>()
             for (table in document.select("table.adaptive")) {
                 var inPsalm = false
                 for (row in table.select("tr")) {
@@ -382,11 +400,48 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
                     val clean = cells.map { cell -> cell.clone().apply { select("span.letter > sup").remove() } }
                     val original = BookText.clean(clean[0].text())
                     val russian = BookText.clean(clean[1].text())
-                    if (original.length in 3..30_000 && russian.length in 3..40_000)
-                        addParallel(result, original, russian, PSALTER_SOURCE)
+                    if (original.length !in 3..30_000 || russian.length !in 3..40_000) continue
+                    addParallel(result, original, russian, PSALTER_SOURCE)
+                    val left = psalmVerseTexts(cells[0], leftMarkers) ?: continue
+                    val right = psalmVerseTexts(cells[1], leftMarkers) ?: continue
+                    left.zip(right).forEach { (verseOriginal, verseRussian) ->
+                        val key = normal(verseOriginal)
+                        if (key.isBlank() || key in conflicted) return@forEach
+                        val previous = verses[key]
+                        if (previous == null) verses[key] = BookTranslation(verseRussian, PSALTER_SOURCE)
+                        else if (previous.russian != verseRussian) {
+                            // Punctuation and case differences also make a new key ambiguous.
+                            // A later matching row cannot reintroduce an already rejected key.
+                            verses.remove(key)
+                            conflicted += key
+                        }
+                    }
                 }
             }
+            verses.forEach { (key, translation) -> result.putIfAbsent(key, translation) }
             return BookTranslationIndex(result)
+        }
+
+        /** Split only at direct numbered markers already verified in both columns. */
+        private fun psalmVerseTexts(cell: Element, numbers: List<Int>): List<String>? {
+            val markers = cell.select("sup")
+            if (markers.size != numbers.size || markers.isEmpty()) return null
+            val nodes = cell.childNodes()
+            val boundaries = markers.map { marker ->
+                val wrapper = marker.parent() ?: return null
+                if (wrapper.parent() !== cell) return null
+                nodes.indexOfFirst { it === wrapper }.takeIf { it >= 0 } ?: return null
+            }
+            if (nodes.take(boundaries.first()).any { it !is TextNode || BookText.clean(it.text()).isNotEmpty() }) return null
+            return boundaries.mapIndexed { index, start ->
+                val end = boundaries.getOrNull(index + 1) ?: nodes.size
+                val fragment = Element("div")
+                for (node in nodes.subList(start + 1, end)) {
+                    if (node is Element && node.select("sup,table,tr,td,th,h1,h2,h3,h4,h5,h6,script,style").isNotEmpty()) return null
+                    fragment.appendChild(node.clone())
+                }
+                BookText.clean(fragment.text()).takeIf(String::isNotBlank) ?: return null
+            }
         }
 
         private fun psalmVerseMarkers(cell: Element): List<Int>? {
