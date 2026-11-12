@@ -66,7 +66,8 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
     }
 
     fun open(service: ParishService) {
-        if (onOpenService != null && ServiceBookSelection.kindFor(service.title) != null) {
+        if (onOpenService != null && (ServiceBookSelection.kindFor(service.title) != null ||
+                ServiceBookSelection.isUnspecifiedEvening(service.title))) {
             onOpenService(service)
             return
         }

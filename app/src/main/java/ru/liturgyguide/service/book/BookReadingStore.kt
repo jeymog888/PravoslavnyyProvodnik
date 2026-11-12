@@ -7,6 +7,7 @@ import ru.liturgyguide.service.SinglePreferenceCommit
 import ru.liturgyguide.model.ServiceBook
 import ru.liturgyguide.model.ServiceBookKey
 import ru.liturgyguide.model.BookBlockKind
+import ru.liturgyguide.model.BookChapter
 
 enum class BookReadingMode(val title: String) { ORIGINAL("Оригинал"), RUSSIAN("Русский"), MEANING("Смысл") }
 enum class BookAnchorKind { HEADER, BLOCK, END }
@@ -40,7 +41,8 @@ object BookReadingCodec {
                     it.contentHash.matches(Regex("[0-9a-f]{64}")) &&
                     it.blockId.length in 1..180 && it.chapterId.length in 1..180 &&
                     (it.parishId == null || it.parishId.length in 1..160) &&
-                    it.fraction.isFinite() && it.fraction in 0f..1f && it.wordsPerMinute in 30..180
+                    it.fraction.isFinite() && it.fraction in 0f..1f &&
+                    it.wordsPerMinute in BookAutoScroll.MIN_RATE..BookAutoScroll.MAX_RATE
             } ?: return null
             position.copy(journeyContext = BookJourneyCodec.decode(journey, position.key, position.parishId))
         }.getOrNull()
@@ -158,26 +160,53 @@ data class BookSearchHit(val chapterId: String, val chapterTitle: String, val bl
     val mode: BookReadingMode = BookReadingMode.ORIGINAL, val matchStart: Int = 0, val matchEndExclusive: Int = 0)
 
 object BookSearch {
-    fun find(book: ServiceBook, query: String, preferredMode: BookReadingMode = BookReadingMode.RUSSIAN): List<BookSearchHit> {
+    fun find(book: ServiceBook, query: String, preferredMode: BookReadingMode = BookReadingMode.RUSSIAN,
+        checkActive: () -> Unit = {}): List<BookSearchHit> {
         if (BookText.normalized(query).length < 2) return emptyList()
-        return book.chapters.asSequence().flatMap { chapter -> chapter.blocks.asSequence().mapNotNull { block ->
+        val candidates = mutableListOf<Pair<BookTextMatchKind, BookSearchHit>>()
+        for (chapter in book.chapters) for (index in chapter.blocks.indices) {
+            checkActive()
+            val block = chapter.blocks[index]
             val original = BookSearchText.find(block.original, query)
             val russian = block.russian?.let { BookSearchText.find(it, query) }
-            val inRussian = russian != null && (preferredMode == BookReadingMode.RUSSIAN || original == null)
-            val match = (if (inRussian) russian else original) ?: return@mapNotNull null
+            val inRussian = russian != null && (original == null || russian.kind < original.kind ||
+                russian.kind == original.kind && preferredMode == BookReadingMode.RUSSIAN)
+            val match = (if (inRussian) russian else original) ?: continue
+            val mode = if (inRussian) BookReadingMode.RUSSIAN else BookReadingMode.ORIGINAL
             val text = if (inRussian) block.russian.orEmpty() else block.original
-            BookSearchHit(chapter.id, chapter.title, block.id, excerpt(text, match.start),
-                if (inRussian) BookReadingMode.RUSSIAN else BookReadingMode.ORIGINAL, match.start, match.endExclusive)
-        } }.take(30).toList()
+            candidates += match.kind to BookSearchHit(chapter.id, chapter.title, block.id,
+                contextualExcerpt(chapter, index, text, match.start, mode), mode, match.start, match.endExclusive)
+        }
+        // A common response can occur more than thirty times. Keep later occurrences
+        // accessible, and do not let early unordered words hide a later exact phrase.
+        checkActive()
+        return candidates.sortedBy { it.first.ordinal }.map { it.second }
+    }
+
+    private fun contextualExcerpt(chapter: BookChapter, index: Int, text: String, matchStart: Int,
+        mode: BookReadingMode): String {
+        if (text.length > 100) return excerpt(text, matchStart)
+        val current = BookText.normalized(text)
+        // Nearby context only, with bounded work even for thousands of identical responses.
+        for (previousIndex in index - 1 downTo (index - 8).coerceAtLeast(0)) {
+            val previous = chapter.blocks[previousIndex]
+            if (previous.isAltarText || previous.kind !in setOf(BookBlockKind.PRAYER, BookBlockKind.SCRIPTURE)) continue
+            // Do not borrow an older translated petition across an untranslated one.
+            val source = (if (mode == BookReadingMode.RUSSIAN) previous.russian else previous.original) ?: break
+            val normalized = BookText.normalized(source)
+            if (normalized == current || normalized.split(' ').size < 3) continue
+            return text + "\nПеред этим: " + excerpt(source, source.length, 120)
+        }
+        return text
     }
 
     /** Show the same source occurrence that the reader will open, including accents. */
-    private fun excerpt(text: String, matchStart: Int): String {
-        if (text.length <= 240) return text
+    private fun excerpt(text: String, matchStart: Int, maxLength: Int = 240): String {
+        if (text.length <= maxLength) return text
         val tokens = Regex("[\\p{L}\\p{N}\\p{M}]+").findAll(text).toList()
         val desiredStart = (matchStart - 60).coerceAtLeast(0)
         val start = tokens.lastOrNull { it.range.first <= desiredStart }?.range?.first ?: 0
-        val limit = (start + 236).coerceAtMost(text.length)
+        val limit = (start + maxLength - 4).coerceAtMost(text.length)
         val end = if (limit == text.length) limit else tokens.lastOrNull { it.range.last < limit }?.range?.last?.plus(1) ?: limit
         return (if (start > 0) "… " else "") + text.substring(start, end).trim() + if (end < text.length) " …" else ""
     }

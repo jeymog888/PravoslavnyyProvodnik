@@ -110,6 +110,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     var churchSearchMode by rememberSaveable { mutableStateOf(ChurchSearchMode.NAME) }
     var personalTimeRequest by rememberSaveable { mutableIntStateOf(0) }
     var availableTextsDate by rememberSaveable { mutableStateOf<String?>(null) }
+    var eveningChoiceJson by rememberSaveable { mutableStateOf<String?>(null) }
     var arrivalDraft by rememberSaveable(stateSaver = ArrivalDraft.Saver) { mutableStateOf<ArrivalDraft?>(null) }
     var arrivalRecoveryNotice by rememberSaveable { mutableStateOf(false) }
     var hasChurchSelection by rememberSaveable { mutableStateOf(preferences.contains("church_id")) }
@@ -344,13 +345,11 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     fun openBookOnDate(date: LocalDate, kind: WorshipKind, eveningMatins: Boolean = false) {
         openBook(ServiceBookSelection.forCivilDate(date, kind, church, eveningMatins))
     }
-    fun openPublishedBook(service: ParishService) {
-        val route = ServiceBookSelection.resolve(service, church)
-        if (route != null) {
+    fun openPublishedRoute(route: BookRoute) {
             val expected = route.journeyContext
             val saved = bookStore.last(route.parishId)?.journeyContext?.takeIf { previous ->
                 expected != null && previous.parishId == expected.parishId && previous.civilDate == expected.civilDate &&
-                    previous.time == expected.time && previous.title == expected.title &&
+                    previous.time == expected.time && previous.title == expected.title && previous.effectivePartSet == expected.effectivePartSet &&
                     previous.parts.zip(expected.parts).all { (old, fresh) ->
                         old.date == fresh.date && old.worship == fresh.worship && old.churchType == fresh.churchType &&
                             old.topLevel == fresh.topLevel
@@ -359,9 +358,18 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
             // Reopening this exact publication keeps its accepted per-part variants.
             // Another occurrence, church or standalone cursor cannot supply its context.
             bookRequestJson = BookRouteCodec.encode(if (saved != null)
-                route.copy(activeKey = saved.parts.first(), journeyContext = saved) else route)
+                route.copy(activeKey = saved.parts.single { it.worship == route.activeKey.worship }, journeyContext = saved) else route)
             navigate(Screen.BOOK)
-        } else availableTextsDate = service.date
+    }
+    fun openPublishedBook(service: ParishService) {
+        val evening = ServiceBookSelection.eveningTexts(service, church, WorshipKind.VESPERS)
+        if (evening != null) {
+            // Keep the occurrence and owner through choice/recreation, without starting a book.
+            eveningChoiceJson = BookRouteCodec.encode(evening)
+            return
+        }
+        val route = ServiceBookSelection.resolve(service, church)
+        if (route != null) openPublishedRoute(route) else availableTextsDate = service.date
     }
     fun resumeLegacyReading() {
         if (invalidRecovery) return
@@ -887,6 +895,21 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
             availableTextsDate?.let { selectedDate ->
                 ServiceBookChooser(LocalDate.parse(selectedDate), onDismiss = { availableTextsDate = null },
                     onSelect = { date, kind -> availableTextsDate = null; openBookOnDate(date, kind) })
+            }
+            eveningChoiceJson?.let { encoded ->
+                val pending = remember(encoded) { BookRouteCodec.decode(encoded) }
+                val occurrence = pending?.journeyContext
+                if (pending != null && occurrence?.isEveningTexts == true && pending.parishId == church?.id &&
+                    screen in setOf(Screen.MAIN, Screen.CHURCH)) {
+                    EveningServiceChoice(occurrence, onDismiss = { eveningChoiceJson = null }, onSelect = { kind ->
+                        val key = occurrence.parts.singleOrNull { it.worship == kind }
+                        val selected = key?.let { pending.copy(activeKey = it).validated() }
+                        if (selected != null && selected.parishId == church?.id) {
+                            eveningChoiceJson = null
+                            openPublishedRoute(selected)
+                        }
+                    })
+                } else LaunchedEffect(encoded, church?.id, screen) { eveningChoiceJson = null }
             }
             pendingChurchSelection?.let { pending ->
                 ChurchChangeDialog(

@@ -63,6 +63,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
@@ -104,7 +105,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     }
     var pendingSearch by remember { mutableStateOf<BookSearchHit?>(null) }
     var searchLine by remember { mutableStateOf<BookSearchLine?>(null) }
-    var wordsPerMinute by rememberSaveable(book.contentHash) { mutableIntStateOf(initial?.wordsPerMinute ?: 85) }
+    var wordsPerMinute by rememberSaveable(book.contentHash) { mutableIntStateOf(initial?.wordsPerMinute ?: BookAutoScroll.DEFAULT_RATE) }
     var showAltar by rememberSaveable(book.contentHash) { mutableStateOf(initial?.showAltar ?: false) }
     var playing by remember { mutableStateOf(false) }
     var sheet by remember { mutableStateOf<String?>(null) }
@@ -129,6 +130,12 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 if (mode == BookReadingMode.MEANING) emptyList() else chapter.blocks.filter { showAltar || !it.isAltarText }
                     .map { BookPageItem(it.id, chapter, it) }
         }
+    }
+    val spokenWords = remember(items, mode) {
+        items.associate { item -> item.id to item.block?.takeIf {
+            it.kind in setOf(BookBlockKind.PRAYER, BookBlockKind.SCRIPTURE)
+        }?.let { block -> BookAutoScroll.wordCount(
+            if (mode == BookReadingMode.RUSSIAN) block.russian ?: block.original else block.original) } }
     }
     val list = rememberLazyListState()
     // These are presentation keys only. Published block IDs and saved bookmarks stay unchanged.
@@ -276,15 +283,12 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             if (!playing || !lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) break
             val elapsed = ((frame - previous) / 1_000_000_000f).coerceIn(0f, .1f)
             previous = frame
-            val visible = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == list.firstVisibleItemIndex }
-            val block = currentItem.block
-            val text = if (mode == BookReadingMode.RUSSIAN) block?.russian ?: block?.original else block?.original
-            val words = text?.split(Regex("\\s+"))?.size?.coerceAtLeast(10) ?: 12
-            val height = visible?.size?.toFloat() ?: with(density) { 100.dp.toPx() }
-            // Keep the chosen words/min proportional even on wide paragraphs. A 5dp/s
-            // floor makes slow rates indistinguishable; 0.1dp only guards degenerate geometry.
-            val speed = (height * wordsPerMinute / (words * 60f)).coerceIn(with(density) { .1.dp.toPx() }, with(density) { 65.dp.toPx() })
-            val consumed = list.scrollBy(speed * elapsed)
+            val visible = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == list.firstVisibleItemIndex } ?: continue
+            val item = (visible.key as? String)?.let(itemKeys::get)
+            val speed = BookAutoScroll.pixelsPerSecond(visible.size.toFloat(), with(density) { 20.dp.toPx() },
+                item?.let { spokenWords[it.id] }, wordsPerMinute)
+            val remaining = visible.offset + visible.size + with(density) { 20.dp.toPx() } - list.layoutInfo.viewportStartOffset
+            val consumed = list.scrollBy(BookAutoScroll.frameDistance(speed, elapsed, remaining))
             if (consumed == 0f && !list.canScrollForward) playing = false
         }
     }
@@ -358,7 +362,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                                 Text(currentChapter.title, style = MaterialTheme.typography.titleSmall,
                                     maxLines = if (compactLabels) 1 else 2, overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.testTag("book_chapter"))
-                                if (!compactLabels) Text(if (journey != null)
+                                if (!compactLabels) Text(if (journey?.isEveningTexts == true) "${book.key.worship.title} · базовый текст" else if (journey != null)
                                     "${book.key.worship.title} · ${journey.parts.indexOf(book.key) + 1} из 2" else "Порядок службы",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -371,6 +375,12 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                         }
                     }
                     if (!shortViewport) BookModePicker(mode, ::changeMode, onOpen = { playing = false })
+                    if (journey?.isEveningTexts == true) journey.parts.singleOrNull { it != book.key }?.let { other ->
+                        TextButton(onClick = { choosePart(other) }, enabled = !switchingPart,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_open_other_part")) {
+                            Text(if (other.worship == WorshipKind.MATINS) "Открыть утреню" else "Открыть вечерню")
+                        }
+                    }
                     if (saveError) Text("Не удалось сохранить место. Проверьте свободное место на телефоне",
                         color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp).testTag("book_save_error"))
@@ -471,7 +481,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                     journey?.parts?.getOrNull(journey.parts.indexOf(book.key) + 1)?.let { next ->
                         Button(onClick = { choosePart(next) }, enabled = !switchingPart,
                             modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_next_part")) {
-                            Text("Перейти к утрене")
+                            Text(if (journey.isEveningTexts) "Открыть утреню" else "Перейти к утрене")
                         }
                     }
                     TextButton(onClick = { sheet = "sources" }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Источники и состав текста") }
@@ -495,7 +505,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 if (hidden) showAltar = true
                 sheet = null
                 seekRevision++
-            })
+            }, otherPart = journey?.parts?.singleOrNull { it != book.key }?.worship,
+                onOpenOtherPart = { journey?.parts?.singleOrNull { it != book.key }?.let(::choosePart) })
             "order" -> LazyColumn(Modifier.fillMaxWidth().heightIn(max = 560.dp).testTag("book_order_list"),
                 state = rememberLazyListState(initialFirstVisibleItemIndex = if (journey != null) 0 else
                     book.chapters.indexOfFirst { it.id == currentChapter.id }.coerceAtLeast(0) + 1),
@@ -525,7 +536,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             "options" -> Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp).testTag("book_options"), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text("Чтение", style = MaterialTheme.typography.headlineSmall)
                 Text("Темп прокрутки: $wordsPerMinute слов/мин", style = MaterialTheme.typography.titleMedium)
-                Slider(value = wordsPerMinute.toFloat(), onValueChange = { wordsPerMinute = it.toInt() }, valueRange = 30f..180f)
+                Slider(value = wordsPerMinute.toFloat(), onValueChange = { wordsPerMinute = it.toInt() },
+                    valueRange = BookAutoScroll.MIN_RATE.toFloat()..BookAutoScroll.MAX_RATE.toFloat())
                 Text("Прокрутка помогает читать в выбранном темпе. Чтобы найти реальное место службы, используйте слова или микрофон",
                     style = MaterialTheme.typography.bodyMedium)
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -594,12 +606,16 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
 internal fun BookJourneyDescription(journey: BookJourneyContext, key: ServiceBookKey) {
     val format = remember { DateTimeFormatter.ofPattern("d MMMM", Locale.forLanguageTag("ru")) }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("По расписанию: ${LocalDate.parse(journey.civilDate).format(format)}, ${journey.time} - начало всей службы",
+        Text(if (journey.isEveningTexts) "В расписании: ${LocalDate.parse(journey.civilDate).format(format)}, ${journey.time}"
+            else "По расписанию: ${LocalDate.parse(journey.civilDate).format(format)}, ${journey.time} - начало всей службы",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.testTag("book_journey_schedule"))
         Text("Тексты на ${LocalDate.parse(key.date).format(format)}. Вечерняя служба относится к следующему церковному дню",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.testTag("book_journey_date"))
+        if (journey.isEveningTexts) Text("Это базовые тексты. Расписание не уточняет порядок службы; песнопения и дополнительные части в храме могут отличаться",
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.testTag("book_evening_texts_note"))
     }
 }
 
@@ -608,7 +624,8 @@ private fun BookJourneyParts(journey: BookJourneyContext, activeKey: ServiceBook
     onChoose: (ServiceBookKey) -> Unit, tag: String, switching: Boolean) {
     val fontScale = LocalDensity.current.fontScale
     Column(Modifier.fillMaxWidth().testTag(tag), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("${activeKey.worship.title} · ${journey.parts.indexOf(activeKey) + 1} из 2",
+        Text(if (journey.isEveningTexts) "Доступные тексты · выбрана ${if (activeKey.worship == WorshipKind.MATINS) "утреня" else "вечерня"}"
+            else "${activeKey.worship.title} · ${journey.parts.indexOf(activeKey) + 1} из 2",
             style = MaterialTheme.typography.labelLarge)
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val button: @Composable (ServiceBookKey, Modifier) -> Unit = { part, modifier ->
@@ -728,7 +745,8 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
     onSelect: (BookSearchHit) -> Unit,
     speechFactory: SpeechGuideFactory = { context, changed -> SpeechGuide(context, changed) },
     hasMicrophonePermission: (() -> Boolean)? = null,
-    speechQuerySelector: (suspend (ServiceBook, List<String>) -> String)? = null) {
+    speechQuerySelector: (suspend (ServiceBook, List<String>) -> String)? = null,
+    otherPart: WorshipKind? = null, onOpenOtherPart: () -> Unit = {}) {
     var query by rememberSaveable { mutableStateOf("") }
     var speechState by remember { mutableStateOf(SpeechGuideState()) }
     var permissionMessage by remember { mutableStateOf<String?>(null) }
@@ -811,7 +829,10 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
         if (!searchAllowed) return@LaunchedEffect
         // Avoid competing full-book scans while a person is still typing.
         delay(100)
-        val found = withContext(Dispatchers.Default) { BookSearch.find(book, requestedQuery, preferredMode) }
+        val found = withContext(Dispatchers.Default) {
+            val searchContext = currentCoroutineContext()
+            BookSearch.find(book, requestedQuery, preferredMode) { searchContext.ensureActive() }
+        }
         searchResult = BookSearchResult(book.key, book.contentHash, requestedQuery, preferredMode, found)
     }
     val currentResult = searchResult?.takeIf { it.bookKey == book.key && it.bookHash == book.contentHash && it.query == query && it.mode == preferredMode }
@@ -844,8 +865,19 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
             }
             if (!searching && query.trim().length >= 2 && hits.isEmpty()) item {
                 Text("Совпадений в этой книге нет. Исправьте услышанные слова или попробуйте другую короткую фразу")
+                if (otherPart != null) {
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedButton(onClick = onOpenOtherPart, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                        .testTag("book_search_other_part")) {
+                        Text(if (otherPart == WorshipKind.MATINS) "Открыть утреню" else "Открыть вечерню")
+                    }
+                }
             }
-            if (query.isBlank()) item { Text("Например: Иже Херувимы, Верую, Отче наш", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            if (query.isBlank()) item { Text("Введите несколько слов подряд из того, что сейчас слышите", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            if (!searching && hits.size > 1) item {
+                Text("Найдено мест: ${hits.size}. Сравните соседние фразы", style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             items(hits, key = { it.blockId }) { hit ->
                 OutlinedCard(onClick = { onSelect(hit) }, modifier = Modifier.fillMaxWidth().testTag("book_hit_${hit.blockId}")) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

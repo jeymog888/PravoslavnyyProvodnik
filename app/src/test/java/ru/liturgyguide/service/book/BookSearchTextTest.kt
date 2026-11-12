@@ -38,12 +38,11 @@ class BookSearchTextTest {
         assertNull(BookSearchText.find(text, " : ; "))
     }
 
-    @Test fun searchStopsReadingTheBookAfterThirtyMatches() {
+    @Test fun searchKeepsLaterOccurrencesAvailableThroughoutTheBoundedBook() {
         val visited = mutableListOf<Int>()
         val blocks = object : AbstractList<BookBlock>() {
             override val size = 300
             override fun get(index: Int): BookBlock {
-                check(index < 30) { "The search must not read beyond the visible result limit" }
                 visited += index
                 return BookBlock("block-$index", BookBlockKind.PRAYER, null, "Господи, помилуй")
             }
@@ -53,9 +52,9 @@ class BookSearchTextTest {
             fetchedAtMillis = 1, selectedEventTitle = null,
             chapters = listOf(BookChapter("chapter", "Молитвы", "Объяснение", blocks)), contentHash = "a".repeat(64))
         val hits = BookSearch.find(book, "Господи")
-        assertEquals(30, hits.size)
-        assertEquals((0 until 30).toList(), visited)
-        assertEquals("block-29", hits.last().blockId)
+        assertEquals(300, hits.size)
+        assertEquals((0 until 300).toList(), visited.distinct())
+        assertEquals("block-299", hits.last().blockId)
     }
 
     @Test fun preferredLanguageWinsWhenBothContainTheWordsAndActualMatchLanguageWinsOtherwise() {

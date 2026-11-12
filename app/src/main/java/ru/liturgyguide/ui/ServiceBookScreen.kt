@@ -59,6 +59,7 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
         // The route names a possible return. Only this publication's saved cursor
         // and its exact accepted edition prove that it is safe to offer the action.
         if (context.civilDate != expected.civilDate || context.time != expected.time || context.title != expected.title ||
+            context.effectivePartSet != expected.effectivePartSet ||
             context.parts.zip(expected.parts).any { (saved, pending) ->
                 saved.date != pending.date || saved.worship != pending.worship || saved.churchType != pending.churchType ||
                     saved.topLevel != pending.topLevel

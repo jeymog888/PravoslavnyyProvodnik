@@ -163,7 +163,7 @@ class BookReaderFlowTest {
             compose.waitForIdle()
 
             val layouts = mutableListOf<TextLayoutResult>()
-            compose.onNodeWithText("Темп прокрутки: 85 слов/мин", useUnmergedTree = true)
+            compose.onNodeWithText("Темп прокрутки: 150 слов/мин", useUnmergedTree = true)
                 .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { assertTrue(it(layouts)) }
             val actual = layouts.single()
             assertEquals("The dialog itself must render at native 200%", 2f, actual.layoutInput.density.fontScale, .001f)

@@ -360,7 +360,47 @@ class BookJourneyNavigationTest {
         assertTrue(books.networkRequests.isEmpty())
     }
 
-    private fun launch(): StateRestorationTester {
+    @Test fun genericEveningRequiresChoiceSurvivesRecreationAndOpensTheOtherTextWithoutLosingItsDate() {
+        books.publish(fixture(vespers)); books.publish(fixture(matins))
+        val restoration = launch("Вечернее богослужение")
+        val before = rawReadingPreferences.all.toMap()
+        home("today_choose_unknown_service").performClick()
+        waitForTag("evening_service_choice")
+        assertTrue("Opening the choice must not start a guessed book", books.requests.isEmpty())
+        assertEquals(before, rawReadingPreferences.all)
+        dismissSheet()
+        compose.onNodeWithTag("book_content").assertDoesNotExist()
+        assertEquals(before, rawReadingPreferences.all)
+
+        home("today_choose_unknown_service").performClick()
+        restoration.emulateSavedInstanceStateRestore()
+        waitForTag("evening_service_choice")
+        compose.onNodeWithTag("evening_service_choice").performScrollToNode(hasTestTag("evening_choose_matins"))
+        compose.onNodeWithTag("evening_choose_matins").performClick()
+        waitForBook(matins)
+        assertTrue(saved().journeyContext!!.isEveningTexts)
+        assertEquals("2026-11-12", saved().journeyContext?.civilDate)
+        assertEquals("2026-11-13", saved().key.date)
+        compose.onNodeWithTag("book_open_other_part").assertTextContains("Открыть вечерню").assertIsDisplayed()
+
+        compose.onNodeWithTag("book_find").performClick()
+        compose.onNodeWithTag("book_search_query").performTextReplacement("несуществующая проверочная фраза")
+        waitForTag("book_search_other_part")
+        compose.onNodeWithTag("book_search_sheet").performScrollToNode(hasTestTag("book_search_other_part"))
+        compose.onNodeWithTag("book_search_other_part").assertTextContains("Открыть вечерню").performClick()
+        waitForBook(vespers)
+        val preservedMatins = requireNotNull(store.positionFor(matins, parishId))
+        assertTrue(preservedMatins.journeyContext!!.isEveningTexts)
+        compose.onNodeWithTag("book_open_other_part").assertTextContains("Открыть утреню").performClick()
+        waitForBook(matins)
+        assertEquals(preservedMatins.key, saved().key)
+        assertEquals(preservedMatins.contentHash, saved().contentHash)
+        assertEquals(preservedMatins.journeyContext, saved().journeyContext)
+        assertEquals("2026-11-13", saved().key.date)
+        assertTrue("Both published fixture books were already saved", books.networkRequests.isEmpty())
+    }
+
+    private fun launch(publishedTitle: String = serviceTitle): StateRestorationTester {
         assertTrue(guidePreferences.edit().putBoolean("dark", false).putInt("text_size", 0).commit())
         assertTrue(ChurchDirectoryStore(guidePreferences).save(SavedChurchRecord(parishId, "Храм святителя Николая",
             "Москва", "Тестовая улица, 8", "Europe/Moscow", 55.75, 37.62, origin = SavedChurchOrigin.OPEN_STREET_MAP,
@@ -370,7 +410,7 @@ class BookJourneyNavigationTest {
             override fun cached(parish: Parish) = InternetScheduleState(parish.id, InternetScheduleStatus.READY,
                 website = "https://parish.example", sourceUrl = "https://parish.example/schedule", checkedAt = instant.toString(),
                 publication = SchedulePublication(parish.id, parish.timezone, "https://parish.example", "https://parish.example/schedule",
-                    instant.toString(), listOf(InternetService("2026-11-12", "17:00", serviceTitle, "service"),
+                    instant.toString(), listOf(InternetService("2026-11-12", "17:00", publishedTitle, "service"),
                         InternetService("2026-11-13", "09:00", "Литургия", "liturgy"))))
             override suspend fun refresh(parish: Parish, now: Instant, force: Boolean, sourceOverride: String?) = cached(parish)
         }

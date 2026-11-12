@@ -41,8 +41,8 @@ class BookJourneyTest {
         val cases = listOf(
             "Вечерня после утрени" to WorshipKind.VESPERS,
             "Вечерня перед утреней" to WorshipKind.VESPERS,
-            "Вечерняя утреня" to WorshipKind.VESPERS,
-            "Утреня в вечернее время" to WorshipKind.VESPERS,
+            "Вечерняя утреня" to WorshipKind.MATINS,
+            "Утреня в вечернее время" to WorshipKind.MATINS,
             "Вечерня с утренними молитвами" to WorshipKind.VESPERS,
             "Утреня по окончании вечерни" to WorshipKind.MATINS,
             "Утреня после окончания вечерни" to WorshipKind.MATINS,

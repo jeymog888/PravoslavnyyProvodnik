@@ -78,6 +78,31 @@ class BookReaderSpeedTest {
             fast / slow in 3.6f..4.4f)
     }
 
+    @Test fun shortRepliesAdvanceAtTheirSpokenLengthRatherThanTenWordsEach() {
+        val key = ServiceBookKey("2026-11-13", WorshipKind.MATINS)
+        val blocks = (0 until 40).map { index -> BookBlock("reply-$index", BookBlockKind.PRAYER, "Хор",
+            if (index % 2 == 0) "Ами́нь." else "Го́споди, поми́луй.") }
+        val source = ServiceBook(key = key, title = "Утреня", sourceUrl = key.sourceUrl(), sourceTitle = "Тест",
+            fetchedAtMillis = 1, selectedEventTitle = null,
+            chapters = listOf(BookChapter("litany", "Ектения", "Ответы хора", blocks)), contentHash = "")
+        val replies = source.copy(contentHash = ServiceBookIntegrity.contentHash(source))
+        check(store.save(BookReadingPosition(key, replies.contentHash, parish, "reply-0", "litany", wordsPerMinute = 180)))
+        compose.setContent {
+            GuideTheme(false) { if (mounted.value) BookReaderScreen(replies, parish, store, 0,
+                onBack = {}, onOpenUrl = {}, onChooseVersion = {}, onSettings = {}) }
+        }
+        compose.mainClock.autoAdvance = false
+        compose.runOnUiThread { mounted.value = true }
+        advance(700)
+        compose.onNodeWithTag("book_play").performClick()
+        advance(4_000)
+        compose.onNodeWithTag("book_play").performClick()
+        advance(700)
+        val index = requireNotNull(store.last(parish)).blockId.removePrefix("reply-").toInt()
+        assertTrue("At 180 words/min several one/two-word responses must pass in four seconds: $index", index >= 5)
+        assertTrue("The paragraph has not been skipped to its end", index < 20)
+    }
+
     private fun mountAt(wordsPerMinute: Int) {
         compose.runOnUiThread { mounted.value = false }
         advance(64)

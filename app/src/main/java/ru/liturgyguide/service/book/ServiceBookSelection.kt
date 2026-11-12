@@ -15,6 +15,28 @@ object ServiceBookSelection {
         "(?:литурги[а-я]*|вечерн[а-я]*|утрен[а-я]*|всенощ[а-я]*(?:\\s+бдени[а-я]*)?|бдени[а-я]*)\\b")
 
     private fun independentTitle(title: String) = timingReference.replace(BookText.normalized(title), " ")
+    private val vespersNoun = Regex("\\bвечерн(?:я|и|ю|е)\\b")
+    private val matinsNoun = Regex("\\bутрен(?:я|и|ю|е)\\b")
+
+    /** A published time without named parts is not evidence that vespers is being read now. */
+    fun isUnspecifiedEvening(title: String): Boolean {
+        val value = independentTitle(title).trim()
+        return (value == "вечернее богослужение" || value.startsWith("вечернее богослужение ")) &&
+            !vespersNoun.containsMatchIn(value) && !matinsNoun.containsMatchIn(value) &&
+            listOf("литург", "всенощ", "бдение").none { it in value }
+    }
+
+    /** Two available base texts, not a claim that the publication names their local order. */
+    fun eveningTexts(service: ParishService, parish: Parish?, chosen: WorshipKind): BookRoute? = runCatching {
+        if (parish == null || !isUnspecifiedEvening(service.title) || chosen !in setOf(WorshipKind.VESPERS, WorshipKind.MATINS)) return null
+        val date = LocalDate.parse(service.date)
+        val parts = listOf(forCivilDate(date, WorshipKind.VESPERS, parish),
+            forCivilDate(date, WorshipKind.MATINS, parish, eveningMatins = true))
+        val key = parts.single { it.worship == chosen }
+        val context = BookJourneyContext(parish.id, service.date, service.time, service.title, parts,
+            partSet = BookPartSetKind.EVENING_TEXTS).validatedFor(key, parish.id) ?: return null
+        BookRoute(key, parish.id, context).validated()
+    }.getOrNull()
 
     // A reference such as "after polyeleos matins" does not name the service being opened.
     // Keep the first supported form narrow; do not infer the rank from the word "polyeleos" alone.
@@ -25,8 +47,7 @@ object ServiceBookSelection {
         val value = independentTitle(title)
         // Unambiguous service nouns, including the genitive, must name both parts.
         // "Вечерняя утреня" and "утренние молитвы" only describe one service.
-        return Regex("\\bвечерн(?:я|и|ю|е)\\b").containsMatchIn(value) &&
-            Regex("\\bутрен(?:я|и|ю|е)\\b").containsMatchIn(value) &&
+        return vespersNoun.containsMatchIn(value) && matinsNoun.containsMatchIn(value) &&
             listOf("всенощ", "бдение", "литург", "молеб", "панихид", "акафист", "повечер", "полунощ", "исповед", "лити").none { it in value } &&
             !Regex("\\b(?:час[а-я]*|[1369])\\b").containsMatchIn(value)
     }
@@ -52,8 +73,8 @@ object ServiceBookSelection {
         return when {
             "всенощ" in value || "бдение" in value -> WorshipKind.VIGIL
             "литург" in value -> WorshipKind.LITURGY
-            "вечерн" in value -> WorshipKind.VESPERS
-            "утрен" in value -> WorshipKind.MATINS
+            vespersNoun.containsMatchIn(value) -> WorshipKind.VESPERS
+            matinsNoun.containsMatchIn(value) -> WorshipKind.MATINS
             "первый час" in value || "1 час" in value -> WorshipKind.HOUR1
             "третий час" in value || "3 час" in value -> WorshipKind.HOUR3
             "шестой час" in value || "6 час" in value -> WorshipKind.HOUR6

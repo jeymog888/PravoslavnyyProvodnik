@@ -8,6 +8,8 @@ import ru.liturgyguide.model.WorshipKind
 import java.time.LocalDate
 import java.time.LocalTime
 
+enum class BookPartSetKind { PUBLISHED_ORDER, EVENING_TEXTS }
+
 /** Local navigation metadata for one published service, never part of a book or its hash. */
 data class BookJourneyContext(
     val parishId: String,
@@ -15,18 +17,24 @@ data class BookJourneyContext(
     val time: String,
     val title: String,
     val parts: List<ServiceBookKey>,
-    val schemaVersion: Int = 1
+    val schemaVersion: Int = 1,
+    val partSet: BookPartSetKind? = null
 ) {
+    // Absent in older saved contexts; those always required explicitly named parts.
+    val effectivePartSet: BookPartSetKind get() = partSet ?: BookPartSetKind.PUBLISHED_ORDER
+    val isEveningTexts: Boolean get() = effectivePartSet == BookPartSetKind.EVENING_TEXTS
+
     fun validatedFor(key: ServiceBookKey, parishId: String?): BookJourneyContext? = runCatching {
         val date = LocalDate.parse(civilDate)
         val valid = schemaVersion == 1 && this.parishId == parishId && this.parishId.length in 1..160 &&
             date.toString() == civilDate && time.matches(Regex("[0-2][0-9]:[0-5][0-9]")) &&
             LocalTime.parse(time).hour >= 12 && title.length in 1..500 &&
-            ServiceBookSelection.isCombinedEvening(title) && parts.size == 2 &&
+            (if (isEveningTexts) ServiceBookSelection.isUnspecifiedEvening(title)
+                else ServiceBookSelection.isCombinedEvening(title)) && parts.size == 2 &&
             parts.map { it.worship } == listOf(WorshipKind.VESPERS, WorshipKind.MATINS) &&
             parts.all { it.isValid() && it.date == date.plusDays(1).toString() } &&
             // Old daily journeys keep their accepted keys even when the publication named polyeleos.
-            (parts[1].topLevel == null || ServiceBookSelection.isPolyeleosMatins(title)) &&
+            (parts[1].topLevel == null || !isEveningTexts && ServiceBookSelection.isPolyeleosMatins(title)) &&
             parts[0].churchType == parts[1].churchType && key in parts
         takeIf { valid }
     }.getOrNull()
@@ -88,7 +96,13 @@ internal object BookJourneyCodec {
     private val gson = Gson()
     fun decode(element: JsonElement?, key: ServiceBookKey, parishId: String?): BookJourneyContext? = runCatching {
         if (element == null || !element.isJsonObject) null
-        else gson.fromJson(element, BookJourneyContext::class.java)?.validatedFor(key, parishId)
+        else {
+            val kind = element.asJsonObject.get("partSet")
+            // Absent/null is the old explicit contract; an unknown new value is not.
+            if (kind != null && !kind.isJsonNull && (!kind.isJsonPrimitive || !kind.asJsonPrimitive.isString ||
+                    BookPartSetKind.entries.none { it.name == kind.asString })) return@runCatching null
+            gson.fromJson(element, BookJourneyContext::class.java)?.validatedFor(key, parishId)
+        }
     }.getOrNull()
 }
 
