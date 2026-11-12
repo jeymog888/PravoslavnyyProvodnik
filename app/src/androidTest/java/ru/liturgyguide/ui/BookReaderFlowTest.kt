@@ -94,6 +94,43 @@ class BookReaderFlowTest {
         }
     }
 
+    @Test fun reopeningInsideTheSpaceBetweenPrayersRetainsTheNextLinePosition() {
+        val book = sampleBook()
+        seed(book, "opening", "opening-1")
+        reader(book)
+        settle()
+        for ((iteration, inset) in listOf(15.dp, 10.dp, 1.dp).withIndex()) {
+            if (iteration > 0) {
+                compose.runOnIdle { mounted.value = false }; settle()
+                seed(book, "opening", "opening-1")
+                compose.runOnIdle { mounted.value = true }; settle()
+            }
+            val content = compose.onNodeWithTag("book_content")
+            val next = compose.onNodeWithTag("book_block_opening-2")
+            val top = content.getBoundsInRoot().top
+            val distance = next.getUnclippedBoundsInRoot().top - top - inset
+            content.performSemanticsAction(SemanticsActions.ScrollBy) { scroll ->
+                assertTrue(scroll(0f, with(compose.density) { distance.toPx() }))
+            }
+            settle()
+            val before = next.getUnclippedBoundsInRoot().top
+            val previousBottom = compose.onNodeWithTag("book_block_opening-1").getUnclippedBoundsInRoot().bottom
+            assertTrue("The viewport must start in the inter-prayer space", previousBottom < top && before > top)
+            assertTrue("The next prayer must have the requested inset", abs((before - top - inset).value) <= 1f)
+            repeat(2) {
+                compose.runOnIdle { mounted.value = false }; settle()
+                compose.runOnIdle { mounted.value = true }; settle()
+                compose.onNodeWithTag("book_mode_original").assertIsSelected()
+                val after = compose.onNodeWithTag("book_block_opening-2").assertIsDisplayed().getUnclippedBoundsInRoot().top
+                assertTrue("Reopening must preserve the visible next line, before=$before after=$after", abs((after - before).value) <= 1f)
+            }
+            compose.onNodeWithTag("book_mode_meaning").performClick(); settle()
+            compose.onNodeWithTag("book_mode_original").performClick(); settle()
+            val afterMeaning = next.assertIsDisplayed().getUnclippedBoundsInRoot().top
+            assertTrue("Meaning must retain the inter-prayer position", abs((afterMeaning - before).value) <= 1f)
+        }
+    }
+
     @Test fun searchFromMeaningRevealsAndOpensTheExactHiddenAltarFragment() {
         val book = sampleBook()
         seed(book, "opening", "opening-1", mode = BookReadingMode.MEANING)

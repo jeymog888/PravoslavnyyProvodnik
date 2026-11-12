@@ -17,6 +17,37 @@ class BookReadingTest {
         assertNull(BookReadingCodec.decode("{}"))
     }
 
+    @Test fun interPrayerSpaceRoundTripsAndOlderPositionsNeedNoMigration() {
+        for (gap in listOf(.25f, .5f, .99f)) {
+            val inSpace = position.copy(fraction = 1f, followingGapFraction = gap)
+            assertEquals(inSpace, BookReadingCodec.decode(BookReadingCodec.encode(inSpace)))
+        }
+        val json = com.google.gson.JsonParser.parseString(BookReadingCodec.encode(position)).asJsonObject
+        json.remove("followingGapFraction")
+        assertEquals(position, BookReadingCodec.decode(json.toString()))
+        for (invalid in listOf("null", "\"0.5\"", "-0.1", "1.1")) {
+            json.add("followingGapFraction", com.google.gson.JsonParser.parseString(invalid))
+            assertNull(BookReadingCodec.decode(json.toString()))
+        }
+        assertThrows(IllegalArgumentException::class.java) { BookReadingCodec.encode(position.copy(followingGapFraction = .5f)) }
+        assertThrows(IllegalArgumentException::class.java) {
+            BookReadingCodec.encode(position.copy(fraction = 1f, anchorKind = BookAnchorKind.END, followingGapFraction = .5f))
+        }
+    }
+
+    @Test fun meaningRetainsTheTextGapButAnExplicitNewLocationClearsIt() {
+        val atGap = position.copy(fraction = 1f, followingGapFraction = .5f)
+        val cursor = BookReadingCursor(atGap)
+        cursor.observe(BookViewport(position.chapterId, position.blockId, 0f, BookAnchorKind.HEADER), BookReadingMode.MEANING)
+        assertEquals(.5f, cursor.snapshot(BookReadingMode.ORIGINAL, 75, false).followingGapFraction)
+        cursor.seek(position.chapterId, position.blockId)
+        assertEquals(0f, cursor.value.followingGapFraction)
+        cursor.observe(BookViewport(position.chapterId, position.blockId, 1f, BookAnchorKind.BLOCK, .25f), BookReadingMode.ORIGINAL)
+        assertEquals(.25f, cursor.value.followingGapFraction)
+        cursor.observe(BookViewport("another-chapter", "another-block", 0f, BookAnchorKind.HEADER), BookReadingMode.MEANING)
+        assertEquals(0f, cursor.value.followingGapFraction)
+    }
+
     @Test fun wordSearchFindsAccentedOriginalAndRussianInTheSameBookWithoutCrossingFragments() {
         val blocks = listOf(
             BookBlock("one", BookBlockKind.PRAYER, "Хор", "И́же Херуви́мы та́йно образу́юще", "Мы таинственно изображаем херувимов"),
@@ -84,6 +115,9 @@ class BookReadingTest {
         val translated = metadataUpdate.copy(chapters = listOf(before.chapters.single().copy(blocks = listOf(block.copy(russian = "Отче наш, сущий на небесах")))))
         assertEquals(0f, BookPositionUpdate.rebase(position, before, translated).fraction)
         assertEquals(.45f, BookPositionUpdate.rebase(position.copy(mode = BookReadingMode.ORIGINAL), before, translated).fraction)
+        val inGap = position.copy(fraction = 1f, followingGapFraction = .5f)
+        assertEquals(.5f, BookPositionUpdate.rebase(inGap, before, metadataUpdate).followingGapFraction)
+        assertEquals(0f, BookPositionUpdate.rebase(inGap, before, translated).followingGapFraction)
     }
 
     @Test fun updateWhileInMeaningUsesTheTextLanguageWhoseOffsetWasSaved() {

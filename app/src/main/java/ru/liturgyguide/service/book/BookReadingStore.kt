@@ -25,7 +25,9 @@ data class BookReadingPosition(
     val anchorKind: BookAnchorKind = BookAnchorKind.BLOCK,
     /** Last actual text language, including when a saved reader is in Meaning. */
     val lastTextMode: BookReadingMode? = null,
-    val journeyContext: BookJourneyContext? = null
+    val journeyContext: BookJourneyContext? = null,
+    /** Progress through the following inter-item space, separate from the item's text. */
+    val followingGapFraction: Float = 0f
 )
 
 object BookReadingCodec {
@@ -35,6 +37,9 @@ object BookReadingCodec {
         return runCatching {
             val value = JsonParser.parseString(json).asJsonObject
             val journey = value.remove("journeyContext")
+            if (value.has("followingGapFraction") && value.get("followingGapFraction").let {
+                    !it.isJsonPrimitive || !it.asJsonPrimitive.isNumber
+                }) return null
             val position = gson.fromJson(value, BookReadingPosition::class.java).takeIf {
                 it.key.isValid() && it.key.worship != null && it.mode != null && it.anchorKind != null &&
                     it.lastTextMode != BookReadingMode.MEANING &&
@@ -42,6 +47,8 @@ object BookReadingCodec {
                     it.blockId.length in 1..180 && it.chapterId.length in 1..180 &&
                     (it.parishId == null || it.parishId.length in 1..160) &&
                     it.fraction.isFinite() && it.fraction in 0f..1f &&
+                    it.followingGapFraction.isFinite() && it.followingGapFraction in 0f..1f &&
+                    (it.followingGapFraction == 0f || it.fraction == 1f && it.anchorKind != BookAnchorKind.END) &&
                     it.wordsPerMinute in BookAutoScroll.MIN_RATE..BookAutoScroll.MAX_RATE
             } ?: return null
             position.copy(journeyContext = BookJourneyCodec.decode(journey, position.key, position.parishId))
@@ -52,7 +59,8 @@ object BookReadingCodec {
     }
 }
 
-data class BookViewport(val chapterId: String, val blockId: String, val fraction: Float, val kind: BookAnchorKind)
+data class BookViewport(val chapterId: String, val blockId: String, val fraction: Float, val kind: BookAnchorKind,
+    val followingGapFraction: Float = 0f)
 
 /** One semantic cursor owns both languages and the temporary chapter-level meaning view. */
 class BookReadingCursor(initial: BookReadingPosition) {
@@ -63,13 +71,15 @@ class BookReadingCursor(initial: BookReadingPosition) {
         value = if (mode == BookReadingMode.MEANING) {
             if (viewport.chapterId == value.chapterId) value.copy(mode = mode)
             else value.copy(chapterId = viewport.chapterId, blockId = viewport.blockId,
-                fraction = 0f, anchorKind = BookAnchorKind.HEADER, mode = mode)
+                fraction = 0f, followingGapFraction = 0f, anchorKind = BookAnchorKind.HEADER, mode = mode)
         } else value.copy(chapterId = viewport.chapterId, blockId = viewport.blockId,
-            fraction = viewport.fraction.coerceIn(0f, 1f), anchorKind = viewport.kind, mode = mode)
+            fraction = viewport.fraction.coerceIn(0f, 1f), followingGapFraction = viewport.followingGapFraction,
+            anchorKind = viewport.kind, mode = mode)
     }
 
     fun seek(chapterId: String, blockId: String, kind: BookAnchorKind = BookAnchorKind.BLOCK, fraction: Float = 0f) {
-        value = value.copy(chapterId = chapterId, blockId = blockId, anchorKind = kind, fraction = fraction.coerceIn(0f, 1f))
+        value = value.copy(chapterId = chapterId, blockId = blockId, anchorKind = kind,
+            fraction = fraction.coerceIn(0f, 1f), followingGapFraction = 0f)
     }
 
     fun snapshot(mode: BookReadingMode, wordsPerMinute: Int, showAltar: Boolean): BookReadingPosition =
@@ -106,6 +116,7 @@ object BookPositionUpdate {
         val unchanged = old != null && matched != null && visibleText(old) == visibleText(matched)
         return position.copy(contentHash = next.contentHash, chapterId = chapter.id, blockId = block.id,
             fraction = if (unchanged && position.anchorKind == BookAnchorKind.BLOCK) position.fraction else 0f,
+            followingGapFraction = if (unchanged && position.anchorKind == BookAnchorKind.BLOCK) position.followingGapFraction else 0f,
             anchorKind = if (matched != null) position.anchorKind else BookAnchorKind.HEADER)
     }
 }
@@ -126,7 +137,7 @@ class BookReadingStore(private val preferences: SharedPreferences) {
             book.blocks.any { block -> block.id == it.blockId }
         }?.let {
             // An explicit source refresh can retain the fragment, but not an offset in changed prose.
-            if (it.contentHash == book.contentHash) it else it.copy(contentHash = book.contentHash, fraction = 0f)
+            if (it.contentHash == book.contentHash) it else it.copy(contentHash = book.contentHash, fraction = 0f, followingGapFraction = 0f)
         }
 
     fun save(position: BookReadingPosition): Boolean = synchronized(preferences) {

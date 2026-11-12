@@ -2,7 +2,7 @@ package ru.liturgyguide.service.book
 
 import org.junit.Assert.*
 import org.junit.Test
-import ru.liturgyguide.model.ServiceBookKey
+import ru.liturgyguide.model.*
 import ru.liturgyguide.service.AcceptanceMemoryPreferences
 import ru.liturgyguide.service.MemoryCommit
 import java.time.LocalDate
@@ -10,6 +10,22 @@ import java.time.LocalDate
 class BookReadingAtomicTest {
     private val position = BookReadingPosition(ServiceBookKey("2026-11-11"), "a".repeat(64), "temple",
         "prayer", "chapter", fraction = .37f, mode = BookReadingMode.RUSSIAN, lastTextMode = BookReadingMode.RUSSIAN)
+
+    @Test fun restoringAnotherEditionClearsTheOldTextAndFollowingSpaceTogether() {
+        val store = BookReadingStore(AcceptanceMemoryPreferences())
+        val atGap = position.copy(fraction = 1f, followingGapFraction = .75f)
+        assertTrue(store.save(atGap))
+        val book = ServiceBook(key = position.key, title = "Литургия", sourceUrl = position.key.sourceUrl(), sourceTitle = "Источник",
+            fetchedAtMillis = 1, selectedEventTitle = null, contentHash = position.contentHash,
+            chapters = listOf(BookChapter("chapter", "Молитва", "Смысл",
+                listOf(BookBlock("prayer", BookBlockKind.PRAYER, null, "Отче наш")))))
+        assertEquals(atGap, store.restore(book, position.parishId))
+        val restored = requireNotNull(store.restore(book.copy(contentHash = "b".repeat(64)), position.parishId))
+        assertEquals(0f, restored.fraction)
+        assertEquals(0f, restored.followingGapFraction)
+        assertTrue(store.save(restored))
+        assertEquals(restored, store.last(position.parishId))
+    }
 
     @Test fun failedWriteRestoresBothPointersAndPreservesUnrelatedChanges() {
         for (failure in listOf(MemoryCommit.FALSE_AFTER_MEMORY, MemoryCommit.THROW_AFTER_MEMORY)) {

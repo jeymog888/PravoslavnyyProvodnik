@@ -122,6 +122,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     val positioningOwner = remember { BookPositioningOwner() }
     var seekRevision by remember { mutableIntStateOf(0) }
     val density = LocalDensity.current
+    val itemSpacingPx = with(density) { 20.dp.roundToPx() }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val view = LocalView.current
     val items = remember(book.contentHash, showAltar, mode) {
@@ -154,10 +155,22 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         val index = list.firstVisibleItemIndex
         val measured = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index && it.size > 0 } ?: return null
         val visible = (measured.key as? String)?.let(itemKeys::get) ?: if (measured.key == endKey) items.last() else return null
+        // Compose may retire the preceding item while its following space is still
+        // visible. Recover that semantic anchor from the next item's positive offset.
+        if (measured.offset in 1..itemSpacingPx && index > 0) {
+            val preceding = items.getOrNull(index - 1) ?: return null
+            val blockId = preceding.block?.id ?: preceding.chapter.blocks.firstOrNull { showAltar || !it.isAltarText }?.id
+                ?: preceding.chapter.blocks.first().id
+            return BookViewport(preceding.chapter.id, blockId, 1f,
+                if (preceding.block == null) BookAnchorKind.HEADER else BookAnchorKind.BLOCK,
+                ((itemSpacingPx - measured.offset).toFloat() / itemSpacingPx).coerceIn(0f, 1f))
+        }
         val kind = when { measured.key == endKey -> BookAnchorKind.END; visible.block == null -> BookAnchorKind.HEADER; else -> BookAnchorKind.BLOCK }
         val blockId = visible.block?.id ?: visible.chapter.blocks.firstOrNull { showAltar || !it.isAltarText }?.id ?: visible.chapter.blocks.first().id
         val fraction = (-measured.offset.toFloat() / measured.size).coerceIn(0f, 1f)
-        return BookViewport(visible.chapter.id, blockId, fraction, kind)
+        val gap = if (kind == BookAnchorKind.END) 0f else
+            ((-measured.offset - measured.size).toFloat() / itemSpacingPx).coerceIn(0f, 1f)
+        return BookViewport(visible.chapter.id, blockId, fraction, kind, gap)
     }
     // The active route owns occurrence metadata, including explicit null for standalone reading.
     fun snapshot() = cursor.snapshot(mode, wordsPerMinute, showAltar)
@@ -187,6 +200,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 ?: items.indexOfFirst { it.chapter.id == anchor.chapterId }
         }.coerceAtLeast(0)
         val targetKey = if (index == items.size) endKey else "${layoutPrefix}page:${items[index].id}"
+        val nextKey = if (index + 1 == items.size) endKey else items.getOrNull(index + 1)?.let { "${layoutPrefix}page:${it.id}" }
         // Composition and Android measure need not complete in one frame. First wait for this
         // edition/mode's item provider, then wait for the requested fragment's actual geometry.
         snapshotFlow { list.layoutInfo.visibleItemsInfo.any {
@@ -199,7 +213,9 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         val height = measuredTarget().size
         var targetOffset = 0
         if (mode != BookReadingMode.MEANING && anchor.anchorKind != BookAnchorKind.END && anchor.fraction > 0f) {
-            targetOffset = (height * anchor.fraction).toInt().coerceIn(0, height - 1)
+            targetOffset = if (anchor.followingGapFraction > 0f)
+                height + (itemSpacingPx * anchor.followingGapFraction).roundToInt().coerceIn(0, itemSpacingPx - 1)
+            else (height * anchor.fraction).toInt().coerceIn(0, height - 1)
             list.scrollToItem(index, targetOffset)
         }
         val target = pendingSearch?.takeIf { it.mode == mode && it.blockId == anchor.blockId }
@@ -217,7 +233,10 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         }
         snapshotFlow {
             val measured = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == list.firstVisibleItemIndex }
-            measured != null && measured.key == targetKey && kotlin.math.abs(measured.offset + targetOffset) <= 1
+            measured != null && (measured.key == targetKey && kotlin.math.abs(measured.offset + targetOffset) <= 1 ||
+                anchor.followingGapFraction > 0f && mode != BookReadingMode.MEANING &&
+                measured.index == index + 1 && measured.key == nextKey &&
+                kotlin.math.abs(measured.offset - (height + itemSpacingPx - targetOffset)) <= 1)
         }.first { it }
     }
     val positioningRequest = layoutPrefix to seekRevision
