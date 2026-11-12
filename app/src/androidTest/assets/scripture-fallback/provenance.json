@@ -1,0 +1,66 @@
+{
+  "baseline": "d2e0589",
+  "files": [
+    {
+      "file": "daily-2026-11-13.html",
+      "source": ".local/release10/matins-gospel-next/evidence/daily-decoded.html",
+      "bytes": 110327,
+      "sha256": "f177b136e6f70e4a06f94513d0ae9b3004b3cf5582368f7ec0d16057930c3200"
+    },
+    {
+      "file": "direct-2026-11-13.html",
+      "source": ".local/release10/matins-gospel-next/evidence/passage-decoded.html",
+      "bytes": 151117,
+      "sha256": "23624d2008a4562c862b42895acb05519940401ced78564e03a3b11dda349f85"
+    },
+    {
+      "file": "rank3-2026-11-13.html",
+      "source": "app/src/test/resources/matins-rank/rank3-2026-11-13.html",
+      "bytes": 314147,
+      "sha256": "f50002dd9e2fb9ab5e614dfd8aab1241ddf572ad29b501449c76cd026cf5fa75"
+    }
+  ],
+  "expected13": "Byte-exact independent research exact-passage.json",
+  "expected18": "Locally extracted from root captured real daily r-column; no Kotlin parser used",
+  "rawReceipts": [
+    {
+      "requestUrl": "https://azbyka.ru/biblia/days/2026-11-13",
+      "finalUrl": "https://azbyka.ru/biblia/days/2026-11-13",
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "bytes": 21536,
+      "sha256": "04475ba619a2ede806116aa37e80812db22bc7e774a8786ec70fa970b13974c9",
+      "elapsedSeconds": 0.099
+    },
+    {
+      "requestUrl": "https://azbyka.ru/biblia/?Lk.10:1-21&c~r",
+      "finalUrl": "https://azbyka.ru/biblia/?Lk.10:1-21&c~r",
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "bytes": 33653,
+      "sha256": "4d4998f54850aba494ec0807391884afee4e3ecfec75e060f353a126c65c6cb8",
+      "elapsedSeconds": 0.088
+    },
+    {
+      "requestUrl": "https://azbyka.ru/biblia/days/2026-11-18",
+      "finalUrl": "https://azbyka.ru/biblia/days/2026-11-18",
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "contentEncoding": "gzip",
+      "bytes": 36490,
+      "sha256": "fc49f46757f10b1d5aba3fa6a5cd41bec707d54479dca72c6aadffc9b4b6b923",
+      "elapsedSeconds": 0.152
+    },
+    {
+      "requestUrl": "https://azbyka.ru/biblia/?Lk.21:12-19&c~r",
+      "finalUrl": "https://azbyka.ru/biblia/?Lk.21:12-19&c~r",
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "contentEncoding": null,
+      "bytes": 148680,
+      "sha256": "6dde9aef63ac08df2392d7a3b4db99634b576b3df42d64ce735d83771204920f",
+      "elapsedSeconds": 0.292
+    }
+  ],
+  "nativeExistingInputs": "Preflight HTML and old accepted M3 JSON are reused unchanged from polyeleos-journey assets; live18 expected text is an oracle only, its daily response is fetched on Android"
+}

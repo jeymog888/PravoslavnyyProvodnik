@@ -45,6 +45,7 @@ class ServiceBookRepositoryTest {
             val html = when {
                 url.contains("/worships/") -> BookFixtures.html()
                 url.contains("/biblia/days/") -> { scriptureRequests++; if (available) dailyReadings() else "<html>Unavailable</html>" }
+                url.startsWith("https://azbyka.ru/biblia/?") -> "<html>Unavailable</html>"
                 url.startsWith("https://azbyka.ru/days/") -> if (available) CalendarFixtures.page(key.date) else "<html>Unavailable</html>"
                 else -> { russianRequests++; if (available) parallelPrayer() else "<html>Unavailable</html>" }
             }
@@ -81,6 +82,7 @@ class ServiceBookRepositoryTest {
             val html = when {
                 url.contains("/worships/") -> BookFixtures.html()
                 url.contains("/biblia/days/") -> if (available) dailyReadings() else error("Offline")
+                url.startsWith("https://azbyka.ru/biblia/?") -> error("Direct Bible unavailable in this corpus test")
                 url.startsWith("https://azbyka.ru/days/") -> if (available) CalendarFixtures.page(key.date) else error("Offline")
                 else -> { russianRequests++; if (available) parallelPrayer() else error("Offline") }
             }

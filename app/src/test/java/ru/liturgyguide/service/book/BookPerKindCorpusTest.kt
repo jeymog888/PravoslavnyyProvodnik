@@ -30,6 +30,7 @@ class BookPerKindCorpusTest {
         "worship=matins" in url -> BookFixtures.html("matins-2026-11-12")
         "worship=chas1" in url -> BookFixtures.html("hour1-2026-11-12")
         "/biblia/days/" in url -> "<html></html>"
+        url.startsWith("https://azbyka.ru/biblia/?") -> "<html></html>"
         url.startsWith("https://azbyka.ru/days/") -> CalendarFixtures.page(url.substringAfterLast('/'))
         else -> null
     }

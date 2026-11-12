@@ -40,7 +40,7 @@ class MatinsRankRepositoryTest {
             assertTrue(ServiceBookIntegrity.valid(result.book))
             assertEquals("Preflight is never published as a daily book", daily, disk.read(daily.key))
             assertEquals(daily, disk.readVersion(daily.key, daily.contentHash))
-            assertEquals(listOf("https://azbyka.ru/biblia/days/$date"), calls.filterNot { it in sourceCalls })
+            assertEquals(listOf("https://azbyka.ru/biblia/days/$date", directUrl(date)), calls.filterNot { it in sourceCalls })
             calls.clear(); writes.clear()
             val offline = ServiceBookRepository(FileBookCache(directory), ScheduleTransport { url ->
                 calls += url; error("Offline must use its own persisted rank cache")
@@ -187,9 +187,11 @@ class MatinsRankRepositoryTest {
                 MatinsRankFixtures.selected(after, "bg_worships_mainEvent").attr("value", main)
                 response(url, after.outerHtml())
             }
-            "https://azbyka.ru/biblia/days/$date" -> response(url, "<html><body></body></html>")
+            "https://azbyka.ru/biblia/days/$date", directUrl(date) -> response(url, "<html><body></body></html>")
             else -> error("Unexpected protocol request: $url")
         }
     }
+    private fun directUrl(date: String) = "https://azbyka.ru/biblia/?" +
+        (if (date == "2026-11-13") "Lk.10:1-21" else "Lk.21:12-19") + "&c~r"
     private fun response(url: String, html: String) = ScheduleResponse(url, html.toByteArray(), "text/html; charset=UTF-8")
 }

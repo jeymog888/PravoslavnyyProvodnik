@@ -176,6 +176,7 @@ class ServiceBookRepository(
         val attempted: MutableSet<String> = mutableSetOf(),
         val daily: MutableMap<String, Pair<BookTranslationIndex, BookSupplementStatus>> = mutableMapOf(),
         val calendars: MutableMap<String, CalendarSupplement?> = mutableMapOf(),
+        val scriptureFallback: BookScriptureFallback.Session = BookScriptureFallback.Session(),
         var corpus: BookTranslationCorpus? = null
     )
 
@@ -198,7 +199,11 @@ class ServiceBookRepository(
             val verses = async {
                 if (!hasScripture) null else {
                     progress(BookLoadProgress.READINGS)
-                    safely { transport.fetch("https://azbyka.ru/biblia/days/${key.date}").html()?.let(BookScripture::fromPage) }
+                    val daily = safely { transport.fetch("https://azbyka.ru/biblia/days/${key.date}").html()?.let(BookScripture::fromPage) }
+                        ?: BookScripture.empty()
+                    val references = plainBook.blocks.filter { it.kind == BookBlockKind.SCRIPTURE && it.russian == null }
+                        .mapNotNull { it.scriptureReferences.singleOrNull() }
+                    BookScriptureFallback.load(daily, references, transport, session = russianSession.scriptureFallback)
                 }
             }
             val russian = async {
@@ -226,22 +231,24 @@ class ServiceBookRepository(
             val exactPairs = extras.second.first.plus(extras.third?.translations ?: BookTranslationIndex.empty()).plus(translations)
             parser.parse(page, key, plainBook.fetchedAtMillis, exactPairs, extras.first ?: BookScripture.empty(), rankRequest)
         }
-        val scriptureStatus = when {
-            !hasScripture -> BookSupplementStatus.NOT_NEEDED
-            parsed.blocks.filter { it.kind == BookBlockKind.SCRIPTURE }.all { it.russian != null } -> BookSupplementStatus.AVAILABLE
-            else -> BookSupplementStatus.RETRY_NEEDED
-        }
         // An unsuccessful refresh of a supplement must not erase an exact, previously
-        // verified translation. Never carry translations across changed original text.
+        // verified translation. Original text and Scripture reference must still agree.
         val previousBook = withContext(Dispatchers.IO) { cache.read(key) }
         val previous = previousBook?.blocks?.associateBy { it.id }.orEmpty()
         val chapters = parsed.chapters.map { chapter -> chapter.copy(blocks = chapter.blocks.map { block ->
             val old = previous[block.id]
-            if (block.russian == null && old != null && old.original == block.original && old.russian != null &&
+            if (block.russian == null && old != null && old.kind == block.kind && old.original == block.original && !old.russian.isNullOrBlank() &&
+                (block.kind != BookBlockKind.SCRIPTURE || old.scriptureReferences == block.scriptureReferences) &&
                 old.translationSource != null && old.translationSource != BookTranslationIndex.EDITORIAL_SOURCE)
                 block.copy(russian = old.russian, translationSource = old.translationSource, meaning = old.meaning ?: block.meaning)
             else block
         }) }
+        val scriptureBlocks = chapters.flatMap { it.blocks }.filter { it.kind == BookBlockKind.SCRIPTURE }
+        val scriptureStatus = when {
+            scriptureBlocks.isEmpty() -> BookSupplementStatus.NOT_NEEDED
+            scriptureBlocks.all { !it.russian.isNullOrBlank() } -> BookSupplementStatus.AVAILABLE
+            else -> BookSupplementStatus.RETRY_NEEDED
+        }
         val day = extras.third?.day ?: previousBook?.calendarDay
         val book = parsed.copy(chapters = chapters, calendarDay = day,
             sources = (parsed.sources + chapters.flatMap { it.blocks }.mapNotNull { it.translationSource } +

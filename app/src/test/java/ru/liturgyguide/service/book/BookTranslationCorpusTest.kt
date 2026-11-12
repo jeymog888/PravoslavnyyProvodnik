@@ -31,6 +31,7 @@ class BookTranslationCorpusTest {
         "worship=liturgy" in url -> BookFixtures.html(if ("2026-11-15" in url) "liturgy-2026-11-15" else "liturgy-2026-11-11")
         "worship=vespers" in url -> BookFixtures.html("vespers-2026-11-12")
         "/biblia/days/" in url -> "<html></html>"
+        url.startsWith("https://azbyka.ru/biblia/?") -> "<html></html>"
         url.startsWith("https://azbyka.ru/days/") -> CalendarFixtures.page(url.substringAfterLast('/'))
         else -> null
     }

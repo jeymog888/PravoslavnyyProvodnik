@@ -25,20 +25,23 @@ import java.security.MessageDigest
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 
-/** Opt-in source protocol proof. Deliberately does not verify translation downloads or reader UI. */
+/** Opt-in source protocol proof; the separate Scripture flag also verifies live daily/direct Bible and offline text. */
 @RunWith(AndroidJUnit4::class)
 class LiveMatinsRankSourceTest {
     private val gson = Gson()
 
     @Test fun realDatedPolyeleosBooksPersistAcrossAnOfflineRepository() = runBlocking {
-        assumeTrue(InstrumentationRegistry.getArguments().getString("feoriaLiveMatinsRank") == "true")
+        val liveScripture = InstrumentationRegistry.getArguments().getString("feoriaLiveScriptureFallback") == "true"
+        assumeTrue(liveScripture || InstrumentationRegistry.getArguments().getString("feoriaLiveMatinsRank") == "true")
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val id = UUID.randomUUID().toString()
         val directory = File(context.cacheDir, "live-matins-rank-$id")
         val output = File(requireNotNull(context.getExternalFilesDir(null)), "matins-rank-qa-$id").apply { mkdirs() }
         val rows = mutableListOf<Map<String, Any?>>()
-        val receipt = linkedMapOf<String, Any?>("status" to "RUNNING", "scope" to "source protocol only",
-            "dates" to listOf("2026-11-13", "2026-11-18"), "translationNetwork" to false, "cases" to rows)
+        val receipt = linkedMapOf<String, Any?>("status" to "RUNNING",
+            "scope" to if (liveScripture) "source protocol plus live daily/direct Scripture" else "source protocol with explicit Bible stubs",
+            "dates" to listOf("2026-11-13", "2026-11-18"), "scriptureNetwork" to liveScripture,
+            "russianPrayerNetwork" to false, "cases" to rows)
         try {
             val network = UrlConnectionScheduleTransport(timeoutMillis = 15_000, limitBytes = 1_500_000)
             for (date in listOf("2026-11-13", "2026-11-18")) {
@@ -46,6 +49,10 @@ class LiveMatinsRankSourceTest {
                 val calls = CopyOnWriteArrayList<String>()
                 val sourceUrls = CopyOnWriteArrayList<String>()
                 val pages = CopyOnWriteArrayList<ScheduleResponse>()
+                val biblePages = CopyOnWriteArrayList<ScheduleResponse>()
+                val reference = if (date == "2026-11-13") "Lk.10:1-21" else "Lk.21:12-19"
+                val dailyUrl = "https://azbyka.ru/biblia/days/$date"
+                val directUrl = "https://azbyka.ru/biblia/?$reference&c~r"
                 val transport = ScheduleTransport { url ->
                     calls += url
                     if (url.startsWith("https://azbyka.ru/worships/?")) {
@@ -56,8 +63,12 @@ class LiveMatinsRankSourceTest {
                             File(output, "$date-source-${pages.size}.html").writeBytes(response.bytes)
                         }
                     } else {
-                        assertEquals("Supplement request must stay explicitly bounded", "https://azbyka.ru/biblia/days/$date", url)
-                        ScheduleResponse(url, "<html><body></body></html>".toByteArray(), "text/html; charset=UTF-8")
+                        assertTrue("Only the exact daily and missing passage are allowed", url == dailyUrl || url == directUrl)
+                        if (liveScripture) network.fetch(url).also { response ->
+                            assertEquals(url, response.url)
+                            biblePages += response
+                            File(output, "$date-bible-${biblePages.size}.html").writeBytes(response.bytes)
+                        } else ScheduleResponse(url, "<html><body></body></html>".toByteArray(), "text/html; charset=UTF-8")
                     }
                 }
                 val online = ServiceBookRepository(FileBookCache(directory), transport, downloadRussian = false)
@@ -84,7 +95,30 @@ class LiveMatinsRankSourceTest {
                     it.kind == BookBlockKind.SCRIPTURE && it.original.isNotBlank() && it.scriptureReferences.isNotEmpty()
                 })
                 assertTrue(chapters.containsKey("отпуст"))
-                assertEquals(listOf("https://azbyka.ru/biblia/days/$date"), calls.filterNot { it in sourceUrls })
+                val expectedBibleUrls = listOf(dailyUrl) +
+                    if (!liveScripture || date == "2026-11-13") listOf(directUrl) else emptyList()
+                assertEquals(expectedBibleUrls, calls.filterNot { it in sourceUrls })
+                val gospel = ready.book.blocks.single { it.kind == BookBlockKind.SCRIPTURE }
+                val plain = ServiceBookParser().parse(requireNotNull(pages[1].html()), key, ready.book.fetchedAtMillis,
+                    rankRequest = MatinsRankSource.resolve(requireNotNull(pages[0].html()), key))
+                assertEquals(plain.blocks.map { it.original }, ready.book.blocks.map { it.original })
+                if (liveScripture) {
+                    assertEquals(expectedBibleUrls, biblePages.map { it.url })
+                    val expected = InstrumentationRegistry.getInstrumentation().context.assets
+                        .open("scripture-fallback/expected-$date.json").bufferedReader().use { it.readText() }
+                    val expectedText = JsonParser.parseString(expected).asJsonObject.getAsJsonArray("verses")
+                        .joinToString("\n\n") { it.asJsonObject["text"].asString }
+                    assertEquals(expectedText, gospel.russian)
+                    assertEquals(if (date == "2026-11-13") 21 else 8, requireNotNull(gospel.russian).split("\n\n").size)
+                    assertEquals("Библия, Синодальный перевод", gospel.translationSource?.title)
+                    assertEquals(if (date == "2026-11-13") directUrl else "https://azbyka.ru/biblia/?$reference&r", gospel.translationSource?.url)
+                    assertTrue(gospel.translationSource in ready.book.sources)
+                    assertEquals(ru.liturgyguide.model.BookSupplementStatus.AVAILABLE, ready.book.enrichment.scripture)
+                } else {
+                    assertNull(gospel.russian)
+                    assertEquals(ru.liturgyguide.model.BookSupplementStatus.RETRY_NEEDED, ready.book.enrichment.scripture)
+                    assertTrue(biblePages.isEmpty())
+                }
                 File(output, "$date-book.json").writeText(gson.toJson(ready.book))
                 val offlineCalls = CopyOnWriteArrayList<String>()
                 val offline = ServiceBookRepository(FileBookCache(directory), ScheduleTransport { url ->
@@ -95,8 +129,11 @@ class LiveMatinsRankSourceTest {
                 assertEquals(ready.book, offline.cachedVersion(key, ready.book.contentHash))
                 assertTrue(offlineCalls.isEmpty())
                 rows += linkedMapOf("date" to date, "canonical" to key.canonical(), "sourceRequests" to sourceUrls.toList(),
-                    "sourceResponseSha256" to pages.map { sha(it.bytes) }, "supplementNetworkRequests" to 0,
-                    "supplementStubCalls" to 1, "offlineRequests" to offlineCalls.size,
+                    "sourceResponseSha256" to pages.map { sha(it.bytes) },
+                    "dailyBibleRequests" to calls.count { it == dailyUrl }, "directBibleRequests" to calls.count { it == directUrl },
+                    "supplementNetworkRequests" to biblePages.size, "bibleResponseSha256" to biblePages.map { sha(it.bytes) },
+                    "supplementStubCalls" to if (liveScripture) 0 else expectedBibleUrls.size, "offlineRequests" to offlineCalls.size,
+                    "gospelRussianSha256" to gospel.russian?.toByteArray()?.let(::sha), "gospelSourceUrl" to gospel.translationSource?.url,
                     "contentHash" to ready.book.contentHash, "mainEvent" to main,
                     "chapters" to ready.book.chapters.size, "blocks" to ready.book.blocks.size, "status" to "PASS")
             }
