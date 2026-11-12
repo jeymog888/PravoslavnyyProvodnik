@@ -68,10 +68,12 @@ class FallbackReadingEntryTest(church: Boolean, width: Int, height: Int, scale: 
             if (index > 0) replace(FallbackFixture(state = emptyState(name)), freshScreen = true)
             val observation = JSONObject().put("state", name)
             observations.put(observation)
-            observeInitialAction(primaryTag, observation)
+            val initialTag = if (name == "empty-published-day")
+                (if (churchPage) "church" else "today") + "_open_next_service" else primaryTag
+            observeInitialAction(initialTag, observation)
             capture("$name-initial", observation)
             if (width == 411) {
-                assertTrue("The WHOLE reading action must be visible before any scroll on $name", observation.getBoolean("fullyVisible"))
+                assertTrue("The primary action must be visible before any scroll on $name", observation.getBoolean("fullyVisible"))
             }
             var swipes = 0
             val primary = reveal(primaryTag, onSwipe = { swipes++ }).assertIsEnabled().assertHeightIsAtLeast(56.dp)

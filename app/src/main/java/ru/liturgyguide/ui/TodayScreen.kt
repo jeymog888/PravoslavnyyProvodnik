@@ -46,7 +46,7 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
     val featured = schedule?.featured
     val personalStart = church?.let { personalStartForDate(userStarts, it, date) }
     val listState = rememberLazyListState()
-    val readingBeforeSchedule = rememberReadingBeforeSchedule(listState, church?.id, date, featured != null,
+    val readingBeforeSchedule = rememberReadingBeforeSchedule(listState, church?.id, date, featured != null || schedule?.next != null,
         readingKey = "today_reading", personalKey = "today_personal")
     val inferredYear = schedule?.publication?.let {
         it.yearInferred && (schedule?.saved == true || it.sourceUrl == church?.sourceUrl)
@@ -189,9 +189,11 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                                     subtitle = serviceActionSubtitle(service.title, service.time + " · " + date.format(format)))
                             }
                         } else {
-                            Text(scheduleEmptyTitle(ownState, schedule?.publication != null || church.schedule.isNotEmpty()), style = MaterialTheme.typography.titleLarge,
+                            Text(scheduleEmptyTitle(ownState, schedule?.publication != null || church.schedule.isNotEmpty()),
+                                style = if (schedule?.next == null) MaterialTheme.typography.titleLarge else MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.testTag("today_schedule_empty"))
-                            Text(scheduleEmptyDescription(ownState, onOpenScheduleSource != null), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            if (schedule?.next == null) Text(scheduleEmptyDescription(ownState, onOpenScheduleSource != null),
+                                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             schedule?.next?.let { offer ->
                                 UpcomingScheduleOffer(offer, "today", onOpenService ?: { open(it) })
                             }

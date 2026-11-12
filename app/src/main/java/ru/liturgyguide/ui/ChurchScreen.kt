@@ -203,7 +203,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     val ownState = internetSchedule?.takeIf { it.parishId == church?.id }
     val arrival = church?.let { arrivalSchedule(it, date, now, ownState) }
     val listState = rememberLazyListState()
-    val readingBeforeSchedule = rememberReadingBeforeSchedule(listState, church?.id, date, arrival?.featured != null,
+    val readingBeforeSchedule = rememberReadingBeforeSchedule(listState, church?.id, date, arrival?.featured != null || arrival?.next != null,
         readingKey = "church_reading", personalKey = "church_personal")
     Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = { Column(Modifier.statusBarsPadding()) {
         if (showBack) PageHeader("Храм", onBack)
@@ -252,7 +252,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                     val read = onReadLiturgy
                     val hasPersonalReading = personalStart != null && read != null
                     val showLiturgy = read != null && !hasPersonalReading
-                    val showChooser = (readingBeforeSchedule || onOpenService == null) && onReadServiceText != null
+                    val showChooser = (arrival?.featured == null || onOpenService == null) && onReadServiceText != null
                     if (!showLiturgy && !showChooser) return
                     item(key = "church_reading") {
                         ArrivalCard(Modifier.testTag("church_reading_card"), accent = featured == null && !hasPersonalReading) {
@@ -343,9 +343,10 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                             }
                         } else {
                             Text(scheduleEmptyTitle(ownState, schedule.publication != null || church.schedule.isNotEmpty()),
-                                style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("church_schedule_empty"))
+                                style = if (schedule.next == null) MaterialTheme.typography.titleLarge else MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.testTag("church_schedule_empty"))
                             val source = scheduleSourceFor(church, ownState)
-                            Text(scheduleEmptyDescription(ownState, source != null), style = MaterialTheme.typography.bodyMedium,
+                            if (schedule.next == null) Text(scheduleEmptyDescription(ownState, source != null), style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                             schedule.next?.let { offer -> UpcomingScheduleOffer(offer, "church", onOpenService) }
                             onRefreshSchedule?.let { refresh -> OutlinedButton(onClick = refresh, enabled = ownState?.loading != true,
