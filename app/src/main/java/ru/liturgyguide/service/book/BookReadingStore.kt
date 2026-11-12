@@ -119,8 +119,12 @@ class BookReadingStore(private val preferences: SharedPreferences) {
         }.getOrDefault(false)
     }
 
-    fun acceptVersion(previous: ServiceBook, next: ServiceBook, parishId: String?): Boolean = synchronized(preferences) {
-        val position = restore(previous, parishId) ?: return@synchronized true
+    fun acceptVersion(previous: ServiceBook, next: ServiceBook, parishId: String?,
+        currentPosition: BookReadingPosition? = null): Boolean = synchronized(preferences) {
+        if (currentPosition != null && (currentPosition.key != previous.key ||
+                currentPosition.contentHash != previous.contentHash || currentPosition.parishId != parishId))
+            return@synchronized false
+        val position = currentPosition ?: restore(previous, parishId) ?: return@synchronized true
         runCatching { save(BookPositionUpdate.rebase(position, previous, next)) }.getOrDefault(false)
     }
 

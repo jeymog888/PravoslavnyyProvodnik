@@ -59,7 +59,12 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
                         }
                         if (!saved) refreshWarning = "Обновленный текст не удалось сохранить на телефоне. Открытая книга осталась на месте. Попробуйте обновить еще раз"
                         else if (fetched.book.contentHash != accepted.contentHash) { update = fetched; refreshWarning = null }
-                        else refreshWarning = fetched.warning ?: "На телефоне актуальная версия текста"
+                        else {
+                            // Retrying can save the same text that previously failed to persist.
+                            // Keep the reader identity, but enable its durable bookmark now.
+                            result = fetched; update = null
+                            refreshWarning = fetched.warning ?: "На телефоне актуальная версия текста"
+                        }
                     }
                     is BookLoadResult.Failed -> refreshWarning = fetched.message
                 } else result = fetched
@@ -108,16 +113,16 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
     if (loaded != null) key(loaded.key.canonical(), loaded.contentHash, parishId) {
         // Keep this remembered callback group present even before an update exists.
         // A conditional memoized lambda here remounts the reader when it first appears.
-        val acceptUpdate: () -> Boolean = {
-                val candidate = update
-                if (candidate != null && candidate.saved && candidate.book.key == loaded.key &&
-                    readingStore.acceptVersion(loaded, candidate.book, parishId)) {
-                    result = candidate; update = null; refreshWarning = null
-                    true
-                } else {
-                    refreshWarning = "Не удалось сохранить место. Открытый текст остался на месте"
-                    false
-                }
+        val acceptUpdate: (BookReadingPosition) -> Boolean = { position ->
+            val candidate = update
+            if (candidate != null && candidate.saved && candidate.book.key == loaded.key &&
+                readingStore.acceptVersion(loaded, candidate.book, parishId, position)) {
+                result = candidate; update = null; refreshWarning = null
+                true
+            } else {
+                refreshWarning = "Не удалось сохранить место. Открытый текст остался на месте"
+                false
+            }
         }
         BookReaderScreen(loaded, parishId, readingStore, textSize, onBack, onOpenUrl,
             onChooseVersion = { requested = it; onRequestChanged(it) }, onSettings = onSettings,

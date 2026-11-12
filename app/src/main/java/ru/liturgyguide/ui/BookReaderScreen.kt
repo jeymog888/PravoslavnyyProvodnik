@@ -87,7 +87,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     textSize: Int, onBack: () -> Unit, onOpenUrl: (String) -> Unit,
     onChooseVersion: (ServiceBookKey) -> Unit, onSettings: () -> Unit,
     isSaved: Boolean = true, loadWarning: String? = null,
-    onRefresh: () -> Unit = {}, refreshing: Boolean = false, onAcceptUpdate: (() -> Boolean)? = null,
+    onRefresh: () -> Unit = {}, refreshing: Boolean = false, onAcceptUpdate: ((BookReadingPosition) -> Boolean)? = null,
     churchTypeInfo: String? = null) {
     val initial = remember(book.contentHash, parishId) { readingStore.restore(book, parishId) }
     var mode by rememberSaveable(book.contentHash) { mutableStateOf(initial?.mode ?: BookReadingMode.ORIGINAL) }
@@ -217,14 +217,15 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         }
     }
     val latestPosition by rememberUpdatedState(newValue = { position() })
-    LaunchedEffect(book.contentHash, mode, showAltar, wordsPerMinute) {
+    val canSavePosition by rememberUpdatedState(isSaved)
+    LaunchedEffect(book.contentHash, mode, showAltar, wordsPerMinute, isSaved) {
         snapshotFlow { if (positioning) null else viewport() }.collectLatest { visible ->
             if (visible == null) return@collectLatest
             cursor.observe(visible, mode)
             delay(400)
             // Small cursor writes are serialized on the owner thread. A late IO job cannot
             // overwrite the more recent synchronous lifecycle snapshot.
-            if (!superseded) saveError = !readingStore.save(snapshot())
+            if (!superseded && isSaved) saveError = !readingStore.save(snapshot())
         }
     }
     DisposableEffect(lifecycle, book.contentHash, view) {
@@ -234,11 +235,11 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             if (event == Lifecycle.Event.ON_PAUSE || event == Lifecycle.Event.ON_STOP) {
                 view.keepScreenOn = false
                 playing = false
-                if (!positioning && !superseded) readingStore.save(latestPosition())
+                if (!positioning && !superseded && canSavePosition) readingStore.save(latestPosition())
             }
         }
         lifecycle.addObserver(observer)
-        onDispose { playing = false; view.keepScreenOn = false; if (!positioning && !superseded) readingStore.save(latestPosition()); lifecycle.removeObserver(observer) }
+        onDispose { playing = false; view.keepScreenOn = false; if (!positioning && !superseded && canSavePosition) readingStore.save(latestPosition()); lifecycle.removeObserver(observer) }
     }
     val manualScroll = remember {
         object : NestedScrollConnection {
@@ -286,12 +287,10 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     fun openSearch(useMicrophone: Boolean) { playing = false; microphoneFirst = useMicrophone; sheet = "search" }
     fun acceptUpdate() {
         playing = false
-        if (!readingStore.save(position())) {
-            saveError = true
-            return
-        }
-        sheet = null
-        superseded = onAcceptUpdate?.invoke() == true
+        // The current text may not exist on disk. Publish only the saved successor's
+        // rebased cursor, in one commit, without an intermediate dangling bookmark.
+        superseded = onAcceptUpdate?.invoke(position()) == true
+        if (superseded) sheet = null else saveError = true
     }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
