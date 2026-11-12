@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.SemanticsActions
@@ -66,8 +67,25 @@ class ScheduleRefreshFeedbackTest(private val churchDetails: Boolean, private va
             }
         }
         fun scroll(tag: String): SemanticsNodeInteraction {
-            compose.onNodeWithTag(containerTag).performScrollToNode(hasTestTag(tag))
-            return compose.onNodeWithTag(tag).performScrollTo().assertIsDisplayed()
+            val container = compose.onNodeWithTag(containerTag)
+            container.performScrollToIndex(0)
+            // Exercise the same touch route as a reader. A refresh changes this card's
+            // height, so do not issue nested semantic scroll requests against old geometry.
+            repeat(30) {
+                compose.mainClock.advanceTimeBy(300)
+                compose.waitForIdle()
+                val target = compose.onAllNodesWithTag(tag).fetchSemanticsNodes().singleOrNull()
+                if (target != null) {
+                    val viewport = container.getBoundsInRoot()
+                    val bounds = compose.onNodeWithTag(tag).getUnclippedBoundsInRoot()
+                    if (bounds.top >= viewport.top && bounds.bottom <= viewport.bottom)
+                        return compose.onNodeWithTag(tag).assertIsDisplayed()
+                }
+                container.performTouchInput {
+                    swipe(Offset(centerX, height * .8f), Offset(centerX, height * .55f), durationMillis = 800)
+                }
+            }
+            throw AssertionError("Could not reveal $tag with bounded touch scrolling")
         }
         if (needsVerification) {
             compose.onNodeWithTag(containerTag).performScrollToNode(hasText("Нужно уточнить расписание"))
