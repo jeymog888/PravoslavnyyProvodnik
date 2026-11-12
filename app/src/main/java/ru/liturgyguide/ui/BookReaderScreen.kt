@@ -2,6 +2,7 @@ package ru.liturgyguide.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
+import androidx.compose.foundation.background
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -17,6 +18,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -174,6 +176,10 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         else items.firstOrNull { it.chapter.id == cursor.value.chapterId } ?: items.first()
     } }
     val currentChapter = currentItem.chapter
+    val currentLocalVariation by remember(itemKeys, list) { derivedStateOf {
+        val measured = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == list.firstVisibleItemIndex }
+        (measured?.key as? String)?.let(itemKeys::get)?.block?.takeIf { it.kind == BookBlockKind.LOCAL_VARIATION }
+    } }
 
     fun viewport(): BookViewport? {
         val index = list.firstVisibleItemIndex
@@ -367,6 +373,13 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             previous = frame
             val visible = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == list.firstVisibleItemIndex } ?: continue
             val item = (visible.key as? String)?.let(itemKeys::get)
+            if (item == null && visible.key != endKey) continue
+            // The source does not contain this hymn, so its duration cannot be inferred.
+            // Keep the actual viewport unchanged until the reader explicitly continues.
+            if (item?.block?.kind == BookBlockKind.LOCAL_VARIATION) {
+                playing = false
+                break
+            }
             val speed = BookAutoScroll.pixelsPerSecond(visible.size.toFloat(), with(density) { 20.dp.toPx() },
                 item?.let { spokenWords[it.id] }, wordsPerMinute)
             val remaining = visible.offset + visible.size + with(density) { 20.dp.toPx() } - list.layoutInfo.viewportStartOffset
@@ -385,6 +398,28 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         mode = value
     }
     fun openSearch(useMicrophone: Boolean) { playing = false; microphoneFirst = useMicrophone; sheet = "search" }
+    fun continueAfterLocalVariation() {
+        if (positioning || switchingPart || superseded || !cancelPendingTarget()) return
+        // Read the measured item again after resolving any pending search transaction.
+        val measured = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == list.firstVisibleItemIndex } ?: return
+        val current = (measured.key as? String)?.let(itemKeys::get)
+            ?.takeIf { it.block?.kind == BookBlockKind.LOCAL_VARIATION } ?: return
+        val index = measured.index
+        if (items.getOrNull(index)?.id != current.id) return
+        val next = items.getOrNull(index + 1)
+        playing = false
+        positioningOwner.job?.cancel()
+        positioning = true
+        pendingSearch = null
+        searchLine = null
+        if (next == null) cursor.seek(current.chapter.id, requireNotNull(current.block).id, BookAnchorKind.END)
+        else {
+            val blockId = next.block?.id ?: next.chapter.blocks.firstOrNull { showAltar || !it.isAltarText }?.id
+                ?: next.chapter.blocks.first().id
+            cursor.seek(next.chapter.id, blockId, if (next.block == null) BookAnchorKind.HEADER else BookAnchorKind.BLOCK)
+        }
+        seekRevision++
+    }
     fun acceptUpdate() {
         if (!cancelPendingTarget()) return
         playing = false
@@ -545,10 +580,14 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         BookReaderAction("Найти", Icons.Default.Search, "Найти место", { openSearch(false) },
                             Modifier.weight(1f).testTag("book_find"), iconsOnly = compactLabels)
-                        BookReaderAction(if (mode == BookReadingMode.MEANING) "К тексту" else if (playing) "Пауза" else "Прокрутка",
-                            if (mode == BookReadingMode.MEANING) Icons.Default.Article else if (playing) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            if (playing) "Остановить прокрутку" else if (mode == BookReadingMode.MEANING) "Вернуться к тексту" else "Прокручивать текст",
-                            { if (mode == BookReadingMode.MEANING) changeMode(lastTextMode) else {
+                        BookReaderAction(if (mode == BookReadingMode.MEANING) "К тексту" else if (currentLocalVariation != null) "Дальше"
+                            else if (playing) "Пауза" else "Прокрутка",
+                            if (mode == BookReadingMode.MEANING) Icons.Default.Article else if (currentLocalVariation != null)
+                                Icons.AutoMirrored.Filled.ArrowForward else if (playing) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            if (mode == BookReadingMode.MEANING) "Вернуться к тексту" else if (currentLocalVariation != null)
+                                "Продолжить после местного песнопения" else if (playing) "Остановить прокрутку" else "Прокручивать текст",
+                            { if (mode == BookReadingMode.MEANING) changeMode(lastTextMode)
+                            else if (currentLocalVariation != null) continueAfterLocalVariation() else {
                                 val cancellingTarget = targetUnresolved
                                 if (cancelPendingTarget()) {
                                     if (cancellingTarget) { pendingSearch = null; positioningOwner.job?.cancel() }
@@ -849,7 +888,13 @@ private fun BookTextBlock(block: BookBlock, mode: BookReadingMode, textSize: Int
         }
     }
     val rubric = block.kind == BookBlockKind.RUBRIC || block.kind == BookBlockKind.LOCAL_VARIATION
-    Column(Modifier.fillMaxWidth().testTag("book_block_${block.id}"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    val localVariation = block.kind == BookBlockKind.LOCAL_VARIATION
+    val container = Modifier.fillMaxWidth().testTag("book_block_${block.id}").let {
+        if (localVariation) it.background(MaterialTheme.colorScheme.surfaceContainerLow, MaterialTheme.shapes.large).padding(16.dp) else it
+    }
+    Column(container, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (localVariation) Text("Местное песнопение", style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface)
         if (block.speaker != null) Text(block.speaker, style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.primary)
         if (mode == BookReadingMode.RUSSIAN && block.russian == null && !rubric)
@@ -863,6 +908,9 @@ private fun BookTextBlock(block: BookBlock, mode: BookReadingMode, textSize: Int
             color = if (rubric) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.testTag("book_text_${block.id}").onGloballyPositioned { textTop = it.positionInParent().y },
             onTextLayout = { textLayout = it })
+        if (localVariation) Text("Прокрутка останавливается здесь. После пения нажмите \"Дальше\"",
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.testTag("book_local_gap_${block.id}"))
     }
 }
 
