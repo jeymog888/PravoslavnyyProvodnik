@@ -8,6 +8,7 @@ import org.junit.Assert.*
 import org.junit.Test
 import ru.liturgyguide.model.BookBlockKind
 import ru.liturgyguide.model.ServiceBookKey
+import ru.liturgyguide.model.WorshipKind
 
 class BookRussianRubricClassificationTest {
     private val provenance: JsonObject = requireNotNull(javaClass.getResourceAsStream("/book/rubric-classification-provenance.json"))
@@ -98,5 +99,81 @@ class BookRussianRubricClassificationTest {
             assertEquals(text, text, block.russian)
         }
         assertTrue(ServiceBookIntegrity.valid(book))
+    }
+
+    @Test fun standaloneMatinsDirectionsAndHeadingsKeepWordsAndPositionWithoutHidingAnAttachedPrayer() {
+        // Whole published paragraphs, verified in the 2026-11-13 full matins source.
+        // The first 16 also occur in the existing 2026-11-12 fixture; the final three are
+        // inserted as standalone paragraphs here, without importing another complete book.
+        val texts = listOf(
+            "Священник, начиная каждение у престола:",
+            "Священник, изображая кадилом крест перед престолом:",
+            "И начинаем шестопсалмие, слушая со всяким молчанием и умилением; читающий же брат с благоговением и страхом Божиим произносит:",
+            "Молитва первая:",
+            "Молитва вторая:",
+            "Молитва третия:",
+            "Молитва четвертая:",
+            "Молитва пятая:",
+            "Молитва шестая:",
+            "Молитва седмая:",
+            "Молитва осмая:",
+            "Молитва девятая:",
+            "Молитва десятая:",
+            "Молитва перваянадесять:",
+            "Молитва втораянадесять:",
+            "И поем на глас тропаря дня:",
+            "Во время пения полиелея духовенство выходит царскими вратами в центр храма.",
+            "Далее духовенство (священник в предшествии диакона) совершает полное каждение храма, начиная с центрального аналоя.",
+            "Если сегодня служба святого (или храм святого), который указан выше в прошении, то далее повторно его не поминаем."
+        )
+        val document = Jsoup.parse(sourceHtml("matins-2026-11-12.html"))
+        val body = requireNotNull(document.selectFirst(".article-single-content.main-page-content"))
+        texts.take(16).forEach { paragraph(document, it) }
+        texts.takeLast(3).asReversed().forEach { body.prependElement("p").appendElement("em").text(it) }
+        val key = ServiceBookKey("2026-11-12", WorshipKind.MATINS)
+        val next = ServiceBookParser().parse(document, key, 12345)
+        texts.forEach { text ->
+            val block = next.blocks.single { it.original == text }
+            assertEquals(text, BookBlockKind.RUBRIC, block.kind)
+            assertEquals(text, text, block.russian)
+            assertEquals(text, text, block.meaning)
+            assertNull(text, block.translationSource)
+            assertNull(text, block.speaker)
+        }
+
+        // Reproduce the old classification while retaining its chapter, scope and words.
+        val previous = next.copy(contentHash = "a".repeat(64), chapters = next.chapters.map { chapter ->
+            chapter.copy(blocks = chapter.blocks.map { block ->
+                if (block.original in texts) block.copy(id = "old-${block.id}", kind = BookBlockKind.PRAYER, russian = null)
+                else block
+            })
+        })
+        assertEquals(previous.blocks.map { it.original }, next.blocks.map { it.original })
+        for (chapter in previous.chapters) for (block in chapter.blocks.filter { it.original in texts }) {
+            val position = BookReadingPosition(key, previous.contentHash, null, block.id, chapter.id,
+                fraction = .45f, mode = BookReadingMode.RUSSIAN, showAltar = block.isAltarText)
+            val rebased = BookPositionUpdate.rebase(position, previous, next)
+            assertEquals(block.original, next.blocks.single { it.id == rebased.blockId }.original)
+            assertEquals(block.original, chapter.id, rebased.chapterId)
+            assertEquals(BookAnchorKind.BLOCK, rebased.anchorKind)
+            assertEquals(.45f, rebased.fraction)
+            assertEquals(next.contentHash, rebased.contentHash)
+        }
+
+        val prayer = "Господи, помилуй."
+        val mixed = document.clone()
+        texts.forEach { paragraph(mixed, it).text("$it $prayer") }
+        val mixedBook = ServiceBookParser().parse(mixed, key, 12345)
+        texts.forEach { text ->
+            val block = mixedBook.blocks.single { it.original == "$text $prayer" }
+            assertEquals(text, BookBlockKind.PRAYER, block.kind)
+            assertNull("Attached prayer must not be labelled as already Russian: $text", block.russian)
+        }
+        val mixedTexts = texts.map { "$it $prayer" }.toSet()
+        assertEquals(next.blocks.map { it.original }, mixedBook.blocks.map {
+            if (it.original in mixedTexts) it.original.removeSuffix(" $prayer") else it.original
+        })
+        assertTrue(ServiceBookIntegrity.valid(next))
+        assertTrue(ServiceBookIntegrity.valid(mixedBook))
     }
 }
