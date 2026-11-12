@@ -271,11 +271,14 @@ fun ChurchDiscoveryScreen(discovery: PlaceDiscovery, onBack: () -> Unit,
     // The preview is limited to six rows; the identity check must include the whole directory.
     // Reimporting a sparse map record could erase its saved website and invalidate its schedule cache.
     val savedById = remember(savedChurches) { savedChurches.associateBy { it.id } }
-    LaunchedEffect(state.resultVersion) {
+    LaunchedEffect(state, state.resultVersion) {
         // A large-font search form may fill the viewport. Bring the response (including
         // loading, permission errors and an empty result) into view after an explicit search.
         // Editing/filtering does not change resultVersion and must not move the reader.
         if (state.resultVersion > 0) scroll.animateScrollToItem(1)
+        // Navigation restores the list offset but not the previous network result set.
+        // A fresh search must expose its query instead of reopening halfway down saved rows.
+        else scroll.scrollToItem(0)
     }
     Scaffold(containerColor = MaterialTheme.colorScheme.surface,
         topBar = { Column(Modifier.statusBarsPadding()) { PageHeader("Найти храм", ::leave) } }) { padding ->
