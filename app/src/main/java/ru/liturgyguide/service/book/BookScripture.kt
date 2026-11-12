@@ -28,15 +28,7 @@ class BookScripture private constructor(
             val texts = ids.map { verses[it] ?: return null }
             return translated(reference, texts)
         }
-        val selected = mutableListOf<String>()
-        for (chapter in range.firstChapter..range.lastChapter) {
-            val inChapter = verses.keys.mapNotNull { Verse.parse(it) }.filter { it.book == range.book && it.chapter == chapter }
-            val start = if (chapter == range.firstChapter) range.firstVerse else 1
-            val end = if (chapter == range.lastChapter) range.lastVerse else inChapter.maxOfOrNull { it.verse } ?: return null
-            if (end < start || end - start > 200) return null
-            for (verse in start..end) selected += verses["${range.book}.$chapter:$verse"] ?: return null
-        }
-        if (selected.isEmpty()) return null
+        val selected = (range.sameChapterIds() ?: return null).map { verses[it] ?: return null }
         return translated(reference, selected)
     }
 
@@ -55,7 +47,7 @@ class BookScripture private constructor(
         if (label.select(".lang-label__title").singleOrNull()?.text()?.let(BookText::clean) != "Синодальный") return this
         val table = header.parent()?.takeIf { it.hasClass("tbl-content") && it.attr("data-book-slug") == range.book }
             ?: return this
-        val required = (range.firstVerse..range.lastVerse).map { "${range.book}.${range.firstChapter}:$it" }
+        val required = range.sameChapterIds() ?: return this
         val elements = table.children().filter {
             it.hasClass("verse") && it.attr("data-lang") == "r" && it.attr("data-verse") in required
         }
@@ -81,8 +73,7 @@ class BookScripture private constructor(
         fun empty() = BookScripture(emptyMap(), emptyMap())
         internal fun directUrl(reference: String): String? {
             val range = Passage.parse(reference) ?: return null
-            if (range.firstChapter != range.lastChapter || range.lastVerse < range.firstVerse ||
-                range.lastVerse - range.firstVerse > 200) return null
+            if (range.sameChapterIds() == null) return null
             return "https://azbyka.ru/biblia/?$reference&c~r"
         }
 
@@ -132,9 +123,35 @@ class BookScripture private constructor(
         }
     }
 
-    private data class Passage(val book: String, val firstChapter: Int, val firstVerse: Int, val lastChapter: Int, val lastVerse: Int) {
+    private data class Passage(val book: String, val firstChapter: Int, val firstVerse: Int, val lastChapter: Int,
+        val lastVerse: Int, val selectedVerses: List<Int>? = null) {
+        fun sameChapterIds(): List<String>? {
+            if (firstChapter != lastChapter) return null
+            val selected = selectedVerses ?: if (lastVerse >= firstVerse && lastVerse - firstVerse <= 200)
+                (firstVerse..lastVerse).toList() else return null
+            return selected.takeIf { it.size in 1..201 }?.map { "$book.$firstChapter:$it" }
+        }
+
         companion object {
             fun parse(value: String): Passage? = runCatching {
+                if (',' in value) {
+                    val match = requireNotNull(Regex("^([1-3]?[A-Za-z]+)\\.(\\d{1,3}):(.+)$").matchEntire(value))
+                    val chapter = match.groupValues[2].toInt()
+                    require(chapter > 0)
+                    val segments = match.groupValues[3].split(',', limit = 202)
+                    require(segments.size in 2..201)
+                    val selected = mutableListOf<Int>()
+                    for (segment in segments) {
+                        val part = requireNotNull(Regex("^(\\d{1,3})(?:-(\\d{1,3}))?$").matchEntire(segment))
+                        val start = part.groupValues[1].toInt()
+                        val end = part.groupValues[2].toIntOrNull() ?: start
+                        // Source order is authoritative: do not sort, merge overlaps or fill gaps.
+                        require(start > (selected.lastOrNull() ?: 0) && end >= start)
+                        require(end - start + 1 <= 201 - selected.size)
+                        selected += start..end
+                    }
+                    return@runCatching Passage(match.groupValues[1], chapter, selected.first(), chapter, selected.last(), selected)
+                }
                 val match = requireNotNull(Regex("^([1-3]?[A-Za-z]+)\\.(\\d{1,3}):(\\d{1,3})(?:-(?:(\\d{1,3}):)?(\\d{1,3}))?$").matchEntire(value))
                 val firstChapter = match.groupValues[2].toInt()
                 val firstVerse = match.groupValues[3].toInt()

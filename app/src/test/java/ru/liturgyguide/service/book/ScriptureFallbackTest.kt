@@ -41,7 +41,7 @@ class ScriptureFallbackTest {
         assertNull("A whole direct passage must not become a bag of reusable spare verses", result.russian("Lk.10:22"))
         assertEquals(expected("2026-11-18"), BookScripture.fromPage(page("daily-2026-11-18.html")).russian("Lk.21:12-19")?.russian)
         assertEquals("https://azbyka.ru/biblia/?Mt.11:27-30&c~r", BookScripture.directUrl("Mt.11:27-30"))
-        for (bad in listOf("Lk.10:1-11:2", "Lk.10:1,3", "Lk.10:1;2", "Lk.10:3-1", "Lk.10:0", "Lk.10:1&x=1", "Lk.10:1-999"))
+        for (bad in listOf("Lk.10:1-11:2", "Lk.10:1;2", "Lk.10:3-1", "Lk.10:0", "Lk.10:1&x=1", "Lk.10:1-999"))
             assertNull(bad, BookScripture.directUrl(bad))
     }
 
