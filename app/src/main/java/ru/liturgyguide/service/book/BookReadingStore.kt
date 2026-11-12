@@ -161,7 +161,12 @@ data class BookSearchHit(val chapterId: String, val chapterTitle: String, val bl
 
 object BookSearch {
     fun find(book: ServiceBook, query: String, preferredMode: BookReadingMode = BookReadingMode.RUSSIAN,
-        checkActive: () -> Unit = {}): List<BookSearchHit> {
+        checkActive: () -> Unit = {}): List<BookSearchHit> =
+        scan(book, query, preferredMode, checkActive).sortedBy { it.first.ordinal }.map { it.second }
+
+    /** Source-order matches retain their quality for one global sort across related books. */
+    internal fun scan(book: ServiceBook, query: String, preferredMode: BookReadingMode,
+        checkActive: () -> Unit): List<Pair<BookTextMatchKind, BookSearchHit>> {
         if (BookText.normalized(query).length < 2) return emptyList()
         val candidates = mutableListOf<Pair<BookTextMatchKind, BookSearchHit>>()
         for (chapter in book.chapters) for (index in chapter.blocks.indices) {
@@ -180,7 +185,7 @@ object BookSearch {
         // A common response can occur more than thirty times. Keep later occurrences
         // accessible, and do not let early unordered words hide a later exact phrase.
         checkActive()
-        return candidates.sortedBy { it.first.ordinal }.map { it.second }
+        return candidates
     }
 
     private fun contextualExcerpt(chapter: BookChapter, index: Int, text: String, matchStart: Int,
