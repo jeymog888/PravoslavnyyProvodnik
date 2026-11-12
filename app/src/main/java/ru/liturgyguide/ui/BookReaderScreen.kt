@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.gestures.stopScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -60,6 +61,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.collectLatest
@@ -88,7 +90,10 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     onChooseVersion: (ServiceBookKey) -> Unit, onSettings: () -> Unit,
     isSaved: Boolean = true, loadWarning: String? = null,
     onRefresh: () -> Unit = {}, refreshing: Boolean = false, onAcceptUpdate: ((BookReadingPosition) -> Boolean)? = null,
-    churchTypeInfo: String? = null) {
+    churchTypeInfo: String? = null, journeyContext: BookJourneyContext? = null,
+    onChoosePart: (ServiceBookKey) -> Boolean = { false },
+    onChooseJourneyVersion: (ServiceBookKey) -> Boolean = { false }) {
+    val journey = journeyContext?.validatedFor(book.key, parishId)
     val initial = remember(book.contentHash, parishId) { readingStore.restore(book, parishId) }
     var mode by rememberSaveable(book.contentHash) { mutableStateOf(initial?.mode ?: BookReadingMode.ORIGINAL) }
     var lastTextMode by rememberSaveable(book.contentHash) {
@@ -105,7 +110,10 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         book.key, book.contentHash, parishId, book.blocks.first().id, book.chapters.first().id,
         anchorKind = BookAnchorKind.HEADER)) }
     var saveError by remember { mutableStateOf(false) }
+    var partSwitchError by remember { mutableStateOf<String?>(null) }
+    var switchingPart by remember { mutableStateOf(false) }
     var superseded by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     var positioning by remember { mutableStateOf(true) }
     val positioningOwner = remember { BookPositioningOwner() }
     var seekRevision by remember { mutableIntStateOf(0) }
@@ -141,7 +149,9 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         val fraction = (-measured.offset.toFloat() / measured.size).coerceIn(0f, 1f)
         return BookViewport(visible.chapter.id, blockId, fraction, kind)
     }
-    fun snapshot() = cursor.snapshot(mode, wordsPerMinute, showAltar).copy(lastTextMode = lastTextMode)
+    // The active route owns occurrence metadata, including explicit null for standalone reading.
+    fun snapshot() = cursor.snapshot(mode, wordsPerMinute, showAltar)
+        .copy(lastTextMode = lastTextMode, journeyContext = journey)
     fun position(): BookReadingPosition {
         if (!positioning) viewport()?.let { cursor.observe(it, mode) }
         return snapshot()
@@ -292,6 +302,37 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         superseded = onAcceptUpdate?.invoke(position()) == true
         if (superseded) sheet = null else saveError = true
     }
+    fun saveAndChangeBook(target: ServiceBookKey, accept: (ServiceBookKey) -> Boolean) {
+        if (journey == null || target == book.key || switchingPart || superseded) return
+        playing = false
+        microphoneFirst = false
+        pendingSearch = null
+        searchLine = null
+        sheet = null
+        switchingPart = true
+        scope.launch {
+            try {
+                // Preserve an in-progress semantic seek, otherwise use the stopped viewport.
+                val pendingPosition = if (positioning) position() else null
+                positioningOwner.job?.cancel()
+                list.stopScroll()
+                val current = pendingPosition ?: position()
+                partSwitchError = when {
+                    !isSaved -> "Текст пока не сохранен. Обновите его в настройках чтения"
+                    !readingStore.save(current) -> "Не удалось сохранить место. Вы остались в этой части"
+                    !accept(target) -> "Не удалось открыть выбранный текст. Попробуйте еще раз"
+                    else -> { superseded = true; null }
+                }
+            } finally { switchingPart = false }
+        }
+    }
+    fun choosePart(target: ServiceBookKey) {
+        if (journey != null && target in journey.parts) saveAndChangeBook(target, onChoosePart)
+    }
+    fun chooseVersion(target: ServiceBookKey) {
+        if (journey == null) { sheet = null; onChooseVersion(target) }
+        else if (journey.replacePart(book.key, target) != null) saveAndChangeBook(target, onChooseJourneyVersion)
+    }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
     // Use this reader's actual space, including split-screen and in-app constraints.
@@ -314,10 +355,12 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                                 Text(currentChapter.title, style = MaterialTheme.typography.titleSmall,
                                     maxLines = if (compactLabels) 1 else 2, overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.testTag("book_chapter"))
-                                if (!compactLabels) Text("Порядок службы", style = MaterialTheme.typography.labelSmall,
+                                if (!compactLabels) Text(if (journey != null)
+                                    "${book.key.worship.title} · ${journey.parts.indexOf(book.key) + 1} из 2" else "Порядок службы",
+                                    style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            Icon(Icons.Default.ExpandMore, if (compactLabels) "Порядок службы" else null)
+                            Icon(Icons.Default.ExpandMore, if (compactLabels || journey != null) "Порядок службы" else null)
                         }
                         if (shortViewport) BookModePicker(mode, ::changeMode, onOpen = { playing = false }, compact = true, iconOnly = true)
                         IconButton(onClick = { playing = false; sheet = "options" }, modifier = Modifier.size(48.dp)) {
@@ -328,6 +371,10 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                     if (saveError) Text("Не удалось сохранить место. Проверьте свободное место на телефоне",
                         color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp).testTag("book_save_error"))
+                    partSwitchError?.let { Text(it,
+                        color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)
+                            .testTag("book_part_switch_error").semantics { liveRegion = LiveRegionMode.Polite }) }
                 }
             }
         },
@@ -371,9 +418,13 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                         verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         if (item.chapter.id == items.first().chapter.id) {
                             Text(book.title, style = MaterialTheme.typography.headlineMedium)
-                            Text(LocalDate.parse(book.key.date).format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru"))) +
+                            Text("Тексты на " + LocalDate.parse(book.key.date).format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru"))) +
                                 if (isSaved) " · Сохранено на телефоне" else " · Пока не сохранено", style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("book_saved"))
+                            journey?.let {
+                                BookJourneyDescription(it, book.key)
+                                BookJourneyParts(it, book.key, ::choosePart, "book_intro_parts", switchingPart)
+                            }
                             loadWarning?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
                             book.selectedEventTitle?.takeIf(String::isNotBlank)?.let {
                                 Text("Праздник и памяти дня: $it", style = MaterialTheme.typography.bodySmall,
@@ -404,6 +455,12 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                     Column(Modifier.fillParentMaxHeight(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                     HorizontalDivider()
                     Text("Конец последования", style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("book_end"))
+                    journey?.parts?.getOrNull(journey.parts.indexOf(book.key) + 1)?.let { next ->
+                        Button(onClick = { choosePart(next) }, enabled = !switchingPart,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_next_part")) {
+                            Text("Перейти к утрене")
+                        }
+                    }
                     TextButton(onClick = { sheet = "sources" }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Источники и состав текста") }
                     }
                 }
@@ -427,9 +484,13 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 seekRevision++
             })
             "order" -> LazyColumn(Modifier.fillMaxWidth().heightIn(max = 560.dp).testTag("book_order_list"),
-                state = rememberLazyListState(initialFirstVisibleItemIndex = book.chapters.indexOfFirst { it.id == currentChapter.id }.coerceAtLeast(0) + 1),
+                state = rememberLazyListState(initialFirstVisibleItemIndex = if (journey != null) 0 else
+                    book.chapters.indexOfFirst { it.id == currentChapter.id }.coerceAtLeast(0) + 1),
                 contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 item { Text("Порядок службы", style = MaterialTheme.typography.headlineSmall) }
+                journey?.let { context -> item {
+                    BookJourneyParts(context, book.key, ::choosePart, "book_journey_parts", switchingPart)
+                } }
                 itemsIndexed(book.chapters, key = { _, chapter -> chapter.id }) { index, chapter ->
                     val isCurrent = chapter.id == currentChapter.id
                     OutlinedButton(onClick = {
@@ -496,10 +557,53 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 if (book.mainEventOptions.size > 1) {
                     item { Text("Вариант дня", style = MaterialTheme.typography.titleMedium) }
                     items(book.mainEventOptions) { option ->
-                        OutlinedButton(onClick = { sheet = null; onChooseVersion(book.key.copy(mainEvent = option.value)) },
+                        OutlinedButton(onClick = { chooseVersion(book.key.copy(mainEvent = option.value)) }, enabled = !switchingPart,
                             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(option.title) }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun BookJourneyDescription(journey: BookJourneyContext, key: ServiceBookKey) {
+    val format = remember { DateTimeFormatter.ofPattern("d MMMM", Locale.forLanguageTag("ru")) }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("По расписанию: ${LocalDate.parse(journey.civilDate).format(format)}, ${journey.time} - начало всей службы",
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.testTag("book_journey_schedule"))
+        Text("Тексты на ${LocalDate.parse(key.date).format(format)}. Вечерняя служба относится к следующему церковному дню",
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.testTag("book_journey_date"))
+    }
+}
+
+@Composable
+private fun BookJourneyParts(journey: BookJourneyContext, activeKey: ServiceBookKey,
+    onChoose: (ServiceBookKey) -> Unit, tag: String, switching: Boolean) {
+    val fontScale = LocalDensity.current.fontScale
+    Column(Modifier.fillMaxWidth().testTag(tag), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("${activeKey.worship.title} · ${journey.parts.indexOf(activeKey) + 1} из 2",
+            style = MaterialTheme.typography.labelLarge)
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val button: @Composable (ServiceBookKey, Modifier) -> Unit = { part, modifier ->
+                val current = part == activeKey
+                OutlinedButton(onClick = { onChoose(part) }, enabled = !switching,
+                    modifier = modifier.heightIn(min = 48.dp)
+                        .testTag((if (tag == "book_journey_parts") "book_part_" else "book_intro_part_") + part.worship.name.lowercase())
+                        .semantics { selected = current; role = Role.Tab },
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor =
+                        if (current) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface)) {
+                    Text(part.worship.title)
+                }
+            }
+            if (fontScale > 1.5f || maxWidth < 280.dp) {
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    journey.parts.forEach { button(it, Modifier.fillMaxWidth()) }
+                }
+            } else Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                journey.parts.forEach { button(it, Modifier.weight(1f)) }
             }
         }
     }

@@ -13,6 +13,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.liturgyguide.model.Parish
 import ru.liturgyguide.model.ServiceBook
@@ -25,9 +26,23 @@ import ru.liturgyguide.service.book.*
 fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: ServiceBooks,
     readingStore: BookReadingStore, textSize: Int, onBack: () -> Unit, onSettings: () -> Unit,
     onOpenUrl: (String) -> Unit, onRequestChanged: (ServiceBookKey) -> Unit = {}, parish: Parish? = null,
+    route: BookRoute? = null, onRouteChanged: (BookRoute) -> Boolean = { false },
     onOpenCommonLiturgy: () -> Unit) {
     val ownParish = parish?.takeIf { it.id == parishId }
-    var requested by remember(initialKey, parishId) { mutableStateOf(initialKey) }
+    val scope = rememberCoroutineScope()
+    // AppNavigation owns managed routes. Direct standalone readers retain their existing API.
+    var standaloneRequest by remember(initialKey, parishId) { mutableStateOf(initialKey) }
+    val ownedRoute = route?.validated()?.takeIf { it.parishId == parishId }
+    val requested = ownedRoute?.activeKey ?: standaloneRequest
+    val journey = ownedRoute?.journeyContext?.validatedFor(requested, parishId)
+    fun changeRequest(key: ServiceBookKey, savedCurrentPart: Boolean): Boolean {
+        if (ownedRoute != null) return ownedRoute.withVariant(key, savedCurrentPart)?.let(onRouteChanged) == true
+        standaloneRequest = key
+        onRequestChanged(key)
+        return true
+    }
+    fun selectPart(key: ServiceBookKey, savedCurrentPart: Boolean): Boolean =
+        ownedRoute?.selectPart(key, savedCurrentPart)?.let(onRouteChanged) == true
     var retry by remember(requested) { mutableIntStateOf(0) }
     var result by remember(requested, parishId) { mutableStateOf<BookLoadResult?>(null) }
     var update by remember(requested, parishId) { mutableStateOf<BookLoadResult.Ready?>(null) }
@@ -35,6 +50,32 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
     var refreshWarning by remember(requested, parishId) { mutableStateOf<String?>(null) }
     var progress by remember(requested) { mutableStateOf(BookLoadProgress.SOURCE) }
     var recovery by remember(requested, parishId) { mutableStateOf<ServiceBook?>(null) }
+    val returnCandidate = ownedRoute?.returnToLastSuccessful()?.takeIf { it.activeKey != requested }
+    var savedReturn by remember(returnCandidate, parishId) { mutableStateOf<BookRoute?>(null) }
+    suspend fun verifiedReturn(candidate: BookRoute): BookRoute? = withContext(Dispatchers.IO) {
+        val position = readingStore.positionFor(candidate.activeKey, parishId) ?: return@withContext null
+        val context = position.journeyContext?.validatedFor(candidate.activeKey, parishId) ?: return@withContext null
+        val expected = candidate.journeyContext ?: return@withContext null
+        // The route names a possible return. Only this publication's saved cursor
+        // and its exact accepted edition prove that it is safe to offer the action.
+        if (context.civilDate != expected.civilDate || context.time != expected.time || context.title != expected.title ||
+            context.parts.zip(expected.parts).any { (saved, pending) ->
+                saved.date != pending.date || saved.worship != pending.worship || saved.churchType != pending.churchType
+            }) return@withContext null
+        val book = books.cachedVersion(candidate.activeKey, position.contentHash) ?: return@withContext null
+        if (book.key != candidate.activeKey || book.contentHash != position.contentHash) return@withContext null
+        candidate.copy(journeyContext = context)
+    }
+    LaunchedEffect(books, returnCandidate, parishId) {
+        savedReturn = null
+        val candidate = returnCandidate ?: return@LaunchedEffect
+        try {
+            val accepted = verifiedReturn(candidate)
+            currentCoroutineContext().ensureActive()
+            savedReturn = accepted
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { /* Do not advertise a return to an unverified saved edition. */ }
+    }
     LaunchedEffect(books, requested, parishId, retry) {
         refreshing = true
         try {
@@ -125,7 +166,10 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
             }
         }
         BookReaderScreen(loaded, parishId, readingStore, textSize, onBack, onOpenUrl,
-            onChooseVersion = { requested = it; onRequestChanged(it) }, onSettings = onSettings,
+            onChooseVersion = { changeRequest(it, savedCurrentPart = false) }, onSettings = onSettings,
+            journeyContext = journey,
+            onChoosePart = { selectPart(it, savedCurrentPart = true) },
+            onChooseJourneyVersion = { changeRequest(it, savedCurrentPart = true) },
             onRefresh = { retry++ }, refreshing = refreshing,
             onAcceptUpdate = acceptUpdate.takeIf { update != null },
             isSaved = (result as? BookLoadResult.Ready)?.saved != false,
@@ -152,13 +196,30 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
                     recovery?.let { saved ->
                         Text("На телефоне есть текст этой службы с прежним вариантом храма", style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.testTag("book_previous_variant_notice"))
-                        OutlinedButton(onClick = { requested = saved.key; onRequestChanged(saved.key) },
+                        OutlinedButton(onClick = { changeRequest(saved.key, savedCurrentPart = false) },
                             modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_open_previous_variant")) {
                             Text("Открыть сохраненный текст")
                         }
                     }
                     if (requested.worship == WorshipKind.LITURGY) OutlinedButton(onClick = onOpenCommonLiturgy,
                         modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Открыть общий порядок литургии") }
+                }
+                journey?.let { BookJourneyDescription(it, requested) }
+                savedReturn?.let { previous ->
+                    OutlinedButton(onClick = {
+                        scope.launch {
+                            try {
+                                // Recheck on action: the accepted cache can disappear after composition.
+                                val accepted = verifiedReturn(previous)
+                                currentCoroutineContext().ensureActive()
+                                if (accepted != null) onRouteChanged(accepted) else savedReturn = null
+                            } catch (cancelled: CancellationException) { throw cancelled }
+                            catch (_: Exception) { savedReturn = null }
+                        }
+                    },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_journey_return")) {
+                        Text(if (previous.activeKey.worship == WorshipKind.VESPERS) "Вернуться к вечерне" else "Вернуться к утрене")
+                    }
                 }
                 TextButton(onClick = onBack, modifier = Modifier.heightIn(min = 48.dp)) { Text("Вернуться к службам") }
             }

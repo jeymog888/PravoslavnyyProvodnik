@@ -2,6 +2,7 @@ package ru.liturgyguide.service.book
 
 import android.content.SharedPreferences
 import com.google.gson.Gson
+import com.google.gson.JsonParser
 import ru.liturgyguide.service.SinglePreferenceCommit
 import ru.liturgyguide.model.ServiceBook
 import ru.liturgyguide.model.ServiceBookKey
@@ -22,7 +23,8 @@ data class BookReadingPosition(
     val showAltar: Boolean = false,
     val anchorKind: BookAnchorKind = BookAnchorKind.BLOCK,
     /** Last actual text language, including when a saved reader is in Meaning. */
-    val lastTextMode: BookReadingMode? = null
+    val lastTextMode: BookReadingMode? = null,
+    val journeyContext: BookJourneyContext? = null
 )
 
 object BookReadingCodec {
@@ -30,14 +32,17 @@ object BookReadingCodec {
     fun decode(json: String?): BookReadingPosition? {
         if (json.isNullOrBlank() || json.length > 8192) return null
         return runCatching {
-            gson.fromJson(json, BookReadingPosition::class.java).takeIf {
+            val value = JsonParser.parseString(json).asJsonObject
+            val journey = value.remove("journeyContext")
+            val position = gson.fromJson(value, BookReadingPosition::class.java).takeIf {
                 it.key.isValid() && it.key.worship != null && it.mode != null && it.anchorKind != null &&
                     it.lastTextMode != BookReadingMode.MEANING &&
                     it.contentHash.matches(Regex("[0-9a-f]{64}")) &&
                     it.blockId.length in 1..180 && it.chapterId.length in 1..180 &&
                     (it.parishId == null || it.parishId.length in 1..160) &&
                     it.fraction.isFinite() && it.fraction in 0f..1f && it.wordsPerMinute in 30..180
-            }
+            } ?: return null
+            position.copy(journeyContext = BookJourneyCodec.decode(journey, position.key, position.parishId))
         }.getOrNull()
     }
     fun encode(position: BookReadingPosition): String = gson.toJson(position).also {

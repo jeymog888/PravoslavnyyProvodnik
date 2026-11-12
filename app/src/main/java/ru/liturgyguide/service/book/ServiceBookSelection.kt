@@ -1,9 +1,11 @@
 package ru.liturgyguide.service.book
 
 import ru.liturgyguide.model.Parish
+import ru.liturgyguide.model.ParishService
 import ru.liturgyguide.model.ServiceBookKey
 import ru.liturgyguide.model.WorshipKind
 import java.time.LocalDate
+import java.time.LocalTime
 
 object ServiceBookSelection {
     // "A memorial service after the liturgy" names the memorial service, not another liturgy.
@@ -12,8 +14,34 @@ object ServiceBookSelection {
         "(?:(?:(?:ранн|поздн|божественн|праздничн|архиерейск)[а-я]*|(?:утренн|вечерн)(?:ей|его|юю|ее|яя|ий|ем))\\s+){0,3}" +
         "(?:литурги[а-я]*|вечерн[а-я]*|утрен[а-я]*|всенощ[а-я]*(?:\\s+бдени[а-я]*)?|бдени[а-я]*)\\b")
 
+    private fun independentTitle(title: String) = timingReference.replace(BookText.normalized(title), " ")
+
+    internal fun isCombinedEvening(title: String): Boolean {
+        val value = independentTitle(title)
+        // Unambiguous service nouns, including the genitive, must name both parts.
+        // "Вечерняя утреня" and "утренние молитвы" only describe one service.
+        return Regex("\\bвечерн(?:я|и|ю|е)\\b").containsMatchIn(value) &&
+            Regex("\\bутрен(?:я|и|ю|е)\\b").containsMatchIn(value) &&
+            listOf("всенощ", "бдение", "литург", "молеб", "панихид", "акафист", "повечер", "полунощ", "исповед", "лити").none { it in value } &&
+            !Regex("\\b(?:час[а-я]*|[1369])\\b").containsMatchIn(value)
+    }
+
+    /** Both schedule entry points resolve the original publication exactly once. */
+    fun resolve(service: ParishService, parish: Parish?): BookRoute? = runCatching {
+        val kind = kindFor(service.title) ?: return null
+        val date = LocalDate.parse(service.date)
+        val eveningMatins = kind == WorshipKind.MATINS &&
+            runCatching { LocalTime.parse(service.time).hour >= 12 }.getOrDefault(false)
+        val key = forCivilDate(date, kind, parish, eveningMatins)
+        val journey = if (parish != null && isCombinedEvening(service.title)) BookJourneyContext(
+            parish.id, service.date, service.time, service.title,
+            listOf(key, forCivilDate(date, WorshipKind.MATINS, parish, eveningMatins = true)))
+            .validatedFor(key, parish.id) else null
+        BookRoute(key, parish?.id, journey).validated()
+    }.getOrNull()
+
     fun kindFor(title: String): WorshipKind? {
-        val value = timingReference.replace(BookText.normalized(title), " ")
+        val value = independentTitle(title)
         return when {
             "всенощ" in value || "бдение" in value -> WorshipKind.VIGIL
             "литург" in value -> WorshipKind.LITURGY

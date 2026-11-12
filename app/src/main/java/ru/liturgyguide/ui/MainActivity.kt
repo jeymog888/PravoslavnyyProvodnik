@@ -29,6 +29,7 @@ import ru.liturgyguide.di.AppContainer
 import ru.liturgyguide.service.*
 import ru.liturgyguide.service.book.*
 import ru.liturgyguide.model.ServiceBookKey
+import ru.liturgyguide.model.ParishService
 import ru.liturgyguide.model.WorshipKind
 import ru.liturgyguide.service.schedule.InternetScheduleState
 import ru.liturgyguide.service.schedule.ScheduleUrl
@@ -77,10 +78,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     val churchStore = remember(preferences) { ChurchDirectoryStore(preferences) }
     val bookStore = remember(context) { BookReadingStore(context.getSharedPreferences("service_book_reading", 0)) }
     var bookRequestJson by rememberSaveable { mutableStateOf<String?>(null) }
-    var bookParishId by rememberSaveable { mutableStateOf<String?>(null) }
-    val bookRequest = remember(bookRequestJson) { runCatching {
-        Gson().fromJson(bookRequestJson, ServiceBookKey::class.java)?.takeIf { it.isValid() }
-    }.getOrNull() }
+    val bookRoute = remember(bookRequestJson) { BookRouteCodec.decode(bookRequestJson) }
+    val bookRequest = bookRoute?.activeKey
     val startStore = remember(preferences) { UserServiceStartStore(preferences) }
     var userStarts by remember { mutableStateOf(startStore.records()) }
     val readingContextStore = remember(preferences) { ReadingContextStore(preferences) }
@@ -254,7 +253,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         else -> Screen.MAIN
     }
     val visibleScreen = when {
-        screen == Screen.BOOK && bookRequest == null -> Screen.MAIN
+        screen == Screen.BOOK && (bookRequest == null || bookRoute?.parishId != church?.id) -> Screen.MAIN
         invalidArrival || (screen == Screen.SERVICE && (invalidRecovery || player.reading == null)) -> Screen.MAIN
         listeningRecovery -> listeningReturn
         else -> screen
@@ -336,14 +335,32 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         if (invalidRecovery) null else (player.reading ?: restoredReading)?.takeIf {
             it.context.parishId == church?.id && it.context.serviceDate == date.toString()
         }
-    fun openBook(key: ServiceBookKey) {
+    fun openBook(key: ServiceBookKey, journeyContext: BookJourneyContext? = null) {
         if (!key.isValid()) return
-        bookRequestJson = Gson().toJson(key)
-        bookParishId = church?.id
+        bookRequestJson = BookRouteCodec.encode(BookRoute(key, church?.id,
+            journeyContext?.validatedFor(key, church?.id)))
         navigate(Screen.BOOK)
     }
     fun openBookOnDate(date: LocalDate, kind: WorshipKind, eveningMatins: Boolean = false) {
         openBook(ServiceBookSelection.forCivilDate(date, kind, church, eveningMatins))
+    }
+    fun openPublishedBook(service: ParishService) {
+        val route = ServiceBookSelection.resolve(service, church)
+        if (route != null) {
+            val expected = route.journeyContext
+            val saved = bookStore.last(route.parishId)?.journeyContext?.takeIf { previous ->
+                expected != null && previous.parishId == expected.parishId && previous.civilDate == expected.civilDate &&
+                    previous.time == expected.time && previous.title == expected.title &&
+                    previous.parts.zip(expected.parts).all { (old, fresh) ->
+                        old.date == fresh.date && old.worship == fresh.worship && old.churchType == fresh.churchType
+                    }
+            }
+            // Reopening this exact publication keeps its accepted per-part variants.
+            // Another occurrence, church or standalone cursor cannot supply its context.
+            bookRequestJson = BookRouteCodec.encode(if (saved != null)
+                route.copy(activeKey = saved.parts.first(), journeyContext = saved) else route)
+            navigate(Screen.BOOK)
+        } else availableTextsDate = service.date
     }
     fun resumeLegacyReading() {
         if (invalidRecovery) return
@@ -579,10 +596,10 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
             Toast.makeText(context, "Не найдено приложение для открытия", Toast.LENGTH_SHORT).show()
         }
     }
-    LaunchedEffect(screen, bookRequestJson) {
+    LaunchedEffect(screen, bookRequestJson, church?.id) {
         // A damaged restored BOOK request displays Home. Normalize its owner too,
         // so Home actions remain usable without weakening stale callback guards.
-        if (screen == Screen.BOOK && bookRequest == null) navigate(Screen.MAIN)
+        if (screen == Screen.BOOK && (bookRequest == null || bookRoute?.parishId != church?.id)) navigate(Screen.MAIN)
     }
     LaunchedEffect(invalidArrival) {
         // Never render a scoped search without its draft: its selection cannot fall through
@@ -631,7 +648,9 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         onOpenBook = { date, kind, evening ->
                             if (screen == Screen.MAIN && churchId == resumeChurchId) openBookOnDate(date, kind, evening)
                         },
-                        onResumeBook = { if (screen == Screen.MAIN && churchId == resumeChurchId) openBook(it.key) },
+                        onResumeBook = { if (screen == Screen.MAIN && churchId == resumeChurchId)
+                            openBook(it.key, it.journeyContext?.validatedFor(it.key, church?.id)) },
+                        onOpenService = { if (screen == Screen.MAIN && churchId == resumeChurchId) openPublishedBook(it) },
                         onRefresh = { scheduleSourceOverride = null; scheduleRefresh++ },
                         onSetScheduleSource = { url ->
                             if (screen == Screen.MAIN && churchId == resumeChurchId) {
@@ -659,13 +678,21 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                             { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
                         }
                     )
-                    Screen.BOOK -> bookRequest?.let { request ->
-                        ServiceBookScreen(request, bookParishId, container.serviceBooks, bookStore, textSize,
+                    Screen.BOOK -> bookRoute?.let { route ->
+                        val request = route.activeKey
+                        ServiceBookScreen(request, route.parishId, container.serviceBooks, bookStore, textSize,
                             parish = church,
+                            route = route,
+                            onRouteChanged = { next ->
+                                if (screen == Screen.BOOK && churchId == resumeChurchId &&
+                                    BookRouteCodec.decode(bookRequestJson) == route) {
+                                    bookRequestJson = BookRouteCodec.encode(next)
+                                    true
+                                } else false
+                            },
                             onBack = { navigate(Screen.MAIN) },
                             onSettings = { settingsOrigin = Screen.BOOK; navigate(Screen.SETTINGS) },
                             onOpenUrl = { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(it))) },
-                            onRequestChanged = { bookRequestJson = Gson().toJson(it) },
                             onOpenCommonLiturgy = { openReadingText(LocalDate.parse(request.date)) })
                     }
                     Screen.MANUAL -> validArrivalDraft?.let { draft ->
@@ -813,10 +840,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                             if (screen == Screen.CHURCH && churchId == resumeChurchId) openBookOnDate(date, kind)
                         },
                         onOpenService = { service ->
-                            val kind = ServiceBookSelection.kindFor(service.title)
-                            if (kind != null) openBookOnDate(LocalDate.parse(service.date), kind,
-                                kind == WorshipKind.MATINS && runCatching { java.time.LocalTime.parse(service.time).hour >= 12 }.getOrDefault(false))
-                            else availableTextsDate = service.date
+                            if (screen == Screen.CHURCH && churchId == resumeChurchId) openPublishedBook(service)
                         },
                         now = now,
                         readingEntryLabel = { "Открыть литургию" },

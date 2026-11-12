@@ -33,7 +33,8 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
     onResumeLegacy: (() -> Unit)?, bottomBar: @Composable () -> Unit,
     userStarts: List<UserServiceStart> = emptyList(), readingNotice: String? = null,
     onOpenScheduleSource: (() -> Unit)? = null, legacyReadingSummary: String? = null,
-    onSetScheduleSource: ((String) -> Unit)? = null) {
+    onSetScheduleSource: ((String) -> Unit)? = null,
+    onOpenService: ((ParishService) -> Unit)? = null) {
     val zone = remember(church?.timezone) {
         runCatching { ZoneId.of(church?.timezone ?: "Europe/Moscow") }.getOrDefault(ZoneId.of("Europe/Moscow"))
     }
@@ -65,6 +66,10 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
     }
 
     fun open(service: ParishService) {
+        if (onOpenService != null && ServiceBookSelection.kindFor(service.title) != null) {
+            onOpenService(service)
+            return
+        }
         val selectedKind = ServiceBookSelection.kindFor(service.title)
         if (selectedKind == null) chooserDateIso = service.date else onOpenBook(LocalDate.parse(service.date), selectedKind,
             selectedKind == WorshipKind.MATINS && runCatching { LocalTime.parse(service.time).hour >= 12 }.getOrDefault(false))
