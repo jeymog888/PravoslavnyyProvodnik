@@ -16,6 +16,10 @@ internal object BookPrayerMetadata {
         "Лик же поет:"
     ).sortedByDescending(String::length)
 
+    // Verified in public Matins and Vespers paragraphs too. This dated-source
+    // boundary must not expand split(), which also reads bilingual table cells.
+    private val datedPublicPrefixes = listOf("И священник возглашает:")
+
     private val prefixes = listOf(
         "Священник, осеняя его крестным знамением, произносит:",
         "Священник возглашает:",
@@ -42,6 +46,9 @@ internal object BookPrayerMetadata {
 
     fun splitLiturgyParagraph(value: String): Parts =
         split(value, liturgyPrefixes).takeIf { it.rubric != null } ?: split(value)
+
+    fun splitDatedPublicParagraph(value: String): Parts =
+        split(value, datedPublicPrefixes).takeIf { it.rubric != null } ?: split(value)
 
     private fun split(value: String, acceptedPrefixes: List<String>): Parts {
         val text = BookText.clean(value)

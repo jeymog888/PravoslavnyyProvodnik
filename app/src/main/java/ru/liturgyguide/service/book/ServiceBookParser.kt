@@ -135,8 +135,12 @@ class ServiceBookParser {
                         add("Текст песнопения этого храма здесь не указан. В этот момент поют тропарь или кондак в честь его святого или праздника",
                             BookBlockKind.LOCAL_VARIATION, altar)
                     } else {
-                        val speech = if (key.worship == WorshipKind.LITURGY && !altar)
-                            BookPrayerMetadata.splitLiturgyParagraph(text) else BookPrayerMetadata.split(text)
+                        val speech = when {
+                            !altar && key.worship == WorshipKind.LITURGY -> BookPrayerMetadata.splitLiturgyParagraph(text)
+                            !altar && (key.worship == WorshipKind.MATINS || key.worship == WorshipKind.VESPERS) ->
+                                BookPrayerMetadata.splitDatedPublicParagraph(text)
+                            else -> BookPrayerMetadata.split(text)
+                        }
                         if (speech.rubric != null) {
                             add(speech.rubric, BookBlockKind.RUBRIC, altar)
                             add(speech.prayer, BookBlockKind.PRAYER, altar)

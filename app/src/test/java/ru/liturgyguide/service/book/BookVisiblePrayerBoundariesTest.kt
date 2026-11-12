@@ -85,9 +85,9 @@ class BookVisiblePrayerBoundariesTest {
         }
     }
 
-    @Test fun newDatedDirectionsDoNotChangeTheOtherServiceParser() {
+    @Test fun anUnreviewedLiturgyDirectionDoesNotChangeTheOtherServiceParser() {
         val document = Jsoup.parse(resource("vespers-2026-11-12.html"))
-        val mixed = "И священник возглашает: Господи, помилуй."
+        val mixed = "Диакон возглашает: Господи, помилуй."
         document.selectFirst(".article-single-content.main-page-content p")!!.text(mixed)
         val book = ServiceBookParser().parse(document, ServiceBookKey("2026-11-12", worship = WorshipKind.VESPERS), 12345)
         assertEquals(1, book.blocks.count { it.original == mixed })
