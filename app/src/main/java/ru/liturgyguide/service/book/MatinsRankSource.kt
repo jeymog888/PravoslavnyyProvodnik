@@ -7,6 +7,7 @@ import ru.liturgyguide.model.BookChapter
 import ru.liturgyguide.model.BookRankSelection
 import ru.liturgyguide.model.ServiceBook
 import ru.liturgyguide.model.ServiceBookKey
+import ru.liturgyguide.model.WorshipKind
 
 /** A verified default selection is required before the source can apply the requested rank. */
 data class ResolvedMatinsRankRequest internal constructor(val key: ServiceBookKey, val mainEvent: String) {
@@ -65,6 +66,10 @@ internal object MatinsRankSource {
         if (book.sourceUrl != ResolvedMatinsRankRequest(book.key, selection.mainEvent).url) return false
         hasRankSections(book.chapters)
     }.getOrDefault(false)
+
+    /** The same body checks also identify a naturally selected polyeleos book without forcing its rank. */
+    fun hasPolyeleosOrder(book: ServiceBook): Boolean =
+        book.key.worship == WorshipKind.MATINS && hasRankSections(book.chapters)
 
     private fun hasRankSections(chapters: List<BookChapter>): Boolean {
         fun section(title: String) = chapters.singleOrNull { BookText.normalized(it.title) == title }

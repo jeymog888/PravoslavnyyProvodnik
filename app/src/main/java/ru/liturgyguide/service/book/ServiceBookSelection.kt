@@ -43,6 +43,18 @@ object ServiceBookSelection {
     internal fun isPolyeleosMatins(title: String): Boolean =
         Regex("\\bполиелейная\\s+утреня\\b").containsMatchIn(independentTitle(title))
 
+    /** An explicit schedule note is an expectation, never a request to raise an arbitrary saint's rank. */
+    internal fun hasPublishedEveningPolyeleos(title: String): Boolean {
+        if (!isUnspecifiedEvening(title)) return false
+        val noun = "полиеле(?:й|я|ю|ем|е)"
+        val dependent = Regex("\\b(?:без|после|перед|до|по окончании|по завершении)\\s+" +
+            "(?:(?:начала|окончания|совершения)\\s+)?$noun\\b")
+        val cancelled = Regex("\\b$noun\\s+(?:не\\s+(?:совершается|будет|предусмотрен)|отмен[а-я]*)\\b")
+        val cancelledBefore = Regex("\\b(?:отмен[а-я]*|не\\s+будет|не\\s+совершается)\\s+$noun\\b")
+        val independent = cancelledBefore.replace(cancelled.replace(dependent.replace(independentTitle(title), " "), " "), " ")
+        return Regex("\\b$noun\\b").containsMatchIn(independent)
+    }
+
     internal fun isCombinedEvening(title: String): Boolean {
         val value = independentTitle(title)
         // Unambiguous service nouns, including the genitive, must name both parts.

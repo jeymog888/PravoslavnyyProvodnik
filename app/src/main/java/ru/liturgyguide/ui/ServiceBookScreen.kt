@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -154,6 +155,8 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
     // Saved BOOK routes can reopen the same text for another church. Language and
     // visibility controls must share the same identity as the persisted reading cursor.
     if (loaded != null) key(loaded.key.canonical(), loaded.contentHash, parishId) {
+        var acknowledgedMismatch by rememberSaveable { mutableStateOf<String?>(null) }
+        val mismatchIdentity = BookServiceFit.polyeleosMismatchIdentity(loaded, journey, parishId)
         // Keep this remembered callback group present even before an update exists.
         // A conditional memoized lambda here remounts the reader when it first appears.
         val acceptUpdate: (BookReadingPosition) -> Boolean = { position ->
@@ -167,7 +170,11 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
                 false
             }
         }
-        BookReaderScreen(loaded, parishId, readingStore, textSize, onBack, onOpenUrl,
+        if (mismatchIdentity != null && acknowledgedMismatch != mismatchIdentity) {
+            BookServiceFitScreen(loaded, requireNotNull(journey), onBack,
+                onChooseVariant = { changeRequest(it, savedCurrentPart = false) },
+                onReadBase = { acknowledgedMismatch = mismatchIdentity })
+        } else BookReaderScreen(loaded, parishId, readingStore, textSize, onBack, onOpenUrl,
             onChooseVersion = { changeRequest(it, savedCurrentPart = false) }, onSettings = onSettings,
             journeyContext = journey,
             onChoosePart = { selectPart(it, savedCurrentPart = true) },
