@@ -1,6 +1,8 @@
 package ru.liturgyguide.service.schedule
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
@@ -52,7 +54,8 @@ internal class OfficialDirectoryResolver(
 
     /** Memo belongs to one refresh only, including failed fetches; a manual retry gets a new one. */
     suspend fun resolve(parish: Parish, excluded: ScheduleSourceExclusions,
-        memo: MutableMap<String, OfficialDirectorySnapshot?>): ScheduleSite? {
+        memo: MutableMap<String, OfficialDirectorySnapshot?>,
+        contactMemo: MutableMap<String, ScheduleSite?> = mutableMapOf()): ScheduleSite? {
         val profile = profiles.singleOrNull { it.serves(parish.city) } ?: return null
         val selected = DirectoryAddress.parse(parish.address, profile)
         val wantedCity = OfficialDirectoryProfile.normalizedLocality(parish.city)
@@ -72,16 +75,29 @@ internal class OfficialDirectoryResolver(
                 !selected.building.sameBuilding(address.building)) return@filter false
             true
         }
-        val entry = possible.singleOrNull() ?: return null
-        val address = DirectoryAddress.parse(entry.address, profile, provenLocalities)
-        if (!address.confirmedCity(wantedCity) || address.building?.sameBuilding(selected.building) != true ||
-            !OpenScheduleSiteResolver.namesMatch(parish.name, entry.title) ||
-            !ScheduleEntityIdentity.compatible(parish.name, entry.title) || !coordinatesAgree(entry.coordinates, parish)) return null
+        possible.singleOrNull()?.let { entry ->
+            val address = DirectoryAddress.parse(entry.address, profile, provenLocalities)
+            if (address.confirmedCity(wantedCity) && address.building?.sameBuilding(selected.building) == true &&
+                OpenScheduleSiteResolver.namesMatch(parish.name, entry.title) &&
+                ScheduleEntityIdentity.compatible(parish.name, entry.title) && coordinatesAgree(entry.coordinates, parish)) {
+                val website = entry.website?.let(ScheduleUrl::publicSource) ?: return null
+                // An excluded strict match does not authorize another identity or extra contact reads.
+                if (excluded.contains(website)) return null
+                return ScheduleSite(website, profile.url, entry.title,
+                    ScheduleEntityIdentity.bind(parish, website, profile.url, entry.title, ScheduleBindingMethod.ARTICLE_SCOPE))
+            }
+        }
+        val entry = ownContactCandidate(parish, profile, snapshot) ?: return null
         val website = entry.website?.let(ScheduleUrl::publicSource) ?: return null
-        // Resolve the building before considering failed URLs; exclusions cannot create uniqueness.
         if (excluded.contains(website)) return null
-        return ScheduleSite(website, profile.url, entry.title,
-            ScheduleEntityIdentity.bind(parish, website, profile.url, entry.title, ScheduleBindingMethod.ARTICLE_SCOPE))
+        val key = listOf(ScheduleEntityIdentity.fingerprint(parish), profile.id, snapshot.sourceSha256,
+            entry.id, ScheduleUrl.normalized(website)).joinToString("\u0000")
+        if (contactMemo.containsKey(key)) return contactMemo[key]?.takeUnless { excluded.contains(it.url) }
+        // The directory load has released its mutex before either own-page request starts.
+        val result = OfficialSiteContactVerifier(transport, clock).verify(parish, profile, snapshot, entry)
+        currentCoroutineContext().ensureActive()
+        contactMemo[key] = result
+        return result?.takeUnless { excluded.contains(it.url) }
     }
 
     private suspend fun load(profile: OfficialDirectoryProfile): OfficialDirectorySnapshot? = withTimeoutOrNull(30_000) {
@@ -181,7 +197,7 @@ internal object OrtOxDirectoryParser {
 }
 
 /** Only an explicit city/address establishes an identity. A district or a nearby city does not. */
-private data class DirectoryAddress(val locality: String?, val completeContext: Boolean,
+internal data class DirectoryAddress(val locality: String?, val completeContext: Boolean,
     val building: PalomnikStreetAddress?) {
     fun confirmedCity(city: String) = completeContext && locality == city
 
@@ -255,4 +271,28 @@ private data class DirectoryAddress(val locality: String?, val completeContext: 
                 normalized.any { it in setOf("россия", "российская федерация", "рф") }
         }
     }
+}
+
+/** Count all complete same-building cards before names, coordinates, websites or exclusions. */
+internal fun ownContactCandidate(parish: Parish, profile: OfficialDirectoryProfile,
+    snapshot: OfficialDirectorySnapshot): OfficialDirectoryEntry? {
+    if (snapshot.profileId != profile.id || snapshot.directoryUrl != profile.url ||
+        snapshot.entries.size !in profile.minimumEntries..OrtOxDirectoryParser.MAX_ENTRIES ||
+        snapshot.entries.map { it.id }.distinct().size != snapshot.entries.size) return null
+    val city = OfficialDirectoryProfile.normalizedLocality(parish.city)
+    val selected = DirectoryAddress.parse(parish.address, profile)
+    val building = selected.building ?: return null
+    if (!selected.confirmedCity(city)) return null
+    val localities = DirectoryAddress.provenLocalities(snapshot.entries, profile)
+    val entry = snapshot.entries.filter {
+        val address = DirectoryAddress.parse(it.address, profile, localities)
+        address.confirmedCity(city) && address.building?.sameBuilding(building) == true
+    }.singleOrNull() ?: return null
+    if (!OfficialContactNames.matches(parish.name, entry.title, city, profile.region, building.street, building) ||
+        !ScheduleEntityIdentity.compatible(parish.name, entry.title)) return null
+    if (entry.coordinates != null) {
+        val pair = OfficialContactProof.coordinatePair(entry.coordinates) ?: return null
+        if (!OfficialContactProof.pointAgrees(pair.first, pair.second, parish)) return null
+    }
+    return entry
 }

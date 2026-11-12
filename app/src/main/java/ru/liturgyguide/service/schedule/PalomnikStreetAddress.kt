@@ -26,6 +26,8 @@ internal data class PalomnikStreetAddress(
         fun parse(value: String): PalomnikStreetAddress? {
             if (value.length !in 3..500) return null
             val normalized = value.lowercase(Locale.ROOT).replace('ё', 'е').replace('\u00a0', ' ').trim()
+                // Only published dotted abbreviations may omit their following space.
+                .replace(Regex("(?<![а-яa-z])(ул|просп|пер|бул|наб|пл)\\.(?=[а-яa-z])"), "$1. ")
             val houseMatch = HOUSE.find(normalized) ?: return null
             val prefix = normalized.substring(0, houseMatch.range.first).trimEnd(' ', ',')
             val streetMarker = STREET.findAll(prefix).singleOrNull() ?: return null

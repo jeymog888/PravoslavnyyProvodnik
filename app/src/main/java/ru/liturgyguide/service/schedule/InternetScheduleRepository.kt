@@ -371,9 +371,13 @@ internal object ScheduleCacheCodec {
         val binding = runCatching {
             val value = root.getAsJsonObject("siteBinding") ?: return@runCatching null
             fun part(key: String) = value.get(key).asString
+            val proof = value.get("officialContactProof")?.let {
+                require(it.isJsonObject)
+                OfficialContactProof.decode(it.asJsonObject)
+            }
             ScheduleSiteBinding(value.get("policyVersion").asInt, part("selectedIdentity"), part("matchedName"),
                 ScheduleEntityScope.valueOf(part("matchedScope")), ScheduleBindingMethod.valueOf(part("method")),
-                part("siteUrl"), part("evidenceUrl"))
+                part("siteUrl"), part("evidenceUrl"), proof)
         }.getOrNull()
         val needsVerification = custom.isBlank() && (evidence.isNotBlank() || pendingFlag || root.get("siteBinding")?.isJsonNull == false) &&
             binding?.validFor(parish, website, evidence) != true

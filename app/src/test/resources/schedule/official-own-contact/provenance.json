@@ -1,0 +1,86 @@
+{
+  "scope": "Existing saved public responses copied byte-for-byte; no network requests. Negative cases mutate independent document copies in tests only.",
+  "sources": [
+    {
+      "file": "nikolsky-home.html",
+      "sourceFile": ".local/release10/official-source-continuation/evidence/nikola-current-root.html",
+      "sourceReceipt": ".local/release10/official-source-continuation/evidence/fetches-fourth.json",
+      "url": "https://nikolskyhram.cerkov.ru/",
+      "finalUrl": "https://nikolskyhram.cerkov.ru/",
+      "capturedAt": "2026-11-12T04:05:29.233180+00:00",
+      "status": 200,
+      "bytes": 122535,
+      "sha256": "80f634df7da398d0da67da1c9c3a30bed613500f8039e40693ed3a7da50b1a26",
+      "transformations": []
+    },
+    {
+      "file": "nikolsky-contact.html",
+      "sourceFile": ".local/release10/official-source-continuation/evidence/nikola-current-contact.html",
+      "sourceReceipt": ".local/release10/official-source-continuation/evidence/fetches-fifth.json",
+      "url": "https://nikolskyhram.cerkov.ru/kontakty/",
+      "finalUrl": "https://nikolskyhram.cerkov.ru/kontakty/",
+      "capturedAt": "2026-11-12T04:06:11.566579+00:00",
+      "status": 200,
+      "bytes": 86092,
+      "sha256": "106fdada50cad402a9cad4302a1df6af39714f46c99918f669309797deefb5c1",
+      "transformations": []
+    },
+    {
+      "file": "nikolsky-schedule.html",
+      "sourceFile": ".local/release10/official-source-continuation/evidence/nikola-current-schedule.html",
+      "sourceReceipt": ".local/release10/official-source-continuation/evidence/fetches-fifth.json",
+      "url": "https://nikolskyhram.cerkov.ru/raspisanie-bogosluzhenij/",
+      "finalUrl": "https://nikolskyhram.cerkov.ru/raspisanie-bogosluzhenij/",
+      "capturedAt": "2026-11-12T04:06:11.566064+00:00",
+      "status": 200,
+      "bytes": 87457,
+      "sha256": "0195b428cd8468cacbb8736b4e61e1bdfd3d8436fcc6ab905d7cb83494f752c0",
+      "transformations": []
+    },
+    {
+      "file": "spassky-home.html",
+      "sourceFile": ".local/release10/second-own-contact/spassky-home.html",
+      "sourceReceipt": ".local/release10/second-own-contact/receipt.json",
+      "url": "https://voronezh-nikolskoe-14.cerkov.ru/",
+      "finalUrl": "https://voronezh-nikolskoe-14.cerkov.ru/",
+      "capturedAt": "2026-11-12T03:26:32.586032+00:00",
+      "status": 200,
+      "bytes": 25070,
+      "sha256": "23aad418189a3b2a322f121a16ea41f5a326bdf11fea21a12cd8bf8be1e93c51",
+      "transformations": []
+    }
+  ],
+  "directory": {
+    "resource": "/schedule/voronezh/official-directory.html",
+    "bytes": 341460,
+    "sha256": "6c7b17b95acd5842e385d79cb35245ab60dfd55f0b268a01f3d24e40a7acedb4",
+    "entries": 233,
+    "status": null,
+    "statusScope": "Original receipt did not record HTTP status; not inferred",
+    "capturedAt": "2026-11-12T02:15:22.424530+00:00",
+    "sourceReceipt": ".local/release10/checkpoint23/source-recheck.json"
+  },
+  "selectedBuildings": [
+    {
+      "id": "osm:way:77503842",
+      "name": "Храм Николая Чудотворца (Воронеж)",
+      "address": "Воронеж, улица Таранченко, 19А",
+      "latitude": 51.6596207,
+      "longitude": 39.2127643,
+      "website": "",
+      "sourceUrl": "https://www.openstreetmap.org/way/77503842",
+      "nameScope": "Published ruWiki title from recovered map-linked identity, not a title invented to satisfy resolver",
+      "sourceReceipt": ".local/release10/schedule-identity-confirmation/EXPLORER.md"
+    },
+    {
+      "id": "osm:way:110564636",
+      "name": "Церковь Спаса Нерукотворного Образа",
+      "address": "Воронеж, улица Фрунзе, 16Б",
+      "latitude": 51.65450065,
+      "longitude": 39.2053557,
+      "website": "",
+      "sourceUrl": "https://www.openstreetmap.org/way/110564636",
+      "sourceReceipt": ".local/release10/second-directory-parish/selected-parish.json"
+    }
+  ]
+}
