@@ -6,6 +6,58 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ScheduleDocumentLinksTest {
+    @Test fun contactPageServicesSubheadingDoesNotPromotePrayerPicturesOrSocialIcons() {
+        val page = Jsoup.parse("""
+            <div id='header'><img src='/rutube.png'></div>
+            <h1>Храм иконы Божией Матери Нечаянная Радость</h1>
+            <div class='entry-content'><h2>Богослужения</h2>
+              <a href='/tropar.png'><img src='/tropar.png' width='260' height='567'></a>
+              <a href='http://parish.example/raspisanie/'>График служб</a></div>
+            <div id='footer'><img src='/youtube1.png'></div>
+        """.trimIndent(), "https://parish.example/o-xrame/")
+        assertEquals(listOf(ScheduleDocumentLink("https://parish.example/raspisanie/",
+            "https://parish.example/o-xrame/", false)), ScheduleDocumentLinks.find(page))
+        val mixed = Jsoup.parse("""
+            <h1>Новости прихода</h1>
+            <article><h2>Расписание богослужений</h2><a href='/files/current.pdf'>Скачать</a></article>
+            <article><h1>Контакты</h1><h2>Богослужения</h2>
+              <a href='/tropar.png'><img src='/tropar.png'></a></article>
+        """.trimIndent(), "https://parish.example/")
+        assertEquals(listOf(ScheduleDocumentLink("https://parish.example/files/current.pdf",
+            "https://parish.example/", true)), ScheduleDocumentLinks.find(mixed))
+    }
+
+    @Test fun oldHttpHtmlAnchorsOnHttpsUpgradeOnlyTheExactValidatedHost() {
+        val source = "https://parish.example:443/contact/"
+        val page = Jsoup.parse("""
+            <h1>Контакты</h1>
+            <a href='http://parish.example/raspisanie/?day=12.11.2026&amp;title=a%26b'>Расписание</a>
+            <a href='https://parish.example/raspisanie/?day=12.11.2026&amp;title=a%26b'>Расписание</a>
+            <a href='http://parish.example:80/schedule/'>Расписание</a>
+            <a href='http://parish.example/schedule.pdf'>Расписание PDF</a>
+            <a href='http://other.example/schedule/'>Расписание</a>
+            <a href='http://www.parish.example/schedule/'>Расписание</a>
+            <a href='http://parish.example.other.org/schedule/'>Расписание</a>
+            <a href='http://parish.example:8080/schedule/'>Расписание</a>
+            <a href='http://parish.example:443/schedule/'>Расписание</a>
+            <a href='https://parish.example:8443/schedule/'>Расписание</a>
+            <a href='http://user@parish.example/schedule/'>Расписание</a>
+            <a href='http://127.0.0.1/schedule/'>Расписание</a>
+            <a href='javascript:alert(1)'>Расписание</a>
+            <a href='data:text/html,schedule'>Расписание</a>
+            <a href='file:///schedule/'>Расписание</a>
+        """.trimIndent(), source)
+        assertEquals(listOf(
+            ScheduleDocumentLink("https://parish.example/raspisanie/?day=12.11.2026&title=a%26b", source, false),
+            ScheduleDocumentLink("https://parish.example/schedule/", source, false),
+            ScheduleDocumentLink("http://parish.example/schedule.pdf", source, true)
+        ), ScheduleDocumentLinks.find(page))
+        // Discovery must not relax the independent network redirect policy.
+        assertTrue(!ScheduleUrl.permittedRedirect(source, "http://parish.example/schedule/"))
+        val boundary = "http://parish.example/".padEnd(2_048, 'a')
+        assertTrue(ScheduleDocumentLinks.find(Jsoup.parse("<a href='$boundary'>Расписание</a>", source)).isEmpty())
+    }
+
     @Test fun realWordPressSharingButtonsDoNotConsumeSchedulePageBudget() {
         val source = "https://nskmonastyr.cerkov.ru/raspisanie-bogosluzhenij/"
         val html = requireNotNull(javaClass.getResource("/schedule/weekly/novosibirsk.html")).readText()
