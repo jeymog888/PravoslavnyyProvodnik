@@ -38,7 +38,9 @@ class BookPrayerBoundariesTest {
             val key = ServiceBookKey(evidence.text("date"), churchType = evidence.text("churchType"))
             assertEquals(evidence.text("sourceUrl"), key.sourceUrl())
             val book = ServiceBookParser().parse(document, key, 12345, index)
-            assertEquals(evidence.get("baselineBlockCount").asInt + 10, book.blocks.size)
+            // The following visible-only boundary group adds twelve more blocks;
+            // BookVisiblePrayerBoundariesTest verifies that group and every unaffected ID.
+            assertEquals(evidence.get("baselineBlockCount").asInt + 10 + 12, book.blocks.size)
             assertEquals(evidence.text("originalTextSha256"), BookText.sha256(book.blocks.joinToString(" ") { it.original }))
             for (case in cases) {
                 val paragraph = document.select(".article-single-content.main-page-content p")
@@ -46,17 +48,21 @@ class BookPrayerBoundariesTest {
                 val leading = requireNotNull(paragraph.children().first())
                 assertTrue(case.text("id"), leading.tagName() in setOf("strong", "em"))
                 assertEquals(case.text("prefix"), BookText.clean(leading.text()))
-                val position = book.blocks.indexOfFirst { it.original == case.text("prayer") }
+                // Later boundaries can expose the same prayer earlier in another chapter.
+                // Identify this original occurrence by its chapter and preceding direction.
+                val chapter = book.chapters.single { it.id == case.text("chapterId") }
+                val position = chapter.blocks.indices.firstOrNull { index -> index > 0 &&
+                    chapter.blocks[index].original == case.text("prayer") &&
+                    chapter.blocks[index - 1].original == case.text("prefix") } ?: -1
                 assertTrue(case.text("id"), position > 0)
-                val prayer = book.blocks[position]
-                val rubric = book.blocks[position - 1]
+                val prayer = chapter.blocks[position]
+                val rubric = chapter.blocks[position - 1]
                 assertEquals(BookBlockKind.PRAYER, prayer.kind)
                 assertEquals(BookBlockKind.RUBRIC, rubric.kind)
                 assertEquals(case.text("prefix"), rubric.original)
                 assertEquals(case.text("bookOriginal"), "${rubric.original} ${prayer.original}")
                 assertEquals(case.get("isAltarText").asBoolean, prayer.isAltarText)
                 assertEquals(prayer.isAltarText, rubric.isAltarText)
-                val chapter = book.chapters.single { prayer in it.blocks }
                 assertEquals(case.text("chapterId"), chapter.id)
                 assertTrue(chapter.blocks.contains(rubric))
                 assertEquals(rubric.original, rubric.russian)

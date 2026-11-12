@@ -19,7 +19,7 @@ class BookPrayerConcordanceTest {
         "<tr><td>${Entities.escape(original)}</td><td>${Entities.escape(russian)}</td></tr>"
     private fun marker(case: JsonObject) = "Тестовый русский текст ${case.text("id")}"
 
-    @Test fun fullSourceOriginalsRecoverAllTwentySixRealBookOccurrencesWithTheirOwnProvenance() {
+    @Test fun fullSourceOriginalsRecoverTheHistoricalOccurrencesAndTwoSeparatedResponsesWithTheirOwnProvenance() {
         val cases = cases("translation-exact-originals")
         assertEquals(22, cases.size)
         var index = BookTranslationIndex.empty()
@@ -28,12 +28,21 @@ class BookPrayerConcordanceTest {
             index = index.plus(BookTranslationIndex.fromParallelPage(document))
         }
         val book = ServiceBookParser().parse(Jsoup.parse(BookFixtures.html()), ServiceBookKey("2026-11-11"), 12345, index)
+        // C10 separates the two previously mixed "Вонмем" directions. Preserve the
+        // historical fixture counts and prove the exact additional occurrences separately.
+        val separatedResponses = setOf(
+            "liturgy-21d28bc25f3d-1:3f9f154728d3fa4a:1",
+            "liturgy-178e5055ac2b-1:3f9f154728d3fa4a:1"
+        )
         var found = 0
         for (case in cases) {
             val (speaker, prayer) = BookText.withoutSpeaker(case.text("bookOriginal"))
             val matching = book.blocks.filter { it.kind == BookBlockKind.PRAYER &&
                 BookText.normalized(it.original) == BookText.normalized(prayer) }
-            assertEquals(case.text("id"), case.get("occurrences").asInt, matching.size)
+            val separated = matching.filter { it.id in separatedResponses }
+            assertEquals(if (case.text("id") == "exact-58") separatedResponses else emptySet<String>(),
+                separated.map { it.id }.toSet())
+            assertEquals(case.text("id"), case.get("occurrences").asInt, matching.size - separated.size)
             // An editorial label is retained as the block's speaker, not silently dropped.
             if (speaker != null) assertTrue(case.text("id"), matching.any { it.speaker == speaker })
             matching.forEach {
@@ -42,7 +51,7 @@ class BookPrayerConcordanceTest {
             }
             found += matching.size
         }
-        assertEquals(26, found)
+        assertEquals(26 + separatedResponses.size, found)
         assertTrue(ServiceBookIntegrity.valid(book))
         val restored = BookTranslationIndex.decode(index.encode())
         cases.forEach { assertEquals(it.text("sourceUrl"), restored.find(it.text("bookOriginal"))?.source?.url) }

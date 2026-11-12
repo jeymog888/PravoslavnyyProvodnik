@@ -4,6 +4,18 @@ package ru.liturgyguide.service.book
 internal object BookPrayerMetadata {
     data class Parts(val rubric: String?, val prayer: String)
 
+    // Dated liturgy paragraphs only. These directions do not authorize stripping either
+    // column of a bilingual source; those two-column boundaries have their own DOM guard.
+    private val liturgyPrefixes = listOf(
+        "И священник возглашает:",
+        "По окончании последнего тропаря, диакон, став впереди священника в Царских вратах, возвышает св. Евангелие и, показывая его народу возглашает громогласно:",
+        "По окончании Трисвятого диакон, подойдя к Царским вратам, возглашает:",
+        "Священник возглашает, благословляя народ:",
+        "Диакон возглашает:",
+        "Священник же, вознося Святой Хлеб, возглашает:",
+        "Лик же поет:"
+    ).sortedByDescending(String::length)
+
     private val prefixes = listOf(
         "Священник, осеняя его крестным знамением, произносит:",
         "Священник возглашает:",
@@ -26,9 +38,14 @@ internal object BookPrayerMetadata {
         "И затем:", "И паки:", "{И снова:}"
     ).sortedByDescending(String::length)
 
-    fun split(value: String): Parts {
+    fun split(value: String): Parts = split(value, prefixes)
+
+    fun splitLiturgyParagraph(value: String): Parts =
+        split(value, liturgyPrefixes).takeIf { it.rubric != null } ?: split(value)
+
+    private fun split(value: String, acceptedPrefixes: List<String>): Parts {
         val text = BookText.clean(value)
-        val prefix = prefixes.firstOrNull { text.startsWith(it, ignoreCase = true) }
+        val prefix = acceptedPrefixes.firstOrNull { text.startsWith(it, ignoreCase = true) }
             ?: return Parts(null, text)
         val prayer = text.substring(prefix.length).trim()
         // A standalone label is not permission to manufacture an empty prayer.

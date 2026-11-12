@@ -88,6 +88,8 @@ class BookTranslationCorpusTest {
 
     @Test fun versionEightWithAllSourceFlagsStillRechecksEverySourceAndKeepsOldPairs() = obsoleteVersionRetries(8)
 
+    @Test fun versionNineWithAllSourceFlagsStillRechecksEverySourceAndKeepsOldPairs() = obsoleteVersionRetries(9)
+
     private fun obsoleteVersionRetries(version: Int) = runBlocking {
         assertTrue(cache.writeTranslationCorpus(BookTranslationCorpus(oldIndex(), allUrls, version = version).encode()))
         val requests = mutableListOf<String>()
@@ -128,6 +130,40 @@ class BookTranslationCorpusTest {
         assertEquals("Сохраненный русский текст", saved.index.find(oldPrayer)?.russian)
         assertEquals("Тестовый полный русский текст.", saved.index.find(original)?.russian)
         assertEquals(BookTranslationIndex.TIMROT_FULL_SOURCE, saved.index.find(original)?.source)
+    }
+
+    @Test fun versionNineRetriesTheMissingPairedSourceWithoutLosingTheOldRussian() = runBlocking {
+        assertTrue(cache.writeTranslationCorpus(BookTranslationCorpus(oldIndex(), allUrls, version = 9).encode()))
+        val requests = mutableListOf<String>()
+        var fullUnavailable = true
+        val repository = ServiceBookRepository(cache, ScheduleTransport { url ->
+            basePage(url)?.let { return@ScheduleTransport response(url, it) }
+            requests += url
+            if (url == BookTranslationIndex.TIMROT_FULL_SOURCE.url) {
+                if (fullUnavailable) error("Full parallel edition unavailable")
+                return@ScheduleTransport response(url, requireNotNull(javaClass.getResourceAsStream("/book/translation-visible-boundaries-full.html"))
+                    .bufferedReader().use { it.readText() })
+            }
+            response(url, page("Молитва источника ${sources.indexOfFirst { it.url == url }}", "Тестовый русский текст"))
+        })
+        val first = repository.load(liturgy) as BookLoadResult.Ready
+        assertEquals(BookSupplementStatus.RETRY_NEEDED, first.book.enrichment.russian)
+        assertEquals(allUrls, requests.toSet())
+        val partial = BookTranslationCorpus.decode(FileBookCache(directory).readTranslationCorpus())
+        assertTrue(partial.current)
+        assertFalse(partial.completeFor(WorshipKind.LITURGY))
+        assertEquals(oldIndex().find(oldPrayer), partial.index.find(oldPrayer))
+        assertNull(partial.index.find("Святая святым."))
+        requests.clear()
+        fullUnavailable = false
+        val next = repository.load(nextLiturgy) as BookLoadResult.Ready
+        assertEquals(listOf(BookTranslationIndex.TIMROT_FULL_SOURCE.url), requests)
+        assertEquals(BookSupplementStatus.AVAILABLE, next.book.enrichment.russian)
+        val complete = BookTranslationCorpus.decode(FileBookCache(directory).readTranslationCorpus())
+        assertTrue(complete.completeFor(WorshipKind.LITURGY))
+        assertEquals(oldIndex().find(oldPrayer), complete.index.find(oldPrayer))
+        assertEquals("Тестовый русский текст full-409-0.", complete.index.find("Святая святым.")?.russian)
+        assertEquals(BookTranslationIndex.TIMROT_FULL_SOURCE, complete.index.find("Святая святым.")?.source)
     }
 
     @Test fun completeCacheAvoidsRequestsButForceRechecksAllSourcesAndReportsPartialFailure() = runBlocking {

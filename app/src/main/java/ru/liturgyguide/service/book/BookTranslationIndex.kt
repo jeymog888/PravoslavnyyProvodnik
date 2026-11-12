@@ -153,12 +153,24 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
             if (source.url == PSALTER_SOURCE.url) return fromPsalterPage(document)
             val result = linkedMapOf<String, BookTranslation>()
             val structuralBodies = linkedMapOf<String, BookTranslation>()
+            val reviewedLiturgyEdition = isReviewedLiturgyEdition(source)
             for (row in document.select("table tr")) {
                 val cells = row.children().filter { it.tagName() == "td" }
                 if (cells.size != 2) continue
                 val original = BookText.clean(cells[0].text())
                 val russian = BookText.clean(cells[1].text())
                 if (original.length < 3 || russian.length < 3 || original == "Церковнославянский") continue
+                if (reviewedLiturgyEdition && (containsReviewedDirection(original) || containsReviewedDirection(russian))) {
+                    // Keep the old whole-cell key. A direction present only on the Russian
+                    // side must not turn a bare original into a falsely shortened pair.
+                    if (containsReviewedDirection(original))
+                        result.putIfAbsent(normal(original), BookTranslation(BookText.withoutSpeaker(russian).second, source))
+                    pairedLeadingDirection(cells[0], cells[1])?.let { (left, right) ->
+                        structuralBodies.putIfAbsent(normal(left), BookTranslation(right, source))
+                    }
+                    // No generic metadata/speaker fallback may bypass the paired DOM check.
+                    continue
+                }
                 val sourceParts = speakerSegments(original)
                 val russianParts = speakerSegments(russian)
                 // Paragraphs occasionally contain several replies. Matching an entire Russian cell
@@ -189,6 +201,50 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
             // earlier on the page. New boundaries should only fill missing concordance entries.
             structuralBodies.forEach { (key, value) -> result.putIfAbsent(key, value) }
             return BookTranslationIndex(result)
+        }
+
+        // Reviewed full rows 409/470 (also short row 371), not generic speaker synonyms.
+        private val leadingDirectionPairs = mapOf(
+            "Священник же, вознося Святый Хлеб, возглашает:" to
+                "Священник же, вознося Святой Хлеб, возглашает:",
+            "Лик же поет:" to "Хор же поет:"
+        )
+        private val leadingDirections = leadingDirectionPairs.keys + leadingDirectionPairs.values
+
+        // The same editorial words can occur in another edition with a different boundary.
+        // Keep this new extraction/guard route within the two pages actually reviewed.
+        private fun isReviewedLiturgyEdition(source: BookSource): Boolean = runCatching {
+            val uri = URI(source.url)
+            uri.scheme.equals("https", ignoreCase = true) && uri.rawUserInfo == null &&
+                uri.host.equals("azbyka.ru", ignoreCase = true) && uri.port in setOf(-1, 443) &&
+                uri.rawPath in setOf(URI(TIMROT_SOURCE.url).rawPath, URI(TIMROT_FULL_SOURCE.url).rawPath)
+        }.getOrDefault(false)
+
+        // A generic speaker/metadata path can expose a direction after earlier labels or
+        // replies. Keep the entire row under this strict boundary guard wherever a reviewed
+        // direction occurs; only pairedLeadingDirection may extract its prayer body.
+        private fun containsReviewedDirection(value: String): Boolean =
+            leadingDirections.any { value.contains(it, ignoreCase = true) }
+
+        /** Both exact directions must lead their cells and leave one complete plain-text body.
+         * A preceding reply, nested paragraph, extra speaker or internal editorial mark is
+         * outside these two verified rows; never erase it to manufacture a shorter pair. */
+        private fun pairedLeadingDirection(left: Element, right: Element): Pair<String, String>? {
+            fun part(cell: Element): Pair<String, String>? {
+                val marker = firstMeaningfulNode(cell) as? Element ?: return null
+                if (marker.tagName() != "span" || marker.classNames() != setOf("k") ||
+                    marker.children().isNotEmpty() || cell.children().size != 1) return null
+                val direction = BookText.clean(marker.text())
+                val tail = cell.childNodes().dropWhile { it !== marker }.drop(1)
+                if (tail.isEmpty() || tail.any { it !is TextNode }) return null
+                val body = BookText.clean(tail.joinToString(" ") { (it as TextNode).text() })
+                if (body.isBlank() || Regex("(?i)${BookText.SPEAKER_LABEL}:\\s*").containsMatchIn(body)) return null
+                return direction to body
+            }
+            val a = part(left) ?: return null
+            val b = part(right) ?: return null
+            if (leadingDirectionPairs[a.first] != b.first) return null
+            return a.second to b.second
         }
 
         /** Some litany rows place the choir's response before a separate petition paragraph.

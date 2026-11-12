@@ -93,7 +93,7 @@ class LiveSharedRussianEnrichmentTest {
             assertEquals(8, corpusRoot.getInt("version"))
             assertEquals(core.map { it.url }.toSet(), stringSet(corpusRoot.getJSONArray("completedSources")))
             report.put("inputCorpusVersion", 8).put("expectedRequestedUrls", JSONArray(expectedUrls))
-                .put("migrationScope", "Corpus8 completion is stale for corpus9; production must fetch core3 plus common3")
+                .put("migrationScope", "Corpus8 completion is stale for the current corpus; production must fetch core3 plus common3")
             val cache = FileBookCache(directory)
             assertTrue(cache.write(before))
             assertTrue(cache.writeTranslationCorpus(corpusJson))
@@ -156,7 +156,7 @@ class LiveSharedRussianEnrichmentTest {
             assertEquals("One attempt per selected source, in the production migration order", expectedUrls, attempts.toList())
             assertEquals(expectedUrls.toSet(), responses.keys.toSet())
             val nextCorpus = JSONObject(requireNotNull(persistedCorpus))
-            assertEquals(9, nextCorpus.getInt("version"))
+            assertEquals(BookTranslationCorpus.VERSION, nextCorpus.getInt("version"))
             assertEquals(expectedUrls.toSet(), stringSet(nextCorpus.getJSONArray("completedSources")))
 
             // Compare all metadata and structure, allowing only missing PRAYER Russian/source fields.
