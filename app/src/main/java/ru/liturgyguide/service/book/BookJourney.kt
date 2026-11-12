@@ -53,11 +53,14 @@ data class BookRoute(
     val activeKey: ServiceBookKey,
     val parishId: String?,
     val journeyContext: BookJourneyContext? = null,
-    val lastSuccessfulKey: ServiceBookKey? = null
+    val lastSuccessfulKey: ServiceBookKey? = null,
+    val pendingSearchTarget: BookLocatedSearchHit? = null
 ) {
     fun validated(): BookRoute? = runCatching {
         if (!activeKey.isValid() || (parishId != null && parishId.length !in 1..160)) return null
         val journey = journeyContext?.validatedFor(activeKey, parishId)
+        if (pendingSearchTarget != null && (pendingSearchTarget.validated() == null ||
+                pendingSearchTarget.bookKey != activeKey || journey == null)) return null
         copy(journeyContext = journey,
             lastSuccessfulKey = lastSuccessfulKey?.takeIf { previous ->
                 previous.isValid() && journey != null && journey.parts.any { part -> samePart(part, previous) }
@@ -68,14 +71,24 @@ data class BookRoute(
         val changed = journeyContext?.replacePart(activeKey, key)
         if (savedCurrentPart && journeyContext != null && changed == null) return null
         return copy(activeKey = key, journeyContext = changed,
-            lastSuccessfulKey = if (savedCurrentPart) activeKey else lastSuccessfulKey).validated()
+            lastSuccessfulKey = if (savedCurrentPart) activeKey else lastSuccessfulKey,
+            pendingSearchTarget = null).validated()
     }
 
     fun selectPart(key: ServiceBookKey, savedCurrentPart: Boolean): BookRoute? {
         val journey = journeyContext?.validatedFor(activeKey, parishId) ?: return null
         if (key !in journey.parts) return null
-        return copy(activeKey = key, lastSuccessfulKey = if (savedCurrentPart) activeKey else lastSuccessfulKey)
+        return copy(activeKey = key, lastSuccessfulKey = if (savedCurrentPart) activeKey else lastSuccessfulKey,
+            pendingSearchTarget = null).validated()
     }
+
+    /** Selection is navigation only; the caller has already committed the current cursor. */
+    fun selectSearchHit(target: BookLocatedSearchHit, savedCurrentPart: Boolean): BookRoute? {
+        if (!savedCurrentPart || target.validated() == null) return null
+        return selectPart(target.bookKey, savedCurrentPart)?.copy(pendingSearchTarget = target)?.validated()
+    }
+
+    fun clearPendingSearch(): BookRoute = copy(pendingSearchTarget = null)
 
     /** Only the recorded accepted key is eligible, never an arbitrary requested variant. */
     fun returnToLastSuccessful(): BookRoute? {
@@ -84,7 +97,7 @@ data class BookRoute(
         val previous = route.lastSuccessfulKey ?: return null
         val pendingPart = journey.parts.singleOrNull { samePart(it, previous) } ?: return null
         val restored = journey.replacePart(pendingPart, previous) ?: return null
-        return route.copy(activeKey = previous, journeyContext = restored)
+        return route.copy(activeKey = previous, journeyContext = restored, pendingSearchTarget = null)
     }
 
     private fun samePart(first: ServiceBookKey, second: ServiceBookKey) =
@@ -114,11 +127,33 @@ object BookRouteCodec {
             val objectValue = JsonParser.parseString(json).asJsonObject
             val journey = objectValue.remove("journeyContext")
             val previous = objectValue.remove("lastSuccessfulKey")
+            val pending = objectValue.remove("pendingSearchTarget")
             val route = gson.fromJson(objectValue, BookRoute::class.java).validated() ?: return null
+            val target = if (pending == null || pending.isJsonNull) null else {
+                if (!validTargetJson(pending)) return null
+                gson.fromJson(pending, BookLocatedSearchHit::class.java)?.validated() ?: return null
+            }
             route.copy(journeyContext = BookJourneyCodec.decode(journey, route.activeKey, route.parishId),
-                lastSuccessfulKey = runCatching { gson.fromJson(previous, ServiceBookKey::class.java) }.getOrNull()).validated()
+                lastSuccessfulKey = runCatching { gson.fromJson(previous, ServiceBookKey::class.java) }.getOrNull(),
+                pendingSearchTarget = target).validated()
         }.getOrNull()
     }
 
     fun encode(route: BookRoute): String = gson.toJson(requireNotNull(route.validated()))
+
+    private fun validTargetJson(element: JsonElement): Boolean = runCatching {
+        val target = element.asJsonObject
+        fun string(value: JsonElement?) = value != null && value.isJsonPrimitive && value.asJsonPrimitive.isString
+        val key = target.getAsJsonObject("bookKey")
+        val hit = target.getAsJsonObject("hit")
+        string(target.get("contentHash")) && listOf("date", "worship", "churchType").all { string(key.get(it)) } &&
+            WorshipKind.entries.any { it.name == key.get("worship").asString } &&
+            listOf("mainEvent", "secondEvent", "topLevel").all { key.get(it).let { value -> value == null || value.isJsonNull || string(value) } } &&
+            listOf("chapterId", "chapterTitle", "blockId", "excerpt", "mode").all { string(hit.get(it)) } &&
+            BookReadingMode.entries.any { it != BookReadingMode.MEANING && it.name == hit.get("mode").asString } &&
+            listOf("matchStart", "matchEndExclusive").all {
+                val number = hit.get(it)
+                number != null && number.isJsonPrimitive && number.asJsonPrimitive.isNumber && number.toString().matches(Regex("0|[1-9][0-9]{0,7}"))
+            }
+    }.getOrDefault(false)
 }

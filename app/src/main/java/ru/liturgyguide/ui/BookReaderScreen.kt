@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -81,7 +82,7 @@ import java.util.Locale
 private data class BookPageItem(val id: String, val chapter: BookChapter, val block: BookBlock?)
 private data class BookSearchLine(val hit: BookSearchHit, val offset: Int)
 private data class BookSearchResult(val bookKey: ServiceBookKey, val bookHash: String, val query: String,
-    val mode: BookReadingMode, val hits: List<BookSearchHit>)
+    val mode: BookReadingMode, val corpus: List<Pair<ServiceBookKey, String>>, val hits: List<BookLocatedSearchHit>)
 private class BookPositioningOwner(var job: Job? = null)
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,26 +94,49 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     onRefresh: () -> Unit = {}, refreshing: Boolean = false, onAcceptUpdate: ((BookReadingPosition) -> Boolean)? = null,
     churchTypeInfo: String? = null, journeyContext: BookJourneyContext? = null,
     onChoosePart: (ServiceBookKey) -> Boolean = { false },
-    onChooseJourneyVersion: (ServiceBookKey) -> Boolean = { false }) {
+    onChooseJourneyVersion: (ServiceBookKey) -> Boolean = { false },
+    searchCorpusLoader: (suspend () -> BookSearchCorpus)? = null,
+    onChooseSearchHit: (BookLocatedSearchHit) -> Boolean = { false },
+    pendingSearchTarget: BookLocatedSearchHit? = null,
+    onPendingSearchHandled: (BookLocatedSearchHit) -> Boolean = { true }) {
     val journey = journeyContext?.validatedFor(book.key, parishId)
     val polyeleosBook = book.key.topLevel == "3" && book.rankSelection?.topLevel == "3"
     val uncheckedPolyeleosJourney = book.key.worship == WorshipKind.MATINS && book.key.topLevel == null &&
         journey?.let { ServiceBookSelection.isPolyeleosMatins(it.title) } == true
     val initial = remember(book.contentHash, parishId) { readingStore.restore(book, parishId) }
-    var mode by rememberSaveable(book.contentHash) { mutableStateOf(initial?.mode ?: BookReadingMode.ORIGINAL) }
-    var lastTextMode by rememberSaveable(book.contentHash) {
-        mutableStateOf(initial?.lastTextMode ?: initial?.mode?.takeUnless { it == BookReadingMode.MEANING } ?: BookReadingMode.ORIGINAL)
+    val initialSearch = remember(book.contentHash, parishId) { pendingSearchTarget?.validatedFor(book) }
+    var targetUnresolved by remember { mutableStateOf(pendingSearchTarget != null) }
+    var targetError by remember { mutableStateOf<String?>(null) }
+    val latestPendingHandled by rememberUpdatedState(onPendingSearchHandled)
+    fun cancelPendingTarget(): Boolean {
+        if (!targetUnresolved) return true
+        if (initialSearch == null || !latestPendingHandled(initialSearch)) {
+            targetError = "Не удалось отменить переход. Попробуйте еще раз"
+            return false
+        }
+        targetUnresolved = false
+        targetError = null
+        return true
     }
-    var pendingSearch by remember { mutableStateOf<BookSearchHit?>(null) }
+    var mode by rememberSaveable(book.contentHash, initialSearch?.identity) { mutableStateOf(initialSearch?.hit?.mode ?: initial?.mode ?: BookReadingMode.ORIGINAL) }
+    var lastTextMode by rememberSaveable(book.contentHash, initialSearch?.identity) {
+        mutableStateOf(initialSearch?.hit?.mode ?: initial?.lastTextMode ?: initial?.mode?.takeUnless { it == BookReadingMode.MEANING } ?: BookReadingMode.ORIGINAL)
+    }
+    var pendingSearch by remember { mutableStateOf(initialSearch?.hit) }
     var searchLine by remember { mutableStateOf<BookSearchLine?>(null) }
     var wordsPerMinute by rememberSaveable(book.contentHash) { mutableIntStateOf(initial?.wordsPerMinute ?: BookAutoScroll.DEFAULT_RATE) }
-    var showAltar by rememberSaveable(book.contentHash) { mutableStateOf(initial?.showAltar ?: false) }
+    var showAltar by rememberSaveable(book.contentHash, initialSearch?.identity) {
+        mutableStateOf(initial?.showAltar == true || initialSearch?.let { target -> book.blocks.singleOrNull { it.id == target.hit.blockId }?.isAltarText } == true)
+    }
     var playing by remember { mutableStateOf(false) }
     var sheet by remember { mutableStateOf<String?>(null) }
     var microphoneFirst by remember { mutableStateOf(false) }
-    val cursor = remember(book.contentHash, parishId) { BookReadingCursor(initial ?: BookReadingPosition(
+    val cursor = remember(book.contentHash, parishId) { BookReadingCursor((initial ?: BookReadingPosition(
         book.key, book.contentHash, parishId, book.blocks.first().id, book.chapters.first().id,
-        anchorKind = BookAnchorKind.HEADER)) }
+        anchorKind = BookAnchorKind.HEADER)).let { saved -> initialSearch?.hit?.let { hit ->
+            saved.copy(chapterId = hit.chapterId, blockId = hit.blockId, fraction = 0f, followingGapFraction = 0f,
+                anchorKind = BookAnchorKind.BLOCK, mode = hit.mode, lastTextMode = hit.mode)
+        } ?: saved }) }
     var saveError by remember { mutableStateOf(false) }
     var partSwitchError by remember { mutableStateOf<String?>(null) }
     var switchingPart by remember { mutableStateOf(false) }
@@ -179,7 +203,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         if (!positioning) viewport()?.let { cursor.observe(it, mode) }
         return snapshot()
     }
-    suspend fun scrollToCursor() {
+    suspend fun scrollToCursor(): Boolean {
         var anchor = cursor.value
         val hiddenAnchor = when (anchor.anchorKind) {
             BookAnchorKind.BLOCK -> items.none { it.block?.id == anchor.blockId }
@@ -219,6 +243,10 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             list.scrollToItem(index, targetOffset)
         }
         val target = pendingSearch?.takeIf { it.mode == mode && it.blockId == anchor.blockId }
+        if (targetUnresolved && target == null) {
+            targetError = "Координаты найденной строки недоступны. Повторите переход или продолжите чтение вручную"
+            return false
+        }
         if (target != null) {
             // First compose this block, then use its real line layout and the text's
             // offset below speaker/translation labels. No character-to-height estimate.
@@ -228,8 +256,10 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             if (line != null && pendingSearch == target) {
                 targetOffset = (line.offset - with(density) { 12.dp.roundToPx() }).coerceIn(0, height - 1)
                 list.scrollToItem(index, targetOffset)
+            } else if (targetUnresolved) {
+                targetError = "Не удалось найти строку в открытом тексте. Повторите переход или продолжите чтение вручную"
+                return false
             }
-            if (pendingSearch == target) pendingSearch = null
         }
         snapshotFlow {
             val measured = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == list.firstVisibleItemIndex }
@@ -238,6 +268,34 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 measured.index == index + 1 && measured.key == nextKey &&
                 kotlin.math.abs(measured.offset - (height + itemSpacingPx - targetOffset)) <= 1)
         }.first { it }
+        if (target != null && pendingSearch == target) {
+            if (targetUnresolved) {
+                val incoming = initialSearch
+                val measured = viewport()
+                if (!isSaved || incoming == null || incoming.validatedFor(book) == null || incoming.hit != target ||
+                    measured == null || measured.chapterId != target.chapterId || measured.blockId != target.blockId ||
+                    measured.kind != BookAnchorKind.BLOCK) {
+                    targetError = "Не удалось проверить найденную строку. Повторите переход или продолжите чтение вручную"
+                    return false
+                }
+                // position() deliberately ignores the viewport while positioning. Commit the
+                // measured line, including its fraction and following gap, before consuming
+                // the serialized request so recreation can never lose an uncommitted jump.
+                cursor.observe(measured, mode)
+                if (!readingStore.save(snapshot())) {
+                    targetError = "Не удалось сохранить найденную строку. Повторите переход или продолжите чтение вручную"
+                    return false
+                }
+                if (!latestPendingHandled(incoming)) {
+                    targetError = "Не удалось завершить переход. Повторите переход или продолжите чтение вручную"
+                    return false
+                }
+                targetUnresolved = false
+                targetError = null
+            }
+            pendingSearch = null
+        }
+        return true
     }
     val positioningRequest = layoutPrefix to seekRevision
     val latestPositioningRequest by rememberUpdatedState(positioningRequest)
@@ -246,7 +304,11 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         positioningOwner.job = work
         positioning = true
         playing = false
-        try { scrollToCursor() } finally {
+        try {
+            val jumped = if (targetUnresolved) withTimeoutOrNull(4_000) { scrollToCursor() } ?: false else scrollToCursor()
+            if (!jumped && targetUnresolved && targetError == null)
+                targetError = "Не удалось найти строку в открытом тексте. Повторите переход или продолжите чтение вручную"
+        } finally {
             if (positioningOwner.job === work) {
                 positioningOwner.job = null
                 // A superseded job cannot declare the new layout ready. A manual drag can
@@ -256,15 +318,15 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         }
     }
     val latestPosition by rememberUpdatedState(newValue = { position() })
-    val canSavePosition by rememberUpdatedState(isSaved)
-    LaunchedEffect(book.contentHash, mode, showAltar, wordsPerMinute, isSaved) {
-        snapshotFlow { if (positioning) null else viewport() }.collectLatest { visible ->
+    val canSavePosition by rememberUpdatedState(isSaved && !targetUnresolved)
+    LaunchedEffect(book.contentHash, mode, showAltar, wordsPerMinute, isSaved, targetUnresolved) {
+        snapshotFlow { if (positioning || targetUnresolved) null else viewport() }.collectLatest { visible ->
             if (visible == null) return@collectLatest
             cursor.observe(visible, mode)
             delay(400)
             // Small cursor writes are serialized on the owner thread. A late IO job cannot
             // overwrite the more recent synchronous lifecycle snapshot.
-            if (!superseded && isSaved) saveError = !readingStore.save(snapshot())
+            if (!superseded && isSaved && !targetUnresolved) saveError = !readingStore.save(snapshot())
         }
     }
     DisposableEffect(lifecycle, book.contentHash, view) {
@@ -285,6 +347,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 if (source == NestedScrollSource.Drag) {
                     playing = false
+                    if (!cancelPendingTarget()) return Offset.Zero
                     pendingSearch = null
                     positioningOwner.job?.cancel()
                 }
@@ -313,6 +376,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     }
     fun changeMode(value: BookReadingMode) {
         if (value == mode) return
+        if (!cancelPendingTarget()) return
         position()
         playing = false
         positioning = true
@@ -322,6 +386,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     }
     fun openSearch(useMicrophone: Boolean) { playing = false; microphoneFirst = useMicrophone; sheet = "search" }
     fun acceptUpdate() {
+        if (!cancelPendingTarget()) return
         playing = false
         // The current text may not exist on disk. Publish only the saved successor's
         // rebased cursor, in one commit, without an intermediate dangling bookmark.
@@ -330,6 +395,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     }
     fun saveAndChangeBook(target: ServiceBookKey, accept: (ServiceBookKey) -> Boolean) {
         if (journey == null || target == book.key || switchingPart || superseded) return
+        if (!cancelPendingTarget()) return
         playing = false
         microphoneFirst = false
         pendingSearch = null
@@ -358,6 +424,42 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     fun chooseVersion(target: ServiceBookKey) {
         if (journey == null) { sheet = null; onChooseVersion(target) }
         else if (journey.replacePart(book.key, target) != null) saveAndChangeBook(target, onChooseJourneyVersion)
+    }
+    fun chooseLocatedHit(located: BookLocatedSearchHit) {
+        if (switchingPart || superseded) return
+        if (located.bookKey == book.key) {
+            val hit = located.validatedFor(book)?.hit ?: return
+            if (!cancelPendingTarget()) return
+            positioning = true
+            cursor.seek(hit.chapterId, hit.blockId)
+            searchLine = null
+            pendingSearch = hit
+            mode = hit.mode
+            lastTextMode = hit.mode
+            if (book.blocks.singleOrNull { it.id == hit.blockId }?.isAltarText == true) showAltar = true
+            sheet = null
+            seekRevision++
+            return
+        }
+        if (journey == null || located.bookKey !in journey.parts || located.validated() == null) return
+        if (!cancelPendingTarget()) return
+        playing = false
+        switchingPart = true
+        partSwitchError = null
+        scope.launch {
+            try {
+                val pendingPosition = if (positioning) position() else null
+                positioningOwner.job?.cancel()
+                list.stopScroll()
+                val current = pendingPosition ?: position()
+                partSwitchError = when {
+                    !isSaved -> "Текст пока не сохранен. Обновите его в настройках чтения"
+                    !readingStore.save(current) -> "Не удалось сохранить место. Вы остались в этой части"
+                    !onChooseSearchHit(located) -> "Не удалось открыть найденный текст. Попробуйте еще раз"
+                    else -> { superseded = true; sheet = null; null }
+                }
+            } finally { switchingPart = false }
+        }
     }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -403,6 +505,18 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                     if (saveError) Text("Не удалось сохранить место. Проверьте свободное место на телефоне",
                         color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp).testTag("book_save_error"))
+                    targetError?.let { message ->
+                        Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).testTag("book_search_jump_error")) {
+                            Text(message, color = MaterialTheme.colorScheme.error)
+                            Row {
+                                TextButton(onClick = { targetError = null; searchLine = null; seekRevision++ },
+                                    modifier = Modifier.testTag("book_search_jump_retry")) { Text("Повторить переход") }
+                                TextButton(onClick = {
+                                    if (cancelPendingTarget()) { pendingSearch = null; positioningOwner.job?.cancel() }
+                                }, modifier = Modifier.testTag("book_search_jump_cancel")) { Text("Читать вручную") }
+                            }
+                        }
+                    }
                     partSwitchError?.let { Text(it,
                         color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)
@@ -421,7 +535,13 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                         BookReaderAction(if (mode == BookReadingMode.MEANING) "К тексту" else if (playing) "Пауза" else "Прокрутка",
                             if (mode == BookReadingMode.MEANING) Icons.Default.Article else if (playing) Icons.Default.Pause else Icons.Default.PlayArrow,
                             if (playing) "Остановить прокрутку" else if (mode == BookReadingMode.MEANING) "Вернуться к тексту" else "Прокручивать текст",
-                            { if (mode == BookReadingMode.MEANING) changeMode(lastTextMode) else playing = !playing },
+                            { if (mode == BookReadingMode.MEANING) changeMode(lastTextMode) else {
+                                val cancellingTarget = targetUnresolved
+                                if (cancelPendingTarget()) {
+                                    if (cancellingTarget) { pendingSearch = null; positioningOwner.job?.cancel() }
+                                    playing = !playing
+                                }
+                            } },
                             Modifier.weight(1f).testTag("book_play"), emphasized = true, iconsOnly = compactLabels)
                         BookReaderAction("Микрофон", Icons.Default.Mic, "Найти по микрофону", { openSearch(true) },
                             Modifier.weight(1f).testTag("book_microphone"), iconsOnly = compactLabels)
@@ -437,7 +557,11 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                     awaitEachGesture {
                         awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
                         playing = false
-                        pendingSearch = null
+                        val cancellingTarget = targetUnresolved
+                        if (cancelPendingTarget()) {
+                            pendingSearch = null
+                            if (cancellingTarget) positioningOwner.job?.cancel()
+                        }
                     }
                 }.testTag("book_content"),
                 state = list, contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 28.dp),
@@ -488,6 +612,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                         }
                     } else BookTextBlock(item.block, mode, textSize,
                         searchHit = pendingSearch?.takeIf { it.blockId == item.block.id && it.mode == mode },
+                        searchRevision = seekRevision,
                         onSearchLine = { line -> if (pendingSearch == line.hit) searchLine = line })
                 }
                 item(key = endKey) {
@@ -513,19 +638,12 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     if (sheet != null) ModalBottomSheet(onDismissRequest = { sheet = null }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         GuideSheetSystemBars()
         when (sheet) {
-            "search" -> BookSearchSheet(book, microphoneFirst, lastTextMode, onSelect = { hit ->
-                positioning = true
-                cursor.seek(hit.chapterId, hit.blockId)
-                searchLine = null
-                pendingSearch = hit
-                mode = hit.mode
-                lastTextMode = hit.mode
-                val hidden = book.blocks.firstOrNull { it.id == hit.blockId }?.isAltarText == true
-                if (hidden) showAltar = true
-                sheet = null
-                seekRevision++
-            }, otherPart = journey?.parts?.singleOrNull { it != book.key }?.worship,
-                onOpenOtherPart = { journey?.parts?.singleOrNull { it != book.key }?.let(::choosePart) })
+            "search" -> BookSearchSheet(book, microphoneFirst, lastTextMode,
+                onSelect = { chooseLocatedHit(BookLocatedSearchHit(book.key, book.contentHash, it)) },
+                otherPart = journey?.parts?.singleOrNull { it != book.key }?.worship,
+                onOpenOtherPart = { journey?.parts?.singleOrNull { it != book.key }?.let(::choosePart) },
+                corpusLoader = searchCorpusLoader, onSelectLocated = ::chooseLocatedHit,
+                selectionError = partSwitchError, selecting = switchingPart)
             "order" -> LazyColumn(Modifier.fillMaxWidth().heightIn(max = 560.dp).testTag("book_order_list"),
                 state = rememberLazyListState(initialFirstVisibleItemIndex = if (journey != null) 0 else
                     book.chapters.indexOfFirst { it.id == currentChapter.id }.coerceAtLeast(0) + 1),
@@ -537,6 +655,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 itemsIndexed(book.chapters, key = { _, chapter -> chapter.id }) { index, chapter ->
                     val isCurrent = chapter.id == currentChapter.id
                     OutlinedButton(onClick = {
+                        if (!cancelPendingTarget()) return@OutlinedButton
+                        pendingSearch = null
                         cursor.seek(chapter.id, chapter.blocks.firstOrNull { showAltar || !it.isAltarText }?.id ?: chapter.blocks.first().id, BookAnchorKind.HEADER)
                         if (mode != BookReadingMode.MEANING && chapter.blocks.all { it.isAltarText }) showAltar = true
                         positioning = true; sheet = null
@@ -561,7 +681,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                     style = MaterialTheme.typography.bodyMedium)
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("Молитвы, читаемые в алтаре", Modifier.weight(1f))
-                    Switch(showAltar, { position(); positioning = true; showAltar = it })
+                    Switch(showAltar, { if (cancelPendingTarget()) { position(); pendingSearch = null; positioning = true; showAltar = it } })
                 }
                 OutlinedButton(onClick = { sheet = null; onSettings() }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Размер текста и тема") }
                 TextButton(onClick = { sheet = "sources" }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Источники и вариант службы") }
@@ -716,10 +836,10 @@ internal fun BookModePicker(mode: BookReadingMode, onSelect: (BookReadingMode) -
 
 @Composable
 private fun BookTextBlock(block: BookBlock, mode: BookReadingMode, textSize: Int,
-    searchHit: BookSearchHit? = null, onSearchLine: (BookSearchLine) -> Unit = {}) {
+    searchHit: BookSearchHit? = null, searchRevision: Int = 0, onSearchLine: (BookSearchLine) -> Unit = {}) {
     var textLayout by remember(block.id, mode) { mutableStateOf<TextLayoutResult?>(null) }
     var textTop by remember(block.id, mode) { mutableStateOf<Float?>(null) }
-    LaunchedEffect(searchHit, textLayout, textTop) {
+    LaunchedEffect(searchHit, textLayout, textTop, searchRevision) {
         val hit = searchHit
         val layout = textLayout
         val top = textTop
@@ -765,7 +885,10 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
     speechFactory: SpeechGuideFactory = { context, changed -> SpeechGuide(context, changed) },
     hasMicrophonePermission: (() -> Boolean)? = null,
     speechQuerySelector: (suspend (ServiceBook, List<String>) -> String)? = null,
-    otherPart: WorshipKind? = null, onOpenOtherPart: () -> Unit = {}) {
+    otherPart: WorshipKind? = null, onOpenOtherPart: () -> Unit = {},
+    corpusLoader: (suspend () -> BookSearchCorpus)? = null,
+    onSelectLocated: (BookLocatedSearchHit) -> Unit = { onSelect(it.hit) },
+    selectionError: String? = null, selecting: Boolean = false) {
     var query by rememberSaveable { mutableStateOf("") }
     var speechState by remember { mutableStateOf(SpeechGuideState()) }
     var permissionMessage by remember { mutableStateOf<String?>(null) }
@@ -774,13 +897,44 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
     var initialRequestMade by remember { mutableStateOf(false) }
     var resolvingSpeech by remember { mutableStateOf(false) }
     var searchResult by remember { mutableStateOf<BookSearchResult?>(null) }
+    var corpus by remember(book.key, book.contentHash) { mutableStateOf(BookSearchCorpus(listOf(book), otherPart)) }
+    var corpusLoading by remember { mutableStateOf(corpusLoader != null) }
+    var manualRevision by remember { mutableLongStateOf(0L) }
+    var voiceRevision by remember { mutableStateOf<Long?>(null) }
     val scope = rememberCoroutineScope()
     val resolver = remember(scope) { BookSpeechQueryResolver(scope, speechQuerySelector) }
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val focus = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
-    val currentBook by rememberUpdatedState(book)
+    val currentCorpus by rememberUpdatedState(corpus)
+    val currentLoader by rememberUpdatedState(corpusLoader)
+    LaunchedEffect(book.key, book.contentHash) {
+        val loader = currentLoader ?: return@LaunchedEffect
+        corpusLoading = true
+        try {
+            val loaded = loader()
+            currentCoroutineContext().ensureActive()
+            // An opening owns its current edition even if an external loader returns stale data.
+            corpus = if (loaded.books.firstOrNull() == book && loaded.books.map { it.key }.distinct().size == loaded.books.size) loaded
+                else BookSearchCorpus(listOf(book), otherPart, "Не удалось проверить другую часть. Поиск выполнен только в открытой книге")
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { corpus = BookSearchCorpus(listOf(book), otherPart, "Не удалось проверить другую часть. Поиск выполнен только в открытой книге") }
+        finally { corpusLoading = false }
+    }
+    fun resolveSpeech(state: SpeechGuideState) {
+        val sources = currentCorpus.books
+        val revision = manualRevision
+        voiceRevision = revision
+        resolvingSpeech = true
+        resolver.resolve(sources, state.alternatives.ifEmpty { listOf(state.transcript) }) { chosen ->
+            if (mounted && speechState === state && manualRevision == revision && voiceRevision == revision &&
+                currentCorpus.books.map { it.key to it.contentHash } == sources.map { it.key to it.contentHash }) {
+                query = chosen
+                resolvingSpeech = false
+            }
+        }
+    }
     val guide = remember(context) { speechFactory(context) { state ->
         resolver.cancel()
         resolvingSpeech = false
@@ -788,16 +942,15 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
         if (state.status == SpeechStatus.RESULT && state.transcript.isNotBlank()) {
             // Show the engine's words immediately. Refining alternatives must never block input.
             query = state.transcript
-            val sourceBook = currentBook
-            resolvingSpeech = true
-            resolver.resolve(sourceBook, state.alternatives.ifEmpty { listOf(state.transcript) }) { chosen ->
-                if (mounted && speechState === state && currentBook.key == sourceBook.key && currentBook.contentHash == sourceBook.contentHash) {
-                    query = chosen
-                    resolvingSpeech = false
-                }
-            }
+            resolveSpeech(state)
         }
     } }
+    LaunchedEffect(corpus.books) {
+        val state = speechState
+        // A late neighbouring book may refine only the still-owned voice request.
+        if (state.status == SpeechStatus.RESULT && voiceRevision == manualRevision && state.transcript.isNotBlank())
+            resolveSpeech(state)
+    }
     val request = remember(guide, lifecycle) { ListeningRequestOwner(
         isCurrent = { mounted }, isForeground = { lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) },
         start = { guide.start(skipSupportCheck = it) }, cancel = { pendingPermission = null; guide.stop() },
@@ -844,18 +997,20 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
     DisposableEffect(book.key, book.contentHash, resolver) { onDispose { resolver.cancel(); resolvingSpeech = false } }
     val searchAllowed = !speechState.isActive && pendingPermission == null && !resolvingSpeech && query.trim().length >= 2
     val requestedQuery = query
-    LaunchedEffect(book.key, book.contentHash, requestedQuery, preferredMode, searchAllowed) {
+    val corpusIdentity = corpus.books.map { it.key to it.contentHash }
+    LaunchedEffect(book.key, book.contentHash, corpusIdentity, requestedQuery, preferredMode, searchAllowed) {
         if (!searchAllowed) return@LaunchedEffect
         // Avoid competing full-book scans while a person is still typing.
         delay(100)
         val found = withContext(Dispatchers.Default) {
             val searchContext = currentCoroutineContext()
-            BookSearch.find(book, requestedQuery, preferredMode) { searchContext.ensureActive() }
+            BookCorpusSearch.find(corpus.books, requestedQuery, preferredMode) { searchContext.ensureActive() }
         }
-        searchResult = BookSearchResult(book.key, book.contentHash, requestedQuery, preferredMode, found)
+        currentCoroutineContext().ensureActive()
+        searchResult = BookSearchResult(book.key, book.contentHash, requestedQuery, preferredMode, corpusIdentity, found)
     }
     val currentResult = searchResult?.takeIf { it.bookKey == book.key && it.bookHash == book.contentHash && it.query == query && it.mode == preferredMode }
-    val searching = resolvingSpeech || (searchAllowed && currentResult == null)
+    val searching = resolvingSpeech || (searchAllowed && currentResult?.corpus != corpusIdentity)
     val hits = if (searchAllowed) currentResult?.hits.orEmpty() else emptyList()
     LazyColumn(Modifier.fillMaxWidth().heightIn(max = 620.dp).imePadding().testTag("book_search_sheet")
         .semantics { stateDescription = if (searching) "Ищу в тексте службы" else "Поиск готов" }, contentPadding = PaddingValues(24.dp),
@@ -866,6 +1021,8 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
             OutlinedTextField(query, {
                 resolver.cancel()
                 resolvingSpeech = false
+                manualRevision++
+                voiceRevision = null
                 query = it.take(300)
             }, label = { Text("Какие слова вы услышали?") },
                 modifier = Modifier.fillMaxWidth().testTag("book_search_query"), singleLine = true,
@@ -877,14 +1034,26 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
                 onFinish = guide::finishListening, onCancel = request::stop,
                 onTryWithoutSupport = { listen(true) })
         }
+        if (corpusLoading) item {
+            Text("Проверяем текст другой части. Совпадения в открытой книге уже доступны",
+                modifier = Modifier.testTag("book_search_corpus_loading"), style = MaterialTheme.typography.bodyMedium)
+        }
+        corpus.error?.let { message -> item {
+            Text(message, modifier = Modifier.testTag("book_search_corpus_error"), color = MaterialTheme.colorScheme.error)
+        } }
+        selectionError?.let { message -> item {
+            Text(message, modifier = Modifier.testTag("book_search_selection_error"), color = MaterialTheme.colorScheme.error)
+        } }
         if (!speechState.isActive && pendingPermission == null) {
             if (searching) item {
                 Text("Ищу в тексте службы", modifier = Modifier.testTag("book_search_progress"),
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (!searching && query.trim().length >= 2 && hits.isEmpty()) item {
-                Text("Совпадений в этой книге нет. Исправьте услышанные слова или попробуйте другую короткую фразу")
-                if (otherPart != null) {
+                Text(if (corpusLoading || corpus.error != null || corpus.books.size == 1)
+                    "Совпадений в открытой книге нет. Исправьте услышанные слова или попробуйте другую короткую фразу"
+                    else "Совпадений в обеих книгах нет. Исправьте услышанные слова или попробуйте другую короткую фразу")
+                if (otherPart != null && corpusLoader == null) {
                     Spacer(Modifier.height(12.dp))
                     OutlinedButton(onClick = onOpenOtherPart, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                         .testTag("book_search_other_part")) {
@@ -897,9 +1066,12 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
                 Text("Найдено мест: ${hits.size}. Сравните соседние фразы", style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            items(hits, key = { it.blockId }) { hit ->
-                OutlinedCard(onClick = { onSelect(hit) }, modifier = Modifier.fillMaxWidth().testTag("book_hit_${hit.blockId}")) {
+            items(hits, key = { it.identity }) { located ->
+                val hit = located.hit
+                val tag = if (located.bookKey == book.key) "book_hit_${hit.blockId}" else "book_cross_hit_${located.identity}"
+                OutlinedCard(onClick = { if (!selecting) onSelectLocated(located) }, modifier = Modifier.fillMaxWidth().testTag(tag)) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(located.bookKey.worship.title, style = MaterialTheme.typography.labelLarge)
                         Text(hit.chapterTitle, style = MaterialTheme.typography.titleMedium)
                         Text(hit.mode.title, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(hit.excerpt, style = MaterialTheme.typography.bodyMedium)

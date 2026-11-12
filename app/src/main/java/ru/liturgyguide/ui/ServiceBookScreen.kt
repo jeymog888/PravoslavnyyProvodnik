@@ -82,6 +82,19 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
     LaunchedEffect(books, requested, parishId, retry) {
         refreshing = true
         try {
+            val target = ownedRoute?.pendingSearchTarget
+            if (target != null) {
+                // Search navigation pins the edition from its session. Neither retry nor
+                // recreation is permission to load a newer text under these coordinates.
+                val exact = withContext(Dispatchers.IO) { books.cachedVersion(requested, target.contentHash) }
+                currentCoroutineContext().ensureActive()
+                result = if (exact != null && target.validatedFor(exact) != null)
+                    BookLoadResult.Ready(exact, fromCache = true, warning = BookWarnings.supplementWarning(exact))
+                else BookLoadResult.Failed(BookFailure.STORAGE,
+                    "Найденная редакция или строка недоступна на телефоне. Вернитесь к прежней книге и повторите поиск")
+                update = null
+                return@LaunchedEffect
+            }
             val pinned = withContext(Dispatchers.IO) {
                 readingStore.positionFor(requested, parishId)?.let { books.cachedVersion(requested, it.contentHash) }
             }
@@ -122,7 +135,7 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
     LaunchedEffect(books, requested, parishId, ownParish, result, refreshing) {
         recovery = null
         val failed = result as? BookLoadResult.Failed
-        if (!refreshing && failed != null && failed.cachedBook == null &&
+        if (ownedRoute?.pendingSearchTarget == null && !refreshing && failed != null && failed.cachedBook == null &&
             failed.reason in setOf(BookFailure.NETWORK, BookFailure.INVALID_SOURCE)) {
             recovery = try {
                 withContext(Dispatchers.IO) {
@@ -138,7 +151,8 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
         else -> null
     }
     LaunchedEffect(books, requested, parishId, loaded?.contentHash, retry, refreshing) {
-        if (loaded == null || refreshing || (result as? BookLoadResult.Ready)?.saved == false) return@LaunchedEffect
+        if (loaded == null || refreshing || ownedRoute?.pendingSearchTarget != null ||
+            (result as? BookLoadResult.Ready)?.saved == false) return@LaunchedEffect
         try {
             val candidate = books.enrichSaved(loaded) ?: return@LaunchedEffect
             currentCoroutineContext().ensureActive()
@@ -179,6 +193,18 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
             journeyContext = journey,
             onChoosePart = { selectPart(it, savedCurrentPart = true) },
             onChooseJourneyVersion = { changeRequest(it, savedCurrentPart = true) },
+            searchCorpusLoader = if (journey != null && ownedRoute != null) {
+                { BookSearchCorpusLoader.load(loaded, journey, parishId, books, readingStore) }
+            } else null,
+            onChooseSearchHit = { target ->
+                ownedRoute?.selectSearchHit(target, savedCurrentPart = true)?.let(onRouteChanged) == true
+            },
+            pendingSearchTarget = ownedRoute?.pendingSearchTarget,
+            onPendingSearchHandled = { target ->
+                // A stale reader cannot consume another navigation request.
+                ownedRoute?.takeIf { it.activeKey == loaded.key && it.pendingSearchTarget == target }
+                    ?.clearPendingSearch()?.let(onRouteChanged) == true
+            },
             onRefresh = { retry++ }, refreshing = refreshing,
             onAcceptUpdate = acceptUpdate.takeIf { update != null },
             isSaved = (result as? BookLoadResult.Ready)?.saved != false,

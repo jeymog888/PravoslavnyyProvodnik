@@ -9,8 +9,18 @@ data class BookLocatedSearchHit(val bookKey: ServiceBookKey, val contentHash: St
         hit.blockId, hit.mode.name, hit.matchStart.toString(), hit.matchEndExclusive.toString())
         .joinToString("") { "${it.length}:$it" })
 
+    /** Bounds for a persisted request, before any book text is available. */
+    fun validated(): BookLocatedSearchHit? = runCatching {
+        takeIf { bookKey.isValid() && contentHash.matches(Regex("[a-f0-9]{64}")) &&
+            hit.chapterId.length in 1..240 && hit.blockId.length in 1..240 &&
+            hit.chapterTitle.length in 1..1000 && hit.excerpt.length in 1..3000 &&
+            hit.mode in setOf(BookReadingMode.ORIGINAL, BookReadingMode.RUSSIAN) &&
+            hit.matchStart in 0..4_000_000 && hit.matchEndExclusive in (hit.matchStart + 1)..4_000_000 }
+    }.getOrNull()
+
     /** Verify the actual source before using its UTF-16 offsets for a reader jump. */
     fun validatedFor(book: ServiceBook): BookLocatedSearchHit? {
+        if (validated() == null) return null
         if (book.key != bookKey || book.contentHash != contentHash) return null
         val chapter = book.chapters.singleOrNull { it.id == hit.chapterId } ?: return null
         if (chapter.title != hit.chapterTitle) return null
