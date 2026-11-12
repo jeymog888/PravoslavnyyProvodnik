@@ -210,7 +210,7 @@ class BookReaderFlowTest {
                 onBack = {}, onSettings = {}, onOpenUrl = {}, onOpenCommonLiturgy = {})
         }
         compose.waitUntil(5_000) { compose.onAllNodesWithTag("book_content").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("Не удалось полностью обновить", substring = true).performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Оригинал службы загружен целиком", substring = true).performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("русский перевод молитв", substring = true).assertExists()
         compose.onNodeWithText("русские чтения Писания", substring = true).assertExists()
         assertTrue(pinnedLookups.get() > 0)
