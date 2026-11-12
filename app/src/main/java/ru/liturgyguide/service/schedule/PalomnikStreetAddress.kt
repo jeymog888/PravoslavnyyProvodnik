@@ -18,7 +18,7 @@ internal data class PalomnikStreetAddress(
         private const val NUMBER = "[0-9]{1,4}(?:/[0-9]{1,4})?(?:\\s*-?\\s*[а-яa-z](?![а-яa-z0-9]))?"
         private val HOUSE = Regex("(?<![а-яa-z0-9/])(?:д(?:ом)?\\.?\\s*)?($NUMBER)((?:[ ,]*(?:корпус|корп\\.?|к\\.?|строение|стр\\.?|с\\.?)\\s*$NUMBER)*)\\s*$")
         private val PART = Regex("[ ,]*(корпус|корп\\.?|к\\.?|строение|стр\\.?|с\\.?)\\s*($NUMBER)")
-        private val STREET = Regex("(?<![а-яa-z])(улица|ул\\.?|проспект|пр-кт|просп\\.?|переулок|пер\\.?|проезд|бульвар|бул\\.?|шоссе|набережная|наб\\.?|площадь|пл\\.?)(?![а-яa-z])\\s+")
+        private val STREET = Regex("(?<![а-яa-z])(улица|ул\\.?|проспект|пр-кт|просп\\.?|переулок|пер\\.?|проезд|бульвар|бул\\.?|шоссе|набережная|наб\\.?|площадь|пл\\.?)(?=\\s|$)")
         private val WORD = Regex("[а-яa-z0-9]+")
         private fun number(value: String) = value.replace(Regex("[\\s-]"), "")
         private fun streetWords(value: String) = WORD.findAll(value).map { it.value }.toList()
@@ -31,7 +31,12 @@ internal data class PalomnikStreetAddress(
             val houseMatch = HOUSE.find(normalized) ?: return null
             val prefix = normalized.substring(0, houseMatch.range.first).trimEnd(' ', ',')
             val streetMarker = STREET.findAll(prefix).singleOrNull() ?: return null
-            val street = prefix.substring(streetMarker.range.last + 1).trim()
+            val after = prefix.substring(streetMarker.range.last + 1).trim()
+            // OSM commonly publishes "Шереметьевская улица", while parish contacts
+            // use "улица Шереметьевская". A suffix must end the street component;
+            // only comma-separated locality components may precede its name.
+            val street = if (after.isNotEmpty()) after else
+                prefix.substring(0, streetMarker.range.first).substringAfterLast(',').trim()
             // Unparsed district/building details must not disappear from the identity comparison.
             if (street.length !in 2..100 || !Regex("[а-яa-z0-9 -]+").matches(street) || WORD.findAll(street).none()) return null
             var corpus: String? = null

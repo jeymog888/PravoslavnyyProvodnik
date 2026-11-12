@@ -6,6 +6,16 @@ import org.junit.Test
 class PalomnikStreetAddressTest {
     private fun address(value: String) = requireNotNull(PalomnikStreetAddress.parse(value))
 
+    @Test fun `street suffix keeps the same full building identity as the parish spelling`() {
+        val selected = address("Шереметьевская улица, 33 с1")
+        assertTrue(selected.sameBuilding(address("г. Москва, ул. Шереметьевская, 33 стр. 1")))
+        assertTrue(selected.sameBuilding(address("Москва, Шереметьевская улица, 33 с1")))
+        assertFalse(selected.sameBuilding(address("Шереметьевская улица, 33")))
+        assertFalse(selected.sameBuilding(address("Шереметьевская улица, 33 с2")))
+        assertFalse(selected.sameBuilding(address("Шереметьевский переулок, 33 с1")))
+        assertNull(PalomnikStreetAddress.parse("Шереметьевская улица, корпус 2, 33 с1"))
+    }
+
     @Test fun `Listi real address retains building identity independently of postal city prefix`() {
         val selected = address("улица Сретенка, 27 с3")
         val source = address("103051, Россия, Москва, ул. Сретенка, 27, стр. 3")
