@@ -1,0 +1,70 @@
+{
+  "checkedOn": "2026-11-12",
+  "notes": "Public response fixtures; any CSRF content replaced with inert test marker; no cookie headers or cookie values retained. Original response hashes are local only.",
+  "requests": [
+    {
+      "file": "bootstrap-public.html",
+      "requestedUrl": "https://sprav.moseparh.ru/monasteries",
+      "finalUrl": "https://sprav.moseparh.ru/monasteries",
+      "status": 200,
+      "bytes": 38031,
+      "sha256": "dfd5c6b31d060305a390147a189a2f5edcdf9fc7c02e59bdc61e3145b20e2e2d",
+      "method": "GET",
+      "fixtureTransformation": "Only CSRF content replaced with inert fixture marker"
+    },
+    {
+      "file": "search-maryina.html",
+      "requestedUrl": "https://sprav.moseparh.ru/monasteries?",
+      "finalUrl": "https://sprav.moseparh.ru/monasteries?",
+      "status": 200,
+      "bytes": 1075,
+      "sha256": "8d2024729f20d568d8685ae4cbe786576eb6a49d1585d109ae2084c847804e5a",
+      "method": "POST"
+    },
+    {
+      "file": "search-listy.html",
+      "requestedUrl": "https://sprav.moseparh.ru/monasteries?",
+      "finalUrl": "https://sprav.moseparh.ru/monasteries?",
+      "status": 200,
+      "bytes": 1023,
+      "sha256": "9d756df40210a47c5b6b640bf45513d344e307eb9408f481a257a675d836f90b",
+      "method": "POST"
+    },
+    {
+      "file": "search-empty.html",
+      "requestedUrl": "https://sprav.moseparh.ru/monasteries?",
+      "finalUrl": "https://sprav.moseparh.ru/monasteries?",
+      "status": 200,
+      "bytes": 423,
+      "sha256": "bdb7cd8675655bf91de0b88ea4100d19eead90899bfc232ffe80a71133115d56",
+      "method": "POST"
+    },
+    {
+      "file": "card-maryina.html",
+      "requestedUrl": "https://sprav.moseparh.ru/org/1032",
+      "finalUrl": "https://sprav.moseparh.ru/org/1032",
+      "status": 200,
+      "bytes": 12475,
+      "sha256": "b6206391f84b079ff81589bae3161a2177b4a9a8a70079ea87de1665b9d1b4cb",
+      "method": "GET"
+    },
+    {
+      "file": "card-listy.html",
+      "requestedUrl": "https://sprav.moseparh.ru/org/406",
+      "finalUrl": "https://sprav.moseparh.ru/org/406",
+      "status": 200,
+      "bytes": 12774,
+      "sha256": "e7003e184ba06a3cf41693e35b80bb9d23631daa24d6eed84157f450feca3078",
+      "method": "GET"
+    },
+    {
+      "file": "card-monastery.html",
+      "requestedUrl": "https://sprav.moseparh.ru/org/924",
+      "finalUrl": "https://sprav.moseparh.ru/org/924",
+      "status": 200,
+      "bytes": 18351,
+      "sha256": "903021adaf7410d1ccccbf8536fcfc5b69f10a427e83e8dbe7f82b939acef0ed",
+      "method": "GET"
+    }
+  ]
+}

@@ -19,6 +19,7 @@ import ru.liturgyguide.service.schedule.ScheduleCacheStore
 import ru.liturgyguide.service.schedule.UrlConnectionScheduleTransport
 import ru.liturgyguide.service.schedule.AndroidScheduleDocumentExtractor
 import ru.liturgyguide.service.schedule.FileOfficialDirectoryCacheStore
+import ru.liturgyguide.service.schedule.productionScheduleSiteResolver
 import ru.liturgyguide.service.book.FileBookCache
 import ru.liturgyguide.service.book.ServiceBookRepository
 import ru.liturgyguide.service.book.ServiceBooks
@@ -36,8 +37,10 @@ class AppContainer(context: Context, private val discoveryOverride: PlaceDiscove
     val historical05Content = Historical05Content(readAsset)
     val historical06Content = Historical06Content(readAsset)
     val internetSchedules: InternetSchedules by lazy {
-        scheduleOverride ?: InternetScheduleRepository(UrlConnectionScheduleTransport(timeoutMillis = 15_000,
-            limitBytes = AndroidScheduleDocumentExtractor.MAX_DOCUMENT_BYTES, allowExplicitHttp = true), object : ScheduleCacheStore {
+        val transport = UrlConnectionScheduleTransport(timeoutMillis = 15_000,
+            limitBytes = AndroidScheduleDocumentExtractor.MAX_DOCUMENT_BYTES, allowExplicitHttp = true)
+        val directories = FileOfficialDirectoryCacheStore(File(appContext.cacheDir, "official-parish-directories"))
+        scheduleOverride ?: InternetScheduleRepository(transport, object : ScheduleCacheStore {
             private val preferences = appContext.getSharedPreferences("internet_schedule_cache", Context.MODE_PRIVATE)
             override fun read(parishId: String): String? = runCatching { preferences.getString(parishId, null) }.getOrNull()
             override fun write(parishId: String, value: String) {
@@ -47,7 +50,7 @@ class AppContainer(context: Context, private val discoveryOverride: PlaceDiscove
                 edit.apply()
             }
         }, AndroidScheduleDocumentExtractor(appContext),
-            directoryCache = FileOfficialDirectoryCacheStore(File(appContext.cacheDir, "official-parish-directories")))
+            siteResolver = productionScheduleSiteResolver(transport, directories))
     }
     val serviceBooks: ServiceBooks by lazy {
         // Only the small reviewed translation catalog supplements published exact pairs.

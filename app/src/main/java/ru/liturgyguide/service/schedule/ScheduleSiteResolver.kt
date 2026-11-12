@@ -20,26 +20,30 @@ fun interface ScheduleSiteResolver {
 
 /** Exact OSM identity first, then an identified encyclopedia entity, never the first search hit. */
 class OpenScheduleSiteResolver(private val transport: ScheduleTransport,
-    directoryCache: OfficialDirectoryCacheStore = MemoryOfficialDirectoryCacheStore()) : ScheduleSiteResolver {
+    directoryCache: OfficialDirectoryCacheStore = MemoryOfficialDirectoryCacheStore(),
+    moscowSearch: MoscowDirectorySearchTransport? = null) : ScheduleSiteResolver {
     private val directories = OfficialDirectoryResolver(transport, directoryCache)
+    private val moscow = moscowSearch?.let { MoscowOfficialDirectoryResolver(transport, it) }
     override suspend fun resolve(parish: Parish): ScheduleSite? = resolve(parish, emptySet())
 
     override suspend fun resolve(parish: Parish, excludedUrls: Set<String>): ScheduleSite? =
-        resolveInSession(parish, excludedUrls, mutableMapOf(), mutableMapOf())
+        resolveInSession(parish, excludedUrls, mutableMapOf(), mutableMapOf(), mutableMapOf())
 
     override fun forRefresh(): ScheduleSiteResolver {
         val directoryMemo = mutableMapOf<String, OfficialDirectorySnapshot?>()
         val contactMemo = mutableMapOf<String, ScheduleSite?>()
+        val moscowMemo = mutableMapOf<String, ScheduleSite?>()
         return object : ScheduleSiteResolver {
             override suspend fun resolve(parish: Parish): ScheduleSite? = resolve(parish, emptySet())
             override suspend fun resolve(parish: Parish, excludedUrls: Set<String>): ScheduleSite? =
-                resolveInSession(parish, excludedUrls, directoryMemo, contactMemo)
+                resolveInSession(parish, excludedUrls, directoryMemo, contactMemo, moscowMemo)
         }
     }
 
     private suspend fun resolveInSession(parish: Parish, excludedUrls: Set<String>,
         directoryMemo: MutableMap<String, OfficialDirectorySnapshot?>,
-        contactMemo: MutableMap<String, ScheduleSite?>): ScheduleSite? {
+        contactMemo: MutableMap<String, ScheduleSite?>,
+        moscowMemo: MutableMap<String, ScheduleSite?>): ScheduleSite? {
         val excluded = ScheduleSourceExclusions(excludedUrls)
         ScheduleUrl.publicSource(parish.website)?.takeUnless(excluded::contains)?.let { return ScheduleSite(it, parish.sourceUrl, parish.name) }
         var tags: JsonObject? = null
@@ -70,6 +74,7 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport,
             pages(json(api)).firstNotNullOfOrNull { it.getAsJsonObject("pageprops")?.string("wikibase_item") }
                 ?.let { id -> fromWikidata(parish, id, title, excluded, ScheduleBindingMethod.EXACT_MAP_LINK)?.let { return it } }
         }
+        moscow?.resolve(parish, excluded, moscowMemo)?.let { return it }
         PalomnikScheduleSiteResolver(transport).resolve(parish, excludedUrls)?.let { return it }
         directories.resolve(parish, excluded, directoryMemo, contactMemo)?.let { return it }
         val latitude = parish.latitude ?: return null
