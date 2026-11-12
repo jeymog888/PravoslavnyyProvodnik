@@ -118,6 +118,32 @@ class LocalChurchCatalogTest {
         assertEquals(listOf("osm:way:1"), found.items.map { it.id })
     }
 
+    @Test fun shortNounCasesFindTheRealMaryinaNameWithoutAliasesOrDroppingLocationWords() = runBlocking {
+        val network = Network()
+        // Exact name, ID, empty city/aliases and address from the bundled OSM record.
+        val maryina = record("osm:way:207742244",
+            name = "Храм Иконы Божией Матери Нечаянная Радость в Марьиной Роще", city = "",
+            aliases = emptyList(), website = null).apply { this["address"] = "Шереметьевская улица, 33 с1" }
+        val client = CatalogPlaceDiscovery(source(body(maryina,
+            record("osm:way:2", name = "Храм Нечаянная Радость в Марьиной Слободе", city = "Москва"),
+            record("osm:way:3", name = "Храм Нечаянная Радость в Марьиной Рощице", city = ""),
+            record("osm:way:4", name = "Храм Николая на Красной Горе", city = ""))), network)
+        val query = "Нечаянная Радость Марьина Роща"
+        val found = client.searchPlaces(query).success()
+        assertEquals(DiscoveryProvider.LOCAL_CATALOG, found.provider)
+        assertEquals(listOf("osm:way:207742244"), found.items.map { it.id })
+        assertEquals("", found.items.single().city)
+        assertEquals("Шереметьевская улица, 33 с1", found.items.single().address)
+        assertEquals(listOf("osm:way:4"), client.searchPlaces("Николая Красная Гора").success().items.map { it.id })
+        assertEquals(listOf("osm:way:207742244"), client.searchPlaces("$query 33 с1").success().items.map { it.id })
+        assertTrue(network.names.isEmpty())
+        // Whole-word case forms only: no three-letter prefix, other noun, missing city evidence or wrong address number.
+        val unmatched = listOf("Нечаянная Радость Марьина Рощ", "Нечаянная Радость Марьина Роза",
+            "Николая Красная Горка", "$query Москва", "$query 34", "$query 33 с2", "$query неизвестное")
+        unmatched.forEach { assertEquals(it, DiscoveryResult.Failure(DiscoveryFailure.UNAVAILABLE), client.searchPlaces(it)) }
+        assertEquals(unmatched, network.names)
+    }
+
     @Test fun inflectedCityNamesCannotBeSuppliedByTheDedicationOfAChurchElsewhereOrWithUnknownCity() = runBlocking {
         val network = Network()
         val client = CatalogPlaceDiscovery(source(body(record(city = "Москва"),

@@ -289,7 +289,10 @@ internal class LocalChurchCatalog private constructor(val fetchedAt: Long, entri
 private object CatalogWords {
     private val wordPattern = Regex("[\\p{L}\\p{N}]+")
     private val cyrillicWord = Regex("[а-я]+")
-    data class Token(val value: String) { val stem = CatalogWords.stem(value) }
+    data class Token(val value: String) {
+        val stem = CatalogWords.stem(value)
+        val shortNounCases = CatalogWords.shortNounCases(value)
+    }
     val cityMarkers = setOf("г", "город", "города", "городе")
     val generic = setOf("храм", "храма", "церковь", "церкви", "собор", "собора", "монастырь", "монастыря", "часовня", "часовни",
         "найти", "рядом", "около", "возле", "в", "во", "на", "у", "и", "с", "со") + cityMarkers
@@ -297,7 +300,16 @@ private object CatalogWords {
     fun words(value: String): List<String> = wordPattern.findAll(value.lowercase(Locale.ROOT).replace('ё', 'е'))
         .map { it.value }.toList()
     fun matches(query: Token, words: Set<String>, stems: Set<String>): Boolean = query.value in words ||
-        query.value.length >= 4 && (query.stem in stems || words.any { it.startsWith(query.value) })
+        query.value.length >= 4 && (query.stem in stems || words.any { it.startsWith(query.value) } ||
+            query.shortNounCases.any { it in words } || query.value.length == 4 && cyrillicWord.matches(query.value) &&
+            words.any { query.value in shortNounCases(it) })
+    /** Роща/роще, гора/горе: exact noun case forms, not a new three-letter prefix search.
+     * Keep the global stem length and the independent published-city constraints unchanged. */
+    private fun shortNounCases(value: String): Set<String> {
+        if (value.length != 4 || !cyrillicWord.matches(value)) return emptySet()
+        val endings = when (value.last()) { 'а' -> "аыиеу"; 'я' -> "яиею"; else -> return emptySet() }
+        return endings.map { value.dropLast(1) + it }.toSet()
+    }
     fun adjectiveCity(value: String) = listOf("ое", "ее", "ий", "ый", "ой", "ая", "яя").any(value::endsWith)
     /** Conservative whole-word cases, never a shared root across different adjective genders. */
     fun cityForms(value: String): Set<String> {
