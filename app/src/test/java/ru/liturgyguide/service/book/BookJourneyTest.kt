@@ -16,7 +16,7 @@ import java.time.LocalDate
 class BookJourneyTest {
     private val parish = Parish("temple", "Храм святителя Николая", "Никольский", "Москва", "", "", "",
         "Europe/Moscow", "", "", "", "", emptyList(), "", "")
-    private val title = "Вечерня. Полиелейная утреня"
+    private val title = "Вечерня. Утреня"
     private val vespers = ServiceBookKey("2026-11-13", WorshipKind.VESPERS, "34")
     private val matins = vespers.copy(worship = WorshipKind.MATINS)
     private val journey = BookJourneyContext(parish.id, "2026-11-12", "17:00", title, listOf(vespers, matins))
@@ -25,7 +25,7 @@ class BookJourneyTest {
         lastTextMode = BookReadingMode.RUSSIAN, journeyContext = journey)
 
     @Test fun explicitEveningNamesCreateExactlyTwoOrderedBooksOnOneNextDate() {
-        for (name in listOf(title, "Вечерня и утреня", "ВЕЧЕРНЯ, ПОЛИЕЛЕЙНАЯ УТРЕНЯ", "Вечерня; утреня")) {
+        for (name in listOf(title, "Вечерня и утреня", "ВЕЧЕРНЯ, УТРЕНЯ", "Вечерня; утреня")) {
             val route = requireNotNull(resolve(name))
             assertEquals(name, vespers, route.activeKey)
             assertEquals(listOf(vespers, matins), route.journeyContext?.parts)

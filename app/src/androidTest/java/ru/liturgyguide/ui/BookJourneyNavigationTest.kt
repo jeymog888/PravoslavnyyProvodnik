@@ -69,7 +69,7 @@ class BookJourneyNavigationTest {
     private val instant = Instant.parse("2026-11-12T13:00:00Z") // 16:00 in the selected parish, before the 17:00 service.
     private val clock = Clock.fixed(instant, ZoneOffset.UTC)
     private val parishId = "osm:way:424243"
-    private val serviceTitle = "Вечерня. Полиелейная утреня"
+    private val serviceTitle = "Вечерня. Утреня"
     private val vespers = ServiceBookKey("2026-11-13", WorshipKind.VESPERS, "34")
     private val matins = vespers.copy(worship = WorshipKind.MATINS)
     private val journey = BookJourneyContext(parishId, "2026-11-12", "17:00", serviceTitle, listOf(vespers, matins))

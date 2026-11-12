@@ -25,6 +25,8 @@ data class BookJourneyContext(
             ServiceBookSelection.isCombinedEvening(title) && parts.size == 2 &&
             parts.map { it.worship } == listOf(WorshipKind.VESPERS, WorshipKind.MATINS) &&
             parts.all { it.isValid() && it.date == date.plusDays(1).toString() } &&
+            // Old daily journeys keep their accepted keys even when the publication named polyeleos.
+            (parts[1].topLevel == null || ServiceBookSelection.isPolyeleosMatins(title)) &&
             parts[0].churchType == parts[1].churchType && key in parts
         takeIf { valid }
     }.getOrNull()
@@ -32,7 +34,8 @@ data class BookJourneyContext(
     /** A variant belongs only to the current source; event IDs never cross into its neighbour. */
     fun replacePart(previous: ServiceBookKey, next: ServiceBookKey): BookJourneyContext? {
         if (validatedFor(previous, parishId) == null || !next.isValid() ||
-            previous.date != next.date || previous.worship != next.worship || previous.churchType != next.churchType) return null
+            previous.date != next.date || previous.worship != next.worship || previous.churchType != next.churchType ||
+            previous.topLevel != next.topLevel) return null
         return copy(parts = parts.map { if (it == previous) next else it }).validatedFor(next, parishId)
     }
 }
@@ -77,7 +80,8 @@ data class BookRoute(
     }
 
     private fun samePart(first: ServiceBookKey, second: ServiceBookKey) =
-        first.date == second.date && first.worship == second.worship && first.churchType == second.churchType
+        first.date == second.date && first.worship == second.worship && first.churchType == second.churchType &&
+            first.topLevel == second.topLevel
 }
 
 internal object BookJourneyCodec {

@@ -11,10 +11,15 @@ object ServiceBookSelection {
     // "A memorial service after the liturgy" names the memorial service, not another liturgy.
     // Remove only dependent timing references; a separately named service remains eligible.
     private val timingReference = Regex("\\b(?:после(?: окончания| завершения)?|по окончании|по завершении|перед|до)\\s+" +
-        "(?:(?:(?:ранн|поздн|божественн|праздничн|архиерейск)[а-я]*|(?:утренн|вечерн)(?:ей|его|юю|ее|яя|ий|ем))\\s+){0,3}" +
+        "(?:(?:(?:ранн|поздн|божественн|праздничн|архиерейск|полиелейн)[а-я]*|(?:утренн|вечерн)(?:ей|его|юю|ее|яя|ий|ем))\\s+){0,3}" +
         "(?:литурги[а-я]*|вечерн[а-я]*|утрен[а-я]*|всенощ[а-я]*(?:\\s+бдени[а-я]*)?|бдени[а-я]*)\\b")
 
     private fun independentTitle(title: String) = timingReference.replace(BookText.normalized(title), " ")
+
+    // A reference such as "after polyeleos matins" does not name the service being opened.
+    // Keep the first supported form narrow; do not infer the rank from the word "polyeleos" alone.
+    internal fun isPolyeleosMatins(title: String): Boolean =
+        Regex("\\bполиелейная\\s+утреня\\b").containsMatchIn(independentTitle(title))
 
     internal fun isCombinedEvening(title: String): Boolean {
         val value = independentTitle(title)
@@ -32,10 +37,12 @@ object ServiceBookSelection {
         val date = LocalDate.parse(service.date)
         val eveningMatins = kind == WorshipKind.MATINS &&
             runCatching { LocalTime.parse(service.time).hour >= 12 }.getOrDefault(false)
+        val matinsRank = if (isPolyeleosMatins(service.title)) "3" else null
         val key = forCivilDate(date, kind, parish, eveningMatins)
+            .let { if (kind == WorshipKind.MATINS) it.copy(topLevel = matinsRank) else it }
         val journey = if (parish != null && isCombinedEvening(service.title)) BookJourneyContext(
             parish.id, service.date, service.time, service.title,
-            listOf(key, forCivilDate(date, WorshipKind.MATINS, parish, eveningMatins = true)))
+            listOf(key, forCivilDate(date, WorshipKind.MATINS, parish, eveningMatins = true).copy(topLevel = matinsRank)))
             .validatedFor(key, parish.id) else null
         BookRoute(key, parish?.id, journey).validated()
     }.getOrNull()

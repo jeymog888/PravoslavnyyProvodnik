@@ -60,7 +60,8 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
         // and its exact accepted edition prove that it is safe to offer the action.
         if (context.civilDate != expected.civilDate || context.time != expected.time || context.title != expected.title ||
             context.parts.zip(expected.parts).any { (saved, pending) ->
-                saved.date != pending.date || saved.worship != pending.worship || saved.churchType != pending.churchType
+                saved.date != pending.date || saved.worship != pending.worship || saved.churchType != pending.churchType ||
+                    saved.topLevel != pending.topLevel
             }) return@withContext null
         val book = books.cachedVersion(candidate.activeKey, position.contentHash) ?: return@withContext null
         if (book.key != candidate.activeKey || book.contentHash != position.contentHash) return@withContext null

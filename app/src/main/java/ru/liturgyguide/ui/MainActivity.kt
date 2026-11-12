@@ -352,7 +352,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                 expected != null && previous.parishId == expected.parishId && previous.civilDate == expected.civilDate &&
                     previous.time == expected.time && previous.title == expected.title &&
                     previous.parts.zip(expected.parts).all { (old, fresh) ->
-                        old.date == fresh.date && old.worship == fresh.worship && old.churchType == fresh.churchType
+                        old.date == fresh.date && old.worship == fresh.worship && old.churchType == fresh.churchType &&
+                            old.topLevel == fresh.topLevel
                     }
             }
             // Reopening this exact publication keeps its accepted per-part variants.

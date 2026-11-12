@@ -1,0 +1,27 @@
+{
+  "baseline": "a0b2595",
+  "realBooks": [
+    {
+      "file": "vespers-2026-11-13-church34.html",
+      "from": ".local/release10/checkpoint34b/source-fixtures/vespers-2026-11-13-church34.html",
+      "bytes": 169174,
+      "sha256": "d81f4d9054cce231f28442482f2547b038e3f8ff3241f6004ef0c98c78cbdb66"
+    },
+    {
+      "file": "daily-matins-2026-11-13-church34.html",
+      "from": "app/src/test/resources/matins-rank/default-2026-11-13.html",
+      "bytes": 282438,
+      "sha256": "4f68b106e867eadf1087dcc1cc38f991b20c76a4fed7a37451b5f3b753258f8f"
+    },
+    {
+      "file": "ranked-matins-2026-11-13-church34.json",
+      "from": ".local/release10/checkpoint34b/real-matins-book.json",
+      "bytes": 665868,
+      "sha256": "440b36d4b7f190d3da575d12f0f6ff0a1e3c272e40be87ea32ea5cf162bfc79d",
+      "nativeContentHash": "4b9b2e7278f3d670ee813dd2afd341fcb7b2d33b0348a0a4754c0f36ad2f8b79",
+      "note": "Root actual Android34b load, 373 Russian fragments; source words unchanged"
+    }
+  ],
+  "legacyRecord": "Explicit synthetic schema1 rankless record preserving the historical title, never built by fresh resolve. Hash/anchor placeholders are for JVM codec proof; native uses only this frozen context with anchors/hash of its actual daily book. No user preferences.",
+  "rankedMetadataMutation": "Only the explicit new-edition test changes book title and rehashes. Original prayers, rank selection and source URL stay unchanged."
+}

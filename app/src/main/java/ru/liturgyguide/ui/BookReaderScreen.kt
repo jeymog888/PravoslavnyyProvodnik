@@ -94,6 +94,9 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     onChoosePart: (ServiceBookKey) -> Boolean = { false },
     onChooseJourneyVersion: (ServiceBookKey) -> Boolean = { false }) {
     val journey = journeyContext?.validatedFor(book.key, parishId)
+    val polyeleosBook = book.key.topLevel == "3" && book.rankSelection?.topLevel == "3"
+    val uncheckedPolyeleosJourney = book.key.worship == WorshipKind.MATINS && book.key.topLevel == null &&
+        journey?.let { ServiceBookSelection.isPolyeleosMatins(it.title) } == true
     val initial = remember(book.contentHash, parishId) { readingStore.restore(book, parishId) }
     var mode by rememberSaveable(book.contentHash) { mutableStateOf(initial?.mode ?: BookReadingMode.ORIGINAL) }
     var lastTextMode by rememberSaveable(book.contentHash) {
@@ -417,7 +420,12 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                         top = if (item.chapter.id == items.first().chapter.id) 28.dp else 12.dp, bottom = 4.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         if (item.chapter.id == items.first().chapter.id) {
-                            Text(book.title, style = MaterialTheme.typography.headlineMedium)
+                            Text(if (polyeleosBook) "Полиелейная утреня" else book.title, style = MaterialTheme.typography.headlineMedium)
+                            if (polyeleosBook || uncheckedPolyeleosJourney) Text(
+                                if (polyeleosBook) "По календарю Азбуки веры"
+                                else "Прежний вариант утрени - полиелейный порядок не проверен",
+                                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.testTag("book_rank_note"))
                             Text("Тексты на " + LocalDate.parse(book.key.date).format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru"))) +
                                 if (isSaved) " · Сохранено на телефоне" else " · Пока не сохранено", style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("book_saved"))
@@ -537,7 +545,11 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                         Text(it, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("book_church_type"))
                     }
                     Spacer(Modifier.height(12.dp))
-                    Text("Полное последование источника. На приходе отдельные молитвы и песнопения могут сокращаться или отличаться")
+                    Text(when {
+                        polyeleosBook -> "Полиелейный вариант по календарю Азбуки веры. Основную память выбрал источник; в храме выбор песнопений может отличаться"
+                        uncheckedPolyeleosJourney -> "Продолжено прежнее чтение утрени. Для этого варианта полиелейный порядок не проверялся"
+                        else -> "Полное последование источника. На приходе отдельные молитвы и песнопения могут сокращаться или отличаться"
+                    })
                     Spacer(Modifier.height(12.dp))
                     Text("Краткие пояснения в разделе \"Смысл\" подготовлены Феорией", style = MaterialTheme.typography.bodyMedium)
                     Spacer(Modifier.height(12.dp))
@@ -554,7 +566,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 items((listOf(BookSource(book.sourceTitle, book.sourceUrl)) + book.sources).distinctBy { it.url }) { source ->
                     TextButton(onClick = { onOpenUrl(source.url) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(source.title) }
                 }
-                if (book.mainEventOptions.size > 1) {
+                if (book.key.topLevel == null && book.mainEventOptions.size > 1) {
                     item { Text("Вариант дня", style = MaterialTheme.typography.titleMedium) }
                     items(book.mainEventOptions) { option ->
                         OutlinedButton(onClick = { chooseVersion(book.key.copy(mainEvent = option.value)) }, enabled = !switchingPart,
