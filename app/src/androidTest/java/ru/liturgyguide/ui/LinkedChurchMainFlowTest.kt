@@ -150,6 +150,73 @@ class LinkedChurchMainFlowTest {
         }
     }
 
+    @Test fun realMetroQueryFindsListiWithoutChangingSelection() {
+        val arguments = InstrumentationRegistry.getArguments()
+        assumeTrue("Requires explicit real Main search opt-in", arguments.getString("feoriaRcSearch") == "true")
+        check(Build.VERSION.SDK_INT >= 29) { "Frame-commit evidence requires Android 10 or newer" }
+        val run = requireNotNull(arguments.getString("rcSearchRun"))
+        require(run.matches(Regex("[A-Za-z0-9_-]{1,100}")))
+        evidence = File(requireNotNull(context.getExternalFilesDir("linked-church-main")), run)
+        check(!evidence.exists() && evidence.mkdirs()) { "Use a unique evidence run ID" }
+        // Exact building identity from discovery/churches-ru.json, not a name-only dedication match.
+        val listiId = "osm:relation:19595736"
+        val listiName = "Храм Троицы Живоначальной в Листах"
+        val listiAddress = "улица Сретенка, 27 с3"
+        val query = "метро Сухаревская троицы"
+        val selectedBefore = preferences.getString("church_id", null)
+        val recordsBefore = preferences.getString(ChurchDirectoryStore.RECORDS_KEY, null)
+        val receipt = linkedMapOf<String, Any?>("passed" to false, "run" to run, "query" to query,
+            "apkSha256" to sha256(File(context.applicationInfo.sourceDir).readBytes()),
+            "catalogSha256" to sha256(context.assets.open("discovery/churches-ru.json").use { it.readBytes() }),
+            "expectedId" to listiId, "expectedName" to listiName, "expectedAddress" to listiAddress,
+            "beforeSelectedId" to selectedBefore, "captures" to captures,
+            "statePolicy" to "Search only; no selection, seed, cleanup, preference restoration or connectivity changes")
+        writeJson("preferences-before.json", snapshotPreferences())
+        try {
+            ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+                try {
+                    awaitTag("nav_church")
+                    compose.onNodeWithTag("nav_church").assertIsDisplayed().performClick()
+                    awaitTag("church_content")
+                    reveal("change_church", "church_content").performClick()
+                    awaitTag("discovery_content")
+                    reveal("discovery_mode_name", "discovery_content").performClick().assertIsSelected()
+                    reveal("discovery_query", "discovery_content").performTextReplacement(query)
+                    closeSoftKeyboardWithCiDiagnostics()
+                    compose.onNodeWithTag("discovery_query").assertTextContains(query)
+                    assertUnselected(selectedBefore, recordsBefore)
+                    val started = SystemClock.elapsedRealtime()
+                    reveal("discovery_submit", "discovery_content").performClick()
+                    compose.waitUntil(timeoutMillis = 60_000) {
+                        compose.onAllNodes(hasTestTag("discovery_submit") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
+                    }
+                    receipt["instrumentedSearchMillis"] = SystemClock.elapsedRealtime() - started
+                    val target = reveal("discovery_church_$listiId", "discovery_content")
+                    target.assertTextContains(listiName, substring = true)
+                    target.assertTextContains(listiAddress, substring = true)
+                    assertUnselected(selectedBefore, recordsBefore)
+                    receipt["foundId"] = listiId
+                    capture("metro-results-without-selection", scenario)
+                } catch (failure: Throwable) {
+                    runCatching { capture("metro-search-failure", scenario) }
+                        .onFailure { receipt["captureFailure"] = it.toString() }
+                    throw failure
+                }
+            }
+            assertUnselected(selectedBefore, recordsBefore)
+            receipt["passed"] = true
+        } catch (failure: Throwable) {
+            receipt["failureType"] = failure.javaClass.name
+            receipt["failureMessage"] = failure.message.orEmpty()
+            throw failure
+        } finally {
+            receipt["selectedUnchanged"] = preferences.getString("church_id", null) == selectedBefore
+            receipt["recordsUnchanged"] = preferences.getString(ChurchDirectoryStore.RECORDS_KEY, null) == recordsBefore
+            writeJson("preferences-after.json", snapshotPreferences())
+            writeJson("receipt.json", receipt)
+        }
+    }
+
     private fun assertUnselected(selected: String?, records: String?) {
         assertEquals("Searching must not change the selected church", selected, preferences.getString("church_id", null))
         assertEquals("Searching must not save a result", records, preferences.getString(ChurchDirectoryStore.RECORDS_KEY, null))
