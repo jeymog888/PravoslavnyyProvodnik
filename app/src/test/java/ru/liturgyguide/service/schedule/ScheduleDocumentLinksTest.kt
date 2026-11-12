@@ -6,6 +6,39 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ScheduleDocumentLinksTest {
+    @Test fun sretenskyBankingModalsDoNotBorrowTheScheduleHeadingForTheirDownloads() {
+        val source = "https://monastery.ru/bogosluzhenie/raspisanie-bogosluzheniy/"
+        // The two req-modal wrappers, attributes and PDF links are from the public page.
+        // Other controls below check that visibility does not erase explicit schedule links.
+        val page = Jsoup.parse("""
+            <h1>Расписание богослужений</h1>
+            <a href='/docs/current.pdf'>Скачать PDF</a><img src='/files/current.png'>
+            <div class='modal fade req-modal' id='req-modal' tabindex='-1' role='dialog' aria-hidden='true'>
+              <div class='modal-dialog' role='document'><div class='modal-content'><div class='modal-body'>
+                <p><b>Реквизиты счета и адреса</b></p>
+                <p><b><a href='/docs/reqs.pdf' download='download'>Скачать PDF</a></b></p>
+              </div></div></div>
+            </div>
+            <div class='modal fade req-modal' id='req-modal2' tabindex='-1' role='dialog' aria-hidden='true'>
+              <div class='modal-dialog' role='document'><div class='modal-content'><div class='modal-body'>
+                <p><b>USD</b></p><a href='/docs/source.pdf' download='requisites'>Скачать PDF</a>
+                <p><b>EUR</b></p><a href='/docs/source.pdf' download='requisites'>Скачать PDF</a>
+              </div></div></div>
+            </div>
+            <div hidden><a href='/docs/hidden.pdf'>Скачать</a><img src='/files/hidden.png'></div>
+            <div aria-hidden='true'><a href='/docs/aria.pdf'>Скачать</a><img src='/files/aria.png'></div>
+            <div class='modal'><a href='/docs/modal.pdf'>Скачать</a><img src='/files/modal.png'></div>
+            <div class='modal' aria-hidden='true'><a href='/docs/next.pdf'>Расписание следующей недели</a></div>
+            <nav hidden><a href='/bogosluzhenie/raspisanie-bogosluzheniy/?day=16.11.2026'>Следующая неделя</a></nav>
+        """.trimIndent(), source)
+        assertEquals(listOf(
+            ScheduleDocumentLink("https://monastery.ru/docs/current.pdf", source, true),
+            ScheduleDocumentLink("https://monastery.ru/docs/next.pdf", source, true),
+            ScheduleDocumentLink("https://monastery.ru/bogosluzhenie/raspisanie-bogosluzheniy/?day=16.11.2026", source, false),
+            ScheduleDocumentLink("https://monastery.ru/files/current.png", source, true)
+        ), ScheduleDocumentLinks.find(page))
+    }
+
     @Test fun contactPageServicesSubheadingDoesNotPromotePrayerPicturesOrSocialIcons() {
         val page = Jsoup.parse("""
             <div id='header'><img src='/rutube.png'></div>

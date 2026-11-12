@@ -17,6 +17,9 @@ object ScheduleDocumentLinks {
         val copy = page.clone()
         ScheduleHtmlDiscussion.removeFrom(copy)
         copy.select("nav,footer,aside,header,[role=navigation],.sidebar,#sidebar,#header,#footer,.header-links,#t-header,#t-footer,.t-tildalabel").remove()
+        // Hidden site-wide dialogs must not borrow the page's schedule heading for
+        // unlabelled downloads. Explicit schedule anchors are still read from page below.
+        copy.select("[hidden],[aria-hidden=true],.modal").remove()
         val content = copy.selectFirst("main,[role=main]") ?: copy.body()
         // Some site builders publish their visible page heading as a div. Page metadata is
         // a fallback only: a news heading must not inherit a site's generic schedule title.
