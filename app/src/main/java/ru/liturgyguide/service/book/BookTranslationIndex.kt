@@ -205,7 +205,18 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
             val a = parts(left) ?: return null
             val b = parts(right) ?: return null
             if (a.first != b.first || a.second.isBlank() || b.second.isBlank()) return null
-            if (BookText.withoutSpeaker(a.second).first != BookText.withoutSpeaker(b.second).first) return null
+            val leftSpeaker = BookText.withoutSpeaker(a.second).first
+            val rightSpeaker = BookText.withoutSpeaker(b.second).first
+            // The complete paired prayer in short row 234 / full row 340 uses a leading
+            // editorial direction on the left and the ordinary priest label on the right.
+            // split also requires a nonempty prayer; unknown directions stay unmatched.
+            val priestDirection = BookPrayerMetadata.split(a.second).rubric
+                ?.equals("Священник молится:", ignoreCase = true) == true
+            // Unknown labels both produce null. That equality cannot authorize this new
+            // boundary: the parallel column must explicitly name the same priest role.
+            if (priestDirection) {
+                if (rightSpeaker != "Священник") return null
+            } else if (leftSpeaker != rightSpeaker) return null
             return a.second to b.second
         }
 
