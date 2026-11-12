@@ -33,7 +33,7 @@ object ScheduleHtmlParser {
         val structured = HtmlScheduleDocumentExtractor.fromHtml(document)
         // A named building or a dated cancellation needs the general parser's section context,
         // rather than the legacy parser's whole-document rejection or context-free row extraction.
-        if (structured.pages.any { page -> page.lines.any {
+        if (MyPrihodScheduleHtml.appliesTo(document) || structured.pages.any { page -> page.lines.any {
             it.venue != null || ScheduleVenue.isLabel(it.text) || cancelled.containsMatchIn(it.text)
         } }) return ScheduleDocumentParser.inspect(structured, today, parish)
         val events = parse(document, today)

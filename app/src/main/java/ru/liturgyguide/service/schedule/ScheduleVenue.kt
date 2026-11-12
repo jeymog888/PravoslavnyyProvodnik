@@ -31,6 +31,10 @@ internal object ScheduleVenue {
     private val legalParish = Regex("(?iu)^(?:местная\\s+)?религиозная\\s+организация\\s+(?:православный\\s+)?приход\\s+(.+?)\\s+[а-яё-]+\\s+епархии\\s+русской\\s+православной\\s+церкви(?:\\s*\\([^)]*\\))?\\s*$")
     private val pairedApostles = Regex("(?iu)(?<![а-яё])(?:(?:святых|свв\\.?|первоверховных|верховных|славных|всехвальных)\\s+)*(?:апостолов\\s+)?петра\\s+и\\s+павла(?![а-яё])|(?<![а-яё])петропавловск(?:ий|ого|ом|ая|ой|ую|ое|ому|ими|их)(?![а-яё])")
     private val namedLocation = Regex("(?iu)(?:^|\\s)(?:на|в(?!\\s+честь)|при|у)\\s+")
+    private val unqualifiedAction = Regex("(?iu)\\b(?:в\\s+храме\\s+совершаются\\s+согласно\\s+расписанию|проводятся\\s+в\\s+храме\\s+в\\s+дни)\\b")
+
+    private fun isUnqualifiedStatement(text: String) =
+        building.findAll(text).count() == 1 && unqualifiedAction.containsMatchIn(text)
 
     private fun dedicationAliases(text: String): String {
         // Only the dedication before an address/associated-site suffix is normalized.
@@ -46,12 +50,14 @@ internal object ScheduleVenue {
         (calendarFeast.findAll(text) + localCouncilFeast.findAll(text)).map { it.range }.toList()
 
     fun isLabel(text: String): Boolean {
+        if (isUnqualifiedStatement(text)) return false
         val candidate = (parishInLegalName(text) ?: text).replace(calendarFeast, " ").replace(localCouncilFeast, " ")
         return building.containsMatchIn(candidate) && !service.containsMatchIn(candidate) &&
             !clock.containsMatchIn(candidate) && tokens(candidate).isNotEmpty()
     }
 
     fun inlineLabel(text: String, calendarDate: LocalDate? = null, datedPreface: Boolean = false): String? {
+        if (isUnqualifiedStatement(text)) return null
         parishInLegalName(text)?.let { return it }
         var candidate = text.replace(calendarFeast, " ").replace(localCouncilFeast, " ")
         // A calendar preface before the first clock in a dated service row is not a venue.

@@ -46,6 +46,9 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
     fun fromHtml(document: Document): ScheduleDocument {
         val copy = document.clone()
         ScheduleHtmlDiscussion.removeFrom(copy)
+        val platform = MyPrihodScheduleHtml.prepare(copy)
+        if (platform?.conflict == true) return ScheduleDocument(document.baseUri(), "html",
+            listOf(ScheduleDocumentPage(emptyList(), ocrFailure = ScheduleOcrFailure.CONFLICTING_EVIDENCE)))
         copy.select("script,style,nav,footer,aside,header,[hidden],.sidebar").remove()
         // Sibling headings may identify the building for each of several articles. Selecting only
         // the first article would lose that scope and silently discard the selected church's section.
@@ -70,6 +73,7 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
                     headingLevel = element.tagName().takeIf { tag -> tag.matches(Regex("h[1-6]")) }?.drop(1)?.toInt() ?: 0) }
         }
         fun table(element: Element) {
+            platform?.tables?.get(element)?.let { lines.addAll(it); return }
             data class Span(val value: String, var remaining: Int)
             val spans = mutableMapOf<Int, Span>()
             element.select("tr").filter { it.closest("table") == element }.take(600).forEach { row ->

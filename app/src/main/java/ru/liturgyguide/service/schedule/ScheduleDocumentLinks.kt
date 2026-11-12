@@ -14,6 +14,7 @@ object ScheduleDocumentLinks {
 
     fun find(page: Document): List<ScheduleDocumentLink> {
         val links = mutableListOf<ScheduleDocumentLink>()
+        val requireDocumentLabel = MyPrihodScheduleHtml.appliesTo(page)
         val copy = page.clone()
         ScheduleHtmlDiscussion.removeFrom(copy)
         copy.select("nav,footer,aside,header,[role=navigation],.sidebar,#sidebar,#header,#footer,.header-links,#t-header,#t-footer,.t-tildalabel").remove()
@@ -53,9 +54,11 @@ object ScheduleDocumentLinks {
                 decoded(it.substringBefore('=')).equals("share", ignoreCase = true)
             }
             if (sharingButton && sharingAction) return@forEach
-            val label = anchor.text() + " " + decoded(anchor.attr("href"))
+            val metadata = if (requireDocumentLabel) anchor.attr("title") + " " +
+                anchor.select("img").joinToString(" ") { it.attr("alt") + " " + it.attr("title") } else ""
+            val label = anchor.text() + " " + decoded(anchor.attr("href")) + " " + metadata
             val binary = extension.containsMatchIn(publishedUrl)
-            if (!schedule.containsMatchIn(label) && !(binary && publishedUrl in contentLinks)) return@forEach
+            if (!schedule.containsMatchIn(label) && !(binary && !requireDocumentLabel && publishedUrl in contentLinks)) return@forEach
             val url = if (binary) publishedUrl else secureHtmlLink(page.baseUri(), publishedUrl)
             if (!binary && !sameSite(page.baseUri(), url)) return@forEach
             links += ScheduleDocumentLink(url, page.baseUri(), binary)
@@ -73,7 +76,7 @@ object ScheduleDocumentLinks {
                 picture.attr("role") == "presentation" || picture.attr("aria-hidden") == "true") return@forEach
             val small = listOf("width", "height").mapNotNull { picture.attr(it).toIntOrNull() }.any { it < 150 }
             // A separate news article does not become a schedule because its sibling is one.
-            if (small || (!schedule.containsMatchIn(label) && !inSchedule(picture))) return@forEach
+            if (small || (!schedule.containsMatchIn(label) && (requireDocumentLabel || !inSchedule(picture)))) return@forEach
             links += ScheduleDocumentLink(url, page.baseUri(), true)
         }
         return links.distinctBy { it.url }.take(12)
