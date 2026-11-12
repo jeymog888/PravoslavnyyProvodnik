@@ -11,6 +11,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import ru.liturgyguide.model.Parish
 import ru.liturgyguide.model.ServiceBook
@@ -48,10 +50,15 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
                     update = BookLoadResult.Ready(latest, fromCache = true, warning = BookWarnings.supplementWarning(latest))
             } else {
                 val fetched = books.load(requested, force = retry > 0) { progress = it }
+                currentCoroutineContext().ensureActive()
                 val accepted = (result as? BookLoadResult.Ready)?.book ?: (result as? BookLoadResult.Failed)?.cachedBook
                 if (accepted != null && retry > 0) when (fetched) {
                     is BookLoadResult.Ready -> {
-                        if (fetched.book.contentHash != accepted.contentHash) update = fetched
+                        val saved = fetched.saved && fetched.book.key == requested && withContext(Dispatchers.IO) {
+                            books.cachedVersion(requested, fetched.book.contentHash) == fetched.book
+                        }
+                        if (!saved) refreshWarning = "Обновленный текст не удалось сохранить на телефоне. Открытая книга осталась на месте. Попробуйте обновить еще раз"
+                        else if (fetched.book.contentHash != accepted.contentHash) { update = fetched; refreshWarning = null }
                         else refreshWarning = fetched.warning ?: "На телефоне актуальная версия текста"
                     }
                     is BookLoadResult.Failed -> refreshWarning = fetched.message
@@ -81,22 +88,41 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
         is BookLoadResult.Failed -> state.cachedBook
         else -> null
     }
+    LaunchedEffect(books, requested, parishId, loaded?.contentHash, retry, refreshing) {
+        if (loaded == null || refreshing || (result as? BookLoadResult.Ready)?.saved == false) return@LaunchedEffect
+        try {
+            val candidate = books.enrichSaved(loaded) ?: return@LaunchedEffect
+            currentCoroutineContext().ensureActive()
+            if (!candidate.saved || candidate.book.key != requested || candidate.book.contentHash == loaded.contentHash)
+                return@LaunchedEffect
+            val saved = withContext(Dispatchers.IO) {
+                books.cachedVersion(requested, candidate.book.contentHash) == candidate.book
+            }
+            currentCoroutineContext().ensureActive()
+            if (saved) update = candidate
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { /* Optional improvement must not interrupt offline reading. */ }
+    }
     // Saved BOOK routes can reopen the same text for another church. Language and
     // visibility controls must share the same identity as the persisted reading cursor.
     if (loaded != null) key(loaded.key.canonical(), loaded.contentHash, parishId) {
-        BookReaderScreen(loaded, parishId, readingStore, textSize, onBack, onOpenUrl,
-            onChooseVersion = { requested = it; onRequestChanged(it) }, onSettings = onSettings,
-            onRefresh = { retry++ }, refreshing = refreshing,
-            onAcceptUpdate = if (update == null) null else { {
+        // Keep this remembered callback group present even before an update exists.
+        // A conditional memoized lambda here remounts the reader when it first appears.
+        val acceptUpdate: () -> Boolean = {
                 val candidate = update
-                if (candidate != null && readingStore.acceptVersion(loaded, candidate.book, parishId)) {
+                if (candidate != null && candidate.saved && candidate.book.key == loaded.key &&
+                    readingStore.acceptVersion(loaded, candidate.book, parishId)) {
                     result = candidate; update = null; refreshWarning = null
                     true
                 } else {
                     refreshWarning = "Не удалось сохранить место. Открытый текст остался на месте"
                     false
                 }
-            } },
+        }
+        BookReaderScreen(loaded, parishId, readingStore, textSize, onBack, onOpenUrl,
+            onChooseVersion = { requested = it; onRequestChanged(it) }, onSettings = onSettings,
+            onRefresh = { retry++ }, refreshing = refreshing,
+            onAcceptUpdate = acceptUpdate.takeIf { update != null },
             isSaved = (result as? BookLoadResult.Ready)?.saved != false,
             churchTypeInfo = ChurchTypeClassifier.description(loaded.key.churchType, ChurchTypeClassifier.classify(ownParish)),
             loadWarning = refreshWarning ?: when (val state = result) {

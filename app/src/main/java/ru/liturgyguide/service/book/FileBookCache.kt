@@ -7,11 +7,14 @@ import java.io.File
 import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
+import java.util.concurrent.ConcurrentHashMap
 
 interface BookCache {
     fun read(key: ServiceBookKey): ServiceBook?
     fun readVersion(key: ServiceBookKey, contentHash: String): ServiceBook? = read(key)?.takeIf { it.contentHash == contentHash }
     fun write(book: ServiceBook): Boolean
+    /** Publish only if the expected edition is still latest. Unsupported caches fail closed. */
+    fun writeIfLatest(expectedHash: String?, book: ServiceBook): Boolean = false
     fun readTranslationCorpus(): String? = null
     fun writeTranslationCorpus(json: String): Boolean = false
 }
@@ -19,24 +22,32 @@ interface BookCache {
 /** A content-addressed book is immutable; the small latest pointer is committed afterwards. */
 class FileBookCache(private val directory: File) : BookCache {
     private val gson = Gson()
+    // All instances for this directory share one lock, including unconditional writes.
+    // The app is single-process; atomic files provide crash safety, this lock provides CAS.
+    private val lock = locks.computeIfAbsent(runCatching { directory.canonicalPath }
+        .getOrElse { directory.absoluteFile.normalize().path }) { Any() }
 
-    @Synchronized override fun read(key: ServiceBookKey): ServiceBook? = runCatching {
+    override fun read(key: ServiceBookKey): ServiceBook? = synchronized(lock) { runCatching {
         require(key.isValid())
         val pointer = File(directory, "${keyId(key)}.latest")
-        if (!pointer.isFile || pointer.length() > 80) return null
+        if (!pointer.isFile || pointer.length() > 80) return@runCatching null
         readVersion(key, pointer.readText(Charsets.UTF_8).trim())
-    }.getOrNull()
+    }.getOrNull() }
 
-    @Synchronized override fun readVersion(key: ServiceBookKey, contentHash: String): ServiceBook? = runCatching {
+    override fun readVersion(key: ServiceBookKey, contentHash: String): ServiceBook? = synchronized(lock) { runCatching {
         require(key.isValid() && contentHash.matches(Regex("[a-f0-9]{64}")))
         val file = File(directory, "${keyId(key)}-$contentHash.json")
-        if (!file.isFile || file.length() !in 1..MAX_BOOK_BYTES) return null
+        if (!file.isFile || file.length() !in 1..MAX_BOOK_BYTES) return@runCatching null
         gson.fromJson(file.readText(Charsets.UTF_8), ServiceBook::class.java).takeIf {
             it != null && it.key == key && it.contentHash == contentHash && ServiceBookIntegrity.valid(it)
         }
-    }.getOrNull()
+    }.getOrNull() }
 
-    @Synchronized override fun write(book: ServiceBook): Boolean = runCatching {
+    override fun writeIfLatest(expectedHash: String?, book: ServiceBook): Boolean = synchronized(lock) {
+        if (read(book.key)?.contentHash != expectedHash) false else write(book)
+    }
+
+    override fun write(book: ServiceBook): Boolean = synchronized(lock) { runCatching {
         require(ServiceBookIntegrity.valid(book))
         val json = gson.toJson(book)
         require(json.toByteArray(Charsets.UTF_8).size <= MAX_BOOK_BYTES)
@@ -44,19 +55,19 @@ class FileBookCache(private val directory: File) : BookCache {
         atomicWrite(File(directory, "$stem-${book.contentHash}.json"), json)
         atomicWrite(File(directory, "$stem.latest"), book.contentHash)
         true
-    }.getOrDefault(false)
+    }.getOrDefault(false) }
 
-    @Synchronized override fun readTranslationCorpus(): String? = runCatching {
+    override fun readTranslationCorpus(): String? = synchronized(lock) { runCatching {
         File(directory, "russian-concordance.json").takeIf { it.isFile && it.length() in 1..BookTranslationCorpus.MAX_BYTES }
             ?.readText(Charsets.UTF_8)?.takeIf { BookTranslationCorpus.decode(it).index.size > 0 }
-    }.getOrNull()
+    }.getOrNull() }
 
-    @Synchronized override fun writeTranslationCorpus(json: String): Boolean = runCatching {
+    override fun writeTranslationCorpus(json: String): Boolean = synchronized(lock) { runCatching {
         require(json.toByteArray(Charsets.UTF_8).size <= BookTranslationCorpus.MAX_BYTES)
         require(BookTranslationCorpus.decode(json).index.size > 0)
         atomicWrite(File(directory, "russian-concordance.json"), json)
         true
-    }.getOrDefault(false)
+    }.getOrDefault(false) }
 
     private fun keyId(key: ServiceBookKey) = BookText.sha256(key.canonical()).take(32)
 
@@ -71,5 +82,8 @@ class FileBookCache(private val directory: File) : BookCache {
         } finally { temporary.delete() }
     }
 
-    companion object { private const val MAX_BOOK_BYTES = 12_000_000L }
+    companion object {
+        private const val MAX_BOOK_BYTES = 12_000_000L
+        private val locks = ConcurrentHashMap<String, Any>()
+    }
 }
