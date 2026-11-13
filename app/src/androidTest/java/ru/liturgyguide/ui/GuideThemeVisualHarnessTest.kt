@@ -64,6 +64,7 @@ class GuideThemeVisualHarnessTest {
     private val captures = mutableListOf<String>()
     private val captureDetails = org.json.JSONArray()
     private var expectedDark = false
+    private var expectedFontScale = 2f
 
     @After fun clean() {
         compose.runOnIdle { mounted.value = false }
@@ -73,11 +74,14 @@ class GuideThemeVisualHarnessTest {
 
     @Test fun lightThemeAtNative320DpAnd200Percent() = exercise(false)
     @Test fun darkThemeAtNative320DpAnd200Percent() = exercise(true)
+    @Test fun lightThemeAtNative360DpAnd100Percent() = exercise(false, 360, 1f)
+    @Test fun darkThemeAtNative360DpAnd100Percent() = exercise(true, 360, 1f)
 
-    private fun exercise(dark: Boolean) {
+    private fun exercise(dark: Boolean, widthDp: Int = 320, fontScale: Float = 2f) {
         expectedDark = dark
+        expectedFontScale = fontScale
         val theme = if (dark) "dark" else "light"
-        output = File(context.filesDir, "theme-10/$theme-320dp-200pct").apply { mkdirs() }
+        output = File(context.filesDir, "theme-10/$theme-${widthDp}dp-${(fontScale * 100).roundToInt()}pct").apply { mkdirs() }
         val cached = FileBookCache(File(context.filesDir, "service-books-v2"))
             .read(ServiceBookKey("2026-11-12"))?.takeIf { book ->
                 book.blocks.any { !it.isAltarText && (it.russian?.length ?: 0) > 500 && it.original.length > 500 }
@@ -95,15 +99,15 @@ class GuideThemeVisualHarnessTest {
             .first { (_, block) -> !block.isAltarText && (block.russian?.length ?: 0) > 500 && block.original.length > 500 }
         assertTrue(store.save(BookReadingPosition(book.key, book.contentHash, parishId,
             readingTarget.second.id, readingTarget.first.id, fraction = .2f)))
-        val report = JSONObject().put("theme", theme).put("requestedWidthDp", 320).put("requestedFontScale", 2.0)
+        val report = JSONObject().put("theme", theme).put("requestedWidthDp", widthDp).put("requestedFontScale", fontScale)
             .put("bookOrigin", if (cached != null) "public_book_from_app_cache" else "shipped_legacy_UI_fixture_not_content_validation")
             .put("bookSourceUrl", book.sourceUrl).put("bookHash", book.contentHash)
             .put("scheduleOrigin", "fixed_visual_fixture_not_live_schedule_validation")
             .put("captureSource", "frame commit + active Window PixelCopy, then two identical native screenshots")
             .put("windowImageSuffix", "-window.png: current app/dialog pixels; primary .png also includes system bars and popups")
-            .put("intentionalEllipsisExcludedFromTextCheck", "book_chapter: compact current-section summary; book_meaning_excerpt: collapsed two-line excerpt")
+            .put("intentionalEllipsisExcludedFromTextCheck", "book_meaning_excerpt: collapsed two-line excerpt")
         try {
-            withNativeCompactDisplay {
+            withNativeDisplay(widthDp, fontScale) {
                 report.put("actualWidthDp", compose.activity.resources.configuration.screenWidthDp)
                     .put("actualFontScale", compose.activity.resources.configuration.fontScale)
                 mounted.value = true
@@ -147,6 +151,22 @@ class GuideThemeVisualHarnessTest {
                 compose.onNodeWithTag("book_text_${readingTarget.second.id}", useUnmergedTree = true)
                     .assertTextEquals(readingTarget.second.original).assertIsDisplayed()
                 assertVisibleMode(BookReadingMode.ORIGINAL)
+                compose.onNodeWithTag("book_chapter", useUnmergedTree = true).assertTextEquals(readingTarget.first.title)
+                    .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { get ->
+                        val layouts = mutableListOf<TextLayoutResult>(); assertTrue(get(layouts))
+                        val layout = layouts.single()
+                        report.put("chapterLayout", layoutEvidence(layout))
+                        assertTextFitsLayout(layout, readingTarget.first.title)
+                    }
+                val languageTag = if (compose.onAllNodesWithTag("book_mode_menu_label", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty())
+                    "book_mode_menu_label" else "book_mode_label_original"
+                compose.onNodeWithTag(languageTag, useUnmergedTree = true).assertTextEquals("Оригинал")
+                    .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { get ->
+                        val layouts = mutableListOf<TextLayoutResult>(); assertTrue(get(layouts))
+                        val layout = layouts.single()
+                        report.put("languageLayout", layoutEvidence(layout))
+                        assertTextFitsLayout(layout, "Оригинал", singleLine = true)
+                    }
                 capture("05-reader-original")
                 selectMode(BookReadingMode.RUSSIAN, captureMenu = true)
                 assertAnchor(before, saved())
@@ -159,6 +179,7 @@ class GuideThemeVisualHarnessTest {
                 target("book_mode_meaning").performClick()
                 settle()
                 compose.onNodeWithTag("book_meaning_sheet").assertIsDisplayed()
+                capture("07a-reader-meaning-entry")
                 assertAnchor(before, saved())
                 assertEquals(BookReadingMode.RUSSIAN, saved().mode)
                 compose.onNodeWithTag("book_meaning_title").performScrollTo().assertTextEquals(readingTarget.first.title)
@@ -259,7 +280,26 @@ class GuideThemeVisualHarnessTest {
         compose.onNodeWithTag(tag, useUnmergedTree = true).assertIsDisplayed()
             .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { assertTrue(it(layouts)) }
         assertTextFitsLayout(layouts.single(), expected, singleLine)
-        assertEquals(2f, layouts.single().layoutInput.density.fontScale, .001f)
+        assertEquals(expectedFontScale, layouts.single().layoutInput.density.fontScale, .001f)
+    }
+
+    private fun layoutEvidence(layout: TextLayoutResult): JSONObject {
+        val boxes = layout.layoutInput.text.text.indices
+            .filterNot { layout.layoutInput.text.text[it].isWhitespace() }.map(layout::getBoundingBox)
+        val lines = org.json.JSONArray()
+        for (line in 0 until layout.lineCount) lines.put(JSONObject()
+            .put("left", layout.getLineLeft(line)).put("top", layout.getLineTop(line))
+            .put("right", layout.getLineRight(line)).put("bottom", layout.getLineBottom(line))
+            .put("ellipsized", layout.isLineEllipsized(line)))
+        return JSONObject().put("hasVisualOverflow", layout.hasVisualOverflow)
+            .put("didOverflowWidth", layout.didOverflowWidth).put("didOverflowHeight", layout.didOverflowHeight)
+            .put("widthPx", layout.size.width).put("heightPx", layout.size.height)
+            .put("paragraphWidthPx", layout.multiParagraph.width)
+            .put("paragraphHeightPx", layout.multiParagraph.height)
+            .put("lineCount", layout.lineCount).put("lines", lines)
+            .put("glyphLeftMinPx", boxes.minOf { it.left }).put("glyphTopMinPx", boxes.minOf { it.top })
+            .put("glyphRightMaxPx", boxes.maxOf { it.right }).put("glyphBottomMaxPx", boxes.maxOf { it.bottom })
+            .put("lastLineEnd", layout.getLineEnd(layout.lineCount - 1, visibleEnd = false))
     }
 
     private fun capture(name: String) {
@@ -274,12 +314,12 @@ class GuideThemeVisualHarnessTest {
             val node = nodes[i]
             if (!node.isDisplayed()) continue
             if (node.fetchSemanticsNode().config.getOrElse(SemanticsProperties.TestTag) { "" } in
-                setOf("book_chapter", "book_meaning_excerpt")) continue
+                setOf("book_meaning_excerpt")) continue
             val layouts = mutableListOf<TextLayoutResult>()
             node.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
             for (layout in layouts) {
                 assertTextFitsLayout(layout, layout.layoutInput.text.text)
-                assertEquals(2f, layout.layoutInput.density.fontScale, .001f)
+                assertEquals(expectedFontScale, layout.layoutInput.density.fontScale, .001f)
             }
         }
     }
@@ -371,20 +411,20 @@ class GuideThemeVisualHarnessTest {
         assertEquals(expected.anchorKind, actual.anchorKind); assertEquals(expected.fraction, actual.fraction, .01f)
     }
 
-    private fun withNativeCompactDisplay(body: () -> Unit) {
+    private fun withNativeDisplay(widthDp: Int, fontScale: Float, body: () -> Unit) {
         fun shell(command: String) = ParcelFileDescriptor.AutoCloseInputStream(
             instrumentation.uiAutomation.executeShellCommand(command)).use { it.readBytes().toString(Charsets.UTF_8).trim() }
         val previousFont = shell("settings get system font_scale").toFloatOrNull()
         val previousSize = Regex("Override size: (\\d+x\\d+)").find(shell("wm size"))?.groupValues?.get(1)
         val density = compose.activity.resources.displayMetrics.density
         try {
-            shell("settings put system font_scale 2.0")
-            shell("wm size ${(320 * density).roundToInt()}x${(640 * density).roundToInt()}")
+            shell("settings put system font_scale $fontScale")
+            shell("wm size ${(widthDp * density).roundToInt()}x${(640 * density).roundToInt()}")
             compose.waitUntil(10_000) {
                 var ready = false
                 compose.activityRule.scenario.onActivity {
-                    ready = abs(it.resources.configuration.fontScale - 2f) < .001f &&
-                        it.resources.configuration.screenWidthDp in 300..340 && it.window.decorView.hasWindowFocus()
+                    ready = abs(it.resources.configuration.fontScale - fontScale) < .001f &&
+                        it.resources.configuration.screenWidthDp in (widthDp - 20)..(widthDp + 20) && it.window.decorView.hasWindowFocus()
                 }
                 ready
             }

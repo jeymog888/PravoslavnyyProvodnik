@@ -147,6 +147,12 @@ class BookReaderPolishTest {
         // Exercise real movement in a long prayer, not only the Play icon's state.
         compose.onNodeWithTag("book_content").performScrollToIndex(12 * 2 + 1)
         settle()
+        compose.onNodeWithTag("book_chapter", useUnmergedTree = true).assertTextEquals("Малая ектения")
+            .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { get ->
+                val layouts = mutableListOf<TextLayoutResult>(); assertTrue(get(layouts))
+                assertFalse("The part name must not collapse to ellipsis", layouts.single().hasVisualOverflow)
+            }
+        compose.onNodeWithTag("book_mode_menu_label", useUnmergedTree = true).assertTextEquals("Оригинал")
         fun paragraphTop() = compose.onNodeWithTag("book_text_long", useUnmergedTree = true)
             .assertIsDisplayed().getUnclippedBoundsInRoot().top
         val before = paragraphTop()

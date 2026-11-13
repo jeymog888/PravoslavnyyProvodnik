@@ -141,7 +141,9 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                 item(key = "today_church") {
                     ArrivalCard(Modifier.testTag("today_church_card")) {
                         Text(church.shortName, style = MaterialTheme.typography.titleLarge)
-                        Text(churchAddressLine(church), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        churchAddressLine(church).takeIf(String::isNotBlank)?.let { address ->
+                            Text(address, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
                         OutlinedButton(onClick = onFindChurch, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("change_church")) {
                             Icon(Icons.Default.Place, null, Modifier.size(20.dp)); Spacer(Modifier.width(12.dp)); Text("Сменить храм")
                         }

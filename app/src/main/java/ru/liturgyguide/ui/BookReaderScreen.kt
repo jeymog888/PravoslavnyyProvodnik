@@ -46,6 +46,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -806,6 +807,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     val shortViewport = maxHeight < 420.dp
     val compactIntro = density.fontScale >= 1.5f || shortViewport
     val toolbarMode = compactIntro
+    val expandedCompactToolbar = density.fontScale >= 1.5f && !shortViewport
     val compactLabels = shortViewport || density.fontScale > 1.5f ||
         (maxWidth < 360.dp && density.fontScale > 1.1f)
     Scaffold(containerColor = MaterialTheme.colorScheme.surface,
@@ -820,21 +822,34 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                         IconButton(onClick = onBack, modifier = Modifier.size(48.dp).testTag("book_back")) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, "Назад")
                         }
-                        TextButton(onClick = { playing = false; sheet = "order" }, modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("book_order")) {
+                        TextButton(onClick = { playing = false; sheet = "order" },
+                            contentPadding = if (expandedCompactToolbar) PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+                                else ButtonDefaults.TextButtonContentPadding,
+                            modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("book_order")) {
                             Column(Modifier.weight(1f)) {
                                 Text(currentChapter.title, style = MaterialTheme.typography.titleSmall,
-                                    maxLines = if (compactLabels) 1 else 2, overflow = TextOverflow.Ellipsis,
+                                    maxLines = if (compactLabels && !expandedCompactToolbar) 1 else 2, overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.testTag("book_chapter"))
                                 if (!compactLabels) Text(if (journey?.isEveningTexts == true) "${book.key.worship.title} · базовый текст" else if (journey != null)
-                                    "${book.key.worship.title} · ${journey.parts.indexOf(book.key) + 1} из ${journey.parts.size}" else "Порядок службы",
+                                    "${book.key.worship.title} · ${journey.parts.indexOf(book.key) + 1} из ${journey.parts.size}" else book.key.worship.title,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            Icon(Icons.Default.ExpandMore, if (compactLabels || journey != null) "Порядок службы" else null)
+                            Icon(Icons.Default.ExpandMore, "Порядок службы")
                         }
-                        if (toolbarMode) BookModePicker(mode, { currentEvents.changeMode(it) }, onOpen = {
+                        if (toolbarMode && !expandedCompactToolbar) BookModePicker(mode, { currentEvents.changeMode(it) }, onOpen = {
                             playing = false; meaningFocusReturnRequested = false
                         }, compact = true, iconOnly = true,
+                            meaningEnabled = !positioning && !targetUnresolved && !meaningOpening, meaningFocus = meaningFocus)
+                        if (!expandedCompactToolbar) IconButton(onClick = { playing = false; sheet = "options" }, modifier = Modifier.size(48.dp)) {
+                            Icon(Icons.Default.TextFields, "Настроить чтение")
+                        }
+                    }
+                    if (expandedCompactToolbar) Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        BookModePicker(mode, { currentEvents.changeMode(it) }, onOpen = {
+                            playing = false; meaningFocusReturnRequested = false
+                        }, compact = true, meaningIconOnly = true, modifier = Modifier.weight(1f),
                             meaningEnabled = !positioning && !targetUnresolved && !meaningOpening, meaningFocus = meaningFocus)
                         IconButton(onClick = { playing = false; sheet = "options" }, modifier = Modifier.size(48.dp)) {
                             Icon(Icons.Default.TextFields, "Настроить чтение")
@@ -1270,7 +1285,7 @@ internal fun bookPartAction(kind: WorshipKind): String = when (kind) {
 @Composable
 internal fun BookModePicker(mode: BookReadingMode, onSelect: (BookReadingMode) -> Unit, onOpen: () -> Unit,
     compact: Boolean = false, iconOnly: Boolean = false, meaningEnabled: Boolean = true,
-    meaningFocus: FocusRequester? = null) {
+    meaningFocus: FocusRequester? = null, meaningIconOnly: Boolean = iconOnly, modifier: Modifier = Modifier) {
     var expanded by remember { mutableStateOf(false) }
     val density = LocalDensity.current
     val measurer = rememberTextMeasurer()
@@ -1281,20 +1296,29 @@ internal fun BookModePicker(mode: BookReadingMode, onSelect: (BookReadingMode) -
         val measured = measurer.measure(AnnotatedString(value.title), style = style, softWrap = false, maxLines = 1)
         with(density) { measured.size.width.toDp() + 18.dp }.coerceAtLeast(48.dp)
     }
-    BoxWithConstraints(if (iconOnly) Modifier else Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+    val embedded = meaningIconOnly && !iconOnly
+    BoxWithConstraints(if (iconOnly || embedded) modifier else modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        val availablePickerWidth = maxWidth
         val needsMenu = compact || minimumWidths.fold(24.dp) { total, width -> total + width } > maxWidth
         if (needsMenu) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (iconOnly) IconButton(onClick = { onOpen(); expanded = true }, modifier = Modifier.size(48.dp).testTag("book_mode_menu")) {
                     Icon(Icons.Default.Translate, "Язык текста: ${mode.title}")
                 } else OutlinedButton(onClick = { onOpen(); expanded = true },
-                    modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("book_mode_menu")) {
+                    contentPadding = if (embedded) PaddingValues(horizontal = 8.dp, vertical = 12.dp)
+                        else ButtonDefaults.ContentPadding,
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("book_mode_menu")
+                        .semantics { contentDescription = "Язык текста: ${mode.title}" }) {
                     Text(mode.title, style = style, modifier = Modifier.testTag("book_mode_menu_label"))
-                    Spacer(Modifier.width(12.dp)); Icon(Icons.Default.ExpandMore, null)
+                    val labelWidth = with(density) { measurer.measure(AnnotatedString(mode.title), style, softWrap = false).size.width.toDp() }
+                    val languageWidth = if (embedded) availablePickerWidth - 60.dp else availablePickerWidth
+                    if (!embedded || labelWidth + 48.dp <= languageWidth) {
+                        Spacer(Modifier.width(if (embedded) 8.dp else 12.dp)); Icon(Icons.Default.ExpandMore, null)
+                    }
                 }
                 val meaningModifier = Modifier.testTag("book_mode_meaning")
                     .then(if (meaningFocus != null) Modifier.focusRequester(meaningFocus) else Modifier)
-                if (iconOnly) IconButton(onClick = { onSelect(BookReadingMode.MEANING) }, enabled = meaningEnabled,
+                if (meaningIconOnly) IconButton(onClick = { onSelect(BookReadingMode.MEANING) }, enabled = meaningEnabled,
                     modifier = meaningModifier.size(48.dp)) { Icon(Icons.Default.Info, "Смысл этого места") }
                 else OutlinedButton(onClick = { onSelect(BookReadingMode.MEANING) }, enabled = meaningEnabled,
                     modifier = meaningModifier.heightIn(min = 48.dp)) { Text("Смысл") }
@@ -1387,7 +1411,8 @@ private fun BookReaderAction(label: String, icon: ImageVector, description: Stri
         colors = ButtonDefaults.textButtonColors(containerColor = if (emphasized) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLow)) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Icon(icon, description, Modifier.size(24.dp))
-            if (!iconsOnly) Text(label, textAlign = TextAlign.Center, style = MaterialTheme.typography.labelLarge)
+            if (!iconsOnly) Text(label, modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center, style = MaterialTheme.typography.labelLarge)
         }
     }
 }

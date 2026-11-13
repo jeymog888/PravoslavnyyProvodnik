@@ -56,19 +56,6 @@ internal fun BookMeaningPanel(content: BookMeaningContent, textSize: Int,
                 Text("Объяснение Феории", style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            content.excerpt?.let { excerpt ->
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Из открытого текста", style = MaterialTheme.typography.labelLarge)
-                    Text(excerpt, style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = if (fullExcerpt) Int.MAX_VALUE else 2, overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.testTag("book_meaning_excerpt"))
-                    TextButton(onClick = { fullExcerpt = !fullExcerpt }, modifier = Modifier.heightIn(min = 48.dp)
-                        .testTag("book_meaning_excerpt_toggle").semantics {
-                            stateDescription = if (fullExcerpt) "Развернуто" else "Свернуто"
-                        }) { Text(if (fullExcerpt) "Свернуть фрагмент" else "Показать весь фрагмент") }
-                }
-            }
             content.brief?.let { brief ->
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("Что происходит", style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
@@ -101,6 +88,20 @@ internal fun BookMeaningPanel(content: BookMeaningContent, textSize: Int,
                 content.brief?.let { brief ->
                     TextButton(onClick = { onOpenUrl(brief.sourceUrl) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                         .testTag("book_meaning_source")) { Text("Источник пояснения") }
+                }
+            }
+            content.excerpt?.let { excerpt ->
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Из открытого текста", style = MaterialTheme.typography.labelLarge)
+                    Text(excerpt, style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = if (fullExcerpt) Int.MAX_VALUE else 2, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.testTag("book_meaning_excerpt"))
+                    TextButton(onClick = { fullExcerpt = !fullExcerpt }, modifier = Modifier.heightIn(min = 48.dp)
+                        .testTag("book_meaning_excerpt_toggle").semantics {
+                            stateDescription = if (fullExcerpt) "Развернуто" else "Свернуто"
+                        }) { Text(if (fullExcerpt) "Свернуть фрагмент" else "Показать весь фрагмент") }
                 }
             }
         }
