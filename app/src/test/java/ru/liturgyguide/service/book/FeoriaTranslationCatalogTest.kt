@@ -14,7 +14,7 @@ import ru.liturgyguide.service.schedule.ScheduleTransport
 import java.io.IOException
 import java.nio.file.Files
 
-/** Protocol regressions for the previous eleven-pair edition; revision3 full coverage is tested separately. */
+/** Protocol regressions for the previous eleven-pair edition; later extensions are tested separately. */
 class FeoriaTranslationCatalogTest {
     private val directory = Files.createTempDirectory("feoria-catalog-").toFile()
     private val cache = FileBookCache(directory)
@@ -47,8 +47,8 @@ class FeoriaTranslationCatalogTest {
     @After fun clean() { directory.deleteRecursively() }
 
     @Test fun previousEightApprovedPairsStayUnchangedAndLegacyParaphrasesRemainSeparate() {
-        assertEquals(3, FeoriaTranslationCatalog.REVISION)
-        assertEquals(116, BookTranslationIndex.fromFeoriaCatalog().size)
+        assertEquals(4, FeoriaTranslationCatalog.REVISION)
+        assertEquals(126, BookTranslationIndex.fromFeoriaCatalog().size)
         assertEquals(11, own.size)
         assertEquals(source, BookTranslationIndex.FEORIA_TRANSLATION_SOURCE)
         assertEquals(BookSource("Русское изложение: редакция Феории", source.url), BookTranslationIndex.EDITORIAL_SOURCE)

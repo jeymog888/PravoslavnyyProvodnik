@@ -11,6 +11,9 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.gson.Gson
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import kotlinx.coroutines.CompletableDeferred
 import org.junit.After
 import org.junit.Assert.*
@@ -28,7 +31,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
-/** A real old native book and local repository. No captured response is called a live result. */
+/** Historical previous11/104-block protocol; current126 completeness has its own native flow. */
 @RunWith(AndroidJUnit4::class)
 class FeoriaTranslationAcceptanceTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
@@ -53,6 +56,21 @@ class FeoriaTranslationAcceptanceTest {
     private val key = ServiceBookKey("2026-11-13", WorshipKind.MATINS, "34", topLevel = "3")
     private val parishId = "feoria-translation-fixture"
     private val ownSource = BookSource("Перевод Феории", "https://github.com/jeymog888/PravoslavnyyProvodnik")
+    // Keep this historical UI/acceptance/cursor scenario pinned to its approved previous11 edition.
+    // BookCanonRussianFlowTest exercises the current full126 catalog and its exact111-block union.
+    private val historicalOwn by lazy {
+        val json = instrumentation.context.assets.open("russian-coverage-12/previous11-approved.json")
+            .bufferedReader().use { it.readText() }
+        BookTranslationIndex.decode(JsonArray().apply {
+            JsonParser.parseString(json).asJsonArray.forEach { value ->
+                val row = value.asJsonObject
+                add(JsonObject().apply {
+                    add("original", row["original"]); add("russian", row["russian"])
+                    addProperty("source", ownSource.title); addProperty("url", ownSource.url)
+                })
+            }
+        }.toString())
+    }
     private val original = "Прииди́те, поклони́мся и припаде́м Самому́ Христу́, Царе́ви и Бо́гу на́шему."
     private val expected = "Придите, поклонимся и падем ниц перед Самим Христом, нашим Царем и Богом."
     private val receipt = linkedMapOf<String, Any?>("status" to "RUNNING", "scope" to "local catalog with actual old native book/repository/reader; optional network disabled")
@@ -65,6 +83,7 @@ class FeoriaTranslationAcceptanceTest {
 
     @Test fun oldBookOffersReviewedLocalTranslationThenKeepsAcceptedRussianAndAttributionOffline() {
         try {
+            assertEquals(11, historicalOwn.size)
             val old = instrumentation.context.assets.open("polyeleos-journey/ranked-matins-2026-11-13-church34.json")
                 .bufferedReader().use { Gson().fromJson(it, ServiceBook::class.java) }
             assertEquals("4b9b2e7278f3d670ee813dd2afd341fcb7b2d33b0348a0a4754c0f36ad2f8b79", old.contentHash)
@@ -163,7 +182,7 @@ class FeoriaTranslationAcceptanceTest {
 
     private fun repository() = ServiceBookRepository(FileBookCache(directory), ScheduleTransport { url ->
         calls += url; error("The local catalog and accepted offline book require no transport")
-    }, translations = BookTranslationIndex.fromFeoriaCatalog(), downloadRussian = false)
+    }, translations = historicalOwn, downloadRussian = false)
     private fun observed(repository: ServiceBookRepository): ServiceBooks = object : ServiceBooks by repository {
         override suspend fun enrichSaved(accepted: ServiceBook, allowNetwork: Boolean): BookLoadResult.Ready? {
             val first = firstClaimed.compareAndSet(false, true)

@@ -19,7 +19,7 @@ import ru.liturgyguide.service.schedule.ScheduleTransport
 import java.io.File
 import java.util.UUID
 
-/** Full105-body catalog on Android: real archive,108 changed blocks, explicit acceptance and disk remount. */
+/** Full catalog on Android: real archive,108 canon +3 common blocks, explicit acceptance and disk remount. */
 @RunWith(AndroidJUnit4::class)
 class BookCanonRussianFlowTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
@@ -30,10 +30,13 @@ class BookCanonRussianFlowTest {
     private fun asset(path: String) = instrumentation.context.assets.open(path).use { it.readBytes().toString(Charsets.UTF_8) }
     @After fun clean() { context.deleteSharedPreferences(name); directory.deleteRecursively() }
 
-    @Test fun all105BodiesAdd108BlocksOnlyToTheAcceptedCandidateAndBothEditionsRemainOffline() = runBlocking {
+    @Test fun all105BodiesAdd108CanonAnd3CommonBlocksOnlyToTheCandidateAndBothEditionsRemainOffline() = runBlocking {
         val json = asset("quiet-matins/matins-accepted-unchanged.json")
         val expected = JsonParser.parseString(asset("russian-coverage-12/canon105-expected.json")).asJsonObject
+        val common = JsonParser.parseString(asset("russian-coverage-12/common10-oracle.json")).asJsonObject
+        val commonArchive = common["acceptedMatinsArchive"].asJsonObject
         assertEquals(expected["originalArchiveSha256"].asString, BookText.sha256(json))
+        assertEquals(commonArchive["sourceFixtureSha256"].asString, BookText.sha256(json))
         val original = Gson().fromJson(json, ServiceBook::class.java)
         assertTrue(ServiceBookIntegrity.valid(original))
         val cache = FileBookCache(directory)
@@ -68,13 +71,21 @@ class BookCanonRussianFlowTest {
             fraction = .35f, mode = BookReadingMode.RUSSIAN, wordsPerMinute = 103, lastTextMode = BookReadingMode.RUSSIAN)
         assertTrue(store.save(position))
         val own = BookTranslationIndex.fromFeoriaCatalog()
-        assertEquals(116, own.size)
+        assertEquals(126, own.size)
         var requests = 0
         val repository = ServiceBookRepository(cache, ScheduleTransport { requests++; error("Full own catalog is offline") }, translations = own)
         val candidate = requireNotNull(repository.enrichSaved(baseline, allowNetwork = false)).book
         val changed = baseline.blocks.zip(candidate.blocks).filter { it.first != it.second }
-        assertEquals(108, changed.size)
-        assertEquals(rows.flatMap { row -> row["blockIds"].asJsonArray.map { it.asString } }.toSet(), changed.map { it.first.id }.toSet())
+        val canonIds = rows.flatMap { row -> row["blockIds"].asJsonArray.map { it.asString } }.toSet()
+        val commonRows = commonArchive["expected"].asJsonArray.map { it.asJsonObject }
+        val commonIds = commonRows.map { it["blockId"].asString }.toSet()
+        assertEquals(108, canonIds.size)
+        assertEquals(3, commonRows.size); assertEquals(3, commonIds.size)
+        assertTrue(canonIds.intersect(commonIds).isEmpty())
+        assertEquals(108, changed.count { it.first.id in canonIds })
+        assertEquals(3, changed.count { it.first.id in commonIds })
+        assertEquals(111, changed.size)
+        assertEquals(canonIds + commonIds, changed.map { it.first.id }.toSet())
         for (row in rows) for (blockId in row["blockIds"].asJsonArray) {
             val before = baseline.blocks.single { it.id == blockId.asString }
             val after = candidate.blocks.single { it.id == blockId.asString }
@@ -84,6 +95,16 @@ class BookCanonRussianFlowTest {
             assertEquals(BookTranslationIndex.FEORIA_TRANSLATION_SOURCE, after.translationSource)
             assertEquals(before.copy(russian = after.russian, translationSource = after.translationSource), after)
         }
+        for (row in commonRows) {
+            val before = baseline.blocks.single { it.id == row["blockId"].asString }
+            val after = candidate.blocks.single { it.id == row["blockId"].asString }
+            assertNull(before.russian)
+            assertEquals(row["originalSha256"].asString, BookText.sha256(after.original))
+            assertEquals(row["russianSha256"].asString, BookText.sha256(requireNotNull(after.russian)))
+            assertEquals(BookTranslationIndex.FEORIA_TRANSLATION_SOURCE, after.translationSource)
+            assertEquals(before.copy(russian = after.russian, translationSource = after.translationSource), after)
+        }
+        assertEquals(baseline.blocks.map { it.id to it.original }, candidate.blocks.map { it.id to it.original })
         assertEquals(publishedBefore, candidate.blocks.filter { it.id in publishedBefore.map(BookBlock::id) })
         assertEquals(position, store.last("canon12"))
         assertEquals(baseline, cache.readVersion(baseline.key, position.contentHash))

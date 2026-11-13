@@ -236,7 +236,18 @@ class BookPublishedRussianCoverageTest {
         assertEquals(listOf(74, 8, 0, 52, 6, 4), oracle.map { it.asJsonObject.get("gains").asInt })
         val corpus = BookTranslationCorpus.decode(text("corpus11-3694.json"))
         assertEquals(3694, corpus.index.size)
-        val common = corpus.index.plus(BookTranslationIndex.fromFeoriaCatalog())
+        // Freeze the actual previous-release catalog: later own translations must not
+        // silently change this historical published-source delta or its missing counts.
+        val previousOwn = Gson().fromJson(requireNotNull(javaClass.getResourceAsStream(
+            "/russian-coverage-12/previous11-approved.json")).bufferedReader().use { it.readText() },
+            Array<FeoriaTranslationCatalog.Entry>::class.java)
+        assertEquals(11, previousOwn.size)
+        val previousIndex = BookTranslationIndex.decode(Gson().toJson(previousOwn.map {
+            mapOf("original" to it.original, "russian" to it.russian,
+                "source" to BookTranslationIndex.FEORIA_TRANSLATION_SOURCE.title,
+                "url" to BookTranslationIndex.FEORIA_TRANSLATION_SOURCE.url)
+        }))
+        val common = corpus.index.plus(previousIndex)
         val calendar15 = requireNotNull(PublishedCalendarSupplements.decode(
             requireNotNull(javaClass.getResourceAsStream("/calendar/2026-11-15.json")).bufferedReader().use { it.readText() }, "2026-11-15"))
         val calendar22 = requireNotNull(BookTranslationIndex.fromCalendarPage(Jsoup.parse(

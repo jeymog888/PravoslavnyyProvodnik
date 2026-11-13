@@ -27,8 +27,8 @@ class FeoriaCanonTranslationsTest {
     @After fun clean() { directory.deleteRecursively() }
 
     @Test fun all105CompletePairsAndProvenanceMatchThePinnedSourceOracle() {
-        assertEquals(3, FeoriaTranslationCatalog.REVISION)
-        assertEquals(116, own.size)
+        assertEquals(4, FeoriaTranslationCatalog.REVISION)
+        assertEquals(126, own.size)
         assertEquals(105, rows.size)
         assertEquals(105, FeoriaCanonTranslations.records.size)
         assertEquals(mapOf("cross-tone6-friday" to 40,
@@ -72,7 +72,7 @@ class FeoriaCanonTranslationsTest {
             Array<FeoriaTranslationCatalog.Entry>::class.java).toList()
         assertEquals(11, before.size)
         assertEquals(before, FeoriaTranslationCatalog.entries.take(11))
-        assertEquals(116, FeoriaTranslationCatalog.entries.map { BookTranslationIndex.normal(it.original) }.distinct().size)
+        assertEquals(126, FeoriaTranslationCatalog.entries.map { BookTranslationIndex.normal(it.original) }.distinct().size)
         assertTrue(FeoriaTranslationCatalog.entries.all { entry ->
             FeoriaTranslationCatalog.recognizes(entry.original,
                 BookTranslation(entry.russian, BookTranslationIndex.FEORIA_TRANSLATION_SOURCE))
@@ -112,10 +112,18 @@ class FeoriaCanonTranslationsTest {
             it.asJsonObject["blockId"].asString to row["russian"].asString
         } }.toMap()
         assertEquals(108, expected.size)
+        val common = CommonTranslationFixtures.archiveExpected.associate { row ->
+            row["blockId"].asString to CommonTranslationFixtures.rowsById.getValue(row["itemId"].asString)["russian"].asString
+        }
+        assertEquals(3, common.size)
+        assertTrue(expected.keys.intersect(common.keys).isEmpty())
         val changed = baseline.blocks.zip(after.blocks).filter { it.first != it.second }
-        assertEquals(expected.keys, changed.map { it.first.id }.toSet())
+        assertEquals(108, changed.count { it.first.id in expected })
+        assertEquals(3, changed.count { it.first.id in common })
+        assertEquals(111, changed.size)
+        assertEquals(expected.keys + common.keys, changed.map { it.first.id }.toSet())
         for ((old, next) in changed) {
-            assertEquals(old.copy(russian = expected.getValue(old.id), translationSource = BookTranslationIndex.FEORIA_TRANSLATION_SOURCE), next)
+            assertEquals(old.copy(russian = (expected + common).getValue(old.id), translationSource = BookTranslationIndex.FEORIA_TRANSLATION_SOURCE), next)
         }
         val publishedBefore = baseline.blocks.filter { it.translationSource in BookPublishedIrmos6.SOURCES }
         assertEquals(8, publishedBefore.size)
