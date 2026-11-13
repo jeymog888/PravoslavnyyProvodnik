@@ -81,8 +81,25 @@ class CatalogPlaceDiscovery(private val local: BundledChurchCatalog, private val
         val found = withContext(Dispatchers.IO) {
             val catalog = local.get() ?: return@withContext null
             val context = currentCoroutineContext()
-            catalog.search(cleaned) { context.ensureActive() }.takeIf { it.isNotEmpty() }
-                ?.let { catalog.result(it) }
+            val strict = catalog.search(cleaned) { context.ensureActive() }
+            val scope = places?.get()?.churchCityScope(cleaned) { context.ensureActive() }
+            val strictIds = strict.map { it.id }.toSet()
+            val scopedPublished = scope?.let {
+                catalog.searchPublishedCity(cleaned, it.remainingQuery, it.city.name) { context.ensureActive() }
+            }.orEmpty().filterNot { it.id in strictIds }
+            val published = strict + scopedPublished
+            val existingIds = published.map { it.id }.toSet()
+            val added = scope?.let { catalog.supplementNearCity(it.remainingQuery, it.city.center) {
+                context.ensureActive()
+            }.filterNot { it.id in existingIds } }.orEmpty()
+            // Keep the complete already-capped strict result. A proximity supplement
+            // must not push a published-city match out through another take(MAX).
+            val items = published + added
+            if (items.isEmpty()) null else catalog.result(items).let { result ->
+                if (scope == null || added.isEmpty()) result else result.copy(notice =
+                    "Дополнительно показаны храмы в радиусе 10 км от центра: ${scope.city.name}. " +
+                        "Город в этих карточках не указан; сверьте название и адрес")
+            }
         }
         return found ?: network.searchPlaces(cleaned)
     }
@@ -164,11 +181,52 @@ internal class LocalChurchCatalog private constructor(val fetchedAt: Long, entri
             .take(DefaultPlaceDiscovery.MAX_CHURCHES).map { it.first }
     }
 
+    /** Missing addr:city may use proximity, without writing that city into the result. */
+    fun supplementNearCity(query: String, center: GeoPoint, checkCancelled: () -> Unit): List<DiscoveredChurch> {
+        val wanted = CatalogWords.words(query).filterNot { it in CatalogWords.generic }.distinct().map { CatalogWords.Token(it) }
+        val normalized = CatalogWords.normalized(query)
+        return entries.mapIndexedNotNull { index, entry ->
+            if (index % 256 == 0) checkCancelled()
+            if (entry.church.city.isNotBlank()) return@mapIndexedNotNull null
+            val distance = center.distanceMeters(entry.church.center)
+            if (distance > CITY_SUPPLEMENT_RADIUS_METERS ||
+                !wanted.all { CatalogWords.matches(it, entry.allWords, entry.allStems) }) return@mapIndexedNotNull null
+            val score = (if (normalized in entry.names) 1_000 else 0) +
+                wanted.count { CatalogWords.matches(it, entry.nameWords, entry.nameStems) } * 10 +
+                wanted.count { it.value in entry.nameWords }
+            Triple(entry.church, score, distance)
+        }.sortedWith(compareByDescending<Triple<DiscoveredChurch, Int, Double>> { it.second }.thenBy { it.third }
+            .thenBy { it.first.name }.thenBy { it.first.id }).map { it.first }
+    }
+
+    /** A unique explicit location must not turn the remaining saint name into a second city. */
+    fun searchPublishedCity(originalQuery: String, remainingQuery: String, city: String,
+        checkCancelled: () -> Unit): List<DiscoveredChurch> {
+        val cityWords = CatalogWords.words(city).filterNot { it in CatalogWords.cityMarkers }
+        if (cityWords.isEmpty()) return emptyList()
+        val remaining = CatalogWords.words(remainingQuery).filterNot { it in CatalogWords.generic }.distinct().map { CatalogWords.Token(it) }
+        val original = CatalogWords.words(originalQuery).filterNot { it in CatalogWords.generic }.distinct().map { CatalogWords.Token(it) }
+        val normalized = CatalogWords.normalized(originalQuery)
+        return entries.mapIndexedNotNull { index, entry ->
+            if (index % 256 == 0) checkCancelled()
+            if (entry.cityWords != cityWords ||
+                !remaining.all { CatalogWords.matches(it, entry.allWords, entry.allStems) }) return@mapIndexedNotNull null
+            // Keep the original query's ranking and cap. Ordinary strict searches
+            // therefore keep the same published-city rows, without a new radius rule.
+            val score = (if (normalized in entry.names) 1_000 else 0) +
+                original.count { CatalogWords.matches(it, entry.nameWords, entry.nameStems) } * 10 +
+                original.count { it.value in entry.nameWords }
+            entry.church to score
+        }.sortedWith(compareByDescending<Pair<DiscoveredChurch, Int>> { it.second }.thenBy { it.first.name }.thenBy { it.first.id })
+            .take(DefaultPlaceDiscovery.MAX_CHURCHES).map { it.first }
+    }
+
     fun result(items: List<DiscoveredChurch>, center: GeoPoint? = null, radius: Int? = null) =
         DiscoveryResult.Success(items, fetchedAt, DiscoveryCacheStatus.LOCAL_SNAPSHOT, DiscoveryProvider.LOCAL_CATALOG,
             center, radius, notice = "Данные карты могут быть неполными. Сверьте название и адрес храма")
 
     companion object {
+        private const val CITY_SUPPLEMENT_RADIUS_METERS = 10_000
         internal const val MAX_CHARACTERS = 64 * 1024 * 1024
         internal const val MAX_RECORDS = 120_000
         // The importer reads eight name/alias tags of at most 2048 characters each.
@@ -286,7 +344,7 @@ internal class LocalChurchCatalog private constructor(val fetchedAt: Long, entri
     }
 }
 
-private object CatalogWords {
+internal object CatalogWords {
     private val wordPattern = Regex("[\\p{L}\\p{N}]+")
     private val cyrillicWord = Regex("[а-я]+")
     data class Token(val value: String) {

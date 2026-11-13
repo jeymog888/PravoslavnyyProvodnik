@@ -60,6 +60,66 @@ internal class LocalPlaceGazetteer private constructor(
         fun asStation() = DiscoveryLandmark(id, name, center, city, region, country, network, contextLabel, mapColour)
     }
 
+    /** A source city point is a proximity anchor, not an administrative boundary. */
+    data class ChurchCityScope(val city: DiscoveryCity, val remainingQuery: String)
+
+    private data class CityPhrase(val entry: Entry, val nameStart: Int, val endExclusive: Int,
+        val removalStart: Int, val eligible: Boolean)
+
+    fun churchCityScope(query: String, checkCancelled: () -> Unit = {}): ChurchCityScope? {
+        val raw = CatalogWords.words(query)
+        if (raw.none { it !in CatalogWords.generic }) return null
+        val candidates = mutableListOf<CityPhrase>()
+        for ((index, entry) in cities.withIndex()) {
+            if (index % 128 == 0) checkCancelled()
+            // Only the primary source name can bind a free-text church query.
+            // Prefixes, aliases and a capped city-search result are not evidence.
+            val name = CatalogWords.words(entry.name)
+            if (name.isEmpty() || name.size > raw.size) continue
+            for (start in 0..raw.size - name.size) {
+                val end = start + name.size
+                val marker = raw.getOrNull(start - 1)
+                val phrase = raw.subList(start, end)
+                // Forms can suppress an unsafe shorter-name fallback. They do not
+                // authorize a city: the separate grammar below must still accept it.
+                if (!phrase.indices.all { word -> phrase[word] in CatalogWords.cityForms(name[word]) }) continue
+                val exact = phrase == name
+                val locative = phrase.indices.all { word -> phrase[word] in cityLocatives(name[word], word < name.lastIndex) }
+                val marked = when (marker) {
+                    "в", "во", "городе" -> locative
+                    "г", "город" -> exact
+                    else -> false
+                }
+                val trailing = end == raw.size && exact && marker !in LOCATION_MARKERS && marker !in NON_LOCATION_PREFIXES
+                candidates += CityPhrase(entry, start, end, if (marked) start - 1 else start, marked || trailing)
+            }
+        }
+        // Match a whole multiword name before a contained shorter city name.
+        // Exact namesakes remain separate entities and therefore remain ambiguous.
+        val longest = candidates.filter { candidate -> candidates.none { other ->
+            other.nameStart <= candidate.nameStart && other.endExclusive >= candidate.endExclusive &&
+                other.endExclusive - other.nameStart > candidate.endExclusive - candidate.nameStart
+        } }
+        val selected = longest.filter { it.eligible }.singleOrNull() ?: return null
+        return ChurchCityScope(selected.entry.asCity(), raw.filterIndexed { index, _ ->
+            index !in selected.removalStart until selected.endExclusive
+        }.joinToString(" "))
+    }
+
+    private fun cityLocatives(word: String, keepUnchangedPrefix: Boolean): Set<String> {
+        val endings = when {
+            word.endsWith("ая") || word.endsWith("яя") -> listOf("ой", "ей")
+            listOf("ое", "ее", "ий", "ый", "ой").any(word::endsWith) -> listOf("ом", "ем")
+            word.endsWith("а") || word.endsWith("я") -> listOf("е", "и")
+            word.endsWith("ь") -> listOf("и", "е")
+            word.last() in "бвгджзклмнпрстфхцчшщ" -> listOf("е")
+            else -> emptyList()
+        }
+        val forms = CatalogWords.cityForms(word).filter { form -> endings.any(form::endsWith) }.toSet()
+        // Uninflected places and fixed prefixes such as Санкт retain their source form.
+        return forms + if (keepUnchangedPrefix || endings.isEmpty()) setOf(word) else emptySet()
+    }
+
     fun searchCities(query: String, checkCancelled: () -> Unit = {}): DiscoveryResult.Success<DiscoveryCity> {
         val wanted = PlaceWords.words(query).filterNot { it in PlaceWords.cityMarkers }
         if (wanted.isEmpty()) return result(emptyList())
@@ -109,6 +169,11 @@ internal class LocalPlaceGazetteer private constructor(
         items, fetchedAt, DiscoveryCacheStatus.LOCAL_SNAPSHOT, DiscoveryProvider.LOCAL_CATALOG)
 
     companion object {
+        private val LOCATION_MARKERS = setOf("в", "во", "г", "город", "городе")
+        private val NON_LOCATION_PREFIXES = setOf("св", "свт", "святой", "святого", "святителя", "святых",
+            "князь", "князя", "равноапостольного", "мученика", "преподобного", "имени", "имя", "честь",
+            "икона", "иконы", "улица", "улицы", "ул", "переулок", "переулка", "пер", "проспект", "проспекта",
+            "площадь", "площади", "набережная", "набережной", "шоссе", "из", "с", "со", "к", "от")
         const val MAX_CHARACTERS = 16 * 1024 * 1024
         const val MAX_RECORDS = 20_000
         const val MAX_PREFIX_RESULTS = 60
