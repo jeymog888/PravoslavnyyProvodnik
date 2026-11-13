@@ -59,6 +59,8 @@ data class ScheduleSourceCandidate(
     val linkedEmail: String = "",
     val verificationUnavailable: Boolean = false,
     val geometryEvidence: ScheduleGeometryEvidence? = null,
+    // Candidate facts only; never used as the transient foreign-image witness.
+    val ownContact: OwnContactCandidateMetadata? = null,
 ) {
     val id: String get() = sha("$provider\u0000$providerObjectId\u0000$sourceUrl")
 
@@ -83,6 +85,20 @@ data class ScheduleSourceCandidate(
                 bounds[1] in -180.0..180.0 && bounds[3] in -180.0..180.0 && bounds[1] < bounds[3])
             require(evidenceUrl == "https://elitsy.ru/parish/$providerObjectId/")
         }
+        if (provider == OwnContactCandidateProvider.PROVIDER) {
+            val metadata = requireNotNull(ownContact)
+            require(OwnContactChildIdentity.ordinaryOsm(parish) && OwnContactChildIdentity.fullName(name) &&
+                OwnContactChildIdentity.pointAgrees(parish, latitude, longitude))
+            require(sourceUrl == evidenceUrl && geometryEvidence == ScheduleGeometryEvidence(evidenceUrl, evidenceSha256))
+            require(metadata.blockKey.matches(Regex("(?:child:[a-f0-9]{40}|dom:[A-Za-z0-9_-]{1,100})")))
+            require(providerObjectId == OwnContactChildIdentity.objectId(evidenceUrl, metadata.blockKey, name))
+            require(metadata.seedOrigins.size in 1..20 && metadata.seedOrigins.distinct().size == metadata.seedOrigins.size &&
+                metadata.seedOrigins.all { it.valid() })
+            require(metadata.publishedPhone == null || metadata.publishedPhone.matches(Regex("[0-9]{10}")))
+            require(outcome == ScheduleIdentityOutcome.CONFLICT ||
+                !OwnContactChildIdentity.conflict(parish, name, address, metadata.publishedPhone))
+            require(listOf(currentContactAddress, currentContactUrl, currentContactSha256, linkedEmail).all(String::isEmpty))
+        } else require(ownContact == null)
         Instant.parse(checkedAt)
         require(latitude.isFinite() && longitude.isFinite() && latitude in -90.0..90.0 && longitude in -180.0..180.0)
         require(outcome in setOf(ScheduleIdentityOutcome.INSUFFICIENT, ScheduleIdentityOutcome.CONFLICT))
