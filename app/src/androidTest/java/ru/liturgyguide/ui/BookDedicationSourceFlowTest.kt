@@ -2,6 +2,7 @@ package ru.liturgyguide.ui
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.graphics.Bitmap
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.semantics.SemanticsActions
@@ -18,6 +19,7 @@ import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.json.JSONObject
 import ru.liturgyguide.model.*
 import ru.liturgyguide.service.book.*
 import ru.liturgyguide.service.schedule.ScheduleResponse
@@ -302,7 +304,7 @@ class BookDedicationSourceFlowTest {
         assertTrue(store.value.save(BookReadingPosition(genericKey, original.contentHash, parish, slot.id, chapter.id,
             wordsPerMinute = 107, lastTextMode = BookReadingMode.ORIGINAL)))
         val restoration = StateRestorationTester(compose)
-        restoration.setContent { GuideTheme(false) {
+        restoration.setContent { GuideTheme(InstrumentationRegistry.getArguments().getString("sourceFlowDark") == "true") {
             if (mounted.value) {
                 val owner = route.value
                 ServiceBookScreen(owner.activeKey, parish, books.value, store.value, 0, onBack = {}, onSettings = {}, onOpenUrl = {},
@@ -334,12 +336,17 @@ class BookDedicationSourceFlowTest {
                     .any { it.text == "Праздники в календаре на 2026 год" }
             }
         }
+        captureActualModal("01-results")
         chooser("book_dedication_result_11183").performClick()
         await("book_dedication_confirmed_title")
         chooser("book_dedication_confirmed_title").assertTextContains("Перенесение мощей", substring = true)
         assertEquals("11183", proof().mineaId)
         assertEquals("2026-05-22", proof().calendarDate)
-        chooser("book_dedication_open").performClick()
+        chooser("book_dedication_confirmed_title")
+        captureActualModal("02-confirmed")
+        val open = chooser("book_dedication_open")
+        captureActualModal("03-open-action")
+        open.performClick()
         compose.waitUntil(5_000) { books.value.inFlight.get() == 1 }
         assertEquals(proof(), route.value.pendingDedication?.selection)
         val old = requireNotNull(route.value.sourceReturn).position
@@ -384,6 +391,25 @@ class BookDedicationSourceFlowTest {
     private fun rememberSelectedSource() {
         openDetails()
         details("book_dedication_remember").assertIsEnabled().performClick()
+    }
+    private fun captureActualModal(label: String) {
+        val arguments = InstrumentationRegistry.getArguments()
+        val run = arguments.getString("sourceFlowVisualRun") ?: return
+        require(run.matches(Regex("[A-Za-z0-9_-]{1,100}")))
+        val output = File(requireNotNull(context.getExternalFilesDir(null)), "dedication-actual-modal/$run")
+        assertTrue(output.isDirectory || output.mkdirs())
+        val image = output.resolve("$label.png")
+        check(!image.exists()) { "Use a new sourceFlowVisualRun" }
+        settle()
+        val font = compose.activity.resources.configuration.fontScale
+        assertEquals("This actual-modal visual run uses the real 200% system font", 2f, font, .001f)
+        val bitmap = requireNotNull(instrumentation.uiAutomation.takeScreenshot())
+        image.outputStream().use { assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)) }
+        output.resolve("$label.json").writeText(JSONObject().put("fontScale", font)
+            .put("dark", arguments.getString("sourceFlowDark") == "true")
+            .put("scope", "Production Reader ModalBottomSheet during the genuine source-selection flow; native screenshot, not a standalone chooser wrapper")
+            .put("pixelWidth", bitmap.width).put("pixelHeight", bitmap.height).toString(2))
+        bitmap.recycle()
     }
     private fun details(tag: String) = reveal(tag, "book_calendar")
     private fun chooser(tag: String) = reveal(tag, "book_dedication_chooser")

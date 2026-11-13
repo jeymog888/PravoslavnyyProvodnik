@@ -50,7 +50,7 @@ internal fun BookDetailsButton(controls: BookOfflineControls?, isSaved: Boolean,
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         // Reserve the same space for every status, including at a large system font.
         val statusLines = if (LocalDensity.current.fontScale > 1.3f || maxWidth < 300.dp) 2 else 1
-        OutlinedButton(onClick = onClick,
+        OutlinedButton(onClick = onClick, shape = MaterialTheme.shapes.medium,
             modifier = modifier.fillMaxWidth().heightIn(min = 52.dp).semantics { stateDescription = summary }) {
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text("О дне и службе")

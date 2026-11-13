@@ -606,6 +606,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     BoxWithConstraints(Modifier.fillMaxSize()) {
     // Use this reader's actual space, including split-screen and in-app constraints.
     val shortViewport = maxHeight < 420.dp
+    val compactIntro = density.fontScale >= 1.5f || shortViewport
+    val toolbarMode = compactIntro
     val compactLabels = shortViewport || density.fontScale > 1.5f ||
         (maxWidth < 360.dp && density.fontScale > 1.1f)
     Scaffold(containerColor = MaterialTheme.colorScheme.surface,
@@ -631,12 +633,12 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                             }
                             Icon(Icons.Default.ExpandMore, if (compactLabels || journey != null) "Порядок службы" else null)
                         }
-                        if (shortViewport) BookModePicker(mode, ::changeMode, onOpen = { playing = false }, compact = true, iconOnly = true)
+                        if (toolbarMode) BookModePicker(mode, ::changeMode, onOpen = { playing = false }, compact = true, iconOnly = true)
                         IconButton(onClick = { playing = false; sheet = "options" }, modifier = Modifier.size(48.dp)) {
                             Icon(Icons.Default.TextFields, "Настроить чтение")
                         }
                     }
-                    if (!shortViewport) BookModePicker(mode, ::changeMode, onOpen = { playing = false })
+                    if (!toolbarMode) BookModePicker(mode, ::changeMode, onOpen = { playing = false })
                     if (journey?.isEveningTexts == true) journey.parts.singleOrNull { it != book.key }?.let { other ->
                         TextButton(onClick = { choosePart(other) }, enabled = !switchingPart,
                             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_open_other_part")) {
@@ -728,16 +730,20 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                     // Keep the top inset inside the header: LazyColumn's leading content
                     // padding would reveal a clipped tail of the previous prayer after a jump.
                     if (item.block == null) Column(Modifier.fillMaxWidth().padding(
-                        top = if (item.chapter.id == items.first().chapter.id) 28.dp else 12.dp, bottom = 4.dp),
+                        top = if (item.chapter.id == items.first().chapter.id && !compactIntro) 28.dp else 12.dp, bottom = 4.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         if (item.chapter.id == items.first().chapter.id) {
-                            Text(if (polyeleosBook) "Полиелейная утреня" else book.title, style = MaterialTheme.typography.headlineMedium)
+                            if (!compactIntro) Text(if (polyeleosBook) "Полиелейная утреня" else book.title,
+                                style = MaterialTheme.typography.headlineMedium)
                             if (polyeleosBook || uncheckedPolyeleosJourney) Text(
                                 if (polyeleosBook) "По календарю Азбуки веры"
                                 else "Прежний вариант утрени - полиелейный порядок не проверен",
                                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.testTag("book_rank_note"))
-                            Text("Тексты на " + LocalDate.parse(book.key.date).format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru"))),
+                            val date = LocalDate.parse(book.key.date).format(DateTimeFormatter.ofPattern(
+                                if (compactIntro) "dd.MM.uuuu" else "d MMMM uuuu", Locale.forLanguageTag("ru")))
+                            Text(if (compactIntro) "${if (polyeleosBook) "Полиелейная утреня" else book.key.worship.title} · $date"
+                                else "Тексты на $date",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("book_saved"))
                             loadWarning?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }

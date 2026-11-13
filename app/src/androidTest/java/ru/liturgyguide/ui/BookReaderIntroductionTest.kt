@@ -66,6 +66,11 @@ class BookReaderIntroductionTest {
 
     @Test fun thePublishedDateAndSelectedMemoryRemainReachableAt320DpAndTwoHundredPercentFont() {
         launch(2f)
+        // This fixture starts with PRAYER. Genuine openings containing rubrics are
+        // measured separately; this assertion does not claim their full geometry.
+        compose.onNodeWithTag("book_saved").assertTextEquals("Утреня · 13.11.2026").assertIsDisplayed()
+        compose.onNodeWithTag("book_open_calendar").assertIsDisplayed().assertHeightIsAtLeast(48.dp)
+        assertFullSyntheticPrayerLineAtLargeFont()
         compose.onNodeWithTag("book_open_calendar").performScrollTo()
         settle()
         val before = requireNotNull(store.last(parish))
@@ -78,6 +83,30 @@ class BookReaderIntroductionTest {
         assertEquals(before.anchorKind, after.anchorKind)
         assertEquals(before.fraction, after.fraction, .001f)
         assertEquals(before.followingGapFraction, after.followingGapFraction, .02f)
+    }
+
+    private fun assertFullSyntheticPrayerLineAtLargeFont() {
+        val viewport = compose.onNodeWithTag("book_content").getBoundsInRoot()
+        val dateBounds = compose.onNodeWithTag("book_saved").getUnclippedBoundsInRoot()
+        val detailsBounds = compose.onNodeWithTag("book_open_calendar").getUnclippedBoundsInRoot()
+        val nodes = compose.onAllNodesWithTag("book_text_opening-1", useUnmergedTree = true).fetchSemanticsNodes()
+        assertEquals("The untouched synthetic opening must compose its first PRAYER at 200%; " +
+            "viewport=$viewport, date=$dateBounds, details=$detailsBounds", 1, nodes.size)
+        val text = compose.onNodeWithTag("book_text_opening-1", useUnmergedTree = true)
+        val layouts = mutableListOf<TextLayoutResult>()
+        text.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { assertTrue(it(layouts)) }
+        val layout = layouts.single()
+        assertEquals(2f, layout.layoutInput.density.fontScale, .001f)
+        assertEquals(320f, viewport.right.value - viewport.left.value, 1f)
+        val density = layout.layoutInput.density.density
+        val textTop = text.getUnclippedBoundsInRoot().top.value
+        val fullLines = (0 until layout.lineCount).count { line ->
+            textTop + layout.getLineTop(line) / density >= viewport.top.value &&
+                textTop + layout.getLineBottom(line) / density <= viewport.bottom.value
+        }
+        assertTrue("The untouched synthetic opening must show at least one full PRAYER line at 200%; " +
+            "fullLines=$fullLines, textTop=$textTop, layout=${layout.size}, viewport=$viewport, " +
+            "date=$dateBounds, details=$detailsBounds", fullLines >= 1)
     }
 
     private fun checkDetailsAndReturn() {

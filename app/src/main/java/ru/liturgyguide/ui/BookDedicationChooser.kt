@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -55,6 +56,7 @@ internal fun BookDedicationChooser(services: BookDedicationServices, parishId: S
     onDismiss: () -> Unit, onOpenUrl: (String) -> Unit) {
     val scope = rememberCoroutineScope()
     val keyboard = LocalSoftwareKeyboardController.current
+    val largeFont = LocalDensity.current.fontScale >= 1.5f
     val work = remember(services, parishId, calendarYear, expectedProfile) { DedicationChoiceWork() }
     val latestOnOpen by rememberUpdatedState(onOpen)
     var query by rememberSaveable(parishId, calendarYear) { mutableStateOf("") }
@@ -199,13 +201,18 @@ internal fun BookDedicationChooser(services: BookDedicationServices, parishId: S
                 val isSelected = selectedEntry?.mineaId == match.entry.mineaId
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedButton(onClick = { select(match.entry) }, enabled = !opening,
+                        shape = MaterialTheme.shapes.medium,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.onSurface),
                         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                             .testTag("book_dedication_result_${match.entry.mineaId}").semantics { selected = isSelected }) {
                         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(match.entry.displayTitle, maxLines = if (isSelected) Int.MAX_VALUE else 2,
+                            Text(match.entry.displayTitle, maxLines = if (isSelected || largeFont) Int.MAX_VALUE else 2,
                                 overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
                             Text(match.dateCandidates.joinToString(" или ") { dedicationDate(it.toString()) }
-                                .ifEmpty { "Дату уточнит календарь" }, style = MaterialTheme.typography.bodyMedium)
+                                .ifEmpty { "Дату уточнит календарь" }, style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                     if (isSelected) {
