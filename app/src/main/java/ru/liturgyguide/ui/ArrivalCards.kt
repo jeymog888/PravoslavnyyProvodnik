@@ -187,6 +187,14 @@ internal fun scheduleSourceFor(church: Parish, state: InternetScheduleState?): S
         .firstNotNullOfOrNull(ScheduleUrl::publicSource)
 }
 
+/** Only an unresolved identity gets this shortcut; source rejection remains a separate state. */
+internal fun canChooseUnverifiedScheduleSource(church: Parish, state: InternetScheduleState?): Boolean {
+    val own = state?.takeIf { it.parishId == church.id } ?: return false
+    val editorWebsite = own.website.ifBlank { church.website }
+    return own.sourceNeedsVerification && !own.loading && !own.publicationRejected && !own.sourceHasWithdrawals &&
+        ScheduleUrl.publicSource(editorWebsite) != null
+}
+
 internal fun scheduleEmptyTitle(state: InternetScheduleState?, hasPublication: Boolean): String = when {
     state?.sourceNeedsVerification == true && state.loading -> "Проверяем источник расписания"
     state?.loading == true -> "Ищем расписание"

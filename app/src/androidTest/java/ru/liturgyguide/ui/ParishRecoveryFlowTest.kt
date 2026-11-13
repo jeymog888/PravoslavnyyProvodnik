@@ -44,6 +44,8 @@ class ParishRecoveryFlowTest(private val churchPage: Boolean, private val width:
     private val second = first.copy(id = "recovery-b", name = "Троицкий храм", shortName = "Троицкий храм")
     private val selected = mutableStateOf(first)
     private val mounted = mutableStateOf(true)
+    private val sourceSetterEnabled = mutableStateOf(true)
+    private val websiteActionEnabled = mutableStateOf(true)
     private val state = mutableStateOf(InternetScheduleState(first.id, InternetScheduleStatus.NO_WEBSITE,
         checkedAt = "2026-12-31T10:00:00Z"))
     private val submitted = mutableListOf<Pair<String, String>>()
@@ -56,6 +58,8 @@ class ParishRecoveryFlowTest(private val churchPage: Boolean, private val width:
     private val editTag get() = if (churchPage) "edit_schedule_website" else "today_edit_schedule_website"
     private val refreshTag get() = if (churchPage) "refresh_schedule" else "today_refresh_schedule"
     private val websiteTag get() = if (churchPage) "open_schedule_website" else "today_schedule_source"
+    private val sourceChoiceTag get() = if (churchPage) "church_schedule_source_choice" else "today_schedule_source_choice"
+    private val emptyTag get() = if (churchPage) "church_schedule_empty" else "today_schedule_empty"
     private val receiptTag get() = if (churchPage) "church_schedule_checked" else "today_schedule_checked"
     private val loadingTag get() = if (churchPage) "schedule_loading_summary" else "today_schedule_loading"
     private var previousFont: String? = null
@@ -132,6 +136,85 @@ class ParishRecoveryFlowTest(private val churchPage: Boolean, private val width:
         reveal(contentTag, refreshTag).assertIsEnabled()
         capture("checked", "parish_recovery_host")
         compose.runOnIdle { assertEquals(listOf(published), sites) }
+    }
+
+    @Test fun anUnverifiedSourceCanBeChosenFromTheScheduleCardWithoutAutomaticAcceptance() {
+        val website = "https://example.org/parish/schedule/?week=2026-12-31"
+        state.value = state.value.copy(status = InternetScheduleStatus.UNSUPPORTED,
+            website = website, sourceUrl = website, sourceNeedsVerification = true)
+        launch()
+        reveal(contentTag, websiteTag).assertHeightIsAtLeast(48.dp)
+            .assert(hasAnyAncestor(hasTestTag(cardTag)))
+        val choose = reveal(contentTag, sourceChoiceTag)
+        choose.assertHeightIsAtLeast(48.dp).assert(hasAnyAncestor(hasTestTag(cardTag)))
+        val websiteBounds = compose.onNodeWithTag(websiteTag).getUnclippedBoundsInRoot()
+        val choiceBounds = choose.getUnclippedBoundsInRoot()
+        assertTrue("The source choice needs at least 12 dp after the website touch target",
+            (choiceBounds.top - websiteBounds.bottom).value >= 12f)
+        assertLabelFits("Указать источник")
+        capture("unverified-source-choice", "parish_recovery_host")
+        choose.performClick()
+        reveal("schedule_source_content", "schedule_website_input")
+        assertEquals("The existing editor must start with this church's website", website,
+            compose.onNodeWithTag("schedule_website_input").fetchSemanticsNode()
+                .config[SemanticsProperties.EditableText].text)
+        compose.onNodeWithTag("schedule_source_church").assertTextEquals(first.shortName)
+        compose.runOnIdle { assertTrue(submitted.isEmpty()); assertTrue(sites.isEmpty()) }
+        capture("unverified-source-form", "schedule_source_content")
+        reveal("schedule_source_content", "cancel_schedule_website").performClick()
+        compose.onNodeWithTag("schedule_source_content").assertDoesNotExist()
+        compose.runOnIdle { assertTrue("Cancellation must not accept this source", submitted.isEmpty()) }
+
+        reveal(contentTag, sourceChoiceTag).performClick()
+        reveal("schedule_source_content", "schedule_website_input")
+        assertEquals(website, compose.onNodeWithTag("schedule_website_input").fetchSemanticsNode()
+            .config[SemanticsProperties.EditableText].text)
+        val submit = reveal("schedule_source_content", "save_schedule_website").assertIsEnabled()
+        val oldSubmit = action(submit)
+        submit.performClick()
+        compose.onNodeWithTag("schedule_source_content").assertDoesNotExist()
+        compose.runOnIdle {
+            oldSubmit()
+            assertEquals("Only an explicit submit may accept the exact URL, once", listOf(first.id to website), submitted)
+            assertTrue(sites.isEmpty())
+        }
+        reveal(contentTag, loadingTag).assertIsDisplayed()
+        compose.onNodeWithTag(sourceChoiceTag).assertDoesNotExist()
+        capture("unverified-source-loading", "parish_recovery_host")
+    }
+
+    @Test fun sourceChoiceShortcutDoesNotBypassRejectedWithdrawnLoadingOrUnsafeSources() {
+        val website = "https://example.org/parish/schedule/"
+        val unverified = state.value.copy(status = InternetScheduleStatus.UNSUPPORTED,
+            website = website, sourceUrl = website, sourceNeedsVerification = true)
+        state.value = unverified
+        launch()
+        reveal(contentTag, sourceChoiceTag).assertIsDisplayed()
+        listOf(
+            unverified.copy(loading = true),
+            unverified.copy(publicationRejected = true),
+            unverified.copy(sourceHasWithdrawals = true),
+            unverified.copy(sourceNeedsVerification = false),
+            unverified.copy(website = "http://127.0.0.1/private", sourceUrl = "http://127.0.0.1/private"),
+            unverified.copy(parishId = second.id)
+        ).forEach { guarded ->
+            compose.runOnIdle { state.value = guarded }
+            // Reveal an eager child of the schedule card so absence is not caused by LazyColumn recycling.
+            reveal(contentTag, emptyTag).assert(hasAnyAncestor(hasTestTag(cardTag)))
+            compose.onNodeWithTag(sourceChoiceTag).assertDoesNotExist()
+            compose.onNodeWithTag("schedule_source_content").assertDoesNotExist()
+        }
+        compose.runOnIdle { state.value = unverified; sourceSetterEnabled.value = false }
+        reveal(contentTag, emptyTag)
+        compose.onNodeWithTag(sourceChoiceTag).assertDoesNotExist()
+        compose.runOnIdle { sourceSetterEnabled.value = true }
+        reveal(contentTag, sourceChoiceTag).assertIsDisplayed()
+        if (!churchPage) {
+            compose.runOnIdle { websiteActionEnabled.value = false }
+            reveal(contentTag, editTag).assertIsDisplayed()
+            compose.onNodeWithTag(sourceChoiceTag).assertDoesNotExist()
+        }
+        compose.runOnIdle { assertTrue(submitted.isEmpty()); assertTrue(sites.isEmpty()) }
     }
 
     @Test fun aChangedChurchRejectsOldSubmitActionsAndDoesNotReuseTheDraft() {
@@ -236,15 +319,17 @@ class ParishRecoveryFlowTest(private val churchPage: Boolean, private val width:
                         if (churchPage) ChurchScreen(listOf(first, second), parish.id, today,
                             onSelect = { _, _ -> ChurchSelectionResult.FAILED }, onOpenUrl = { sites += it }, onBack = { error("Recovery must stay here") },
                             searchQuery = "", onSearchQueryChange = {}, internetSchedule = current,
-                            onRefreshSchedule = { state.value = current.copy(loading = true) }, onSetScheduleSource = setSource,
+                            onRefreshSchedule = { state.value = current.copy(loading = true) },
+                            onSetScheduleSource = setSource.takeIf { sourceSetterEnabled.value },
                             onReadLiturgy = { error("The requested evening book is not a liturgy") },
                             onReadServiceText = { date, worship -> books += date to worship }, now = now)
                         else TodayScreen(parish, now, current, null, null,
                             onFindChurch = {}, onChurchDetails = { error("Recovery must not require another screen") },
                             onOpenBook = { date, worship, _ -> books += date to worship }, onResumeBook = {},
                             onRefresh = { state.value = current.copy(loading = true) }, onResumeLegacy = null, bottomBar = {},
-                            onOpenScheduleSource = scheduleSourceFor(parish, current)?.let { url -> { sites += url; Unit } },
-                            onSetScheduleSource = setSource)
+                            onOpenScheduleSource = scheduleSourceFor(parish, current)?.takeIf { websiteActionEnabled.value }
+                                ?.let { url -> { sites += url; Unit } },
+                            onSetScheduleSource = setSource.takeIf { sourceSetterEnabled.value })
                     }
                 } }
         }

@@ -360,6 +360,15 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                                     Spacer(Modifier.width(12.dp)); Text("Открыть сайт")
                                 }
                             }
+                            if (onSetScheduleSource != null && canChooseUnverifiedScheduleSource(church, ownState)) {
+                                Text("Проверьте на сайте, что это расписание вашего храма", style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                OutlinedButton(onClick = openSourceEditor,
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("church_schedule_source_choice")) {
+                                    Icon(Icons.Default.Edit, null, Modifier.size(20.dp))
+                                    Spacer(Modifier.width(12.dp)); Text("Указать источник")
+                                }
+                            }
                             if (source == null && onSetScheduleSource != null) {
                                 OutlinedButton(onClick = openSourceEditor,
                                     modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("edit_schedule_website")) {
