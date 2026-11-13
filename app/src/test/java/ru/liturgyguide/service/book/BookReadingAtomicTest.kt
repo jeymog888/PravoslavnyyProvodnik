@@ -95,4 +95,31 @@ class BookReadingAtomicTest {
         assertEquals(newer, store.last("temple"))
         assertEquals("No rollback may overwrite the newer group", count + 1, preferences.commitCount)
     }
+
+    @Test fun anUpdateOfferedToAnOlderReaderCannotReplaceAnEditionAcceptedElsewhere() {
+        fun book(label: String): ServiceBook {
+            val draft = ServiceBook(key = position.key, title = "Литургия", sourceUrl = position.key.sourceUrl(),
+                sourceTitle = "Синтетический источник", fetchedAtMillis = 1, selectedEventTitle = null,
+                contentHash = "", chapters = listOf(BookChapter("chapter", "Молитва", "Пояснение", (0..15).map {
+                    BookBlock(if (it == 0) "prayer" else "prayer-$it", BookBlockKind.PRAYER, null,
+                        "Синтетическая редакция $label. Просим помощи и мира для всех людей. ".repeat(12))
+                })))
+            return draft.copy(contentHash = ServiceBookIntegrity.contentHash(draft)).also {
+                assertTrue(ServiceBookIntegrity.valid(it))
+            }
+        }
+        val preferences = AcceptanceMemoryPreferences()
+        val store = BookReadingStore(preferences)
+        val previous = book("А")
+        val offered = book("В")
+        val acceptedElsewhere = book("Б")
+        val oldPosition = position.copy(contentHash = previous.contentHash)
+        val newPosition = position.copy(contentHash = acceptedElsewhere.contentHash, fraction = .8f)
+        assertTrue(store.save(oldPosition))
+        assertTrue(store.save(newPosition))
+        val before = preferences.values.toMap()
+        assertFalse(store.acceptVersion(previous, offered, position.parishId, oldPosition))
+        assertEquals(before, preferences.values)
+        assertEquals(newPosition, store.last(position.parishId))
+    }
 }

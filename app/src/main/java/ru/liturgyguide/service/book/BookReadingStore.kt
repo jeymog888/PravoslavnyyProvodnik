@@ -179,10 +179,23 @@ class BookReadingStore(private val preferences: SharedPreferences) {
         }.getOrDefault(false)
     }
 
+    /** An open reader may move its cursor, but may not reclaim an edition accepted elsewhere. */
+    fun saveReading(position: BookReadingPosition): Boolean = synchronized(preferences) {
+        when (val reading = lookup(position.key, position.parishId)) {
+            BookReadingLookup.Unreadable -> false
+            is BookReadingLookup.Found -> if (reading.position.contentHash == position.contentHash) save(position) else false
+            BookReadingLookup.Absent -> save(position)
+        }
+    }
+
     fun acceptVersion(previous: ServiceBook, next: ServiceBook, parishId: String?,
         currentPosition: BookReadingPosition? = null): Boolean = synchronized(preferences) {
         if (currentPosition != null && (currentPosition.key != previous.key ||
                 currentPosition.contentHash != previous.contentHash || currentPosition.parishId != parishId))
+            return@synchronized false
+        val accepted = lookup(previous.key, parishId)
+        if (accepted == BookReadingLookup.Unreadable ||
+            accepted is BookReadingLookup.Found && accepted.position.contentHash != previous.contentHash)
             return@synchronized false
         val position = currentPosition ?: restore(previous, parishId) ?: return@synchronized true
         runCatching { save(BookPositionUpdate.rebase(position, previous, next)) }.getOrDefault(false)

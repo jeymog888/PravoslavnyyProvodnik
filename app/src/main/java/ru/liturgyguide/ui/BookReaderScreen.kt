@@ -288,7 +288,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 // measured line, including its fraction and following gap, before consuming
                 // the serialized request so recreation can never lose an uncommitted jump.
                 cursor.observe(measured, mode)
-                if (!readingStore.save(snapshot())) {
+                if (!readingStore.saveReading(snapshot())) {
                     targetError = "Не удалось сохранить найденную строку. Повторите переход или продолжите чтение вручную"
                     return false
                 }
@@ -332,7 +332,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             delay(400)
             // Small cursor writes are serialized on the owner thread. A late IO job cannot
             // overwrite the more recent synchronous lifecycle snapshot.
-            if (!superseded && isSaved && !targetUnresolved) saveError = !readingStore.save(snapshot())
+            if (!superseded && isSaved && !targetUnresolved) saveError = !readingStore.saveReading(snapshot())
         }
     }
     DisposableEffect(lifecycle, book.contentHash, view) {
@@ -342,11 +342,11 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             if (event == Lifecycle.Event.ON_PAUSE || event == Lifecycle.Event.ON_STOP) {
                 view.keepScreenOn = false
                 playing = false
-                if (!positioning && !superseded && canSavePosition) readingStore.save(latestPosition())
+                if (!positioning && !superseded && canSavePosition) readingStore.saveReading(latestPosition())
             }
         }
         lifecycle.addObserver(observer)
-        onDispose { playing = false; view.keepScreenOn = false; if (!positioning && !superseded && canSavePosition) readingStore.save(latestPosition()); lifecycle.removeObserver(observer) }
+        onDispose { playing = false; view.keepScreenOn = false; if (!positioning && !superseded && canSavePosition) readingStore.saveReading(latestPosition()); lifecycle.removeObserver(observer) }
     }
     val manualScroll = remember {
         object : NestedScrollConnection {
@@ -446,7 +446,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 val current = pendingPosition ?: position()
                 partSwitchError = when {
                     !isSaved -> "Текст пока не сохранен. Обновите его в настройках чтения"
-                    !readingStore.save(current) -> "Не удалось сохранить место. Вы остались в этой части"
+                    !readingStore.saveReading(current) -> "Не удалось сохранить место. Вы остались в этой части"
                     !accept(target) -> "Не удалось открыть выбранный текст. Попробуйте еще раз"
                     else -> { superseded = true; null }
                 }
@@ -489,7 +489,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 val current = pendingPosition ?: position()
                 partSwitchError = when {
                     !isSaved -> "Текст пока не сохранен. Обновите его в настройках чтения"
-                    !readingStore.save(current) -> "Не удалось сохранить место. Вы остались в этой части"
+                    !readingStore.saveReading(current) -> "Не удалось сохранить место. Вы остались в этой части"
                     !onChooseSearchHit(located) -> "Не удалось открыть найденный текст. Попробуйте еще раз"
                     else -> { superseded = true; sheet = null; null }
                 }
@@ -537,7 +537,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                             Text(if (other.worship == WorshipKind.MATINS) "Открыть утреню" else "Открыть вечерню")
                         }
                     }
-                    if (saveError) Text("Не удалось сохранить место. Проверьте свободное место на телефоне",
+                    if (saveError) Text("Не удалось сохранить место",
                         color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp).testTag("book_save_error"))
                     targetError?.let { message ->

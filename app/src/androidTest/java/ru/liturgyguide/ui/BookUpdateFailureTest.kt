@@ -105,11 +105,13 @@ class BookUpdateFailureTest {
         val key = ServiceBookKey("2026-11-11")
         val block = BookBlock("prayer", BookBlockKind.PRAYER, null,
             "Господи, помоги нам жить в мире. ".repeat(100), "Господь, помоги нам жить в мире. ".repeat(100))
+        val hiddenPadding = List(14) { index -> BookBlock("integrity-altar-$index", BookBlockKind.PRAYER, null,
+            "Синтетическая алтарная молитва $index для проверки полной книги.", isAltarText = true) }
         val book = ServiceBook(key = key, title = "Литургия", sourceUrl = key.sourceUrl(), sourceTitle = "Тестовый источник",
             fetchedAtMillis = 1, selectedEventTitle = null,
-            chapters = listOf(BookChapter("chapter", "Общая молитва", meaning, listOf(block))), contentHash = "",
+            chapters = listOf(BookChapter("chapter", "Общая молитва", meaning, listOf(block) + hiddenPadding)), contentHash = "",
             enrichment = BookEnrichment(BookSupplementStatus.AVAILABLE, BookSupplementStatus.NOT_NEEDED))
-        return book.copy(contentHash = ServiceBookIntegrity.contentHash(book))
+        return book.copy(contentHash = ServiceBookIntegrity.contentHash(book)).also { assertTrue(ServiceBookIntegrity.valid(it)) }
     }
 
     private class FailAfterMemoryPreferences(private val backing: SharedPreferences) : SharedPreferences by backing {
