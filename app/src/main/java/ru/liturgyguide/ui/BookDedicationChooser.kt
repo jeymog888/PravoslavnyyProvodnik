@@ -83,9 +83,9 @@ internal fun BookDedicationChooser(services: BookDedicationServices, parishId: S
             val loaded = withContext(Dispatchers.IO) { services.loadCatalog() }
             currentCoroutineContext().ensureActive()
             catalog = loaded
-            if (loaded == null) catalogError = "Не удалось открыть список посвящений на телефоне. Попробуйте еще раз"
+            if (loaded == null) catalogError = "Не удалось открыть список имен и праздников на телефоне. Попробуйте еще раз"
         } catch (cancelled: CancellationException) { throw cancelled }
-        catch (_: Exception) { catalogError = "Не удалось открыть список посвящений на телефоне. Попробуйте еще раз" }
+        catch (_: Exception) { catalogError = "Не удалось открыть список имен и праздников на телефоне. Попробуйте еще раз" }
         finally { loading = false }
     }
     fun cancelChoice() {
@@ -155,14 +155,14 @@ internal fun BookDedicationChooser(services: BookDedicationServices, parishId: S
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("В честь кого освящен храм?", style = MaterialTheme.typography.headlineSmall,
+                Text("Песнопения храма", style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.semantics { heading() })
-                Text("Подберем храмовые песнопения по посвящению", style = MaterialTheme.typography.bodyMedium)
+                Text("Найдите святого или праздник из посвящения храма", style = MaterialTheme.typography.bodyMedium)
                 Text(parishTitle, style = MaterialTheme.typography.bodyMedium)
             }
         }
         if (unreadable) item {
-            Text("Сохраненный выбор посвящения недоступен. Сначала проверьте его в сведениях о службе",
+            Text("Сохраненный выбор для этого храма недоступен. Сначала проверьте его в сведениях о службе",
                 color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("book_dedication_profile_error"))
         } else {
             item {
@@ -180,7 +180,7 @@ internal fun BookDedicationChooser(services: BookDedicationServices, parishId: S
             }
             if (loading) item {
                 LinearProgressIndicator(Modifier.fillMaxWidth())
-                Text("Открываем список посвящений", style = MaterialTheme.typography.bodyMedium)
+                Text("Открываем список имен и праздников", style = MaterialTheme.typography.bodyMedium)
             }
             catalogError?.let { message -> item {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -192,7 +192,7 @@ internal fun BookDedicationChooser(services: BookDedicationServices, parishId: S
             if (!loading && catalogError == null) item {
                 Text(if (query.isBlank()) "Введите имя святого, праздник или название иконы"
                     else if (matches.isEmpty()) "Ничего не найдено. Попробуйте другое имя или название"
-                    else "Праздники посвящения в $calendarYear году", style = MaterialTheme.typography.bodyMedium,
+                    else "Праздники в календаре на $calendarYear год", style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("book_dedication_results_status"))
             }
             items(matches, key = { it.entry.mineaId }) { match ->
@@ -227,7 +227,7 @@ internal fun BookDedicationChooser(services: BookDedicationServices, parishId: S
                         }
                         val ambiguous = resolution as? PatronalResolution.Ambiguous
                         if (ambiguous != null && confirmed == null) {
-                            Text("Выберите праздник, подтвержденный календарем", style = MaterialTheme.typography.bodyMedium,
+                            Text("Выберите событие, найденное в календаре", style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.testTag("book_dedication_ambiguous"))
                             ambiguous.choices.forEach { proof ->
                                 OutlinedButton(onClick = { confirmed = proof; openError = null },
@@ -243,10 +243,12 @@ internal fun BookDedicationChooser(services: BookDedicationServices, parishId: S
                         confirmed?.let { proof ->
                             Column(Modifier.fillMaxWidth().testTag("book_dedication_confirmed"),
                                 verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                Text("Подтверждено календарем", style = MaterialTheme.typography.labelLarge)
+                                Text("Событие найдено в календаре", style = MaterialTheme.typography.labelLarge)
                                 Text(proof.title, style = MaterialTheme.typography.titleMedium,
                                     modifier = Modifier.testTag("book_dedication_confirmed_title"))
-                                Text("Праздник посвящения: ${dedicationDate(proof.calendarDate)}")
+                                Text("Дата праздника: ${dedicationDate(proof.calendarDate)}")
+                                Text("Разные праздники одного святого могут иметь разные тексты",
+                                    style = MaterialTheme.typography.bodyMedium)
                                 Button(onClick = { open(proof) }, enabled = !opening,
                                     modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_dedication_open")) {
                                     Text(if (opening) "Открываем текст..." else "Открыть текст")
@@ -295,20 +297,28 @@ internal fun BookDedicationSourceSection(controls: BookDedicationControls, onCho
         Text("Песнопения храма", style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
         if (controls.busy || returning) LinearProgressIndicator(Modifier.fillMaxWidth().testTag("book_dedication_progress"))
         val proof = controls.currentSource
-        if (proof == null) Text("Конкретное посвящение в открытом тексте не выбрано", style = MaterialTheme.typography.bodyMedium)
+        if (proof == null) Text("Песнопения для конкретного святого или праздника не выбраны", style = MaterialTheme.typography.bodyMedium)
         else {
+            val saved = (controls.expectedProfile as? PatronalProfileLookup.Found)?.proof
+            val remembered = saved != null && saved.id == proof.id && saved.mineaId == proof.mineaId && saved.churchType == proof.churchType
             Text(proof.title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("book_dedication_current_source"))
-            Text("Праздник посвящения: ${dedicationDate(proof.calendarDate)}", style = MaterialTheme.typography.bodyMedium)
+            Text("Праздник в источнике: ${dedicationDate(proof.calendarDate)}", style = MaterialTheme.typography.bodyMedium)
+            Text(if (remembered) "Этот вариант используется для новых служб этого храма" else "Вариант открыт для этой службы",
+                style = MaterialTheme.typography.bodyMedium)
+            if (controls.onRememberSource != null) Text(
+                "Запомните вариант, если он соответствует посвящению храма. Разные праздники одного святого могут иметь разные тексты",
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             TextButton(onClick = { onOpenUrl(dedicationDayUrl(proof)) },
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_dedication_current_day")) {
                 Text("Открыть праздник в календаре")
             }
         }
         if (controls.expectedProfile == PatronalProfileLookup.Unreadable) Text(
-            "Сохраненный выбор посвящения недоступен. Проверьте его еще раз, прежде чем менять текст",
+            "Сохраненный выбор для этого храма недоступен. Проверьте его еще раз, прежде чем менять текст",
             color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("book_dedication_profile_error"))
         (listOfNotNull(controls.message, actionError)).distinct().forEach {
-            Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium,
+            Text(it, color = if (it == actionError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.testTag("book_dedication_profile_message").semantics { liveRegion = LiveRegionMode.Polite })
         }
         controls.onRetryProfile?.let { retry ->
@@ -317,10 +327,16 @@ internal fun BookDedicationSourceSection(controls: BookDedicationControls, onCho
                 Text("Проверить сохраненный выбор")
             }
         }
+        controls.onRememberSource?.let { remember ->
+            OutlinedButton(onClick = remember, enabled = !controls.busy && !returning,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_dedication_remember")) {
+                Text("Запомнить для этого храма")
+            }
+        }
         OutlinedButton(onClick = onChoose,
             enabled = !controls.busy && !returning && controls.expectedProfile != PatronalProfileLookup.Unreadable,
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_dedication_choose")) {
-            Text(if (proof == null) "Выбрать посвящение" else "Изменить посвящение")
+            Text(if (proof == null) "Выбрать песнопения" else "Выбрать другие песнопения")
         }
         if (controls.onReturn != null) OutlinedButton(onClick = onReturn, enabled = !controls.busy && !returning,
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_dedication_return")) {

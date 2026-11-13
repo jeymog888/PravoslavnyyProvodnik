@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.google.gson.Gson
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -43,6 +44,20 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
     val journey = ownedRoute?.journeyContext?.validatedFor(requested, parishId)
     var preparedDedication by remember(requested, parishId, journey, ownedRoute?.sourceReturn) { mutableStateOf(false) }
     var dedicationMessage by remember(ownedRoute?.sourceReturn) { mutableStateOf<String?>(null) }
+    // Opening a source is temporary. Only a separate user action can make its
+    // calendar variant the preference for future openings in this parish.
+    val dedicationIntentSignature = remember(ownedRoute?.sourceReturn, ownedRoute?.pendingDedication) {
+        ownedRoute?.pendingDedication?.let { request ->
+            BookText.sha256(Gson().toJson(listOf(request, ownedRoute.sourceReturn)))
+        }
+    }
+    // Save the consent's identity as well as its presence: saveable inputs are
+    // not restored themselves and cannot bind a restored Boolean to a source.
+    var rememberedDedicationSignature by rememberSaveable(ownedRoute?.sourceReturn, ownedRoute?.pendingDedication) {
+        mutableStateOf<String?>(null)
+    }
+    val rememberDedicationRequested = dedicationIntentSignature != null &&
+        rememberedDedicationSignature == dedicationIntentSignature
     var dedicationProfileRetry by remember(ownedRoute?.pendingDedication) { mutableIntStateOf(0) }
     var dedicationProfileBusy by remember(ownedRoute?.pendingDedication) { mutableStateOf(false) }
     var dedicationProfileFailed by remember(ownedRoute?.pendingDedication) { mutableStateOf(false) }
@@ -117,10 +132,10 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
                     preparedDedication = true
                     result = ready
                     dedicationMessage = when {
-                        prepared.reusedPosition -> "Открыто сохраненное место в выбранном тексте"
+                        prepared.reusedPosition -> "Открыто сохраненное место в выбранном варианте песнопений"
                         prepared.matchKind == BookDedicationMatchKind.SECTION_START -> "Открыто начало той же части. Найдите нужную строку ниже или по словам"
-                        prepared.matchKind == BookDedicationMatchKind.KNOWN_HYMN -> "Открыт текст песнопения храма"
-                        else -> "Место чтения сохранено в выбранном тексте"
+                        prepared.matchKind == BookDedicationMatchKind.KNOWN_HYMN -> "Открыт выбранный вариант песнопений"
+                        else -> "Открыт выбранный вариант песнопений. Место чтения сохранено"
                     }
                     return true
                 }
@@ -360,13 +375,14 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
         else -> null
     }
     LaunchedEffect(dedicationServices, ownedRoute?.pendingDedication, requested, loaded?.contentHash,
-        dedicationProfileRetry, refreshing) {
+        dedicationProfileRetry, rememberDedicationRequested, refreshing) {
         val activeRoute = ownedRoute ?: return@LaunchedEffect
         val request = activeRoute.pendingDedication ?: return@LaunchedEffect
         val services = dedicationServices ?: return@LaunchedEffect
         val ownerParish = parishId ?: return@LaunchedEffect
         val ready = result as? BookLoadResult.Ready ?: return@LaunchedEffect
-        if (loaded == null || refreshing || !preparedDedication || isRouteCurrent == null) return@LaunchedEffect
+        if (!rememberDedicationRequested || loaded == null || refreshing || !preparedDedication || isRouteCurrent == null)
+            return@LaunchedEffect
         dedicationProfileBusy = true
         dedicationProfileFailed = false
         try {
@@ -375,13 +391,20 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
             if (!ownsDedicationRoute(activeRoute)) return@LaunchedEffect
             val accepted = readingStore.lookup(requested, ownerParish) as? BookReadingLookup.Found
             val expected = request.expectedProfile?.let { PatronalProfileLookup.Found(it) } ?: PatronalProfileLookup.Absent
+            val currentProfile = services.choices.readProfile(ownerParish)
+            if (currentProfile == PatronalProfileLookup.Unreadable) {
+                dedicationProfileFailed = true
+                dedicationMessage = "Не удалось проверить сохраненный выбор для этого храма. Открытый вариант доступен для чтения"
+                return@LaunchedEffect
+            }
             // No suspension separates the live owner check, current accepted edition,
             // profile CAS and clearing the navigation request.
             val committed = token != null && accepted != null && accepted.position.contentHash == token.contentHash &&
                 accepted.position.journeyContext == journey &&
-                (services.choices.readProfile(ownerParish) == PatronalProfileLookup.Found(token.proof) ||
+                (currentProfile == PatronalProfileLookup.Found(token.proof) ||
                     services.choices.commitProfile(ownerParish, token, expected))
             if (committed) {
+                dedicationMessage = "Выбор запомнен для этого храма"
                 if (!onRouteChanged(activeRoute.clearPendingDedication())) {
                     dedicationMessage = "Текст сохранен. Вернитесь к нему из списка служб"
                 }
@@ -421,7 +444,7 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
             java.time.LocalDate.parse(requested.date).year, dedicationServices.choices.readProfile(parishId),
             loaded?.patronalSelection, busy = refreshing || dedicationProfileBusy || dedicationReturnBusy,
             message = dedicationMessage,
-            onRetryProfile = if (dedicationProfileFailed && ownedRoute.pendingDedication != null)
+            onRetryProfile = if (rememberDedicationRequested && dedicationProfileFailed && ownedRoute.pendingDedication != null)
                 ({ if (ownsDedicationRoute(ownedRoute) && !dedicationProfileBusy) dedicationProfileRetry++ }) else null,
             beginSourceChange = { selection, expected, current ->
                 when {
@@ -439,7 +462,15 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
                         else BookDedicationStart.STALE_ROUTE
                     }
                 }
-            }, onReturn = if (ownedRoute.sourceReturn != null) ({ current -> returnDedicationSource(current) }) else null)
+            }, onReturn = if (ownedRoute.sourceReturn != null) ({ current -> returnDedicationSource(current) }) else null,
+            onRememberSource = if (ownedRoute.pendingDedication != null && !rememberDedicationRequested &&
+                !refreshing && !dedicationProfileBusy && !dedicationReturnBusy) ({
+                if (ownsDedicationRoute(ownedRoute) && loaded != null && preparedDedication &&
+                    !refreshing && !dedicationProfileBusy && !dedicationReturnBusy) {
+                    rememberedDedicationSignature = dedicationIntentSignature
+                    dedicationProfileRetry++
+                }
+            }) else null)
         else null
     // This identity owns both checks and preparation. Even a non-cooperative late
     // response must not publish into another text, edition, journey or parish.

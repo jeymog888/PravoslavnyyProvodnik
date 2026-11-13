@@ -228,7 +228,7 @@ class BookDedicationChooserTest {
         checkLayout(compose.onNodeWithTag("book_dedication_confirmed_title"), 2f)
         reveal("book_dedication_open").assertHeightIsAtLeast(48.dp)
         checkButtonLayouts("book_dedication_open", 2f)
-        val date = compose.onNodeWithText("Праздник посвящения: 4 декабря 2026")
+        val date = compose.onNodeWithText("Дата праздника: 4 декабря 2026")
         date.assertIsDisplayed()
         checkLayout(date, 2f)
         val gap = compose.onNodeWithTag("book_dedication_open").getUnclippedBoundsInRoot().top - date.getUnclippedBoundsInRoot().bottom

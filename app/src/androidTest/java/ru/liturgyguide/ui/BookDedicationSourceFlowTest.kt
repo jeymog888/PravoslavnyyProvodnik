@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.gson.JsonParser
@@ -88,7 +89,11 @@ class BookDedicationSourceFlowTest {
         assertNull(store.value.positionFor(route.value.activeKey, parish))
         books.value.releasePending()
         awaitDestination()
+        assertEquals("Opening a published variant is not permission to save a parish setting",
+            PatronalProfileLookup.Absent, choices.readProfile(parish))
+        rememberSelectedSource()
         awaitPublishedProfile()
+        dismissSheet()
         assertTrue(durableAtCommit.get() > 0)
         assertHymnCursor()
         assertSamePosition(old, saved(genericKey))
@@ -118,7 +123,11 @@ class BookDedicationSourceFlowTest {
         chooseMayFromTheRealMissingTroparion()
         books.value.releasePending()
         awaitDestination()
+        assertEquals(0, choicePreferences.rejected.get())
+        assertEquals(PatronalProfileLookup.Absent, choices.readProfile(parish))
+        rememberSelectedSource()
         compose.waitUntil(5_000) { choicePreferences.rejected.get() > 0 }
+        dismissSheet()
         assertNotNull(route.value.pendingDedication)
         assertEquals(PatronalProfileLookup.Absent, choices.readProfile(parish))
         val other = destination.blocks.dropWhile { it.id != hymn().id }.drop(1)
@@ -127,9 +136,11 @@ class BookDedicationSourceFlowTest {
         val moved = saved(destination.key)
         assertNotEquals(hymn().id, moved.blockId)
         val pending = requireNotNull(BookRouteCodec.decode(BookRouteCodec.encode(route.value)))
+        val previousAttempts = choicePreferences.rejected.get()
         remount(pending, offline = true)
         awaitDestination()
-        compose.waitUntil(5_000) { choicePreferences.rejected.get() >= 2 }
+        assertEquals("A newly mounted owner without saved explicit intent cannot publish a parish setting",
+            previousAttempts, choicePreferences.rejected.get())
         assertSamePosition(moved, saved(destination.key))
         assertTrue(books.value.loads.isEmpty())
         compose.runOnIdle { mounted.value = false }
@@ -183,6 +194,55 @@ class BookDedicationSourceFlowTest {
         assertFalse(readingPreferences.all.keys.any { it.startsWith("dedication:") })
     }
 
+    @Test fun aTemporaryVariantSurvivesRemountWithoutBecomingAPermanentParishSetting() {
+        launch()
+        val old = chooseMayFromTheRealMissingTroparion()
+        books.value.releasePending()
+        awaitDestination()
+        assertHymnCursor()
+        assertEquals(PatronalProfileLookup.Absent, choices.readProfile(parish))
+        assertNotNull(route.value.pendingDedication)
+        val temporary = requireNotNull(BookRouteCodec.decode(BookRouteCodec.encode(route.value)))
+        denyCalendar = true
+        remount(temporary, offline = true)
+        awaitDestination()
+        assertHymnCursor()
+        assertEquals(PatronalProfileLookup.Absent, choices.readProfile(parish))
+        assertEquals(0, choicePreferences.rejected.get())
+        assertTrue(books.value.loads.isEmpty())
+        openDetails()
+        details("book_dedication_remember").assertIsEnabled()
+        details("book_dedication_return").performClick()
+        awaitOriginal()
+        assertSamePosition(old, saved(genericKey))
+        assertEquals(PatronalProfileLookup.Absent, choices.readProfile(parish))
+    }
+
+    @Test fun restoringSavedStateRetainsOnlyTheExplicitIntentAndItsOwnAcceptedReading() {
+        choicePreferences.rejectProfiles = true
+        val restoration = launch()
+        chooseMayFromTheRealMissingTroparion()
+        books.value.releasePending()
+        awaitDestination()
+        assertEquals(0, choicePreferences.rejected.get())
+        rememberSelectedSource()
+        compose.waitUntil(5_000) { choicePreferences.rejected.get() > 0 }
+        dismissSheet()
+        val before = saved(destination.key)
+        val attempts = choicePreferences.rejected.get()
+        restoration.emulateSavedInstanceStateRestore()
+        awaitDestination()
+        compose.waitUntil(5_000) { choicePreferences.rejected.get() > attempts }
+        assertSamePosition(before, saved(destination.key))
+        assertEquals(PatronalProfileLookup.Absent, choices.readProfile(parish))
+        choicePreferences.rejectProfiles = false
+        openDetails()
+        details("book_dedication_profile_retry").performClick()
+        awaitPublishedProfile()
+        dismissSheet()
+        assertSamePosition(before, saved(destination.key))
+    }
+
     @Test fun networkAndUnsavedBookFailuresOfferExplicitReturnWithoutAcceptingADedication() {
         launch()
         for ((index, outcome) in listOf(Outcome.NETWORK_FAILURE, Outcome.UNSAVED).withIndex()) {
@@ -208,7 +268,9 @@ class BookDedicationSourceFlowTest {
         val old = chooseMayFromTheRealMissingTroparion()
         books.value.releasePending()
         awaitDestination()
+        rememberSelectedSource()
         awaitPublishedProfile()
+        dismissSheet()
         val current = saved(destination.key)
         val currentRoute = route.value
         books.value.hideVersionFor = genericKey
@@ -232,14 +294,15 @@ class BookDedicationSourceFlowTest {
         assertSamePosition(old, saved(genericKey))
     }
 
-    private fun launch() {
+    private fun launch(): StateRestorationTester {
         assertTrue(ServiceBookIntegrity.valid(original))
         assertTrue(cache.write(original))
         val slot = missingTroparion()
         val chapter = original.chapters.single { slot in it.blocks }
         assertTrue(store.value.save(BookReadingPosition(genericKey, original.contentHash, parish, slot.id, chapter.id,
             wordsPerMinute = 107, lastTextMode = BookReadingMode.ORIGINAL)))
-        compose.setContent { GuideTheme(false) {
+        val restoration = StateRestorationTester(compose)
+        restoration.setContent { GuideTheme(false) {
             if (mounted.value) {
                 val owner = route.value
                 ServiceBookScreen(owner.activeKey, parish, books.value, store.value, 0, onBack = {}, onSettings = {}, onOpenUrl = {},
@@ -250,6 +313,7 @@ class BookDedicationSourceFlowTest {
         } }
         contentSet = true
         awaitOriginal()
+        return restoration
     }
 
     private fun chooseMayFromTheRealMissingTroparion(): BookReadingPosition {
@@ -267,7 +331,7 @@ class BookDedicationSourceFlowTest {
         compose.waitUntil(5_000) {
             compose.onAllNodesWithTag("book_dedication_results_status").fetchSemanticsNodes().any { node ->
                 node.config.getOrElse(androidx.compose.ui.semantics.SemanticsProperties.Text) { emptyList() }
-                    .any { it.text == "Праздники посвящения в 2026 году" }
+                    .any { it.text == "Праздники в календаре на 2026 год" }
             }
         }
         chooser("book_dedication_result_11183").performClick()
@@ -316,6 +380,10 @@ class BookDedicationSourceFlowTest {
         compose.onNodeWithContentDescription("Настроить чтение").performClick()
         compose.onNodeWithTag("book_options_offline").performScrollTo().performClick()
         await("book_calendar")
+    }
+    private fun rememberSelectedSource() {
+        openDetails()
+        details("book_dedication_remember").assertIsEnabled().performClick()
     }
     private fun details(tag: String) = reveal(tag, "book_calendar")
     private fun chooser(tag: String) = reveal(tag, "book_dedication_chooser")

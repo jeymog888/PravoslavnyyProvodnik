@@ -19,5 +19,6 @@ data class BookDedicationControls(
     val message: String? = null,
     val onRetryProfile: (() -> Unit)? = null,
     val beginSourceChange: (PatronalEventProof, PatronalProfileLookup, BookReadingPosition) -> BookDedicationStart,
-    val onReturn: (suspend (BookReadingPosition) -> Boolean)? = null
+    val onReturn: (suspend (BookReadingPosition) -> Boolean)? = null,
+    val onRememberSource: (() -> Unit)? = null
 )

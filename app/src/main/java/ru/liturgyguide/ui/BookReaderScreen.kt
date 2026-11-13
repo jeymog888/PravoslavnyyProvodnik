@@ -1040,7 +1040,7 @@ private fun BookTextBlock(key: ServiceBookKey, block: BookBlock, mode: BookReadi
             modifier = Modifier.testTag("book_local_gap_${block.id}"))
         if (onChooseDedication != null) OutlinedButton(onClick = onChooseDedication, enabled = !dedicationBusy,
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_dedication_entry")) {
-            Text(if (localVariation) "Подобрать текст" else "Уточнить посвящение")
+            Text(if (localVariation) "Подобрать текст" else "Выбрать песнопения")
         }
     }
 }
