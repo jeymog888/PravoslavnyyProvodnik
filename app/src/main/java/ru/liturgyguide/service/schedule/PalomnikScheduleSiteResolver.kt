@@ -13,6 +13,7 @@ import java.util.Locale
 internal class PalomnikScheduleSiteResolver(
     private val transport: ScheduleTransport,
     private val citylessTimeoutMillis: Long = 45_000,
+    private val childChurchVerifier: MonasteryChurchSiteVerifier? = null,
 ) : ScheduleSiteResolver {
     override suspend fun resolve(parish: Parish): ScheduleSite? = resolve(parish, emptySet())
 
@@ -106,7 +107,8 @@ internal class PalomnikScheduleSiteResolver(
         val pages = data.getAsJsonObject("query")?.getAsJsonObject("pages") ?: return null
         if (!pages.entrySet().map { it.key }.containsAll(candidates.keys)) return null
         if (strictAddress != null && pages.entrySet().map { it.key }.toSet() != candidates.keys) return null
-        val matched = mutableListOf<ScheduleSite?>()
+        data class Candidate(val site: ScheduleSite?, val child: MonasteryChurchCandidate?)
+        val matched = mutableListOf<Candidate>()
         for ((id, value) in pages.entrySet()) {
             if (strictAddress != null && !value.isJsonObject) return null
             if (id !in candidates || !value.isJsonObject) continue
@@ -115,14 +117,21 @@ internal class PalomnikScheduleSiteResolver(
             val revision = page.getAsJsonArray("revisions")?.singleOrNull()?.takeIf { it.isJsonObject }?.asJsonObject ?: return null
             val content = revision.getAsJsonObject("slots")?.getAsJsonObject("main")?.string("*") ?: return null
             val source = sourceFor(parish, candidates.getValue(id), content, latitude, longitude, excluded, strictAddress) ?: continue
-            matched += source.url?.let {
-                val evidence = "https://azbyka.ru/palomnik/index.php?curid=$id"
-                val title = candidates.getValue(id)
+            val evidence = "https://azbyka.ru/palomnik/index.php?curid=$id"
+            val title = candidates.getValue(id)
+            val child = source.childAddress?.let { address ->
+                source.url?.let { url -> MonasteryChurchCandidate(url, evidence, title, content,
+                    revision.string("revid").orEmpty(), address, source.latitude, source.longitude) }
+            }
+            val site = source.url?.takeIf { source.childAddress == null }?.let {
                 ScheduleSite(it, evidence, title, ScheduleEntityIdentity.bind(parish, it, evidence, title,
                     ScheduleBindingMethod.ARTICLE_SCOPE, source.scope))
             }
+            // An unavailable source is still a matching identity; it cannot disambiguate a namesake.
+            matched += Candidate(site, child)
         }
-        return matched.singleOrNull()
+        val only = matched.singleOrNull() ?: return null
+        return only.site ?: only.child?.let { childChurchVerifier?.verify(parish, it) }
     }
 
     private suspend fun json(url: String): JsonObject? = try {
@@ -132,7 +141,8 @@ internal class PalomnikScheduleSiteResolver(
     } catch (cancelled: CancellationException) { throw cancelled }
     catch (_: Exception) { null }
 
-    private data class MatchingIdentity(val url: String?, val scope: ScheduleEntityScope)
+    private data class MatchingIdentity(val url: String?, val scope: ScheduleEntityScope,
+        val childAddress: String? = null, val latitude: Double = 0.0, val longitude: Double = 0.0)
 
     private fun sourceFor(parish: Parish, title: String, text: String, latitude: Double, longitude: Double, excluded: ScheduleSourceExclusions, strictAddress: PalomnikStreetAddress?): MatchingIdentity? {
         if (text.length > 160_000 || !OpenScheduleSiteResolver.namesMatch(parish.name, title)) return null
@@ -142,8 +152,10 @@ internal class PalomnikScheduleSiteResolver(
         val kinds = LOCATION_KIND.findAll(locations.single().value).map { it.groupValues[1].trim() }.toList()
         if (kinds.size > 1) return null
         val kind = kinds.singleOrNull()?.let(ScheduleEntityIdentity::scope) ?: ScheduleEntityScope.UNKNOWN
-        if (!ScheduleEntityIdentity.compatible(parish.name, title, kind)) return null
         val scope = ScheduleEntityIdentity.articleScope(title, kind) ?: return null
+        val child = childChurchVerifier != null && ScheduleEntityIdentity.scope(parish.name) == ScheduleEntityScope.CHURCH &&
+            scope == ScheduleEntityScope.MONASTERY
+        if (!child && !ScheduleEntityIdentity.compatible(parish.name, title, kind)) return null
         val lat = locations.single().groupValues[1].toDoubleOrNull()?.takeIf { it.isFinite() && it in -90.0..90.0 } ?: return null
         val lon = locations.single().groupValues[2].toDoubleOrNull()?.takeIf { it.isFinite() && it in -180.0..180.0 } ?: return null
         val distance = OpenScheduleSiteResolver.distanceMeters(latitude, longitude, lat, lon)
@@ -151,7 +163,15 @@ internal class PalomnikScheduleSiteResolver(
         val lines = text.lineSequence().toList()
         val addresses = lines.map { it.replace("'", "").trim() }.filter { it.startsWith("Адрес:") }.map { it.substringAfter(':').trim() }
         val address = addresses.singleOrNull() ?: return null
-        if (strictAddress != null) {
+        if (child) {
+            if (distance > 150) return null
+            val selectedAddress = PalomnikStreetAddress.parse(parish.address) ?: return null
+            val parentAddress = PalomnikStreetAddress.parse(address) ?: return null
+            if (!selectedAddress.sameBuilding(parentAddress)) return null
+            if (parish.city.isNotBlank() && ChildChurchRelation.city(address)?.let {
+                it != ScheduleEntityIdentity.normalize(parish.city)
+            } == true) return null
+        } else if (strictAddress != null) {
             // A monastery article may describe several churches and one shared schedule.
             // Website ownership alone does not assign those services to the selected building.
             if (distance > 150) return null
@@ -188,8 +208,8 @@ internal class PalomnikScheduleSiteResolver(
         // Exclusions cannot disambiguate different matching churches or competing published
         // schedule links. A uniquely identified church may fall back to its unique homepage.
         val preferred = schedules.singleOrNull()?.takeUnless(excluded::contains)
-        val chosen = if (schedules.size > 1) null else preferred ?: sites.singleOrNull()?.takeUnless(excluded::contains)
-        return MatchingIdentity(chosen, scope)
+        val chosen = if (child) preferred else if (schedules.size > 1) null else preferred ?: sites.singleOrNull()?.takeUnless(excluded::contains)
+        return MatchingIdentity(chosen, scope, address.takeIf { child }, lat, lon)
     }
 
     private fun https(value: String): String? {

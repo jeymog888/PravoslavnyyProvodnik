@@ -1,0 +1,2 @@
+Schedule pages and article are unchanged public responses captured 2026-11-13. Their receipt hashes are in provenance.json. Search JSON is unchanged from the existing Palomnik cityless fixture. The dated book is the unchanged original-language 2026-11-12 full-order fixture (site navigation removed), whose provenance is in app/src/test/resources/book/README.md. No translated prayer was invented. All are test-only assets.
+Book fixture SHA256: 51e30dfb845e7ca102d5725fda4cb350ec9d524bc6478b6b18be8c7b5a4753fe

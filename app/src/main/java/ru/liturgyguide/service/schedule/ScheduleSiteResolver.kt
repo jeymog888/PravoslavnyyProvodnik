@@ -75,7 +75,8 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport,
                 ?.let { id -> fromWikidata(parish, id, title, excluded, ScheduleBindingMethod.EXACT_MAP_LINK)?.let { return it } }
         }
         moscow?.resolve(parish, excluded, moscowMemo)?.let { return it }
-        PalomnikScheduleSiteResolver(transport).resolve(parish, excludedUrls)?.let { return it }
+        PalomnikScheduleSiteResolver(transport, childChurchVerifier = MonasteryChurchSiteVerifier(transport, memo = contactMemo))
+            .resolve(parish, excludedUrls)?.let { return it }
         directories.resolve(parish, excluded, directoryMemo, contactMemo)?.let { return it }
         val latitude = parish.latitude ?: return null
         val longitude = parish.longitude ?: return null
