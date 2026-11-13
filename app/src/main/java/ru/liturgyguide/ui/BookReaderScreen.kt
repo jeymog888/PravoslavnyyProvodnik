@@ -285,6 +285,9 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         else items.firstOrNull { it.chapter.id == cursor.value.chapterId } ?: items.first()
     } }
     val currentChapter = currentItem.chapter
+    val currentSectionTitle = remember(book, currentItem.id) { currentItem.block?.let {
+        BookAfterCommunionMeaning.forPlace(book, currentChapter, it)?.title
+    } ?: currentChapter.title }
     val currentLocalVariation by remember(itemKeys, list) { derivedStateOf {
         val measured = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == list.firstVisibleItemIndex }
         (measured?.key as? String)?.let(itemKeys::get)?.block?.takeIf { it.kind == BookBlockKind.LOCAL_VARIATION }
@@ -838,7 +841,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                                 else ButtonDefaults.TextButtonContentPadding,
                             modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("book_order")) {
                             Column(Modifier.weight(1f)) {
-                                Text(currentChapter.title, style = MaterialTheme.typography.titleSmall,
+                                Text(currentSectionTitle, style = MaterialTheme.typography.titleSmall,
                                     maxLines = if (compactLabels && !expandedCompactToolbar) 1 else 2, overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.testTag("book_chapter"))
                                 if (!compactLabels) Text(if (journey?.isEveningTexts == true) "${book.key.worship.title} · базовый текст" else if (journey != null)

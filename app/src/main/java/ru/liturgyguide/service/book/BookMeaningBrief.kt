@@ -35,16 +35,19 @@ data class BookMeaningContent(val position: BookReadingPosition, val chapterTitl
                     .takeIf { it.isNotBlank() }
             // Old accepted Matins copied the public six-psalms help onto every quiet
             // prayer. That block.meaning cannot identify this private paragraph.
+            val fragment = if (privateText || block.kind == BookBlockKind.LOCAL_VARIATION) null
+                else BookAfterCommunionMeaning.forPlace(book, chapter, block)
             val detail = when {
+                fragment != null -> fragment.detail
                 visibility.isQuiet(block.id) -> requireNotNull(visibility.quietGroup).explanation
                 privateText -> BookMeaningCatalog.meaningFor("В алтаре").orEmpty()
                 else -> BookMeaningCatalog.displayMeaning(book, chapter)
             }
-            val brief = if (privateText || block.kind == BookBlockKind.LOCAL_VARIATION) null
+            val brief = if (fragment != null) fragment.brief else if (privateText || block.kind == BookBlockKind.LOCAL_VARIATION) null
                 else BookMeaningBriefCatalog.forPlace(book, chapter, block.id)
             val scopedDetail = if (brief?.topicId == "vespers-psalm-103" && BookText.normalized(chapter.title) == "перед началом")
                 BookMeaningCatalog.meaningFor("Псалом 103", block.original, "vespers").orEmpty() else detail
-            return BookMeaningContent(textPosition, brief?.title ?: chapter.title, excerpt, scopedDetail, brief, privateText)
+            return BookMeaningContent(textPosition, fragment?.title ?: brief?.title ?: chapter.title, excerpt, scopedDetail, brief, privateText)
         }
     }
 }
