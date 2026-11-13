@@ -9,7 +9,7 @@ import ru.liturgyguide.model.WorshipKind
 import java.time.LocalDate
 import java.time.LocalTime
 
-enum class BookPartSetKind { PUBLISHED_ORDER, EVENING_TEXTS }
+enum class BookPartSetKind { PUBLISHED_ORDER, EVENING_TEXTS, HOURS_LITURGY_TEXTS }
 
 /** Local navigation metadata for one published service, never part of a book or its hash. */
 data class BookJourneyContext(
@@ -24,19 +24,28 @@ data class BookJourneyContext(
     // Absent in older saved contexts; those always required explicitly named parts.
     val effectivePartSet: BookPartSetKind get() = partSet ?: BookPartSetKind.PUBLISHED_ORDER
     val isEveningTexts: Boolean get() = effectivePartSet == BookPartSetKind.EVENING_TEXTS
+    val isHoursLiturgyTexts: Boolean get() = effectivePartSet == BookPartSetKind.HOURS_LITURGY_TEXTS
 
     fun validatedFor(key: ServiceBookKey, parishId: String?): BookJourneyContext? = runCatching {
         val date = LocalDate.parse(civilDate)
+        val start = LocalTime.parse(time)
         val valid = schemaVersion == 1 && this.parishId == parishId && this.parishId.length in 1..160 &&
             date.toString() == civilDate && time.matches(Regex("[0-2][0-9]:[0-5][0-9]")) &&
-            LocalTime.parse(time).hour >= 12 && title.length in 1..500 &&
-            (if (isEveningTexts) ServiceBookSelection.isUnspecifiedEvening(title)
-                else ServiceBookSelection.isCombinedEvening(title)) && parts.size == 2 &&
-            parts.map { it.worship } == listOf(WorshipKind.VESPERS, WorshipKind.MATINS) &&
-            parts.all { it.isValid() && it.date == date.plusDays(1).toString() } &&
-            // Old daily journeys keep their accepted keys even when the publication named polyeleos.
-            (parts[1].topLevel == null || !isEveningTexts && ServiceBookSelection.isPolyeleosMatins(title)) &&
-            parts[0].churchType == parts[1].churchType && parts[0].patronalId == parts[1].patronalId && key in parts
+            title.length in 1..500 &&
+            (if (isHoursLiturgyTexts) {
+                ServiceBookSelection.isHoursLiturgy(title) && parts.size == 3 &&
+                    parts.map { it.worship } == listOf(WorshipKind.HOUR3, WorshipKind.HOUR6, WorshipKind.LITURGY) &&
+                    parts.all { it.isValid() && it.date == civilDate && it.topLevel == null }
+            } else {
+                start.hour >= 12 &&
+                    (if (isEveningTexts) ServiceBookSelection.isUnspecifiedEvening(title)
+                        else ServiceBookSelection.isCombinedEvening(title)) && parts.size == 2 &&
+                    parts.map { it.worship } == listOf(WorshipKind.VESPERS, WorshipKind.MATINS) &&
+                    parts.all { it.isValid() && it.date == date.plusDays(1).toString() } &&
+                    // Old daily journeys keep accepted keys when the publication named polyeleos.
+                    (parts[1].topLevel == null || !isEveningTexts && ServiceBookSelection.isPolyeleosMatins(title))
+            }) && parts.map { it.churchType }.distinct().size == 1 &&
+            parts.map { it.patronalId }.distinct().size == 1 && key in parts
         takeIf { valid }
     }.getOrNull()
 
@@ -99,6 +108,7 @@ data class BookRoute(
     fun validated(): BookRoute? = runCatching {
         if (!activeKey.isValid() || (parishId != null && parishId.length !in 1..160)) return null
         val journey = journeyContext?.validatedFor(activeKey, parishId)
+        if (journeyContext?.isHoursLiturgyTexts == true && journey == null) return null
         // New source transactions must never silently lose their occurrence or
         // previous cursor. Legacy routes keep their existing context fallback.
         if ((pendingDedication != null || sourceReturn != null) && journeyContext != null && journey == null) return null
@@ -205,7 +215,10 @@ object BookRouteCodec {
         if (json.isNullOrBlank() || json.length > 8192) return null
         return runCatching {
             val parsed = JsonParser.parseString(json).asJsonObject
-            val objectValue = if (parsed.has("pendingDedication") || parsed.has("sourceReturn"))
+            val morningJourney = parsed.get("journeyContext")?.takeIf { it.isJsonObject }?.asJsonObject?.get("partSet")?.let {
+                it.isJsonPrimitive && it.asJsonPrimitive.isString && it.asString == BookPartSetKind.HOURS_LITURGY_TEXTS.name
+            } == true
+            val objectValue = if (parsed.has("pendingDedication") || parsed.has("sourceReturn") || morningJourney)
                 StrictBookJson.objectValue(json, maximumDepth = 16, maximumValues = 4096) else parsed
             val journey = objectValue.remove("journeyContext")
             val previous = objectValue.remove("lastSuccessfulKey")
@@ -232,6 +245,7 @@ object BookRouteCodec {
                 BookSourceReturn(position, gson.fromJson(value.get("lastSuccessfulKey"), ServiceBookKey::class.java))
             }
             val decodedJourney = BookJourneyCodec.decode(journey, route.activeKey, route.parishId)
+            if (morningJourney && (decodedJourney == null || !validJourneyJson(journey))) return null
             if (requestedDedication != null || previousSource != null) {
                 if (!objectValue.keySet().all { it in setOf("activeKey", "parishId") } ||
                     !validKeyJson(objectValue.get("activeKey")) || !nullableString(objectValue.get("parishId")) ||
@@ -270,7 +284,10 @@ object BookRouteCodec {
         context.keySet().all { it in setOf("parishId", "civilDate", "time", "title", "parts", "schemaVersion", "partSet") } &&
             listOf("parishId", "civilDate", "time", "title").all { string(context.get(it)) } &&
             context.get("schemaVersion").let { it != null && it.isJsonPrimitive && it.asJsonPrimitive.isNumber && it.toString() == "1" } &&
-            context.get("parts").let { it != null && it.isJsonArray && it.asJsonArray.size() == 2 && it.asJsonArray.all(::validKeyJson) } &&
+            context.get("parts").let { it != null && it.isJsonArray &&
+                it.asJsonArray.size() == (if (context.get("partSet")?.let { kind ->
+                    string(kind) && kind.asString == BookPartSetKind.HOURS_LITURGY_TEXTS.name } == true) 3 else 2) &&
+                it.asJsonArray.all(::validKeyJson) } &&
             context.get("partSet").let { it == null || it.isJsonNull || string(it) && BookPartSetKind.entries.any { kind -> kind.name == it.asString } }
     }.getOrDefault(false)
 

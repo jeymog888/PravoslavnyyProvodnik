@@ -359,6 +359,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
             val saved = bookStore.last(selected.parishId)?.journeyContext?.takeIf { previous ->
                 expected != null && previous.parishId == expected.parishId && previous.civilDate == expected.civilDate &&
                     previous.time == expected.time && previous.title == expected.title && previous.effectivePartSet == expected.effectivePartSet &&
+                    previous.parts.size == expected.parts.size &&
                     previous.parts.zip(expected.parts).all { (old, fresh) ->
                         old.date == fresh.date && old.worship == fresh.worship && old.churchType == fresh.churchType &&
                             old.topLevel == fresh.topLevel && old.patronalId == fresh.patronalId

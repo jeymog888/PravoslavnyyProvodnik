@@ -106,6 +106,12 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     onPendingSearchHandled: (BookLocatedSearchHit) -> Boolean = { true },
     offlineControls: BookOfflineControls? = null, dedicationControls: BookDedicationControls? = null) {
     val journey = journeyContext?.validatedFor(book.key, parishId)
+    val hourReview = remember(book.key, book.contentHash, journey?.isHoursLiturgyTexts) {
+        BookHourSourceReview.of(book, journey?.isHoursLiturgyTexts == true)
+    }
+    var uncheckedPlaybackAllowed by remember(book.key, book.contentHash) { mutableStateOf(false) }
+    val blocksHourPlayback = hourReview.blocksPlayback &&
+        (hourReview.status == BookHourReviewStatus.CONFLICT || !uncheckedPlaybackAllowed)
     val polyeleosBook = book.key.topLevel == "3" && book.rankSelection?.topLevel == "3"
     val uncheckedPolyeleosJourney = book.key.worship == WorshipKind.MATINS && book.key.topLevel == null &&
         journey?.let { ServiceBookSelection.isPolyeleosMatins(it.title) } == true
@@ -398,8 +404,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             }
         }
     }
-    LaunchedEffect(playing, wordsPerMinute, mode) {
-        if (!playing || mode == BookReadingMode.MEANING) return@LaunchedEffect
+    LaunchedEffect(playing, wordsPerMinute, mode, blocksHourPlayback) {
+        if (!playing || mode == BookReadingMode.MEANING || blocksHourPlayback) return@LaunchedEffect
         var previous = withFrameNanos { it }
         while (playing && lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
             val frame = withFrameNanos { it }
@@ -423,6 +429,12 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             val consumed = list.scrollBy(BookAutoScroll.frameDistance(speed, elapsed, remaining))
             if (consumed == 0f && !list.canScrollForward) playing = false
         }
+    }
+    fun preparePlayback(): Boolean {
+        val cancellingTarget = targetUnresolved
+        if (!cancelPendingTarget()) return false
+        if (cancellingTarget) { pendingSearch = null; positioningOwner.job?.cancel() }
+        return !targetUnresolved
     }
     fun changeMode(value: BookReadingMode) {
         if (value == mode) return
@@ -680,7 +692,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                                     maxLines = if (compactLabels) 1 else 2, overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.testTag("book_chapter"))
                                 if (!compactLabels) Text(if (journey?.isEveningTexts == true) "${book.key.worship.title} · базовый текст" else if (journey != null)
-                                    "${book.key.worship.title} · ${journey.parts.indexOf(book.key) + 1} из 2" else "Порядок службы",
+                                    "${book.key.worship.title} · ${journey.parts.indexOf(book.key) + 1} из ${journey.parts.size}" else "Порядок службы",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
@@ -692,6 +704,10 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                         }
                     }
                     if (!toolbarMode) BookModePicker(mode, ::changeMode, onOpen = { playing = false })
+                    if (hourReview.needsReview) TextButton(onClick = { playing = false; sheet = "hour_review" },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_hours_review")) {
+                        Text(if (hourReview.compositionOnly) "Набор включает не все части - подробнее" else "Текст часов требует сверки - подробнее")
+                    }
                     if (journey?.isEveningTexts == true) journey.parts.singleOrNull { it != book.key }?.let { other ->
                         TextButton(onClick = { choosePart(other) }, enabled = !switchingPart,
                             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_open_other_part")) {
@@ -741,19 +757,16 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         BookReaderAction("Найти", Icons.Default.Search, "Найти место", { openSearch(false) },
                             Modifier.weight(1f).testTag("book_find"), iconsOnly = compactLabels)
-                        BookReaderAction(if (mode == BookReadingMode.MEANING) "К тексту" else if (currentLocalVariation != null) "Дальше"
+                        BookReaderAction(if (mode == BookReadingMode.MEANING) "К тексту" else if (blocksHourPlayback) "Сверить" else if (currentLocalVariation != null) "Дальше"
                             else if (playing) "Пауза" else "Прокрутка",
-                            if (mode == BookReadingMode.MEANING) Icons.Default.Article else if (currentLocalVariation != null)
+                            if (mode == BookReadingMode.MEANING) Icons.Default.Article else if (blocksHourPlayback) Icons.Default.Info else if (currentLocalVariation != null)
                                 Icons.AutoMirrored.Filled.ArrowForward else if (playing) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            if (mode == BookReadingMode.MEANING) "Вернуться к тексту" else if (currentLocalVariation != null)
+                            if (mode == BookReadingMode.MEANING) "Вернуться к тексту" else if (blocksHourPlayback) "Проверить текст часов" else if (currentLocalVariation != null)
                                 "Продолжить после местного песнопения" else if (playing) "Остановить прокрутку" else "Прокручивать текст",
                             { if (mode == BookReadingMode.MEANING) changeMode(lastTextMode)
+                            else if (blocksHourPlayback) { playing = false; sheet = "hour_review" }
                             else if (currentLocalVariation != null) continueAfterLocalVariation() else {
-                                val cancellingTarget = targetUnresolved
-                                if (cancelPendingTarget()) {
-                                    if (cancellingTarget) { pendingSearch = null; positioningOwner.job?.cancel() }
-                                    playing = !playing
-                                }
+                                if (preparePlayback()) playing = !playing
                             } },
                             Modifier.weight(1f).testTag("book_play"), emphasized = true, iconsOnly = compactLabels)
                         BookReaderAction("Микрофон", Icons.Default.Mic, "Найти по микрофону", { openSearch(true) },
@@ -841,7 +854,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                     journey?.parts?.getOrNull(journey.parts.indexOf(book.key) + 1)?.let { next ->
                         Button(onClick = { choosePart(next) }, enabled = !switchingPart,
                             modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_next_part")) {
-                            Text(if (journey.isEveningTexts) "Открыть утреню" else "Перейти к утрене")
+                            Text(if (journey.isEveningTexts) "Открыть утреню"
+                                else if (journey.isHoursLiturgyTexts) bookPartAction(next.worship) else "Перейти к утрене")
                         }
                     }
                     TextButton(onClick = { sheet = "sources" }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Источники и состав текста") }
@@ -858,6 +872,51 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         GuideSheetSystemBars()
         when (sheet) {
+            "hour_review" -> Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(if (hourReview.compositionOnly) "Неполный набор частей" else "Текст часов требует сверки",
+                    style = MaterialTheme.typography.headlineSmall, modifier = Modifier.testTag("book_hours_review_title"))
+                Text(hourReview.message, style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.testTag("book_hours_review_message"))
+                targetError?.let { message ->
+                    Text(message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.testTag("book_hours_playback_error"))
+                }
+                if (hourReview.status == BookHourReviewStatus.UNKNOWN && !hourReview.compositionOnly)
+                    Button(onClick = {
+                        playing = false
+                        if (preparePlayback()) {
+                            uncheckedPlaybackAllowed = true
+                            sheet = null
+                            playing = true
+                        }
+                    },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_hours_allow_unchecked_playback")) {
+                        Text("Прокручивать этот текст")
+                    }
+                journey?.takeIf { it.isHoursLiturgyTexts }?.parts?.singleOrNull {
+                    it.worship == WorshipKind.LITURGY && it != book.key
+                }?.let { liturgy ->
+                    Button(onClick = { choosePart(liturgy) }, enabled = !switchingPart,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_hours_open_liturgy")) {
+                        Text("Открыть литургию")
+                    }
+                }
+                if (hourReview.status == BookHourReviewStatus.UNKNOWN && !hourReview.compositionOnly)
+                    OutlinedButton(onClick = { sheet = null; onRefresh() }, enabled = !refreshing,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_hours_refresh")) {
+                        Text("Обновить и проверить текст")
+                    }
+                OutlinedButton(onClick = { onOpenUrl(BookHourSourceReview.guidanceUrl(book)) },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Богослужебные указания") }
+                OutlinedButton(onClick = { onOpenUrl(book.sourceUrl) },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                    Text(if (book.key.worship == WorshipKind.LITURGY) "Исходный текст литургии" else "Исходный текст часа")
+                }
+                TextButton(onClick = { sheet = null }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                    Text("Читать самостоятельно")
+                }
+            }
             "search" -> BookSearchSheet(book, microphoneFirst, lastTextMode,
                 onSelect = { chooseLocatedHit(BookLocatedSearchHit(book.key, book.contentHash, it)) },
                 otherPart = journey?.parts?.singleOrNull { it != book.key }?.worship,
@@ -946,7 +1005,10 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                         Text(if (refreshing) "Обновляем текст" else "Обновить текст и перевод")
                     }
                 }
-                items(book.notices) { Text(it, style = MaterialTheme.typography.bodyMedium) }
+                items(book.notices.filterNot(BookHourSourceReview::isInternalNotice)) { Text(it, style = MaterialTheme.typography.bodyMedium) }
+                if (hourReview.status != BookHourReviewStatus.NOT_APPLICABLE) item {
+                    Text(hourReview.message, style = MaterialTheme.typography.bodyMedium)
+                }
                 item {
                     OutlinedButton(onClick = ::openCalendar, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
                         Text("О дне и службе")
@@ -982,36 +1044,44 @@ internal fun BookJourneyDescription(journey: BookJourneyContext, key: ServiceBoo
             else "По расписанию: ${LocalDate.parse(journey.civilDate).format(format)}, ${journey.time} - начало всей службы",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.testTag("book_journey_schedule"))
-        Text("Тексты на ${LocalDate.parse(key.date).format(format)}. Вечерняя служба относится к следующему церковному дню",
+        Text(if (journey.isHoursLiturgyTexts) "Тексты на ${LocalDate.parse(key.date).format(format)}"
+            else "Тексты на ${LocalDate.parse(key.date).format(format)}. Вечерняя служба относится к следующему церковному дню",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.testTag("book_journey_date"))
         if (journey.isEveningTexts) Text("Это базовые тексты. Расписание не уточняет порядок службы; песнопения и дополнительные части в храме могут отличаться",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.testTag("book_evening_texts_note"))
+        if (journey.isHoursLiturgyTexts) Text(ServiceBookSelection.hoursLiturgyScope(journey.title),
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.testTag("book_hours_liturgy_note"))
     }
 }
 
 @Composable
-private fun BookJourneyParts(journey: BookJourneyContext, activeKey: ServiceBookKey,
+internal fun BookJourneyParts(journey: BookJourneyContext, activeKey: ServiceBookKey,
     onChoose: (ServiceBookKey) -> Unit, tag: String, switching: Boolean) {
     val fontScale = LocalDensity.current.fontScale
     Column(Modifier.fillMaxWidth().testTag(tag), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(if (journey.isEveningTexts) "Доступные тексты · выбрана ${if (activeKey.worship == WorshipKind.MATINS) "утреня" else "вечерня"}"
-            else "${activeKey.worship.title} · ${journey.parts.indexOf(activeKey) + 1} из 2",
+            else "${activeKey.worship.title} · ${journey.parts.indexOf(activeKey) + 1} из ${journey.parts.size}",
             style = MaterialTheme.typography.labelLarge)
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val button: @Composable (ServiceBookKey, Modifier) -> Unit = { part, modifier ->
                 val current = part == activeKey
                 OutlinedButton(onClick = { onChoose(part) }, enabled = !switching,
                     modifier = modifier.heightIn(min = 48.dp)
-                        .testTag((if (tag == "book_journey_parts") "book_part_" else "book_intro_part_") + part.worship.name.lowercase())
+                        .testTag((when (tag) {
+                            "book_journey_parts" -> "book_part_"
+                            "book_failed_parts" -> "book_failed_part_"
+                            else -> "book_intro_part_"
+                        }) + part.worship.name.lowercase())
                         .semantics { selected = current; role = Role.Tab },
                     colors = ButtonDefaults.outlinedButtonColors(containerColor =
                         if (current) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface)) {
-                    Text(part.worship.title)
+                    Text(part.worship.title, Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
                 }
             }
-            if (fontScale > 1.5f || maxWidth < 280.dp) {
+            if (journey.parts.size > 2 || fontScale > 1.5f || maxWidth < 280.dp) {
                 Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     journey.parts.forEach { button(it, Modifier.fillMaxWidth()) }
                 }
@@ -1020,6 +1090,15 @@ private fun BookJourneyParts(journey: BookJourneyContext, activeKey: ServiceBook
             }
         }
     }
+}
+
+internal fun bookPartAction(kind: WorshipKind): String = when (kind) {
+    WorshipKind.LITURGY -> "Открыть литургию"
+    WorshipKind.HOUR3 -> "Открыть третий час"
+    WorshipKind.HOUR6 -> "Открыть шестой час"
+    WorshipKind.MATINS -> "Открыть утреню"
+    WorshipKind.VESPERS -> "Открыть вечерню"
+    else -> "Открыть: ${kind.title}"
 }
 
 @Composable
@@ -1289,12 +1368,16 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
                 onTryWithoutSupport = { listen(true) })
         }
         if (corpusLoading) item {
-            Text("Проверяем текст другой части. Совпадения в открытой книге уже доступны",
+            Text("Проверяем тексты остальных частей. Совпадения в открытой книге уже доступны",
                 modifier = Modifier.testTag("book_search_corpus_loading"), style = MaterialTheme.typography.bodyMedium)
         }
         corpus.error?.let { message -> item {
             Text(message, modifier = Modifier.testTag("book_search_corpus_error"), color = MaterialTheme.colorScheme.error)
         } }
+        items(corpus.warnings) { message ->
+            Text(message, modifier = Modifier.testTag("book_search_corpus_warning"),
+                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
         selectionError?.let { message -> item {
             Text(message, modifier = Modifier.testTag("book_search_selection_error"), color = MaterialTheme.colorScheme.error)
         } }
@@ -1306,7 +1389,8 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
             if (!searching && query.trim().length >= 2 && hits.isEmpty()) item {
                 Text(if (corpusLoading || corpus.error != null || corpus.books.size == 1)
                     "Совпадений в открытой книге нет. Исправьте услышанные слова или попробуйте другую короткую фразу"
-                    else "Совпадений в обеих книгах нет. Исправьте услышанные слова или попробуйте другую короткую фразу")
+                    else if (corpus.books.size == 2) "Совпадений в обеих книгах нет. Исправьте услышанные слова или попробуйте другую короткую фразу"
+                    else "Совпадений в выбранных текстах нет. Исправьте услышанные слова или попробуйте другую короткую фразу")
                 if (otherPart != null && corpusLoader == null) {
                     Spacer(Modifier.height(12.dp))
                     OutlinedButton(onClick = onOpenOtherPart, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)

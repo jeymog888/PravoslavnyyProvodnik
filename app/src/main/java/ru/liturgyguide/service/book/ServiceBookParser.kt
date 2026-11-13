@@ -201,7 +201,9 @@ class ServiceBookParser {
             rankSelection = rankSelection, patronalSelection = patronalSelection)
         if (rankSelection != null && !MatinsRankSource.validBook(book))
             throw InvalidServiceBook("Источник не вернул полный полиелейный порядок")
-        return book.copy(contentHash = ServiceBookIntegrity.contentHash(book))
+        val reviewed = BookHourSourceReview.record(document, book)?.let { book.copy(notices = book.notices + it,
+            sources = (book.sources + BookSource("Богослужебные указания", BookHourSourceReview.guidanceUrl(book))).distinct()) } ?: book
+        return reviewed.copy(contentHash = ServiceBookIntegrity.contentHash(reviewed))
     }
 
     /** A whole source-marked dismissal can be a bare text node after HTML repair.

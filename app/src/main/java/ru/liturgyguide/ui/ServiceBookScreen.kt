@@ -93,7 +93,7 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
         // The route names a possible return. Only this publication's saved cursor
         // and its exact accepted edition prove that it is safe to offer the action.
         if (context.civilDate != expected.civilDate || context.time != expected.time || context.title != expected.title ||
-            context.effectivePartSet != expected.effectivePartSet ||
+            context.effectivePartSet != expected.effectivePartSet || context.parts.size != expected.parts.size ||
             context.parts.zip(expected.parts).any { (saved, pending) ->
                 saved.date != pending.date || saved.worship != pending.worship || saved.churchType != pending.churchType ||
                     saved.topLevel != pending.topLevel || saved.patronalId != pending.patronalId
@@ -635,6 +635,8 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
                         modifier = Modifier.testTag("book_accepted_edition_missing"))
                     Text((result as? BookLoadResult.Failed)?.message.orEmpty(), style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.testTag("book_load_error"))
+                    if (journey?.isHoursLiturgyTexts == true) BookJourneyParts(journey, requested,
+                        { selectPart(it, savedCurrentPart = false) }, "book_failed_parts", refreshing)
                     if (acceptedCandidate != null && ownedRoute?.pendingDedication == null) {
                         Text("Загружена другая редакция. Ее можно открыть с начала. Прежнее сохраненное место пока не изменено",
                             style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("book_new_edition_notice"))
@@ -668,6 +670,8 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
                     Text("Текст пока не загружен", style = MaterialTheme.typography.headlineSmall)
                     Text((result as? BookLoadResult.Failed)?.message.orEmpty(), style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.testTag("book_load_error"))
+                    if (journey?.isHoursLiturgyTexts == true) BookJourneyParts(journey, requested,
+                        { selectPart(it, savedCurrentPart = false) }, "book_failed_parts", refreshing)
                     Button(onClick = { result = null; retry++ }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Попробовать еще раз") }
                     recovery?.let { saved ->
                         Text("На телефоне есть текст этой службы с прежним вариантом храма", style = MaterialTheme.typography.bodyMedium,

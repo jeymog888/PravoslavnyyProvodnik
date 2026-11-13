@@ -128,7 +128,13 @@ class ChildChurchAutomaticJourneyTest {
             assertEquals(listOf("08:30", "17:00"), events.map { it.time })
             val event = events.single { it.time == "08:30" }
             val service = ParishService(event.date, event.time, event.title, event.kind)
-            val route = requireNotNull(ServiceBookSelection.resolve(service, selected))
+            val morning = requireNotNull(ServiceBookSelection.resolve(service, selected))
+            assertEquals(WorshipKind.HOUR3, morning.activeKey.worship)
+            val parts = requireNotNull(morning.journeyContext).parts
+            assertEquals(listOf(WorshipKind.HOUR3, WorshipKind.HOUR6, WorshipKind.LITURGY), parts.map { it.worship })
+            assertTrue(parts.all { it.date == civilDate.toString() })
+            // Opening the explicitly offered liturgy is independent of either hour loading.
+            val route = requireNotNull(morning.selectPart(parts.last(), savedCurrentPart = false))
             assertEquals(civilDate.toString(), route.activeKey.date)
             assertEquals(WorshipKind.LITURGY, route.activeKey.worship)
             assertEquals(selected.id, route.parishId)

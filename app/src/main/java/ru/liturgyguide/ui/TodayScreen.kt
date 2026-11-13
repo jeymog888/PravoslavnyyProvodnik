@@ -175,7 +175,8 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                                     color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("schedule_inferred_year"))
                             }
                             if (kind != null) Button(onClick = { open(featured) }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("open_service_book")) {
-                                Text(if (kind == WorshipKind.LITURGY && featured.kind == "service_block") "Открыть литургию" else "Открыть службу")
+                                Text(if (ServiceBookSelection.isHoursLiturgy(featured.title)) "Открыть часы и литургию"
+                                    else if (kind == WorshipKind.LITURGY && featured.kind == "service_block") "Открыть литургию" else "Открыть службу")
                             } else OutlinedButton(onClick = { open(featured) }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("today_choose_unknown_service")) {
                                 Text("Выбрать текст службы")
                             }

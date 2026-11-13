@@ -36,6 +36,8 @@ private fun BookOfflineControls.summary(): String {
         busy -> "Проверяем загрузку"
         checked.contextError != null || checked.parts.any { it.status == BookOfflinePartStatus.STORAGE_ERROR } ->
             "Проверьте загрузку"
+        checked.parts.any { it.status == BookOfflinePartStatus.REVIEW_REQUIRED } ->
+            "Сохранено ${checked.storedCount} из ${checked.total} · требуется сверка"
         checked.total > 1 -> "Сохранено ${checked.readyCount} из ${checked.total}"
         checked.isComplete -> "Доступен без сети"
         checked.needsRecovery -> "Нужно восстановить текст"
@@ -78,7 +80,7 @@ internal fun BookOfflineSection(activeKey: ServiceBookKey, controls: BookOffline
         else {
             state.parts.forEach { part ->
                 val name = if (state.total > 1) part.key.worship.title else "Текст"
-                val feminine = state.total > 1 && part.key.worship != WorshipKind.VIGIL
+                val feminine = state.total > 1 && part.key.worship in setOf(WorshipKind.LITURGY, WorshipKind.VESPERS, WorshipKind.MATINS)
                 val status = when (part.status) {
                     BookOfflinePartStatus.READY -> if (feminine) "сохранена" else "сохранен"
                     BookOfflinePartStatus.MISSING, BookOfflinePartStatus.FAILED,
@@ -86,6 +88,7 @@ internal fun BookOfflineSection(activeKey: ServiceBookKey, controls: BookOffline
                     BookOfflinePartStatus.NEEDS_RECOVERY -> "нужно восстановить"
                     BookOfflinePartStatus.STORAGE_ERROR -> "не удалось проверить"
                     BookOfflinePartStatus.SAVING -> "сохраняем"
+                    BookOfflinePartStatus.REVIEW_REQUIRED -> if (feminine) "сохранена - требуется сверка" else "сохранен - требуется сверка"
                 }
                 Text("$name - $status", style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.testTag("book_offline_part_${part.key.worship.name}"))
@@ -93,6 +96,7 @@ internal fun BookOfflineSection(activeKey: ServiceBookKey, controls: BookOffline
             if (state.isComplete) Text(when {
                 state.total == 1 -> "Текст доступен без сети"
                 state.partSet == BookPartSetKind.EVENING_TEXTS -> "Оба текста доступны без сети"
+                state.partSet == BookPartSetKind.HOURS_LITURGY_TEXTS -> "Три текста сохранены для чтения без сети"
                 else -> "Обе части доступны без сети"
             }, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("book_offline_complete"))
             (listOfNotNull(state.contextError) + state.parts.mapNotNull { it.message }).distinct().forEach { message ->
@@ -107,6 +111,7 @@ internal fun BookOfflineSection(activeKey: ServiceBookKey, controls: BookOffline
         }
         val recovery = state?.parts?.firstOrNull { it.status == BookOfflinePartStatus.NEEDS_RECOVERY }
         val refresh = state?.parts?.firstOrNull { it.status == BookOfflinePartStatus.NEEDS_REFRESH }
+        val review = state?.parts?.firstOrNull { it.status == BookOfflinePartStatus.REVIEW_REQUIRED }
         when {
             controls.preparing -> Button(onClick = controls.onPrepare, enabled = false,
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_prepare_service")) {
@@ -123,7 +128,7 @@ internal fun BookOfflineSection(activeKey: ServiceBookKey, controls: BookOffline
             }, enabled = !blocked, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                 .testTag("book_recover_part_${recovery.key.worship.name}")) {
                 Text(if (recovery.key == activeKey) "Открыть текст заново"
-                    else if (recovery.key.worship == WorshipKind.MATINS) "Открыть утреню" else "Открыть вечерню")
+                    else bookPartAction(recovery.key.worship))
             }
             refresh != null -> Button(onClick = {
                 if (refresh.key != activeKey) onChoosePart(refresh.key)
@@ -140,8 +145,16 @@ internal fun BookOfflineSection(activeKey: ServiceBookKey, controls: BookOffline
                     state.parts.any { it.status == BookOfflinePartStatus.FAILED } -> "Попробовать еще раз"
                     state.total == 1 -> "Сохранить текст"
                     state.partSet == BookPartSetKind.EVENING_TEXTS -> "Сохранить оба текста"
+                    state.partSet == BookPartSetKind.HOURS_LITURGY_TEXTS -> "Сохранить три текста"
                     else -> "Сохранить обе части"
                 })
+            }
+            review != null -> OutlinedButton(onClick = {
+                if (review.key != activeKey) onChoosePart(review.key)
+                else if (onAcceptUpdate != null) onAcceptUpdate() else onRefresh()
+            }, enabled = !blocked, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_review_part_${review.key.worship.name}")) {
+                Text(if (review.key != activeKey) "Открыть текст для сверки"
+                    else if (onAcceptUpdate != null) "Открыть обновленный текст" else "Обновить и проверить текст")
             }
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)

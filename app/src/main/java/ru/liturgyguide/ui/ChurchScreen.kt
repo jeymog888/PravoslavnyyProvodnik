@@ -446,7 +446,8 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     }
 }
 
-internal fun serviceReadingAction(service: ParishService): String = when (ServiceBookSelection.kindFor(service.title)) {
+internal fun serviceReadingAction(service: ParishService): String = if (ServiceBookSelection.isHoursLiturgy(service.title))
+    "Открыть часы и литургию" else when (ServiceBookSelection.kindFor(service.title)) {
     WorshipKind.LITURGY -> "Открыть литургию"
     WorshipKind.VESPERS -> "Открыть вечерню"
     WorshipKind.MATINS -> "Открыть утреню"

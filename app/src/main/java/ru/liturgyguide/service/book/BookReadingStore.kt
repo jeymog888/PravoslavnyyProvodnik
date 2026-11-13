@@ -115,7 +115,7 @@ object BookPositionUpdate {
         if (oldJourney != null && journeyContext != null) require(
             oldJourney.parishId == journeyContext.parishId && oldJourney.civilDate == journeyContext.civilDate &&
                 oldJourney.time == journeyContext.time && oldJourney.title == journeyContext.title &&
-                oldJourney.effectivePartSet == journeyContext.effectivePartSet &&
+                oldJourney.effectivePartSet == journeyContext.effectivePartSet && oldJourney.parts.size == journeyContext.parts.size &&
                 oldJourney.parts.zip(journeyContext.parts).all { (before, after) ->
                     before.date == after.date && before.worship == after.worship && before.topLevel == after.topLevel
                 })

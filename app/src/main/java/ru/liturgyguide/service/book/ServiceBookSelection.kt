@@ -64,8 +64,37 @@ object ServiceBookSelection {
             !Regex("\\b(?:час[а-я]*|[1369])\\b").containsMatchIn(value)
     }
 
+    /** The publication names ordinary hours and a liturgy, not an interval or another set of hours. */
+    fun isHoursLiturgy(title: String): Boolean {
+        val value = independentTitle(title)
+        // Parentheses and ':' carry composition, so inspect them before normalization
+        // removes punctuation. Numbers in a saint's name outside this span are unrelated.
+        val declaredHours = Regex("(?iu)\\bчасы\\s*(?:\\(([^)]{1,180})\\)|:\\s*([^.!?]{1,180}))")
+            .findAll(BookText.clean(title))
+        val ordinal = Regex("\\b(?:[1369](?:[ -]?(?:й|го))?|первый|первого|третий|третьего|шестой|шестого|девятый|девятого)\\b")
+        if (declaredHours.any { ordinal.containsMatchIn(BookText.normalized(it.groupValues.drop(1).joinToString(" "))) }) return false
+        return Regex("\\bчасы\\b").containsMatchIn(value) && Regex("\\bлитургия\\b").containsMatchIn(value) &&
+            listOf("царск", "пасхальн", "преждеосвящ", "изобразительн").none { it in value } &&
+            !Regex("\\b(?:[1369](?:[ -]?(?:й|го))?|первый|первого|третий|третьего|шестой|шестого|девятый|девятого)\\s+(?:час|часы|часа)\\b").containsMatchIn(value) &&
+            !Regex("\\bчасы\\s+(?:[1369](?: й| го)?|первый|первого|третий|третьего|шестой|шестого|девятый|девятого)\\b").containsMatchIn(value) &&
+            !Regex("\\b(?:после|перед|до|окончании|завершении)\\s+час(?:ы|ов|ами)\\b").containsMatchIn(value)
+    }
+
+    fun hoursLiturgyScope(title: String): String = if (listOf("молеб", "панихид", "акафист", "исповед").any {
+            it in BookText.normalized(title) })
+        "Тексты третьего и шестого часов и литургии. Остальные службы из этой записи в набор не входят"
+    else "Тексты третьего и шестого часов и литургии. Местные сокращения и выбор песнопений могут отличаться"
+
     /** Both schedule entry points resolve the original publication exactly once. */
     fun resolve(service: ParishService, parish: Parish?): BookRoute? = runCatching {
+        if (parish != null && isHoursLiturgy(service.title)) {
+            val parts = listOf(WorshipKind.HOUR3, WorshipKind.HOUR6, WorshipKind.LITURGY).map {
+                forCivilDate(LocalDate.parse(service.date), it, parish)
+            }
+            val context = BookJourneyContext(parish.id, service.date, service.time, service.title, parts,
+                partSet = BookPartSetKind.HOURS_LITURGY_TEXTS).validatedFor(parts.first(), parish.id) ?: return null
+            return BookRoute(parts.first(), parish.id, context).validated()
+        }
         val kind = kindFor(service.title) ?: return null
         val date = LocalDate.parse(service.date)
         val eveningMatins = kind == WorshipKind.MATINS &&

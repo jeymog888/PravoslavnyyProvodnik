@@ -8,7 +8,7 @@ import kotlinx.coroutines.withContext
 import ru.liturgyguide.model.ServiceBook
 import ru.liturgyguide.model.ServiceBookKey
 
-enum class BookOfflinePartStatus { READY, MISSING, NEEDS_RECOVERY, NEEDS_REFRESH, STORAGE_ERROR, SAVING, FAILED }
+enum class BookOfflinePartStatus { READY, MISSING, NEEDS_RECOVERY, NEEDS_REFRESH, STORAGE_ERROR, SAVING, FAILED, REVIEW_REQUIRED }
 
 data class BookOfflinePart(
     val key: ServiceBookKey,
@@ -17,6 +17,7 @@ data class BookOfflinePart(
     val message: String? = null
 ) {
     val isReady: Boolean get() = status == BookOfflinePartStatus.READY
+    val hasStoredEdition: Boolean get() = savedHash != null && (isReady || status == BookOfflinePartStatus.REVIEW_REQUIRED)
     val needsRecovery: Boolean get() = status == BookOfflinePartStatus.NEEDS_RECOVERY
     val needsRefresh: Boolean get() = status == BookOfflinePartStatus.NEEDS_REFRESH
 }
@@ -28,6 +29,7 @@ data class BookOfflineState(
     val contextError: String? = null
 ) {
     val readyCount: Int get() = parts.count { it.isReady }
+    val storedCount: Int get() = parts.count { it.hasStoredEdition }
     val total: Int get() = parts.size
     val isComplete: Boolean get() = contextError == null && parts.isNotEmpty() && parts.all { it.isReady }
     val canPrepare: Boolean get() = contextError == null && parts.none { it.status == BookOfflinePartStatus.SAVING } &&
@@ -47,11 +49,12 @@ object BookOfflinePreparation {
             else -> null
         }
         val keys = context?.parts ?: listOf(activeBook.key)
-        val verified = keys.map { key -> inspectPart(key, activeBook, parishId, books, store) }
+        val verified = keys.map { key -> inspectPart(key, activeBook, parishId, books, store, context?.isHoursLiturgyTexts == true) }
 
-        // Inspecting a later part must not leave an earlier READY tied to a stale owner.
+        // Inspecting a later part must not leave an earlier stored edition tied to
+        // a stale owner. REVIEW_REQUIRED also contributes a hash to storedCount.
         // Latest matters only for an unaccepted neighbour, never for the visible book.
-        val latestStillMatches = verified.filter { it.part.isReady && it.part.key != activeBook.key &&
+        val latestStillMatches = verified.filter { it.part.hasStoredEdition && it.part.key != activeBook.key &&
             it.owner == BookReadingLookup.Absent }.associate { checked ->
             currentCoroutineContext().ensureActive()
             checked.part.key to try {
@@ -62,11 +65,12 @@ object BookOfflinePreparation {
         val parts = verified.map { checked ->
             currentCoroutineContext().ensureActive()
             val part = checked.part
-            if (!part.isReady) part else {
+            if (!part.hasStoredEdition) part else {
                 when (val owner = store.lookup(part.key, parishId)) {
                     BookReadingLookup.Unreadable -> recovery(part.key, "Не удалось проверить сохраненное место")
                     is BookReadingLookup.Found -> if (owner.position.contentHash == part.savedHash) part
-                        else if (part.key == activeBook.key) recovery(part.key, "Выбрана другая сохраненная редакция этого текста")
+                        else if (part.key == activeBook.key || part.status == BookOfflinePartStatus.REVIEW_REQUIRED)
+                            recovery(part.key, "Выбрана другая сохраненная редакция этого текста")
                         else changed(part.key)
                     BookReadingLookup.Absent -> if (part.key == activeBook.key ||
                         checked.owner == BookReadingLookup.Absent && latestStillMatches[part.key] == true) part
@@ -128,7 +132,7 @@ object BookOfflinePreparation {
     private data class Verified(val part: BookOfflinePart, val owner: BookReadingLookup)
 
     private suspend fun inspectPart(key: ServiceBookKey, active: ServiceBook, parishId: String?,
-        books: ServiceBooks, store: BookReadingStore): Verified {
+        books: ServiceBooks, store: BookReadingStore, morningJourney: Boolean): Verified {
         var owner = store.lookup(key, parishId)
         return try {
             if (key == active.key) {
@@ -145,7 +149,7 @@ object BookOfflinePreparation {
                     owner == BookReadingLookup.Unreadable -> recovery(key, "Не удалось проверить сохраненное место")
                     (owner as? BookReadingLookup.Found)?.position?.contentHash?.let { it != active.contentHash } == true ->
                         recovery(key, "Выбрана другая сохраненная редакция этого текста")
-                    saved -> ready(key, active.contentHash)
+                    saved -> ready(active, morningJourney)
                     else -> refresh(key)
                 }
                 return Verified(part, owner)
@@ -165,10 +169,10 @@ object BookOfflinePreparation {
                 currentCoroutineContext().ensureActive()
                 val after = store.lookup(key, parishId)
                 if (!sameEdition(owner, after)) { owner = after; return@repeat }
-                if (acceptedHash != null) return Verified(if (durable) ready(key, acceptedHash)
+                if (acceptedHash != null) return Verified(if (durable) ready(requireNotNull(candidate), morningJourney)
                     else recovery(key, "Сохраненная редакция недоступна на телефоне"), after)
                 if (!durable) return Verified(BookOfflinePart(key, BookOfflinePartStatus.MISSING), after)
-                if (latestMatches) return Verified(ready(key, requireNotNull(candidate).contentHash), after)
+                if (latestMatches) return Verified(ready(requireNotNull(candidate), morningJourney), after)
                 owner = after
             }
             Verified(changed(key), owner)
@@ -187,7 +191,12 @@ object BookOfflinePreparation {
     private fun matches(book: ServiceBook?, key: ServiceBookKey, hash: String?): Boolean =
         book != null && hash != null && book.key == key && book.contentHash == hash && ServiceBookIntegrity.valid(book)
 
-    private fun ready(key: ServiceBookKey, hash: String) = BookOfflinePart(key, BookOfflinePartStatus.READY, hash)
+    private fun ready(book: ServiceBook, morningJourney: Boolean): BookOfflinePart {
+        val review = BookHourSourceReview.of(book, morningJourney)
+        return if (review.needsReview) BookOfflinePart(book.key, BookOfflinePartStatus.REVIEW_REQUIRED,
+            book.contentHash, review.message)
+        else BookOfflinePart(book.key, BookOfflinePartStatus.READY, book.contentHash)
+    }
     private fun recovery(key: ServiceBookKey, message: String) = BookOfflinePart(key, BookOfflinePartStatus.NEEDS_RECOVERY, message = message)
     private fun refresh(key: ServiceBookKey) = BookOfflinePart(key, BookOfflinePartStatus.NEEDS_REFRESH,
         message = "Открытый текст пока не сохранен. Обновите его")
