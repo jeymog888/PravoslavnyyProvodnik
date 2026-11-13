@@ -70,7 +70,8 @@ class AppContainer(context: Context, private val discoveryOverride: PlaceDiscove
                 check(edit.commit()) { "Schedule safety observation was not saved" }
             }
         }, AndroidScheduleDocumentExtractor(appContext),
-            siteResolver = productionScheduleSiteResolver(transport, directories))
+            siteResolver = productionScheduleSiteResolver(transport, directories),
+            curatedPublishers = { parishes.getOrNull()?.directory?.churches.orEmpty() })
     }
     val serviceBooks: ServiceBooks by lazy {
         // Only the small reviewed translation catalog supplements published exact pairs.

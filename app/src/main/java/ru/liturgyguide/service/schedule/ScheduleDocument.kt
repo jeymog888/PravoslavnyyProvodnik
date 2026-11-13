@@ -27,6 +27,8 @@ data class ScheduleDocumentPage(val lines: List<ScheduleDocumentLine>,
     val sourceTruncated: Boolean = false)
 data class ScheduleDocument(val sourceUrl: String, val format: String, val pages: List<ScheduleDocumentPage>)
 enum class ScheduleParseDisposition { PARSED, UNSUPPORTED, REJECTED }
+// Transient evidence for one attachment; it never changes cache authority or withdrawal history.
+enum class ScheduleRejectionReason { OTHER_ENTITY_ONLY }
 data class ScheduleParseResult(
     val disposition: ScheduleParseDisposition,
     val events: List<InternetService> = emptyList(),
@@ -35,7 +37,8 @@ data class ScheduleParseResult(
     val withdrawsAll: Boolean = false,
     val yearInferred: Boolean = false,
     // Scope could not be proved. Stop this source; this is not a claim of a global withdrawal.
-    val safetyConflict: Boolean = false
+    val safetyConflict: Boolean = false,
+    val rejectionReason: ScheduleRejectionReason? = null
 )
 
 fun interface ScheduleDocumentExtractor {

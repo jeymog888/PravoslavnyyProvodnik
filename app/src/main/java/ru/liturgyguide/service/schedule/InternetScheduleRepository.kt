@@ -92,7 +92,9 @@ class InternetScheduleRepository(
     private val cache: ScheduleCacheStore,
     private val documentExtractor: ScheduleDocumentExtractor = HtmlScheduleDocumentExtractor,
     siteResolver: ScheduleSiteResolver? = null,
-    directoryCache: OfficialDirectoryCacheStore = MemoryOfficialDirectoryCacheStore()
+    directoryCache: OfficialDirectoryCacheStore = MemoryOfficialDirectoryCacheStore(),
+    // Only the shipped reviewed parish directory may supply independent publisher identities.
+    private val curatedPublishers: () -> List<Parish> = { emptyList() }
 ) : InternetSchedules {
     private val siteResolver = siteResolver ?: OpenScheduleSiteResolver(transport, directoryCache)
     private val importProgress = MutableStateFlow(ScheduleImportProgress("", ScheduleImportPhase.IDLE))
@@ -595,9 +597,16 @@ class InternetScheduleRepository(
                 previousImage = selectedDocument?.takeIf { it.format == "image" }
                 previousImageParent = next.linkedFrom.takeIf { previousImage != null }.orEmpty()
                 if (continuation != null) publicationSource = continuation.sourceUrl
-                parsed = selectedDocument?.let { ScheduleDocumentParser.inspect(it, date, parish) }
+                val inspected = selectedDocument?.let { ScheduleDocumentParser.inspect(it, date, parish) }
                     ?: ScheduleParseResult(ScheduleParseDisposition.UNSUPPORTED)
                 format = selectedDocument?.format ?: "unknown"
+                parsed = if (selectedDocument != null && continuation == null && !rootRequest && next.document &&
+                    next.linkedFrom.isNotBlank() && selectedDocument.sourceUrl == response.url && format == "image" &&
+                    response.contentType.substringBefore(';').trim().startsWith("image/", ignoreCase = true)) {
+                    val witness = KnownOtherScheduleVenue.resolve(parish, website, next.linkedFrom,
+                        runCatching { curatedPublishers() }.getOrDefault(emptyList()))
+                    ScheduleForeignImage.certify(selectedDocument, date, parish, website, next.linkedFrom, witness, inspected)
+                } else inspected
             }
             if (parsed.safetyConflict) {
                 // A newer OCR pass can contradict an already-readable page from this same
@@ -609,6 +618,15 @@ class InternetScheduleRepository(
                 break
             }
             val withdraws = parsed.withdrawsAll || parsed.withdrawnDates.isNotEmpty() || parsed.withdrawnStarts.isNotEmpty()
+            if (parsed.rejectionReason == ScheduleRejectionReason.OTHER_ENTITY_ONLY &&
+                parsed.disposition == ScheduleParseDisposition.REJECTED && parsed.events.isEmpty() &&
+                !parsed.safetyConflict && !withdraws && !rootRequest && next.document && format == "image" &&
+                next.linkedFrom.isNotBlank() && !sourceConflict(publicationSource)) {
+                // A positively identified neighbour's complete image is neither a new
+                // selected publication nor a reason to erase the accepted offline schedule.
+                previousImage = null; previousImageParent = ""
+                continue
+            }
             hasWithdrawal = hasWithdrawal || withdraws
             if (parsed.disposition == ScheduleParseDisposition.REJECTED || withdraws) {
                 // Report safety evidence immediately: a later timeout must not restore an
