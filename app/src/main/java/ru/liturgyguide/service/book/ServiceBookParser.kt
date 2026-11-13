@@ -89,7 +89,9 @@ class ServiceBookParser {
         fun walk(node: Node, altar: Boolean = false) {
             if (node is TextNode) {
                 val text = BookText.clean(node.text())
-                if (text.length >= 3) add(text, BookBlockKind.RUBRIC, altar)
+                if (text.length >= 3) add(text,
+                    if (!altar && key.worship in setOf(WorshipKind.MATINS, WorshipKind.VESPERS) &&
+                        isWholePublishedDismissal(node)) BookBlockKind.PRAYER else BookBlockKind.RUBRIC, altar)
                 return
             }
             if (node !is Element) return
@@ -199,6 +201,23 @@ class ServiceBookParser {
         if (rankSelection != null && !MatinsRankSource.validBook(book))
             throw InvalidServiceBook("Источник не вернул полный полиелейный порядок")
         return book.copy(contentHash = ServiceBookIntegrity.contentHash(book))
+    }
+
+    /** A whole source-marked dismissal can be a bare text node after HTML repair.
+     * An intervening element (especially an unfilled patronal slot) keeps the old boundary.
+     */
+    private fun isWholePublishedDismissal(node: TextNode): Boolean {
+        val parent = node.parent() as? Element ?: return false
+        if (parent.tagName() != "div" || !parent.hasClass("variable_text")) return false
+        fun blank(value: Node) = value is TextNode && BookText.clean(value.text()).isEmpty()
+        var previous = node.previousSibling()
+        while (previous != null && blank(previous)) previous = previous.previousSibling()
+        val heading = previous as? Element ?: return false
+        if (heading.tagName() != "h3" || heading.select("a#otpust").size != 1 ||
+            BookText.normalized(heading.text()) != "отпуст") return false
+        var next = node.nextSibling()
+        while (next != null && blank(next)) next = next.nextSibling()
+        return next == null || next is Element && next.tagName() in setOf("h1", "h2", "h3")
     }
 
     private fun selected(document: Document, id: String): Element? = document.selectFirst("#$id option[selected]")

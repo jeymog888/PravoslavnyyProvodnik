@@ -247,14 +247,19 @@ class BookReadingStore(private val preferences: SharedPreferences) {
         }
 
     fun save(position: BookReadingPosition): Boolean = synchronized(preferences) {
-        runCatching {
+        commitPosition(position)
+    }
+
+    private fun commitPosition(position: BookReadingPosition, receiptIdentity: String? = null): Boolean {
+        return runCatching {
             val json = BookReadingCodec.encode(position)
             val key = positionKey(position.key, position.parishId)
             val changes = linkedMapOf<String, Any?>(key to json, lastKey(position.parishId) to json)
+            receiptIdentity?.let { changes["dedication:$it"] = json }
             val keys = preferences.all.keys.filter { it.startsWith("position:") }
             if (key !in keys && keys.size >= 32) keys.firstOrNull()?.let { changes[it] = null }
-            // Two reading pointers (and at most one evicted old position) form one
-            // acceptance. A failed disk report must not leave the new hash in memory.
+            // Reading pointers, an optional source receipt and at most one evicted
+            // position form one acceptance. A failed disk report rolls all of them back.
             SinglePreferenceCommit.write(preferences, changes)
         }.getOrDefault(false)
     }
@@ -266,6 +271,42 @@ class BookReadingStore(private val preferences: SharedPreferences) {
             is BookReadingLookup.Found -> if (reading.position.contentHash == position.contentHash) save(position) else false
             BookReadingLookup.Absent -> save(position)
         }
+    }
+
+    /** A source transaction cannot replace a cursor changed during its last suspended IO. */
+    fun compareAndSave(position: BookReadingPosition, expected: BookReadingLookup): Boolean = synchronized(preferences) {
+        if (expected == BookReadingLookup.Unreadable || lookup(position.key, position.parishId) != expected)
+            return@synchronized false
+        save(position)
+    }
+
+    /** A prepared source remains distinguishable from a never-opened book after cursor eviction. */
+    fun lookupDedicationReceipt(identity: String, key: ServiceBookKey, parishId: String?): BookReadingLookup =
+        synchronized(preferences) {
+            if (!identity.matches(Regex("[a-f0-9]{64}"))) return@synchronized BookReadingLookup.Unreadable
+            runCatching {
+                val values = preferences.all
+                val receiptKey = "dedication:$identity"
+                if (!values.containsKey(receiptKey)) return@runCatching BookReadingLookup.Absent
+                val position = (values[receiptKey] as? String)?.let(BookReadingCodec::decode)
+                    ?.takeIf { it.key == key && it.parishId == parishId }
+                    ?: return@runCatching BookReadingLookup.Unreadable
+                BookReadingLookup.Found(position)
+            }.getOrDefault(BookReadingLookup.Unreadable)
+        }
+
+    /** The receipt and first accepted cursor have one disk/memory outcome, never separate writes. */
+    fun compareAndSaveDedication(position: BookReadingPosition, expected: BookReadingLookup,
+        identity: String): Boolean = synchronized(preferences) {
+        runCatching {
+            if (expected == BookReadingLookup.Unreadable ||
+                expected is BookReadingLookup.Found && expected.position != position ||
+                lookup(position.key, position.parishId) != expected ||
+                lookupDedicationReceipt(identity, position.key, position.parishId) != BookReadingLookup.Absent ||
+                preferences.all.keys.count { it.startsWith("dedication:") } >= 128) return@synchronized false
+            // Receipts are never evicted: forgetting one could authorize a silent rebase.
+            commitPosition(position, identity)
+        }.getOrDefault(false)
     }
 
     /** Explicit return only: an evicted cursor can be restored, never an existing owner's cursor. */
@@ -315,14 +356,15 @@ object BookSearch {
             checkActive()
             val block = chapter.blocks[index]
             val original = BookSearchText.find(block.original, query)
-            val russian = block.russian?.let { BookSearchText.find(it, query) }
+            val russianText = BookBlockPresentation.effectiveRussian(book.key, block)
+            val russian = russianText?.let { BookSearchText.find(it, query) }
             val inRussian = russian != null && (original == null || russian.kind < original.kind ||
                 russian.kind == original.kind && preferredMode == BookReadingMode.RUSSIAN)
             val match = (if (inRussian) russian else original) ?: continue
             val mode = if (inRussian) BookReadingMode.RUSSIAN else BookReadingMode.ORIGINAL
-            val text = if (inRussian) block.russian.orEmpty() else block.original
+            val text = if (inRussian) russianText.orEmpty() else block.original
             candidates += match.kind to BookSearchHit(chapter.id, chapter.title, block.id,
-                contextualExcerpt(chapter, index, text, match.start, mode), mode, match.start, match.endExclusive)
+                contextualExcerpt(book.key, chapter, index, text, match.start, mode), mode, match.start, match.endExclusive)
         }
         // A common response can occur more than thirty times. Keep later occurrences
         // accessible, and do not let early unordered words hide a later exact phrase.
@@ -330,16 +372,17 @@ object BookSearch {
         return candidates
     }
 
-    private fun contextualExcerpt(chapter: BookChapter, index: Int, text: String, matchStart: Int,
+    private fun contextualExcerpt(key: ServiceBookKey, chapter: BookChapter, index: Int, text: String, matchStart: Int,
         mode: BookReadingMode): String {
         if (text.length > 100) return excerpt(text, matchStart)
         val current = BookText.normalized(text)
         // Nearby context only, with bounded work even for thousands of identical responses.
         for (previousIndex in index - 1 downTo (index - 8).coerceAtLeast(0)) {
             val previous = chapter.blocks[previousIndex]
-            if (previous.isAltarText || previous.kind !in setOf(BookBlockKind.PRAYER, BookBlockKind.SCRIPTURE)) continue
+            if (previous.isAltarText || !BookBlockPresentation.isSpoken(key, previous)) continue
             // Do not borrow an older translated petition across an untranslated one.
-            val source = (if (mode == BookReadingMode.RUSSIAN) previous.russian else previous.original) ?: break
+            val source = (if (mode == BookReadingMode.RUSSIAN)
+                BookBlockPresentation.effectiveRussian(key, previous) else previous.original) ?: break
             val normalized = BookText.normalized(source)
             if (normalized == current || normalized.split(' ').size < 3) continue
             return text + "\nПеред этим: " + excerpt(source, source.length, 120)

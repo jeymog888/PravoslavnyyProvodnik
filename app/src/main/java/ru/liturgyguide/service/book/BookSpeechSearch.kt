@@ -21,7 +21,7 @@ object BookSpeechSearch {
         // No second 3 MB copy of the whole book and no scan at all for one hypothesis.
         for (book in books) for (chapter in book.chapters) for (block in chapter.blocks) {
             checkActive()
-            for (source in listOfNotNull(block.original, block.russian)) {
+            for (source in listOfNotNull(block.original, BookBlockPresentation.effectiveRussian(book.key, block))) {
                 checkActive()
                 val text = " ${BookText.normalized(source)} "
                 for (index in 0 until best) if (text.contains(" ${ranked[index].second} ")) {
