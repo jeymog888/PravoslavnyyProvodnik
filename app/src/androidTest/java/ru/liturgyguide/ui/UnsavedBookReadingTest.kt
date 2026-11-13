@@ -59,6 +59,7 @@ class UnsavedBookReadingTest {
         refresh()
         compose.waitUntil(5_000) { books.calls.get() == 2 && store.last(parish)?.contentHash == book.contentHash }
         compose.onNodeWithTag("book_options").assertExists()
+        compose.onNodeWithTag("book_update_available", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithTag("book_accept_update").assertDoesNotExist()
         val saved = requireNotNull(store.last(parish))
         assertEquals("second", saved.blockId)
@@ -78,9 +79,10 @@ class UnsavedBookReadingTest {
         readSecondPrayer()
         assertTrue(preferences.all.isEmpty())
         refresh()
-        compose.waitUntil(5_000) { compose.onAllNodesWithTag("book_options_accept_update").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("book_accept_update").fetchSemanticsNodes().isNotEmpty() }
         assertTrue("An unsaved hash must never be published before acceptance", preferences.all.isEmpty())
-        compose.onNodeWithTag("book_options_accept_update").performScrollTo().performClick()
+        compose.openBookUpdateOptions()
+        compose.onNodeWithTag("book_accept_update").performScrollTo().performClick()
         settle()
         val accepted = requireNotNull(store.last(parish))
         assertEquals(next.contentHash, accepted.contentHash)

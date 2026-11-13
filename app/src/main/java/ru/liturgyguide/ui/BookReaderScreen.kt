@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.view.View
 import android.view.ViewTreeObserver
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -13,6 +14,7 @@ import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.gestures.stopScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -106,6 +108,7 @@ private data class BookMeaningReaderSession(val owner: Any, val content: BookMea
 private class BookReaderEvents(
     val changeMode: (BookReadingMode) -> Unit,
     val acceptUpdate: () -> Unit,
+    val openOptions: () -> Unit,
     val openCalendar: () -> Unit,
     val choosePart: (ServiceBookKey) -> Unit,
     val chooseVersion: (ServiceBookKey) -> Unit,
@@ -200,6 +203,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     var playing by remember { mutableStateOf(false) }
     var sheet by remember { mutableStateOf<String?>(null) }
     val meaningOwner = remember(book.key, book.contentHash, parishId) { Any() }
+    var optionsOfferAtTop by remember(meaningOwner) { mutableStateOf(false) }
+    var optionsOfferShown by remember(meaningOwner) { mutableStateOf(false) }
     val latestMeaningOwner by rememberUpdatedState(meaningOwner)
     var meaningSession by remember(meaningOwner) { mutableStateOf<BookMeaningReaderSession?>(null) }
     var meaningOpening by remember(meaningOwner) { mutableStateOf(false) }
@@ -712,6 +717,13 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         superseded = onAcceptUpdate?.invoke(position()) == true
         if (superseded) sheet = null else updateFailureRevision++
     }
+    fun openOptions() {
+        playing = false
+        // Placement belongs to this opening, not to a later asynchronous candidate.
+        optionsOfferAtTop = onAcceptUpdate != null
+        optionsOfferShown = optionsOfferAtTop
+        sheet = "options"
+    }
     fun saveAndChangeBook(target: ServiceBookKey, accept: (ServiceBookKey) -> Boolean) {
         if (journey == null || target == book.key || switchingPart || superseded) return
         if (!cancelPendingTarget()) return
@@ -786,6 +798,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     // Wrapping ::changeMode in rememberUpdatedState alone would still compare equal.
     val events = BookReaderEvents(
         changeMode = { value -> changeMode(value) }, acceptUpdate = { acceptUpdate() },
+        openOptions = { openOptions() },
         openCalendar = { openCalendar() }, choosePart = { value -> choosePart(value) },
         chooseVersion = { value -> chooseVersion(value) }, chooseLocatedHit = { value -> chooseLocatedHit(value) },
         openDedication = { openDedication() }, beginDedication = { proof, expected -> beginDedication(proof, expected) },
@@ -815,8 +828,6 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         topBar = {
             Surface(color = MaterialTheme.colorScheme.surface, shadowElevation = 1.dp) {
                 Column(Modifier.statusBarsPadding()) {
-                    if (onAcceptUpdate != null) TextButton(onClick = { currentEvents.acceptUpdate() },
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_accept_update")) { Text("Обновленный текст готов · Открыть") }
                     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         IconButton(onClick = onBack, modifier = Modifier.size(48.dp).testTag("book_back")) {
@@ -841,9 +852,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                             playing = false; meaningFocusReturnRequested = false
                         }, compact = true, iconOnly = true,
                             meaningEnabled = !positioning && !targetUnresolved && !meaningOpening, meaningFocus = meaningFocus)
-                        if (!expandedCompactToolbar) IconButton(onClick = { playing = false; sheet = "options" }, modifier = Modifier.size(48.dp)) {
-                            Icon(Icons.Default.TextFields, "Настроить чтение")
-                        }
+                        if (!expandedCompactToolbar) BookReaderSettingsButton(onAcceptUpdate != null,
+                            onClick = { currentEvents.openOptions() })
                     }
                     if (expandedCompactToolbar) Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 8.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -851,9 +861,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                             playing = false; meaningFocusReturnRequested = false
                         }, compact = true, meaningIconOnly = true, modifier = Modifier.weight(1f),
                             meaningEnabled = !positioning && !targetUnresolved && !meaningOpening, meaningFocus = meaningFocus)
-                        IconButton(onClick = { playing = false; sheet = "options" }, modifier = Modifier.size(48.dp)) {
-                            Icon(Icons.Default.TextFields, "Настроить чтение")
-                        }
+                        BookReaderSettingsButton(onAcceptUpdate != null,
+                            onClick = { currentEvents.openOptions() })
                     }
                     if (!toolbarMode) BookModePicker(mode, { currentEvents.changeMode(it) }, onOpen = {
                         playing = false; meaningFocusReturnRequested = false
@@ -1046,7 +1055,9 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             if (latestMeaningOwner === session.owner && meaningSession === session && !superseded) onOpenUrl(url)
         })
     }
-    if (sheet != null) ModalBottomSheet(onDismissRequest = {
+    if (sheet != null) ModalBottomSheet(
+        modifier = if (sheet == "options") Modifier.testTag("book_options_sheet") else Modifier,
+        onDismissRequest = {
         dedicationReturnWork.job?.cancel()
         sheet = null
         dedicationSession = null
@@ -1132,26 +1143,37 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                     }
                 }
             }
-            "options" -> Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp).testTag("book_options"), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("Чтение", style = MaterialTheme.typography.headlineSmall)
-                BookDetailsButton(offlineControls, isSaved, { currentEvents.openCalendar() }, Modifier.testTag("book_options_offline"))
-                Text("Темп прокрутки: $wordsPerMinute слов/мин", style = MaterialTheme.typography.titleMedium)
-                Slider(value = wordsPerMinute.toFloat(), onValueChange = { wordsPerMinute = it.toInt() },
-                    valueRange = BookAutoScroll.MIN_RATE.toFloat()..BookAutoScroll.MAX_RATE.toFloat())
-                Text("Прокрутка помогает читать в выбранном темпе. Чтобы найти реальное место службы, используйте слова или микрофон",
-                    style = MaterialTheme.typography.bodyMedium)
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Тихие молитвы и алтарные тексты", Modifier.weight(1f))
-                    Switch(showAltar, { changePrivateVisibility(it) })
+            // The dialog's real available height, rather than the reading Box, bounds this viewport.
+            // Its fixed fraction keeps the expanded sheet anchor unchanged when a late offer appends.
+            "options" -> Box(Modifier.fillMaxWidth().fillMaxHeight(.9f).testTag("book_options_viewport")) {
+                Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp).testTag("book_options"), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    val updateAvailable = onAcceptUpdate != null
+                    val showOffer = optionsOfferShown || updateAvailable
+                    if (updateAvailable && !optionsOfferShown) SideEffect { optionsOfferShown = true }
+                    val updateWarning = loadWarning ?: if (updateFailureRevision > 0)
+                        "Не удалось открыть обновленный текст. Вы остались в прежней редакции" else null
+                    Text("Чтение", style = MaterialTheme.typography.headlineSmall)
+                    if (showOffer && optionsOfferAtTop) BookUpdateOffer(updateAvailable, updateWarning,
+                        onAccept = { currentEvents.acceptUpdate() })
+                    BookDetailsButton(offlineControls, isSaved, { currentEvents.openCalendar() }, Modifier.testTag("book_options_offline"))
+                    Text("Темп прокрутки: $wordsPerMinute слов/мин", style = MaterialTheme.typography.titleMedium)
+                    Slider(value = wordsPerMinute.toFloat(), onValueChange = { wordsPerMinute = it.toInt() },
+                        valueRange = BookAutoScroll.MIN_RATE.toFloat()..BookAutoScroll.MAX_RATE.toFloat())
+                    Text("Прокрутка помогает читать в выбранном темпе. Чтобы найти реальное место службы, используйте слова или микрофон",
+                        style = MaterialTheme.typography.bodyMedium)
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("Тихие молитвы и алтарные тексты", Modifier.weight(1f))
+                        Switch(showAltar, { changePrivateVisibility(it) })
+                    }
+                    OutlinedButton(onClick = { sheet = null; onSettings() }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Размер текста и тема") }
+                    TextButton(onClick = { sheet = "sources" }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Источники и вариант службы") }
+                    OutlinedButton(onClick = onRefresh, enabled = !refreshing, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_refresh")) {
+                        Text(if (refreshing) "Обновляем текст" else "Обновить текст и перевод")
+                    }
+                    if (!showOffer) loadWarning?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                    if (showOffer && !optionsOfferAtTop) BookUpdateOffer(updateAvailable, updateWarning,
+                        onAccept = { currentEvents.acceptUpdate() })
                 }
-                OutlinedButton(onClick = { sheet = null; onSettings() }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Размер текста и тема") }
-                TextButton(onClick = { sheet = "sources" }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Источники и вариант службы") }
-                if (onAcceptUpdate != null) Button(onClick = { currentEvents.acceptUpdate() },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_options_accept_update")) { Text("Открыть обновленный текст") }
-                OutlinedButton(onClick = onRefresh, enabled = !refreshing, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_refresh")) {
-                    Text(if (refreshing) "Обновляем текст" else "Обновить текст и перевод")
-                }
-                loadWarning?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
             }
             "calendar" -> BookCalendarContent(book, onOpenUrl, journey, offlineControls,
                 onChoosePart = { currentEvents.choosePart(it) }, onReopenActive = { currentEvents.reopenActive() },
@@ -1399,6 +1421,39 @@ private fun BookTextBlock(key: ServiceBookKey, block: BookBlock, mode: BookReadi
         if (onChooseDedication != null) OutlinedButton(onClick = onChooseDedication, enabled = !dedicationBusy,
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_dedication_entry")) {
             Text(if (localVariation) "Подобрать текст" else "Выбрать песнопения")
+        }
+    }
+}
+
+@Composable
+private fun BookReaderSettingsButton(updateAvailable: Boolean, onClick: () -> Unit) {
+    // The decorative badge stays inside the same target; availability cannot move the toolbar.
+    Box(Modifier.size(48.dp)) {
+        IconButton(onClick = onClick, modifier = Modifier.fillMaxSize().testTag("book_reader_settings")
+            .semantics { if (updateAvailable) stateDescription = "Доступен обновленный текст" }) {
+            Icon(Icons.Default.TextFields, "Настроить чтение")
+        }
+        if (updateAvailable) Box(Modifier.align(Alignment.TopEnd).padding(4.dp).size(10.dp)
+            .background(MaterialTheme.colorScheme.primary, CircleShape)
+            .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape)
+            .testTag("book_update_available"))
+    }
+}
+
+@Composable
+private fun BookUpdateOffer(available: Boolean, warning: String?, onAccept: () -> Unit) {
+    Column(Modifier.fillMaxWidth().testTag("book_update_offer"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Обновленный текст", style = MaterialTheme.typography.titleMedium)
+        // A withdrawn offer keeps its space for this open panel but cannot retain an old action.
+        Button(onClick = onAccept, enabled = available,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
+                .testTag(if (available) "book_accept_update" else "book_update_unavailable")
+                .semantics { if (!available) stateDescription = "Обновление недоступно" }) {
+            Text("Открыть обновленный текст", Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        }
+        warning?.let {
+            Text(it, style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.testTag("book_update_warning").semantics { liveRegion = LiveRegionMode.Polite })
         }
     }
 }

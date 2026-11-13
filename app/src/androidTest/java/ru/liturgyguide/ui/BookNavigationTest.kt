@@ -155,7 +155,7 @@ class BookNavigationTest {
         compose.waitUntil(5_000) { refresh in books.delivered }
         settle()
         assertEquals(selected, saved().key)
-        compose.onNodeWithTag("book_accept_update").assertDoesNotExist()
+        compose.onNodeWithTag("book_update_available", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithText("Запоздавшее обновление прежнего варианта").assertDoesNotExist()
         compose.onNodeWithTag("book_back").performClick()
         home("resume_book").performClick()
@@ -182,20 +182,21 @@ class BookNavigationTest {
         waitForBook()
         settle()
         compose.onNodeWithTag("book_mode_russian").assertIsSelected()
-        compose.onNodeWithTag("book_accept_update").assertIsDisplayed()
+        compose.onNodeWithTag("book_update_available", useUnmergedTree = true).assertIsDisplayed()
         val before = saved()
         assertEquals("New cache content must not replace the accepted book by itself", old.contentHash, before.contentHash)
         assertEquals("reading-long", before.blockId)
         assertTrue("Start well inside the paragraph", before.fraction > .3f)
         assertTrue("Both editions were cached; no fetch is needed", books.requests.isEmpty())
 
+        compose.openBookUpdateOptions()
         compose.onNodeWithTag("book_accept_update").performClick()
         compose.runOnIdle {
             assertEquals("Accept must persist the new version immediately; old onDispose must not overwrite it",
                 newer.contentHash, saved().contentHash)
         }
         settle()
-        compose.onNodeWithTag("book_accept_update").assertDoesNotExist()
+        compose.onNodeWithTag("book_update_available", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithTag("book_mode_russian").assertIsSelected()
         val accepted = saved()
         assertEquals(newer.contentHash, accepted.contentHash)
@@ -223,7 +224,7 @@ class BookNavigationTest {
         assertEquals(accepted.mode, restored.mode)
         assertEquals(accepted.fraction, restored.fraction, .001f)
         compose.onNodeWithTag("book_mode_russian").assertIsSelected()
-        compose.onNodeWithTag("book_accept_update").assertDoesNotExist()
+        compose.onNodeWithTag("book_update_available", useUnmergedTree = true).assertDoesNotExist()
         val afterRestore = compose.onNodeWithTag("book_block_reading-long").assertIsDisplayed().getUnclippedBoundsInRoot().top
         assertTrue("Saved instance restoration must retain the visible line", abs((afterRestore - beforeRestore).value) <= 2f)
         assertTrue(books.requests.isEmpty())

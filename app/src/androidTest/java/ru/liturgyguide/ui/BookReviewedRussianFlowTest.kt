@@ -88,11 +88,11 @@ class BookReviewedRussianFlowTest {
         assertTrue("The complete original fallback must be on screen", originalBounds.top >= viewport.top && originalBounds.bottom <= viewport.bottom)
         compose.onNodeWithTag("book_missing_russian_$TARGET").assertExists()
         compose.onNodeWithTag("book_feoria_translation_$TARGET").assertDoesNotExist()
-        compose.onNodeWithTag("book_accept_update").assertDoesNotExist()
+        compose.onNodeWithTag("book_update_available", useUnmergedTree = true).assertDoesNotExist()
         val beforePreferences = preferences.all.toMap()
 
         release.complete(Unit)
-        compose.waitUntil(10_000) { books.value.candidate.get() != null && exists("book_accept_update") }
+        compose.waitUntil(10_000) { books.value.candidate.get() != null && exists("book_update_available", useUnmergedTree = true) }
         settle()
         val candidate = requireNotNull(books.value.candidate.get())
         assertTrue(candidate.saved)
@@ -108,6 +108,7 @@ class BookReviewedRussianFlowTest {
         assertEquals(old, cache.readVersion(old.key, old.contentHash))
         assertArrayEquals(oldDiskBytes, oldFile.readBytes())
 
+        compose.openBookUpdateOptions()
         compose.onNodeWithTag("book_accept_update").assertIsDisplayed().performClick()
         awaitReader(candidate.book.contentHash)
         val accepted = saved()
@@ -128,7 +129,7 @@ class BookReviewedRussianFlowTest {
         compose.waitUntil(5_000) { reopenedBooks.started.get() >= 1 && reopenedBooks.inFlight.get() == 0 }
         assertEquals(accepted, saved())
         assertReviewedTextVisible()
-        compose.onNodeWithTag("book_accept_update").assertDoesNotExist()
+        compose.onNodeWithTag("book_update_available", useUnmergedTree = true).assertDoesNotExist()
         assertEquals(0, reopenedBooks.loads.get())
         assertEquals(0, networkCalls.get())
         assertEquals(candidate.book, FileBookCache(directory).readVersion(old.key, saved().contentHash))
@@ -182,7 +183,7 @@ class BookReviewedRussianFlowTest {
         compose.waitUntil(10_000) { exists("book_content") && store.value.last(parish)?.contentHash == hash }
         settle()
     }
-    private fun exists(tag: String) = compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty()
+    private fun exists(tag: String, useUnmergedTree: Boolean = false) = compose.onAllNodesWithTag(tag, useUnmergedTree = useUnmergedTree).fetchSemanticsNodes().isNotEmpty()
     private fun settle() { compose.waitForIdle(); compose.mainClock.advanceTimeBy(750); compose.waitForIdle() }
     private fun sha256(bytes: ByteArray) = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it.toInt() and 0xff) }
     private class LocalBooks(private val repository: ServiceBookRepository, private val gate: CompletableDeferred<Unit>?) : ServiceBooks by repository {

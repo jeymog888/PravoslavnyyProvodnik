@@ -89,10 +89,11 @@ class BookPublishedRussianFlowTest {
         compose.onNodeWithTag("book_missing_russian_${target.id}").assertExists()
         assertEquals(before.contentHash, reading.value.positionFor(key, parish)?.contentHash)
         gate.complete(Unit)
-        compose.waitUntil(15_000) { compose.onAllNodesWithTag("book_accept_update").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(15_000) { compose.onAllNodesWithTag("book_update_available", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
         assertEquals(listOf(BookTranslationIndex.OCTOECHOS7_SOURCE.url), requested.toList())
         assertEquals(before.contentHash, reading.value.positionFor(key, parish)?.contentHash)
         compose.onNodeWithTag("book_text_${target.id}").assertTextEquals(target.original)
+        compose.openBookUpdateOptions()
         compose.onNodeWithTag("book_accept_update").performClick()
         compose.waitUntil(10_000) { reading.value.positionFor(key, parish)?.contentHash != before.contentHash }
         compose.onNodeWithTag("book_text_${target.id}").assertTextEquals(expected.get("russian").asString)

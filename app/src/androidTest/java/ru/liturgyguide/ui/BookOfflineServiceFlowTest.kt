@@ -233,7 +233,7 @@ class BookOfflineServiceFlowTest {
 
         books.value.releaseEnrichment(updated)
         compose.waitUntil(5_000) { books.value.enrichmentDelivered.get() == 1 }
-        await("book_accept_update")
+        await("book_update_available", useUnmergedTree = true)
         settle()
         assertEquals("Offering A2 must not cancel the independently running B download", 0, books.value.cancelled.get())
         assertSame(heldLoad, books.value.pending.get())
@@ -367,8 +367,8 @@ class BookOfflineServiceFlowTest {
         compose.onNodeWithTag("book_calendar").performScrollToNode(hasTestTag(tag))
         return compose.onNodeWithTag(tag).performScrollTo().assertIsDisplayed()
     }
-    private fun await(tag: String) { compose.waitUntil(5_000) { exists(tag) } }
-    private fun exists(tag: String) = compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty()
+    private fun await(tag: String, useUnmergedTree: Boolean = false) { compose.waitUntil(5_000) { exists(tag, useUnmergedTree) } }
+    private fun exists(tag: String, useUnmergedTree: Boolean = false) = compose.onAllNodesWithTag(tag, useUnmergedTree = useUnmergedTree).fetchSemanticsNodes().isNotEmpty()
     private fun saved(key: ServiceBookKey) = requireNotNull(store.positionFor(key, parish))
     private fun BookReadingPosition.canonicalZero() = copy(fraction = if (fraction == 0f) 0f else fraction)
     private fun settle() { compose.waitForIdle(); compose.mainClock.advanceTimeBy(700); compose.waitForIdle() }

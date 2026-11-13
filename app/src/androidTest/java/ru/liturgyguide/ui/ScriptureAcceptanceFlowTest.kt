@@ -104,7 +104,7 @@ class ScriptureAcceptanceFlowTest {
             assertEquals("load-result", completedLoad["event"])
             assertEquals("Ready", completedLoad["kind"])
             assertEquals(true, completedLoad["saved"])
-            waitFor("book_accept_update")
+            waitFor("book_update_available", useUnmergedTree = true)
             settle()
             val newer = requireNotNull(cache.read(key))
             val translated = newer.blocks.single { it.id == gospel.id }
@@ -113,12 +113,14 @@ class ScriptureAcceptanceFlowTest {
             assertEquals(expected, translated.russian)
             assertEquals(BookSource("Библия, Синодальный перевод", directUrl), translated.translationSource)
             assertEquals(BookSupplementStatus.AVAILABLE, newer.enrichment.scripture)
-            assertEquals(old.blocks.map { it.original }, newer.blocks.map { it.original })
+            assertCapturedRefreshStructure(old, newer)
             assertNotEquals(old.contentHash, newer.contentHash)
             assertPosition(initial, saved())
             assertArrayEquals(oldBytes, oldFile.readBytes())
             assertEquals(listOf(key.copy(topLevel = null).sourceUrl(), old.sourceUrl,
                 "https://azbyka.ru/biblia/days/2026-11-13", directUrl), calls.toList())
+            compose.onNodeWithTag("book_text_${gospel.id}").assertIsDisplayed().assertTextEquals(gospel.original)
+            compose.openBookUpdateOptions()
             compose.onNodeWithTag("book_accept_update").assertIsDisplayed().performClick()
             compose.runOnIdle { assertEquals(newer.contentHash, saved().contentHash) }
             settle()
@@ -212,9 +214,47 @@ class ScriptureAcceptanceFlowTest {
             compose.waitForIdle()
         }
     }
+    private fun assertCapturedRefreshStructure(old: ServiceBook, newer: ServiceBook) {
+        val oracle = JsonParser.parseString(asset("scripture-fallback/refresh-structure-oracle.json")).asJsonObject
+        assertEquals(oracle["archiveFileSha256"].asString, BookText.sha256(asset(oracle["archivePath"].asString)))
+        assertEquals(oracle["archiveContentHash"].asString, old.contentHash)
+        assertEquals(oracle["sourceSha256"].asString, BookText.sha256(asset(oracle["sourcePath"].asString)))
+        assertEquals(oracle["oldBlockCount"].asInt, old.blocks.size)
+        val splits = oracle.getAsJsonArray("splits").map { it.asJsonObject }
+        assertEquals(8, splits.size)
+        val byIndex = splits.associateBy { it["oldIndex"].asInt }
+        assertEquals(8, byIndex.size)
+        val expected = old.blocks.flatMapIndexed { index, block ->
+            val split = byIndex[index]
+            if (split == null) listOf(block.original) else {
+                assertEquals(split["oldId"].asString, block.id)
+                assertEquals(split["oldOriginalSha256"].asString, BookText.sha256(block.original))
+                val rubric = split["rubric"].asString
+                assertTrue(block.original.startsWith("$rubric "))
+                val prayer = block.original.removePrefix(rubric).trim()
+                assertEquals(split["prayerSha256"].asString, BookText.sha256(prayer))
+                listOf(rubric, prayer)
+            }
+        }
+        assertEquals(oracle["newBlockCount"].asInt, expected.size)
+        assertEquals(oracle["expectedOriginalsNulJoinSha256"].asString, BookText.sha256(expected.joinToString("\u0000")))
+        assertEquals(expected.size, newer.blocks.size)
+        expected.forEachIndexed { index, text ->
+            assertEquals("Original row $index hash", BookText.sha256(text), BookText.sha256(newer.blocks[index].original))
+            assertEquals("Original row $index", text, newer.blocks[index].original)
+        }
+        splits.forEach { split ->
+            val index = split["newIndex"].asInt
+            assertEquals(BookBlockKind.RUBRIC, newer.blocks[index].kind)
+            assertEquals(BookBlockKind.PRAYER, newer.blocks[index + 1].kind)
+            assertEquals(split["rubric"].asString, newer.blocks[index].original)
+            assertEquals(split["prayerSha256"].asString, BookText.sha256(newer.blocks[index + 1].original))
+        }
+    }
+
     private fun asset(path: String) = instrumentation.context.assets.open(path).bufferedReader().use { it.readText() }
     private fun saved() = requireNotNull(store.last(parishId))
-    private fun waitFor(tag: String) { compose.waitUntil(5_000) { compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty() } }
+    private fun waitFor(tag: String, useUnmergedTree: Boolean = false) { compose.waitUntil(5_000) { compose.onAllNodesWithTag(tag, useUnmergedTree = useUnmergedTree).fetchSemanticsNodes().isNotEmpty() } }
     private fun settle() { compose.waitForIdle(); compose.mainClock.advanceTimeBy(700); compose.waitForIdle() }
     private fun assertPosition(expected: BookReadingPosition, actual: BookReadingPosition) {
         assertEquals(expected.copy(fraction = actual.fraction), actual)

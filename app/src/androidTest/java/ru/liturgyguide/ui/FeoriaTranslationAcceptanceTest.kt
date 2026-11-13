@@ -108,7 +108,7 @@ class FeoriaTranslationAcceptanceTest {
             assertPosition(initial, saved())
             compose.onNodeWithTag("book_text_${target.id}").assertTextEquals(original)
             compose.onNodeWithTag("book_feoria_translation_${target.id}").assertDoesNotExist()
-            compose.onNodeWithTag("book_accept_update").assertDoesNotExist()
+            compose.onNodeWithTag("book_update_available", useUnmergedTree = true).assertDoesNotExist()
             assertTrue(calls.isEmpty())
             compose.runOnIdle { release.complete(Unit) }
             // The local book transformation owns its bounded completion; UI has its own 5s deadline.
@@ -116,7 +116,7 @@ class FeoriaTranslationAcceptanceTest {
             assertNull(firstFailure.get())
             val ready = requireNotNull(firstReady.get())
             assertTrue(ready.saved); assertTrue(ready.fromCache)
-            waitFor("book_accept_update"); settle()
+            waitFor("book_update_available", useUnmergedTree = true); settle()
             val newer = ready.book
             assertEquals(newer, cache.read(key)); assertTrue(ServiceBookIntegrity.valid(newer))
             assertEquals(104, newer.blocks.count { it.translationSource == ownSource })
@@ -129,6 +129,7 @@ class FeoriaTranslationAcceptanceTest {
             }
             assertEquals(old, newer.copy(chapters = old.chapters, sources = old.sources, contentHash = old.contentHash))
             assertPosition(initial, saved()); assertArrayEquals(oldBytes, oldFile.readBytes()); assertTrue(calls.isEmpty())
+            compose.openBookUpdateOptions()
             compose.onNodeWithTag("book_accept_update").assertIsDisplayed().performClick()
             settle()
             val accepted = saved()
@@ -220,7 +221,7 @@ class FeoriaTranslationAcceptanceTest {
         dismiss[0].performSemanticsAction(SemanticsActions.Dismiss) { assertTrue(it()) }
         compose.waitForIdle()
     }
-    private fun waitFor(tag: String) { compose.waitUntil(5_000) { compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty() } }
+    private fun waitFor(tag: String, useUnmergedTree: Boolean = false) { compose.waitUntil(5_000) { compose.onAllNodesWithTag(tag, useUnmergedTree = useUnmergedTree).fetchSemanticsNodes().isNotEmpty() } }
     private fun settle() { compose.waitForIdle(); compose.mainClock.advanceTimeBy(700); compose.waitForIdle() }
     private fun saved() = requireNotNull(store.last(parishId))
     private fun assertPosition(expected: BookReadingPosition, actual: BookReadingPosition) {

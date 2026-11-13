@@ -47,11 +47,12 @@ class SavedBookEnrichmentFlowTest {
         awaitReader()
         compose.waitUntil(5_000) { calls.get() > 0 }
         compose.onNodeWithTag("book_loading").assertDoesNotExist()
-        compose.onNodeWithTag("book_accept_update").assertDoesNotExist()
+        compose.onNodeWithTag("book_update_available", useUnmergedTree = true).assertDoesNotExist()
         val before = requireNotNull(store.last(parish.value))
         compose.runOnIdle { ready.complete(BookLoadResult.Ready(next, fromCache = true)) }
         awaitUpdate()
         assertEquals(before, store.last(parish.value))
+        compose.openBookUpdateOptions()
         compose.onNodeWithTag("book_accept_update").performClick()
         settle()
         val accepted = requireNotNull(store.last(parish.value))
@@ -65,7 +66,7 @@ class SavedBookEnrichmentFlowTest {
         compose.runOnIdle { mounted.value = false }; settle()
         compose.runOnIdle { mounted.value = true }; awaitReader()
         assertEquals(next.contentHash, store.last(parish.value)!!.contentHash)
-        compose.onNodeWithTag("book_accept_update").assertDoesNotExist()
+        compose.onNodeWithTag("book_update_available", useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test fun newlyTranslatedCurrentRussianFallbackKeepsBlockAndResetsOnlyItsFraction() {
@@ -80,6 +81,7 @@ class SavedBookEnrichmentFlowTest {
         compose.runOnIdle { ready.complete(BookLoadResult.Ready(next, fromCache = true)) }
         awaitUpdate()
         assertEquals(old.contentHash, store.last(parish.value)!!.contentHash)
+        compose.openBookUpdateOptions()
         compose.onNodeWithTag("book_accept_update").performClick()
         settle()
         val after = requireNotNull(store.last(parish.value))
@@ -121,15 +123,15 @@ class SavedBookEnrichmentFlowTest {
         compose.onNodeWithTag("book_refresh").performScrollTo().performClick()
         compose.waitUntil(5_000) { loads.get() == 1 }
         settle()
-        compose.onNodeWithTag("book_options_accept_update").assertDoesNotExist()
         compose.onNodeWithTag("book_accept_update").assertDoesNotExist()
+        compose.onNodeWithTag("book_update_available", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithText("Обновленный текст не удалось сохранить на телефоне. Открытая книга осталась на месте. Попробуйте обновить еще раз")
             .performScrollTo().assertIsDisplayed()
         assertEquals(old.contentHash, store.last(parish.value)!!.contentHash)
         compose.onNodeWithTag("book_refresh").performScrollTo().performClick()
         compose.waitUntil(5_000) { loads.get() == 2 }
         settle()
-        compose.onNodeWithTag("book_options_accept_update").assertDoesNotExist()
+        compose.onNodeWithTag("book_accept_update").assertDoesNotExist()
         assertEquals(old.contentHash, store.last(parish.value)!!.contentHash)
         compose.onNodeWithTag("book_refresh").performScrollTo().performClick()
         compose.waitUntil(5_000) { loads.get() == 3 }
@@ -137,10 +139,11 @@ class SavedBookEnrichmentFlowTest {
         compose.onNodeWithTag("book_options").assertExists()
         compose.runOnIdle { thirdResponse.complete(Unit) }
         settle()
-        compose.waitUntil(5_000) { compose.onAllNodesWithTag("book_options_accept_update").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("book_accept_update").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("book_options").assertExists()
         assertEquals(old.contentHash, store.last(parish.value)!!.contentHash)
-        compose.onNodeWithTag("book_options_accept_update").performScrollTo().performClick()
+        compose.openBookUpdateOptions()
+        compose.onNodeWithTag("book_accept_update").performScrollTo().performClick()
         settle()
         assertEquals(next.contentHash, store.last(parish.value)!!.contentHash)
     }
@@ -162,7 +165,7 @@ class SavedBookEnrichmentFlowTest {
         compose.waitUntil(5_000) { calls.get() > 1 }
         compose.runOnIdle { ready.complete(BookLoadResult.Ready(next, fromCache = true)) }
         settle()
-        compose.onNodeWithTag("book_accept_update").assertDoesNotExist()
+        compose.onNodeWithTag("book_update_available", useUnmergedTree = true).assertDoesNotExist()
         assertEquals(old.contentHash, store.last("first-parish")!!.contentHash)
         assertEquals(old.contentHash, store.last("second-parish")!!.contentHash)
     }
@@ -200,7 +203,7 @@ class SavedBookEnrichmentFlowTest {
         compose.waitUntil(5_000) { calls.get() > 1 }
         compose.runOnIdle { ready.complete(BookLoadResult.Ready(next, fromCache = true)) }
         settle()
-        compose.onNodeWithTag("book_accept_update").assertDoesNotExist()
+        compose.onNodeWithTag("book_update_available", useUnmergedTree = true).assertDoesNotExist()
         assertEquals(otherKey, store.last(parish.value)!!.key)
         assertEquals(other.contentHash, store.last(parish.value)!!.contentHash)
         assertEquals(old.contentHash, store.positionFor(old.key, parish.value)!!.contentHash)
@@ -233,7 +236,7 @@ class SavedBookEnrichmentFlowTest {
         settle()
     }
     private fun awaitUpdate() {
-        compose.waitUntil(5_000) { compose.onAllNodesWithTag("book_accept_update").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("book_update_available", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
         settle()
     }
     private fun settle() { compose.waitForIdle(); compose.mainClock.advanceTimeBy(650); compose.waitForIdle() }
@@ -244,9 +247,15 @@ class SavedBookEnrichmentFlowTest {
             fetchedAtMillis = 1, selectedEventTitle = null, contentHash = "",
             chapters = listOf(BookChapter("chapter", "Общая молитва", "Объяснение общей молитвы", listOf(
                 BookBlock("first", BookBlockKind.PRAYER, null, "Господи, помоги нам жить в мире. ".repeat(100), currentRussian),
-                BookBlock("second", BookBlockKind.PRAYER, null, "Господи, благослови наши дела. ".repeat(100))))),
+                BookBlock("second", BookBlockKind.PRAYER, null, "Господи, благослови наши дела. ".repeat(100))) +
+                // A synthetic accepted book must meet the same minimum structure as a stored service.
+                // Keep both addressed prayer IDs and their text unchanged.
+                List(13) { index -> BookBlock("context-$index", BookBlockKind.RUBRIC, null,
+                    "Служебная пометка для проверки сохраненной книги ${index + 1}") })),
             enrichment = BookEnrichment(BookSupplementStatus.AVAILABLE, BookSupplementStatus.NOT_NEEDED))
-        return book.copy(contentHash = ServiceBookIntegrity.contentHash(book))
+        return book.copy(contentHash = ServiceBookIntegrity.contentHash(book)).also {
+            assertTrue("The synthetic accepted edition must satisfy the production cache contract", ServiceBookIntegrity.valid(it))
+        }
     }
     private fun translated(book: ServiceBook, id: String): ServiceBook = book.copy(chapters = book.chapters.map { chapter ->
         chapter.copy(blocks = chapter.blocks.map { block -> if (block.id == id) block.copy(

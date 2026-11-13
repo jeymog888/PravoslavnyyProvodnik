@@ -287,7 +287,7 @@ class BookReaderFlowTest {
         settle()
         assertEquals("Returning to a bookmarked date must not load/adopt the latest edition", 0, loads.get())
         assertTrue(pinnedLookups.get() > 0)
-        compose.onNodeWithTag("book_accept_update").assertIsDisplayed()
+        compose.onNodeWithTag("book_update_available", useUnmergedTree = true).assertIsDisplayed()
         compose.onNodeWithTag("book_mode_russian").assertIsSelected()
         compose.onNodeWithTag("book_chapter", useUnmergedTree = true).assertTextEquals(chapter.title)
         val restored = saved()

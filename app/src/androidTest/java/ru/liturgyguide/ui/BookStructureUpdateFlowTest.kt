@@ -75,6 +75,7 @@ class BookStructureUpdateFlowTest {
         compose.onNodeWithTag("book_block_old-target").assertIsDisplayed()
         val before = requireNotNull(store.last(parish))
         assertEquals(old.contentHash, before.contentHash)
+        compose.openBookUpdateOptions()
         compose.onNodeWithTag("book_accept_update").performClick()
         settle()
         assertAccepted(next, if (split) 0f else before.fraction)
@@ -93,7 +94,7 @@ class BookStructureUpdateFlowTest {
         assertEquals(fraction, accepted.fraction, .004f)
         compose.onNodeWithTag("book_block_new-target").assertIsDisplayed()
         compose.onNodeWithTag("book_block_intro").assertIsNotDisplayed()
-        compose.onNodeWithTag("book_accept_update").assertDoesNotExist()
+        compose.onNodeWithTag("book_update_available", useUnmergedTree = true).assertDoesNotExist()
     }
 
     private fun book(target: List<BookBlock>): ServiceBook {

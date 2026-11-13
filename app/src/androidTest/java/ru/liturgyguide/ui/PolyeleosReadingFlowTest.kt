@@ -290,6 +290,7 @@ class PolyeleosReadingFlowTest {
         val restoration = launch()
         home("resume_book").performClick()
         waitForBook(matins); assertPosition(initial, saved())
+        compose.openBookUpdateOptions()
         compose.onNodeWithTag("book_accept_update").assertIsDisplayed().performClick()
         compose.runOnIdle { assertEquals(newer.contentHash, saved().contentHash) }
         settle()

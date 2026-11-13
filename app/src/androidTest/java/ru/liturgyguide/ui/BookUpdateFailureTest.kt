@@ -63,12 +63,13 @@ class BookUpdateFailureTest {
         assertEquals(.37f, restored.fraction, .001f)
         compose.onNodeWithTag("book_meaning_sheet").assertDoesNotExist()
         compose.onNodeWithTag("book_play").assertContentDescriptionEquals("Прокручивать текст")
-        val beforeTop = compose.onNodeWithTag("book_text_prayer", useUnmergedTree = true).getUnclippedBoundsInRoot().top
         assertExplanation(old)
+        val beforeTop = compose.onNodeWithTag("book_text_prayer", useUnmergedTree = true).getUnclippedBoundsInRoot().top
         val before = requireNotNull(store.last(parish))
-        val beforeValues = backing.all.toMap()
-        compose.onNodeWithTag("book_accept_update").assertIsDisplayed()
+        compose.openBookUpdateOptions()
+        assertEquals("Opening reading settings must not accept the candidate", before, store.last(parish))
         compose.runOnIdle { storage.failHashOnce = newer.contentHash }
+        val beforeValues = backing.all.toMap()
         compose.onNodeWithTag("book_accept_update").performClick()
         // Check immediately, before lifecycle saves or a later debounce can hide
         // the bug by overwriting the prematurely accepted hash with the old one.
@@ -78,13 +79,17 @@ class BookUpdateFailureTest {
             assertEquals(beforeValues, backing.all)
             assertEquals(before, BookReadingStore(backing).last(parish))
         }
+        compose.onNodeWithTag("book_accept_update").assertIsDisplayed()
+        compose.onNode(hasText("Не удалось сохранить место. Открытый текст остался на месте") and
+            hasAnyAncestor(hasTestTag("book_options"))).assertIsDisplayed()
+        compose.dismissBookUpdateOptions()
+        settle()
         assertExplanation(old)
         compose.onNodeWithText(newer.chapters.single().meaning).assertDoesNotExist()
         assertEquals(before, store.last(parish))
         assertTrue("A refused edition must retain the visible Russian line", abs((compose.onNodeWithTag("book_text_prayer", useUnmergedTree = true)
             .getUnclippedBoundsInRoot().top - beforeTop).value) <= 2f)
-        compose.onNodeWithTag("book_accept_update").assertIsDisplayed()
-        compose.onNodeWithText("Не удалось сохранить место. Открытый текст остался на месте").assertExists()
+        compose.onNodeWithTag("book_update_available", useUnmergedTree = true).assertIsDisplayed()
 
         compose.runOnIdle { mounted.value = false }
         compose.waitForIdle()
@@ -93,13 +98,14 @@ class BookUpdateFailureTest {
         assertEquals("Reentry must still pin the old edition", old.contentHash, store.last(parish)!!.contentHash)
         assertEquals(before, store.last(parish))
         assertExplanation(old)
+        compose.openBookUpdateOptions()
         compose.onNodeWithTag("book_accept_update").performClick()
         compose.runOnIdle {
             assertEquals(newer.contentHash, store.last(parish)!!.contentHash)
             assertEquals(1, storage.failures)
         }
         settle()
-        compose.onNodeWithTag("book_accept_update").assertDoesNotExist()
+        compose.onNodeWithTag("book_update_available", useUnmergedTree = true).assertDoesNotExist()
         assertExplanation(newer)
         val accepted = requireNotNull(store.last(parish))
         assertEquals(before.key, accepted.key)
