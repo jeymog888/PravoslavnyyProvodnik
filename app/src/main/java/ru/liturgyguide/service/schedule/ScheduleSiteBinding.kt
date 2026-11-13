@@ -5,7 +5,7 @@ import java.security.MessageDigest
 import java.util.Locale
 
 /** What was actually checked: article scope, or a link on the exact selected map object. */
-enum class ScheduleBindingMethod { ARTICLE_SCOPE, EXACT_MAP_LINK, DIRECTORY_OWN_CONTACT, CHILD_CHURCH_OWN_SITE }
+enum class ScheduleBindingMethod { ARTICLE_SCOPE, EXACT_MAP_LINK, DIRECTORY_OWN_CONTACT, CHILD_CHURCH_OWN_SITE, PUBLISHER_GEOMETRY_CHAIN }
 enum class ScheduleEntityScope { CHURCH, MONASTERY, SKETE, CHAPEL, COMPLEX, UNKNOWN }
 
 data class ScheduleSiteBinding(
@@ -18,6 +18,7 @@ data class ScheduleSiteBinding(
     val evidenceUrl: String,
     val officialContactProof: OfficialContactProof? = null,
     val childChurchOwnSiteProof: ChildChurchOwnSiteProof? = null,
+    val publisherGeometryProof: PublisherGeometryProof? = null,
 ) {
     fun validFor(parish: Parish, website: String, evidence: String): Boolean =
         policyVersion == ScheduleEntityIdentity.POLICY_VERSION &&
@@ -25,7 +26,8 @@ data class ScheduleSiteBinding(
             matchedName.length in 1..300 && matchedName.none(Char::isISOControl) &&
             ScheduleUrl.publicSource(siteUrl) == siteUrl && ScheduleDocumentLinks.sameSite(siteUrl, website) &&
             evidenceUrl == evidence && ScheduleUrl.publicSource(evidenceUrl) == evidenceUrl &&
-            (method !in setOf(ScheduleBindingMethod.DIRECTORY_OWN_CONTACT, ScheduleBindingMethod.CHILD_CHURCH_OWN_SITE) || siteUrl == website) &&
+            (method !in setOf(ScheduleBindingMethod.DIRECTORY_OWN_CONTACT, ScheduleBindingMethod.CHILD_CHURCH_OWN_SITE,
+                ScheduleBindingMethod.PUBLISHER_GEOMETRY_CHAIN) || siteUrl == website) &&
             (method in setOf(ScheduleBindingMethod.EXACT_MAP_LINK, ScheduleBindingMethod.CHILD_CHURCH_OWN_SITE) ||
                 ScheduleEntityIdentity.compatible(parish.name, matchedName, matchedScope)) &&
             (if (method == ScheduleBindingMethod.DIRECTORY_OWN_CONTACT)
@@ -33,7 +35,10 @@ data class ScheduleSiteBinding(
             else officialContactProof == null) &&
             (if (method == ScheduleBindingMethod.CHILD_CHURCH_OWN_SITE)
                 childChurchOwnSiteProof?.validFor(parish, this) == true
-            else childChurchOwnSiteProof == null)
+            else childChurchOwnSiteProof == null) &&
+            (if (method == ScheduleBindingMethod.PUBLISHER_GEOMETRY_CHAIN)
+                publisherGeometryProof?.validFor(parish, this) == true
+            else publisherGeometryProof == null)
 }
 
 internal object ScheduleEntityIdentity {

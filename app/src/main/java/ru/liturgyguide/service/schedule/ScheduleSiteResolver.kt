@@ -9,7 +9,7 @@ import java.util.Locale
 import kotlin.math.*
 
 data class ScheduleSite(val url: String, val evidenceUrl: String, val matchedName: String,
-    val binding: ScheduleSiteBinding? = null)
+    val binding: ScheduleSiteBinding? = null, val observedSchedule: ScheduleResponse? = null)
 fun interface ScheduleSiteResolver {
     suspend fun resolve(parish: Parish): ScheduleSite?
     suspend fun resolve(parish: Parish, excludedUrls: Set<String>): ScheduleSite? =
@@ -78,6 +78,7 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport,
         PalomnikScheduleSiteResolver(transport, childChurchVerifier = MonasteryChurchSiteVerifier(transport, memo = contactMemo))
             .resolve(parish, excludedUrls)?.let { return it }
         directories.resolve(parish, excluded, directoryMemo, contactMemo)?.let { return it }
+        PublisherGeometryResolver(transport, memo = contactMemo).resolve(parish, excluded)?.let { return it }
         val latitude = parish.latitude ?: return null
         val longitude = parish.longitude ?: return null
         val distinctive = nameTokens(parish.name)

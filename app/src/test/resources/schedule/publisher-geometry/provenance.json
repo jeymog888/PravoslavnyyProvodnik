@@ -1,0 +1,322 @@
+{
+  "scope": "Unchanged public responses captured 2026-11-13. Production replay uses real JSON negotiated by the production Accept header for the exact outward-rounded OSM request. Exact XML is separately retained for compatibility; wider200m remains research only.",
+  "receipts": [
+    {
+      "name": "official-ortox-collection",
+      "requestedUrl": "https://eparhia-kaluga.cerkov.ru/xramy/",
+      "capturedAtUtc": "2026-11-13T07:34:42.959172+00:00",
+      "tlsPolicy": "Default verified TLS; no credentials/cookies; source-published explicit HTTP only",
+      "status": 200,
+      "responseUrl": "https://eparhia-kaluga.cerkov.ru/xramy/",
+      "contentType": "text/html; charset=UTF-8",
+      "httpDate": "Fri, 13 Nov 2026 07:34:46 GMT",
+      "bytes": 284936,
+      "sha256": "2cb2cb2e1051c324dade00e20bfe4911d34769c4314466488f1ac552413f599f",
+      "file": "official-ortox-collection.html"
+    },
+    {
+      "name": "diocese-city-directory",
+      "requestedUrl": "https://eparhia-kaluga.ru/kaluzhskaja-eparhija/prihody/kaluga.html",
+      "capturedAtUtc": "2026-11-13T07:34:42.959613+00:00",
+      "tlsPolicy": "Default verified TLS; no credentials/cookies; source-published explicit HTTP only",
+      "status": 200,
+      "responseUrl": "https://eparhia-kaluga.ru/kaluzhskaja-eparhija/prihody/kaluga.html",
+      "contentType": "text/html; charset=utf-8",
+      "httpDate": "Fri, 13 Nov 2026 07:34:43 GMT",
+      "bytes": 103016,
+      "sha256": "dda018958c6cde1f79e8b39ca985b3b788e525122a58adbd9235d7605fe9e821",
+      "file": "diocese-city-directory.html"
+    },
+    {
+      "name": "diocese-city-directory-page2",
+      "requestedUrl": "https://eparhia-kaluga.ru/kaluzhskaja-eparhija/prihody/kaluga.html?start=20",
+      "capturedAtUtc": "2026-11-13T07:41:30.783399+00:00",
+      "method": "GET",
+      "tlsPolicy": "Default verified TLS; no credentials or cookies",
+      "status": 200,
+      "responseUrl": "https://eparhia-kaluga.ru/kaluzhskaja-eparhija/prihody/kaluga.html?start=20",
+      "contentType": "text/html; charset=utf-8",
+      "httpDate": "Fri, 13 Nov 2026 07:41:31 GMT",
+      "bytes": 95901,
+      "sha256": "36d992835d5b9c0c38126c2c65bc9dc91073e3d1aa3936600e4039d054489d6a",
+      "file": "diocese-city-directory-page2.html"
+    },
+    {
+      "name": "ortox-own-https",
+      "requestedUrl": "https://kalujskoe-19.cerkov.ru/",
+      "capturedAtUtc": "2026-11-13T07:36:26.634419+00:00",
+      "method": "GET",
+      "tlsPolicy": "Default verified TLS; no credentials or cookies",
+      "status": 200,
+      "responseUrl": "https://kalujskoe-19.cerkov.ru/",
+      "contentType": "text/html; charset=UTF-8",
+      "httpDate": "Fri, 13 Nov 2026 07:36:27 GMT",
+      "bytes": 24497,
+      "sha256": "17df3c1da88af6ec04c90f3b8d8a8fa2ddc9d84db230ca39f6a765ebb9b8d630",
+      "file": "ortox-own-https.html"
+    },
+    {
+      "name": "diocese-card",
+      "requestedUrl": "https://eparhia-kaluga.ru/kaluzhskaja-eparhija/prihody/kaluga/1587-oficialnyj-sajt-kaluzhskoj-eparhii-prihody-gorod-kaluga-domovyj-hram-v-chest-voznesenija-gospodnja.html",
+      "capturedAtUtc": "2026-11-13T07:33:02.147603+00:00",
+      "tlsPolicy": "Python default verified TLS; no credentials or cookies; HTTP explicitly published by diocese",
+      "status": 200,
+      "responseUrl": "https://eparhia-kaluga.ru/kaluzhskaja-eparhija/prihody/kaluga/1587-oficialnyj-sajt-kaluzhskoj-eparhii-prihody-gorod-kaluga-domovyj-hram-v-chest-voznesenija-gospodnja.html",
+      "contentType": "text/html; charset=utf-8",
+      "httpDate": "Fri, 13 Nov 2026 07:33:02 GMT",
+      "bytes": 77196,
+      "sha256": "6664a7cc31b1406bff7b0f905bb042203dca57c26c8a5fe8e94ff1b7f2276a44",
+      "file": "diocese-card.html"
+    },
+    {
+      "name": "own-http-home",
+      "requestedUrl": "http://kaluga-voznesenie.ru/",
+      "capturedAtUtc": "2026-11-13T07:33:01.626948+00:00",
+      "tlsPolicy": "Python default verified TLS; no credentials or cookies; HTTP explicitly published by diocese",
+      "status": 200,
+      "responseUrl": "http://kaluga-voznesenie.ru/",
+      "contentType": "text/html; charset=UTF-8",
+      "httpDate": "Fri, 13 Nov 2026 07:33:02 GMT",
+      "bytes": 140337,
+      "sha256": "26a7c0ae22f867d0ae464396e0127a247c7668464f0c13016e24fe5bd1144602",
+      "file": "own-http-home.html"
+    },
+    {
+      "name": "own-http-contact",
+      "requestedUrl": "http://kaluga-voznesenie.ru/kontakty/",
+      "capturedAtUtc": "2026-11-13T07:33:01.627572+00:00",
+      "tlsPolicy": "Python default verified TLS; no credentials or cookies; HTTP explicitly published by diocese",
+      "status": 200,
+      "responseUrl": "http://kaluga-voznesenie.ru/kontakty/",
+      "contentType": "text/html; charset=UTF-8",
+      "httpDate": "Fri, 13 Nov 2026 07:33:02 GMT",
+      "bytes": 129958,
+      "sha256": "b9dc9eb8f56015493f7461a0a90fa490037f7631d68640eec75ac50e8c780acd",
+      "file": "own-http-contact.html"
+    },
+    {
+      "name": "own-http-about",
+      "requestedUrl": "http://kaluga-voznesenie.ru/o-hrame/",
+      "capturedAtUtc": "2026-11-13T07:34:42.958176+00:00",
+      "tlsPolicy": "Default verified TLS; no credentials/cookies; source-published explicit HTTP only",
+      "status": 200,
+      "responseUrl": "http://kaluga-voznesenie.ru/o-hrame/",
+      "contentType": "text/html; charset=UTF-8",
+      "httpDate": "Fri, 13 Nov 2026 07:34:43 GMT",
+      "bytes": 164945,
+      "sha256": "86a1dfaf0d90084f50233af4f48a09878fef21077b4318458ad849fcee641ae4",
+      "file": "own-http-about.html"
+    },
+    {
+      "name": "own-http-clergy",
+      "requestedUrl": "http://kaluga-voznesenie.ru/duhovenstvo-hrama/",
+      "capturedAtUtc": "2026-11-13T07:43:13.193932+00:00",
+      "method": "GET",
+      "tlsPolicy": "Default verified TLS; no credentials/cookies; explicit own navigation HTTP link",
+      "status": 200,
+      "responseUrl": "http://kaluga-voznesenie.ru/duhovenstvo-hrama/",
+      "contentType": "text/html; charset=UTF-8",
+      "httpDate": "Fri, 13 Nov 2026 07:43:13 GMT",
+      "bytes": 147063,
+      "sha256": "4d9020b2e36cea1634685642e7045549ced1337cf7c7e3bc0a05490b96c54ba7",
+      "file": "own-http-clergy.html"
+    },
+    {
+      "name": "own-http-schedule",
+      "requestedUrl": "http://kaluga-voznesenie.ru/raspisanie-bogosluzhenii/",
+      "capturedAtUtc": "2026-11-13T07:33:01.627768+00:00",
+      "tlsPolicy": "Python default verified TLS; no credentials or cookies; HTTP explicitly published by diocese",
+      "status": 200,
+      "responseUrl": "http://kaluga-voznesenie.ru/raspisanie-bogosluzhenii/",
+      "contentType": "text/html; charset=UTF-8",
+      "httpDate": "Fri, 13 Nov 2026 07:33:02 GMT",
+      "bytes": 131744,
+      "sha256": "b3faa2f0025d6a0985d4baaf72a900f112c4e8c8dfdb138840b484d57e438d05",
+      "file": "own-http-schedule.html"
+    },
+    {
+      "name": "official-linked-sobory",
+      "requestedUrl": "https://sobory.ru/article/?object=17648",
+      "capturedAtUtc": "2026-11-13T07:34:42.959836+00:00",
+      "tlsPolicy": "Default verified TLS; no credentials/cookies; source-published explicit HTTP only",
+      "status": 200,
+      "responseUrl": "https://sobory.ru/article/?object=17648",
+      "contentType": "text/html; charset=UTF-8",
+      "httpDate": "Fri, 13 Nov 2026 07:34:40 GMT",
+      "bytes": 58840,
+      "sha256": "1f10b2490bb12a649d869d65e65d3f92beefc8dd8b7a4b857d4836b15fabf3d5",
+      "file": "official-linked-sobory.html"
+    },
+    {
+      "name": "osm-way-full",
+      "requestedUrl": "https://api.openstreetmap.org/api/0.6/way/155168069/full.json",
+      "capturedAtUtc": "2026-11-13T07:33:01.789284+00:00",
+      "tlsPolicy": "Python default verified TLS; no credentials or cookies; HTTP explicitly published by diocese",
+      "status": 200,
+      "responseUrl": "https://api.openstreetmap.org/api/0.6/way/155168069/full.json",
+      "contentType": "application/json; charset=utf-8",
+      "httpDate": "Fri, 13 Nov 2026 07:33:02 GMT",
+      "bytes": 3989,
+      "sha256": "b7c39e8dc2d5d30da5057abb7ec7e476df5db10fecbed6d83aad547b8f606cfc",
+      "file": "osm-way-full.jsonraw"
+    },
+    {
+      "name": "osm-complete-200m-map",
+      "requestedUrl": "https://api.openstreetmap.org/api/0.6/map?bbox=36.3050,54.5287,36.3118,54.5325",
+      "capturedAtUtc": "2026-11-13T07:41:30.783877+00:00",
+      "method": "GET",
+      "tlsPolicy": "Default verified TLS; no credentials or cookies",
+      "status": 200,
+      "responseUrl": "https://api.openstreetmap.org/api/0.6/map?bbox=36.3050,54.5287,36.3118,54.5325",
+      "contentType": "application/xml; charset=utf-8",
+      "httpDate": "Fri, 13 Nov 2026 07:41:31 GMT",
+      "bytes": 337823,
+      "sha256": "e136e690b8f20bcba43a6c2f1b97c696c93fd6809a8e3a254ec7e14b6e7c22d7",
+      "file": "osm-complete-200m-map.xml"
+    },
+    {
+      "name": "ortox-babynino",
+      "requestedUrl": "http://babyninskoe-10.cerkov.ru/",
+      "capturedAtUtc": "2026-11-13T08:30:30.475704+00:00",
+      "method": "GET",
+      "tlsPolicy": "Default verified TLS; explicit official collection links; no credentials/cookies",
+      "status": 200,
+      "responseUrl": "https://babyninskoe-10.cerkov.ru/",
+      "contentType": "text/html; charset=UTF-8",
+      "bytes": 24653,
+      "sha256": "02b61bf4352a658e278b2b9287852d93e4edf98756a5e9d9f50600c87d8f7e73",
+      "file": "ortox-babynino.html"
+    },
+    {
+      "name": "ortox-voznesenye",
+      "requestedUrl": "http://tarusskoe-6.cerkov.ru/",
+      "capturedAtUtc": "2026-11-13T08:30:30.476193+00:00",
+      "method": "GET",
+      "tlsPolicy": "Default verified TLS; explicit official collection links; no credentials/cookies",
+      "status": 200,
+      "responseUrl": "https://tarusskoe-6.cerkov.ru/",
+      "contentType": "text/html; charset=UTF-8",
+      "bytes": 24529,
+      "sha256": "4af3432e32688d8298416bdd4a959cc10b42378e1e25f201e6e0aeed1e56d96b",
+      "file": "ortox-voznesenye.html"
+    },
+    {
+      "name": "osm-exact-rounded-neighbourhood",
+      "requestedUrl": "https://api.openstreetmap.org/api/0.6/map?bbox=36.3058572,54.5291495,36.3109824,54.5320427",
+      "responseUrl": "https://api.openstreetmap.org/api/0.6/map?bbox=36.3058572,54.5291495,36.3109824,54.5320427",
+      "capturedAtUtc": "2026-11-13T09:09:58.074589+00:00",
+      "status": 200,
+      "contentType": "application/xml; charset=utf-8",
+      "bytes": 234586,
+      "sha256": "4b2039e30097c312abc823397b13b49cf3e8da2e7ecc8782c49ac4c291742c27",
+      "file": "osm-exact-rounded-neighbourhood.xml",
+      "method": "GET",
+      "tlsPolicy": "Default verified TLS; no credentials/cookies; own HTTP link explicitly published on verified source"
+    },
+    {
+      "name": "own-http-about-services",
+      "requestedUrl": "http://kaluga-voznesenie.ru/bogosluzheniya-v-nashem-hrame/",
+      "responseUrl": "http://kaluga-voznesenie.ru/bogosluzheniya-v-nashem-hrame/",
+      "capturedAtUtc": "2026-11-13T09:09:59.126087+00:00",
+      "status": 200,
+      "contentType": "text/html; charset=UTF-8",
+      "bytes": 131957,
+      "sha256": "46f7ea689c1931e2fae56ded123a6fe7de7e98003e238ad6431fbe5bcc7d1ded",
+      "file": "own-http-about-services.html",
+      "method": "GET",
+      "tlsPolicy": "Default verified TLS; no credentials/cookies; own HTTP link explicitly published on verified source"
+    },
+    {
+      "name": "osm-neighbourhood-native-json",
+      "requestedUrl": "https://api.openstreetmap.org/api/0.6/map?bbox=36.3058572,54.5291495,36.3109824,54.5320427",
+      "responseUrl": "https://api.openstreetmap.org/api/0.6/map?bbox=36.3058572,54.5291495,36.3109824,54.5320427",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 207464,
+      "sha256": "386507fbea096ee11622855e80fc2101c6c9a72eead6df1fd1a6682ea24160e2",
+      "file": "osm-neighbourhood-native.jsonraw",
+      "accept": "text/html,application/xhtml+xml,application/json,application/pdf,image/*;q=0.9",
+      "tlsPolicy": "Default verified TLS; no credentials or cookies"
+    }
+  ],
+  "logicalRequestLedger": {
+    "scope": "Expected successful fixture path, not an upper bound for all sources and not a count of HTTP redirect hops",
+    "totalTransportCalls": 17,
+    "proofTransportCalls": 15,
+    "proofSessionLimit": 16,
+    "outsideProof": [
+      "selected-map-metadata",
+      "importer-informational-link"
+    ],
+    "entries": [
+      {
+        "role": "selected-map-metadata",
+        "requestedUrl": "https://api.openstreetmap.org/api/0.6/way/155168069.json"
+      },
+      {
+        "role": "selected-contour",
+        "requestedUrl": "https://api.openstreetmap.org/api/0.6/way/155168069/full.json"
+      },
+      {
+        "role": "neighbourhood",
+        "requestedUrl": "https://api.openstreetmap.org/api/0.6/map?bbox=36.3058572,54.5291495,36.3109824,54.5320427"
+      },
+      {
+        "role": "ortox-collection",
+        "requestedUrl": "https://eparhia-kaluga.cerkov.ru/xramy/"
+      },
+      {
+        "role": "directory-page0",
+        "requestedUrl": "https://eparhia-kaluga.ru/kaluzhskaja-eparhija/prihody/kaluga.html"
+      },
+      {
+        "role": "directory-page20",
+        "requestedUrl": "https://eparhia-kaluga.ru/kaluzhskaja-eparhija/prihody/kaluga.html?start=20"
+      },
+      {
+        "role": "passport-kaluga",
+        "requestedUrl": "http://kalujskoe-19.cerkov.ru/"
+      },
+      {
+        "role": "passport-babynino",
+        "requestedUrl": "http://babyninskoe-10.cerkov.ru/"
+      },
+      {
+        "role": "passport-voznesenye",
+        "requestedUrl": "http://tarusskoe-6.cerkov.ru/"
+      },
+      {
+        "role": "official-detail",
+        "requestedUrl": "https://eparhia-kaluga.ru/kaluzhskaja-eparhija/prihody/kaluga/1587-oficialnyj-sajt-kaluzhskoj-eparhii-prihody-gorod-kaluga-domovyj-hram-v-chest-voznesenija-gospodnja.html"
+      },
+      {
+        "role": "current-home",
+        "requestedUrl": "http://kaluga-voznesenie.ru/"
+      },
+      {
+        "role": "current-contact",
+        "requestedUrl": "http://kaluga-voznesenie.ru/kontakty/"
+      },
+      {
+        "role": "current-history",
+        "requestedUrl": "http://kaluga-voznesenie.ru/o-hrame/"
+      },
+      {
+        "role": "current-clergy",
+        "requestedUrl": "http://kaluga-voznesenie.ru/duhovenstvo-hrama/"
+      },
+      {
+        "role": "linked-interior-anchor",
+        "requestedUrl": "https://sobory.ru/article/?object=17648"
+      },
+      {
+        "role": "current-schedule",
+        "requestedUrl": "http://kaluga-voznesenie.ru/raspisanie-bogosluzhenii/"
+      },
+      {
+        "role": "importer-informational-link",
+        "requestedUrl": "http://kaluga-voznesenie.ru/bogosluzheniya-v-nashem-hrame/"
+      }
+    ]
+  }
+}

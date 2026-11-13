@@ -104,7 +104,8 @@ class InternetScheduleRepository(
         val changedSource = sourceOverride != null && custom != previous.customSource
         // A saved relationship permits offline reading, not a fresh network publication
         // after the monastery may have acquired another church. Recheck it per refresh.
-        val recheckChildRelationship = custom.isBlank() && previous.siteBinding?.method == ScheduleBindingMethod.CHILD_CHURCH_OWN_SITE
+        val recheckChildRelationship = custom.isBlank() && previous.siteBinding?.method in setOf(
+            ScheduleBindingMethod.CHILD_CHURCH_OWN_SITE, ScheduleBindingMethod.PUBLISHER_GEOMETRY_CHAIN)
         // Cache validation already requires the configured source to be unchanged. Reuse a
         // confirmed resolved source instead of retrying the same obsolete configured URL.
         // A withdrawal has no publication, but its source must still be retried: returning to
@@ -114,6 +115,7 @@ class InternetScheduleRepository(
                 previous.siteBinding?.validFor(parish, it, previous.siteEvidenceUrl) == true) }
         var needsVerification = (previous.sourceNeedsVerification && custom.isBlank()) || recheckChildRelationship
         var binding = previous.siteBinding.takeUnless { changedSource || needsVerification }
+        var prefetchedSchedule: ScheduleResponse? = null
         var website = if (needsVerification) "" else
             custom.takeIf(String::isNotBlank) ?: resolved ?: configured.takeIf(String::isNotBlank) ?: previous.website
         var source = website
@@ -133,10 +135,14 @@ class InternetScheduleRepository(
             val completed = withTimeoutOrNull(180_000) {
                 if (recheckChildRelationship) {
                     phase(ScheduleImportPhase.FINDING_SITE)
-                    when (val checked = MonasteryChurchSiteVerifier(transport, Clock.fixed(now, ZoneOffset.UTC))
-                        .revalidate(parish, requireNotNull(previous.siteBinding))) {
+                    val previousBinding = requireNotNull(previous.siteBinding)
+                    val revalidated = if (previousBinding.method == ScheduleBindingMethod.PUBLISHER_GEOMETRY_CHAIN)
+                        PublisherGeometryResolver(transport, Clock.fixed(now, ZoneOffset.UTC)).revalidate(parish, previousBinding)
+                    else MonasteryChurchSiteVerifier(transport, Clock.fixed(now, ZoneOffset.UTC)).revalidate(parish, previousBinding)
+                    when (val checked = revalidated) {
                         is ChildChurchSiteCheck.Confirmed -> {
                             website = checked.site.url; binding = checked.site.binding; evidence = checked.site.evidenceUrl
+                            prefetchedSchedule = checked.site.observedSchedule
                             needsVerification = false
                         }
                         is ChildChurchSiteCheck.Unavailable -> {
@@ -185,6 +191,7 @@ class InternetScheduleRepository(
                         return@withTimeoutOrNull true
                     }
                     website = site?.url.orEmpty(); evidence = site?.evidenceUrl.orEmpty(); binding = site?.binding
+                    prefetchedSchedule = site?.observedSchedule
                     if (site != null) needsVerification = false
                 }
                 source = website
@@ -194,7 +201,7 @@ class InternetScheduleRepository(
                 }
                 val primaryEvidence = evidence
                 val primaryBinding = binding
-                val primary = importSource(parish, website, date, now, primaryBinding) { checkedWebsite, checkedSource, withdrawal ->
+                val primary = importSource(parish, website, date, now, primaryBinding, prefetchedSchedule) { checkedWebsite, checkedSource, withdrawal ->
                     rejectedPublication = true; website = checkedWebsite; source = checkedSource
                     if (withdrawal) sourceHasWithdrawals = true
                 }
@@ -206,7 +213,7 @@ class InternetScheduleRepository(
                     phase(ScheduleImportPhase.FINDING_SITE)
                     val alternative = lookup(parish, primary.attemptedUrls + configured, resolverSession)
                     if (alternative != null) {
-                        val next = importSource(parish, alternative.url, date, now, alternative.binding) { checkedWebsite, checkedSource, withdrawal ->
+                        val next = importSource(parish, alternative.url, date, now, alternative.binding, alternative.observedSchedule) { checkedWebsite, checkedSource, withdrawal ->
                             // A different building at a new candidate cannot invalidate an
                             // older accepted source. Actual withdrawals of this parish can.
                             if (withdrawal) {
@@ -261,6 +268,7 @@ class InternetScheduleRepository(
 
     /** Each attempt has the same small crawl budget; refresh owns the single shared deadline. */
     private suspend fun importSource(parish: Parish, root: String, date: LocalDate, now: Instant, binding: ScheduleSiteBinding?,
+        initialResponse: ScheduleResponse? = null,
         onSafety: (website: String, sourceUrl: String, withdrawal: Boolean) -> Unit): SourceAttempt {
         var website = root
         var source = root
@@ -294,7 +302,9 @@ class InternetScheduleRepository(
             if (next.document) documents++ else htmlPages++
             phase(if (next.document) ScheduleImportPhase.READING_DOCUMENT else ScheduleImportPhase.LOADING_PAGE)
             attempted += next.url
-            val response = try { transport.fetch(next.url) }
+            val response = try {
+                initialResponse?.takeIf { visited.size == 1 && next.url == root && it.url == root } ?: transport.fetch(next.url)
+            }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (_: Exception) { previousImage = null; previousImageParent = ""; continue }
             attempted += response.url
@@ -363,7 +373,8 @@ class InternetScheduleRepository(
             // The relationship proves the parent's main church, not every occasional service
             // on its shared site. Venue and withdrawal checks above retain their precedence.
             val events = retained(parsed.events).filter {
-                binding?.method != ScheduleBindingMethod.CHILD_CHURCH_OWN_SITE || ChildChurchRelation.mainService(it.title)
+                binding?.method !in setOf(ScheduleBindingMethod.CHILD_CHURCH_OWN_SITE,
+                    ScheduleBindingMethod.PUBLISHER_GEOMETRY_CHAIN) || ChildChurchRelation.mainService(it.title)
             }
             val dedicated = next.linkedFrom.isNotBlank() || next.document ||
                 Regex("(?iu)(schedule|raspisan|расписан)").containsMatchIn(response.url)
@@ -429,9 +440,13 @@ internal object ScheduleCacheCodec {
                 require(it.isJsonObject)
                 ChildChurchOwnSiteProof.decode(it.asJsonObject)
             }
+            val publisherProof = value.get("publisherGeometryProof")?.takeUnless { it.isJsonNull }?.let {
+                require(it.isJsonObject)
+                PublisherGeometryProof.decode(it.asJsonObject)
+            }
             ScheduleSiteBinding(value.get("policyVersion").asInt, part("selectedIdentity"), part("matchedName"),
                 ScheduleEntityScope.valueOf(part("matchedScope")), ScheduleBindingMethod.valueOf(part("method")),
-                part("siteUrl"), part("evidenceUrl"), proof, childProof)
+                part("siteUrl"), part("evidenceUrl"), proof, childProof, publisherProof)
         }.getOrNull()
         val needsVerification = custom.isBlank() && (evidence.isNotBlank() || pendingFlag || root.get("siteBinding")?.isJsonNull == false) &&
             binding?.validFor(parish, website, evidence) != true
