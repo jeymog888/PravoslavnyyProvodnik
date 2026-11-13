@@ -19,10 +19,23 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
         entries[normal(original)]?.let {
             return it.takeIf { it.source != FEORIA_TRANSLATION_SOURCE || FeoriaTranslationCatalog.recognizes(original, it) }
         }
+        val text = BookText.clean(original)
+        // The constructor prepends tone metadata to complete calendar hymns. It is
+        // not part of the prayer body, but remains visible in both languages.
+        val tone = Regex("^Глас ([1-8]):\\s+(.+)$", RegexOption.DOT_MATCHES_ALL).matchEntire(text)
+        if (tone != null) {
+            val body = BookText.clean(tone.groupValues[2])
+            if (body.isEmpty() || Regex("^(?:Глас\\b|Припев:)", RegexOption.IGNORE_CASE).containsMatchIn(body) ||
+                BookText.withoutSpeaker(body).first != null) return null
+            val pair = entries[normal(body)] ?: return null
+            if (!trustedToneSource(pair.source)) return null
+            val russian = BookText.clean(pair.russian)
+            if (russian.isEmpty() || Regex("^Глас\\b", RegexOption.IGNORE_CASE).containsMatchIn(russian)) return null
+            return pair.copy(russian = "Глас ${tone.groupValues[1]}: $russian")
+        }
         // A refrain remains one original block. Only a single leading label may be restored
         // around an exact published body; do not remove counts or recurse through labels.
         val prefix = "Припев:"
-        val text = BookText.clean(original)
         if (!text.startsWith(prefix, ignoreCase = true)) return null
         val body = text.substring(prefix.length).trim()
         if (body.isEmpty() || body.startsWith(prefix, ignoreCase = true)) return null
@@ -48,6 +61,17 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
     }
 
     private fun sourcePage(url: String?): URI? = url?.let { runCatching { URI(it) }.getOrNull() }
+
+    private fun trustedToneSource(source: BookSource): Boolean {
+        if (ALL_PARALLEL_SOURCES.any { source.title == it.title && samePublishedPage(sourcePage(source.url), URI(it.url)) }) return true
+        val page = sourcePage(source.url) ?: return false
+        if (page.scheme != "https" || page.host != "azbyka.ru" || page.port != -1 || page.rawUserInfo != null ||
+            page.rawQuery != null || page.rawFragment != null) return false
+        val dateText = Regex("^/days/([0-9]{4}-[0-9]{2}-[0-9]{2})/?$").matchEntire(page.rawPath.orEmpty())?.groupValues?.get(1) ?: return false
+        val date = runCatching { LocalDate.parse(dateText) }.getOrNull() ?: return false
+        if (date.toString() != dateText || date.year !in 1900..2200) return false
+        return source.title == "Азбука веры: календарь и API" || source.title == "Азбука веры · календарь на $dateText"
+    }
 
     // The primary loader records the response URL. Query/fragment aliases retain their
     // attribution and page priority, but never normalize a path or admit another origin.

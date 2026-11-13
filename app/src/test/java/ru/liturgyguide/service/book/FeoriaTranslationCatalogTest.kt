@@ -36,13 +36,13 @@ class FeoriaTranslationCatalogTest {
     )
     @After fun clean() { directory.deleteRecursively() }
 
-    @Test fun onlyEightApprovedExactPairsAreTrustedAndLegacyParaphrasesRemainSeparate() {
-        assertEquals(1, FeoriaTranslationCatalog.REVISION)
-        assertEquals(8, own.size)
+    @Test fun previousEightApprovedPairsStayUnchangedAndLegacyParaphrasesRemainSeparate() {
+        assertEquals(2, FeoriaTranslationCatalog.REVISION)
+        assertEquals(11, own.size)
         assertEquals(source, BookTranslationIndex.FEORIA_TRANSLATION_SOURCE)
         assertEquals(BookSource("Русское изложение: редакция Феории", source.url), BookTranslationIndex.EDITORIAL_SOURCE)
         assertNotEquals(source, BookTranslationIndex.EDITORIAL_SOURCE)
-        assertEquals(approved.map { it.id }, FeoriaTranslationCatalog.entries.map { it.id })
+        assertEquals(approved.map { it.id }, FeoriaTranslationCatalog.entries.take(8).map { it.id })
         approved.zip(FeoriaTranslationCatalog.entries).forEach { (expected, entry) ->
             assertEquals(expected.original, entry.original); assertEquals(expected.russian, entry.russian)
             assertEquals(1, entry.revision); assertEquals(MatinsRankFixtures.url(MatinsRankFixtures.key()), entry.originalSourceUrl)

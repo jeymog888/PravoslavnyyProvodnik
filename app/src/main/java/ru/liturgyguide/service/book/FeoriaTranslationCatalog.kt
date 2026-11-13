@@ -2,11 +2,12 @@ package ru.liturgyguide.service.book
 
 /** Reviewed project translations, separate from the older explanatory paraphrases. */
 internal object FeoriaTranslationCatalog {
-    const val REVISION = 1
+    const val REVISION = 2
     private const val ORIGINAL_SOURCE_URL = "https://azbyka.ru/worships/?date=2026-11-13&worship=matins&size=full&church=34&main_event=0&top_level=3"
 
     data class Entry(val id: String, val original: String, val russian: String,
-        val revision: Int = REVISION, val originalSourceUrl: String = ORIGINAL_SOURCE_URL)
+        // Entry revisions describe their wording; adding new entries does not revise the old eight.
+        val revision: Int = 1, val originalSourceUrl: String = ORIGINAL_SOURCE_URL)
 
     val entries = listOf(
         Entry("apostles_refrain",
@@ -32,7 +33,19 @@ internal object FeoriaTranslationCatalog {
             "Ибо Ты - наш Бог, и Тебе мы воздаем славу: Отцу, Сыну и Святому Духу, сейчас, всегда и вечно. Аминь."),
         Entry("their_voice_all_the_earth",
             "Во всю зе́млю изы́де веща́ние их / и в концы́ вселе́нныя глаго́лы их.",
-            "Их голос прозвучал по всей земле, и их слова достигли краев мира.")
+            "Их голос прозвучал по всей земле, и их слова достигли краев мира."),
+        Entry("refrain_cross_glory",
+            "Припев: Сла́ва, Го́споди, Кресту́ Твоему́ честно́му.",
+            "Припев: Слава, Господи, Твоему Кресту, достойному почитания.", revision = 2,
+            originalSourceUrl = "https://azbyka.ru/worships/?date=2026-11-13&worship=matins&size=full&church=20"),
+        Entry("holy_martyrs_refrain",
+            "Припев: Святи́и му́ченицы, моли́те Бо́га о нас.",
+            "Припев: Святые мученики, молитесь Богу о нас.", revision = 2,
+            originalSourceUrl = "https://azbyka.ru/worships/?date=2026-11-13&worship=matins&size=full&church=20"),
+        Entry("saint_epimachus_refrain",
+            "Припев: Святы́й му́чениче Епимáше, моли́ Бо́га о на́с.",
+            "Припев: Святой мученик Епимах, молись Богу о нас.", revision = 2,
+            originalSourceUrl = "https://azbyka.ru/worships/?date=2026-11-13&worship=matins&size=full&church=20")
     )
 
     fun recognizes(original: String, translation: BookTranslation): Boolean =
