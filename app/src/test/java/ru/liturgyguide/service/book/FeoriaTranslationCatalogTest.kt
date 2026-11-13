@@ -47,8 +47,8 @@ class FeoriaTranslationCatalogTest {
     @After fun clean() { directory.deleteRecursively() }
 
     @Test fun previousEightApprovedPairsStayUnchangedAndLegacyParaphrasesRemainSeparate() {
-        assertEquals(4, FeoriaTranslationCatalog.REVISION)
-        assertEquals(126, BookTranslationIndex.fromFeoriaCatalog().size)
+        assertEquals(4, FeoriaTranslationCatalog.entries.take(126).maxOf { it.revision })
+        assertEquals(126, WeekdayAntiphonFixtures.previousOwn126.size)
         assertEquals(11, own.size)
         assertEquals(source, BookTranslationIndex.FEORIA_TRANSLATION_SOURCE)
         assertEquals(BookSource("Русское изложение: редакция Феории", source.url), BookTranslationIndex.EDITORIAL_SOURCE)

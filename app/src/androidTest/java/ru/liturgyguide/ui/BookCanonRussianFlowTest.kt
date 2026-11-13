@@ -70,7 +70,16 @@ class BookCanonRussianFlowTest {
         val position = BookReadingPosition(baseline.key, baseline.contentHash, "canon12", target, chapter.id,
             fraction = .35f, mode = BookReadingMode.RUSSIAN, wordsPerMinute = 103, lastTextMode = BookReadingMode.RUSSIAN)
         assertTrue(store.save(position))
-        val own = BookTranslationIndex.fromFeoriaCatalog()
+        // Keep the previous exact111 Matins delta separate from the independently reviewed weekday15.
+        val oldRows = JsonParser.parseString(asset("russian-weekday-antiphons/oracle.json")).asJsonObject["previous126"].asJsonArray
+        val own = BookTranslationIndex.decode(JsonArray().apply { oldRows.forEach { value ->
+            val row = value.asJsonObject
+            add(JsonObject().apply {
+                add("original", row["original"]); add("russian", row["russian"])
+                addProperty("source", BookTranslationIndex.FEORIA_TRANSLATION_SOURCE.title)
+                addProperty("url", BookTranslationIndex.FEORIA_TRANSLATION_SOURCE.url)
+            })
+        } }.toString())
         assertEquals(126, own.size)
         var requests = 0
         val repository = ServiceBookRepository(cache, ScheduleTransport { requests++; error("Full own catalog is offline") }, translations = own)

@@ -55,7 +55,8 @@ internal object CommonTranslationFixtures {
 }
 
 class FeoriaCommonTranslationsTest {
-    private val own = BookTranslationIndex.fromFeoriaCatalog()
+    // New weekday pairs have a separate exact15 oracle; preserve this exact48 historical delta.
+    private val own = WeekdayAntiphonFixtures.previousOwn126
     private val source = BookTranslationIndex.FEORIA_TRANSLATION_SOURCE
     private val directory = Files.createTempDirectory("feoria-common-12-").toFile()
     private val rows get() = CommonTranslationFixtures.rows
@@ -64,7 +65,7 @@ class FeoriaCommonTranslationsTest {
     @Test fun allTenCompletePairsAndTheirProvenanceEqualTheIndependentApprovedOracle() {
         val oracle = CommonTranslationFixtures.oracle
         assertEquals("PASS", oracle["semanticVerdict"].asString)
-        assertEquals(4, FeoriaTranslationCatalog.REVISION)
+        assertEquals(4, FeoriaTranslationCatalog.entries.take(126).maxOf { it.revision })
         assertEquals(126, own.size)
         assertEquals(10, rows.size)
         assertEquals(10, FeoriaCommonTranslations.records.size)
@@ -127,7 +128,7 @@ class FeoriaCommonTranslationsTest {
             "legacy-presentation/vespers-accepted-unchanged.json" to "archiveVespersSha256")) {
             assertEquals(resource, preserved[field].asString, BookText.sha256(CommonTranslationFixtures.text(resource)))
         }
-        assertEquals(126, FeoriaTranslationCatalog.entries.map { BookTranslationIndex.normal(it.original) }.distinct().size)
+        assertEquals(126, FeoriaTranslationCatalog.entries.take(126).map { BookTranslationIndex.normal(it.original) }.distinct().size)
     }
 
     @Test fun namesNegationsTruncationExtraLabelsAndForgedRussianCannotInheritAnyCommonPair() {

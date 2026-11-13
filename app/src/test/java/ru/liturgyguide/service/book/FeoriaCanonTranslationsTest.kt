@@ -20,14 +20,15 @@ class FeoriaCanonTranslationsTest {
     private fun text(path: String) = requireNotNull(javaClass.classLoader?.getResource(path)).readText()
     private val oracle by lazy { JsonParser.parseString(text("russian-coverage-12/canon-105-oracle.json")).asJsonObject }
     private val rows get() = oracle["items"].asJsonArray.map { it.asJsonObject }
-    private val own = BookTranslationIndex.fromFeoriaCatalog()
+    // Pin this historical canon/common delta to its independently approved previous126.
+    private val own = WeekdayAntiphonFixtures.previousOwn126
     private val directory = Files.createTempDirectory("feoria-canon-12-").toFile()
     private val archiveText by lazy { text("legacy-presentation/matins-accepted-unchanged.json") }
     private val archive by lazy { gson.fromJson(archiveText, ServiceBook::class.java) }
     @After fun clean() { directory.deleteRecursively() }
 
     @Test fun all105CompletePairsAndProvenanceMatchThePinnedSourceOracle() {
-        assertEquals(4, FeoriaTranslationCatalog.REVISION)
+        assertEquals(4, FeoriaTranslationCatalog.entries.take(126).maxOf { it.revision })
         assertEquals(126, own.size)
         assertEquals(105, rows.size)
         assertEquals(105, FeoriaCanonTranslations.records.size)
@@ -72,7 +73,7 @@ class FeoriaCanonTranslationsTest {
             Array<FeoriaTranslationCatalog.Entry>::class.java).toList()
         assertEquals(11, before.size)
         assertEquals(before, FeoriaTranslationCatalog.entries.take(11))
-        assertEquals(126, FeoriaTranslationCatalog.entries.map { BookTranslationIndex.normal(it.original) }.distinct().size)
+        assertEquals(126, FeoriaTranslationCatalog.entries.take(126).map { BookTranslationIndex.normal(it.original) }.distinct().size)
         assertTrue(FeoriaTranslationCatalog.entries.all { entry ->
             FeoriaTranslationCatalog.recognizes(entry.original,
                 BookTranslation(entry.russian, BookTranslationIndex.FEORIA_TRANSLATION_SOURCE))
