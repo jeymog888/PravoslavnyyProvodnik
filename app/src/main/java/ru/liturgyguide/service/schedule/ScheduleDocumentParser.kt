@@ -29,7 +29,8 @@ object ScheduleDocumentParser {
     fun inspect(document: ScheduleDocument, today: LocalDate, parish: Parish? = null): ScheduleParseResult {
         // A supplementary pass can reveal a withdrawal whose scope is not readable. Do
         // not revive primary-pass events, or invent which dates/buildings were withdrawn.
-        if (document.pages.any { it.ocrFailure == ScheduleOcrFailure.CONFLICTING_EVIDENCE })
+        if (document.pages.size > 12 || document.pages.any {
+                it.sourceTruncated || it.lines.size > 2_000 || it.ocrFailure == ScheduleOcrFailure.CONFLICTING_EVIDENCE })
             return ScheduleParseResult(ScheduleParseDisposition.REJECTED, safetyConflict = true)
         val events = mutableListOf<InternetService>()
         val cancelledDates = mutableSetOf<LocalDate>()
@@ -39,9 +40,10 @@ object ScheduleDocumentParser {
         val inferredMonths = ScheduleYearInference.months(document, today)
         document.pages.take(12).forEachIndexed { pageIndex, page ->
             if (page.ocrFailure != null) return@forEachIndexed
-            data class HeadingScope(val cancelled: Boolean, val venue: String?, val date: LocalDate?)
+            data class HeadingScope(val cancelled: Boolean, val venue: String?, val date: LocalDate?, val lineIndex: Int)
             val headings = sortedMapOf<Int, HeadingScope>()
             var sectionVenue: String? = null
+            var sectionVenueLine = -1
             var scope: YearMonth? = null
             var currentDate: LocalDate? = null
             var pendingClock: String? = null
@@ -49,7 +51,7 @@ object ScheduleDocumentParser {
             var pendingDate: LocalDate? = null
             var pendingVenue: String? = null
             var rejected = false
-            data class DayContainerScope(val venue: String?, val month: YearMonth?, val date: LocalDate?,
+            data class DayContainerScope(val venue: String?, val venueLine: Int, val month: YearMonth?, val date: LocalDate?,
                 val headings: Map<Int, HeadingScope>)
             val dayContainers = ArrayDeque<DayContainerScope>()
             fun flush() {
@@ -67,13 +69,13 @@ object ScheduleDocumentParser {
                 // outer restrictions, then restore them before reading its sibling card.
                 if (line.startsDayContainer) {
                     flush()
-                    dayContainers.addLast(DayContainerScope(sectionVenue, scope, currentDate, headings.toMap()))
+                    dayContainers.addLast(DayContainerScope(sectionVenue, sectionVenueLine, scope, currentDate, headings.toMap()))
                     currentDate = null
                 }
                 if (line.endsDayContainer) {
                     flush()
                     dayContainers.removeLastOrNull()?.let { outer ->
-                        sectionVenue = outer.venue; scope = outer.month; currentDate = outer.date
+                        sectionVenue = outer.venue; sectionVenueLine = outer.venueLine; scope = outer.month; currentDate = outer.date
                         headings.clear(); headings.putAll(outer.headings)
                     }
                     return@lineLoop
@@ -105,18 +107,24 @@ object ScheduleDocumentParser {
                 if (line.headingLevel > 0) {
                     flush()
                     headings.keys.filter { it >= line.headingLevel }.toList().forEach(headings::remove)
-                    headings[line.headingLevel] = HeadingScope(cancellation.containsMatchIn(clean), venueLabel, dateIn(clean, scope)?.first)
+                    headings[line.headingLevel] = HeadingScope(cancellation.containsMatchIn(clean), venueLabel, dateIn(clean, scope)?.first, lineIndex)
                     currentDate = headings.values.mapNotNull { it.date }.lastOrNull()
                 } else if (venueLabel != null) {
-                    flush(); sectionVenue = venueLabel
+                    flush(); sectionVenue = venueLabel; sectionVenueLine = lineIndex
                     currentDate = headings.values.mapNotNull { it.date }.lastOrNull()
                     if (!cancellation.containsMatchIn(clean)) return@lineLoop
                 }
                 val locatedRowDate = dateIn(clean, scope)
                 val rowDate = locatedRowDate?.first ?: currentDate
                 val venueText = dateIn(venueEvidence, scope)?.let { venueEvidence.removeRange(it.second) } ?: venueEvidence
+                // A plain venue label and an active venue heading are both explicit
+                // evidence. The later one governs; a generic heading cannot erase the
+                // underlying parish signature when an older venue heading leaves scope.
+                val headingVenue = headings.values.filter { it.venue != null }.maxByOrNull { it.lineIndex }
+                val inheritedVenue = if (sectionVenue != null && sectionVenueLine > (headingVenue?.lineIndex ?: -1))
+                    sectionVenue else headingVenue?.venue ?: sectionVenue
                 val scopedVenue = line.venue ?: ScheduleVenue.inlineLabel(venueText, rowDate, datedPreface = locatedRowDate != null) ?:
-                    headings.values.mapNotNull { it.venue }.lastOrNull() ?: sectionVenue
+                    inheritedVenue
                 val scopedCancellation = headings.values.any { it.cancelled }
                 if (!ScheduleVenue.matches(scopedVenue, parish)) { flush(); currentDate = null; rejectedScope = true; return@lineLoop }
                 if (scopedCancellation) rejectedScope = true

@@ -22,7 +22,9 @@ data class ScheduleDocumentPage(val lines: List<ScheduleDocumentLine>,
     // Audit-only text from every completed pass, including an unsuccessful repair. Never
     // parse it as another page of events or silently discard conflicting safety evidence.
     val rawOcrEvidence: List<String>? = null,
-    val ocrFailure: ScheduleOcrFailure? = null)
+    val ocrFailure: ScheduleOcrFailure? = null,
+    // A bounded extraction may not silently hide a later venue restriction or cancellation.
+    val sourceTruncated: Boolean = false)
 data class ScheduleDocument(val sourceUrl: String, val format: String, val pages: List<ScheduleDocumentPage>)
 enum class ScheduleParseDisposition { PARSED, UNSUPPORTED, REJECTED }
 data class ScheduleParseResult(
@@ -155,7 +157,8 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
             if (dayContainer) lines += ScheduleDocumentLine("", endsDayContainer = true)
         }
         walk(body)
-        return ScheduleDocument(document.baseUri(), "html", listOf(ScheduleDocumentPage(lines.take(2_000))))
+        return ScheduleDocument(document.baseUri(), "html", listOf(ScheduleDocumentPage(lines.take(2_000),
+            sourceTruncated = lines.size > 2_000)))
     }
 
     private val clockCell = ScheduleClocks.pattern

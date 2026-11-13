@@ -26,22 +26,32 @@ object ScheduleHtmlParser {
     private val cancelled = ScheduleCancellation
 
     fun parse(html: String, sourceUrl: String, today: LocalDate): List<InternetService> =
-        parse(Jsoup.parse(html, sourceUrl), today)
+        inspect(Jsoup.parse(html, sourceUrl), today).events
 
     /** Empty extraction is not permission to bypass an explicit cancellation or ambiguity. */
     fun inspect(document: Document, today: LocalDate, parish: Parish? = null): ScheduleParseResult {
+        val declarative = ScheduleDeclarativeText.prepare(document, today)
+        if (declarative?.conflict == true) return ScheduleParseResult(ScheduleParseDisposition.REJECTED, safetyConflict = true)
+        if (declarative != null) {
+            val expanded = HtmlScheduleDocumentExtractor.fromHtml(declarative.document)
+            return ScheduleDocumentParser.inspect(ScheduleDeclarativeText.withDisplayTitles(expanded, declarative.serviceTitles), today, parish)
+        }
         val structured = HtmlScheduleDocumentExtractor.fromHtml(document)
+        if (structured.pages.any { it.sourceTruncated })
+            return ScheduleParseResult(ScheduleParseDisposition.REJECTED, safetyConflict = true)
         // A named building or a dated cancellation needs the general parser's section context,
         // rather than the legacy parser's whole-document rejection or context-free row extraction.
         if (MyPrihodScheduleHtml.appliesTo(document) || structured.pages.any { page -> page.lines.any {
             it.venue != null || ScheduleVenue.isLabel(it.text) || cancelled.containsMatchIn(it.text)
         } }) return ScheduleDocumentParser.inspect(structured, today, parish)
-        val events = parse(document, today)
+        val events = parseLegacy(document, today)
         val known = document.select("[data-day],.bg_ortcal_schedule").any { !ScheduleHtmlDiscussion.contains(it) }
         return ScheduleParseResult(if (events.isNotEmpty() || known) ScheduleParseDisposition.PARSED else ScheduleParseDisposition.UNSUPPORTED, events)
     }
 
-    fun parse(document: Document, today: LocalDate): List<InternetService> {
+    fun parse(document: Document, today: LocalDate): List<InternetService> = inspect(document, today).events
+
+    private fun parseLegacy(document: Document, today: LocalDate): List<InternetService> {
         val content = document.clone().also(ScheduleHtmlDiscussion::removeFrom)
         if (globalVenue.containsMatchIn(content.text()) || content.select("h1,h2,h3").any {
                 differentVenue.containsMatchIn(it.text()) || cancelled.containsMatchIn(it.text()) }) return emptyList()
