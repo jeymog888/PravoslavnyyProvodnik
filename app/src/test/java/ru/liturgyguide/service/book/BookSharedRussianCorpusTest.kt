@@ -176,7 +176,7 @@ class BookSharedRussianCorpusTest {
         assertTrue(requests.none { it in listOf(vigil.url, hour.url, panikhida.url, octoechos.url) })
     }
 
-    @Test fun toneSelectionUsesTheActualOctoechosHeadingAndRejectsCalendarConflictsAndOtherTones() {
+    @Test fun toneSelectionUsesTheActualOctoechosHeadingAndRejectsCalendarConflicts() {
         val sunday = parsed("2026-11-15", "30")
         val common = listOf(vigil, hour, panikhida)
         assertEquals(common + octoechos, BookSharedRussianSources.forBook(sunday))
@@ -188,7 +188,7 @@ class BookSharedRussianCorpusTest {
         fun heading(text: String) = sunday.copy(chapters = sunday.chapters.map { c -> c.copy(blocks = c.blocks.map {
             if (it.original.startsWith("Октоих.")) it.copy(original = text) else it
         }) })
-        assertEquals(common, BookSharedRussianSources.forBook(heading("Октоих. Глас 6. Неделя. На 8.")))
+        assertEquals(common + BookTranslationIndex.OCTOECHOS_SOURCES[5], BookSharedRussianSources.forBook(heading("Октоих. Глас 6. Неделя. На 8.")))
         assertEquals(common, BookSharedRussianSources.forBook(heading("Октоих. Глас 7. Неделя. На 8. Иная приписка")))
         val conflict = sunday.copy(chapters = sunday.chapters.map { c ->
             if (c.blocks.any { it.original.startsWith("Октоих.") }) c.copy(blocks = c.blocks +
@@ -204,8 +204,11 @@ class BookSharedRussianCorpusTest {
         var index = BookTranslationIndex.empty()
         sources.forEach { x ->
             val source = BookTranslationIndex.ALL_PARALLEL_SOURCES.single { it.url == x.get("sourceUrl").asString }
+            // The new Sunday adapter verifies the whole actual publication, not an old cropped row fixture.
+            val html = if (source == octoechos) requireNotNull(javaClass.getResourceAsStream("/book/published-russian/sunday-7.html"))
+                .bufferedReader().use { it.readText() } else BookFixturesText(x.get("fixture").asString)
             index = index.fillingMissing(BookTranslationIndex.fromParallelPage(Jsoup.parse(
-                BookFixturesText(x.get("fixture").asString), source.url), source))
+                html, source.url), source))
         }
         provenance.getAsJsonArray("cases").forEach { x ->
             val original = x.asJsonObject.get("bookOriginal").asString
@@ -381,7 +384,12 @@ class BookSharedRussianCorpusTest {
     private fun day(date: String, voice: Int?) = BookCalendarDay(date, "Память дня", voice, emptyList(), "https://azbyka.ru/days/$date")
     private fun pair(original: String, russian: String, source: BookSource) = BookTranslationIndex.fromParallelPage(Jsoup.parse(table(original, russian), source.url), source)
     private fun table(original: String, russian: String) = "<table><tr><td>${Entities.escape(original)}</td><td>${Entities.escape(russian)}</td></tr></table>"
-    private fun response(url: String, html: String) = ScheduleResponse(url, html.toByteArray(Charsets.UTF_8), "text/html;charset=utf-8")
+    private fun response(url: String, html: String): ScheduleResponse {
+        val page = if (url == octoechos.url && html.startsWith("<table>"))
+            "<h1>Октоих воскресный. Глас 7</h1><div class=\"article-single-content main-page-content\">" +
+                "<table><tr><td>Церковнославянский</td><td>Русский</td></tr></table>$html</div>" else html
+        return ScheduleResponse(url, page.toByteArray(Charsets.UTF_8), "text/html;charset=utf-8")
+    }
     private fun ServiceBook.rehash() = copy(contentHash = ServiceBookIntegrity.contentHash(this))
     private class MutableClock(var now: Long = 1_794_348_000_000) : Clock() {
         override fun getZone(): ZoneId = ZoneId.of("UTC")

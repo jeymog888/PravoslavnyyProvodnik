@@ -17,7 +17,10 @@ data class BookTranslation(val russian: String, val source: BookSource, val mean
 class BookTranslationIndex private constructor(private val entries: Map<String, BookTranslation>) {
     fun find(original: String): BookTranslation? {
         entries[normal(original)]?.let {
-            return it.takeIf { it.source != FEORIA_TRANSLATION_SOURCE || FeoriaTranslationCatalog.recognizes(original, it) }
+            return it.takeIf { pair ->
+                (pair.source != FEORIA_TRANSLATION_SOURCE || FeoriaTranslationCatalog.recognizes(original, pair)) &&
+                    (!BookPublishedIrmos6.registered(pair.source) || BookPublishedIrmos6.recognizesBody(original, pair))
+            }
         }
         val text = BookText.clean(original)
         // The constructor prepends tone metadata to complete calendar hymns. It is
@@ -32,6 +35,11 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
             val russian = BookText.clean(pair.russian)
             if (russian.isEmpty() || Regex("^Глас\\b", RegexOption.IGNORE_CASE).containsMatchIn(russian)) return null
             return pair.copy(russian = "Глас ${tone.groupValues[1]}: $russian")
+        }
+        BookPublishedIrmos6.findBody(text)?.let { body ->
+            val pair = entries[normal(body)] ?: return null
+            if (!BookPublishedIrmos6.recognizesBody(body, pair)) return null
+            return pair.copy(russian = "Ирмос, глас 6: ${pair.russian}")
         }
         // A refrain remains one original block. Only a single leading label may be restored
         // around an exact published body; do not remove counts or recurse through labels.
@@ -63,7 +71,11 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
     private fun sourcePage(url: String?): URI? = url?.let { runCatching { URI(it) }.getOrNull() }
 
     private fun trustedToneSource(source: BookSource): Boolean {
-        if (ALL_PARALLEL_SOURCES.any { source.title == it.title && samePublishedPage(sourcePage(source.url), URI(it.url)) }) return true
+        // Seasonal irmoi have their own whole-body, voice6 and Russian-hash contract.
+        // They must never enter the generic constructor tone-wrapper path.
+        if (ALL_PARALLEL_SOURCES.filterNot(BookPublishedIrmos6::registered).any {
+                source.title == it.title && samePublishedPage(sourcePage(source.url), URI(it.url))
+            }) return true
         val page = sourcePage(source.url) ?: return false
         if (page.scheme != "https" || page.host != "azbyka.ru" || page.port != -1 || page.rawUserInfo != null ||
             page.rawQuery != null || page.rawFragment != null) return false
@@ -124,14 +136,15 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
         val HOUR6_SOURCE = TIMROT_SOURCE.copy(url = "https://azbyka.ru/bogosluzhenie/chas-shestoj/")
         val HOUR9_SOURCE = TIMROT_SOURCE.copy(url = "https://azbyka.ru/bogosluzhenie/chas-devyatyj/")
         val PANIKHIDA_SOURCE = TIMROT_SOURCE.copy(url = "https://azbyka.ru/bogosluzhenie/posledovanie-panihidy/")
-        val OCTOECHOS7_SOURCE = TIMROT_SOURCE.copy(url = "https://azbyka.ru/bogosluzhenie/oktoih-voskresnyj-glas-7/")
+        val OCTOECHOS_SOURCES = (1..8).map { TIMROT_SOURCE.copy(url = "https://azbyka.ru/bogosluzhenie/oktoih-voskresnyj-glas-$it/") }
+        val OCTOECHOS7_SOURCE = OCTOECHOS_SOURCES[6]
         // The page credits E.N. Biryukova and I.I. Biryukov for its Psalter translation.
         // Do not attribute the entire page, including its other prayers, to Timrot.
         val PSALTER_SOURCE = BookSource("Азбука веры · Псалтирь с переводом",
             "https://azbyka.ru/molitvoslov/psaltir-po-kafizmam-s-perevodom.html")
         val ALL_PARALLEL_SOURCES = PARALLEL_SOURCES + listOf(VESPERS_SOURCE, VIGIL_SOURCE,
             HOUR1_SOURCE, HOUR3_SOURCE, HOUR6_SOURCE, HOUR9_SOURCE, PSALTER_SOURCE,
-            PANIKHIDA_SOURCE, OCTOECHOS7_SOURCE)
+            PANIKHIDA_SOURCE) + OCTOECHOS_SOURCES + BookPublishedIrmos6.SOURCES
 
         fun requiredSources(worship: WorshipKind): List<BookSource> = when (worship) {
             WorshipKind.LITURGY -> PARALLEL_SOURCES
@@ -199,10 +212,15 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
             url = document.location().ifBlank { TIMROT_SOURCE.url }
         )): BookTranslationIndex {
             if (source.url == PSALTER_SOURCE.url) return fromPsalterPage(document)
+            if (BookPublishedIrmos6.registered(source)) return BookTranslationIndex(BookPublishedIrmos6.extract(document, source))
+            val page = if (BookSundayRussianPage.registered(source))
+                BookSundayRussianPage.prepare(document, source) ?: return empty() else document
             val result = linkedMapOf<String, BookTranslation>()
             val structuralBodies = linkedMapOf<String, BookTranslation>()
             val reviewedLiturgyEdition = isReviewedLiturgyEdition(source)
-            for (row in document.select("table tr")) {
+            val rows = if (BookSundayRussianPage.registered(source))
+                page.select(".article-single-content.main-page-content table tr") else page.select("table tr")
+            for (row in rows) {
                 val cells = row.children().filter { it.tagName() == "td" }
                 if (cells.size != 2) continue
                 val original = BookText.clean(cells[0].text())

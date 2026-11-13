@@ -100,8 +100,8 @@ class PublishedVerseTranslationTest {
         assertEquals(own.find(ownFull), merged.find(ownFull))
     }
 
-    @Test fun versionTenRemainsReadableOfflineButCannotClaimCompletenessUnderVersionEleven() {
-        assertEquals(11, BookTranslationCorpus.VERSION); assertEquals(4_000_000, BookTranslationCorpus.MAX_BYTES)
+    @Test fun versionTenRemainsReadableOfflineButCannotClaimCompletenessUnderVersionTwelve() {
+        assertEquals(12, BookTranslationCorpus.VERSION); assertEquals(4_000_000, BookTranslationCorpus.MAX_BYTES)
         val index = pair("Старая молитва", "Старый опубликованный перевод QA", vigil)
         val all = BookTranslationIndex.ALL_PARALLEL_SOURCES.map { it.url }.toSet()
         val old = BookTranslationCorpus(index, all, version = 10).encode()
@@ -117,7 +117,7 @@ class PublishedVerseTranslationTest {
         assertEquals(index.encode(), restored.index.encode())
     }
 
-    @Test fun optInRealSourcesPreserve206WholePairsReject12ConflictsGain40And38AndPersistFullCorpus() {
+    @Test fun optInRealSourcesPreserve206WholePairsReject12ConflictsGain40And38AndPersistHistoricalTwelveSourceCorpus() {
         val path = System.getProperty("feoria36bInputs") ?: System.getenv("FEORIA_36B_INPUTS")
         assumeTrue("Requires explicit local SHA-verified published inputs", !path.isNullOrBlank())
         val inputs = File(requireNotNull(path)).canonicalFile
@@ -178,17 +178,21 @@ class PublishedVerseTranslationTest {
             assertEquals(listOf(vigil, BookTranslationIndex.TIMROT_SOURCE, psalter), matinsSources)
             var matins = BookTranslationIndex.empty()
             matinsSources.forEach { matins = matins.fillingMissing(requireNotNull(perSource[it.url])) }
-            val sourceOrder = (matinsSources + BookTranslationIndex.ALL_PARALLEL_SOURCES).distinctBy { it.url }
+            val frozenSources = BookTranslationIndex.ALL_PARALLEL_SOURCES.filter { it.url in perSource }
+            val sourceOrder = (matinsSources + frozenSources).distinctBy { it.url }
             var full = BookTranslationIndex.empty()
             sourceOrder.forEach { full = full.fillingMissing(requireNotNull(perSource[it.url])) }
-            val corpus = BookTranslationCorpus(full, perSource.keys)
+            // These frozen twelve exports predate the Sunday extraction change.
+            // Keep their pairs readable without declaring the expanded corpus complete.
+            val corpus = BookTranslationCorpus(full, perSource.keys, version = 11)
             val encoded = corpus.encode(); val bytes = encoded.toByteArray(Charsets.UTF_8)
             assertTrue(bytes.size > 2_000_000); assertTrue(bytes.size <= 4_000_000)
             val disk = FileBookCache(directory)
             assertTrue(disk.writeTranslationCorpus(encoded)); assertEquals(encoded, disk.readTranslationCorpus())
             val restored = BookTranslationCorpus.decode(disk.readTranslationCorpus())
             assertEquals(full.encode(), restored.index.encode()); assertEquals(11, restored.version)
-            assertTrue(restored.completeFor(BookTranslationIndex.ALL_PARALLEL_SOURCES))
+            assertFalse(restored.current)
+            assertFalse(restored.completeFor(BookTranslationIndex.ALL_PARALLEL_SOURCES))
             assertTrue(entries(full).values.none { it.source == BookTranslationIndex.FEORIA_TRANSLATION_SOURCE || it.source == BookTranslationIndex.EDITORIAL_SOURCE })
             val rawBook = Gson().fromJson(read("old-book.json"), ServiceBook::class.java)
             // Native and JVM serializers may hash differently. Only its hash is adapted for this JVM cache.

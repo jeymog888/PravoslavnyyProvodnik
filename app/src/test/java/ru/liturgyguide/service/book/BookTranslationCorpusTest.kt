@@ -91,6 +91,8 @@ class BookTranslationCorpusTest {
 
     @Test fun versionNineWithAllSourceFlagsStillRechecksEverySourceAndKeepsOldPairs() = obsoleteVersionRetries(9)
 
+    @Test fun versionElevenRetainsItsPairsButRechecksTheChangedSundayExtractor() = obsoleteVersionRetries(11)
+
     private fun obsoleteVersionRetries(version: Int) = runBlocking {
         assertTrue(cache.writeTranslationCorpus(BookTranslationCorpus(oldIndex(), allUrls, version = version).encode()))
         val requests = mutableListOf<String>()
