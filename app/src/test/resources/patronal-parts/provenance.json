@@ -1,0 +1,24 @@
+{
+  "capturedOn": "2026-11-13",
+  "scope": "Anonymous public GET; concrete dedication on actual Vespers and First Hour, not local performance evidence",
+  "fixtures": [
+    {
+      "file": "vespers.html",
+      "sourceUrl": "https://azbyka.ru/worships/?date=2026-11-13&worship=vespers&size=full&church=34&patronal=111300",
+      "rawBytes": 168354,
+      "rawSha256": "fba5119ba4f39e5ee570f5569ddc2c0a42ab1089a2eb8d0e88b7a505e922fa1d",
+      "fixtureBytes": 69905,
+      "fixtureSha256": "a891a1cce188c8cd2b5942d8421f8d43eff7749757ca23429cc30e570cc359d2",
+      "transform": "lxml copies actual worship title, controls and complete content; removes script/style/iframe"
+    },
+    {
+      "file": "chas1.html",
+      "sourceUrl": "https://azbyka.ru/worships/?date=2026-11-13&worship=chas1&size=full&church=34&patronal=111300",
+      "rawBytes": 117226,
+      "rawSha256": "cb5503f754907aa3949d8a9f4fd9547b2e0fe1be588c645c129fa7ec95bcf46a",
+      "fixtureBytes": 19126,
+      "fixtureSha256": "6373ec07b0d0df966f67bcc51975327389333535c416c9c804ea3a82ec2100eb",
+      "transform": "lxml copies actual worship title, controls and complete content; removes script/style/iframe"
+    }
+  ]
+}

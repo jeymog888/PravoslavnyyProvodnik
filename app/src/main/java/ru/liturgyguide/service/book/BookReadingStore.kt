@@ -8,6 +8,7 @@ import ru.liturgyguide.model.ServiceBook
 import ru.liturgyguide.model.ServiceBookKey
 import ru.liturgyguide.model.BookBlockKind
 import ru.liturgyguide.model.BookChapter
+import ru.liturgyguide.model.BookBlock
 
 enum class BookReadingMode(val title: String) { ORIGINAL("Оригинал"), RUSSIAN("Русский"), MEANING("Смысл") }
 enum class BookAnchorKind { HEADER, BLOCK, END }
@@ -88,16 +89,57 @@ class BookReadingCursor(initial: BookReadingPosition) {
         value.copy(mode = mode, wordsPerMinute = wordsPerMinute, showAltar = showAltar).also { value = it }
 }
 
+enum class BookDedicationMatchKind { EXACT, KNOWN_HYMN, SECTION_START }
+data class BookDedicationPosition(val position: BookReadingPosition, val matchKind: BookDedicationMatchKind)
+
 object BookPositionUpdate {
     fun rebase(position: BookReadingPosition, previous: ServiceBook, next: ServiceBook): BookReadingPosition {
         require(position.key == previous.key && previous.key == next.key)
-        val exact = next.blocks.firstOrNull { it.id == position.blockId }
+        return rebaseContent(position, previous, next).position
+    }
+
+    /** EXACT identifies the same source occurrence; changed visible prose still resets its fraction. */
+    fun rebaseForDedication(position: BookReadingPosition, previous: ServiceBook, next: ServiceBook,
+        journeyContext: BookJourneyContext? = null): BookDedicationPosition {
+        require(position.key == previous.key && position.contentHash == previous.contentHash)
+        require(previous.key.date == next.key.date && previous.key.worship == next.key.worship &&
+            previous.key.topLevel == next.key.topLevel)
+        require(ServiceBookIntegrity.valid(previous) && ServiceBookIntegrity.valid(next) &&
+            next.patronalSelection?.matches(next.key) == true)
+        require(BookReadingCodec.decode(BookReadingCodec.encode(position)) != null)
+        require(previous.chapters.any { it.id == position.chapterId && it.blocks.any { block -> block.id == position.blockId } })
+        val oldJourney = position.journeyContext
+        require(oldJourney?.validatedFor(previous.key, position.parishId) == oldJourney &&
+            journeyContext?.validatedFor(next.key, position.parishId) == journeyContext)
+        require((oldJourney == null) == (journeyContext == null))
+        if (oldJourney != null && journeyContext != null) require(
+            oldJourney.parishId == journeyContext.parishId && oldJourney.civilDate == journeyContext.civilDate &&
+                oldJourney.time == journeyContext.time && oldJourney.title == journeyContext.title &&
+                oldJourney.effectivePartSet == journeyContext.effectivePartSet &&
+                oldJourney.parts.zip(journeyContext.parts).all { (before, after) ->
+                    before.date == after.date && before.worship == after.worship && before.topLevel == after.topLevel
+                })
+        val slot = knownTempleSlot(position, previous, next)
+        val result = if (slot?.second?.kind == BookBlockKind.PRAYER) BookDedicationPosition(position.copy(contentHash = next.contentHash,
+            chapterId = slot.first.id, blockId = slot.second.id, fraction = 0f, followingGapFraction = 0f,
+            anchorKind = BookAnchorKind.BLOCK), BookDedicationMatchKind.KNOWN_HYMN)
+        else rebaseContent(position, previous, next, verifiedLocalSlot = slot?.second,
+            allowUnverifiedLocalIdentity = false)
+        return result.copy(position = result.position.copy(key = next.key, journeyContext = journeyContext))
+    }
+
+    private fun rebaseContent(position: BookReadingPosition, previous: ServiceBook, next: ServiceBook,
+        verifiedLocalSlot: BookBlock? = null, allowUnverifiedLocalIdentity: Boolean = true): BookDedicationPosition {
         val old = previous.blocks.firstOrNull { it.id == position.blockId }
+        // Missing hymn descriptions repeat verbatim. Filling one renumbers the
+        // other, so an old LOCAL_VARIATION ID alone cannot identify its owner.
+        val ignoreLocalIdentity = !allowUnverifiedLocalIdentity && old?.kind == BookBlockKind.LOCAL_VARIATION
+        val exact = verifiedLocalSlot ?: if (ignoreLocalIdentity) null else next.blocks.firstOrNull { it.id == position.blockId }
         val oldChapter = previous.chapters.firstOrNull { old != null && old in it.blocks }
         val sameChapter = next.chapters.firstOrNull { it.id == oldChapter?.id }
         // Correcting a rubric changes its content-derived ID. Match only an unambiguous,
         // verbatim original in the same chapter and altar/public scope, never a similar prayer.
-        val migrated = if (exact == null && old != null && sameChapter != null &&
+        val migrated = if (!ignoreLocalIdentity && exact == null && old != null && sameChapter != null &&
             oldChapter?.blocks?.count { it.original == old.original && it.isAltarText == old.isAltarText } == 1) {
             val whole = sameChapter.blocks.filter { it.original == old.original && it.isAltarText == old.isAltarText }
             val split = sameChapter.blocks.zipWithNext().filter { (rubric, prayer) ->
@@ -116,10 +158,48 @@ object BookPositionUpdate {
         fun visibleText(value: ru.liturgyguide.model.BookBlock) =
             if (textMode == BookReadingMode.RUSSIAN) value.russian ?: value.original else value.original
         val unchanged = old != null && matched != null && visibleText(old) == visibleText(matched)
-        return position.copy(contentHash = next.contentHash, chapterId = chapter.id, blockId = block.id,
+        val rebased = position.copy(contentHash = next.contentHash, chapterId = chapter.id, blockId = block.id,
             fraction = if (unchanged && position.anchorKind == BookAnchorKind.BLOCK) position.fraction else 0f,
             followingGapFraction = if (unchanged && position.anchorKind == BookAnchorKind.BLOCK) position.followingGapFraction else 0f,
             anchorKind = if (matched != null) position.anchorKind else BookAnchorKind.HEADER)
+        return BookDedicationPosition(rebased,
+            if (matched != null) BookDedicationMatchKind.EXACT else BookDedicationMatchKind.SECTION_START)
+    }
+
+    /** Only the two verified temple hymn slots have a safe replacement anchor. */
+    private fun knownTempleSlot(position: BookReadingPosition, previous: ServiceBook,
+        next: ServiceBook): Pair<BookChapter, BookBlock>? {
+        val oldChapter = previous.chapters.singleOrNull { it.id == position.chapterId } ?: return null
+        val oldIndex = oldChapter.blocks.indexOfFirst { it.id == position.blockId }
+        if (oldIndex < 0) return null
+        val old = oldChapter.blocks[oldIndex]
+        if (old.kind != BookBlockKind.LOCAL_VARIATION || old.isAltarText) return null
+        val labels = setOf("тропарь храма", "кондак храма")
+        val labelIndex = oldChapter.blocks.take(oldIndex).indexOfLast {
+            it.kind == BookBlockKind.RUBRIC && !it.isAltarText && BookText.normalized(it.original) in labels
+        }
+        if (labelIndex < 0 || oldChapter.blocks.subList(labelIndex + 1, oldIndex).any {
+                it.kind != BookBlockKind.RUBRIC || it.isAltarText
+            }) return null
+        val label = oldChapter.blocks[labelIndex]
+        val chapter = next.chapters.singleOrNull { it.id == oldChapter.id } ?: return null
+        val selectedLabel = chapter.blocks.singleOrNull { it.id == label.id && it.original == label.original &&
+            it.kind == BookBlockKind.RUBRIC && !it.isAltarText } ?: return null
+        val after = oldChapter.blocks.drop(oldIndex + 1).firstOrNull { candidate ->
+            chapter.blocks.any { it.id == candidate.id }
+        } ?: return null
+        val start = chapter.blocks.indexOf(selectedLabel) + 1
+        val end = chapter.blocks.indexOfFirst { it.id == after.id }
+        if (end <= start) return null
+        val section = chapter.blocks.subList(start, end)
+        if (section.any { it.isAltarText }) return null
+        val material = section.filter { it.kind != BookBlockKind.RUBRIC }
+        val target = when {
+            material.isNotEmpty() && material.all { it.kind == BookBlockKind.PRAYER } -> material.first()
+            material.size == 1 && material.single().kind == BookBlockKind.LOCAL_VARIATION -> material.single()
+            else -> return null
+        }
+        return chapter to target
     }
 }
 
@@ -186,6 +266,18 @@ class BookReadingStore(private val preferences: SharedPreferences) {
             is BookReadingLookup.Found -> if (reading.position.contentHash == position.contentHash) save(position) else false
             BookReadingLookup.Absent -> save(position)
         }
+    }
+
+    /** Explicit return only: an evicted cursor can be restored, never an existing owner's cursor. */
+    fun restoreMissing(book: ServiceBook, position: BookReadingPosition): Boolean = synchronized(preferences) {
+        runCatching {
+            if (position.key != book.key || position.contentHash != book.contentHash || !ServiceBookIntegrity.valid(book) ||
+                book.chapters.none { it.id == position.chapterId && it.blocks.any { block -> block.id == position.blockId } } ||
+                BookReadingCodec.decode(BookReadingCodec.encode(position)) == null ||
+                position.journeyContext?.validatedFor(position.key, position.parishId) != position.journeyContext ||
+                lookup(position.key, position.parishId) != BookReadingLookup.Absent) return@synchronized false
+            save(position)
+        }.getOrDefault(false)
     }
 
     fun acceptVersion(previous: ServiceBook, next: ServiceBook, parishId: String?,

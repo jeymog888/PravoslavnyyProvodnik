@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "sourceManifest": ".local/release11/research/patronal/manifest.json",
+  "contentTypeEvidence": {
+    "observedOn": "2026-11-13",
+    "requestedAndFinalUrl": "https://azbyka.ru/worships/calendar/api/2026-12-04/",
+    "status": 200,
+    "contentType": "text/html; charset=UTF-8",
+    "bodyFormat": "JSON, verified independently from the MIME header",
+    "rawBytes": 11994,
+    "rawSha256": "2f57a400b6640f43a6d5707025f4184b47d16364c3b2a4fc5c43d1f247420fbf"
+  },
+  "projection": {
+    "root": [
+      "events"
+    ],
+    "event": [
+      "id",
+      "title",
+      "minea_id",
+      "church_type"
+    ],
+    "allEventsRetained": true,
+    "valueTypesRetained": true
+  },
+  "fixtures": [
+    {
+      "fixture": "calendar-nicholas-may-2026-05-22.json",
+      "rawUrl": "https://azbyka.ru/worships/calendar/api/2026-05-22/",
+      "rawSha256": "bd73fe248a5f0d018af0010f19f2aca249010d9ca6da1bc89d166b2aac90db52",
+      "rawBytes": 446663,
+      "fixtureSha256": "159673125fb51eecc838d9fd05cc874a9c5c2e361af8f580359a8121c2f16621",
+      "fixtureBytes": 1558,
+      "eventCount": 9,
+      "confirmedEventId": "111300",
+      "mineaId": "11183",
+      "churchType": "34",
+      "calendarDate": "2026-05-22"
+    },
+    {
+      "fixture": "calendar-nicholas-dec-2026-12-19.json",
+      "rawUrl": "https://azbyka.ru/worships/calendar/api/2026-12-19/",
+      "rawSha256": "c3ce123ff076103d3b300b55c7f6626f25ace2b67cc9f233ec5c526440fb5e19",
+      "rawBytes": 257945,
+      "fixtureSha256": "d4bc50ab12afb360107ce6ea91153b03a8c46ccb791af0c00114468015469a84",
+      "fixtureBytes": 233,
+      "eventCount": 1,
+      "confirmedEventId": "129540",
+      "mineaId": "9906",
+      "churchType": "34",
+      "calendarDate": "2026-12-19"
+    },
+    {
+      "fixture": "calendar-trinity-2026-05-31.json",
+      "rawUrl": "https://azbyka.ru/worships/calendar/api/2026-05-31/",
+      "rawSha256": "9680489702d5abc23add3ea202a57ca828136a31c84f4996ac999c827ec79cac",
+      "rawBytes": 142135,
+      "fixtureSha256": "8404d92aa686d86f4b2ac61e6bdf7d788ba1c6f400def1adb1f39eab29495903",
+      "fixtureBytes": 1887,
+      "eventCount": 10,
+      "confirmedEventId": "101360",
+      "mineaId": "9197",
+      "churchType": "10",
+      "calendarDate": "2026-05-31"
+    },
+    {
+      "fixture": "calendar-presentation-2026-02-15.json",
+      "rawUrl": "https://azbyka.ru/worships/calendar/api/2026-02-15/",
+      "rawSha256": "25bb2c34470d705490d210bfc308602c10e31ea9e2e0be116f9b113543cd8d73",
+      "rawBytes": 31048,
+      "fixtureSha256": "922abb8034bff132a772407852d210136fbfc8c9659a49c4adf0c3e1f3f6c641",
+      "fixtureBytes": 656,
+      "eventCount": 3,
+      "confirmedEventId": "104530",
+      "mineaId": "10885",
+      "churchType": "10",
+      "calendarDate": "2026-02-15"
+    },
+    {
+      "fixture": "calendar-elizabeth-2026-07-18.json",
+      "rawUrl": "https://azbyka.ru/worships/calendar/api/2026-07-18/",
+      "rawSha256": "3044503cf8853275296015adae1cb870590216b7845f7d9529721ea174aae511",
+      "rawBytes": 96559,
+      "fixtureSha256": "254267bfcab08f2043cf76d751ab06cca3691a1d0d231e14b6d1b535139b55b5",
+      "fixtureBytes": 1376,
+      "eventCount": 7,
+      "confirmedEventId": "115980",
+      "mineaId": "9369",
+      "churchType": "30",
+      "calendarDate": "2026-07-18"
+    },
+    {
+      "fixture": "calendar-presentation-mary-2026-12-04.json",
+      "rawUrl": "https://azbyka.ru/worships/calendar/api/2026-12-04/",
+      "rawSha256": "2f57a400b6640f43a6d5707025f4184b47d16364c3b2a4fc5c43d1f247420fbf",
+      "rawBytes": 11994,
+      "fixtureSha256": "02ff32e68b09661df93dd693f208c4f6c2cdeeaa7d199a03346c90c74c77cb8f",
+      "fixtureBytes": 272,
+      "eventCount": 1,
+      "confirmedEventId": "128390",
+      "mineaId": "14581",
+      "churchType": "20",
+      "calendarDate": "2026-12-04"
+    }
+  ]
+}
