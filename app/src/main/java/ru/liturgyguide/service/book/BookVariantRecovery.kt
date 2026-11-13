@@ -7,7 +7,7 @@ import ru.liturgyguide.model.ServiceBookKey
 /** A prior edition can be offered after failure, but remains a book under its original key. */
 object BookVariantRecovery {
     fun legacyKey(requested: ServiceBookKey, parish: Parish?): ServiceBookKey? {
-        if (!requested.isValid() || parish == null) return null
+        if (!requested.isValid() || requested.patronalId != null || parish == null) return null
         val classification = ChurchTypeClassifier.classify(parish)
         if (requested.churchType != classification.requestType) return null
         val previousType = ServiceBookSelection.legacyChurchType(parish)

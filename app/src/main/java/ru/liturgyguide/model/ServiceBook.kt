@@ -10,18 +10,20 @@ data class ServiceBookKey(
     val churchType: String = "30",
     val mainEvent: String? = null,
     val secondEvent: String? = null,
-    val topLevel: String? = null
+    val topLevel: String? = null,
+    val patronalId: String? = null
 ) {
     fun isValid(): Boolean = runCatching {
         val parsed = LocalDate.parse(date)
         parsed.toString() == date && parsed.year in 1900..2200 && worship.queryValue.isNotBlank() &&
             churchType in setOf("10", "11", "12", "20", "30", "31", "32", "33", "34", "35") &&
             listOf(mainEvent, secondEvent).all { it == null || it.matches(Regex("[0-9]{0,6}")) } &&
-            (topLevel == null || (topLevel == "3" && worship == WorshipKind.MATINS && mainEvent == null && secondEvent == null))
+            (topLevel == null || (topLevel == "3" && worship == WorshipKind.MATINS && mainEvent == null && secondEvent == null)) &&
+            (patronalId == null || patronalId.matches(Regex("[1-9][0-9]{0,8}")))
     }.getOrDefault(false)
 
     fun canonical(): String = listOf(date, worship.name, churchType, mainEvent ?: "~", secondEvent ?: "~").joinToString("|") +
-        (topLevel?.let { "|top_level=$it" } ?: "")
+        (topLevel?.let { "|top_level=$it" } ?: "") + (patronalId?.let { "|patronal=$it" } ?: "")
 
     fun sourceUrl(): String {
         require(isValid())
@@ -32,6 +34,7 @@ data class ServiceBookKey(
         val values = linkedMapOf("date" to date, "worship" to kind.queryValue, "size" to "full", "church" to churchType)
         mainEvent?.let { values["main_event"] = it }
         secondEvent?.let { values["second_event"] = it }
+        patronalId?.let { values["patronal"] = it }
         return "https://azbyka.ru/worships/?" + values.entries.joinToString("&") {
             "${it.key}=${URLEncoder.encode(it.value, "UTF-8") }"
         }
@@ -61,6 +64,27 @@ data class BookVariantOption(val value: String, val title: String)
 
 /** The actual source selection belongs to this edition, not to the default-intent key. */
 data class BookRankSelection(val mainEvent: String, val secondEvent: String, val topLevel: String)
+
+/** Public calendar evidence for a concrete dedication, kept with the downloaded edition. */
+data class PatronalEventProof(
+    val id: String,
+    val mineaId: String,
+    val calendarDate: String,
+    val title: String,
+    val churchType: String,
+    val sourceUrl: String
+) {
+    fun isValid(): Boolean = runCatching {
+        val date = LocalDate.parse(calendarDate)
+        date.toString() == calendarDate && date.year in 1900..2200 &&
+            id.matches(Regex("[1-9][0-9]{0,8}")) && mineaId.matches(Regex("[1-9][0-9]{0,8}")) &&
+            title.length in 1..500 && title == title.trim() && title.none { it.isISOControl() || it in "<>" } &&
+            churchType in setOf("10", "11", "12", "20", "30", "31", "32", "33", "34", "35") &&
+            sourceUrl == "https://azbyka.ru/worships/calendar/api/$calendarDate/"
+    }.getOrDefault(false)
+
+    fun matches(key: ServiceBookKey): Boolean = isValid() && key.isValid() && id == key.patronalId && churchType == key.churchType
+}
 
 /** Calendar context belongs to a date, not to a parish's choice of service or its order. */
 data class BookCommemoration(val title: String, val description: String?, val sourceUrl: String)
@@ -106,7 +130,8 @@ data class ServiceBook(
     // Null is omitted by Gson, preserving the hash of previously downloaded v0.8 books.
     val calendarDay: BookCalendarDay? = null,
     // Nullable additions leave the serialized form and hash of older books unchanged.
-    val rankSelection: BookRankSelection? = null
+    val rankSelection: BookRankSelection? = null,
+    val patronalSelection: PatronalEventProof? = null
 ) {
     val blocks: List<BookBlock> get() = chapters.flatMap { it.blocks }
     val translatedPrayerCount: Int get() = blocks.count { it.kind in setOf(BookBlockKind.PRAYER, BookBlockKind.SCRIPTURE) && it.russian != null }

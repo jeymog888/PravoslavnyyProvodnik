@@ -5,6 +5,7 @@ import org.jsoup.nodes.Element
 import ru.liturgyguide.model.BookBlockKind
 import ru.liturgyguide.model.BookChapter
 import ru.liturgyguide.model.BookRankSelection
+import ru.liturgyguide.model.PatronalEventProof
 import ru.liturgyguide.model.ServiceBook
 import ru.liturgyguide.model.ServiceBookKey
 import ru.liturgyguide.model.WorshipKind
@@ -26,9 +27,9 @@ internal object MatinsRankSource {
     private val eventId = Regex("[0-9]{1,6}")
     private val optionalEventId = Regex("[0-9]{0,6}")
 
-    fun resolve(document: Document, key: ServiceBookKey): ResolvedMatinsRankRequest {
+    fun resolve(document: Document, key: ServiceBookKey, patronalSelection: PatronalEventProof? = null): ResolvedMatinsRankRequest {
         requireRankedKey(key)
-        validateCommonControls(document, key)
+        validateCommonControls(document, key, patronalSelection)
         val main = selected(document, "bg_worships_mainEvent")
         val id = main.attr("value")
         if (!eventId.matches(id)) invalid("Источник не выбрал основную память")
@@ -44,10 +45,11 @@ internal object MatinsRankSource {
         return ResolvedMatinsRankRequest(key, id)
     }
 
-    fun validate(document: Document, key: ServiceBookKey, request: ResolvedMatinsRankRequest): BookRankSelection {
+    fun validate(document: Document, key: ServiceBookKey, request: ResolvedMatinsRankRequest,
+        patronalSelection: PatronalEventProof? = null): BookRankSelection {
         requireRankedKey(key)
         if (request.key != key) invalid("Выбран другой вариант службы")
-        validateCommonControls(document, key)
+        validateCommonControls(document, key, patronalSelection)
         val main = selected(document, "bg_worships_mainEvent")
         val second = selected(document, "bg_worships_secondEvent")
         if (main.attr("value") != request.mainEvent) invalid("Источник вернул другую основную память")
@@ -91,7 +93,7 @@ internal object MatinsRankSource {
         if (!key.isValid() || key.topLevel != "3") invalid("Неизвестный полиелейный вариант")
     }
 
-    private fun validateCommonControls(document: Document, key: ServiceBookKey) {
+    private fun validateCommonControls(document: Document, key: ServiceBookKey, patronalSelection: PatronalEventProof?) {
         val date = document.select("#bg_worships_setDay").singleOrNull()
             ?: invalid("Источник не указал единственную дату")
         if (date.tagName() != "input" || date.attr("type") != "date" || date.attr("value") != key.date)
@@ -100,22 +102,10 @@ internal object MatinsRankSource {
             invalid("Источник вернул другой вид службы")
         if (selected(document, "bg_worship_size").attr("value") != "full")
             invalid("Источник вернул сокращенный текст")
-        if (selected(document, "bg_worships_church").attr("value") != key.churchType)
-            invalid("Источник вернул другой вариант храма")
+        PatronalSourceSelection.validate(document, key, patronalSelection, strictLegacy = true)
     }
 
-    private fun selected(document: Document, id: String): Element {
-        val control = document.select("#$id").singleOrNull()
-            ?: invalid("Источник вернул неоднозначные параметры службы")
-        if (control.tagName() != "select") invalid("Источник вернул неизвестный параметр службы")
-        val option = control.select("option[selected]").singleOrNull()
-            ?: invalid("Источник не подтвердил выбранный параметр службы")
-        val parent = option.parent()
-        if (parent !== control && !(parent?.tagName() == "optgroup" && parent.parent() === control))
-            invalid("Выбранный параметр не относится к своему полю")
-        if (!option.hasAttr("value")) invalid("Источник не указал значение выбранного параметра")
-        return option
-    }
+    private fun selected(document: Document, id: String): Element = PatronalSourceSelection.strictSelected(document, id)
 
     private fun invalid(message: String): Nothing = throw InvalidServiceBook(message)
 }

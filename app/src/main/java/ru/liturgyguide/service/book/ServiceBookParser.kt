@@ -16,12 +16,13 @@ class ServiceBookParser {
         fetchedAtMillis: Long,
         translations: BookTranslationIndex = BookTranslationIndex.empty(),
         scripture: BookScripture = BookScripture.empty(),
-        rankRequest: ResolvedMatinsRankRequest? = null
+        rankRequest: ResolvedMatinsRankRequest? = null,
+        patronalSelection: PatronalEventProof? = null
     ): ServiceBook {
         if (!key.isValid() || key.worship == WorshipKind.VIGIL) throw InvalidServiceBook("Неизвестная служба")
         val rankSelection = if (key.topLevel != null) {
             val resolved = rankRequest ?: throw InvalidServiceBook("Не определена основная память полиелейного варианта")
-            MatinsRankSource.validate(document, key, resolved)
+            MatinsRankSource.validate(document, key, resolved, patronalSelection)
         } else {
             if (rankRequest != null) throw InvalidServiceBook("Полиелейный вариант не относится к выбранной книге")
             null
@@ -32,8 +33,7 @@ class ServiceBookParser {
             throw InvalidServiceBook("Источник вернул другой вид службы")
         if (selected(document, "bg_worship_size")?.attr("value") != "full")
             throw InvalidServiceBook("Источник вернул сокращенный текст")
-        if (selected(document, "bg_worships_church")?.attr("value") != key.churchType)
-            throw InvalidServiceBook("Источник вернул другой вариант храма")
+        PatronalSourceSelection.validate(document, key, patronalSelection)
         if (key.mainEvent != null && selected(document, "bg_worships_mainEvent")?.attr("value") != key.mainEvent)
             throw InvalidServiceBook("Источник вернул другой праздник")
         if (key.secondEvent != null && selected(document, "bg_worships_secondEvent")?.attr("value") != key.secondEvent)
@@ -195,7 +195,7 @@ class ServiceBookParser {
             sourceTitle = "Азбука веры: Богослужения сегодня", fetchedAtMillis = fetchedAtMillis,
             selectedEventTitle = eventTitle, chapters = chapters, contentHash = "", notices = notices, sources = sources,
             mainEventOptions = options(document, "bg_worships_mainEvent"), secondEventOptions = options(document, "bg_worships_secondEvent"),
-            rankSelection = rankSelection)
+            rankSelection = rankSelection, patronalSelection = patronalSelection)
         if (rankSelection != null && !MatinsRankSource.validBook(book))
             throw InvalidServiceBook("Источник не вернул полный полиелейный порядок")
         return book.copy(contentHash = ServiceBookIntegrity.contentHash(book))

@@ -26,6 +26,7 @@ object ServiceBookIntegrity {
         require(book.notices.size <= 30 && book.notices.all { it.length <= 2_000 })
         require(book.calendarDay == null || PublishedCalendarSupplements.valid(book.calendarDay, book.key.date))
         require(MatinsRankSource.validBook(book))
+        require(PatronalSourceSelection.validBook(book))
         require(book.contentHash.matches(Regex("[a-f0-9]{64}")) && book.contentHash == contentHash(book))
         true
     }.getOrDefault(false)

@@ -35,7 +35,7 @@ data class BookJourneyContext(
             parts.all { it.isValid() && it.date == date.plusDays(1).toString() } &&
             // Old daily journeys keep their accepted keys even when the publication named polyeleos.
             (parts[1].topLevel == null || !isEveningTexts && ServiceBookSelection.isPolyeleosMatins(title)) &&
-            parts[0].churchType == parts[1].churchType && key in parts
+            parts[0].churchType == parts[1].churchType && parts[0].patronalId == parts[1].patronalId && key in parts
         takeIf { valid }
     }.getOrNull()
 
@@ -43,7 +43,7 @@ data class BookJourneyContext(
     fun replacePart(previous: ServiceBookKey, next: ServiceBookKey): BookJourneyContext? {
         if (validatedFor(previous, parishId) == null || !next.isValid() ||
             previous.date != next.date || previous.worship != next.worship || previous.churchType != next.churchType ||
-            previous.topLevel != next.topLevel) return null
+            previous.topLevel != next.topLevel || previous.patronalId != next.patronalId) return null
         return copy(parts = parts.map { if (it == previous) next else it }).validatedFor(next, parishId)
     }
 }
@@ -68,6 +68,9 @@ data class BookRoute(
     }.getOrNull()
 
     fun withVariant(key: ServiceBookKey, savedCurrentPart: Boolean): BookRoute? {
+        // A dedication changes the whole source context, even before a cursor is
+        // available. It cannot use this daily-variant shortcut to drop the journey.
+        if (activeKey.patronalId != key.patronalId) return null
         val changed = journeyContext?.replacePart(activeKey, key)
         if (savedCurrentPart && journeyContext != null && changed == null) return null
         return copy(activeKey = key, journeyContext = changed,
@@ -102,7 +105,7 @@ data class BookRoute(
 
     private fun samePart(first: ServiceBookKey, second: ServiceBookKey) =
         first.date == second.date && first.worship == second.worship && first.churchType == second.churchType &&
-            first.topLevel == second.topLevel
+            first.topLevel == second.topLevel && first.patronalId == second.patronalId
 }
 
 internal object BookJourneyCodec {
@@ -148,7 +151,7 @@ object BookRouteCodec {
         val hit = target.getAsJsonObject("hit")
         string(target.get("contentHash")) && listOf("date", "worship", "churchType").all { string(key.get(it)) } &&
             WorshipKind.entries.any { it.name == key.get("worship").asString } &&
-            listOf("mainEvent", "secondEvent", "topLevel").all { key.get(it).let { value -> value == null || value.isJsonNull || string(value) } } &&
+            listOf("mainEvent", "secondEvent", "topLevel", "patronalId").all { key.get(it).let { value -> value == null || value.isJsonNull || string(value) } } &&
             listOf("chapterId", "chapterTitle", "blockId", "excerpt", "mode").all { string(hit.get(it)) } &&
             BookReadingMode.entries.any { it != BookReadingMode.MEANING && it.name == hit.get("mode").asString } &&
             listOf("matchStart", "matchEndExclusive").all {

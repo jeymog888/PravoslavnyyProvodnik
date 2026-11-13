@@ -46,7 +46,8 @@ class ServiceBookRepository(
     private val translations: BookTranslationIndex = BookTranslationIndex.empty(),
     private val clock: Clock = Clock.systemUTC(),
     private val downloadRussian: Boolean = true,
-    private val calendar: CalendarSupplements? = null
+    private val calendar: CalendarSupplements? = null,
+    private val patronalProofs: PatronalProofs = PatronalProofs { null }
 ) : ServiceBooks {
     private val mutex = Mutex()
     private val parser = ServiceBookParser()
@@ -164,14 +165,20 @@ class ServiceBookRepository(
         backgroundJob.get()?.cancel()
         try { return mutex.withLock {
             if (force) backgroundAttemptAt.clear()
-            val previous = withContext(Dispatchers.IO) { cache.read(key) }
+            val previous = withContext(Dispatchers.IO) { cache.read(key)?.takeIf {
+                key.patronalId == null || it.key == key && ServiceBookIntegrity.valid(it)
+            } }
             if (previous != null && !force) return@withLock BookLoadResult.Ready(previous, fromCache = true, warning = BookWarnings.supplementWarning(previous))
             try {
                 val russianSession = RussianLoadSession(force)
-                if (key.worship == WorshipKind.VIGIL) loadVigil(key, force, russianSession, onProgress)
-                else fetchBook(key, russianSession, onProgress)
+                val patronalSelection = resolvePatronalSelection(key, previous)
+                if (key.worship == WorshipKind.VIGIL) loadVigil(key, force, russianSession, onProgress, patronalSelection)
+                else fetchBook(key, russianSession, onProgress, patronalSelection)
             } catch (cancelled: CancellationException) {
                 throw cancelled
+            } catch (_: UnconfirmedPatronalSelection) {
+                BookLoadResult.Failed(BookFailure.INVALID_SOURCE,
+                    "Источник не подтвердил выбранное посвящение храма. Проверьте выбор или попробуйте еще раз", previous)
             } catch (_: UnsupportedMatinsRank) {
                 BookLoadResult.Failed(BookFailure.INVALID_SOURCE,
                     "Источник предлагает другой праздничный порядок на эту дату. Полиелейный вариант пока не подтвержден. Вернитесь к выбору службы", previous)
@@ -194,20 +201,37 @@ class ServiceBookRepository(
         var corpus: BookTranslationCorpus? = null
     )
 
-    private suspend fun fetchBook(key: ServiceBookKey, russianSession: RussianLoadSession, progress: (BookLoadProgress) -> Unit): BookLoadResult.Ready {
+    private data class RussianBookTexts(val main: BookTranslationIndex, val status: BookSupplementStatus,
+        val patronal: BookTranslationIndex = BookTranslationIndex.empty())
+
+    private suspend fun resolvePatronalSelection(key: ServiceBookKey, previous: ServiceBook?): PatronalEventProof? {
+        val id = key.patronalId ?: return null
+        return withContext(Dispatchers.IO) {
+            val selected = safely { patronalProofs.find(id) }?.takeIf { it.matches(key) }
+            selected ?: sequenceOf(previous).plus(if (key.worship == WorshipKind.VIGIL)
+                listOf(WorshipKind.VESPERS, WorshipKind.MATINS, WorshipKind.HOUR1).asSequence().map { cache.read(key.copy(worship = it)) }
+                else emptySequence()).filterNotNull().firstNotNullOfOrNull { saved ->
+                    saved.takeIf { ServiceBookIntegrity.valid(it) && it.key.patronalId == id && it.key.churchType == key.churchType }
+                        ?.patronalSelection?.takeIf { it.matches(key) }
+                } ?: PatronalSourceSelection.reject()
+        }
+    }
+
+    private suspend fun fetchBook(key: ServiceBookKey, russianSession: RussianLoadSession, progress: (BookLoadProgress) -> Unit,
+        patronalSelection: PatronalEventProof?): BookLoadResult.Ready {
         progress(BookLoadProgress.SOURCE)
         val rankRequest = if (key.topLevel == null) null else {
-            val preflight = transport.fetch(key.copy(topLevel = null).sourceUrl()).html()
-                ?: throw InvalidServiceBook("Источник вернул не страницу службы")
+            val preflight = fetchSourcePage(key.copy(topLevel = null).sourceUrl(), key)
             currentCoroutineContext().ensureActive()
-            withContext(Dispatchers.Default) { MatinsRankSource.resolve(preflight, key) }
+            withContext(Dispatchers.Default) { MatinsRankSource.resolve(preflight, key, patronalSelection) }
         }
         currentCoroutineContext().ensureActive()
-        val page = transport.fetch(rankRequest?.url ?: key.sourceUrl()).html()
-            ?: throw InvalidServiceBook("Источник вернул не страницу службы")
+        val page = fetchSourcePage(rankRequest?.url ?: key.sourceUrl(), key)
         currentCoroutineContext().ensureActive()
         // Validate completeness before extra requests and before touching any cache.
-        val plainBook = withContext(Dispatchers.Default) { parser.parse(page, key, clock.millis(), translations, rankRequest = rankRequest) }
+        val plainBook = withContext(Dispatchers.Default) {
+            parser.parse(page, key, clock.millis(), translations, rankRequest = rankRequest, patronalSelection = patronalSelection)
+        }
         val hasScripture = plainBook.blocks.any { it.kind == BookBlockKind.SCRIPTURE && it.scriptureReferences.isNotEmpty() }
         val extras = coroutineScope {
             val verses = async {
@@ -221,15 +245,19 @@ class ServiceBookRepository(
                 }
             }
             val russian = async {
-                if (!downloadRussian) BookTranslationIndex.empty() to BookSupplementStatus.NOT_REQUESTED
+                if (!downloadRussian) RussianBookTexts(BookTranslationIndex.empty(), BookSupplementStatus.NOT_REQUESTED)
                 else {
                     val common = loadRussianCorpus(key.worship, russianSession, progress)
                     val daily = loadDailyRussian(key.date, russianSession, progress)
+                    val patronal = patronalSelection?.takeIf { it.calendarDate != key.date }
+                        ?.let { loadDailyRussian(it.calendarDate, russianSession, progress) }
                     // A shared cache may already include other orders. Keep dated HTML/API
                     // ahead of these optional pages, both on cold and subsequent liturgy loads.
                     val primary = if (key.worship == WorshipKind.LITURGY)
                         common.first.fromSources(BookTranslationIndex.PARALLEL_SOURCES) else common.first
-                    primary.plus(daily.first) to combineStatus(listOf(common.second, daily.second))
+                    RussianBookTexts(primary.plus(daily.first),
+                        combineStatus(listOfNotNull(common.second, daily.second, patronal?.second)),
+                        patronal?.first ?: BookTranslationIndex.empty())
                 }
             }
             // The two primary sources own the bounded transport first. Optional context must
@@ -242,8 +270,12 @@ class ServiceBookRepository(
             Triple(scripture, russianText, russianSession.calendars[key.date])
         }
         val parsed = withContext(Dispatchers.Default) {
-            val exactPairs = extras.second.first.plus(extras.third?.translations ?: BookTranslationIndex.empty()).plus(translations)
-            parser.parse(page, key, plainBook.fetchedAtMillis, exactPairs, extras.first ?: BookScripture.empty(), rankRequest)
+            // The service day's HTML/API pairs retain their priority. A different
+            // dedication date only fills exact missing originals; it is not today's calendar.
+            val exactPairs = extras.second.main.plus(extras.third?.translations ?: BookTranslationIndex.empty())
+                .plus(extras.second.patronal).plus(translations)
+            parser.parse(page, key, plainBook.fetchedAtMillis, exactPairs, extras.first ?: BookScripture.empty(), rankRequest,
+                patronalSelection)
         }
         // An unsuccessful refresh of a supplement must not erase an exact, previously
         // verified translation. Original text and Scripture reference must still agree.
@@ -269,13 +301,22 @@ class ServiceBookRepository(
         val book = parsed.copy(chapters = chapters, calendarDay = day,
             sources = (parsed.sources + chapters.flatMap { it.blocks }.mapNotNull { it.translationSource } +
                 listOfNotNull(day?.let { BookSource("Азбука веры · церковный день", it.sourceUrl) })).distinct(),
-            enrichment = BookEnrichment(extras.second.second, scriptureStatus)).let {
+            enrichment = BookEnrichment(extras.second.status, scriptureStatus)).let {
             it.copy(contentHash = ServiceBookIntegrity.contentHash(it))
         }
         val withShared = if (key.worship == WorshipKind.LITURGY) withContext(Dispatchers.Default) {
             russianSession.corpus?.index?.let { SavedBookEnrichment.apply(book, it) } ?: book
         } else book
         return save(withShared, progress)
+    }
+
+    private suspend fun fetchSourcePage(url: String, key: ServiceBookKey): org.jsoup.nodes.Document {
+        val response = transport.fetch(url)
+        currentCoroutineContext().ensureActive()
+        // A dedication's provenance must name the response actually verified, not
+        // a request silently redirected to another source selection or origin.
+        if (key.patronalId != null && response.url != url) PatronalSourceSelection.reject()
+        return response.html() ?: throw InvalidServiceBook("Источник вернул не страницу службы")
     }
 
     private suspend fun loadRussianCorpus(worship: WorshipKind, session: RussianLoadSession,
@@ -344,12 +385,16 @@ class ServiceBookRepository(
     }
 
     private suspend fun loadVigil(key: ServiceBookKey, force: Boolean, russianSession: RussianLoadSession,
-        progress: (BookLoadProgress) -> Unit): BookLoadResult.Ready {
+        progress: (BookLoadProgress) -> Unit, patronalSelection: PatronalEventProof?): BookLoadResult.Ready {
         val parts = mutableListOf<ServiceBook>()
         for (kind in listOf(WorshipKind.VESPERS, WorshipKind.MATINS, WorshipKind.HOUR1)) {
             val partKey = key.copy(worship = kind)
-            val saved = if (force) null else withContext(Dispatchers.IO) { cache.read(partKey) }
-            parts += saved ?: fetchBook(partKey, russianSession, progress).book
+            val saved = if (force) null else withContext(Dispatchers.IO) {
+                cache.read(partKey)?.takeIf {
+                    it.key == partKey && ServiceBookIntegrity.valid(it) && it.patronalSelection == patronalSelection
+                }
+            }
+            parts += saved ?: fetchBook(partKey, russianSession, progress, patronalSelection).book
         }
         val chapters = parts.flatMap { part -> part.chapters.mapIndexed { index, chapter ->
             if (index == 0) chapter.copy(title = "${part.title} · ${chapter.title}") else chapter
@@ -361,7 +406,7 @@ class ServiceBookRepository(
                 parts.flatMap { it.notices }).distinct(), sources = parts.flatMap { it.sources }.distinct(),
             mainEventOptions = parts.first().mainEventOptions, secondEventOptions = parts.first().secondEventOptions,
             enrichment = BookEnrichment(combineStatus(parts.map { it.enrichment.russian }), combineStatus(parts.map { it.enrichment.scripture })),
-            calendarDay = parts.firstNotNullOfOrNull { it.calendarDay })
+            calendarDay = parts.firstNotNullOfOrNull { it.calendarDay }, patronalSelection = patronalSelection)
         return save(preliminary.copy(contentHash = ServiceBookIntegrity.contentHash(preliminary)), progress)
     }
 

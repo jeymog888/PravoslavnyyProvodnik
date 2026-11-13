@@ -73,7 +73,7 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
             context.effectivePartSet != expected.effectivePartSet ||
             context.parts.zip(expected.parts).any { (saved, pending) ->
                 saved.date != pending.date || saved.worship != pending.worship || saved.churchType != pending.churchType ||
-                    saved.topLevel != pending.topLevel
+                    saved.topLevel != pending.topLevel || saved.patronalId != pending.patronalId
             }) return@withContext null
         val book = books.cachedVersion(candidate.activeKey, position.contentHash) ?: return@withContext null
         if (book.key != candidate.activeKey || book.contentHash != position.contentHash) return@withContext null
