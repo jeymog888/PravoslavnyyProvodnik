@@ -345,13 +345,14 @@ data class BookSearchHit(val chapterId: String, val chapterTitle: String, val bl
 object BookSearch {
     fun find(book: ServiceBook, query: String, preferredMode: BookReadingMode = BookReadingMode.RUSSIAN,
         checkActive: () -> Unit = {}): List<BookSearchHit> =
-        scan(book, query, preferredMode, checkActive).sortedBy { it.first.ordinal }.map { it.second }
+        scan(book, query, preferredMode, checkActive).sortedBy { it.first.ordinal }.map { it.third }
 
     /** Source-order matches retain their quality for one global sort across related books. */
     internal fun scan(book: ServiceBook, query: String, preferredMode: BookReadingMode,
-        checkActive: () -> Unit): List<Pair<BookTextMatchKind, BookSearchHit>> {
+        checkActive: () -> Unit): List<Triple<BookTextMatchKind, Boolean, BookSearchHit>> {
         if (BookText.normalized(query).length < 2) return emptyList()
-        val candidates = mutableListOf<Pair<BookTextMatchKind, BookSearchHit>>()
+        val candidates = mutableListOf<Triple<BookTextMatchKind, Boolean, BookSearchHit>>()
+        val visibility = BookVisibilityScope.of(book)
         for (chapter in book.chapters) for (index in chapter.blocks.indices) {
             checkActive()
             val block = chapter.blocks[index]
@@ -363,8 +364,8 @@ object BookSearch {
             val match = (if (inRussian) russian else original) ?: continue
             val mode = if (inRussian) BookReadingMode.RUSSIAN else BookReadingMode.ORIGINAL
             val text = if (inRussian) russianText.orEmpty() else block.original
-            candidates += match.kind to BookSearchHit(chapter.id, chapter.title, block.id,
-                contextualExcerpt(book.key, chapter, index, text, match.start, mode), mode, match.start, match.endExclusive)
+            candidates += Triple(match.kind, visibility.isPrivate(block), BookSearchHit(chapter.id, chapter.title, block.id,
+                contextualExcerpt(book.key, chapter, index, text, match.start, mode, visibility), mode, match.start, match.endExclusive))
         }
         // A common response can occur more than thirty times. Keep later occurrences
         // accessible, and do not let early unordered words hide a later exact phrase.
@@ -373,13 +374,13 @@ object BookSearch {
     }
 
     private fun contextualExcerpt(key: ServiceBookKey, chapter: BookChapter, index: Int, text: String, matchStart: Int,
-        mode: BookReadingMode): String {
+        mode: BookReadingMode, visibility: BookVisibilityScope): String {
         if (text.length > 100) return excerpt(text, matchStart)
         val current = BookText.normalized(text)
         // Nearby context only, with bounded work even for thousands of identical responses.
         for (previousIndex in index - 1 downTo (index - 8).coerceAtLeast(0)) {
             val previous = chapter.blocks[previousIndex]
-            if (previous.isAltarText || !BookBlockPresentation.isSpoken(key, previous)) continue
+            if (visibility.isPrivate(previous) || !BookBlockPresentation.isSpoken(key, previous)) continue
             // Do not borrow an older translated petition across an untranslated one.
             val source = (if (mode == BookReadingMode.RUSSIAN)
                 BookBlockPresentation.effectiveRussian(key, previous) else previous.original) ?: break

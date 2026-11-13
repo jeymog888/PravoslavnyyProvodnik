@@ -81,7 +81,8 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-private data class BookPageItem(val id: String, val chapter: BookChapter, val block: BookBlock?)
+private data class BookPageItem(val id: String, val chapter: BookChapter, val block: BookBlock?,
+    val quietGroup: BookQuietPrayerGroup? = null)
 private data class BookSearchLine(val hit: BookSearchHit, val offset: Int)
 private data class BookSearchResult(val bookKey: ServiceBookKey, val bookHash: String, val query: String,
     val mode: BookReadingMode, val corpus: List<Pair<ServiceBookKey, String>>, val hits: List<BookLocatedSearchHit>)
@@ -108,6 +109,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     val polyeleosBook = book.key.topLevel == "3" && book.rankSelection?.topLevel == "3"
     val uncheckedPolyeleosJourney = book.key.worship == WorshipKind.MATINS && book.key.topLevel == null &&
         journey?.let { ServiceBookSelection.isPolyeleosMatins(it.title) } == true
+    val visibility = remember(book.key, book.contentHash) { BookVisibilityScope.of(book) }
     val initial = remember(book.contentHash, parishId) { readingStore.restore(book, parishId) }
     val initialSearch = remember(book.contentHash, parishId) { pendingSearchTarget?.validatedFor(book) }
     var targetUnresolved by remember { mutableStateOf(pendingSearchTarget != null) }
@@ -131,8 +133,11 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     var searchLine by remember { mutableStateOf<BookSearchLine?>(null) }
     var wordsPerMinute by rememberSaveable(book.contentHash) { mutableIntStateOf(initial?.wordsPerMinute ?: BookAutoScroll.DEFAULT_RATE) }
     var showAltar by rememberSaveable(book.contentHash, initialSearch?.identity) {
-        mutableStateOf(initial?.showAltar == true || initialSearch?.let { target -> book.blocks.singleOrNull { it.id == target.hit.blockId }?.isAltarText } == true)
+        mutableStateOf(initial?.showAltar == true || initial?.blockId?.let(visibility::isQuiet) == true ||
+            initialSearch?.let { target -> book.blocks.singleOrNull { it.id == target.hit.blockId }?.let(visibility::isPrivate) } == true)
     }
+    fun visible(block: BookBlock) = visibility.isVisible(block, showAltar)
+    fun firstVisible(chapter: BookChapter) = visibility.firstVisible(chapter, showAltar)
     var playing by remember { mutableStateOf(false) }
     var sheet by remember { mutableStateOf<String?>(null) }
     var microphoneFirst by remember { mutableStateOf(false) }
@@ -155,9 +160,9 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     var dedicationReturning by remember { mutableStateOf(false) }
     val dedicationReturnWork = remember { BookDedicationReturnWork() }
     val dedicationEntryId = remember(book.contentHash, book.patronalSelection) {
-        book.blocks.firstOrNull { !it.isAltarText && it.kind == BookBlockKind.LOCAL_VARIATION }?.id
+        book.blocks.firstOrNull { !visibility.isPrivate(it) && it.kind == BookBlockKind.LOCAL_VARIATION }?.id
             ?: if (book.patronalSelection == null) book.blocks.firstOrNull {
-                !it.isAltarText && BookText.normalized(it.original) == "тропарь храма"
+                !visibility.isPrivate(it) && BookText.normalized(it.original) == "тропарь храма"
             }?.id else null
     }
     LaunchedEffect(dedicationOwner) {
@@ -175,14 +180,20 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val view = LocalView.current
     val items = remember(book.contentHash, showAltar, mode) {
-        book.chapters.filter { chapter -> mode == BookReadingMode.MEANING || showAltar || chapter.blocks.any { !it.isAltarText } }.flatMap { chapter ->
-            listOf(BookPageItem("chapter:${chapter.id}", chapter, null)) +
-                if (mode == BookReadingMode.MEANING) emptyList() else chapter.blocks.filter { showAltar || !it.isAltarText }
-                    .map { BookPageItem(it.id, chapter, it) }
+        book.chapters.filter { chapter -> mode == BookReadingMode.MEANING || chapter.blocks.any(::visible) }.flatMap { chapter ->
+            buildList {
+                add(BookPageItem("chapter:${chapter.id}", chapter, null))
+                if (mode != BookReadingMode.MEANING) for (block in chapter.blocks) {
+                    if (visible(block)) add(BookPageItem(block.id, chapter, block))
+                    visibility.quietGroup?.takeIf { it.introductionId == block.id }?.let { group ->
+                        add(BookPageItem("quiet:${group.introductionId}", chapter, block, group))
+                    }
+                }
+            }
         }
     }
     val spokenWords = remember(items, mode, book.key) {
-        items.associate { item -> item.id to item.block?.let { block ->
+        items.associate { item -> item.id to item.block?.takeIf { item.quietGroup == null && visible(it) }?.let { block ->
             BookBlockPresentation.spokenText(book.key, block, mode)?.let(BookAutoScroll::wordCount)
         } }
     }
@@ -211,14 +222,18 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         // visible. Recover that semantic anchor from the next item's positive offset.
         if (measured.offset in 1..itemSpacingPx && index > 0) {
             val preceding = items.getOrNull(index - 1) ?: return null
-            val blockId = preceding.block?.id ?: preceding.chapter.blocks.firstOrNull { showAltar || !it.isAltarText }?.id
+            if (preceding.quietGroup != null) return BookViewport(preceding.chapter.id,
+                preceding.quietGroup.introductionId, 0f, BookAnchorKind.BLOCK)
+            val blockId = preceding.block?.id ?: firstVisible(preceding.chapter)?.id
                 ?: preceding.chapter.blocks.first().id
             return BookViewport(preceding.chapter.id, blockId, 1f,
                 if (preceding.block == null) BookAnchorKind.HEADER else BookAnchorKind.BLOCK,
                 ((itemSpacingPx - measured.offset).toFloat() / itemSpacingPx).coerceIn(0f, 1f))
         }
+        if (visible.quietGroup != null) return BookViewport(visible.chapter.id,
+            visible.quietGroup.introductionId, 0f, BookAnchorKind.BLOCK)
         val kind = when { measured.key == endKey -> BookAnchorKind.END; visible.block == null -> BookAnchorKind.HEADER; else -> BookAnchorKind.BLOCK }
-        val blockId = visible.block?.id ?: visible.chapter.blocks.firstOrNull { showAltar || !it.isAltarText }?.id ?: visible.chapter.blocks.first().id
+        val blockId = visible.block?.id ?: firstVisible(visible.chapter)?.id ?: visible.chapter.blocks.first().id
         val fraction = (-measured.offset.toFloat() / measured.size).coerceIn(0f, 1f)
         val gap = if (kind == BookAnchorKind.END) 0f else
             ((-measured.offset - measured.size).toFloat() / itemSpacingPx).coerceIn(0f, 1f)
@@ -241,14 +256,14 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         if (mode != BookReadingMode.MEANING && hiddenAnchor) {
             val oldIndex = book.chapters.indexOfFirst { it.id == anchor.chapterId }.coerceAtLeast(0)
             val chapter = items.firstOrNull { item -> book.chapters.indexOf(item.chapter) >= oldIndex }?.chapter ?: items.last().chapter
-            cursor.seek(chapter.id, chapter.blocks.firstOrNull { showAltar || !it.isAltarText }?.id ?: chapter.blocks.first().id,
+            cursor.seek(chapter.id, firstVisible(chapter)?.id ?: chapter.blocks.first().id,
                 BookAnchorKind.HEADER)
             anchor = cursor.value
         }
         val index = when {
             mode == BookReadingMode.MEANING || anchor.anchorKind == BookAnchorKind.HEADER -> items.indexOfFirst { it.chapter.id == anchor.chapterId }
             anchor.anchorKind == BookAnchorKind.END -> items.size
-            else -> items.indexOfFirst { it.block?.id == anchor.blockId }.takeIf { it >= 0 }
+            else -> items.indexOfFirst { it.quietGroup == null && it.block?.id == anchor.blockId }.takeIf { it >= 0 }
                 ?: items.indexOfFirst { it.chapter.id == anchor.chapterId }
         }.coerceAtLeast(0)
         val targetKey = if (index == items.size) endKey else "${layoutPrefix}page:${items[index].id}"
@@ -419,6 +434,43 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         if (value != BookReadingMode.MEANING) lastTextMode = value
         mode = value
     }
+    fun changePrivateVisibility(nextAltar: Boolean) {
+        if (switchingPart || superseded || !cancelPendingTarget()) return
+        playing = false
+        scope.launch {
+            val pendingPosition = if (positioning) position() else null
+            positioningOwner.job?.cancel()
+            list.stopScroll()
+            currentCoroutineContext().ensureActive()
+            if (switchingPart || superseded) return@launch
+            val current = pendingPosition ?: position()
+            val currentBlock = book.blocks.singleOrNull { it.id == current.blockId }
+            var target = current.copy(showAltar = nextAltar)
+            if (current.anchorKind != BookAnchorKind.END && currentBlock != null &&
+                !visibility.isVisible(currentBlock, nextAltar)) {
+                val group = visibility.quietGroup?.takeIf { current.blockId in it.blockIds }
+                if (group != null) target = target.copy(chapterId = group.chapterId, blockId = group.introductionId,
+                    fraction = 0f, followingGapFraction = 0f, anchorKind = BookAnchorKind.BLOCK)
+                else {
+                    val oldIndex = book.chapters.indexOfFirst { it.id == current.chapterId }.coerceAtLeast(0)
+                    val chapter = book.chapters.drop(oldIndex).firstOrNull { visibility.firstVisible(it, nextAltar) != null }
+                        ?: book.chapters.lastOrNull { visibility.firstVisible(it, nextAltar) != null }
+                        ?: return@launch
+                    target = target.copy(chapterId = chapter.id,
+                        blockId = requireNotNull(visibility.firstVisible(chapter, nextAltar)).id,
+                        fraction = 0f, followingGapFraction = 0f, anchorKind = BookAnchorKind.HEADER)
+                }
+            }
+            if (isSaved && !readingStore.saveReading(target)) { saveError = true; return@launch }
+            if (target.blockId != current.blockId || target.anchorKind != current.anchorKind)
+                cursor.seek(target.chapterId, target.blockId, target.anchorKind, target.fraction)
+            pendingSearch = null
+            searchLine = null
+            positioning = true
+            showAltar = nextAltar
+            seekRevision++
+        }
+    }
     fun openSearch(useMicrophone: Boolean) { playing = false; microphoneFirst = useMicrophone; sheet = "search" }
     fun openCalendar() {
         playing = false
@@ -518,7 +570,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         searchLine = null
         if (next == null) cursor.seek(current.chapter.id, requireNotNull(current.block).id, BookAnchorKind.END)
         else {
-            val blockId = next.block?.id ?: next.chapter.blocks.firstOrNull { showAltar || !it.isAltarText }?.id
+            val blockId = next.block?.id ?: firstVisible(next.chapter)?.id
                 ?: next.chapter.blocks.first().id
             cursor.seek(next.chapter.id, blockId, if (next.block == null) BookAnchorKind.HEADER else BookAnchorKind.BLOCK)
         }
@@ -569,13 +621,14 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         if (located.bookKey == book.key) {
             val hit = located.validatedFor(book)?.hit ?: return
             if (!cancelPendingTarget()) return
+            playing = false
             positioning = true
             cursor.seek(hit.chapterId, hit.blockId)
             searchLine = null
             pendingSearch = hit
             mode = hit.mode
             lastTextMode = hit.mode
-            if (book.blocks.singleOrNull { it.id == hit.blockId }?.isAltarText == true) showAltar = true
+            if (book.blocks.singleOrNull { it.id == hit.blockId }?.let(visibility::isPrivate) == true) showAltar = true
             sheet = null
             seekRevision++
             return
@@ -729,7 +782,20 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 items(items, key = { "${layoutPrefix}page:${it.id}" }) { item ->
                     // Keep the top inset inside the header: LazyColumn's leading content
                     // padding would reveal a clipped tail of the previous prayer after a jump.
-                    if (item.block == null) Column(Modifier.fillMaxWidth().padding(
+                    if (item.quietGroup != null) {
+                        val expanded = showAltar
+                        OutlinedCard(Modifier.fillMaxWidth().testTag("book_quiet_group")) {
+                            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Text(item.quietGroup.title, style = MaterialTheme.typography.titleMedium)
+                                Text(item.quietGroup.explanation, style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                OutlinedButton(onClick = { changePrivateVisibility(!expanded) },
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_quiet_toggle")) {
+                                    Text(if (expanded) "Свернуть тихие и алтарные тексты" else "Показать тихие и алтарные тексты")
+                                }
+                            }
+                        }
+                    } else if (item.block == null) Column(Modifier.fillMaxWidth().padding(
                         top = if (item.chapter.id == items.first().chapter.id && !compactIntro) 28.dp else 12.dp, bottom = 4.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         if (item.chapter.id == items.first().chapter.id) {
@@ -811,8 +877,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                     OutlinedButton(onClick = {
                         if (!cancelPendingTarget()) return@OutlinedButton
                         pendingSearch = null
-                        cursor.seek(chapter.id, chapter.blocks.firstOrNull { showAltar || !it.isAltarText }?.id ?: chapter.blocks.first().id, BookAnchorKind.HEADER)
-                        if (mode != BookReadingMode.MEANING && chapter.blocks.all { it.isAltarText }) showAltar = true
+                        cursor.seek(chapter.id, firstVisible(chapter)?.id ?: chapter.blocks.first().id, BookAnchorKind.HEADER)
+                        if (mode != BookReadingMode.MEANING && chapter.blocks.none(::visible)) showAltar = true
                         positioning = true; sheet = null
                         seekRevision++
                     }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_order_item_${chapter.id}")
@@ -835,8 +901,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 Text("Прокрутка помогает читать в выбранном темпе. Чтобы найти реальное место службы, используйте слова или микрофон",
                     style = MaterialTheme.typography.bodyMedium)
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Молитвы, читаемые в алтаре", Modifier.weight(1f))
-                    Switch(showAltar, { if (cancelPendingTarget()) { position(); pendingSearch = null; positioning = true; showAltar = it } })
+                    Text("Тихие молитвы и алтарные тексты", Modifier.weight(1f))
+                    Switch(showAltar, { changePrivateVisibility(it) })
                 }
                 OutlinedButton(onClick = { sheet = null; onSettings() }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Размер текста и тема") }
                 TextButton(onClick = { sheet = "sources" }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Источники и вариант службы") }
@@ -1083,6 +1149,9 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
     var resolvingSpeech by remember { mutableStateOf(false) }
     var searchResult by remember { mutableStateOf<BookSearchResult?>(null) }
     var corpus by remember(book.key, book.contentHash) { mutableStateOf(BookSearchCorpus(listOf(book), otherPart)) }
+    val resultScopes = remember(corpus.books.map { it.key to it.contentHash }) {
+        corpus.books.associate { it.key to BookVisibilityScope.of(it) }
+    }
     var corpusLoading by remember { mutableStateOf(corpusLoader != null) }
     var manualRevision by remember { mutableLongStateOf(0L) }
     var voiceRevision by remember { mutableStateOf<Long?>(null) }
@@ -1258,6 +1327,13 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(located.bookKey.worship.title, style = MaterialTheme.typography.labelLarge)
                         Text(hit.chapterTitle, style = MaterialTheme.typography.titleMedium)
+                        corpus.books.singleOrNull { it.key == located.bookKey }?.blocks?.singleOrNull { it.id == hit.blockId }?.let { block ->
+                            val scope = resultScopes[located.bookKey]
+                            if (scope?.isPrivate(block) == true) Text(
+                                if (scope.isQuiet(block.id)) "Тихая молитва священника" else "Алтарный текст",
+                                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.testTag("book_hit_private_${hit.blockId}"))
+                        }
                         Text(hit.mode.title, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(hit.excerpt, style = MaterialTheme.typography.bodyMedium)
                     }

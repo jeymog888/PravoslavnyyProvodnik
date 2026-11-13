@@ -45,15 +45,20 @@ object BookCorpusSearch {
         checkActive: () -> Unit = {}): List<BookLocatedSearchHit> {
         if (BookText.normalized(query).length < 2) return emptyList()
         require(books.map { it.key }.distinct().size == books.size) { "Choose exactly one edition for each book key" }
-        val candidates = mutableListOf<Pair<BookTextMatchKind, BookLocatedSearchHit>>()
+        val candidates = mutableListOf<Triple<BookTextMatchKind, Boolean, BookLocatedSearchHit>>()
         for (book in books) {
             checkActive()
-            BookSearch.scan(book, query, preferredMode, checkActive).forEach { (kind, hit) ->
-                candidates += kind to BookLocatedSearchHit(book.key, book.contentHash, hit)
+            // Carry visibility from the cancellable search pass. A preliminary full
+            // traversal would read the whole book even after the user closes search.
+            BookSearch.scan(book, query, preferredMode, checkActive).forEach { (kind, isPrivate, hit) ->
+                candidates += Triple(kind, isPrivate, BookLocatedSearchHit(book.key, book.contentHash, hit))
             }
         }
         checkActive()
-        // Kotlin's stable sort keeps corpus and source order among equally good matches.
-        return candidates.sortedBy { it.first.ordinal }.map { it.second }
+        // Match quality always wins. A quiet duplicate must not outrank an equally
+        // good public phrase just because its source chapter occurs earlier.
+        // Stable sorting retains every result and source order within each scope.
+        return candidates.sortedWith(compareBy<Triple<BookTextMatchKind, Boolean, BookLocatedSearchHit>> { it.first.ordinal }
+            .thenBy { it.second }).map { it.third }
     }
 }
