@@ -821,7 +821,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                         if (mode == BookReadingMode.MEANING) {
                             Text("Объяснение Феории", style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(item.chapter.meaning,
+                            Text(BookMeaningCatalog.displayMeaning(book, item.chapter),
                                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = (19 + textSize * 2).sp, lineHeight = (29 + textSize * 3).sp))
                         }
                     } else BookTextBlock(book.key, item.block, mode, textSize,

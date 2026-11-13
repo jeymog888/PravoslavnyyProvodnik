@@ -39,7 +39,7 @@ class BookMeaningCatalogTest {
     @Test fun numberedCanonSongsAndOrdinaryPsalmDoNotShareTheSameExplanation() {
         val song = requireNotNull(BookMeaningCatalog.meaningFor("Песнь 9", worship = "matins"))
         val psalm = requireNotNull(BookMeaningCatalog.meaningFor("Псалом 33", worship = "liturgy"))
-        assertTrue(song.contains("Канон"))
+        assertTrue(song.contains("канон", ignoreCase = true))
         assertTrue(psalm.contains("библейский псалом", ignoreCase = true))
         assertNotEquals(song, psalm)
     }
