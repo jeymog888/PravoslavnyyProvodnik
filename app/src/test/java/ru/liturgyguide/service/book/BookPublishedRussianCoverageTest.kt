@@ -252,16 +252,31 @@ class BookPublishedRussianCoverageTest {
             requireNotNull(javaClass.getResourceAsStream("/calendar/2026-11-15.json")).bufferedReader().use { it.readText() }, "2026-11-15"))
         val calendar22 = requireNotNull(BookTranslationIndex.fromCalendarPage(Jsoup.parse(
             text("calendar-2026-11-22.html"), "https://azbyka.ru/days/2026-11-22"), "2026-11-22"))
+        // This exact144 oracle describes the previous published-boundary package.
+        // The two newly reviewed first-Liturgy hymn keys have their own exact14 replay.
+        val opening = JsonParser.parseString(requireNotNull(javaClass.getResourceAsStream(
+            "/book/sunday-opening/oracle.json")).bufferedReader().use { it.readText() }).asJsonObject
+        val newSundayKeys = opening["items"].asJsonArray.map { it.asJsonObject }
+            .filter { it["rank"].asInt in setOf(32, 39) }
+            .map { BookTranslationIndex.normal(it["original"].asString) }.toSet()
+        assertEquals(2, newSundayKeys.size)
+        fun previousSundayIndex(tone: Int): BookTranslationIndex {
+            val old = com.google.gson.JsonArray()
+            JsonParser.parseString(index(tone).encode()).asJsonArray.forEach { pair ->
+                if (pair.asJsonObject["original"].asString !in newSundayKeys) old.add(pair)
+            }
+            return BookTranslationIndex.decode(old.toString())
+        }
         var total = 0
         oracle.forEach { raw ->
             val c = raw.asJsonObject
             val fields = c.get("key").asString.split('|')
             val key = ServiceBookKey(fields[0], WorshipKind.valueOf(fields[1]), churchType = fields[2])
-            val optional = index(c.get("tone").asInt)
+            val optional = previousSundayIndex(c.get("tone").asInt)
             var baseline = common.plus(if (key.date == "2026-11-15") calendar15.translations else calendar22)
             // The prior release already selected Sunday7 for Liturgy. It did not select Sunday8,
             // nor a direct Matins/Vespers page. Preserve that real pre-change baseline.
-            if (key.date == "2026-11-15" && key.worship == WorshipKind.LITURGY) baseline = baseline.plus(index(7))
+            if (key.date == "2026-11-15" && key.worship == WorshipKind.LITURGY) baseline = baseline.plus(previousSundayIndex(7))
             val html = if (key.date == "2026-11-15") BookFixtures.html("${key.worship.queryValue}-${key.date}")
                 else text("${key.worship.queryValue}-${key.date}.html")
             val parsed = ServiceBookParser().parse(Jsoup.parse(html, key.sourceUrl()), key, 12345, translations = baseline)

@@ -216,6 +216,19 @@ class BookSharedRussianCorpusTest {
             assertNull(index.find("Не $original"))
             assertNull(index.find(original + " Дополнительные молитвенные слова"))
         }
+        // Keep the historical four-order delta pinned. The separately reviewed Sunday
+        // opening package must add only its independent exact block IDs below.
+        val opening = JsonParser.parseString(requireNotNull(javaClass.getResourceAsStream(
+            "/book/sunday-opening/oracle.json")).bufferedReader().use { it.readText() }).asJsonObject
+        val openingRows = opening["items"].asJsonArray.map { it.asJsonObject }
+            .filter { it["rank"].asInt in setOf(32, 39) }.associateBy { it["id"].asString }
+        assertEquals(2, openingRows.size)
+        val openingKeys = openingRows.values.map { BookTranslationIndex.normal(it["original"].asString) }.toSet()
+        val previousPairs = JsonArray()
+        JsonParser.parseString(index.encode()).asJsonArray.forEach { pair ->
+            if (pair.asJsonObject["original"].asString !in openingKeys) previousPairs.add(pair)
+        }
+        val previousIndex = BookTranslationIndex.decode(previousPairs.toString())
         val expected = listOf(9, 7, 12, 7)
         provenance.getAsJsonArray("baselines").forEachIndexed { i, raw ->
             val x = raw.asJsonObject
@@ -227,11 +240,26 @@ class BookSharedRussianCorpusTest {
                 if (b.kind in setOf(BookBlockKind.PRAYER, BookBlockKind.SCRIPTURE) && b.id !in missing)
                     b.copy(russian = "Уже доступный текст ${b.id}", translationSource = core[1]) else b
             }) }).rehash()
-            val after = requireNotNull(SavedBookEnrichment.apply(before, index))
+            val after = requireNotNull(SavedBookEnrichment.apply(before, previousIndex))
             val gained = before.blocks.zip(after.blocks).filter { (a, b) -> a.russian == null && b.russian != null }
             assertEquals(expected[i], gained.count { !it.first.isAltarText })
             assertEquals(1, gained.count { it.first.isAltarText })
             assertGapOnly(before, after)
+            val current = requireNotNull(SavedBookEnrichment.apply(before, index))
+            val expectedOpening = opening["cases"].asJsonArray.map { it.asJsonObject }
+                .singleOrNull { it["bookKey"].asString.startsWith("${book.key.date}|${book.key.worship}|${book.key.churchType}|") }
+                ?.getAsJsonArray("expected")?.map { it.asJsonObject }
+                .orEmpty().filter { it["itemId"].asString in openingRows && it["blockId"].asString in missing }
+                .associate { it["blockId"].asString to openingRows.getValue(it["itemId"].asString) }
+            val additionallyChanged = after.blocks.zip(current.blocks).filter { (old, new) -> old != new }
+            assertEquals(expectedOpening.keys, additionallyChanged.map { it.first.id }.toSet())
+            additionallyChanged.forEach { (old, new) ->
+                val approved = expectedOpening.getValue(old.id)
+                assertNull(old.russian)
+                assertEquals(approved["original"].asString, old.original)
+                assertEquals(approved["russian"].asString, new.russian)
+            }
+            assertGapOnly(before, current)
         }
     }
 

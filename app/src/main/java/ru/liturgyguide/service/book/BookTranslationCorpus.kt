@@ -25,7 +25,10 @@ internal data class BookTranslationCorpus(
 
     companion object {
         // Bump when the required source set or exact extraction rules change.
-        const val VERSION = 12
+        const val VERSION = 13
+        // Version 12 entries stay valid offline. Only these changed extractors need another page pass.
+        internal val REEXTRACTED_SOURCES = setOf(BookTranslationIndex.TIMROT_FULL_SOURCE.url,
+            BookTranslationIndex.OCTOECHOS_SOURCES[6].url, BookTranslationIndex.OCTOECHOS_SOURCES[7].url)
         const val MAX_BYTES = 4_000_000
 
         fun decode(json: String?): BookTranslationCorpus = runCatching {
@@ -36,7 +39,9 @@ internal data class BookTranslationCorpus(
             val version = value.get("version").asInt
             val sources = value.getAsJsonArray("completedSources").map { it.asString }.toSet()
             require(sources.all { url -> BookTranslationIndex.ALL_PARALLEL_SOURCES.any { it.url == url } })
-            BookTranslationCorpus(BookTranslationIndex.decode(value.getAsJsonArray("entries").toString()), sources, version)
+            val index = BookTranslationIndex.decode(value.getAsJsonArray("entries").toString())
+            if (version == 12) BookTranslationCorpus(index, sources - REEXTRACTED_SOURCES)
+            else BookTranslationCorpus(index, sources, version)
         }.getOrElse { BookTranslationCorpus() }
     }
 }

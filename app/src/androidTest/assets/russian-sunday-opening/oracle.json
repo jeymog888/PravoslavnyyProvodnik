@@ -1,0 +1,1740 @@
+{
+  "status": "DRAFT_INDEPENDENT_EXPECTED_FROM_ASTRA_REVIEW_NOT_PARSER_OUTPUT",
+  "scope": "8 whole published pairs / 14 occurrences; proposed implementation not applied or runtime tested",
+  "review": {
+    "path": ".local/release12/russian/liturgy-next-analysis/ASTRA-PUBLISHED-BOUNDARIES.json",
+    "sha256": "5b5b5558e19041421a24b0784d5aae71b1a768f49d8b574fa995ec6bf4351f3a"
+  },
+  "sourceInputs": {
+    "astra": {
+      "path": ".local/release12/russian/liturgy-next-analysis/ASTRA-PUBLISHED-BOUNDARIES.json",
+      "sha256": "5b5b5558e19041421a24b0784d5aae71b1a768f49d8b574fa995ec6bf4351f3a"
+    },
+    "measurement": {
+      "path": ".local/release12/russian/measure-after-105/measurement.json",
+      "sha256": "0c5ce24c8af9675abc9421a91989fa78eacaea385a3ddef3c0a1e83b7b21fae9"
+    },
+    "commonCandidate": {
+      "path": ".local/release12/russian/common-candidate/translation-candidate.json",
+      "sha256": "61b71a4402eb7b7bf309e55fa4a25e5653cf9207d4b487b322b04cb66358fa75"
+    },
+    "commonReview": {
+      "path": ".local/release12/russian/common-candidate/ASTRA-SEMANTIC-RECHECK.json",
+      "sha256": "2d21d40c112ff6037c9b630aed57530a96c55cbadf98e01e91c82fbc36a1c2d5"
+    }
+  },
+  "expectedRanks": [
+    23,
+    24,
+    25,
+    27,
+    28,
+    29,
+    32,
+    39
+  ],
+  "expectedWholePairs": 8,
+  "expectedOccurrences": 14,
+  "items": [
+    {
+      "rank": 23,
+      "id": "liturgy-next-b02b245bd37621ef",
+      "semanticVerdict": "PASS",
+      "original": "на 4: 1 Лик: Блаже́ни есте́, егда́ поно́сят вам, / и изжену́т, и реку́т всяк зол глаго́л на вы, лжу́ще Мене́ ра́ди.",
+      "originalSha256": "71f9780b22e579668aefd241e7376726875baa40edfe187b363bcafe8f04ec19",
+      "russian": "на 4: 1 Лик: Блаженны вы, когда будут поносить вас / и гнать и всячески неправедно злословить за Меня.",
+      "russianSha256": "236d61f63fc6d3af6e60dc3df209d04119e668a3212dc9a172554d774cb07f71",
+      "preservedBookMetadata": "на 4: 1 Лик:",
+      "separateSourceCitation": null,
+      "source": {
+        "title": "Перевод иеромонаха Амвросия (Тимрота), Азбука веры",
+        "url": "https://azbyka.ru/bogosluzhenie/liturgiya-ioanna-zlatousta/",
+        "sourcePath": ".local/translation-audit/full.html",
+        "sourceFileSha256": "ca80cb43bd94f28ed0bc774878f7883ef3a611f3f5904c9dd92b15e09212f0b3",
+        "fixture": "book/sunday-opening/full-liturgy.html",
+        "selectedWitnessIndex": 0,
+        "sourceCsBody": "Блажени есте, егда поносят вам, / и изженут, и рекут всяк зол глагол на вы, лжуще Мене ради.",
+        "sourceCsBodySha256": "20da5bb84b1ad273d1ef0c3966fd0eb4074e7769a56dd4430e57d4ebca49aa9c",
+        "sourceRuBodyUnmodified": "Блаженны вы, когда будут поносить вас / и гнать и всячески неправедно злословить за Меня.",
+        "sourceRuBodyUnmodifiedSha256": "bbbccb03d1be12220d7b00411ca01ec2aa362bdbf2e0d99e710055dcfefb27c3",
+        "expectedLeftMetadata": [
+          {
+            "class": [
+              "k"
+            ],
+            "text": "на 4:"
+          },
+          {
+            "class": [
+              "n"
+            ],
+            "text": "1."
+          }
+        ],
+        "expectedRightMetadata": [
+          {
+            "class": [
+              "k"
+            ],
+            "text": "на 4:"
+          },
+          {
+            "class": [
+              "n"
+            ],
+            "text": "1."
+          }
+        ],
+        "boundary": "PAIRED_LEADING_DOM_METADATA_ONLY_REVIEW_REQUIRED",
+        "actualJsoupRowIndexForEvidenceOnly": 103
+      },
+      "occurrences": [
+        {
+          "bookKey": "2026-11-15|LITURGY|30|~|~",
+          "sourcePath": "app/src/test/resources/book/liturgy-2026-11-15.html",
+          "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+          "sourceBookContentHash": "9d8e0e762182bb4828a6f524c666a9f05c70ea871beb9e74f4c173873eb93c7b",
+          "blockId": "liturgy-82484d23212b-1:d323b1fdf8d03451:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "chapterTitle": "Блаженны, третий изобразительный антифон (на 8)",
+          "originalSha256": "71f9780b22e579668aefd241e7376726875baa40edfe187b363bcafe8f04ec19",
+          "spoken": true,
+          "isPrivate": false,
+          "isQuiet": false,
+          "isAltar": false,
+          "sourceConstructorUrl": "https://azbyka.ru/worships/?date=2026-11-15&worship=liturgy&size=full&church=30",
+          "context": [
+            {
+              "id": "liturgy-82484d23212b-1:0282f7c8a3d8d86a:1",
+              "kind": "PRAYER",
+              "original": "Пригвозди́л еси́ на Кресте́, Ще́дре, грехи́ на́шя, Христе́, и Твое́ю сме́ртию сме́рть умертви́л еси́ воздви́гнувый уме́ршыя из ме́ртвых: те́мже покланя́емся Твоему́ свято́му воскресе́нию.",
+              "originalSha256": "ba3ad4e7f5a392066019ee2716dd52ff0c3efe4362bdc3e12ea3e98d8cf77817",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:ea2381e8e8e2fbfb:1",
+              "kind": "PRAYER",
+              "original": "Блаже́ни изгна́ни пра́вды ра́ди, / я́ко тех есть Ца́рство Небе́сное.",
+              "originalSha256": "ddb860b14837304f0845d6db73e3a56ebe29c7d4d2e8005dfe2e448f751e1fc0",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:4c8ed38a5d971164:1",
+              "kind": "PRAYER",
+              "original": "Излия́ я́д зми́й в слу́хи Е́вины иногда́: Христо́с же на Дре́ве кре́стнем источи́л е́сть ми́рови жи́зни сла́дость. Те́мже взыва́ем: помяни́ на́с, Го́споди, во Ца́рствии Твое́м.",
+              "originalSha256": "ff336a0cc541eb612132dfe86f4ec98bddf1ea527bf37bf2fd9bbbe657104208",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:d323b1fdf8d03451:1",
+              "kind": "PRAYER",
+              "original": "на 4: 1 Лик: Блаже́ни есте́, егда́ поно́сят вам, / и изжену́т, и реку́т всяк зол глаго́л на вы, лжу́ще Мене́ ра́ди.",
+              "originalSha256": "71f9780b22e579668aefd241e7376726875baa40edfe187b363bcafe8f04ec19",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:0161655c96aefca9:1",
+              "kind": "PRAYER",
+              "original": "Во гро́бе я́ко сме́ртен положе́н бы́л еси́, Животе́ все́х Христе́: и вереи́ а́довы сломи́л еси́: и воскре́с во сла́ве тридне́вен я́ко си́лен, все́х просвети́л еси́: сла́ва Твоему́ воста́нию.",
+              "originalSha256": "9a4e4d51b4e98d183eb8538e49445073f9208f74c99046ebf1749ef548ddf260",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:1b2b05aa6490f200:1",
+              "kind": "PRAYER",
+              "original": "Ра́дуйтеся и весели́теся, / я́ко мзда ва́ша мно́га на Небесе́х.",
+              "originalSha256": "7c6a1d5a2490109773588111f9134694a9fedd3285fb7ad02a3b3a12149a1cc8",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            }
+          ]
+        },
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "sourcePath": ".local/release11/next-core/russian/octoechos/source-liturgy-2026-11-22.html",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourceBookContentHash": "adfd788a85c9ac30b6c8767292b55cbd980b84f19147cbe7e4a0d553a0c2c87b",
+          "blockId": "liturgy-82484d23212b-1:d323b1fdf8d03451:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "chapterTitle": "Блаженны, третий изобразительный антифон (на 8)",
+          "originalSha256": "71f9780b22e579668aefd241e7376726875baa40edfe187b363bcafe8f04ec19",
+          "spoken": true,
+          "isPrivate": false,
+          "isQuiet": false,
+          "isAltar": false,
+          "sourceConstructorUrl": "https://azbyka.ru/worships/?date=2026-11-22&worship=liturgy&size=full&church=30",
+          "context": [
+            {
+              "id": "liturgy-82484d23212b-1:6f5eb3e6f7ab88ce:1",
+              "kind": "PRAYER",
+              "original": "На дре́ве пригвожде́н бы́в Спа́се на́ш во́лею, я́же от дре́ва кля́твы Ада́ма изба́вил еси́, воздая́ я́ко Ще́др е́же по о́бразу, и ра́йское селе́ние.",
+              "originalSha256": "f10805c2df3bd39106d50a0246bd7abf04618f80dfd2afe567f3759b4dc2fb87",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:ea2381e8e8e2fbfb:1",
+              "kind": "PRAYER",
+              "original": "Блаже́ни изгна́ни пра́вды ра́ди, / я́ко тех есть Ца́рство Небе́сное.",
+              "originalSha256": "ddb860b14837304f0845d6db73e3a56ebe29c7d4d2e8005dfe2e448f751e1fc0",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:df21f5e2672524fd:1",
+              "kind": "PRAYER",
+              "original": "Дне́сь Христо́с воскре́с от гро́ба, все́м ве́рным подая́ нетле́ние, и ра́дость обновля́ет мироно́сицам по стра́сти и Воскресе́нии.",
+              "originalSha256": "e3848ba1a61abed684a2af5667ee38be8774d27eb0cb798b6a1db9cf0d754183",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:d323b1fdf8d03451:1",
+              "kind": "PRAYER",
+              "original": "на 4: 1 Лик: Блаже́ни есте́, егда́ поно́сят вам, / и изжену́т, и реку́т всяк зол глаго́л на вы, лжу́ще Мене́ ра́ди.",
+              "originalSha256": "71f9780b22e579668aefd241e7376726875baa40edfe187b363bcafe8f04ec19",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:b7638cb497e6af4a:1",
+              "kind": "PRAYER",
+              "original": "Ра́дуйтеся му́дрыя жены́ мироно́сицы, пе́рвыя Христо́во Воскресе́ние ви́девшя, и его́ возвести́вшя апо́столом, всего́ ми́ра воззва́ние.",
+              "originalSha256": "b4964ab0519b210d6e54707d866dfd764182fb65fcdcb536a04f555e8faa7340",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:1b2b05aa6490f200:1",
+              "kind": "PRAYER",
+              "original": "Ра́дуйтеся и весели́теся, / я́ко мзда ва́ша мно́га на Небесе́х.",
+              "originalSha256": "7c6a1d5a2490109773588111f9134694a9fedd3285fb7ad02a3b3a12149a1cc8",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rank": 24,
+      "id": "liturgy-next-6587982f927d1185",
+      "semanticVerdict": "FIX",
+      "original": "Благослови́, душе́ моя́, Го́спода, / и вся вну́тренняя моя́ И́мя святое́ Его́. / Благослове́н еси́, Го́споди.",
+      "originalSha256": "29bbf5c991bdadcc1d7668cea4242c483ede34925d7554dc845adfb266b78b94",
+      "russian": "Благословляй, душа моя, Господа / и вся внутренность моя – имя святое Его. / Благословен Ты, Господи!",
+      "russianSha256": "66b9804b53221bddb25aa9c7d632b781868a6baa5d50f3de70413da6a043fb98",
+      "preservedBookMetadata": null,
+      "separateSourceCitation": "Пс 102:1-8",
+      "source": {
+        "title": "Перевод иеромонаха Амвросия (Тимрота), Азбука веры",
+        "url": "https://azbyka.ru/bogosluzhenie/liturgiya-ioanna-zlatousta/",
+        "sourcePath": ".local/translation-audit/full.html",
+        "sourceFileSha256": "ca80cb43bd94f28ed0bc774878f7883ef3a611f3f5904c9dd92b15e09212f0b3",
+        "fixture": "book/sunday-opening/full-liturgy.html",
+        "selectedWitnessIndex": 0,
+        "sourceCsBody": "Благослови, душе моя, Господа, / и вся внутренняя моя Имя святое Его. / Благословен еси, Господи.",
+        "sourceCsBodySha256": "e2e5b2a122311722768b9c609d3c8f035b65736720bfc52d5684a84677297846",
+        "sourceRuBodyUnmodified": "Благословляй, душа моя, Господа / и вся внутренность моя – имя святое Его. / Благословен Ты, Господи! Пс 102:1-8",
+        "sourceRuBodyUnmodifiedSha256": "7d2863dfe6d09b8a9acc1aeebb80c89fc8e2030384a3c20452f500f78a7f9fcc",
+        "expectedLeftMetadata": [
+          {
+            "class": [
+              "n"
+            ],
+            "text": "1."
+          }
+        ],
+        "expectedRightMetadata": [
+          {
+            "class": [
+              "n"
+            ],
+            "text": "1."
+          }
+        ],
+        "boundary": "PAIRED_LEADING_DOM_METADATA_ONLY_REVIEW_REQUIRED",
+        "actualJsoupRowIndexForEvidenceOnly": 60
+      },
+      "occurrences": [
+        {
+          "bookKey": "2026-11-15|LITURGY|30|~|~",
+          "sourcePath": "app/src/test/resources/book/liturgy-2026-11-15.html",
+          "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+          "sourceBookContentHash": "9d8e0e762182bb4828a6f524c666a9f05c70ea871beb9e74f4c173873eb93c7b",
+          "blockId": "liturgy-4291c26b3f06-1:b743466c6fe92fa9:1",
+          "chapterId": "liturgy-4291c26b3f06-1",
+          "chapterTitle": "Первый изобразительный антифон",
+          "originalSha256": "29bbf5c991bdadcc1d7668cea4242c483ede34925d7554dc845adfb266b78b94",
+          "spoken": true,
+          "isPrivate": false,
+          "isQuiet": false,
+          "isAltar": false,
+          "sourceConstructorUrl": "https://azbyka.ru/worships/?date=2026-11-15&worship=liturgy&size=full&church=30",
+          "context": [
+            {
+              "id": "liturgy-4291c26b3f06-1:33cc4a12891ac5c6:1",
+              "kind": "PRAYER",
+              "original": "Благослови́те Го́спода, вся дела́ Его́, / на вся́ком ме́сте влады́чества Его́.",
+              "originalSha256": "358b6835c3dc695db8c0a548892f18f5aaaa89adc4c1148f1af3d9c844f4c837",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-4291c26b3f06-1:424abab9dd54fc14:1",
+              "kind": "PRAYER",
+              "original": "Сла́ва Отцу́ и Сы́ну и Свято́му Ду́ху.",
+              "originalSha256": "ab68179f357194bcfe7544f42879bbbd8f3e7a284e7f3a740890916e3d75ef7f",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-4291c26b3f06-1:ad180df509eac12f:1",
+              "kind": "PRAYER",
+              "original": "И ны́не и при́сно и во ве́ки веко́в. Ами́нь.",
+              "originalSha256": "1f0119f464dc734996693f10c408fd3a512893237f70e1e15145ea143e3de1ea",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-4291c26b3f06-1:b743466c6fe92fa9:1",
+              "kind": "PRAYER",
+              "original": "Благослови́, душе́ моя́, Го́спода, / и вся вну́тренняя моя́ И́мя святое́ Его́. / Благослове́н еси́, Го́споди.",
+              "originalSha256": "29bbf5c991bdadcc1d7668cea4242c483ede34925d7554dc845adfb266b78b94",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-4291c26b3f06-1:f96e8b9b34dd134d:1",
+              "kind": "RUBRIC",
+              "original": "По окончании антифона, став на обычном месте и поклонившись, диакон возглашает:",
+              "originalSha256": "54c24cab0e4b597083b1159445f77f2a4965459b971c0ef0660d1affc820b2a1",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-ed716e9f74f9-1:5b652639a25a43a7:1",
+              "kind": "PRAYER",
+              "original": "Па́ки и па́ки ми́ром Го́споду помо́лимся.",
+              "originalSha256": "853d6ce5292e5dda564747f5d408f1ef42e56dd20bcbde3c31bb3024ee2f0bbf",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            }
+          ]
+        },
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "sourcePath": ".local/release11/next-core/russian/octoechos/source-liturgy-2026-11-22.html",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourceBookContentHash": "adfd788a85c9ac30b6c8767292b55cbd980b84f19147cbe7e4a0d553a0c2c87b",
+          "blockId": "liturgy-4291c26b3f06-1:b743466c6fe92fa9:1",
+          "chapterId": "liturgy-4291c26b3f06-1",
+          "chapterTitle": "Первый изобразительный антифон",
+          "originalSha256": "29bbf5c991bdadcc1d7668cea4242c483ede34925d7554dc845adfb266b78b94",
+          "spoken": true,
+          "isPrivate": false,
+          "isQuiet": false,
+          "isAltar": false,
+          "sourceConstructorUrl": "https://azbyka.ru/worships/?date=2026-11-22&worship=liturgy&size=full&church=30",
+          "context": [
+            {
+              "id": "liturgy-4291c26b3f06-1:33cc4a12891ac5c6:1",
+              "kind": "PRAYER",
+              "original": "Благослови́те Го́спода, вся дела́ Его́, / на вся́ком ме́сте влады́чества Его́.",
+              "originalSha256": "358b6835c3dc695db8c0a548892f18f5aaaa89adc4c1148f1af3d9c844f4c837",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-4291c26b3f06-1:424abab9dd54fc14:1",
+              "kind": "PRAYER",
+              "original": "Сла́ва Отцу́ и Сы́ну и Свято́му Ду́ху.",
+              "originalSha256": "ab68179f357194bcfe7544f42879bbbd8f3e7a284e7f3a740890916e3d75ef7f",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-4291c26b3f06-1:ad180df509eac12f:1",
+              "kind": "PRAYER",
+              "original": "И ны́не и при́сно и во ве́ки веко́в. Ами́нь.",
+              "originalSha256": "1f0119f464dc734996693f10c408fd3a512893237f70e1e15145ea143e3de1ea",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-4291c26b3f06-1:b743466c6fe92fa9:1",
+              "kind": "PRAYER",
+              "original": "Благослови́, душе́ моя́, Го́спода, / и вся вну́тренняя моя́ И́мя святое́ Его́. / Благослове́н еси́, Го́споди.",
+              "originalSha256": "29bbf5c991bdadcc1d7668cea4242c483ede34925d7554dc845adfb266b78b94",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-4291c26b3f06-1:f96e8b9b34dd134d:1",
+              "kind": "RUBRIC",
+              "original": "По окончании антифона, став на обычном месте и поклонившись, диакон возглашает:",
+              "originalSha256": "54c24cab0e4b597083b1159445f77f2a4965459b971c0ef0660d1affc820b2a1",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-ed716e9f74f9-1:5b652639a25a43a7:1",
+              "kind": "PRAYER",
+              "original": "Па́ки и па́ки ми́ром Го́споду помо́лимся.",
+              "originalSha256": "853d6ce5292e5dda564747f5d408f1ef42e56dd20bcbde3c31bb3024ee2f0bbf",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rank": 25,
+      "id": "liturgy-next-ffcf53b809f16712",
+      "semanticVerdict": "PASS",
+      "original": "на 12: 1 Лик: Блаже́ни ни́щии ду́хом, / я́ко тех есть Ца́рство Небе́сное.",
+      "originalSha256": "f3b8a71ee54d582378640f50dae1f2732236e6edbf334544832d6f00fac92e2a",
+      "russian": "на 12: 1 Лик: Блаженны нищие духом, / ибо их есть Царство Небесное.",
+      "russianSha256": "b081be94a45491bc95c637f2332589da972cd70c81e18579d70f7b3d9521e62f",
+      "preservedBookMetadata": "на 12: 1 Лик:",
+      "separateSourceCitation": null,
+      "source": {
+        "title": "Перевод иеромонаха Амвросия (Тимрота), Азбука веры",
+        "url": "https://azbyka.ru/bogosluzhenie/liturgiya-ioanna-zlatousta/",
+        "sourcePath": ".local/translation-audit/full.html",
+        "sourceFileSha256": "ca80cb43bd94f28ed0bc774878f7883ef3a611f3f5904c9dd92b15e09212f0b3",
+        "fixture": "book/sunday-opening/full-liturgy.html",
+        "selectedWitnessIndex": 0,
+        "sourceCsBody": "Блажени нищии духом, / яко тех есть Царство Небесное.",
+        "sourceCsBodySha256": "af63f573b3f2fcb54bd83bc050a809ca4a080385464090f2ed269d0fcdde318c",
+        "sourceRuBodyUnmodified": "Блаженны нищие духом, / ибо их есть Царство Небесное.",
+        "sourceRuBodyUnmodifiedSha256": "c7a0b87209699db1f79c77a1b37883e828827ff4a8e3cffa25c72a4248d8aed6",
+        "expectedLeftMetadata": [
+          {
+            "class": [
+              "k"
+            ],
+            "text": "на 12:"
+          },
+          {
+            "class": [
+              "n"
+            ],
+            "text": "1."
+          }
+        ],
+        "expectedRightMetadata": [
+          {
+            "class": [
+              "k"
+            ],
+            "text": "на 12:"
+          },
+          {
+            "class": [
+              "n"
+            ],
+            "text": "1."
+          }
+        ],
+        "boundary": "PAIRED_LEADING_DOM_METADATA_ONLY_REVIEW_REQUIRED",
+        "actualJsoupRowIndexForEvidenceOnly": 95
+      },
+      "occurrences": [
+        {
+          "bookKey": "2026-11-15|LITURGY|30|~|~",
+          "sourcePath": "app/src/test/resources/book/liturgy-2026-11-15.html",
+          "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+          "sourceBookContentHash": "9d8e0e762182bb4828a6f524c666a9f05c70ea871beb9e74f4c173873eb93c7b",
+          "blockId": "liturgy-82484d23212b-1:95d6bfe151324036:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "chapterTitle": "Блаженны, третий изобразительный антифон (на 8)",
+          "originalSha256": "f3b8a71ee54d582378640f50dae1f2732236e6edbf334544832d6f00fac92e2a",
+          "spoken": true,
+          "isPrivate": false,
+          "isQuiet": false,
+          "isAltar": false,
+          "sourceConstructorUrl": "https://azbyka.ru/worships/?date=2026-11-15&worship=liturgy&size=full&church=30",
+          "context": [
+            {
+              "id": "liturgy-ed716e9f74f9-2:1825d58735faaac6:1",
+              "kind": "PRAYER",
+              "original": "Ами́нь.",
+              "originalSha256": "aa1d2ea0e1ed5ca53de675a72838b7d0f0ef893d1964e19bf3c0520ae3f1b7bd",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-ed716e9f74f9-2:dd21ed844f7babc6:1",
+              "kind": "RUBRIC",
+              "original": "Здесь открываются Царские врата на малый вход.",
+              "originalSha256": "fcecef77bb4d4d1d3249e7e597f375ea1a9dfb80408ed4bc7eee9e3b62546f08",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:14aa3aa10c361b56:1",
+              "kind": "PRAYER",
+              "original": "Во Ца́рствии Твое́м помяни́ нас, Го́споди, / егда́ прии́деши, во Ца́рствии Твое́м.",
+              "originalSha256": "d2a949d6f64f401ffae6793983119027f9a4dbce70355ad11eaaafb87894416b",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:95d6bfe151324036:1",
+              "kind": "PRAYER",
+              "original": "на 12: 1 Лик: Блаже́ни ни́щии ду́хом, / я́ко тех есть Ца́рство Небе́сное.",
+              "originalSha256": "f3b8a71ee54d582378640f50dae1f2732236e6edbf334544832d6f00fac92e2a",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:5b31bbb3ff415144:1",
+              "kind": "PRAYER",
+              "original": "Блаже́ни пла́чущии, / я́ко ти́и уте́шатся.",
+              "originalSha256": "8760d6596f647c93d0f63cd295331989c9ad2fd5a9d65f0311cb1d4202e149bb",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:7479391109195a49:1",
+              "kind": "PRAYER",
+              "original": "на 10: 1 Лик: Блаже́ни кро́тции, / я́ко ти́и насле́дят зе́млю.",
+              "originalSha256": "bc2c7424e021c4f899c926323052e87711431ed8d68d726c79aabac167faef9d",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            }
+          ]
+        },
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "sourcePath": ".local/release11/next-core/russian/octoechos/source-liturgy-2026-11-22.html",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourceBookContentHash": "adfd788a85c9ac30b6c8767292b55cbd980b84f19147cbe7e4a0d553a0c2c87b",
+          "blockId": "liturgy-82484d23212b-1:95d6bfe151324036:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "chapterTitle": "Блаженны, третий изобразительный антифон (на 8)",
+          "originalSha256": "f3b8a71ee54d582378640f50dae1f2732236e6edbf334544832d6f00fac92e2a",
+          "spoken": true,
+          "isPrivate": false,
+          "isQuiet": false,
+          "isAltar": false,
+          "sourceConstructorUrl": "https://azbyka.ru/worships/?date=2026-11-22&worship=liturgy&size=full&church=30",
+          "context": [
+            {
+              "id": "liturgy-ed716e9f74f9-2:1825d58735faaac6:1",
+              "kind": "PRAYER",
+              "original": "Ами́нь.",
+              "originalSha256": "aa1d2ea0e1ed5ca53de675a72838b7d0f0ef893d1964e19bf3c0520ae3f1b7bd",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-ed716e9f74f9-2:dd21ed844f7babc6:1",
+              "kind": "RUBRIC",
+              "original": "Здесь открываются Царские врата на малый вход.",
+              "originalSha256": "fcecef77bb4d4d1d3249e7e597f375ea1a9dfb80408ed4bc7eee9e3b62546f08",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:14aa3aa10c361b56:1",
+              "kind": "PRAYER",
+              "original": "Во Ца́рствии Твое́м помяни́ нас, Го́споди, / егда́ прии́деши, во Ца́рствии Твое́м.",
+              "originalSha256": "d2a949d6f64f401ffae6793983119027f9a4dbce70355ad11eaaafb87894416b",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:95d6bfe151324036:1",
+              "kind": "PRAYER",
+              "original": "на 12: 1 Лик: Блаже́ни ни́щии ду́хом, / я́ко тех есть Ца́рство Небе́сное.",
+              "originalSha256": "f3b8a71ee54d582378640f50dae1f2732236e6edbf334544832d6f00fac92e2a",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:5b31bbb3ff415144:1",
+              "kind": "PRAYER",
+              "original": "Блаже́ни пла́чущии, / я́ко ти́и уте́шатся.",
+              "originalSha256": "8760d6596f647c93d0f63cd295331989c9ad2fd5a9d65f0311cb1d4202e149bb",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:7479391109195a49:1",
+              "kind": "PRAYER",
+              "original": "на 10: 1 Лик: Блаже́ни кро́тции, / я́ко ти́и насле́дят зе́млю.",
+              "originalSha256": "bc2c7424e021c4f899c926323052e87711431ed8d68d726c79aabac167faef9d",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rank": 27,
+      "id": "liturgy-next-202a5f18a8fa5824",
+      "semanticVerdict": "PASS",
+      "original": "на 6: 1 Лик: Блаже́ни миротво́рцы, / я́ко ти́и сы́нове Бо́жии нареку́тся.",
+      "originalSha256": "4eb9ce8639964009cb771f4303ef5c66a920e1c38d1326a5a7bc6b86c2db0bf4",
+      "russian": "на 6: 1 Лик: Блаженны миротворцы, / ибо они будут наречены сынами Божиими.",
+      "russianSha256": "6e93703c8134c05cb15f69bdeb001fabb59af90a31407918c4afcab837d05d5c",
+      "preservedBookMetadata": "на 6: 1 Лик:",
+      "separateSourceCitation": null,
+      "source": {
+        "title": "Перевод иеромонаха Амвросия (Тимрота), Азбука веры",
+        "url": "https://azbyka.ru/bogosluzhenie/liturgiya-ioanna-zlatousta/",
+        "sourcePath": ".local/translation-audit/full.html",
+        "sourceFileSha256": "ca80cb43bd94f28ed0bc774878f7883ef3a611f3f5904c9dd92b15e09212f0b3",
+        "fixture": "book/sunday-opening/full-liturgy.html",
+        "selectedWitnessIndex": 0,
+        "sourceCsBody": "Блажени миротворцы, / яко тии сынове Божии нарекутся.",
+        "sourceCsBodySha256": "fef4c6d49fb1265f877de3bd180e89641dc419c25a9452b62e52226f620b040c",
+        "sourceRuBodyUnmodified": "Блаженны миротворцы, / ибо они будут наречены сынами Божиими.",
+        "sourceRuBodyUnmodifiedSha256": "95748bf372397b7584ea3d82113937a8dedbf3de93f0d7f5329e19fb6155d2a7",
+        "expectedLeftMetadata": [
+          {
+            "class": [
+              "k"
+            ],
+            "text": "на 6:"
+          },
+          {
+            "class": [
+              "n"
+            ],
+            "text": "1."
+          }
+        ],
+        "expectedRightMetadata": [
+          {
+            "class": [
+              "k"
+            ],
+            "text": "на 6:"
+          },
+          {
+            "class": [
+              "n"
+            ],
+            "text": "1."
+          }
+        ],
+        "boundary": "PAIRED_LEADING_DOM_METADATA_ONLY_REVIEW_REQUIRED",
+        "actualJsoupRowIndexForEvidenceOnly": 101
+      },
+      "occurrences": [
+        {
+          "bookKey": "2026-11-15|LITURGY|30|~|~",
+          "sourcePath": "app/src/test/resources/book/liturgy-2026-11-15.html",
+          "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+          "sourceBookContentHash": "9d8e0e762182bb4828a6f524c666a9f05c70ea871beb9e74f4c173873eb93c7b",
+          "blockId": "liturgy-82484d23212b-1:5a13e153c6e38c7c:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "chapterTitle": "Блаженны, третий изобразительный антифон (на 8)",
+          "originalSha256": "4eb9ce8639964009cb771f4303ef5c66a920e1c38d1326a5a7bc6b86c2db0bf4",
+          "spoken": true,
+          "isPrivate": false,
+          "isQuiet": false,
+          "isAltar": false,
+          "sourceConstructorUrl": "https://azbyka.ru/worships/?date=2026-11-15&worship=liturgy&size=full&church=30",
+          "context": [
+            {
+              "id": "liturgy-82484d23212b-1:08277d2b0c3de774:1",
+              "kind": "PRAYER",
+              "original": "Красе́н бе́ и до́бр в сне́дь, и́же мене́ умертви́вый пло́д: Христо́с е́сть Дре́во Живо́тное, от Него́же яды́й не умира́ю, но вопию́ с разбо́йником: помяни́ мя, Го́споди, во Ца́рствии Твое́м.",
+              "originalSha256": "4faebabae7a81e5e539c3c0677cdc33ae82f22fe6654401eb5f85c0e2a0588ac",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:0a5a9f8029da081e:1",
+              "kind": "PRAYER",
+              "original": "Блаже́ни чи́стии се́рдцем, / я́ко ти́и Бо́га у́зрят.",
+              "originalSha256": "5afb933da619aedcb321362b054e95e0a856f7c0bea5b336aa8482bc6b4710bd",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:70659fe9ae89edf7:1",
+              "kind": "PRAYER",
+              "original": "На Кре́ст возне́сся, Ще́дре, Ада́мово рукописа́ние дре́вняго греха́ загла́дил еси́, и спа́сл еси́ от пре́лести ве́сь ро́д челове́ческий. Те́мже воспева́ем Тя́, Благоде́телю Го́споди.",
+              "originalSha256": "ddc87de57e48e52cd7e548bf30cd910beaeb1561c08809a3690387c85d3b4416",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:5a13e153c6e38c7c:1",
+              "kind": "PRAYER",
+              "original": "на 6: 1 Лик: Блаже́ни миротво́рцы, / я́ко ти́и сы́нове Бо́жии нареку́тся.",
+              "originalSha256": "4eb9ce8639964009cb771f4303ef5c66a920e1c38d1326a5a7bc6b86c2db0bf4",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:0282f7c8a3d8d86a:1",
+              "kind": "PRAYER",
+              "original": "Пригвозди́л еси́ на Кресте́, Ще́дре, грехи́ на́шя, Христе́, и Твое́ю сме́ртию сме́рть умертви́л еси́ воздви́гнувый уме́ршыя из ме́ртвых: те́мже покланя́емся Твоему́ свято́му воскресе́нию.",
+              "originalSha256": "ba3ad4e7f5a392066019ee2716dd52ff0c3efe4362bdc3e12ea3e98d8cf77817",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:ea2381e8e8e2fbfb:1",
+              "kind": "PRAYER",
+              "original": "Блаже́ни изгна́ни пра́вды ра́ди, / я́ко тех есть Ца́рство Небе́сное.",
+              "originalSha256": "ddb860b14837304f0845d6db73e3a56ebe29c7d4d2e8005dfe2e448f751e1fc0",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            }
+          ]
+        },
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "sourcePath": ".local/release11/next-core/russian/octoechos/source-liturgy-2026-11-22.html",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourceBookContentHash": "adfd788a85c9ac30b6c8767292b55cbd980b84f19147cbe7e4a0d553a0c2c87b",
+          "blockId": "liturgy-82484d23212b-1:5a13e153c6e38c7c:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "chapterTitle": "Блаженны, третий изобразительный антифон (на 8)",
+          "originalSha256": "4eb9ce8639964009cb771f4303ef5c66a920e1c38d1326a5a7bc6b86c2db0bf4",
+          "spoken": true,
+          "isPrivate": false,
+          "isQuiet": false,
+          "isAltar": false,
+          "sourceConstructorUrl": "https://azbyka.ru/worships/?date=2026-11-22&worship=liturgy&size=full&church=30",
+          "context": [
+            {
+              "id": "liturgy-82484d23212b-1:cee9cf91df7231b1:1",
+              "kind": "PRAYER",
+              "original": "Помяни́ на́с, Христе́ Спа́се ми́ра, я́коже разбо́йника помяну́л еси́ на дре́ве: и сподо́би все́х, Еди́не Ще́дре, Небе́сному Ца́рствию Твоему́.",
+              "originalSha256": "686ca07c8f5410b6de9b3debac9bdec816afc25c95dc87e9b213a40a66214786",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:0a5a9f8029da081e:1",
+              "kind": "PRAYER",
+              "original": "Блаже́ни чи́стии се́рдцем, / я́ко ти́и Бо́га у́зрят.",
+              "originalSha256": "5afb933da619aedcb321362b054e95e0a856f7c0bea5b336aa8482bc6b4710bd",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:b16b0a09485e60a0:1",
+              "kind": "PRAYER",
+              "original": "Слы́ши Ада́ме, и ра́дуйся со Е́вою: я́ко обнажи́вый пре́жде обоя́, и пре́лестию взе́м ва́с пле́нники, Кресто́м Христо́вым упраздни́ся.",
+              "originalSha256": "05057a4e9d43e9fa5f2c88e79e74a22f0b81980a8e4475eadea0e501e1288eae",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:5a13e153c6e38c7c:1",
+              "kind": "PRAYER",
+              "original": "на 6: 1 Лик: Блаже́ни миротво́рцы, / я́ко ти́и сы́нове Бо́жии нареку́тся.",
+              "originalSha256": "4eb9ce8639964009cb771f4303ef5c66a920e1c38d1326a5a7bc6b86c2db0bf4",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:6f5eb3e6f7ab88ce:1",
+              "kind": "PRAYER",
+              "original": "На дре́ве пригвожде́н бы́в Спа́се на́ш во́лею, я́же от дре́ва кля́твы Ада́ма изба́вил еси́, воздая́ я́ко Ще́др е́же по о́бразу, и ра́йское селе́ние.",
+              "originalSha256": "f10805c2df3bd39106d50a0246bd7abf04618f80dfd2afe567f3759b4dc2fb87",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:ea2381e8e8e2fbfb:1",
+              "kind": "PRAYER",
+              "original": "Блаже́ни изгна́ни пра́вды ра́ди, / я́ко тех есть Ца́рство Небе́сное.",
+              "originalSha256": "ddb860b14837304f0845d6db73e3a56ebe29c7d4d2e8005dfe2e448f751e1fc0",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rank": 28,
+      "id": "liturgy-next-3c11cd3b221e34d7",
+      "semanticVerdict": "PASS",
+      "original": "на 10: 1 Лик: Блаже́ни кро́тции, / я́ко ти́и насле́дят зе́млю.",
+      "originalSha256": "bc2c7424e021c4f899c926323052e87711431ed8d68d726c79aabac167faef9d",
+      "russian": "на 10: 1 Лик: Блаженны кроткие, / ибо они наследуют землю.",
+      "russianSha256": "36e205ce6e0956ebaaee9bc7f70b2c9ca1a3aa32d207ce6644148162f07252c9",
+      "preservedBookMetadata": "на 10: 1 Лик:",
+      "separateSourceCitation": null,
+      "source": {
+        "title": "Перевод иеромонаха Амвросия (Тимрота), Азбука веры",
+        "url": "https://azbyka.ru/bogosluzhenie/liturgiya-ioanna-zlatousta/",
+        "sourcePath": ".local/translation-audit/full.html",
+        "sourceFileSha256": "ca80cb43bd94f28ed0bc774878f7883ef3a611f3f5904c9dd92b15e09212f0b3",
+        "fixture": "book/sunday-opening/full-liturgy.html",
+        "selectedWitnessIndex": 0,
+        "sourceCsBody": "Блажени кротции, / яко тии наследят землю.",
+        "sourceCsBodySha256": "04c874a33635e1a84f25a9f574626a65e12f9471688b1eed677652c80430471b",
+        "sourceRuBodyUnmodified": "Блаженны кроткие, / ибо они наследуют землю.",
+        "sourceRuBodyUnmodifiedSha256": "2d34a1ff0d70ea4b81beec58b5639d1af64737c12f5456bb06518edd92dcb7b7",
+        "expectedLeftMetadata": [
+          {
+            "class": [
+              "k"
+            ],
+            "text": "на 10:"
+          },
+          {
+            "class": [
+              "n"
+            ],
+            "text": "1."
+          }
+        ],
+        "expectedRightMetadata": [
+          {
+            "class": [
+              "k"
+            ],
+            "text": "на 10:"
+          },
+          {
+            "class": [
+              "n"
+            ],
+            "text": "1."
+          }
+        ],
+        "boundary": "PAIRED_LEADING_DOM_METADATA_ONLY_REVIEW_REQUIRED",
+        "actualJsoupRowIndexForEvidenceOnly": 97
+      },
+      "occurrences": [
+        {
+          "bookKey": "2026-11-15|LITURGY|30|~|~",
+          "sourcePath": "app/src/test/resources/book/liturgy-2026-11-15.html",
+          "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+          "sourceBookContentHash": "9d8e0e762182bb4828a6f524c666a9f05c70ea871beb9e74f4c173873eb93c7b",
+          "blockId": "liturgy-82484d23212b-1:7479391109195a49:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "chapterTitle": "Блаженны, третий изобразительный антифон (на 8)",
+          "originalSha256": "bc2c7424e021c4f899c926323052e87711431ed8d68d726c79aabac167faef9d",
+          "spoken": true,
+          "isPrivate": false,
+          "isQuiet": false,
+          "isAltar": false,
+          "sourceConstructorUrl": "https://azbyka.ru/worships/?date=2026-11-15&worship=liturgy&size=full&church=30",
+          "context": [
+            {
+              "id": "liturgy-82484d23212b-1:14aa3aa10c361b56:1",
+              "kind": "PRAYER",
+              "original": "Во Ца́рствии Твое́м помяни́ нас, Го́споди, / егда́ прии́деши, во Ца́рствии Твое́м.",
+              "originalSha256": "d2a949d6f64f401ffae6793983119027f9a4dbce70355ad11eaaafb87894416b",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:95d6bfe151324036:1",
+              "kind": "PRAYER",
+              "original": "на 12: 1 Лик: Блаже́ни ни́щии ду́хом, / я́ко тех есть Ца́рство Небе́сное.",
+              "originalSha256": "f3b8a71ee54d582378640f50dae1f2732236e6edbf334544832d6f00fac92e2a",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:5b31bbb3ff415144:1",
+              "kind": "PRAYER",
+              "original": "Блаже́ни пла́чущии, / я́ко ти́и уте́шатся.",
+              "originalSha256": "8760d6596f647c93d0f63cd295331989c9ad2fd5a9d65f0311cb1d4202e149bb",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:7479391109195a49:1",
+              "kind": "PRAYER",
+              "original": "на 10: 1 Лик: Блаже́ни кро́тции, / я́ко ти́и насле́дят зе́млю.",
+              "originalSha256": "bc2c7424e021c4f899c926323052e87711431ed8d68d726c79aabac167faef9d",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:5ed2d546b3c35cde:1",
+              "kind": "PRAYER",
+              "original": "Блаже́ни а́лчущии и жа́ждущии пра́вды, / я́ко ти́и насы́тятся.",
+              "originalSha256": "d5080d6264ade00d207df4ba64ae8386c37a6627d3334549c70eda9138899991",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:90aaca42c1b2d3b8:1",
+              "kind": "PRAYER",
+              "original": "на 8: 1 Лик: Блаже́ни ми́лостивии, / я́ко ти́и поми́ловани бу́дут.",
+              "originalSha256": "5733fda4b19e7878f80cb63f4ef8590ac5276afd7aea2ccfbac13420b1012f36",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            }
+          ]
+        },
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "sourcePath": ".local/release11/next-core/russian/octoechos/source-liturgy-2026-11-22.html",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourceBookContentHash": "adfd788a85c9ac30b6c8767292b55cbd980b84f19147cbe7e4a0d553a0c2c87b",
+          "blockId": "liturgy-82484d23212b-1:7479391109195a49:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "chapterTitle": "Блаженны, третий изобразительный антифон (на 8)",
+          "originalSha256": "bc2c7424e021c4f899c926323052e87711431ed8d68d726c79aabac167faef9d",
+          "spoken": true,
+          "isPrivate": false,
+          "isQuiet": false,
+          "isAltar": false,
+          "sourceConstructorUrl": "https://azbyka.ru/worships/?date=2026-11-22&worship=liturgy&size=full&church=30",
+          "context": [
+            {
+              "id": "liturgy-82484d23212b-1:14aa3aa10c361b56:1",
+              "kind": "PRAYER",
+              "original": "Во Ца́рствии Твое́м помяни́ нас, Го́споди, / егда́ прии́деши, во Ца́рствии Твое́м.",
+              "originalSha256": "d2a949d6f64f401ffae6793983119027f9a4dbce70355ad11eaaafb87894416b",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:95d6bfe151324036:1",
+              "kind": "PRAYER",
+              "original": "на 12: 1 Лик: Блаже́ни ни́щии ду́хом, / я́ко тех есть Ца́рство Небе́сное.",
+              "originalSha256": "f3b8a71ee54d582378640f50dae1f2732236e6edbf334544832d6f00fac92e2a",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:5b31bbb3ff415144:1",
+              "kind": "PRAYER",
+              "original": "Блаже́ни пла́чущии, / я́ко ти́и уте́шатся.",
+              "originalSha256": "8760d6596f647c93d0f63cd295331989c9ad2fd5a9d65f0311cb1d4202e149bb",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:7479391109195a49:1",
+              "kind": "PRAYER",
+              "original": "на 10: 1 Лик: Блаже́ни кро́тции, / я́ко ти́и насле́дят зе́млю.",
+              "originalSha256": "bc2c7424e021c4f899c926323052e87711431ed8d68d726c79aabac167faef9d",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:5ed2d546b3c35cde:1",
+              "kind": "PRAYER",
+              "original": "Блаже́ни а́лчущии и жа́ждущии пра́вды, / я́ко ти́и насы́тятся.",
+              "originalSha256": "d5080d6264ade00d207df4ba64ae8386c37a6627d3334549c70eda9138899991",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:90aaca42c1b2d3b8:1",
+              "kind": "PRAYER",
+              "original": "на 8: 1 Лик: Блаже́ни ми́лостивии, / я́ко ти́и поми́ловани бу́дут.",
+              "originalSha256": "5733fda4b19e7878f80cb63f4ef8590ac5276afd7aea2ccfbac13420b1012f36",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rank": 29,
+      "id": "liturgy-next-016e9f8cb0f6d9b4",
+      "semanticVerdict": "PASS",
+      "original": "на 8: 1 Лик: Блаже́ни ми́лостивии, / я́ко ти́и поми́ловани бу́дут.",
+      "originalSha256": "5733fda4b19e7878f80cb63f4ef8590ac5276afd7aea2ccfbac13420b1012f36",
+      "russian": "на 8: 1 Лик: Блаженны милостивые, / ибо они помилованы будут.",
+      "russianSha256": "42c8818ace2d65354cccc8b23228c7deea2825807bb1bac2021ac7eafa1d007c",
+      "preservedBookMetadata": "на 8: 1 Лик:",
+      "separateSourceCitation": null,
+      "source": {
+        "title": "Перевод иеромонаха Амвросия (Тимрота), Азбука веры",
+        "url": "https://azbyka.ru/bogosluzhenie/liturgiya-ioanna-zlatousta/",
+        "sourcePath": ".local/translation-audit/full.html",
+        "sourceFileSha256": "ca80cb43bd94f28ed0bc774878f7883ef3a611f3f5904c9dd92b15e09212f0b3",
+        "fixture": "book/sunday-opening/full-liturgy.html",
+        "selectedWitnessIndex": 0,
+        "sourceCsBody": "Блажени милостивии, / яко тии помиловани будут.",
+        "sourceCsBodySha256": "6f870dc7472f3318c507132080651f7e2563dd8bcc94b994f30d27776e375f47",
+        "sourceRuBodyUnmodified": "Блаженны милостивые, / ибо они помилованы будут.",
+        "sourceRuBodyUnmodifiedSha256": "7d99378558b0ed2482a5cb438d0648ec1df82075b72c8c0ca64a6a8e8819d088",
+        "expectedLeftMetadata": [
+          {
+            "class": [
+              "k"
+            ],
+            "text": "на 8:"
+          },
+          {
+            "class": [
+              "n"
+            ],
+            "text": "1."
+          }
+        ],
+        "expectedRightMetadata": [
+          {
+            "class": [
+              "k"
+            ],
+            "text": "на 8:"
+          },
+          {
+            "class": [
+              "n"
+            ],
+            "text": "1."
+          }
+        ],
+        "boundary": "PAIRED_LEADING_DOM_METADATA_ONLY_REVIEW_REQUIRED",
+        "actualJsoupRowIndexForEvidenceOnly": 99
+      },
+      "occurrences": [
+        {
+          "bookKey": "2026-11-15|LITURGY|30|~|~",
+          "sourcePath": "app/src/test/resources/book/liturgy-2026-11-15.html",
+          "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+          "sourceBookContentHash": "9d8e0e762182bb4828a6f524c666a9f05c70ea871beb9e74f4c173873eb93c7b",
+          "blockId": "liturgy-82484d23212b-1:90aaca42c1b2d3b8:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "chapterTitle": "Блаженны, третий изобразительный антифон (на 8)",
+          "originalSha256": "5733fda4b19e7878f80cb63f4ef8590ac5276afd7aea2ccfbac13420b1012f36",
+          "spoken": true,
+          "isPrivate": false,
+          "isQuiet": false,
+          "isAltar": false,
+          "sourceConstructorUrl": "https://azbyka.ru/worships/?date=2026-11-15&worship=liturgy&size=full&church=30",
+          "context": [
+            {
+              "id": "liturgy-82484d23212b-1:5b31bbb3ff415144:1",
+              "kind": "PRAYER",
+              "original": "Блаже́ни пла́чущии, / я́ко ти́и уте́шатся.",
+              "originalSha256": "8760d6596f647c93d0f63cd295331989c9ad2fd5a9d65f0311cb1d4202e149bb",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:7479391109195a49:1",
+              "kind": "PRAYER",
+              "original": "на 10: 1 Лик: Блаже́ни кро́тции, / я́ко ти́и насле́дят зе́млю.",
+              "originalSha256": "bc2c7424e021c4f899c926323052e87711431ed8d68d726c79aabac167faef9d",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:5ed2d546b3c35cde:1",
+              "kind": "PRAYER",
+              "original": "Блаже́ни а́лчущии и жа́ждущии пра́вды, / я́ко ти́и насы́тятся.",
+              "originalSha256": "d5080d6264ade00d207df4ba64ae8386c37a6627d3334549c70eda9138899991",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:90aaca42c1b2d3b8:1",
+              "kind": "PRAYER",
+              "original": "на 8: 1 Лик: Блаже́ни ми́лостивии, / я́ко ти́и поми́ловани бу́дут.",
+              "originalSha256": "5733fda4b19e7878f80cb63f4ef8590ac5276afd7aea2ccfbac13420b1012f36",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:a932c4516d99f670:1",
+              "kind": "RUBRIC",
+              "original": "Октоих. Глас 7. Неделя. На 8.",
+              "originalSha256": "9f5a01ec19fc8adbdc0fd9a9f1fba57aa4d84d1687f6ba8a2f2757d9ad57aa42",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:08277d2b0c3de774:1",
+              "kind": "PRAYER",
+              "original": "Красе́н бе́ и до́бр в сне́дь, и́же мене́ умертви́вый пло́д: Христо́с е́сть Дре́во Живо́тное, от Него́же яды́й не умира́ю, но вопию́ с разбо́йником: помяни́ мя, Го́споди, во Ца́рствии Твое́м.",
+              "originalSha256": "4faebabae7a81e5e539c3c0677cdc33ae82f22fe6654401eb5f85c0e2a0588ac",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            }
+          ]
+        },
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "sourcePath": ".local/release11/next-core/russian/octoechos/source-liturgy-2026-11-22.html",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourceBookContentHash": "adfd788a85c9ac30b6c8767292b55cbd980b84f19147cbe7e4a0d553a0c2c87b",
+          "blockId": "liturgy-82484d23212b-1:90aaca42c1b2d3b8:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "chapterTitle": "Блаженны, третий изобразительный антифон (на 8)",
+          "originalSha256": "5733fda4b19e7878f80cb63f4ef8590ac5276afd7aea2ccfbac13420b1012f36",
+          "spoken": true,
+          "isPrivate": false,
+          "isQuiet": false,
+          "isAltar": false,
+          "sourceConstructorUrl": "https://azbyka.ru/worships/?date=2026-11-22&worship=liturgy&size=full&church=30",
+          "context": [
+            {
+              "id": "liturgy-82484d23212b-1:5b31bbb3ff415144:1",
+              "kind": "PRAYER",
+              "original": "Блаже́ни пла́чущии, / я́ко ти́и уте́шатся.",
+              "originalSha256": "8760d6596f647c93d0f63cd295331989c9ad2fd5a9d65f0311cb1d4202e149bb",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:7479391109195a49:1",
+              "kind": "PRAYER",
+              "original": "на 10: 1 Лик: Блаже́ни кро́тции, / я́ко ти́и насле́дят зе́млю.",
+              "originalSha256": "bc2c7424e021c4f899c926323052e87711431ed8d68d726c79aabac167faef9d",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:5ed2d546b3c35cde:1",
+              "kind": "PRAYER",
+              "original": "Блаже́ни а́лчущии и жа́ждущии пра́вды, / я́ко ти́и насы́тятся.",
+              "originalSha256": "d5080d6264ade00d207df4ba64ae8386c37a6627d3334549c70eda9138899991",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:90aaca42c1b2d3b8:1",
+              "kind": "PRAYER",
+              "original": "на 8: 1 Лик: Блаже́ни ми́лостивии, / я́ко ти́и поми́ловани бу́дут.",
+              "originalSha256": "5733fda4b19e7878f80cb63f4ef8590ac5276afd7aea2ccfbac13420b1012f36",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:36e3357e17ede0bd:1",
+              "kind": "RUBRIC",
+              "original": "Октоих. Глас 8. Неделя. На 8.",
+              "originalSha256": "c3d7b7d6667bc7b00a70e572aeb45c8d47423fd3713f73bd9e072ee370a2d469",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:cee9cf91df7231b1:1",
+              "kind": "PRAYER",
+              "original": "Помяни́ на́с, Христе́ Спа́се ми́ра, я́коже разбо́йника помяну́л еси́ на дре́ве: и сподо́би все́х, Еди́не Ще́дре, Небе́сному Ца́рствию Твоему́.",
+              "originalSha256": "686ca07c8f5410b6de9b3debac9bdec816afc25c95dc87e9b213a40a66214786",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rank": 32,
+      "id": "liturgy-next-24545440de80c7d6",
+      "semanticVerdict": "PASS",
+      "original": "Красе́н бе́ и до́бр в сне́дь, и́же мене́ умертви́вый пло́д: Христо́с е́сть Дре́во Живо́тное, от Него́же яды́й не умира́ю, но вопию́ с разбо́йником: помяни́ мя, Го́споди, во Ца́рствии Твое́м.",
+      "originalSha256": "4faebabae7a81e5e539c3c0677cdc33ae82f22fe6654401eb5f85c0e2a0588ac",
+      "russian": "Красив был и хорош в пищу / меня умертвивший плод. / Христос же – древо жизни, / от которого вкусив, я не умираю, / но взываю вместе с разбойником: / «Помяни меня, Господи, / во Царствии Твоем!»",
+      "russianSha256": "69d9c6bc9d59d4f61056ba1e20c54757d1f8d0d3640bb15e1b561086ff79b920",
+      "preservedBookMetadata": null,
+      "separateSourceCitation": null,
+      "source": {
+        "title": "Перевод иеромонаха Амвросия (Тимрота), Азбука веры",
+        "url": "https://azbyka.ru/bogosluzhenie/oktoih-voskresnyj-glas-7/",
+        "sourcePath": ".local/release11/next-core/russian/octoechos/glas-7.html",
+        "sourceFileSha256": "51263d620a7141446d3133858c33acb41ea18ddbe99b54f14fac39ff436fb5a7",
+        "fixture": "book/published-russian/sunday-7.html",
+        "selectedWitnessIndex": 0,
+        "sourceCsBody": "Красен бе и добр в снедь, иже мене умертвивый плод: / Христос есть Древо животное, / от Негоже ядый не умираю, / но вопию с разбойником: / помяни мя Господи, во Царствии Твоем.",
+        "sourceCsBodySha256": "e914a250f2eccd828ba324dd847bb1a824337a9b6000910b1e6eb8337445bdaa",
+        "sourceRuBodyUnmodified": "Красив был и хорош в пищу / меня умертвивший плод. / Христос же – древо жизни, / от которого вкусив, я не умираю, / но взываю вместе с разбойником: / «Помяни меня, Господи, / во Царствии Твоем!»",
+        "sourceRuBodyUnmodifiedSha256": "69d9c6bc9d59d4f61056ba1e20c54757d1f8d0d3640bb15e1b561086ff79b920",
+        "expectedLeftMetadata": [
+          "НА ЛИТУРГИИ.",
+          "Блаженна, глас 7:"
+        ],
+        "expectedRightMetadata": [
+          "НА ЛИТУРГИИ",
+          "Блаженны, на 8"
+        ],
+        "boundary": "ONE_PAIRED_PARAGRAPH_UNDER_PAIRED_HEADINGS_REVIEW_REQUIRED",
+        "actualJsoupRowIndexForEvidenceOnly": 180
+      },
+      "occurrences": [
+        {
+          "bookKey": "2026-11-15|LITURGY|30|~|~",
+          "sourcePath": "app/src/test/resources/book/liturgy-2026-11-15.html",
+          "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+          "sourceBookContentHash": "9d8e0e762182bb4828a6f524c666a9f05c70ea871beb9e74f4c173873eb93c7b",
+          "blockId": "liturgy-82484d23212b-1:08277d2b0c3de774:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "chapterTitle": "Блаженны, третий изобразительный антифон (на 8)",
+          "originalSha256": "4faebabae7a81e5e539c3c0677cdc33ae82f22fe6654401eb5f85c0e2a0588ac",
+          "spoken": true,
+          "isPrivate": false,
+          "isQuiet": false,
+          "isAltar": false,
+          "sourceConstructorUrl": "https://azbyka.ru/worships/?date=2026-11-15&worship=liturgy&size=full&church=30",
+          "context": [
+            {
+              "id": "liturgy-82484d23212b-1:5ed2d546b3c35cde:1",
+              "kind": "PRAYER",
+              "original": "Блаже́ни а́лчущии и жа́ждущии пра́вды, / я́ко ти́и насы́тятся.",
+              "originalSha256": "d5080d6264ade00d207df4ba64ae8386c37a6627d3334549c70eda9138899991",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:90aaca42c1b2d3b8:1",
+              "kind": "PRAYER",
+              "original": "на 8: 1 Лик: Блаже́ни ми́лостивии, / я́ко ти́и поми́ловани бу́дут.",
+              "originalSha256": "5733fda4b19e7878f80cb63f4ef8590ac5276afd7aea2ccfbac13420b1012f36",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:a932c4516d99f670:1",
+              "kind": "RUBRIC",
+              "original": "Октоих. Глас 7. Неделя. На 8.",
+              "originalSha256": "9f5a01ec19fc8adbdc0fd9a9f1fba57aa4d84d1687f6ba8a2f2757d9ad57aa42",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:08277d2b0c3de774:1",
+              "kind": "PRAYER",
+              "original": "Красе́н бе́ и до́бр в сне́дь, и́же мене́ умертви́вый пло́д: Христо́с е́сть Дре́во Живо́тное, от Него́же яды́й не умира́ю, но вопию́ с разбо́йником: помяни́ мя, Го́споди, во Ца́рствии Твое́м.",
+              "originalSha256": "4faebabae7a81e5e539c3c0677cdc33ae82f22fe6654401eb5f85c0e2a0588ac",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:0a5a9f8029da081e:1",
+              "kind": "PRAYER",
+              "original": "Блаже́ни чи́стии се́рдцем, / я́ко ти́и Бо́га у́зрят.",
+              "originalSha256": "5afb933da619aedcb321362b054e95e0a856f7c0bea5b336aa8482bc6b4710bd",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:70659fe9ae89edf7:1",
+              "kind": "PRAYER",
+              "original": "На Кре́ст возне́сся, Ще́дре, Ада́мово рукописа́ние дре́вняго греха́ загла́дил еси́, и спа́сл еси́ от пре́лести ве́сь ро́д челове́ческий. Те́мже воспева́ем Тя́, Благоде́телю Го́споди.",
+              "originalSha256": "ddc87de57e48e52cd7e548bf30cd910beaeb1561c08809a3690387c85d3b4416",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rank": 39,
+      "id": "liturgy-next-4eaa1faf114a618c",
+      "semanticVerdict": "PASS",
+      "original": "Помяни́ на́с, Христе́ Спа́се ми́ра, я́коже разбо́йника помяну́л еси́ на дре́ве: и сподо́би все́х, Еди́не Ще́дре, Небе́сному Ца́рствию Твоему́.",
+      "originalSha256": "686ca07c8f5410b6de9b3debac9bdec816afc25c95dc87e9b213a40a66214786",
+      "russian": "Помяни нас, Христе, Спаситель мира, / как помянул разбойника на древе, / и удостой всех, единый Милосердный, / Небесного Царства Твоего.",
+      "russianSha256": "86358bd1c81c36d19cd0d0287dbe9be6fdb20a0efd60cb69ce4c8f9094153881",
+      "preservedBookMetadata": null,
+      "separateSourceCitation": null,
+      "source": {
+        "title": "Перевод иеромонаха Амвросия (Тимрота), Азбука веры",
+        "url": "https://azbyka.ru/bogosluzhenie/oktoih-voskresnyj-glas-8/",
+        "sourcePath": ".local/release11/next-core/russian/octoechos/glas-8.html",
+        "sourceFileSha256": "57cf0a46adf64ab73690f6d155c1e7557a72af8124190d8204de6bb435b6ba8b",
+        "fixture": "book/published-russian/sunday-8.html",
+        "selectedWitnessIndex": 0,
+        "sourceCsBody": "Помяни нас, Христе Спасе мiра, / якоже разбойника помянул еси на древе: / и сподоби всех, Едине Щедре, / Небесному Царствию Твоему.",
+        "sourceCsBodySha256": "2450ce7d77e7d7de75c2875f389d0daea7b037cccd7d70b65e8af0059f878193",
+        "sourceRuBodyUnmodified": "Помяни нас, Христе, Спаситель мира, / как помянул разбойника на древе, / и удостой всех, единый Милосердный, / Небесного Царства Твоего.",
+        "sourceRuBodyUnmodifiedSha256": "86358bd1c81c36d19cd0d0287dbe9be6fdb20a0efd60cb69ce4c8f9094153881",
+        "expectedLeftMetadata": [
+          "НА ЛИТУРГИИ.",
+          "Блаженны, глас 8:"
+        ],
+        "expectedRightMetadata": [
+          "НА ЛИТУРГИИ",
+          "Блаженны, на 8"
+        ],
+        "boundary": "ONE_PAIRED_PARAGRAPH_UNDER_PAIRED_HEADINGS_REVIEW_REQUIRED",
+        "actualJsoupRowIndexForEvidenceOnly": 181
+      },
+      "occurrences": [
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "sourcePath": ".local/release11/next-core/russian/octoechos/source-liturgy-2026-11-22.html",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourceBookContentHash": "adfd788a85c9ac30b6c8767292b55cbd980b84f19147cbe7e4a0d553a0c2c87b",
+          "blockId": "liturgy-82484d23212b-1:cee9cf91df7231b1:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "chapterTitle": "Блаженны, третий изобразительный антифон (на 8)",
+          "originalSha256": "686ca07c8f5410b6de9b3debac9bdec816afc25c95dc87e9b213a40a66214786",
+          "spoken": true,
+          "isPrivate": false,
+          "isQuiet": false,
+          "isAltar": false,
+          "sourceConstructorUrl": "https://azbyka.ru/worships/?date=2026-11-22&worship=liturgy&size=full&church=30",
+          "context": [
+            {
+              "id": "liturgy-82484d23212b-1:5ed2d546b3c35cde:1",
+              "kind": "PRAYER",
+              "original": "Блаже́ни а́лчущии и жа́ждущии пра́вды, / я́ко ти́и насы́тятся.",
+              "originalSha256": "d5080d6264ade00d207df4ba64ae8386c37a6627d3334549c70eda9138899991",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:90aaca42c1b2d3b8:1",
+              "kind": "PRAYER",
+              "original": "на 8: 1 Лик: Блаже́ни ми́лостивии, / я́ко ти́и поми́ловани бу́дут.",
+              "originalSha256": "5733fda4b19e7878f80cb63f4ef8590ac5276afd7aea2ccfbac13420b1012f36",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:36e3357e17ede0bd:1",
+              "kind": "RUBRIC",
+              "original": "Октоих. Глас 8. Неделя. На 8.",
+              "originalSha256": "c3d7b7d6667bc7b00a70e572aeb45c8d47423fd3713f73bd9e072ee370a2d469",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:cee9cf91df7231b1:1",
+              "kind": "PRAYER",
+              "original": "Помяни́ на́с, Христе́ Спа́се ми́ра, я́коже разбо́йника помяну́л еси́ на дре́ве: и сподо́би все́х, Еди́не Ще́дре, Небе́сному Ца́рствию Твоему́.",
+              "originalSha256": "686ca07c8f5410b6de9b3debac9bdec816afc25c95dc87e9b213a40a66214786",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:0a5a9f8029da081e:1",
+              "kind": "PRAYER",
+              "original": "Блаже́ни чи́стии се́рдцем, / я́ко ти́и Бо́га у́зрят.",
+              "originalSha256": "5afb933da619aedcb321362b054e95e0a856f7c0bea5b336aa8482bc6b4710bd",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            },
+            {
+              "id": "liturgy-82484d23212b-1:b16b0a09485e60a0:1",
+              "kind": "PRAYER",
+              "original": "Слы́ши Ада́ме, и ра́дуйся со Е́вою: я́ко обнажи́вый пре́жде обоя́, и пре́лестию взе́м ва́с пле́нники, Кресто́м Христо́вым упраздни́ся.",
+              "originalSha256": "05057a4e9d43e9fa5f2c88e79e74a22f0b81980a8e4475eadea0e501e1288eae",
+              "isPrivate": false,
+              "isQuiet": false,
+              "isAltar": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "bookKey": "2026-11-15|LITURGY|30|~|~",
+      "fixture": "book/liturgy-2026-11-15.html",
+      "sourcePath": "app/src/test/resources/book/liturgy-2026-11-15.html",
+      "sourceFixtureSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+      "expectedGainCount": 7,
+      "sourceAcceptedContentHashUnmodified": "9d8e0e762182bb4828a6f524c666a9f05c70ea871beb9e74f4c173873eb93c7b",
+      "expected": [
+        {
+          "rank": 23,
+          "itemId": "liturgy-next-b02b245bd37621ef",
+          "blockId": "liturgy-82484d23212b-1:d323b1fdf8d03451:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "originalSha256": "71f9780b22e579668aefd241e7376726875baa40edfe187b363bcafe8f04ec19",
+          "russianSha256": "236d61f63fc6d3af6e60dc3df209d04119e668a3212dc9a172554d774cb07f71"
+        },
+        {
+          "rank": 24,
+          "itemId": "liturgy-next-6587982f927d1185",
+          "blockId": "liturgy-4291c26b3f06-1:b743466c6fe92fa9:1",
+          "chapterId": "liturgy-4291c26b3f06-1",
+          "originalSha256": "29bbf5c991bdadcc1d7668cea4242c483ede34925d7554dc845adfb266b78b94",
+          "russianSha256": "66b9804b53221bddb25aa9c7d632b781868a6baa5d50f3de70413da6a043fb98"
+        },
+        {
+          "rank": 25,
+          "itemId": "liturgy-next-ffcf53b809f16712",
+          "blockId": "liturgy-82484d23212b-1:95d6bfe151324036:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "originalSha256": "f3b8a71ee54d582378640f50dae1f2732236e6edbf334544832d6f00fac92e2a",
+          "russianSha256": "b081be94a45491bc95c637f2332589da972cd70c81e18579d70f7b3d9521e62f"
+        },
+        {
+          "rank": 27,
+          "itemId": "liturgy-next-202a5f18a8fa5824",
+          "blockId": "liturgy-82484d23212b-1:5a13e153c6e38c7c:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "originalSha256": "4eb9ce8639964009cb771f4303ef5c66a920e1c38d1326a5a7bc6b86c2db0bf4",
+          "russianSha256": "6e93703c8134c05cb15f69bdeb001fabb59af90a31407918c4afcab837d05d5c"
+        },
+        {
+          "rank": 28,
+          "itemId": "liturgy-next-3c11cd3b221e34d7",
+          "blockId": "liturgy-82484d23212b-1:7479391109195a49:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "originalSha256": "bc2c7424e021c4f899c926323052e87711431ed8d68d726c79aabac167faef9d",
+          "russianSha256": "36e205ce6e0956ebaaee9bc7f70b2c9ca1a3aa32d207ce6644148162f07252c9"
+        },
+        {
+          "rank": 29,
+          "itemId": "liturgy-next-016e9f8cb0f6d9b4",
+          "blockId": "liturgy-82484d23212b-1:90aaca42c1b2d3b8:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "originalSha256": "5733fda4b19e7878f80cb63f4ef8590ac5276afd7aea2ccfbac13420b1012f36",
+          "russianSha256": "42c8818ace2d65354cccc8b23228c7deea2825807bb1bac2021ac7eafa1d007c"
+        },
+        {
+          "rank": 32,
+          "itemId": "liturgy-next-24545440de80c7d6",
+          "blockId": "liturgy-82484d23212b-1:08277d2b0c3de774:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "originalSha256": "4faebabae7a81e5e539c3c0677cdc33ae82f22fe6654401eb5f85c0e2a0588ac",
+          "russianSha256": "69d9c6bc9d59d4f61056ba1e20c54757d1f8d0d3640bb15e1b561086ff79b920"
+        }
+      ]
+    },
+    {
+      "bookKey": "2026-11-22|LITURGY|30|~|~",
+      "fixture": "book/published-russian/liturgy-2026-11-22.html",
+      "sourcePath": ".local/release11/next-core/russian/octoechos/source-liturgy-2026-11-22.html",
+      "sourceFixtureSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+      "expectedGainCount": 7,
+      "sourceAcceptedContentHashUnmodified": "adfd788a85c9ac30b6c8767292b55cbd980b84f19147cbe7e4a0d553a0c2c87b",
+      "expected": [
+        {
+          "rank": 23,
+          "itemId": "liturgy-next-b02b245bd37621ef",
+          "blockId": "liturgy-82484d23212b-1:d323b1fdf8d03451:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "originalSha256": "71f9780b22e579668aefd241e7376726875baa40edfe187b363bcafe8f04ec19",
+          "russianSha256": "236d61f63fc6d3af6e60dc3df209d04119e668a3212dc9a172554d774cb07f71"
+        },
+        {
+          "rank": 24,
+          "itemId": "liturgy-next-6587982f927d1185",
+          "blockId": "liturgy-4291c26b3f06-1:b743466c6fe92fa9:1",
+          "chapterId": "liturgy-4291c26b3f06-1",
+          "originalSha256": "29bbf5c991bdadcc1d7668cea4242c483ede34925d7554dc845adfb266b78b94",
+          "russianSha256": "66b9804b53221bddb25aa9c7d632b781868a6baa5d50f3de70413da6a043fb98"
+        },
+        {
+          "rank": 25,
+          "itemId": "liturgy-next-ffcf53b809f16712",
+          "blockId": "liturgy-82484d23212b-1:95d6bfe151324036:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "originalSha256": "f3b8a71ee54d582378640f50dae1f2732236e6edbf334544832d6f00fac92e2a",
+          "russianSha256": "b081be94a45491bc95c637f2332589da972cd70c81e18579d70f7b3d9521e62f"
+        },
+        {
+          "rank": 27,
+          "itemId": "liturgy-next-202a5f18a8fa5824",
+          "blockId": "liturgy-82484d23212b-1:5a13e153c6e38c7c:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "originalSha256": "4eb9ce8639964009cb771f4303ef5c66a920e1c38d1326a5a7bc6b86c2db0bf4",
+          "russianSha256": "6e93703c8134c05cb15f69bdeb001fabb59af90a31407918c4afcab837d05d5c"
+        },
+        {
+          "rank": 28,
+          "itemId": "liturgy-next-3c11cd3b221e34d7",
+          "blockId": "liturgy-82484d23212b-1:7479391109195a49:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "originalSha256": "bc2c7424e021c4f899c926323052e87711431ed8d68d726c79aabac167faef9d",
+          "russianSha256": "36e205ce6e0956ebaaee9bc7f70b2c9ca1a3aa32d207ce6644148162f07252c9"
+        },
+        {
+          "rank": 29,
+          "itemId": "liturgy-next-016e9f8cb0f6d9b4",
+          "blockId": "liturgy-82484d23212b-1:90aaca42c1b2d3b8:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "originalSha256": "5733fda4b19e7878f80cb63f4ef8590ac5276afd7aea2ccfbac13420b1012f36",
+          "russianSha256": "42c8818ace2d65354cccc8b23228c7deea2825807bb1bac2021ac7eafa1d007c"
+        },
+        {
+          "rank": 39,
+          "itemId": "liturgy-next-4eaa1faf114a618c",
+          "blockId": "liturgy-82484d23212b-1:cee9cf91df7231b1:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "originalSha256": "686ca07c8f5410b6de9b3debac9bdec816afc25c95dc87e9b213a40a66214786",
+          "russianSha256": "86358bd1c81c36d19cd0d0287dbe9be6fdb20a0efd60cb69ce4c8f9094153881"
+        }
+      ]
+    }
+  ],
+  "rejectedWitnesses": [
+    {
+      "rank": 9,
+      "id": "liturgy-next-d5c5e1e25aa045b4",
+      "original": "Богоро́дичен: Предста́тельство христиа́н непосты́дное, хода́тайство ко Творцу́ непрело́жное, не пре́зри гре́шных моле́ний гла́сы, но предвари́, я́ко Блага́я, на по́мощь на́с, ве́рно зову́щих Ти́: ускори́ на моли́тву, и потщи́ся на умоле́ние, предста́тельствующи при́сно, Богоро́дице, чту́щих Тя́.",
+      "originalSha256": "abeac179553936a045e06047fdab549f624e5c2b1380feb4ec07ccc4f227f66a",
+      "witnessIndex": 0,
+      "verdict": "REJECT",
+      "sourceIdentity": {
+        "path": ".local/translation-audit/short.html",
+        "sourceFileSha256": "abb4dd9cfcc174194af1d1439840385308cba45e9e754fba5ca84b2a36fddf7f",
+        "sourceTitle": "Перевод иеромонаха Амвросия (Тимрота), Азбука веры",
+        "sourceUrl": "https://azbyka.ru/bogosluzhenie/liturgiya-svt-ioanna-zlatousta/",
+        "documentLocation": "https://azbyka.ru/bogosluzhenie/liturgiya-svt-ioanna-zlatousta/",
+        "h1": [
+          "Литургия свт. Иоанна Златоуста"
+        ],
+        "registeredParallelSource": true,
+        "requiredForLiturgy": true,
+        "sundayRegistered": false,
+        "sundayPrepareAccepted": null,
+        "currentParsedEntries": 423
+      },
+      "rowIndex": 402,
+      "boundary": "ONE_PAIRED_PARAGRAPH_UNDER_PAIRED_HEADINGS_REVIEW_REQUIRED",
+      "rejection": {
+        "reason": "CHANGED_EXACT_PAIRED_HEADING",
+        "details": {
+          "side": "leftSourceMetadata",
+          "headingIndex": 0,
+          "expectedText": "И ныне, Богородичен:",
+          "expectedCleanText": "И ныне, Богородичен:",
+          "actualTag": "h3",
+          "actualText": "Слава, кондак, глас 6. Подобен: Еже о нас:",
+          "actualCleanText": "Слава, кондак, глас 6. Подобен: Еже о нас:",
+          "actualHtml": "<h3>Слава, кондак, глас 6.<br>\n  Подобен: Еже о нас:</h3>"
+        }
+      },
+      "expectedLeftMetadata": [
+        "И ныне, Богородичен:"
+      ],
+      "expectedRightMetadata": [
+        "И ныне, Богородичен"
+      ],
+      "actualLeftHeadings": [
+        {
+          "tag": "h3",
+          "text": "Слава, кондак, глас 6. Подобен: Еже о нас:",
+          "cleanText": "Слава, кондак, глас 6. Подобен: Еже о нас:",
+          "html": "<h3>Слава, кондак, глас 6.<br>\n  Подобен: Еже о нас:</h3>"
+        }
+      ],
+      "actualRightHeadings": [
+        {
+          "tag": "h3",
+          "text": "Слава, кондак, глас 6. Подобен: Еже о нас:",
+          "cleanText": "Слава, кондак, глас 6. Подобен: Еже о нас:",
+          "html": "<h3>Слава, кондак, глас 6.<br>\n  Подобен: Еже о нас:</h3>"
+        }
+      ],
+      "actualPairedCellHtmlSha256": [
+        "9436a10a2488489d8be1b72332560b0ca5f395b2fb13732034788aa90eef6806",
+        "6b83049299b4b4139199be80d0dabb0329d71953c135a6360d808b7320549cab"
+      ],
+      "directCurrentMatch": false
+    },
+    {
+      "rank": 21,
+      "id": "liturgy-next-016b022ab6e80789",
+      "original": "И всех, и вся.",
+      "originalSha256": "0ae5085b516324791991d4c7d0fb4d86090bc9a837befd1dd6350268d930de58",
+      "witnessIndex": 1,
+      "verdict": "REJECT",
+      "sourceIdentity": {
+        "path": ".local/translation-audit/short.html",
+        "sourceFileSha256": "abb4dd9cfcc174194af1d1439840385308cba45e9e754fba5ca84b2a36fddf7f",
+        "sourceTitle": "Перевод иеромонаха Амвросия (Тимрота), Азбука веры",
+        "sourceUrl": "https://azbyka.ru/bogosluzhenie/liturgiya-svt-ioanna-zlatousta/",
+        "documentLocation": "https://azbyka.ru/bogosluzhenie/liturgiya-svt-ioanna-zlatousta/",
+        "h1": [
+          "Литургия свт. Иоанна Златоуста"
+        ],
+        "registeredParallelSource": true,
+        "requiredForLiturgy": true,
+        "sundayRegistered": false,
+        "sundayPrepareAccepted": null,
+        "currentParsedEntries": 423
+      },
+      "rowIndex": 267,
+      "boundary": "PAIRED_LEADING_DOM_METADATA_ONLY_REVIEW_REQUIRED",
+      "rejection": {
+        "reason": "MISSING_FINITE_LEADING_METADATA",
+        "details": {
+          "side": "leftSourceMetadata",
+          "expected": {
+            "class": [
+              "k"
+            ],
+            "text": "И певцы поют:"
+          },
+          "actual": "В первых помяни, Господи, великаго господина и отца нашего"
+        }
+      },
+      "expectedLeftMetadata": [
+        {
+          "class": [
+            "k"
+          ],
+          "text": "И певцы поют:"
+        }
+      ],
+      "expectedRightMetadata": [
+        {
+          "class": [
+            "k"
+          ],
+          "text": "Певцы поют:"
+        }
+      ],
+      "actualLeftHeadings": [],
+      "actualRightHeadings": [],
+      "actualPairedCellHtmlSha256": [
+        "8b7468b2586875b68587b016ca525e2011c0d94ca1be965070ed54e6c228b522",
+        "c0b568b17b1cc47de2c77adeea8c26cd99a5d7f26979e54bdb92e1a86b249e48"
+      ],
+      "directCurrentMatch": false
+    },
+    {
+      "rank": 11,
+      "id": "liturgy-next-01fb87cf2eb8d2ab",
+      "original": "Преосвяще́нныя митрополи́ты, архиепи́скопы и епи́скопы, и весь свяще́ннический и мона́шеский чин, при́чет свята́го хра́ма сего́, и всех вас правосла́вных христиа́н, да помяне́т Госпо́дь Бог во Ца́рствии Свое́м, всегда́, ны́не и при́сно, и во ве́ки веко́в.",
+      "originalSha256": "0689cf125bf5ec17c2a32c5a37f54ee373d2eda53c1c62d4ec9910b834a2cae1",
+      "witnessIndex": 0,
+      "verdict": "REJECT",
+      "sourceIdentity": {
+        "path": ".local/translation-audit/full.html",
+        "sourceFileSha256": "ca80cb43bd94f28ed0bc774878f7883ef3a611f3f5904c9dd92b15e09212f0b3",
+        "sourceTitle": "Перевод иеромонаха Амвросия (Тимрота), Азбука веры",
+        "sourceUrl": "https://azbyka.ru/bogosluzhenie/liturgiya-ioanna-zlatousta/",
+        "documentLocation": "https://azbyka.ru/bogosluzhenie/liturgiya-ioanna-zlatousta/",
+        "h1": [
+          "Божественная Литургия святого отца нашего Иоанна Златоуста"
+        ],
+        "registeredParallelSource": true,
+        "requiredForLiturgy": true,
+        "sundayRegistered": false,
+        "sundayPrepareAccepted": null,
+        "currentParsedEntries": 505
+      },
+      "rowIndex": 280,
+      "boundary": "PAIRED_LEADING_DOM_METADATA_ONLY_REVIEW_REQUIRED",
+      "rejection": {
+        "reason": "QUEUED_RU_DIFFERS_FROM_ACTUAL_BODY",
+        "details": {
+          "expected": "Преосвященных митрополитов, архиепископов и епископов, и весь священнический и монашеский чин, братию и прихожан святого храма сего (или: святой обители сей ) , всех вас, [греч.: нас] православных христиан, да помянет Господь Бог во Царствии Своем всегда, ныне и присно, и во веки веков.",
+          "actual": "Преосвященных митрополитов, архиепископов и епископов, и весь священнический и монашеский чин, братию и прихожан святого храма сего (или: святой обители сей), всех вас, [греч.: нас] православных христиан, да помянет Господь Бог во Царствии Своем всегда, ныне и присно, и во веки веков."
+        }
+      },
+      "expectedLeftMetadata": [
+        {
+          "class": [
+            "k"
+          ],
+          "text": "Таже священник:"
+        }
+      ],
+      "expectedRightMetadata": [
+        {
+          "class": [
+            "k"
+          ],
+          "text": "Также священник:"
+        }
+      ],
+      "actualLeftHeadings": [],
+      "actualRightHeadings": [],
+      "actualPairedCellHtmlSha256": [
+        "3a382b8040827aea5de202012eaa5a7881d1807a1d1ddc3536667be4cffafcbc",
+        "9431c733bf967b67db7cf4491f3482d74fcc6ddb34d99bf335f3fb26b9afda20"
+      ],
+      "directCurrentMatch": false
+    }
+  ],
+  "fullRussianClaimed": false
+}

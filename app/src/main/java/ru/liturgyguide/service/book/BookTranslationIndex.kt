@@ -14,7 +14,13 @@ import java.time.LocalDate
 data class BookTranslation(val russian: String, val source: BookSource, val meaning: String? = null)
 
 /** A lexical concordance, not a machine translator. Absent matches deliberately remain absent. */
-class BookTranslationIndex private constructor(private val entries: Map<String, BookTranslation>) {
+class BookTranslationIndex private constructor(
+    private val entries: Map<String, BookTranslation>,
+    // A newly derived boundary may fill an absent key, never replace an older exact pair.
+    private val fillOnlyKeys: Set<String> = emptySet(),
+    // Keep the qualified full-edition body separate from an older bare pair from another page.
+    private val openingBodies: Map<BookSundayOpening.Key, BookTranslation> = emptyMap()
+) {
     fun find(original: String): BookTranslation? {
         entries[normal(original)]?.let {
             return it.takeIf { pair ->
@@ -22,6 +28,7 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
                     (!BookPublishedIrmos6.registered(pair.source) || BookPublishedIrmos6.recognizesBody(original, pair))
             }
         }
+        BookSundayOpening.find(original, openingBodies::get)?.let { return it }
         val text = BookText.clean(original)
         // The constructor prepends tone metadata to complete calendar hymns. It is
         // not part of the prayer body, but remains visible in both languages.
@@ -58,14 +65,22 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
 
     /** Supplemental editions may fill a missing exact key, never replace an accepted pair. */
     internal fun fillingMissing(other: BookTranslationIndex): BookTranslationIndex =
-        BookTranslationIndex(other.entries + entries)
+        BookTranslationIndex(other.entries + entries, fillOnlyKeys + (other.fillOnlyKeys - entries.keys),
+            other.openingBodies + openingBodies)
 
     internal fun fromSources(sources: Collection<BookSource>): BookTranslationIndex {
         val pages = sources.mapNotNull { sourcePage(it.url) }
-        return BookTranslationIndex(entries.filterValues { translation ->
+        val retained = entries.filterValues { translation ->
             val actual = sourcePage(translation.source.url)
             pages.any { samePublishedPage(actual, it) }
-        })
+        }.toMutableMap()
+        val retainedOpening = openingBodies.filterValues { translation ->
+            val actual = sourcePage(translation.source.url)
+            pages.any { samePublishedPage(actual, it) }
+        }
+        val restoredBodyKeys = retainedOpening.keys.map { it.body }.toSet() - retained.keys
+        retainedOpening.forEach { (key, pair) -> retained.putIfAbsent(key.body, pair) }
+        return BookTranslationIndex(retained, fillOnlyKeys.intersect(retained.keys) + restoredBodyKeys, retainedOpening)
     }
 
     private fun sourcePage(url: String?): URI? = url?.let { runCatching { URI(it) }.getOrNull() }
@@ -96,17 +111,21 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
 
     fun plus(other: BookTranslationIndex): BookTranslationIndex {
         val merged = other.entries.toMutableMap()
+        val retainedFillOnly = other.fillOnlyKeys.toMutableSet()
         val shortPage = URI(TIMROT_SOURCE.url)
         val fullPage = URI(TIMROT_FULL_SOURCE.url)
         entries.forEach { (original, incoming) ->
             // A partial refresh may load the short edition while the full edition is offline.
             // Keep the previously verified full rendering of this exact prayer in that case.
             val previous = merged[original]
+            if (original in fillOnlyKeys && previous != null) return@forEach
             if (!samePublishedPage(sourcePage(incoming.source.url), shortPage) ||
-                !samePublishedPage(sourcePage(previous?.source?.url), fullPage))
+                !samePublishedPage(sourcePage(previous?.source?.url), fullPage)) {
                 merged[original] = incoming
+                if (original in fillOnlyKeys) retainedFillOnly += original else retainedFillOnly -= original
+            }
         }
-        return BookTranslationIndex(merged)
+        return BookTranslationIndex(merged, retainedFillOnly, openingBodies + other.openingBodies)
     }
 
     val size: Int get() = entries.size
@@ -116,6 +135,14 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
             addProperty("original", key); addProperty("russian", value.russian)
             addProperty("source", value.source.title); addProperty("url", value.source.url)
             value.meaning?.let { addProperty("meaning", it) }
+            if (key in fillOnlyKeys) addProperty("boundaryFillOnly", true)
+            val qualified = openingBodies.filterKeys { it.body == key }
+            if (qualified.isNotEmpty()) add("openingBodies", JsonArray().apply {
+                qualified.forEach { (metadata, pair) -> add(JsonObject().apply {
+                    addProperty("count", metadata.count); addProperty("russian", pair.russian)
+                    addProperty("source", pair.source.title); addProperty("url", pair.source.url)
+                }) }
+            })
         }) }
     }.toString()
 
@@ -217,6 +244,8 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
                 BookSundayRussianPage.prepare(document, source) ?: return empty() else document
             val result = linkedMapOf<String, BookTranslation>()
             val structuralBodies = linkedMapOf<String, BookTranslation>()
+            val sundayOpeningBodies = linkedMapOf<String, BookTranslation>()
+            val qualifiedOpening = linkedMapOf<BookSundayOpening.Key, BookTranslation>()
             val reviewedLiturgyEdition = isReviewedLiturgyEdition(source)
             val rows = if (BookSundayRussianPage.registered(source))
                 page.select(".article-single-content.main-page-content table tr") else page.select("table tr")
@@ -256,6 +285,12 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
                 pairedLeadingNumber(cells[0], cells[1])?.let { (left, right) ->
                     addParallel(structuralBodies, left, right, source)
                 }
+                BookSundayOpening.fromRow(page, source, cells[0], cells[1])?.let { body ->
+                    addParallel(sundayOpeningBodies, body.original, body.russian, source)
+                    body.count?.let { count -> BookSundayOpening.key(count, body.original)?.let { key ->
+                        qualifiedOpening.putIfAbsent(key, BookTranslation(body.russian, source))
+                    } }
+                }
                 // A Psalm heading belongs to the edition's structure. Keep the original pair too,
                 // and add a body-only pair only when both leading DOM headings name the same Psalm.
                 val leftPsalm = psalmBody(cells[0])
@@ -266,7 +301,9 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
             // Preserve an already available whole-cell edition even when a derived pair occurs
             // earlier on the page. New boundaries should only fill missing concordance entries.
             structuralBodies.forEach { (key, value) -> result.putIfAbsent(key, value) }
-            return BookTranslationIndex(result)
+            val addedOpeningKeys = sundayOpeningBodies.keys - result.keys
+            sundayOpeningBodies.forEach { (key, value) -> result.putIfAbsent(key, value) }
+            return BookTranslationIndex(result, addedOpeningKeys, qualifiedOpening)
         }
 
         // Reviewed full rows 409/470 (also short row 371), not generic speaker synonyms.
@@ -552,6 +589,8 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
         fun decode(json: String?): BookTranslationIndex = runCatching {
             require(json != null && json.length <= BookTranslationCorpus.MAX_BYTES)
             val result = linkedMapOf<String, BookTranslation>()
+            val qualifiedOpening = linkedMapOf<BookSundayOpening.Key, BookTranslation>()
+            val retainedFillOnly = linkedSetOf<String>()
             JsonParser.parseString(json).asJsonArray.forEach { value ->
                 val item = value.asJsonObject
                 val original = requireNotNull(item.string("original"))
@@ -559,8 +598,24 @@ class BookTranslationIndex private constructor(private val entries: Map<String, 
                 val source = BookSource(requireNotNull(item.string("source")), requireNotNull(item.string("url")))
                 require(original.length <= 30_000 && russian.length <= 40_000)
                 result[normal(original)] = BookTranslation(russian, source, item.string("meaning"))
+                item.get("boundaryFillOnly")?.let { flag ->
+                    require(flag.isJsonPrimitive && flag.asJsonPrimitive.isBoolean)
+                    if (flag.asBoolean) retainedFillOnly += normal(original)
+                }
+                item.getAsJsonArray("openingBodies")?.let { qualified ->
+                    require(qualified.size() <= 5)
+                    qualified.forEach { entry ->
+                        val body = entry.asJsonObject
+                        val key = requireNotNull(BookSundayOpening.key(requireNotNull(body.string("count")), original))
+                        val pair = BookTranslation(requireNotNull(body.string("russian")),
+                            BookSource(requireNotNull(body.string("source")), requireNotNull(body.string("url"))))
+                        require(pair.source == TIMROT_FULL_SOURCE && pair.russian.length in 1..40_000 &&
+                            key !in qualifiedOpening && BookText.withoutSpeaker(original).first == null)
+                        qualifiedOpening[key] = pair
+                    }
+                }
             }
-            BookTranslationIndex(result)
+            BookTranslationIndex(result, retainedFillOnly, qualifiedOpening)
         }.getOrElse { empty() }
 
         private fun addParallel(target: MutableMap<String, BookTranslation>, original: String, russian: String, source: BookSource) {
