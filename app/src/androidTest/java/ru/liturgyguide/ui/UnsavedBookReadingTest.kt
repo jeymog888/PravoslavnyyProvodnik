@@ -128,7 +128,7 @@ class UnsavedBookReadingTest {
                 onBack = {}, onSettings = {}, onOpenUrl = {}, onOpenCommonLiturgy = {})
         } }
         awaitReader()
-        compose.onNodeWithTag("book_saved").assertTextContains("Пока не сохранено", substring = true)
+        compose.onNodeWithTag("book_offline_summary", useUnmergedTree = true).assertTextEquals("Пока не сохранен")
     }
 
     private fun readSecondPrayer() {
@@ -165,8 +165,13 @@ class UnsavedBookReadingTest {
                 BookBlock("first", BookBlockKind.PRAYER, null, "Первая строка для проверки чтения. ".repeat(90),
                     "Первый русский текст для проверки чтения. ".repeat(90)),
                 BookBlock("second", BookBlockKind.PRAYER, null, "Вторая строка для проверки чтения. ".repeat(90),
-                    "Второй русский текст для проверки чтения. ".repeat(90))))), contentHash = "",
+                    "Второй русский текст для проверки чтения. ".repeat(90))) + (0..12).map { index ->
+                BookBlock("quiet-altar-$index", BookBlockKind.PRAYER, null,
+                    "Синтетический алтарный хвост для проверки целостности книги. ".repeat(3), isAltarText = true)
+            })), contentHash = "",
             enrichment = BookEnrichment(BookSupplementStatus.AVAILABLE, BookSupplementStatus.NOT_NEEDED))
-        return value.copy(contentHash = ServiceBookIntegrity.contentHash(value))
+        return value.copy(contentHash = ServiceBookIntegrity.contentHash(value)).also {
+            assertTrue("The fixture must satisfy the same saved-book contract as the reader", ServiceBookIntegrity.valid(it))
+        }
     }
 }

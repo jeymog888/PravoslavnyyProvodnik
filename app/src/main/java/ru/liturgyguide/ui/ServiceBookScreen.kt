@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
@@ -23,6 +24,7 @@ import ru.liturgyguide.model.WorshipKind
 import ru.liturgyguide.service.book.*
 
 private enum class AcceptedEditionAction { CHECK, DOWNLOAD, OPEN_NEW }
+private class BookOfflineWork { var run: Any? = null }
 
 /** Owns a single requested book. A cancelled response can never replace another route's text. */
 @Composable
@@ -236,7 +238,7 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
             acceptedCandidate = null
             acceptedCandidateHash = null
             acceptedRecoveryWarning = null
-            if ((retry == 0 || previousRecovery != null) && pinned != null) {
+            if (pinned != null && (opened == null || retry == 0 || previousRecovery != null)) {
                 // A downloaded update remains available after leaving the reader or going offline.
                 // Keep the accepted text fixed until the reader explicitly chooses the new version.
                 var latestReadFailed = false
@@ -301,6 +303,88 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
         is BookLoadResult.Failed -> state.cachedBook
         else -> null
     }
+    // This identity owns both checks and preparation. Even a non-cooperative late
+    // response must not publish into another text, edition, journey or parish.
+    val offlineOwner = remember(books, readingStore, loaded?.key, loaded?.contentHash, journey, parishId) { Any() }
+    val currentOfflineOwner by rememberUpdatedState(offlineOwner)
+    val offlineWork = remember(offlineOwner) { BookOfflineWork() }
+    var offlineState by remember(offlineOwner) { mutableStateOf<BookOfflineState?>(null) }
+    var offlineBusy by remember(offlineOwner) { mutableStateOf(false) }
+    var offlinePreparing by remember(offlineOwner) { mutableStateOf(false) }
+    var offlineRequest by remember(offlineOwner) { mutableIntStateOf(0) }
+    var prepareOffline by remember(offlineOwner) { mutableStateOf(false) }
+    // Keep this whole group in the same composition position while readiness and
+    // update candidates change. The reader must retain its measured prayer line.
+    val offlineControls = BookOfflineControls(offlineState, offlineBusy, offlinePreparing,
+        onCheck = {
+            if (currentOfflineOwner === offlineOwner && loaded != null && !offlineBusy && !refreshing) {
+                offlineBusy = true
+                prepareOffline = false
+                offlineRequest++
+            }
+        },
+        onPrepare = {
+            if (currentOfflineOwner === offlineOwner && loaded != null && !offlineBusy && !refreshing &&
+                offlineState?.canPrepare == true) {
+                offlineBusy = true
+                prepareOffline = true
+                offlineRequest++
+            }
+        },
+        onReopenActive = {
+            if (currentOfflineOwner !== offlineOwner || loaded == null || offlineBusy || refreshing) false
+            else {
+                // Reader has already retired its old cursor. The ordinary opening
+                // path rechecks the accepted edition and supplies its recovery UI.
+                result = null
+                update = null
+                refreshWarning = null
+                acceptedRecovery = null
+                acceptedCandidate = null
+                acceptedCandidateHash = null
+                acceptedRecoveryWarning = null
+                acceptedAction = AcceptedEditionAction.CHECK
+                retry++
+                true
+            }
+        })
+    LaunchedEffect(offlineOwner, result, refreshing, offlineRequest) {
+        val run = Any()
+        offlineWork.run = run
+        fun ownsRun() = currentOfflineOwner === offlineOwner && offlineWork.run === run
+        val active = loaded
+        if (active == null || refreshing) {
+            if (ownsRun()) {
+                offlineBusy = false
+                offlinePreparing = false
+                prepareOffline = false
+            }
+            return@LaunchedEffect
+        }
+        val shouldPrepare = prepareOffline
+        prepareOffline = false
+        offlineBusy = true
+        offlinePreparing = shouldPrepare
+        val job = currentCoroutineContext()[Job]
+        try {
+            val checked = if (shouldPrepare) BookOfflinePreparation.prepare(active, journey, parishId, books, readingStore) { state ->
+                if (job?.isActive == true && ownsRun()) offlineState = state
+            } else BookOfflinePreparation.inspect(active, journey, parishId, books, readingStore)
+            currentCoroutineContext().ensureActive()
+            if (ownsRun()) offlineState = checked
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) {
+            if (ownsRun()) offlineState = BookOfflineState(
+                parts = (journey?.parts ?: listOf(active.key)).map { BookOfflinePart(it, BookOfflinePartStatus.STORAGE_ERROR) },
+                partSet = journey?.effectivePartSet,
+                contextError = "Не удалось проверить загрузку. Попробуйте еще раз")
+        } finally {
+            if (ownsRun()) {
+                offlineBusy = false
+                offlinePreparing = false
+            }
+        }
+    }
     LaunchedEffect(books, requested, parishId, loaded?.contentHash, retry, refreshing) {
         if (loaded == null || refreshing || ownedRoute?.pendingSearchTarget != null ||
             (result as? BookLoadResult.Ready)?.saved == false) return@LaunchedEffect
@@ -358,6 +442,7 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
             },
             onRefresh = { retry++ }, refreshing = refreshing,
             onAcceptUpdate = acceptUpdate.takeIf { update != null },
+            offlineControls = offlineControls,
             isSaved = (result as? BookLoadResult.Ready)?.saved != false,
             churchTypeInfo = ChurchTypeClassifier.description(loaded.key.churchType, ChurchTypeClassifier.classify(ownParish)),
             loadWarning = refreshWarning ?: when (val state = result) {

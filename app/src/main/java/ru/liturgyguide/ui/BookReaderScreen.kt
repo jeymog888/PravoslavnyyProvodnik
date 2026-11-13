@@ -100,7 +100,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     searchCorpusLoader: (suspend () -> BookSearchCorpus)? = null,
     onChooseSearchHit: (BookLocatedSearchHit) -> Boolean = { false },
     pendingSearchTarget: BookLocatedSearchHit? = null,
-    onPendingSearchHandled: (BookLocatedSearchHit) -> Boolean = { true }) {
+    onPendingSearchHandled: (BookLocatedSearchHit) -> Boolean = { true },
+    offlineControls: BookOfflineControls? = null) {
     val journey = journeyContext?.validatedFor(book.key, parishId)
     val polyeleosBook = book.key.topLevel == "3" && book.rankSelection?.topLevel == "3"
     val uncheckedPolyeleosJourney = book.key.worship == WorshipKind.MATINS && book.key.topLevel == null &&
@@ -398,6 +399,28 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         mode = value
     }
     fun openSearch(useMicrophone: Boolean) { playing = false; microphoneFirst = useMicrophone; sheet = "search" }
+    fun openCalendar() {
+        playing = false
+        sheet = "calendar"
+        offlineControls?.onCheck?.invoke()
+    }
+    fun reopenActive() {
+        if (switchingPart || superseded || !cancelPendingTarget()) return
+        playing = false
+        microphoneFirst = false
+        sheet = null
+        // Retire this reader before its parent can mount another accepted edition.
+        // Neither disposal nor the lifecycle observer may publish the old cursor.
+        superseded = true
+        if (offlineControls?.onReopenActive?.invoke() == true) {
+            positioningOwner.job?.cancel()
+            pendingSearch = null
+            searchLine = null
+        } else {
+            superseded = false
+            partSwitchError = "Не удалось открыть текст заново. Попробуйте еще раз"
+        }
+    }
     fun continueAfterLocalVariation() {
         if (positioning || switchingPart || superseded || !cancelPendingTarget()) return
         // Read the measured item again after resolving any pending search transaction.
@@ -496,6 +519,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             } finally { switchingPart = false }
         }
     }
+    val acceptCalendarUpdate: () -> Unit = ::acceptUpdate
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
     // Use this reader's actual space, including split-screen and in-app constraints.
@@ -631,14 +655,11 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                                 else "Прежний вариант утрени - полиелейный порядок не проверен",
                                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.testTag("book_rank_note"))
-                            Text("Тексты на " + LocalDate.parse(book.key.date).format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru"))) +
-                                if (isSaved) " · Сохранено на телефоне" else " · Пока не сохранено", style = MaterialTheme.typography.bodySmall,
+                            Text("Тексты на " + LocalDate.parse(book.key.date).format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru"))),
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("book_saved"))
                             loadWarning?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
-                            OutlinedButton(onClick = { playing = false; sheet = "calendar" },
-                                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_open_calendar")) {
-                                Text("О дне и службе")
-                            }
+                            BookDetailsButton(offlineControls, isSaved, ::openCalendar, Modifier.testTag("book_open_calendar"))
                         }
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         Text(item.chapter.title, style = MaterialTheme.typography.titleLarge,
@@ -713,6 +734,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             }
             "options" -> Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp).testTag("book_options"), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text("Чтение", style = MaterialTheme.typography.headlineSmall)
+                BookDetailsButton(offlineControls, isSaved, ::openCalendar, Modifier.testTag("book_options_offline"))
                 Text("Темп прокрутки: $wordsPerMinute слов/мин", style = MaterialTheme.typography.titleMedium)
                 Slider(value = wordsPerMinute.toFloat(), onValueChange = { wordsPerMinute = it.toInt() },
                     valueRange = BookAutoScroll.MIN_RATE.toFloat()..BookAutoScroll.MAX_RATE.toFloat())
@@ -731,7 +753,10 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 }
                 loadWarning?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
             }
-            "calendar" -> BookCalendarContent(book, onOpenUrl, journey)
+            "calendar" -> BookCalendarContent(book, onOpenUrl, journey, offlineControls,
+                onChoosePart = ::choosePart, onReopenActive = ::reopenActive,
+                onRefresh = onRefresh, refreshing = refreshing,
+                onAcceptUpdate = acceptCalendarUpdate.takeIf { onAcceptUpdate != null })
             "sources" -> LazyColumn(Modifier.heightIn(max = 600.dp), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 item {
                     Text("Состав книги", style = MaterialTheme.typography.headlineSmall)
@@ -754,7 +779,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 }
                 items(book.notices) { Text(it, style = MaterialTheme.typography.bodyMedium) }
                 item {
-                    OutlinedButton(onClick = { sheet = "calendar" }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
+                    OutlinedButton(onClick = ::openCalendar, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
                         Text("О дне и службе")
                     }
                 }

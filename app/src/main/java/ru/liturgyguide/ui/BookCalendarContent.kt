@@ -17,6 +17,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import ru.liturgyguide.model.ServiceBook
+import ru.liturgyguide.model.ServiceBookKey
 import ru.liturgyguide.model.WorshipKind
 import ru.liturgyguide.service.book.BookJourneyContext
 import java.time.LocalDate
@@ -26,7 +27,9 @@ import java.util.Locale
 /** Kept outside the prayer stream: a commemoration is not an extra part of this service. */
 @Composable
 internal fun BookCalendarContent(book: ServiceBook, onOpenUrl: (String) -> Unit,
-    journeyContext: BookJourneyContext? = null) {
+    journeyContext: BookJourneyContext? = null, offlineControls: BookOfflineControls? = null,
+    onChoosePart: (ServiceBookKey) -> Unit = {}, onReopenActive: () -> Unit = {},
+    onRefresh: () -> Unit = {}, refreshing: Boolean = false, onAcceptUpdate: (() -> Unit)? = null) {
     val day = book.calendarDay
     val journey = journeyContext?.validatedFor(book.key, journeyContext.parishId)
     var showCommemorations by rememberSaveable(book.contentHash) { mutableStateOf(false) }
@@ -39,6 +42,10 @@ internal fun BookCalendarContent(book: ServiceBook, onOpenUrl: (String) -> Unit,
                 Text(LocalDate.parse(book.key.date).format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru"))),
                     style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("book_calendar_date"))
             }
+        }
+        if (offlineControls != null) item {
+            BookOfflineSection(book.key, offlineControls, onChoosePart, onReopenActive,
+                onRefresh, refreshing, onAcceptUpdate)
         }
         if (journey != null) item {
             Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {
