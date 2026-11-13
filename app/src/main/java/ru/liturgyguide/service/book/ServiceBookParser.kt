@@ -91,7 +91,8 @@ class ServiceBookParser {
                 val text = BookText.clean(node.text())
                 if (text.length >= 3) add(text,
                     if (!altar && key.worship in setOf(WorshipKind.MATINS, WorshipKind.VESPERS) &&
-                        isWholePublishedDismissal(node)) BookBlockKind.PRAYER else BookBlockKind.RUBRIC, altar)
+                        (isWholePublishedDismissal(node) || isPublishedDoxologyRun(node)))
+                        BookBlockKind.PRAYER else BookBlockKind.RUBRIC, altar)
                 return
             }
             if (node !is Element) return
@@ -218,6 +219,33 @@ class ServiceBookParser {
         var next = node.nextSibling()
         while (next != null && blank(next)) next = next.nextSibling()
         return next == null || next is Element && next.tagName() in setOf("h1", "h2", "h3")
+    }
+
+    /** Two exact italic runs repaired out of their signed hymn paragraphs by Jsoup. */
+    private fun isPublishedDoxologyRun(node: TextNode): Boolean {
+        val italic = node.parent() as? Element ?: return false
+        if (italic.tagName() != "i" || italic.childNodeSize() != 1 || italic.childNode(0) !== node) return false
+        when (node.wholeText) {
+            "Сла́ва Отцу́, и Сы́ну, и Свято́му Ду́ху.",
+            "И ны́не, и при́сно, и во ве́ки веко́в. Ами́нь." -> Unit
+            else -> return false
+        }
+        val region = italic.parent() ?: return false
+        if (region.tagName() != "div" || !region.hasClass("variable_text")) return false
+        fun adjacent(before: Boolean): Node? {
+            var sibling = if (before) italic.previousSibling() else italic.nextSibling()
+            // Skip whitespace only, never another element, comment or editorial text.
+            while (sibling is TextNode && sibling.wholeText.isBlank())
+                sibling = if (before) sibling.previousSibling() else sibling.nextSibling()
+            return sibling
+        }
+        fun signedParagraph(value: Node?): Boolean {
+            val paragraph = value as? Element ?: return false
+            if (paragraph.tagName() != "p") return false
+            val labels = paragraph.select("label.bg_worships_info")
+            return labels.size == 1 && labels.single().parent() === paragraph
+        }
+        return signedParagraph(adjacent(before = true)) && signedParagraph(adjacent(before = false))
     }
 
     private fun selected(document: Document, id: String): Element? = document.selectFirst("#$id option[selected]")
