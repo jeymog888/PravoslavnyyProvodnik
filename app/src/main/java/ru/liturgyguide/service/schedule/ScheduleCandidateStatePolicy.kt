@@ -1,6 +1,7 @@
 package ru.liturgyguide.service.schedule
 
 import java.net.URI
+import ru.liturgyguide.model.Parish
 
 /** A failed new suggestion is not evidence against a previously accepted different source. */
 internal fun candidateConflictsWithAcceptedSource(candidate: ScheduleSourceCandidate?, binding: ScheduleSiteBinding?,
@@ -41,3 +42,33 @@ internal fun manualSourceChangeBlockedByHistory(state: InternetScheduleState, re
         state.siteBinding?.siteUrl, state.publication?.website, state.website.takeIf(String::isNotBlank),
         state.customSource.takeIf(String::isNotBlank)
     ).none { sameCandidateSource(it, requested) }
+
+/** Only a cold ordinary map object may finish discovery before the expensive proof graph. */
+internal fun permitsInitialFastDiscovery(parish: Parish, state: InternetScheduleState): Boolean {
+    val lat = parish.latitude ?: return false
+    val lon = parish.longitude ?: return false
+    return Regex("^osm:(node|way|relation):([1-9][0-9]{0,18})$").matches(parish.id) &&
+        lat.isFinite() && lon.isFinite() && lat in -90.0..90.0 && lon in -180.0..180.0 &&
+        parish.website.isBlank() && state.website.isBlank() && state.sourceUrl.isBlank() &&
+        state.configuredWebsite.isBlank() && state.customSource.isBlank() && state.siteEvidenceUrl.isBlank() &&
+        state.publication == null && state.siteBinding == null && !state.loading &&
+        !state.publicationRejected && !state.sourceHasWithdrawals && !state.sourceNeedsVerification &&
+        state.sourceChangeBlock == ScheduleSourceChangeBlock.NONE
+}
+
+/** Fresh suggestions can stop the search only when the visible, merged row is actionable. */
+internal fun hasActionableFastCandidate(parish: Parish, state: InternetScheduleState,
+    fresh: ScheduleCandidateDiscovery, merged: List<ScheduleSourceCandidate>, excludedUrls: Set<String>): Boolean {
+    val excluded = ScheduleSourceExclusions(excludedUrls)
+    val approved = state.siteBinding?.candidateConfirmation?.candidate?.id
+    return fresh.candidates.groupBy { it.id }.values.any { rows ->
+        if (rows.size != 1) return@any false
+        val raw = rows.single()
+        val candidate = merged.singleOrNull { it.id == raw.id } ?: return@any false
+        raw.canConfirm(parish) && candidate.canConfirm(parish) &&
+            candidate.id !in state.dismissedCandidateIds && candidate.id != approved &&
+            !candidateChangeBlockedByHistory(state, candidate) && !excluded.contains(candidate.sourceUrl) &&
+            merged.none { it.validFor(parish) && it.outcome == ScheduleIdentityOutcome.CONFLICT &&
+                candidateCoversSource(it, candidate.sourceUrl) }
+    }
+}

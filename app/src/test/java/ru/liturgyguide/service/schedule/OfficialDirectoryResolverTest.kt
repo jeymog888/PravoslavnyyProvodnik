@@ -53,7 +53,7 @@ class OfficialDirectoryResolverTest {
         assertTrue(snapshot.entries.any { it.website == null })
         assertEquals(1, snapshot.entries.count { it.title.isBlank() })
         assertEquals(snapshot, OfficialDirectoryCodec.decode(OfficialDirectoryCodec.encode(snapshot), profile))
-        val calls = mutableListOf<String>()
+        val calls = java.util.concurrent.CopyOnWriteArrayList<String>()
         val store = ScheduleMemory()
         val directory = MemoryOfficialDirectoryCacheStore()
         val repository = InternetScheduleRepository(ScheduleTransport { url ->
@@ -71,7 +71,14 @@ class OfficialDirectoryResolverTest {
         val ready = repository.refresh(selected, now, force = true)
         assertEquals(InternetScheduleStatus.READY, ready.status)
         assertEquals(1, calls.count { it == profile.url })
-        assertEquals(5, calls.size)
+        // The cold stage asks the two current candidate providers before this unchanged
+        // regional proof. Neither unavailable provider may block the strong fallback.
+        val candidateCalls = calls.filter { it == "https://map.patriarchia.ru/" ||
+            it.startsWith("https://elitsy.ru/map/ajaxpoints/?") }
+        assertEquals(2, candidateCalls.size)
+        assertEquals(1, candidateCalls.count { it == "https://map.patriarchia.ru/" })
+        assertEquals(1, candidateCalls.count { it.startsWith("https://elitsy.ru/map/ajaxpoints/?") })
+        assertEquals(5, calls.size - candidateCalls.size)
         assertEquals(listOf(home, schedule), calls.takeLast(2))
         assertEquals(profile.url, ready.siteEvidenceUrl)
         assertEquals("", ready.configuredWebsite)

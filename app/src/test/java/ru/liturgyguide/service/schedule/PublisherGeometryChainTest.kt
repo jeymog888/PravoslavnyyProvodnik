@@ -35,7 +35,7 @@ class PublisherGeometryChainTest {
     private fun fixture(name: String) = javaClass.classLoader!!.getResourceAsStream("schedule/publisher-geometry/$name")!!.readBytes()
     private fun html(name: String) = fixture(name).toString(Charsets.UTF_8)
     private inner class Network(private val xmlMap: Boolean = false) : ScheduleTransport {
-        val calls = mutableListOf<String>()
+        val calls = java.util.concurrent.CopyOnWriteArrayList<String>()
         var before: suspend (String) -> Unit = {}
         var rewrite: (String, ScheduleResponse) -> ScheduleResponse = { _, response -> response }
         val pages = linkedMapOf(profile.ortoxUrl to "official-ortox-collection.html", profile.directoryUrl to "diocese-city-directory.html",
@@ -99,9 +99,15 @@ class PublisherGeometryChainTest {
         assertTrue(result.publication!!.yearInferred)
         assertEquals("The exact observed page is consumed, without a second schedule GET", 1, network.calls.count { it == schedule })
         assertEquals(15, proof.evidence.size)
-        assertEquals("The complete proof, exact-map metadata and one legitimate importer link stay bounded", 17, network.calls.size)
+        val candidateCalls = network.calls.filter { it == "https://map.patriarchia.ru/" ||
+            it.startsWith("https://elitsy.ru/map/ajaxpoints/?") }
+        assertEquals(2, candidateCalls.size)
+        assertEquals(1, candidateCalls.count { it == "https://map.patriarchia.ru/" })
+        assertEquals(1, candidateCalls.count { it.startsWith("https://elitsy.ru/map/ajaxpoints/?") })
+        val proofAndImportCalls = network.calls.filterNot { it in candidateCalls }
+        assertEquals("The unchanged complete proof, exact-map metadata and importer stay bounded", 17, proofAndImportCalls.size)
         assertEquals(listOf("https://api.openstreetmap.org/api/0.6/way/155168069.json", aboutServices),
-            network.calls.filter { request -> proof.evidence.none { it.requestedUrl == request } })
+            proofAndImportCalls.filter { request -> proof.evidence.none { it.requestedUrl == request } })
         assertEquals(1, network.calls.count { it == aboutServices })
         val encoded = requireNotNull(cache.read(selected.id)); assertTrue(encoded.length <= 200_000)
         assertEquals(result, ScheduleCacheCodec.decode(encoded, selected))

@@ -124,7 +124,7 @@ class MoscowOfficialDirectoryResolverTest {
     }
 
     @Test fun productionResolverGraphUsesTheDirectoryBeforeBroadSearchAndImportsThenReopensWithoutNetwork() = runBlocking {
-        val selected = maryina(); val calls = mutableListOf<String>(); val searchCalls = mutableListOf<List<String>>()
+        val selected = maryina(); val calls = java.util.concurrent.CopyOnWriteArrayList<String>(); val searchCalls = mutableListOf<List<String>>()
         var cached: String? = null
         val cache = object : ScheduleCacheStore {
             override fun read(parishId: String) = cached
@@ -150,7 +150,13 @@ class MoscowOfficialDirectoryResolverTest {
         assertEquals(maryinaUrl, state.siteEvidenceUrl)
         assertTrue(state.siteBinding!!.validFor(selected, state.website, state.siteEvidenceUrl))
         assertEquals(1, searchCalls.size)
-        assertEquals(listOf("https://api.openstreetmap.org/api/0.6/way/207742244.json", maryinaUrl, maryinaSchedule), calls)
+        val candidateCalls = calls.filter { it == "https://map.patriarchia.ru/" ||
+            it.startsWith("https://elitsy.ru/map/ajaxpoints/?") }
+        assertEquals(2, candidateCalls.size)
+        assertEquals(1, candidateCalls.count { it == "https://map.patriarchia.ru/" })
+        assertEquals(1, candidateCalls.count { it.startsWith("https://elitsy.ru/map/ajaxpoints/?") })
+        assertEquals(listOf("https://api.openstreetmap.org/api/0.6/way/207742244.json", maryinaUrl, maryinaSchedule),
+            calls.filterNot { it in candidateCalls })
         var offlineCalls = 0
         val offline = InternetScheduleRepository(ScheduleTransport { offlineCalls++; throw IOException() }, cache)
         assertEquals(state, offline.cached(selected))

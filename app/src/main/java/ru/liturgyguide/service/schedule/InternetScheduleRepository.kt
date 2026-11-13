@@ -254,6 +254,8 @@ class InternetScheduleRepository(
         var rejectedPublication = false
         var sourceHasWithdrawals = previous.sourceHasWithdrawals && !changedSource
         var blockedConflict = false
+        var concurrentFastState: InternetScheduleState? = null
+        var pendingFastReview: Pair<String?, InternetScheduleState>? = null
         var safetyObserved = false
         var safetyRetained: SchedulePublication? = null
         val withdrawnDates = mutableSetOf<String>()
@@ -359,8 +361,46 @@ class InternetScheduleRepository(
                 }
                 if (website.isBlank()) {
                     phase(ScheduleImportPhase.FINDING_SITE)
+                    var fastSite: ScheduleSite? = null
+                    if (sourceOverride == null && confirmedCandidate == null && permitsInitialFastDiscovery(parish, previous)) {
+                        val snapshot = runCatching { cache.read(parish.id) }
+                        val snapshotState = snapshot.getOrNull()?.let { ScheduleCacheCodec.decode(it, parish) }
+                            ?: initialScheduleState(parish)
+                        if (snapshot.isSuccess && snapshotState == previous) {
+                            val early = try { resolverSession.initialFastDiscovery(parish, emptySet()) }
+                                catch (cancelled: CancellationException) { throw cancelled }
+                                catch (_: Exception) { null }
+                            currentCoroutineContext().ensureActive()
+                            val latest = runCatching { cache.read(parish.id) }
+                            if (latest.isFailure || latest.getOrNull() != snapshot.getOrNull()) {
+                                // A late proposal cannot erase a newer dismissal, acceptance or withdrawal.
+                                concurrentFastState = cached(parish)
+                                return@withTimeoutOrNull true
+                            }
+                            if (early != null) {
+                                recordCandidates(early.candidates)
+                                fastSite = provedSite(parish, emptySet(), early)?.takeUnless { site ->
+                                    sourceCandidates.any { it.outcome == ScheduleIdentityOutcome.CONFLICT &&
+                                        candidateCoversSource(it, site.url) }
+                                }
+                                if (fastSite == null && hasActionableFastCandidate(parish, previous,
+                                        early.candidates, sourceCandidates, emptySet())) {
+                                    pendingFastReview = snapshot.getOrNull() to previous.copy(
+                                        status = if (candidateUnavailable) InternetScheduleStatus.UNAVAILABLE else InternetScheduleStatus.NO_WEBSITE,
+                                        checkedAt = now.toString(), sourceCandidates = sourceCandidates,
+                                        candidateSearchIdentity = ScheduleEntityIdentity.fingerprint(parish),
+                                        candidateSearchUnavailable = candidateUnavailable, candidateObservedIds = candidateObservedIds,
+                                        candidateSearchIncomplete = candidateIncomplete)
+                                    return@withTimeoutOrNull true
+                                }
+                            }
+                        } else if (snapshot.isSuccess) {
+                            concurrentFastState = cached(parish)
+                            return@withTimeoutOrNull true
+                        }
+                    }
                     // A stale configured website must not bypass the source-identity check.
-                    val site = lookup(if (needsVerification) parish.copy(website = "") else parish, emptySet(), resolverSession, ::recordCandidates)
+                    val site = (fastSite ?: lookup(if (needsVerification) parish.copy(website = "") else parish, emptySet(), resolverSession, ::recordCandidates))
                         ?.takeUnless { site ->
                             sourceCandidates.any { it.outcome == ScheduleIdentityOutcome.CONFLICT &&
                                 candidateCoversSource(it, site.url) } ||
@@ -419,6 +459,14 @@ class InternetScheduleRepository(
         catch (_: Exception) { status = InternetScheduleStatus.UNAVAILABLE }
         finally { phase(ScheduleImportPhase.FINISHED) }
         currentCoroutineContext().ensureActive()
+        concurrentFastState?.let { return@withContext it }
+        pendingFastReview?.let { (snapshot, review) ->
+            // No suspension between the last check and this metadata-only write.
+            val current = runCatching { cache.read(parish.id) }
+            if (current.isFailure || current.getOrNull() != snapshot) return@withContext cached(parish)
+            runCatching { cache.write(parish.id, ScheduleCacheCodec.encode(review)) }
+            return@withContext review
+        }
         if (blockedConflict) return@withContext blockedSourceChange(previous, now, ScheduleSourceChangeBlock.CONFLICT)
         val retainedPublication = (publication ?: if (safetyObserved) safetyRetained else
             previous.publication.takeUnless { changedSource || rejectedPublication }).takeUnless { needsVerification }
@@ -451,19 +499,23 @@ class InternetScheduleRepository(
 
     private suspend fun lookup(parish: Parish, excludedUrls: Set<String>, resolver: ScheduleSiteResolver,
         onCandidates: (ScheduleCandidateDiscovery) -> Unit): ScheduleSite? = try {
-        val excluded = ScheduleSourceExclusions(excludedUrls)
         val discovery = resolver.discover(parish, excludedUrls)
         onCandidates(discovery.candidates)
-        discovery.site?.takeIf { discovery.outcome == ScheduleIdentityOutcome.PROVED }?.let { site ->
+        provedSite(parish, excludedUrls, discovery)
+    } catch (cancelled: CancellationException) { throw cancelled }
+    catch (_: Exception) {
+        onCandidates(ScheduleCandidateDiscovery(unavailable = true))
+        null
+    }
+
+    private fun provedSite(parish: Parish, excludedUrls: Set<String>, discovery: ScheduleSourceDiscovery): ScheduleSite? {
+        val excluded = ScheduleSourceExclusions(excludedUrls)
+        return discovery.site?.takeIf { discovery.outcome == ScheduleIdentityOutcome.PROVED }?.let { site ->
             val url = ScheduleUrl.publicSource(site.url)
             val evidence = ScheduleUrl.publicSource(site.evidenceUrl)
             if (url == null || evidence == null || excluded.contains(url) || site.binding?.validFor(parish, url, evidence) != true) null
             else site.copy(url = url, evidenceUrl = evidence)
         }
-    } catch (cancelled: CancellationException) { throw cancelled }
-    catch (_: Exception) {
-        onCandidates(ScheduleCandidateDiscovery(unavailable = true))
-        null
     }
 
     /** Each attempt has the same small crawl budget; refresh owns the single shared deadline. */

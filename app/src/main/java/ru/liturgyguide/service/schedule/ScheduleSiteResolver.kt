@@ -3,6 +3,7 @@ package ru.liturgyguide.service.schedule
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.withTimeoutOrNull
 import ru.liturgyguide.model.Parish
 import java.net.URLEncoder
 import java.util.Locale
@@ -25,6 +26,8 @@ fun interface ScheduleSiteResolver {
             ScheduleIdentityOutcome.CONFLICT else ScheduleIdentityOutcome.INSUFFICIENT
         return ScheduleSourceDiscovery(outcome, candidates = found)
     }
+    /** Optional cold-source prelude. Existing custom discover contracts remain authoritative. */
+    suspend fun initialFastDiscovery(parish: Parish, excludedUrls: Set<String>): ScheduleSourceDiscovery? = null
     /** One scope for primary/alternative lookup; test/custom resolvers keep their existing behavior. */
     fun forRefresh(): ScheduleSiteResolver = this
 }
@@ -41,47 +44,74 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport,
     override suspend fun resolve(parish: Parish): ScheduleSite? = resolve(parish, emptySet())
 
     override suspend fun resolve(parish: Parish, excludedUrls: Set<String>): ScheduleSite? =
-        resolveInSession(parish, excludedUrls, mutableMapOf(), mutableMapOf(), mutableMapOf())
+        resolveInSession(parish, excludedUrls, mutableMapOf(), mutableMapOf(), mutableMapOf(), mutableMapOf())
 
     override suspend fun candidates(parish: Parish, excludedUrls: Set<String>): ScheduleCandidateDiscovery =
         candidateProvider.discover(parish, excludedUrls)
+
+    override suspend fun initialFastDiscovery(parish: Parish, excludedUrls: Set<String>): ScheduleSourceDiscovery? =
+        forRefresh().initialFastDiscovery(parish, excludedUrls)
+
+    private data class CandidateRequest(val identity: String, val excluded: Set<String>)
 
     override fun forRefresh(): ScheduleSiteResolver {
         val directoryMemo = mutableMapOf<String, OfficialDirectorySnapshot?>()
         val contactMemo = mutableMapOf<String, ScheduleSite?>()
         val moscowMemo = mutableMapOf<String, ScheduleSite?>()
+        val osmMemo = mutableMapOf<String, JsonObject?>()
+        val candidateMemo = mutableMapOf<CandidateRequest, ScheduleCandidateDiscovery>()
         return object : ScheduleSiteResolver {
-            override suspend fun candidates(parish: Parish, excludedUrls: Set<String>): ScheduleCandidateDiscovery =
-                candidateProvider.discover(parish, excludedUrls)
+            private fun request(parish: Parish, excludedUrls: Set<String>) =
+                CandidateRequest(ScheduleEntityIdentity.fingerprint(parish), excludedUrls.toSet())
+            override suspend fun candidates(parish: Parish, excludedUrls: Set<String>): ScheduleCandidateDiscovery {
+                val key = request(parish, excludedUrls)
+                candidateMemo[key]?.let { return it }
+                val found = try {
+                    // Leave headroom for Composite to retain a ready neighbor after its own 30s timeout.
+                    withTimeoutOrNull(35_000) { candidateProvider.discover(parish, excludedUrls) }
+                        ?: ScheduleCandidateDiscovery(unavailable = true)
+                } catch (cancelled: CancellationException) { throw cancelled }
+                catch (_: Exception) { ScheduleCandidateDiscovery(unavailable = true) }
+                candidateMemo[key] = found
+                return found
+            }
+            override suspend fun initialFastDiscovery(parish: Parish, excludedUrls: Set<String>): ScheduleSourceDiscovery? {
+                val url = osmObjectUrl(parish) ?: return null
+                val excluded = ScheduleSourceExclusions(excludedUrls)
+                val exact = withTimeoutOrNull(3_000) {
+                    exactOsmSite(parish, osmTags(parish, osmMemo), url, excluded)
+                }
+                // Our own bounded timeout is a completed negative only within this attempt.
+                // A parent cancellation still propagates and cannot populate a later session.
+                if (!osmMemo.containsKey(osmMemoKey(parish, url))) osmMemo[osmMemoKey(parish, url)] = null
+                if (exact?.binding?.validFor(parish, exact.url, exact.evidenceUrl) == true)
+                    return ScheduleSourceDiscovery(ScheduleIdentityOutcome.PROVED, exact)
+                val found = candidates(parish, excludedUrls)
+                return candidateDiscovery(found)
+            }
+            override suspend fun discover(parish: Parish, excludedUrls: Set<String>): ScheduleSourceDiscovery {
+                val site = resolve(parish, excludedUrls)
+                val alreadyRead = candidateMemo[request(parish, excludedUrls)]
+                if (site?.binding?.validFor(parish, site.url, site.evidenceUrl) == true)
+                    return ScheduleSourceDiscovery(ScheduleIdentityOutcome.PROVED, site,
+                        alreadyRead ?: ScheduleCandidateDiscovery())
+                return candidateDiscovery(candidates(parish, excludedUrls))
+            }
             override suspend fun resolve(parish: Parish): ScheduleSite? = resolve(parish, emptySet())
             override suspend fun resolve(parish: Parish, excludedUrls: Set<String>): ScheduleSite? =
-                resolveInSession(parish, excludedUrls, directoryMemo, contactMemo, moscowMemo)
+                resolveInSession(parish, excludedUrls, directoryMemo, contactMemo, moscowMemo, osmMemo)
         }
     }
 
     private suspend fun resolveInSession(parish: Parish, excludedUrls: Set<String>,
         directoryMemo: MutableMap<String, OfficialDirectorySnapshot?>,
         contactMemo: MutableMap<String, ScheduleSite?>,
-        moscowMemo: MutableMap<String, ScheduleSite?>): ScheduleSite? {
+        moscowMemo: MutableMap<String, ScheduleSite?>,
+        osmMemo: MutableMap<String, JsonObject?>): ScheduleSite? {
         val excluded = ScheduleSourceExclusions(excludedUrls)
         ScheduleUrl.publicSource(parish.website)?.takeUnless(excluded::contains)?.let { return ScheduleSite(it, parish.sourceUrl, parish.name) }
-        var tags: JsonObject? = null
-        val osm = Regex("^osm:(node|way|relation):([1-9][0-9]{0,18})$").matchEntire(parish.id)
-        if (osm != null) {
-            val url = "https://api.openstreetmap.org/api/0.6/${osm.groupValues[1]}/${osm.groupValues[2]}.json"
-            val data = json(url)
-            tags = data?.getAsJsonArray("elements")?.firstOrNull { item ->
-                val value = item.takeIf { it.isJsonObject }?.asJsonObject
-                value?.get("type")?.asString == osm.groupValues[1] && value.get("id")?.asString == osm.groupValues[2]
-            }?.asJsonObject?.getAsJsonObject("tags")
-            listOf("website", "contact:website").firstNotNullOfOrNull { key ->
-                tags?.string(key)?.let(ScheduleUrl::publicSource)?.takeUnless(excluded::contains)
-            }?.let { site ->
-                val name = tags?.string("name") ?: parish.name
-                return ScheduleSite(site, url, name,
-                    ScheduleEntityIdentity.bind(parish, site, url, name, ScheduleBindingMethod.EXACT_MAP_LINK))
-            }
-        }
+        val tags = osmTags(parish, osmMemo)
+        osmObjectUrl(parish)?.let { url -> exactOsmSite(parish, tags, url, excluded)?.let { return it } }
         // These links belong to the exact selected map object and need no broad search inference.
         val linkedTitle = tags?.string("wikipedia")?.takeIf { it.startsWith("ru:") }?.substringAfter(':')
         val linkedTitleCompatible = linkedTitle == null || !ScheduleEntityIdentity.hasExplicitConflict(parish.name, linkedTitle)
@@ -139,6 +169,43 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport,
         val chosen = sites.firstOrNull { !excluded.contains(it) } ?: return null
         val evidence = "https://www.wikidata.org/wiki/$id"
         return ScheduleSite(chosen, evidence, title, ScheduleEntityIdentity.bind(parish, chosen, evidence, title, method))
+    }
+
+    private fun candidateDiscovery(found: ScheduleCandidateDiscovery): ScheduleSourceDiscovery {
+        val outcome = if (found.candidates.isNotEmpty() && found.candidates.all { it.outcome == ScheduleIdentityOutcome.CONFLICT })
+            ScheduleIdentityOutcome.CONFLICT else ScheduleIdentityOutcome.INSUFFICIENT
+        return ScheduleSourceDiscovery(outcome, candidates = found)
+    }
+
+    private fun osmObjectUrl(parish: Parish): String? =
+        Regex("^osm:(node|way|relation):([1-9][0-9]{0,18})$").matchEntire(parish.id)?.let {
+            "https://api.openstreetmap.org/api/0.6/${it.groupValues[1]}/${it.groupValues[2]}.json"
+        }
+
+    private fun osmMemoKey(parish: Parish, url: String): String =
+        ScheduleEntityIdentity.fingerprint(parish) + "\u0000" + url
+
+    private suspend fun osmTags(parish: Parish, memo: MutableMap<String, JsonObject?>): JsonObject? {
+        val url = osmObjectUrl(parish) ?: return null
+        val key = osmMemoKey(parish, url)
+        if (memo.containsKey(key)) return memo[key]
+        val identity = parish.id.split(':')
+        val data = json(url)
+        val tags = runCatching { data?.getAsJsonArray("elements")?.firstOrNull { item ->
+            val value = item.takeIf { it.isJsonObject }?.asJsonObject
+            value?.get("type")?.asString == identity[1] && value.get("id")?.asString == identity[2]
+        }?.asJsonObject?.getAsJsonObject("tags") }.getOrNull()
+        memo[key] = tags
+        return tags
+    }
+
+    private fun exactOsmSite(parish: Parish, tags: JsonObject?, url: String, excluded: ScheduleSourceExclusions): ScheduleSite? {
+        val site = listOf("website", "contact:website").firstNotNullOfOrNull { key ->
+            tags?.string(key)?.let(ScheduleUrl::publicSource)?.takeUnless(excluded::contains)
+        } ?: return null
+        val name = tags?.string("name") ?: parish.name
+        return ScheduleSite(site, url, name,
+            ScheduleEntityIdentity.bind(parish, site, url, name, ScheduleBindingMethod.EXACT_MAP_LINK))
     }
 
     private suspend fun json(url: String): JsonObject? = try {
