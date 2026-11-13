@@ -2,12 +2,20 @@ package ru.liturgyguide.ui
 
 import android.Manifest
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.SharedPreferences
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -18,17 +26,38 @@ import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
+import java.util.UUID
 
 /** Injected recognition verifies navigation/acceptance, not real acoustics or Android permission UI. */
 @RunWith(AndroidJUnit4::class)
 class ListeningNavigationTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
-    private val container = AppContainer(context, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
-    private val preferences get() = context.getSharedPreferences("guide_preferences", Context.MODE_PRIVATE)
+    private val preferenceName = "listening-navigation-${UUID.randomUUID()}-guide"
+    private val preferences = context.getSharedPreferences(preferenceName, Context.MODE_PRIVATE)
+    private val localContext = object : ContextWrapper(context) {
+        // AppContainer normalizes its context, so keep the same isolated preference routing there too.
+        override fun getApplicationContext(): Context = this
+        override fun getSharedPreferences(name: String, mode: Int): SharedPreferences =
+            if (name == "guide_preferences") preferences else super.getSharedPreferences(name, mode)
+    }
+    private val container = AppContainer(localContext, scheduleOverride = ru.liturgyguide.service.schedule.OfflineInternetSchedules)
+    private val mounted = mutableStateOf(true)
+    private var contentSet = false
     private val day = LocalDate.of(2026, 11, 8)
     private val clock = Clock.fixed(Instant.parse("2026-11-10T12:00:00Z"), ZoneOffset.UTC)
     private val transcript = "Отче наш Иже еси на небесех"
+
+    @After fun clean() {
+        try {
+            if (contentSet) {
+                compose.runOnIdle { mounted.value = false }
+                compose.waitForIdle()
+            }
+        } finally {
+            context.deleteSharedPreferences(preferenceName)
+        }
+    }
 
     @Test fun openingFromThePlayerPausesWithoutRequestingPermissionOrStartingCapture() =
         withCiFailureDiagnostics("listening.entryWithoutCapture") {
@@ -117,7 +146,7 @@ class ListeningNavigationTest {
             val interrupt = ListeningInterrupt()
             var writable = false
             val choices = mutableListOf<Pair<String, String?>>()
-            compose.setContent {
+            mount {
                 GuideTheme(false) {
                     ListeningScreen(container.getStageMatcher().getAllStages(),
                         onSelect = { stage, phrase -> choices += stage to phrase; writable },
@@ -166,8 +195,18 @@ class ListeningNavigationTest {
 
     private fun launch(): FakeSpeech {
         val speech = FakeSpeech()
-        compose.setContent { AppNavigation(container, clock, monotonicMillis = { 1_000L }, speechFactory = speech.factory) }
+        mount { AppNavigation(container, clock, monotonicMillis = { 1_000L }, speechFactory = speech.factory) }
         return speech
+    }
+
+    private fun mount(content: @Composable () -> Unit) {
+        compose.setContent {
+            CompositionLocalProvider(LocalContext provides localContext,
+                LocalActivityResultRegistryOwner provides compose.activity) {
+                if (mounted.value) content()
+            }
+        }
+        contentSet = true
     }
 
     private fun seed(): ActiveServicePlayback {
