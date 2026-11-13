@@ -32,6 +32,7 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
     readingStore: BookReadingStore, textSize: Int, onBack: () -> Unit, onSettings: () -> Unit,
     onOpenUrl: (String) -> Unit, onRequestChanged: (ServiceBookKey) -> Unit = {}, parish: Parish? = null,
     route: BookRoute? = null, onRouteChanged: (BookRoute) -> Boolean = { false },
+    dedicationServices: BookDedicationServices? = null, isRouteCurrent: ((BookRoute) -> Boolean)? = null,
     onOpenCommonLiturgy: () -> Unit) {
     val ownParish = parish?.takeIf { it.id == parishId }
     val scope = rememberCoroutineScope()
@@ -40,6 +41,13 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
     val ownedRoute = route?.validated()?.takeIf { it.parishId == parishId }
     val requested = ownedRoute?.activeKey ?: standaloneRequest
     val journey = ownedRoute?.journeyContext?.validatedFor(requested, parishId)
+    var preparedDedication by remember(requested, parishId, journey, ownedRoute?.sourceReturn) { mutableStateOf(false) }
+    var dedicationMessage by remember(ownedRoute?.sourceReturn) { mutableStateOf<String?>(null) }
+    var dedicationProfileRetry by remember(ownedRoute?.pendingDedication) { mutableIntStateOf(0) }
+    var dedicationProfileBusy by remember(ownedRoute?.pendingDedication) { mutableStateOf(false) }
+    var dedicationProfileFailed by remember(ownedRoute?.pendingDedication) { mutableStateOf(false) }
+    var dedicationReturnBusy by remember(ownedRoute?.sourceReturn) { mutableStateOf(false) }
+    fun ownsDedicationRoute(captured: BookRoute): Boolean = isRouteCurrent?.invoke(captured) == true
     fun changeRequest(key: ServiceBookKey, savedCurrentPart: Boolean): Boolean {
         if (ownedRoute != null) return ownedRoute.withVariant(key, savedCurrentPart)?.let(onRouteChanged) == true
         standaloneRequest = key
@@ -89,13 +97,55 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (_: Exception) { /* Do not advertise a return to an unverified saved edition. */ }
     }
-    LaunchedEffect(books, requested, parishId, journey, ownedRoute?.pendingSearchTarget, retry) {
+    LaunchedEffect(books, requested, parishId, journey, ownedRoute?.pendingSearchTarget, ownedRoute?.sourceReturn, retry) {
         refreshing = true
         val action = acceptedAction
         acceptedAction = AcceptedEditionAction.CHECK
         val previousRecovery = acceptedRecovery
         var checkedReading: BookReadingLookup? = null
+        val openingRoute = ownedRoute
+        suspend fun mountReady(ready: BookLoadResult.Ready): Boolean {
+            if (openingRoute?.pendingDedication == null) { result = ready; return true }
+            if (dedicationServices == null || isRouteCurrent == null) {
+                result = BookLoadResult.Failed(BookFailure.STORAGE, "Выбор текста недоступен. Вернитесь к прежней службе")
+                return false
+            }
+            val prepared = prepareDedicationReading(openingRoute, ready,
+                checkedReading ?: BookReadingLookup.Unreadable, books, readingStore) { ownsDedicationRoute(openingRoute) }
+            when (prepared) {
+                is BookDedicationPreparation.Ready -> {
+                    preparedDedication = true
+                    result = ready
+                    dedicationMessage = when {
+                        prepared.reusedPosition -> "Открыто сохраненное место в выбранном тексте"
+                        prepared.matchKind == BookDedicationMatchKind.SECTION_START -> "Открыто начало той же части. Найдите нужную строку ниже или по словам"
+                        prepared.matchKind == BookDedicationMatchKind.KNOWN_HYMN -> "Открыт текст песнопения храма"
+                        else -> "Место чтения сохранено в выбранном тексте"
+                    }
+                    return true
+                }
+                is BookDedicationPreparation.Failed -> {
+                    result = BookLoadResult.Failed(BookFailure.STORAGE, prepared.message)
+                    return false
+                }
+            }
+        }
         try {
+            val reading = withContext(Dispatchers.IO) { readingStore.lookup(requested, parishId) }
+            checkedReading = reading
+            if (openingRoute?.pendingDedication != null) {
+                val receiptIdentity = openingRoute.dedicationReceiptIdentity()
+                val receipt = receiptIdentity?.let { readingStore.lookupDedicationReceipt(it, requested, parishId) }
+                    ?: BookReadingLookup.Unreadable
+                if (receipt == BookReadingLookup.Unreadable || reading == BookReadingLookup.Unreadable ||
+                    receipt is BookReadingLookup.Found && reading == BookReadingLookup.Absent) {
+                    result = BookLoadResult.Failed(BookFailure.STORAGE,
+                        "Выбранный текст уже был подготовлен, но его сохраненное место недоступно. Вернитесь к прежнему тексту")
+                    update = null
+                    acceptedRecovery = null
+                    return@LaunchedEffect
+                }
+            }
             val target = ownedRoute?.pendingSearchTarget
             if (target != null) {
                 acceptedRecovery = null
@@ -106,15 +156,13 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
                 // recreation is permission to load a newer text under these coordinates.
                 val exact = withContext(Dispatchers.IO) { books.cachedVersion(requested, target.contentHash) }
                 currentCoroutineContext().ensureActive()
-                result = if (exact != null && target.validatedFor(exact) != null)
-                    BookLoadResult.Ready(exact, fromCache = true, warning = BookWarnings.supplementWarning(exact))
-                else BookLoadResult.Failed(BookFailure.STORAGE,
+                if (exact != null && target.validatedFor(exact) != null)
+                    mountReady(BookLoadResult.Ready(exact, fromCache = true, warning = BookWarnings.supplementWarning(exact)))
+                else result = BookLoadResult.Failed(BookFailure.STORAGE,
                     "Найденная редакция или строка недоступна на телефоне. Вернитесь к прежней книге и повторите поиск")
                 update = null
                 return@LaunchedEffect
             }
-            val reading = withContext(Dispatchers.IO) { readingStore.lookup(requested, parishId) }
-            checkedReading = reading
             fun stopIfReadingChanged(): Boolean {
                 if (readingStore.lookup(requested, parishId) == reading) return false
                 acceptedRecovery = reading
@@ -135,6 +183,10 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
             currentCoroutineContext().ensureActive()
             val opened = (result as? BookLoadResult.Ready)?.book ?: (result as? BookLoadResult.Failed)?.cachedBook
             if (action == AcceptedEditionAction.OPEN_NEW && previousRecovery != null) {
+                if (openingRoute?.pendingDedication != null) {
+                    acceptedRecoveryWarning = "Сначала вернитесь к прежнему тексту и восстановите сохраненную редакцию"
+                    return@LaunchedEffect
+                }
                 // A button click does not authorize replacing a cursor changed by another owner.
                 if (reading != previousRecovery) {
                     acceptedRecoveryWarning = "Сохраненное место изменилось. Проверьте его еще раз"
@@ -218,7 +270,7 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
                         ?: "Не удалось сохранить загруженную редакцию на телефоне. Сохраненное место не изменено"
                     position != null && durable.book.contentHash == position.contentHash -> {
                         // Exact content can restore the existing coordinates; no new edition is accepted.
-                        result = durable
+                        if (!mountReady(durable)) return@LaunchedEffect
                         acceptedRecovery = null
                         acceptedRecoveryWarning = null
                     }
@@ -248,7 +300,8 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
                 currentCoroutineContext().ensureActive()
                 // No suspension may separate this final owner check from mounting the reader.
                 if (stopIfReadingChanged()) return@LaunchedEffect
-                result = BookLoadResult.Ready(pinned, fromCache = true, warning = BookWarnings.supplementWarning(pinned))
+                if (!mountReady(BookLoadResult.Ready(pinned, fromCache = true, warning = BookWarnings.supplementWarning(pinned))))
+                    return@LaunchedEffect
                 if (latestReadFailed) refreshWarning = "Не удалось проверить обновления. Сохраненная книга открыта"
                 if (latest != null && latest.contentHash != pinned.contentHash)
                     update = BookLoadResult.Ready(latest, fromCache = true, warning = BookWarnings.supplementWarning(latest))
@@ -266,12 +319,15 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
                         else {
                             // Retrying can save the same text that previously failed to persist.
                             // Keep the reader identity, but enable its durable bookmark now.
-                            result = fetched; update = null
+                            if (!mountReady(fetched)) return@LaunchedEffect
+                            update = null
                             refreshWarning = fetched.warning ?: "На телефоне актуальная версия текста"
                         }
                     }
                     is BookLoadResult.Failed -> refreshWarning = fetched.message
-                } else result = fetched
+                } else if (fetched is BookLoadResult.Ready) mountReady(fetched)
+                else result = if (openingRoute?.pendingDedication != null)
+                    (fetched as? BookLoadResult.Failed)?.copy(cachedBook = null) ?: fetched else fetched
             }
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (_: Exception) {
@@ -288,7 +344,7 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
     LaunchedEffect(books, requested, parishId, ownParish, result, refreshing) {
         recovery = null
         val failed = result as? BookLoadResult.Failed
-        if (ownedRoute?.pendingSearchTarget == null && !refreshing && failed != null && failed.cachedBook == null &&
+        if (ownedRoute?.pendingSearchTarget == null && ownedRoute?.pendingDedication == null && !refreshing && failed != null && failed.cachedBook == null &&
             failed.reason in setOf(BookFailure.NETWORK, BookFailure.INVALID_SOURCE)) {
             recovery = try {
                 withContext(Dispatchers.IO) {
@@ -298,11 +354,93 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
             catch (_: Exception) { null }
         }
     }
-    val loaded = when (val state = result) {
+    val loaded = if (ownedRoute?.pendingDedication != null && !preparedDedication) null else when (val state = result) {
         is BookLoadResult.Ready -> state.book
         is BookLoadResult.Failed -> state.cachedBook
         else -> null
     }
+    LaunchedEffect(dedicationServices, ownedRoute?.pendingDedication, requested, loaded?.contentHash,
+        dedicationProfileRetry, refreshing) {
+        val activeRoute = ownedRoute ?: return@LaunchedEffect
+        val request = activeRoute.pendingDedication ?: return@LaunchedEffect
+        val services = dedicationServices ?: return@LaunchedEffect
+        val ownerParish = parishId ?: return@LaunchedEffect
+        val ready = result as? BookLoadResult.Ready ?: return@LaunchedEffect
+        if (loaded == null || refreshing || !preparedDedication || isRouteCurrent == null) return@LaunchedEffect
+        dedicationProfileBusy = true
+        dedicationProfileFailed = false
+        try {
+            val token = VerifiedPatronalBook.verify(ownerParish, requested, request.selection, ready, books)
+            currentCoroutineContext().ensureActive()
+            if (!ownsDedicationRoute(activeRoute)) return@LaunchedEffect
+            val accepted = readingStore.lookup(requested, ownerParish) as? BookReadingLookup.Found
+            val expected = request.expectedProfile?.let { PatronalProfileLookup.Found(it) } ?: PatronalProfileLookup.Absent
+            // No suspension separates the live owner check, current accepted edition,
+            // profile CAS and clearing the navigation request.
+            val committed = token != null && accepted != null && accepted.position.contentHash == token.contentHash &&
+                accepted.position.journeyContext == journey &&
+                (services.choices.readProfile(ownerParish) == PatronalProfileLookup.Found(token.proof) ||
+                    services.choices.commitProfile(ownerParish, token, expected))
+            if (committed) {
+                if (!onRouteChanged(activeRoute.clearPendingDedication())) {
+                    dedicationMessage = "Текст сохранен. Вернитесь к нему из списка служб"
+                }
+            } else {
+                dedicationProfileFailed = true
+                dedicationMessage = "Текст открыт, но выбор для этого храма пока не сохранен. Повторите сохранение в сведениях о тексте"
+            }
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) {
+            if (ownsDedicationRoute(activeRoute)) {
+                dedicationProfileFailed = true
+                dedicationMessage = "Не удалось сохранить выбор для храма. Открытый текст остался на месте"
+            }
+        } finally { dedicationProfileBusy = false }
+    }
+    suspend fun returnDedicationSource(current: BookReadingPosition? = null): Boolean {
+        val activeRoute = ownedRoute ?: return false
+        if (dedicationReturnBusy || !ownsDedicationRoute(activeRoute)) return false
+        if (current != null && (loaded == null || current.key != requested || current.parishId != parishId ||
+                current.contentHash != loaded.contentHash || current.journeyContext != journey ||
+                !readingStore.saveReading(current))) return false
+        dedicationReturnBusy = true
+        try {
+            val previous = preparePreviousDedication(activeRoute, books, readingStore) { ownsDedicationRoute(activeRoute) }
+            currentCoroutineContext().ensureActive()
+            if (previous != null && ownsDedicationRoute(activeRoute) && onRouteChanged(previous)) return true
+            dedicationMessage = "Прежний текст или сохраненное место недоступны. Текущее чтение осталось на месте"
+            return false
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) {
+            if (ownsDedicationRoute(activeRoute)) dedicationMessage = "Не удалось проверить прежний текст. Попробуйте еще раз"
+            return false
+        } finally { dedicationReturnBusy = false }
+    }
+    val dedicationControls = if (dedicationServices != null && ownedRoute != null && parishId != null && isRouteCurrent != null)
+        BookDedicationControls(dedicationServices, parishId, ownParish?.shortName ?: "Выбранный храм",
+            java.time.LocalDate.parse(requested.date).year, dedicationServices.choices.readProfile(parishId),
+            loaded?.patronalSelection, busy = refreshing || dedicationProfileBusy || dedicationReturnBusy,
+            message = dedicationMessage,
+            onRetryProfile = if (dedicationProfileFailed && ownedRoute.pendingDedication != null)
+                ({ if (ownsDedicationRoute(ownedRoute) && !dedicationProfileBusy) dedicationProfileRetry++ }) else null,
+            beginSourceChange = { selection, expected, current ->
+                when {
+                    !ownsDedicationRoute(ownedRoute) || loaded == null || refreshing || dedicationProfileBusy || dedicationReturnBusy ->
+                        BookDedicationStart.STALE_ROUTE
+                    expected == PatronalProfileLookup.Unreadable -> BookDedicationStart.STORAGE_FAILED
+                    dedicationServices.choices.readProfile(parishId) != expected -> BookDedicationStart.STALE_ROUTE
+                    !selection.isValid() || current.key != requested || current.parishId != parishId ||
+                        current.contentHash != loaded.contentHash || current.journeyContext != journey -> BookDedicationStart.STALE_ROUTE
+                    !readingStore.saveReading(current) -> BookDedicationStart.STORAGE_FAILED
+                    else -> {
+                        val saved = (readingStore.lookup(requested, parishId) as? BookReadingLookup.Found)?.position
+                        val next = saved?.let { ownedRoute.withDedication(selection, it, (expected as? PatronalProfileLookup.Found)?.proof) }
+                        if (next != null && ownsDedicationRoute(ownedRoute) && onRouteChanged(next)) BookDedicationStart.OPENED
+                        else BookDedicationStart.STALE_ROUTE
+                    }
+                }
+            }, onReturn = if (ownedRoute.sourceReturn != null) ({ current -> returnDedicationSource(current) }) else null)
+        else null
     // This identity owns both checks and preparation. Even a non-cooperative late
     // response must not publish into another text, edition, journey or parish.
     val offlineOwner = remember(books, readingStore, loaded?.key, loaded?.contentHash, journey, parishId) { Any() }
@@ -403,7 +541,7 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
     }
     // Saved BOOK routes can reopen the same text for another church. Language and
     // visibility controls must share the same identity as the persisted reading cursor.
-    if (loaded != null) key(loaded.key.canonical(), loaded.contentHash, parishId) {
+    if (loaded != null) key(loaded.key.canonical(), loaded.contentHash, parishId, ownedRoute?.sourceReturn) {
         var acknowledgedMismatch by rememberSaveable { mutableStateOf<String?>(null) }
         val mismatchIdentity = BookServiceFit.polyeleosMismatchIdentity(loaded, journey, parishId)
         // Keep this remembered callback group present even before an update exists.
@@ -443,6 +581,7 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
             onRefresh = { retry++ }, refreshing = refreshing,
             onAcceptUpdate = acceptUpdate.takeIf { update != null },
             offlineControls = offlineControls,
+            dedicationControls = dedicationControls,
             isSaved = (result as? BookLoadResult.Ready)?.saved != false,
             churchTypeInfo = ChurchTypeClassifier.description(loaded.key.churchType, ChurchTypeClassifier.classify(ownParish)),
             loadWarning = refreshWarning ?: when (val state = result) {
@@ -465,7 +604,7 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
                         modifier = Modifier.testTag("book_accepted_edition_missing"))
                     Text((result as? BookLoadResult.Failed)?.message.orEmpty(), style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.testTag("book_load_error"))
-                    if (acceptedCandidate != null) {
+                    if (acceptedCandidate != null && ownedRoute?.pendingDedication == null) {
                         Text("Загружена другая редакция. Ее можно открыть с начала. Прежнее сохраненное место пока не изменено",
                             style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("book_new_edition_notice"))
                         Button(onClick = { acceptedAction = AcceptedEditionAction.OPEN_NEW; retry++ }, enabled = !refreshing,
@@ -511,6 +650,13 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
                         modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Открыть общий порядок литургии") }
                 }
                 journey?.let { BookJourneyDescription(it, requested) }
+                if (ownedRoute?.sourceReturn != null) {
+                    OutlinedButton(onClick = { scope.launch { returnDedicationSource() } }, enabled = !dedicationReturnBusy,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_dedication_failed_return")) {
+                        Text(if (dedicationReturnBusy) "Проверяем прежний текст" else "Вернуться к прежнему тексту")
+                    }
+                    dedicationMessage?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+                }
                 savedReturn?.let { previous ->
                     OutlinedButton(onClick = {
                         scope.launch {

@@ -86,6 +86,8 @@ private data class BookSearchLine(val hit: BookSearchHit, val offset: Int)
 private data class BookSearchResult(val bookKey: ServiceBookKey, val bookHash: String, val query: String,
     val mode: BookReadingMode, val corpus: List<Pair<ServiceBookKey, String>>, val hits: List<BookLocatedSearchHit>)
 private class BookPositioningOwner(var job: Job? = null)
+private data class BookDedicationReaderSession(val owner: Any, val controls: BookDedicationControls)
+private class BookDedicationReturnWork { var job: Job? = null }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -101,7 +103,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     onChooseSearchHit: (BookLocatedSearchHit) -> Boolean = { false },
     pendingSearchTarget: BookLocatedSearchHit? = null,
     onPendingSearchHandled: (BookLocatedSearchHit) -> Boolean = { true },
-    offlineControls: BookOfflineControls? = null) {
+    offlineControls: BookOfflineControls? = null, dedicationControls: BookDedicationControls? = null) {
     val journey = journeyContext?.validatedFor(book.key, parishId)
     val polyeleosBook = book.key.topLevel == "3" && book.rankSelection?.topLevel == "3"
     val uncheckedPolyeleosJourney = book.key.worship == WorshipKind.MATINS && book.key.topLevel == null &&
@@ -144,6 +146,26 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     var partSwitchError by remember { mutableStateOf<String?>(null) }
     var switchingPart by remember { mutableStateOf(false) }
     var superseded by remember { mutableStateOf(false) }
+    val dedicationOwner = remember(book.key, book.contentHash, parishId, dedicationControls?.services,
+        dedicationControls?.parishId) { Any() }
+    val latestDedicationOwner by rememberUpdatedState(dedicationOwner)
+    val latestDedicationControls by rememberUpdatedState(dedicationControls)
+    var dedicationSession by remember { mutableStateOf<BookDedicationReaderSession?>(null) }
+    var dedicationActionError by remember { mutableStateOf<String?>(null) }
+    var dedicationReturning by remember { mutableStateOf(false) }
+    val dedicationReturnWork = remember { BookDedicationReturnWork() }
+    val dedicationEntryId = remember(book.contentHash, book.patronalSelection) {
+        book.blocks.firstOrNull { !it.isAltarText && it.kind == BookBlockKind.LOCAL_VARIATION }?.id
+            ?: if (book.patronalSelection == null) book.blocks.firstOrNull {
+                !it.isAltarText && BookText.normalized(it.original) == "тропарь храма"
+            }?.id else null
+    }
+    LaunchedEffect(dedicationOwner) {
+        if (dedicationSession?.owner?.let { it !== dedicationOwner } == true) {
+            dedicationSession = null
+            if (sheet == "dedication") sheet = null
+        }
+    }
     val scope = rememberCoroutineScope()
     var positioning by remember { mutableStateOf(true) }
     val positioningOwner = remember { BookPositioningOwner() }
@@ -159,11 +181,10 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                     .map { BookPageItem(it.id, chapter, it) }
         }
     }
-    val spokenWords = remember(items, mode) {
-        items.associate { item -> item.id to item.block?.takeIf {
-            it.kind in setOf(BookBlockKind.PRAYER, BookBlockKind.SCRIPTURE)
-        }?.let { block -> BookAutoScroll.wordCount(
-            if (mode == BookReadingMode.RUSSIAN) block.russian ?: block.original else block.original) } }
+    val spokenWords = remember(items, mode, book.key) {
+        items.associate { item -> item.id to item.block?.let { block ->
+            BookBlockPresentation.spokenText(book.key, block, mode)?.let(BookAutoScroll::wordCount)
+        } }
     }
     val list = rememberLazyListState()
     // These are presentation keys only. Published block IDs and saved bookmarks stay unchanged.
@@ -404,6 +425,66 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         sheet = "calendar"
         offlineControls?.onCheck?.invoke()
     }
+    fun openDedication() {
+        val controls = latestDedicationControls ?: return
+        if (controls.parishId != parishId || controls.busy || switchingPart || superseded) return
+        playing = false
+        dedicationActionError = null
+        // Retain all three typed states. An unreadable profile is never absence.
+        dedicationSession = BookDedicationReaderSession(dedicationOwner, controls)
+        sheet = "dedication"
+    }
+    suspend fun beginDedication(proof: PatronalEventProof, expectedProfile: PatronalProfileLookup): BookDedicationStart {
+        val selection = dedicationSession ?: return BookDedicationStart.STALE_ROUTE
+        if (selection.owner !== latestDedicationOwner || sheet != "dedication" || switchingPart || superseded ||
+            selection.controls.expectedProfile != expectedProfile) return BookDedicationStart.STALE_ROUTE
+        if (!cancelPendingTarget()) return BookDedicationStart.STORAGE_FAILED
+        playing = false
+        microphoneFirst = false
+        val pendingPosition = if (positioning) position() else null
+        positioningOwner.job?.cancel()
+        list.stopScroll()
+        currentCoroutineContext().ensureActive()
+        val controls = latestDedicationControls ?: return BookDedicationStart.STALE_ROUTE
+        if (selection.owner !== latestDedicationOwner || dedicationSession !== selection ||
+            sheet != "dedication" || controls.parishId != parishId || superseded) return BookDedicationStart.STALE_ROUTE
+        val current = pendingPosition ?: position()
+        // The live parent verifies ownership before it commits this cursor. No
+        // child save may race a changed route or an independently accepted book.
+        val started = controls.beginSourceChange(proof, expectedProfile, current)
+        if (started == BookDedicationStart.OPENED) {
+            superseded = true
+            sheet = null
+            dedicationSession = null
+            pendingSearch = null
+            searchLine = null
+        }
+        return started
+    }
+    fun returnDedicationSource() {
+        val controls = latestDedicationControls ?: return
+        if (controls.onReturn == null || controls.busy || dedicationReturning || switchingPart || superseded) return
+        if (!cancelPendingTarget()) return
+        val owner = dedicationOwner
+        playing = false
+        dedicationReturning = true
+        dedicationActionError = null
+        dedicationReturnWork.job = scope.launch {
+            try {
+                val pendingPosition = if (positioning) position() else null
+                positioningOwner.job?.cancel()
+                list.stopScroll()
+                currentCoroutineContext().ensureActive()
+                if (owner !== latestDedicationOwner || sheet != "calendar" || superseded) return@launch
+                if (latestDedicationControls?.onReturn?.invoke(pendingPosition ?: position()) == true) {
+                    superseded = true
+                    sheet = null
+                } else dedicationActionError = "Не удалось вернуться к прежнему тексту. Попробуйте еще раз"
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { dedicationActionError = "Не удалось вернуться к прежнему тексту. Попробуйте еще раз" }
+            finally { dedicationReturning = false }
+        }
+    }
     fun reopenActive() {
         if (switchingPart || superseded || !cancelPendingTarget()) return
         playing = false
@@ -520,6 +601,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         }
     }
     val acceptCalendarUpdate: () -> Unit = ::acceptUpdate
+    val chooseDedication: () -> Unit = ::openDedication
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
     // Use this reader's actual space, including split-screen and in-app constraints.
@@ -670,10 +752,12 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                             Text(item.chapter.meaning,
                                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = (19 + textSize * 2).sp, lineHeight = (29 + textSize * 3).sp))
                         }
-                    } else BookTextBlock(item.block, mode, textSize,
+                    } else BookTextBlock(book.key, item.block, mode, textSize,
                         searchHit = pendingSearch?.takeIf { it.blockId == item.block.id && it.mode == mode },
                         searchRevision = seekRevision,
-                        onSearchLine = { line -> if (pendingSearch == line.hit) searchLine = line })
+                        onSearchLine = { line -> if (pendingSearch == line.hit) searchLine = line },
+                        onChooseDedication = chooseDedication.takeIf { dedicationControls != null && item.block.id == dedicationEntryId },
+                        dedicationBusy = dedicationControls?.busy == true)
                 }
                 item(key = endKey) {
                     // A full end page lets the last short chapter align at the top too.
@@ -695,7 +779,11 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         }
     }
     }
-    if (sheet != null) ModalBottomSheet(onDismissRequest = { sheet = null }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+    if (sheet != null) ModalBottomSheet(onDismissRequest = {
+        dedicationReturnWork.job?.cancel()
+        sheet = null
+        dedicationSession = null
+    }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         GuideSheetSystemBars()
         when (sheet) {
             "search" -> BookSearchSheet(book, microphoneFirst, lastTextMode,
@@ -756,7 +844,16 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             "calendar" -> BookCalendarContent(book, onOpenUrl, journey, offlineControls,
                 onChoosePart = ::choosePart, onReopenActive = ::reopenActive,
                 onRefresh = onRefresh, refreshing = refreshing,
-                onAcceptUpdate = acceptCalendarUpdate.takeIf { onAcceptUpdate != null })
+                onAcceptUpdate = acceptCalendarUpdate.takeIf { onAcceptUpdate != null },
+                dedicationControls = dedicationControls, onChooseDedication = chooseDedication,
+                onReturnDedication = ::returnDedicationSource, dedicationReturning = dedicationReturning,
+                dedicationActionError = dedicationActionError)
+            "dedication" -> dedicationSession?.let { selection ->
+                val controls = selection.controls
+                BookDedicationChooser(controls.services, controls.parishId, controls.parishTitle,
+                    controls.calendarYear, controls.expectedProfile, onOpen = ::beginDedication,
+                    onDismiss = { sheet = null; dedicationSession = null }, onOpenUrl = onOpenUrl)
+            }
             "sources" -> LazyColumn(Modifier.heightIn(max = 600.dp), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 item {
                     Text("Состав книги", style = MaterialTheme.typography.headlineSmall)
@@ -899,8 +996,9 @@ internal fun BookModePicker(mode: BookReadingMode, onSelect: (BookReadingMode) -
 }
 
 @Composable
-private fun BookTextBlock(block: BookBlock, mode: BookReadingMode, textSize: Int,
-    searchHit: BookSearchHit? = null, searchRevision: Int = 0, onSearchLine: (BookSearchLine) -> Unit = {}) {
+private fun BookTextBlock(key: ServiceBookKey, block: BookBlock, mode: BookReadingMode, textSize: Int,
+    searchHit: BookSearchHit? = null, searchRevision: Int = 0, onSearchLine: (BookSearchLine) -> Unit = {},
+    onChooseDedication: (() -> Unit)? = null, dedicationBusy: Boolean = false) {
     var textLayout by remember(block.id, mode) { mutableStateOf<TextLayoutResult?>(null) }
     var textTop by remember(block.id, mode) { mutableStateOf<Float?>(null) }
     LaunchedEffect(searchHit, textLayout, textTop, searchRevision) {
@@ -914,6 +1012,8 @@ private fun BookTextBlock(block: BookBlock, mode: BookReadingMode, textSize: Int
     }
     val rubric = block.kind == BookBlockKind.RUBRIC || block.kind == BookBlockKind.LOCAL_VARIATION
     val localVariation = block.kind == BookBlockKind.LOCAL_VARIATION
+    val effectiveRussian = BookBlockPresentation.effectiveRussian(key, block)
+    val legacyPrayer = BookBlockPresentation.isLegacyPrayer(key, block)
     val container = Modifier.fillMaxWidth().testTag("book_block_${block.id}").let {
         if (localVariation) it.background(MaterialTheme.colorScheme.surfaceContainerLow, MaterialTheme.shapes.large).padding(16.dp) else it
     }
@@ -922,12 +1022,14 @@ private fun BookTextBlock(block: BookBlock, mode: BookReadingMode, textSize: Int
             color = MaterialTheme.colorScheme.onSurface)
         if (block.speaker != null) Text(block.speaker, style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.primary)
-        if (mode == BookReadingMode.RUSSIAN && block.russian == null && !rubric)
-            Text("Этот фрагмент пока в оригинале", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        if (mode == BookReadingMode.RUSSIAN && block.russian != null && block.translationSource == BookTranslationIndex.FEORIA_TRANSLATION_SOURCE && !rubric)
+        if (mode == BookReadingMode.RUSSIAN && effectiveRussian == null && (!rubric || legacyPrayer))
+            Text("Этот фрагмент пока в оригинале", style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.testTag("book_missing_russian_${block.id}"))
+        if (mode == BookReadingMode.RUSSIAN && effectiveRussian != null && block.translationSource == BookTranslationIndex.FEORIA_TRANSLATION_SOURCE && !rubric)
             Text("Перевод Феории", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag("book_feoria_translation_${block.id}"))
-        val text = if (mode == BookReadingMode.RUSSIAN) block.russian ?: block.original else block.original
+        val text = if (mode == BookReadingMode.RUSSIAN) effectiveRussian ?: block.original else block.original
         Text(text, style = if (rubric) MaterialTheme.typography.bodyMedium else
             MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Serif, fontSize = (21 + textSize * 2).sp, lineHeight = (32 + textSize * 3).sp),
             color = if (rubric) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
@@ -936,6 +1038,10 @@ private fun BookTextBlock(block: BookBlock, mode: BookReadingMode, textSize: Int
         if (localVariation) Text("Прокрутка останавливается здесь. После пения нажмите \"Дальше\"",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.testTag("book_local_gap_${block.id}"))
+        if (onChooseDedication != null) OutlinedButton(onClick = onChooseDedication, enabled = !dedicationBusy,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_dedication_entry")) {
+            Text(if (localVariation) "Подобрать текст" else "Уточнить посвящение")
+        }
     }
 }
 

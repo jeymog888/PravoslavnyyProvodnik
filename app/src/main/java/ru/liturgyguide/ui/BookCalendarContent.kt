@@ -29,7 +29,9 @@ import java.util.Locale
 internal fun BookCalendarContent(book: ServiceBook, onOpenUrl: (String) -> Unit,
     journeyContext: BookJourneyContext? = null, offlineControls: BookOfflineControls? = null,
     onChoosePart: (ServiceBookKey) -> Unit = {}, onReopenActive: () -> Unit = {},
-    onRefresh: () -> Unit = {}, refreshing: Boolean = false, onAcceptUpdate: (() -> Unit)? = null) {
+    onRefresh: () -> Unit = {}, refreshing: Boolean = false, onAcceptUpdate: (() -> Unit)? = null,
+    dedicationControls: BookDedicationControls? = null, onChooseDedication: () -> Unit = {},
+    onReturnDedication: () -> Unit = {}, dedicationReturning: Boolean = false, dedicationActionError: String? = null) {
     val day = book.calendarDay
     val journey = journeyContext?.validatedFor(book.key, journeyContext.parishId)
     var showCommemorations by rememberSaveable(book.contentHash) { mutableStateOf(false) }
@@ -46,6 +48,10 @@ internal fun BookCalendarContent(book: ServiceBook, onOpenUrl: (String) -> Unit,
         if (offlineControls != null) item {
             BookOfflineSection(book.key, offlineControls, onChoosePart, onReopenActive,
                 onRefresh, refreshing, onAcceptUpdate)
+        }
+        if (dedicationControls != null) item {
+            BookDedicationSourceSection(dedicationControls, onChooseDedication, onReturnDedication,
+                dedicationReturning, dedicationActionError, onOpenUrl)
         }
         if (journey != null) item {
             Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium) {

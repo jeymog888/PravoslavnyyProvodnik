@@ -13,6 +13,9 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
@@ -78,6 +81,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     val churchStore = remember(preferences) { ChurchDirectoryStore(preferences) }
     val bookStore = remember(context) { BookReadingStore(context.getSharedPreferences("service_book_reading", 0)) }
     var bookRequestJson by rememberSaveable { mutableStateOf<String?>(null) }
+    var bookOpeningIssue by rememberSaveable { mutableStateOf<String?>(null) }
     val bookRoute = remember(bookRequestJson) { BookRouteCodec.decode(bookRequestJson) }
     val bookRequest = bookRoute?.activeKey
     val startStore = remember(preferences) { UserServiceStartStore(preferences) }
@@ -342,12 +346,17 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
             journeyContext?.validatedFor(key, church?.id)))
         navigate(Screen.BOOK)
     }
-    fun openBookOnDate(date: LocalDate, kind: WorshipKind, eveningMatins: Boolean = false) {
-        openBook(ServiceBookSelection.forCivilDate(date, kind, church, eveningMatins))
-    }
-    fun openPublishedRoute(route: BookRoute) {
-            val expected = route.journeyContext
-            val saved = bookStore.last(route.parishId)?.journeyContext?.takeIf { previous ->
+    fun openFreshBook(route: BookRoute) {
+            if (route.parishId != church?.id) return
+            val profile = route.parishId?.let(container.bookDedication.choices::readProfile) ?: PatronalProfileLookup.Absent
+            if (profile == PatronalProfileLookup.Unreadable) {
+                bookOpeningIssue = BookRouteCodec.encode(route)
+                return
+            }
+            val selected = if (profile is PatronalProfileLookup.Found) route.withProfileForNewOpening(profile.proof) ?: return
+                else route
+            val expected = selected.journeyContext
+            val saved = bookStore.last(selected.parishId)?.journeyContext?.takeIf { previous ->
                 expected != null && previous.parishId == expected.parishId && previous.civilDate == expected.civilDate &&
                     previous.time == expected.time && previous.title == expected.title && previous.effectivePartSet == expected.effectivePartSet &&
                     previous.parts.zip(expected.parts).all { (old, fresh) ->
@@ -358,9 +367,14 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
             // Reopening this exact publication keeps its accepted per-part variants.
             // Another occurrence, church or standalone cursor cannot supply its context.
             bookRequestJson = BookRouteCodec.encode(if (saved != null)
-                route.copy(activeKey = saved.parts.single { it.worship == route.activeKey.worship }, journeyContext = saved) else route)
+                selected.copy(activeKey = saved.parts.single { it.worship == selected.activeKey.worship }, journeyContext = saved) else selected)
+            bookOpeningIssue = null
             navigate(Screen.BOOK)
     }
+    fun openBookOnDate(date: LocalDate, kind: WorshipKind, eveningMatins: Boolean = false) {
+        openFreshBook(BookRoute(ServiceBookSelection.forCivilDate(date, kind, church, eveningMatins), church?.id))
+    }
+    fun openPublishedRoute(route: BookRoute) = openFreshBook(route)
     fun openPublishedBook(service: ParishService) {
         val evening = ServiceBookSelection.eveningTexts(service, church, WorshipKind.VESPERS)
         if (evening != null) {
@@ -692,6 +706,11 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         ServiceBookScreen(request, route.parishId, container.serviceBooks, bookStore, textSize,
                             parish = church,
                             route = route,
+                            dedicationServices = container.bookDedication,
+                            isRouteCurrent = { candidate ->
+                                screen == Screen.BOOK && churchId == resumeChurchId &&
+                                    BookRouteCodec.decode(bookRequestJson) == candidate
+                            },
                             onRouteChanged = { next ->
                                 if (screen == Screen.BOOK && churchId == resumeChurchId &&
                                     BookRouteCodec.decode(bookRequestJson) == route) {
@@ -891,6 +910,16 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                     )
                 }
                 }
+            }
+            bookOpeningIssue?.let { encoded ->
+                val pending = BookRouteCodec.decode(encoded)
+                if (pending != null && pending.parishId == church?.id) AlertDialog(
+                    onDismissRequest = { bookOpeningIssue = null },
+                    title = { Text("Выбор текста недоступен") },
+                    text = { Text("Не удалось проверить сохраненное посвящение храма. Повторите проверку, чтобы открыть выбранный текст") },
+                    confirmButton = { TextButton(onClick = { openFreshBook(pending) }) { Text("Проверить еще раз") } },
+                    dismissButton = { TextButton(onClick = { bookOpeningIssue = null }) { Text("Закрыть") } })
+                else LaunchedEffect(encoded, church?.id) { bookOpeningIssue = null }
             }
             availableTextsDate?.let { selectedDate ->
                 ServiceBookChooser(LocalDate.parse(selectedDate), onDismiss = { availableTextsDate = null },

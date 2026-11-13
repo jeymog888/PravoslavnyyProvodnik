@@ -25,6 +25,12 @@ import ru.liturgyguide.service.book.ServiceBookRepository
 import ru.liturgyguide.service.book.ServiceBooks
 import ru.liturgyguide.service.book.PublishedCalendarSupplements
 import ru.liturgyguide.service.book.BookTranslationIndex
+import ru.liturgyguide.service.book.BookDedicationServices
+import ru.liturgyguide.service.book.PatronalCalendarResolver
+import ru.liturgyguide.service.book.PatronalCatalog
+import ru.liturgyguide.service.book.PatronalChoiceStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 
 class AppContainer(context: Context, private val discoveryOverride: PlaceDiscovery? = null,
@@ -36,6 +42,14 @@ class AppContainer(context: Context, private val discoveryOverride: PlaceDiscove
     }
     val historical05Content = Historical05Content(readAsset)
     val historical06Content = Historical06Content(readAsset)
+    val bookDedication: BookDedicationServices by lazy {
+        val choices = PatronalChoiceStore(appContext.getSharedPreferences("book_dedication", Context.MODE_PRIVATE))
+        BookDedicationServices(choices, PatronalCalendarResolver(choices), loadCatalog = {
+            withContext(Dispatchers.IO) {
+                runCatching { PatronalCatalog.decode(readAsset(PatronalCatalog.ASSET_NAME)) }.getOrNull()
+            }
+        })
+    }
     val internetSchedules: InternetSchedules by lazy {
         val transport = UrlConnectionScheduleTransport(timeoutMillis = 15_000,
             limitBytes = AndroidScheduleDocumentExtractor.MAX_DOCUMENT_BYTES, allowExplicitHttp = true)
@@ -57,7 +71,7 @@ class AppContainer(context: Context, private val discoveryOverride: PlaceDiscove
         // The older short guide's explanatory paraphrases remain separate.
         booksOverride ?: ServiceBookRepository(FileBookCache(File(appContext.filesDir, "service-books-v2")),
             translations = BookTranslationIndex.fromFeoriaCatalog(),
-            calendar = PublishedCalendarSupplements())
+            calendar = PublishedCalendarSupplements(), patronalProofs = bookDedication.choices)
     }
     val placeDiscovery: PlaceDiscovery by lazy {
         discoveryOverride ?: CatalogPlaceDiscovery(BundledChurchCatalog(open = {
