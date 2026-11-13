@@ -150,27 +150,42 @@ class BookReaderPlaybackTest {
         assertTrue(abs((paragraphTop() - originalTop).value) <= 1f)
     }
 
-    @Test fun meaningAtAnAltarOnlyChapterReturnsToTheNextVisibleChapterInsteadOfTheBeginning() {
-        launch(mode = BookReadingMode.MEANING, chapterId = "opening", blockId = "opening-1", fraction = 0f)
-        // Meaning contains one entry per chapter; choose the middle altar-only chapter.
-        compose.onNodeWithTag("book_content").performScrollToIndex(1)
-        settle()
-        compose.onNodeWithTag("book_chapter", useUnmergedTree = true).assertTextEquals("Тихая молитва в алтаре")
-        assertEquals("altar-only", saved().chapterId)
-        assertEquals(BookAnchorKind.HEADER, saved().anchorKind)
-        assertFalse(saved().showAltar)
+    @Test fun explainingAPlayingParagraphStopsItAndKeepsTheLatestLineWithoutAHiddenChapterFeed() {
+        launch()
+        compose.mainClock.autoAdvance = false
+        play()
+        advance(2_000)
+        val before = paragraphTop()
+        compose.onNodeWithTag("book_mode_meaning").performClick()
+        advance(700)
+        val captured = saved()
+        assertEquals("reading", captured.chapterId)
+        assertEquals("long-prayer", captured.blockId)
+        assertEquals(BookReadingMode.ORIGINAL, captured.mode)
+        compose.onNodeWithTag("book_meaning_title").assertTextEquals("Общая молитва")
+        compose.onNodeWithText("Тихая молитва в алтаре").assertDoesNotExist()
+        advance(3_000)
+        assertEquals(captured, saved())
+        compose.onNodeWithTag("book_meaning_close").performClick()
+        advance(700)
+        assertPaused()
+        assertTrue(abs((paragraphTop() - before).value) <= 2f)
+        assertEquals(captured.blockId, saved().blockId)
+        assertEquals(captured.fraction, saved().fraction, .001f)
+        val returned = paragraphTop()
+        advance(3_000)
+        assertTrue(abs((paragraphTop() - returned).value) <= 1f)
+    }
 
-        selectMode(BookReadingMode.MEANING, BookReadingMode.ORIGINAL)
-        settle()
-        compose.onNodeWithTag("book_chapter", useUnmergedTree = true).assertTextEquals("Общая молитва")
-        compose.onNodeWithTag("book_block_long-prayer").assertIsDisplayed()
-        val position = saved()
-        assertEquals("reading", position.chapterId)
-        assertEquals("long-prayer", position.blockId)
-        assertEquals(BookAnchorKind.HEADER, position.anchorKind)
-        assertEquals(0f, position.fraction, .001f)
-        assertFalse(position.showAltar)
-        assertNotEquals("opening", position.chapterId)
+    @Test fun oldMeaningAtAnAltarOnlyChapterRehydratesAsPausedOriginalAtItsPrivateAnchor() {
+        launch(mode = BookReadingMode.MEANING, chapterId = "altar-only", blockId = "altar-1", fraction = .3f)
+        assertEquals(BookReadingMode.ORIGINAL, saved().mode)
+        assertEquals("altar-only", saved().chapterId)
+        assertEquals("altar-1", saved().blockId)
+        assertEquals(.3f, saved().fraction, .01f)
+        assertTrue(saved().showAltar)
+        compose.onNodeWithTag("book_meaning_sheet").assertDoesNotExist()
+        assertPaused()
     }
 
     @Test fun endPageKeepsTheLastChapterInTheHeader() {
@@ -204,7 +219,7 @@ class BookReaderPlaybackTest {
         if (compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty()) compose.onNodeWithTag(tag).performClick()
         else {
             // The accessible mode picker becomes a dropdown under large system fonts.
-            compose.onNode(hasText(from.title) and hasClickAction()).performClick()
+            compose.onNodeWithTag("book_mode_menu").performClick()
             advance(400)
             compose.onNodeWithText(to.title).performClick()
         }

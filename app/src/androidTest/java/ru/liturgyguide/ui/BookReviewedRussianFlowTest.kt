@@ -8,6 +8,8 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.gson.Gson
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import kotlinx.coroutines.CompletableDeferred
 import org.junit.After
 import org.junit.Assert.*
@@ -23,7 +25,7 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
-/** Genuine accepted Matins + reviewed bundled pairs, real local publication, explicit reader acceptance and disk remount. */
+/** Previous three-refrain /48-block package: genuine archive, explicit reader acceptance and disk remount. */
 @RunWith(AndroidJUnit4::class)
 class BookReviewedRussianFlowTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
@@ -167,7 +169,14 @@ class BookReviewedRussianFlowTest {
     }
     private fun newBooks(gate: CompletableDeferred<Unit>? = null) = LocalBooks(ServiceBookRepository(FileBookCache(directory),
         ScheduleTransport { networkCalls.incrementAndGet(); error("This local reviewed-pair scenario forbids network") },
-        translations = BookTranslationIndex.fromFeoriaCatalog()), gate).also { owners += it }
+        // Deliberately the previously reviewed three-refrain package; full105-body coverage has a separate native test.
+        translations = BookTranslationIndex.decode(JsonArray().apply { APPROVED.forEach { (original, russian) ->
+            add(JsonObject().apply {
+                addProperty("original", original); addProperty("russian", russian)
+                addProperty("source", BookTranslationIndex.FEORIA_TRANSLATION_SOURCE.title)
+                addProperty("url", BookTranslationIndex.FEORIA_TRANSLATION_SOURCE.url)
+            })
+        } }.toString())), gate).also { owners += it }
     private fun saved() = requireNotNull(store.value.positionFor(old.key, parish))
     private fun awaitReader(hash: String) {
         compose.waitUntil(10_000) { exists("book_content") && store.value.last(parish)?.contentHash == hash }

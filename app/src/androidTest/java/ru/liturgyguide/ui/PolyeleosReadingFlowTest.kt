@@ -158,8 +158,14 @@ class PolyeleosReadingFlowTest {
         choosePart(WorshipKind.MATINS); assertPosition(beforeM, saved())
         selectMode(BookReadingMode.MEANING)
         val meaning = saved()
-        assertEquals(BookReadingMode.MEANING, meaning.mode)
+        assertEquals(BookReadingMode.ORIGINAL, meaning.mode)
         assertEquals(BookReadingMode.ORIGINAL, meaning.lastTextMode)
+        compose.onNodeWithTag("book_meaning_sheet").assertIsDisplayed()
+        assertPosition(beforeM, meaning)
+        compose.onNodeWithTag("book_meaning_close").assertIsDisplayed().performClick()
+        settle()
+        compose.onNodeWithTag("book_meaning_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("book_play").assertContentDescriptionEquals("Прокручивать текст")
         choosePart(WorshipKind.VESPERS); assertPosition(beforeV, saved())
         choosePart(WorshipKind.MATINS); assertPosition(meaning, saved())
         compose.onNodeWithContentDescription("Настроить чтение").performClick()
@@ -167,8 +173,13 @@ class PolyeleosReadingFlowTest {
         compose.onNodeWithTag("settings_content").assertIsDisplayed()
         compose.onNodeWithContentDescription("Назад").performClick()
         waitForBook(matins); assertPosition(meaning, saved())
+        selectMode(BookReadingMode.MEANING)
+        compose.onNodeWithTag("book_meaning_sheet").assertIsDisplayed()
+        assertPosition(beforeM, saved())
         restoration.emulateSavedInstanceStateRestore()
         waitForBook(matins); assertPosition(meaning, saved())
+        compose.onNodeWithTag("book_meaning_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("book_play").assertContentDescriptionEquals("Прокручивать текст")
         compose.runOnIdle { mounted.value = false }
         compose.waitForIdle()
         books.reopenCache()
@@ -300,9 +311,18 @@ class PolyeleosReadingFlowTest {
         reveal("book_rank_note", "book_content").assertTextEquals("По календарю Азбуки веры")
         assertReadable("book_rank_note")
         captureScreen("320dp-font200-rank")
-        compose.onNodeWithText("Полиелейная утреня").assertExists()
+        reveal("book_saved", "book_content").assertTextContains("Полиелейная утреня", substring = true)
+            .assertTextContains("13.11.2026", substring = true)
+        assertReadable("book_saved")
         selectMode(BookReadingMode.RUSSIAN)
+        val beforeMeaning = saved()
         selectMode(BookReadingMode.MEANING)
+        assertPosition(beforeMeaning, saved())
+        compose.onNodeWithTag("book_meaning_close").assertIsDisplayed().assertHeightIsAtLeast(48.dp).performClick()
+        settle()
+        compose.onNodeWithTag("book_meaning_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("book_play").assertContentDescriptionEquals("Прокручивать текст")
+        assertPosition(beforeMeaning, saved())
         selectMode(BookReadingMode.ORIGINAL)
         val firstPrayer = fixture(matins).blocks.first { it.kind == BookBlockKind.PRAYER && !it.isAltarText }
         compose.onNodeWithTag("book_content").performScrollToNode(hasTestTag("book_block_${firstPrayer.id}"))
@@ -605,8 +625,21 @@ class PolyeleosReadingFlowTest {
         "", "", "Europe/Moscow", "", "", "", "", emptyList(), "", "")
 
     private fun selectMode(mode: BookReadingMode) {
+        if (mode == BookReadingMode.MEANING) {
+            val before = saved()
+            compose.onNodeWithTag("book_mode_meaning").assertIsDisplayed().assertHeightIsAtLeast(48.dp).performClick()
+            settle()
+            compose.onNodeWithTag("book_meaning_sheet").assertIsDisplayed()
+            assertPosition(before, saved())
+            return
+        }
         val menu = compose.onAllNodesWithTag("book_mode_menu").fetchSemanticsNodes().isNotEmpty()
-        if (menu) compose.onNodeWithTag("book_mode_menu").assertHeightIsAtLeast(48.dp).performClick()
+        if (menu) {
+            compose.onNodeWithTag("book_mode_menu").assertHeightIsAtLeast(48.dp).performClick()
+            compose.onNodeWithTag("book_mode_original").assertIsDisplayed()
+            compose.onNodeWithTag("book_mode_russian").assertIsDisplayed()
+            compose.onNodeWithTag("book_mode_menu_label_meaning", useUnmergedTree = true).assertDoesNotExist()
+        }
         val tag = "book_mode_${mode.name.lowercase()}"
         compose.onNodeWithTag(tag).assertHeightIsAtLeast(48.dp).performClick()
         settle()

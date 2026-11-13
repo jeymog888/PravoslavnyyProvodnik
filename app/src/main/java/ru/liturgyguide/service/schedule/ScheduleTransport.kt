@@ -148,6 +148,14 @@ class UrlConnectionScheduleTransport(
                         current.useCaches = false
                         current.setRequestProperty("User-Agent", "Feoria/0.8 (+https://github.com/jeymog888/PravoslavnyyProvodnik)")
                         current.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/json,application/pdf,image/*;q=0.9")
+                        // These public frontend headers apply only to this target, never to the next redirect hop.
+                        val requestUri = URI(target)
+                        if (requestUri.scheme == "https" && requestUri.host == "elitsy.ru" && requestUri.port == -1 &&
+                            requestUri.rawPath == "/map/ajaxpoints/") {
+                            current.setRequestProperty("Accept", "application/json, text/javascript, */*; q=0.01")
+                            current.setRequestProperty("X-Requested-With", "XMLHttpRequest")
+                            current.setRequestProperty("Referer", "https://elitsy.ru/map/")
+                        }
                         current.setRequestProperty("Accept-Encoding", "identity")
                         val status = try { current.responseCode } catch (failure: IOException) {
                             val fallback = fallbackHttp ?: throw failure

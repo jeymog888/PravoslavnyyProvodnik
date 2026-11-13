@@ -166,9 +166,14 @@ internal fun UpcomingScheduleOffer(offer: ArrivalScheduleOffer, tagPrefix: Strin
 internal fun scheduleEmptyDescription(state: InternetScheduleState?, hasWebsite: Boolean = true): String = when {
     state?.sourceNeedsVerification == true && state.loading -> "Проверяем, относится ли расписание к выбранному храму. Тексты службы уже можно читать"
     state?.loading == true -> "Проверяем сайт храма. Тексты службы уже можно читать"
+    state?.sourceCandidates?.any { it.id !in state.dismissedCandidateIds &&
+        it.id != state.siteBinding?.candidateConfirmation?.candidate?.id } == true ->
+        "Нашли возможные источники. Проверьте, что расписание относится к выбранному храму"
     state?.sourceNeedsVerification == true -> if (hasWebsite)
         "Пока не удалось подтвердить, что расписание относится к этому храму. Можно проверить на сайте или повторить поиск"
         else "Пока не удалось подтвердить, что расписание относится к этому храму. Можно повторить поиск. Тексты службы уже можно читать"
+    state?.candidateSearchUnavailable == true && state.website.isBlank() ->
+        "Не удалось проверить источники расписания. Повторите поиск"
     state?.status == InternetScheduleStatus.UNAVAILABLE -> if (hasWebsite)
         "Не удалось обновить расписание. Попробуйте еще раз или посмотрите его на сайте"
         else "Не удалось обновить расписание. Попробуйте еще раз. Тексты службы уже можно читать"
@@ -199,6 +204,8 @@ internal fun scheduleEmptyTitle(state: InternetScheduleState?, hasPublication: B
     state?.sourceNeedsVerification == true && state.loading -> "Проверяем источник расписания"
     state?.loading == true -> "Ищем расписание"
     state?.sourceNeedsVerification == true -> "Нужно уточнить расписание"
+    state?.sourceCandidates?.any { it.id !in state.dismissedCandidateIds &&
+        it.id != state.siteBinding?.candidateConfirmation?.candidate?.id } == true -> "Нужно проверить источник"
     hasPublication -> "Нет записей на эту дату"
     else -> "Расписание пока не найдено"
 }

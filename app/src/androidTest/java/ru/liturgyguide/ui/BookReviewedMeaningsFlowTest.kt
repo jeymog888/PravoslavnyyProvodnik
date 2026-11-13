@@ -73,8 +73,10 @@ class BookReviewedMeaningsFlowTest {
         compose.onNodeWithTag("book_mode_meaning").performClick()
         settle()
         compose.onAllNodesWithText("Объяснение Феории").onFirst().assertExists()
-        compose.onNodeWithText(REVIEWED_PRAISES).assertIsDisplayed()
-        assertAnchor(before, BookReadingMode.MEANING)
+        compose.onNodeWithText(REVIEWED_PRAISES).performScrollTo().assertIsDisplayed()
+        assertAnchor(before, BookReadingMode.RUSSIAN)
+        compose.onNodeWithTag("book_meaning_close").performClick()
+        settle()
         for (mode in listOf(BookReadingMode.ORIGINAL, BookReadingMode.RUSSIAN)) {
             compose.onNodeWithTag("book_mode_${mode.name.lowercase()}").performClick()
             settle()
@@ -96,8 +98,8 @@ class BookReviewedMeaningsFlowTest {
         assertAnchor(before, BookReadingMode.RUSSIAN)
         compose.onNodeWithTag("book_mode_meaning").performClick()
         settle()
-        compose.onNodeWithText(REVIEWED_PRAISES).assertIsDisplayed()
-        assertAnchor(before, BookReadingMode.MEANING)
+        compose.onNodeWithText(REVIEWED_PRAISES).performScrollTo().assertIsDisplayed()
+        assertAnchor(before, BookReadingMode.RUSSIAN)
         assertArrayEquals(oldDiskBytes, edition.readBytes())
         assertEquals(originalJson, Gson().toJson(exact))
     }

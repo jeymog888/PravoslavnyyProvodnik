@@ -84,7 +84,7 @@ class LivePublisherMainFlowTest {
         val receipt = linkedMapOf<String, Any?>(
             "passed" to false, "run" to run, "startedAtUtc" to Instant.now().toString(),
             "statePolicy" to "Production MainActivity/AppContainer; state changes only through native UI; selected church, books and positions deliberately retained",
-            "scope" to "Automatic publisher binding, exact published occurrence, UI offline preparation and three reading modes; Activity close only",
+            "scope" to "Automatic publisher binding, exact published occurrence, UI offline preparation, two text languages and temporary Meaning sheet; Activity close only",
             "rootColdCheckStillRequired" to true, "coldProcessTestedHere" to false,
             "radiosChangedHere" to false, "networkAvailabilityVerifiedHere" to false,
             "sourceOverrideUsed" to false, "sourceEditorOpened" to false,
@@ -304,13 +304,42 @@ class LivePublisherMainFlowTest {
             assertEquals(BookReadingMode.ORIGINAL, original.mode)
             modePositions += original
             capture("06-original-scrolled-reading", output, captures)
+            var meaningLineTop: androidx.compose.ui.unit.Dp? = null
+            var meaningPosition: BookReadingPosition? = null
             for ((mode, name) in listOf(BookReadingMode.RUSSIAN to "07-russian-same-cursor",
                 BookReadingMode.MEANING to "08-meaning-same-cursor", BookReadingMode.ORIGINAL to "09-returned-original-same-cursor")) {
+                if (mode == BookReadingMode.ORIGINAL && exists("book_meaning_sheet")) {
+                    compose.onNodeWithTag("book_meaning_close").assertIsDisplayed().performClick()
+                    settle()
+                    compose.onNodeWithTag("book_meaning_sheet").assertDoesNotExist()
+                    compose.onNodeWithTag("book_play").assertContentDescriptionEquals("Прокручивать текст")
+                    val captured = requireNotNull(meaningPosition)
+                    assertEquals(captured, store.last(parishId))
+                    assertTrue("Closing help must restore the same Russian line", kotlin.math.abs((compose.onNodeWithTag(
+                        "book_block_${captured.blockId}").getUnclippedBoundsInRoot().top - requireNotNull(meaningLineTop)).value) <= 2f)
+                }
+                val beforeAction = requireNotNull(store.last(parishId))
+                if (mode == BookReadingMode.MEANING) {
+                    meaningPosition = beforeAction
+                    meaningLineTop = compose.onNodeWithTag("book_block_${beforeAction.blockId}").getUnclippedBoundsInRoot().top
+                }
                 selectMode(mode)
-                await(15_000) { store.last(parishId)?.mode == mode }
+                val expectedLanguage = if (mode == BookReadingMode.MEANING) beforeAction.mode else mode
+                await(15_000) { store.last(parishId)?.mode == expectedLanguage }
                 settle()
+                if (mode == BookReadingMode.MEANING) {
+                    compose.onNodeWithTag("book_meaning_sheet").assertIsDisplayed()
+                    val acceptedBook = requireNotNull(books.cachedVersion(beforeAction.key, beforeAction.contentHash))
+                    val fragment = acceptedBook.blocks.single { it.id == beforeAction.blockId }
+                    val excerpt = BookBlockPresentation.effectiveRussian(acceptedBook.key, fragment) ?: fragment.original
+                    compose.onNodeWithTag("book_meaning_excerpt").assertTextEquals(excerpt)
+                    if (exists("book_meaning_more")) compose.onNodeWithTag("book_meaning_more").performScrollTo().performClick()
+                    compose.onNodeWithTag("book_meaning_detail").performScrollTo().assertIsDisplayed()
+                    assertEquals(beforeAction, store.last(parishId))
+                }
                 val actual = requireNotNull(store.last(parishId))
-                assertEquals(if (mode == BookReadingMode.MEANING) BookReadingMode.RUSSIAN else mode, actual.lastTextMode)
+                assertEquals(expectedLanguage, actual.mode)
+                assertEquals(expectedLanguage, actual.lastTextMode)
                 assertSameCursor(original, actual)
                 modePositions += actual
                 compose.onNodeWithTag("book_save_error").assertDoesNotExist()
@@ -398,7 +427,12 @@ class LivePublisherMainFlowTest {
 
     private fun selectMode(mode: BookReadingMode) {
         val tag = "book_mode_${mode.name.lowercase()}"
-        if (!exists(tag)) compose.onNodeWithTag("book_mode_menu").assertIsDisplayed().performClick()
+        if (mode != BookReadingMode.MEANING && !exists(tag)) {
+            compose.onNodeWithTag("book_mode_menu").assertIsDisplayed().performClick()
+            compose.onNodeWithTag("book_mode_original").assertIsDisplayed()
+            compose.onNodeWithTag("book_mode_russian").assertIsDisplayed()
+            compose.onNodeWithTag("book_mode_menu_label_meaning", useUnmergedTree = true).assertDoesNotExist()
+        }
         compose.onNodeWithTag(tag).assertIsDisplayed().performClick()
     }
     private fun openDetails() {

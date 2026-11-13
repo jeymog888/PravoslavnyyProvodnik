@@ -70,16 +70,16 @@ class BookReaderFlowTest {
         repeat(5) { cycle ->
             compose.onNodeWithTag("book_mode_meaning").performClick()
             settle()
-            compose.onNodeWithTag("book_chapter", useUnmergedTree = true).assertTextEquals(target.title)
-            compose.onNodeWithText(target.meaning).assertIsDisplayed()
+            compose.onNodeWithTag("book_meaning_title").assertTextEquals(target.title)
+            compose.onNodeWithText(target.meaning).performScrollTo().assertIsDisplayed()
             val meaning = saved()
-            assertEquals("Meaning mode, cycle $cycle: $meaning", BookReadingMode.MEANING, meaning.mode)
+            assertEquals("The sheet must not replace the reading language, cycle $cycle", before.mode, meaning.mode)
             assertEquals("Meaning block, cycle $cycle: $meaning", before.blockId, meaning.blockId)
             assertEquals(before.chapterId, meaning.chapterId)
             assertEquals(BookAnchorKind.BLOCK, meaning.anchorKind)
             assertEquals(before.fraction, meaning.fraction, .001f)
 
-            compose.onNodeWithTag("book_mode_original").performClick()
+            compose.onNodeWithTag("book_meaning_close").performClick()
             settle()
             compose.onNodeWithTag("book_mode_original").assertIsSelected()
             val restored = saved()
@@ -125,19 +125,20 @@ class BookReaderFlowTest {
                 assertTrue("Reopening must preserve the visible next line, before=$before after=$after", abs((after - before).value) <= 1f)
             }
             compose.onNodeWithTag("book_mode_meaning").performClick(); settle()
-            compose.onNodeWithTag("book_mode_original").performClick(); settle()
+            compose.onNodeWithTag("book_meaning_close").performClick(); settle()
             val afterMeaning = next.assertIsDisplayed().getUnclippedBoundsInRoot().top
             assertTrue("Meaning must retain the inter-prayer position", abs((afterMeaning - before).value) <= 1f)
         }
     }
 
-    @Test fun searchFromMeaningRevealsAndOpensTheExactHiddenAltarFragment() {
+    @Test fun oldMeaningReopensInTextAndSearchRevealsTheExactHiddenAltarFragment() {
         val book = sampleBook()
         seed(book, "opening", "opening-1", mode = BookReadingMode.MEANING)
         reader(book)
         settle()
         assertFalse(saved().showAltar)
-        compose.onNodeWithTag("book_mode_meaning").assertIsSelected()
+        compose.onNodeWithTag("book_mode_original").assertIsSelected()
+        compose.onNodeWithTag("book_meaning_sheet").assertDoesNotExist()
         compose.onNodeWithTag("book_block_altar-target").assertDoesNotExist()
 
         compose.onNodeWithTag("book_find").performClick()

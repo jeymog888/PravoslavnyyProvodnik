@@ -137,17 +137,20 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         legacyDefaultId = parishes?.directory?.defaultChurchId)
     val internetSchedules = container.internetSchedules
     val scheduleImport = internetSchedules.progress?.collectAsState()?.value
-    var internetSchedule by remember(internetSchedules, baseChurch?.id) {
+    var internetSchedule by remember(internetSchedules, baseChurch) {
         mutableStateOf(baseChurch?.let(internetSchedules::cached))
     }
-    var scheduleRefresh by remember(baseChurch?.id) { mutableIntStateOf(0) }
-    var scheduleSourceOverride by remember(baseChurch?.id) { mutableStateOf<String?>(null) }
+    var scheduleRefresh by remember(baseChurch) { mutableIntStateOf(0) }
+    var scheduleSourceOverride by remember(baseChurch) { mutableStateOf<String?>(null) }
+    var scheduleCandidateConfirmation by remember(baseChurch) { mutableStateOf<String?>(null) }
     val parishDay = baseChurch?.let { now.atZone(ZoneId.of(it.timezone)).toLocalDate() }
-    LaunchedEffect(internetSchedules, baseChurch?.id, parishDay, scheduleRefresh) {
+    LaunchedEffect(internetSchedules, baseChurch, parishDay, scheduleRefresh) {
         val selected = baseChurch ?: return@LaunchedEffect
         internetSchedule = (internetSchedule ?: InternetScheduleState(selected.id)).copy(loading = true)
-        internetSchedule = internetSchedules.refresh(selected, now, force = scheduleRefresh > 0,
-            sourceOverride = scheduleSourceOverride)
+        val candidate = scheduleCandidateConfirmation
+        scheduleCandidateConfirmation = null
+        internetSchedule = if (candidate != null) internetSchedules.confirmCandidate(selected, candidate, now)
+            else internetSchedules.refresh(selected, now, force = scheduleRefresh > 0, sourceOverride = scheduleSourceOverride)
     }
     val church = baseChurch?.let { original -> internetSchedule?.let { original.withInternetSchedule(it, now) } ?: original }
     val churches = remember(baseChurches, church) { baseChurches.map { if (it.id == church?.id) requireNotNull(church) else it } }
@@ -675,9 +678,10 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         onResumeBook = { if (screen == Screen.MAIN && churchId == resumeChurchId)
                             openBook(it.key, it.journeyContext?.validatedFor(it.key, church?.id)) },
                         onOpenService = { if (screen == Screen.MAIN && churchId == resumeChurchId) openPublishedBook(it) },
-                        onRefresh = { scheduleSourceOverride = null; scheduleRefresh++ },
+                        onRefresh = { scheduleCandidateConfirmation = null; scheduleSourceOverride = null; scheduleRefresh++ },
                         onSetScheduleSource = { url ->
                             if (screen == Screen.MAIN && churchId == resumeChurchId) {
+                                scheduleCandidateConfirmation = null
                                 scheduleSourceOverride = url; scheduleRefresh++
                             }
                         },
@@ -846,11 +850,21 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                     Screen.CHURCH -> ChurchScreen(
                         churches = churches, selectedId = church?.id,
                         internetSchedule = internetSchedule,
-                        onRefreshSchedule = { scheduleSourceOverride = null; scheduleRefresh++ },
+                        onRefreshSchedule = { scheduleCandidateConfirmation = null; scheduleSourceOverride = null; scheduleRefresh++ },
                         onSetScheduleSource = { url ->
                             if (screen == Screen.CHURCH && churchId == resumeChurchId) {
+                                scheduleCandidateConfirmation = null
                                 scheduleSourceOverride = url; scheduleRefresh++
                             }
+                        },
+                        onConfirmScheduleCandidate = { candidateId ->
+                            if (screen == Screen.CHURCH && churchId == resumeChurchId && internetSchedule?.loading != true) {
+                                scheduleSourceOverride = null; scheduleCandidateConfirmation = candidateId; scheduleRefresh++
+                            }
+                        },
+                        onDismissScheduleCandidate = { candidateId ->
+                            if (screen == Screen.CHURCH && churchId == resumeChurchId && internetSchedule?.loading != true)
+                                baseChurch?.let { selected -> internetSchedule = internetSchedules.dismissCandidate(selected, candidateId) }
                         },
                         favorites = favoriteChurches,
                         onToggleFavorite = { id -> favoriteChurches = churchStore.toggleFavorite(id, churches.map { it.id }.toSet()) },

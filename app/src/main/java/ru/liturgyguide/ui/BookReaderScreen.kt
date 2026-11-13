@@ -2,6 +2,8 @@ package ru.liturgyguide.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.view.View
+import android.view.ViewTreeObserver
 import androidx.compose.foundation.background
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,6 +28,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -71,6 +75,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 import kotlin.math.roundToInt
 import ru.liturgyguide.model.*
 import ru.liturgyguide.service.SpeechGuide
@@ -89,6 +95,45 @@ private data class BookSearchResult(val bookKey: ServiceBookKey, val bookHash: S
 private class BookPositioningOwner(var job: Job? = null)
 private data class BookDedicationReaderSession(val owner: Any, val controls: BookDedicationControls)
 private class BookDedicationReturnWork { var job: Job? = null }
+/** Only temporary presentation state: never serialized as a prayer or a saved book coordinate. */
+private data class BookMeaningPresentationAnchor(val itemId: String, val fraction: Float,
+    val followingGapFraction: Float = 0f)
+private data class BookMeaningReaderSession(val owner: Any, val content: BookMeaningContent,
+    val presentationAnchor: BookMeaningPresentationAnchor?)
+
+/** Identity equality is intentional: Kotlin local function references ignore their captured values in equals. */
+private class BookReaderEvents(
+    val changeMode: (BookReadingMode) -> Unit,
+    val acceptUpdate: () -> Unit,
+    val openCalendar: () -> Unit,
+    val choosePart: (ServiceBookKey) -> Unit,
+    val chooseVersion: (ServiceBookKey) -> Unit,
+    val chooseLocatedHit: (BookLocatedSearchHit) -> Unit,
+    val openDedication: () -> Unit,
+    val beginDedication: suspend (PatronalEventProof, PatronalProfileLookup) -> BookDedicationStart,
+    val returnDedicationSource: () -> Unit,
+    val reopenActive: () -> Unit,
+)
+
+/** Wait for the dialog to release this actual Android window, with no timing guess or retained listener. */
+private suspend fun View.awaitReaderWindowFocus(): Boolean = suspendCancellableCoroutine { continuation ->
+    val observer = viewTreeObserver
+    if (!isAttachedToWindow || !observer.isAlive) {
+        continuation.resume(false)
+        return@suspendCancellableCoroutine
+    }
+    lateinit var listener: ViewTreeObserver.OnWindowFocusChangeListener
+    fun finish() {
+        if (!continuation.isActive) return
+        if (observer.isAlive) observer.removeOnWindowFocusChangeListener(listener)
+        continuation.resume(true)
+    }
+    listener = ViewTreeObserver.OnWindowFocusChangeListener { focused -> if (focused) finish() }
+    observer.addOnWindowFocusChangeListener(listener)
+    continuation.invokeOnCancellation { if (observer.isAlive) observer.removeOnWindowFocusChangeListener(listener) }
+    // Installing first closes the race between checking focus and registering its callback.
+    if (hasWindowFocus()) finish()
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -116,7 +161,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     val uncheckedPolyeleosJourney = book.key.worship == WorshipKind.MATINS && book.key.topLevel == null &&
         journey?.let { ServiceBookSelection.isPolyeleosMatins(it.title) } == true
     val visibility = remember(book.key, book.contentHash) { BookVisibilityScope.of(book) }
-    val initial = remember(book.contentHash, parishId) { readingStore.restore(book, parishId) }
+    val restored = remember(book.contentHash, parishId) { readingStore.restore(book, parishId) }
+    val initial = remember(restored) { restored?.forTextReading() }
     val initialSearch = remember(book.contentHash, parishId) { pendingSearchTarget?.validatedFor(book) }
     var targetUnresolved by remember { mutableStateOf(pendingSearchTarget != null) }
     var targetError by remember { mutableStateOf<String?>(null) }
@@ -131,21 +177,35 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         targetError = null
         return true
     }
-    var mode by rememberSaveable(book.contentHash, initialSearch?.identity) { mutableStateOf(initialSearch?.hit?.mode ?: initial?.mode ?: BookReadingMode.ORIGINAL) }
+    var storedMode by rememberSaveable(book.contentHash, initialSearch?.identity) { mutableStateOf(initialSearch?.hit?.mode ?: initial?.mode ?: BookReadingMode.ORIGINAL) }
     var lastTextMode by rememberSaveable(book.contentHash, initialSearch?.identity) {
         mutableStateOf(initialSearch?.hit?.mode ?: initial?.lastTextMode ?: initial?.mode?.takeUnless { it == BookReadingMode.MEANING } ?: BookReadingMode.ORIGINAL)
     }
+    // Also normalize the old enum restored by Android's saved-instance state, not only disk.
+    val mode = storedMode.takeUnless { it == BookReadingMode.MEANING }
+        ?: lastTextMode.takeUnless { it == BookReadingMode.MEANING } ?: BookReadingMode.ORIGINAL
     var pendingSearch by remember { mutableStateOf(initialSearch?.hit) }
     var searchLine by remember { mutableStateOf<BookSearchLine?>(null) }
     var wordsPerMinute by rememberSaveable(book.contentHash) { mutableIntStateOf(initial?.wordsPerMinute ?: BookAutoScroll.DEFAULT_RATE) }
     var showAltar by rememberSaveable(book.contentHash, initialSearch?.identity) {
         mutableStateOf(initial?.showAltar == true || initial?.blockId?.let(visibility::isQuiet) == true ||
+            restored?.takeIf { it.mode == BookReadingMode.MEANING }?.blockId?.let { id ->
+                book.blocks.singleOrNull { it.id == id }?.let(visibility::isPrivate)
+            } == true ||
             initialSearch?.let { target -> book.blocks.singleOrNull { it.id == target.hit.blockId }?.let(visibility::isPrivate) } == true)
     }
     fun visible(block: BookBlock) = visibility.isVisible(block, showAltar)
     fun firstVisible(chapter: BookChapter) = visibility.firstVisible(chapter, showAltar)
     var playing by remember { mutableStateOf(false) }
     var sheet by remember { mutableStateOf<String?>(null) }
+    val meaningOwner = remember(book.key, book.contentHash, parishId) { Any() }
+    val latestMeaningOwner by rememberUpdatedState(meaningOwner)
+    var meaningSession by remember(meaningOwner) { mutableStateOf<BookMeaningReaderSession?>(null) }
+    var meaningOpening by remember(meaningOwner) { mutableStateOf(false) }
+    var meaningReturnAnchor by remember(meaningOwner) { mutableStateOf<BookMeaningPresentationAnchor?>(null) }
+    var meaningReturnRevision by remember(meaningOwner) { mutableIntStateOf(-1) }
+    val meaningFocus = remember { FocusRequester() }
+    var meaningFocusReturnRequested by remember(meaningOwner) { mutableStateOf(false) }
     var microphoneFirst by remember { mutableStateOf(false) }
     val cursor = remember(book.contentHash, parishId) { BookReadingCursor((initial ?: BookReadingPosition(
         book.key, book.contentHash, parishId, book.blocks.first().id, book.chapters.first().id,
@@ -154,9 +214,13 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 anchorKind = BookAnchorKind.BLOCK, mode = hit.mode, lastTextMode = hit.mode)
         } ?: saved }) }
     var saveError by remember { mutableStateOf(false) }
+    var updateFailureRevision by remember(meaningOwner) { mutableIntStateOf(0) }
     var partSwitchError by remember { mutableStateOf<String?>(null) }
     var switchingPart by remember { mutableStateOf(false) }
     var superseded by remember { mutableStateOf(false) }
+    LaunchedEffect(sheet, superseded) {
+        if (sheet != null || superseded) meaningSession = null
+    }
     val dedicationOwner = remember(book.key, book.contentHash, parishId, dedicationControls?.services,
         dedicationControls?.parishId) { Any() }
     val latestDedicationOwner by rememberUpdatedState(dedicationOwner)
@@ -186,10 +250,10 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val view = LocalView.current
     val items = remember(book.contentHash, showAltar, mode) {
-        book.chapters.filter { chapter -> mode == BookReadingMode.MEANING || chapter.blocks.any(::visible) }.flatMap { chapter ->
+        book.chapters.filter { chapter -> chapter.blocks.any(::visible) }.flatMap { chapter ->
             buildList {
                 add(BookPageItem("chapter:${chapter.id}", chapter, null))
-                if (mode != BookReadingMode.MEANING) for (block in chapter.blocks) {
+                for (block in chapter.blocks) {
                     if (visible(block)) add(BookPageItem(block.id, chapter, block))
                     visibility.quietGroup?.takeIf { it.introductionId == block.id }?.let { group ->
                         add(BookPageItem("quiet:${group.introductionId}", chapter, block, group))
@@ -205,7 +269,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     }
     val list = rememberLazyListState()
     // These are presentation keys only. Published block IDs and saved bookmarks stay unchanged.
-    // A list measured in Meaning must never be interpreted with the indices of Original.
+    // A list measured in Russian must never be interpreted as Original geometry.
     val layoutPrefix = "${book.contentHash}:${mode.name}:$showAltar:"
     val itemKeys = remember(items, layoutPrefix) { items.associateBy { "${layoutPrefix}page:${it.id}" } }
     val endKey = "${layoutPrefix}end"
@@ -245,21 +309,38 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             ((-measured.offset - measured.size).toFloat() / itemSpacingPx).coerceIn(0f, 1f)
         return BookViewport(visible.chapter.id, blockId, fraction, kind, gap)
     }
+    fun meaningPresentationAnchor(): BookMeaningPresentationAnchor? {
+        val index = list.firstVisibleItemIndex
+        val measured = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index && it.size > 0 } ?: return null
+        if (measured.offset in 1..itemSpacingPx && index > 0) {
+            val preceding = items.getOrNull(index - 1)?.takeIf { it.quietGroup != null } ?: return null
+            return BookMeaningPresentationAnchor(preceding.id, 1f,
+                ((itemSpacingPx - measured.offset).toFloat() / itemSpacingPx).coerceIn(0f, 1f))
+        }
+        val item = (measured.key as? String)?.let(itemKeys::get)?.takeIf { it.quietGroup != null } ?: return null
+        return BookMeaningPresentationAnchor(item.id, (-measured.offset.toFloat() / measured.size).coerceIn(0f, 1f),
+            ((-measured.offset - measured.size).toFloat() / itemSpacingPx).coerceIn(0f, 1f))
+    }
     // The active route owns occurrence metadata, including explicit null for standalone reading.
     fun snapshot() = cursor.snapshot(mode, wordsPerMinute, showAltar)
         .copy(lastTextMode = lastTextMode, journeyContext = journey)
     fun position(): BookReadingPosition {
+        meaningSession?.takeIf { it.owner === meaningOwner }?.let { return it.content.position }
         if (!positioning) viewport()?.let { cursor.observe(it, mode) }
         return snapshot()
     }
     suspend fun scrollToCursor(): Boolean {
         var anchor = cursor.value
+        val presentation = meaningReturnAnchor?.takeIf { target ->
+            meaningReturnRevision == seekRevision && items.any { it.id == target.itemId &&
+                it.chapter.id == anchor.chapterId && it.quietGroup?.introductionId == anchor.blockId }
+        }
         val hiddenAnchor = when (anchor.anchorKind) {
             BookAnchorKind.BLOCK -> items.none { it.block?.id == anchor.blockId }
             BookAnchorKind.HEADER -> items.none { it.chapter.id == anchor.chapterId }
             BookAnchorKind.END -> false
         }
-        if (mode != BookReadingMode.MEANING && hiddenAnchor) {
+        if (hiddenAnchor) {
             val oldIndex = book.chapters.indexOfFirst { it.id == anchor.chapterId }.coerceAtLeast(0)
             val chapter = items.firstOrNull { item -> book.chapters.indexOf(item.chapter) >= oldIndex }?.chapter ?: items.last().chapter
             cursor.seek(chapter.id, firstVisible(chapter)?.id ?: chapter.blocks.first().id,
@@ -267,7 +348,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             anchor = cursor.value
         }
         val index = when {
-            mode == BookReadingMode.MEANING || anchor.anchorKind == BookAnchorKind.HEADER -> items.indexOfFirst { it.chapter.id == anchor.chapterId }
+            presentation != null -> items.indexOfFirst { it.id == presentation.itemId }
+            anchor.anchorKind == BookAnchorKind.HEADER -> items.indexOfFirst { it.chapter.id == anchor.chapterId }
             anchor.anchorKind == BookAnchorKind.END -> items.size
             else -> items.indexOfFirst { it.quietGroup == null && it.block?.id == anchor.blockId }.takeIf { it >= 0 }
                 ?: items.indexOfFirst { it.chapter.id == anchor.chapterId }
@@ -284,11 +366,14 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index && it.key == targetKey && it.size > 0 }
         }.first { it != null }!!
         val height = measuredTarget().size
+        val fraction = presentation?.fraction ?: anchor.fraction
+        val gap = presentation?.followingGapFraction ?: anchor.followingGapFraction
         var targetOffset = 0
-        if (mode != BookReadingMode.MEANING && anchor.anchorKind != BookAnchorKind.END && anchor.fraction > 0f) {
-            targetOffset = if (anchor.followingGapFraction > 0f)
-                height + (itemSpacingPx * anchor.followingGapFraction).roundToInt().coerceIn(0, itemSpacingPx - 1)
-            else (height * anchor.fraction).toInt().coerceIn(0, height - 1)
+        if ((presentation != null || anchor.anchorKind != BookAnchorKind.END) && fraction > 0f) {
+            targetOffset = if (gap > 0f)
+                height + (itemSpacingPx * gap).roundToInt().coerceIn(0, itemSpacingPx - 1)
+            else if (presentation != null) (height * fraction).roundToInt().coerceIn(0, height)
+            else (height * fraction).toInt().coerceIn(0, height - 1)
             list.scrollToItem(index, targetOffset)
         }
         val target = pendingSearch?.takeIf { it.mode == mode && it.blockId == anchor.blockId }
@@ -313,7 +398,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         snapshotFlow {
             val measured = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == list.firstVisibleItemIndex }
             measured != null && (measured.key == targetKey && kotlin.math.abs(measured.offset + targetOffset) <= 1 ||
-                anchor.followingGapFraction > 0f && mode != BookReadingMode.MEANING &&
+                (gap > 0f || presentation != null && fraction == 1f) &&
                 measured.index == index + 1 && measured.key == nextKey &&
                 kotlin.math.abs(measured.offset - (height + itemSpacingPx - targetOffset)) <= 1)
         }.first { it }
@@ -362,14 +447,17 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 positioningOwner.job = null
                 // A superseded job cannot declare the new layout ready. A manual drag can
                 // cancel this request and resume saving the actual visible reading position.
-                if (latestPositioningRequest == positioningRequest) positioning = false
+                if (latestPositioningRequest == positioningRequest) {
+                    meaningReturnAnchor = null
+                    positioning = false
+                }
             }
         }
     }
     val latestPosition by rememberUpdatedState(newValue = { position() })
     val canSavePosition by rememberUpdatedState(isSaved && !targetUnresolved)
     LaunchedEffect(book.contentHash, mode, showAltar, wordsPerMinute, isSaved, targetUnresolved) {
-        snapshotFlow { if (positioning || targetUnresolved) null else viewport() }.collectLatest { visible ->
+        snapshotFlow { if (positioning || targetUnresolved || meaningSession != null) null else viewport() }.collectLatest { visible ->
             if (visible == null) return@collectLatest
             cursor.observe(visible, mode)
             delay(400)
@@ -405,7 +493,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         }
     }
     LaunchedEffect(playing, wordsPerMinute, mode, blocksHourPlayback) {
-        if (!playing || mode == BookReadingMode.MEANING || blocksHourPlayback) return@LaunchedEffect
+        if (!playing || blocksHourPlayback) return@LaunchedEffect
         var previous = withFrameNanos { it }
         while (playing && lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
             val frame = withFrameNanos { it }
@@ -436,15 +524,42 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         if (cancellingTarget) { pendingSearch = null; positioningOwner.job?.cancel() }
         return !targetUnresolved
     }
+    fun openMeaning() {
+        if (meaningOpening || meaningSession != null || sheet != null || positioning || targetUnresolved || switchingPart || superseded) return
+        // Stop the frame loop synchronously. stopScroll also ends a manual fling before
+        // materializing the actual viewport; no suspension separates capture from the sheet.
+        playing = false
+        meaningFocusReturnRequested = false
+        meaningOpening = true
+        val owner = meaningOwner
+        scope.launch {
+            try {
+                list.stopScroll()
+                currentCoroutineContext().ensureActive()
+                if (latestMeaningOwner !== owner || positioning || targetUnresolved || switchingPart || superseded || sheet != null) return@launch
+                val captured = position()
+                val presentation = meaningPresentationAnchor()
+                val content = (if (presentation != null) BookMeaningContent.captureQuietGroup(book, captured)
+                    else BookMeaningContent.capture(book, captured)) ?: return@launch
+                if (isSaved) saveError = !readingStore.saveReading(captured)
+                meaningSession = BookMeaningReaderSession(owner, content, presentation)
+            } finally {
+                if (latestMeaningOwner === owner) meaningOpening = false
+            }
+        }
+    }
     fun changeMode(value: BookReadingMode) {
+        if (value == BookReadingMode.MEANING) { openMeaning(); return }
         if (value == mode) return
         if (!cancelPendingTarget()) return
+        meaningFocusReturnRequested = false
         position()
+        meaningSession = null
         playing = false
         positioning = true
         pendingSearch = null
-        if (value != BookReadingMode.MEANING) lastTextMode = value
-        mode = value
+        lastTextMode = value
+        storedMode = value
     }
     fun changePrivateVisibility(nextAltar: Boolean) {
         if (switchingPart || superseded || !cancelPendingTarget()) return
@@ -594,7 +709,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         // The current text may not exist on disk. Publish only the saved successor's
         // rebased cursor, in one commit, without an intermediate dangling bookmark.
         superseded = onAcceptUpdate?.invoke(position()) == true
-        if (superseded) sheet = null else saveError = true
+        if (superseded) sheet = null else updateFailureRevision++
     }
     fun saveAndChangeBook(target: ServiceBookKey, accept: (ServiceBookKey) -> Boolean) {
         if (journey == null || target == book.key || switchingPart || superseded) return
@@ -638,7 +753,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             cursor.seek(hit.chapterId, hit.blockId)
             searchLine = null
             pendingSearch = hit
-            mode = hit.mode
+            storedMode = hit.mode
             lastTextMode = hit.mode
             if (book.blocks.singleOrNull { it.id == hit.blockId }?.let(visibility::isPrivate) == true) showAltar = true
             sheet = null
@@ -665,8 +780,26 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             } finally { switchingPart = false }
         }
     }
-    val acceptCalendarUpdate: () -> Unit = ::acceptUpdate
-    val chooseDedication: () -> Unit = ::openDedication
+    // The UI keeps stable forwarding lambdas, while every composition publishes its
+    // current mode, item maps and parent actions in a fresh owner-scoped bundle.
+    // Wrapping ::changeMode in rememberUpdatedState alone would still compare equal.
+    val events = BookReaderEvents(
+        changeMode = { value -> changeMode(value) }, acceptUpdate = { acceptUpdate() },
+        openCalendar = { openCalendar() }, choosePart = { value -> choosePart(value) },
+        chooseVersion = { value -> chooseVersion(value) }, chooseLocatedHit = { value -> chooseLocatedHit(value) },
+        openDedication = { openDedication() }, beginDedication = { proof, expected -> beginDedication(proof, expected) },
+        returnDedicationSource = { returnDedicationSource() }, reopenActive = { reopenActive() })
+    val eventState = remember(meaningOwner) { mutableStateOf(events) }
+    eventState.value = events
+    val currentEvents by eventState
+    val acceptCalendarUpdate: () -> Unit = { currentEvents.acceptUpdate() }
+    val chooseDedication: () -> Unit = { currentEvents.openDedication() }
+    val updateNotice = remember(meaningOwner) { SnackbarHostState() }
+    LaunchedEffect(meaningOwner, updateFailureRevision, loadWarning) {
+        if (updateFailureRevision > 0) updateNotice.showSnackbar(
+            loadWarning ?: "Не удалось открыть обновленный текст. Вы остались в прежней редакции",
+            withDismissAction = true, duration = SnackbarDuration.Indefinite)
+    }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
     // Use this reader's actual space, including split-screen and in-app constraints.
@@ -676,10 +809,11 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     val compactLabels = shortViewport || density.fontScale > 1.5f ||
         (maxWidth < 360.dp && density.fontScale > 1.1f)
     Scaffold(containerColor = MaterialTheme.colorScheme.surface,
+        snackbarHost = { if (sheet == null && meaningSession == null) SnackbarHost(updateNotice) },
         topBar = {
             Surface(color = MaterialTheme.colorScheme.surface, shadowElevation = 1.dp) {
                 Column(Modifier.statusBarsPadding()) {
-                    if (onAcceptUpdate != null) TextButton(onClick = ::acceptUpdate,
+                    if (onAcceptUpdate != null) TextButton(onClick = { currentEvents.acceptUpdate() },
                         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_accept_update")) { Text("Обновленный текст готов · Открыть") }
                     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -698,18 +832,24 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                             }
                             Icon(Icons.Default.ExpandMore, if (compactLabels || journey != null) "Порядок службы" else null)
                         }
-                        if (toolbarMode) BookModePicker(mode, ::changeMode, onOpen = { playing = false }, compact = true, iconOnly = true)
+                        if (toolbarMode) BookModePicker(mode, { currentEvents.changeMode(it) }, onOpen = {
+                            playing = false; meaningFocusReturnRequested = false
+                        }, compact = true, iconOnly = true,
+                            meaningEnabled = !positioning && !targetUnresolved && !meaningOpening, meaningFocus = meaningFocus)
                         IconButton(onClick = { playing = false; sheet = "options" }, modifier = Modifier.size(48.dp)) {
                             Icon(Icons.Default.TextFields, "Настроить чтение")
                         }
                     }
-                    if (!toolbarMode) BookModePicker(mode, ::changeMode, onOpen = { playing = false })
+                    if (!toolbarMode) BookModePicker(mode, { currentEvents.changeMode(it) }, onOpen = {
+                        playing = false; meaningFocusReturnRequested = false
+                    },
+                        meaningEnabled = !positioning && !targetUnresolved && !meaningOpening, meaningFocus = meaningFocus)
                     if (hourReview.needsReview) TextButton(onClick = { playing = false; sheet = "hour_review" },
                         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_hours_review")) {
                         Text(if (hourReview.compositionOnly) "Набор включает не все части - подробнее" else "Текст часов требует сверки - подробнее")
                     }
                     if (journey?.isEveningTexts == true) journey.parts.singleOrNull { it != book.key }?.let { other ->
-                        TextButton(onClick = { choosePart(other) }, enabled = !switchingPart,
+                        TextButton(onClick = { currentEvents.choosePart(other) }, enabled = !switchingPart,
                             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_open_other_part")) {
                             Text(if (other.worship == WorshipKind.MATINS) "Открыть утреню" else "Открыть вечерню")
                         }
@@ -757,14 +897,13 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         BookReaderAction("Найти", Icons.Default.Search, "Найти место", { openSearch(false) },
                             Modifier.weight(1f).testTag("book_find"), iconsOnly = compactLabels)
-                        BookReaderAction(if (mode == BookReadingMode.MEANING) "К тексту" else if (blocksHourPlayback) "Сверить" else if (currentLocalVariation != null) "Дальше"
+                        BookReaderAction(if (blocksHourPlayback) "Сверить" else if (currentLocalVariation != null) "Дальше"
                             else if (playing) "Пауза" else "Прокрутка",
-                            if (mode == BookReadingMode.MEANING) Icons.Default.Article else if (blocksHourPlayback) Icons.Default.Info else if (currentLocalVariation != null)
+                            if (blocksHourPlayback) Icons.Default.Info else if (currentLocalVariation != null)
                                 Icons.AutoMirrored.Filled.ArrowForward else if (playing) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            if (mode == BookReadingMode.MEANING) "Вернуться к тексту" else if (blocksHourPlayback) "Проверить текст часов" else if (currentLocalVariation != null)
+                            if (blocksHourPlayback) "Проверить текст часов" else if (currentLocalVariation != null)
                                 "Продолжить после местного песнопения" else if (playing) "Остановить прокрутку" else "Прокручивать текст",
-                            { if (mode == BookReadingMode.MEANING) changeMode(lastTextMode)
-                            else if (blocksHourPlayback) { playing = false; sheet = "hour_review" }
+                            { if (blocksHourPlayback) { playing = false; sheet = "hour_review" }
                             else if (currentLocalVariation != null) continueAfterLocalVariation() else {
                                 if (preparePlayback()) playing = !playing
                             } },
@@ -825,18 +964,14 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                                 else "Тексты на $date",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("book_saved"))
-                            loadWarning?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
-                            BookDetailsButton(offlineControls, isSaved, ::openCalendar, Modifier.testTag("book_open_calendar"))
+                            loadWarning?.takeIf { updateFailureRevision == 0 }?.let {
+                                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                            }
+                            BookDetailsButton(offlineControls, isSaved, { currentEvents.openCalendar() }, Modifier.testTag("book_open_calendar"))
                         }
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         Text(item.chapter.title, style = MaterialTheme.typography.titleLarge,
                             modifier = Modifier.semantics { heading() })
-                        if (mode == BookReadingMode.MEANING) {
-                            Text("Объяснение Феории", style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(BookMeaningCatalog.displayMeaning(book, item.chapter),
-                                style = MaterialTheme.typography.bodyLarge.copy(fontSize = (19 + textSize * 2).sp, lineHeight = (29 + textSize * 3).sp))
-                        }
                     } else BookTextBlock(book.key, item.block, mode, textSize,
                         searchHit = pendingSearch?.takeIf { it.blockId == item.block.id && it.mode == mode },
                         searchRevision = seekRevision,
@@ -845,14 +980,12 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                         dedicationBusy = dedicationControls?.busy == true)
                 }
                 item(key = endKey) {
-                    // A full end page lets the last short chapter align at the top too.
-                    // Otherwise switching to Meaning near the end would silently select
-                    // an earlier visible chapter and overwrite the reading position.
+                    // A full end page lets the last short chapter and the END anchor align at the top too.
                     Column(Modifier.fillParentMaxHeight(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                     HorizontalDivider()
                     Text("Конец последования", style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("book_end"))
                     journey?.parts?.getOrNull(journey.parts.indexOf(book.key) + 1)?.let { next ->
-                        Button(onClick = { choosePart(next) }, enabled = !switchingPart,
+                        Button(onClick = { currentEvents.choosePart(next) }, enabled = !switchingPart,
                             modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_next_part")) {
                             Text(if (journey.isEveningTexts) "Открыть утреню"
                                 else if (journey.isHoursLiturgyTexts) bookPartAction(next.worship) else "Перейти к утрене")
@@ -864,6 +997,39 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             }
         }
     }
+    }
+    LaunchedEffect(meaningOwner, meaningFocusReturnRequested, positioning, targetUnresolved,
+        meaningOpening, meaningSession, sheet, superseded) {
+        if (sheet != null || superseded) {
+            meaningFocusReturnRequested = false
+            return@LaunchedEffect
+        }
+        if (!meaningFocusReturnRequested || positioning || targetUnresolved || meaningOpening ||
+            meaningSession != null) return@LaunchedEffect
+        // This effect starts after the enabled picker has been applied. Its native
+        // host may regain focus later than the modal's last Compose animation frame.
+        if (view.awaitReaderWindowFocus() && latestMeaningOwner === meaningOwner && meaningSession == null &&
+            sheet == null && !superseded && !positioning && !targetUnresolved && !meaningOpening) {
+            meaningFocus.requestFocus()
+            meaningFocusReturnRequested = false
+        }
+    }
+    meaningSession?.takeIf { it.owner === meaningOwner && sheet == null && !superseded }?.let { session ->
+        fun dismissMeaning() {
+            if (latestMeaningOwner !== session.owner || meaningSession !== session) return
+            // Reapply the same semantic anchor if text reflowed while the modal was open.
+            // No chapter seek or language switch is involved.
+            meaningReturnAnchor = session.presentationAnchor
+            meaningReturnRevision = seekRevision + 1
+            positioning = true
+            seekRevision++
+            meaningSession = null
+            playing = false
+            meaningFocusReturnRequested = true
+        }
+        BookMeaningSheet(session.content, textSize, { dismissMeaning() }, onOpenUrl = { url ->
+            if (latestMeaningOwner === session.owner && meaningSession === session && !superseded) onOpenUrl(url)
+        })
     }
     if (sheet != null) ModalBottomSheet(onDismissRequest = {
         dedicationReturnWork.job?.cancel()
@@ -897,7 +1063,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 journey?.takeIf { it.isHoursLiturgyTexts }?.parts?.singleOrNull {
                     it.worship == WorshipKind.LITURGY && it != book.key
                 }?.let { liturgy ->
-                    Button(onClick = { choosePart(liturgy) }, enabled = !switchingPart,
+                    Button(onClick = { currentEvents.choosePart(liturgy) }, enabled = !switchingPart,
                         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_hours_open_liturgy")) {
                         Text("Открыть литургию")
                     }
@@ -918,10 +1084,10 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 }
             }
             "search" -> BookSearchSheet(book, microphoneFirst, lastTextMode,
-                onSelect = { chooseLocatedHit(BookLocatedSearchHit(book.key, book.contentHash, it)) },
+                onSelect = { currentEvents.chooseLocatedHit(BookLocatedSearchHit(book.key, book.contentHash, it)) },
                 otherPart = journey?.parts?.singleOrNull { it != book.key }?.worship,
-                onOpenOtherPart = { journey?.parts?.singleOrNull { it != book.key }?.let(::choosePart) },
-                corpusLoader = searchCorpusLoader, onSelectLocated = ::chooseLocatedHit,
+                onOpenOtherPart = { journey?.parts?.singleOrNull { it != book.key }?.let { currentEvents.choosePart(it) } },
+                corpusLoader = searchCorpusLoader, onSelectLocated = { currentEvents.chooseLocatedHit(it) },
                 selectionError = partSwitchError, selecting = switchingPart)
             "order" -> LazyColumn(Modifier.fillMaxWidth().heightIn(max = 560.dp).testTag("book_order_list"),
                 state = rememberLazyListState(initialFirstVisibleItemIndex = if (journey != null) 0 else
@@ -929,7 +1095,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 item { Text("Порядок службы", style = MaterialTheme.typography.headlineSmall) }
                 journey?.let { context -> item {
-                    BookJourneyParts(context, book.key, ::choosePart, "book_journey_parts", switchingPart)
+                    BookJourneyParts(context, book.key, { currentEvents.choosePart(it) }, "book_journey_parts", switchingPart)
                 } }
                 itemsIndexed(book.chapters, key = { _, chapter -> chapter.id }) { index, chapter ->
                     val isCurrent = chapter.id == currentChapter.id
@@ -937,7 +1103,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                         if (!cancelPendingTarget()) return@OutlinedButton
                         pendingSearch = null
                         cursor.seek(chapter.id, firstVisible(chapter)?.id ?: chapter.blocks.first().id, BookAnchorKind.HEADER)
-                        if (mode != BookReadingMode.MEANING && chapter.blocks.none(::visible)) showAltar = true
+                        if (chapter.blocks.none(::visible)) showAltar = true
                         positioning = true; sheet = null
                         seekRevision++
                     }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_order_item_${chapter.id}")
@@ -953,7 +1119,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             }
             "options" -> Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp).testTag("book_options"), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text("Чтение", style = MaterialTheme.typography.headlineSmall)
-                BookDetailsButton(offlineControls, isSaved, ::openCalendar, Modifier.testTag("book_options_offline"))
+                BookDetailsButton(offlineControls, isSaved, { currentEvents.openCalendar() }, Modifier.testTag("book_options_offline"))
                 Text("Темп прокрутки: $wordsPerMinute слов/мин", style = MaterialTheme.typography.titleMedium)
                 Slider(value = wordsPerMinute.toFloat(), onValueChange = { wordsPerMinute = it.toInt() },
                     valueRange = BookAutoScroll.MIN_RATE.toFloat()..BookAutoScroll.MAX_RATE.toFloat())
@@ -965,7 +1131,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 }
                 OutlinedButton(onClick = { sheet = null; onSettings() }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Размер текста и тема") }
                 TextButton(onClick = { sheet = "sources" }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Источники и вариант службы") }
-                if (onAcceptUpdate != null) Button(onClick = ::acceptUpdate,
+                if (onAcceptUpdate != null) Button(onClick = { currentEvents.acceptUpdate() },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_options_accept_update")) { Text("Открыть обновленный текст") }
                 OutlinedButton(onClick = onRefresh, enabled = !refreshing, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("book_refresh")) {
                     Text(if (refreshing) "Обновляем текст" else "Обновить текст и перевод")
@@ -973,16 +1139,16 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 loadWarning?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
             }
             "calendar" -> BookCalendarContent(book, onOpenUrl, journey, offlineControls,
-                onChoosePart = ::choosePart, onReopenActive = ::reopenActive,
+                onChoosePart = { currentEvents.choosePart(it) }, onReopenActive = { currentEvents.reopenActive() },
                 onRefresh = onRefresh, refreshing = refreshing,
                 onAcceptUpdate = acceptCalendarUpdate.takeIf { onAcceptUpdate != null },
                 dedicationControls = dedicationControls, onChooseDedication = chooseDedication,
-                onReturnDedication = ::returnDedicationSource, dedicationReturning = dedicationReturning,
+                onReturnDedication = { currentEvents.returnDedicationSource() }, dedicationReturning = dedicationReturning,
                 dedicationActionError = dedicationActionError)
             "dedication" -> dedicationSession?.let { selection ->
                 val controls = selection.controls
                 BookDedicationChooser(controls.services, controls.parishId, controls.parishTitle,
-                    controls.calendarYear, controls.expectedProfile, onOpen = ::beginDedication,
+                    controls.calendarYear, controls.expectedProfile, onOpen = { proof, expected -> currentEvents.beginDedication(proof, expected) },
                     onDismiss = { sheet = null; dedicationSession = null }, onOpenUrl = onOpenUrl)
             }
             "sources" -> LazyColumn(Modifier.heightIn(max = 600.dp), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -1010,7 +1176,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                     Text(hourReview.message, style = MaterialTheme.typography.bodyMedium)
                 }
                 item {
-                    OutlinedButton(onClick = ::openCalendar, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
+                    OutlinedButton(onClick = { currentEvents.openCalendar() }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
                         Text("О дне и службе")
                     }
                 }
@@ -1027,7 +1193,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 if (book.key.topLevel == null && book.mainEventOptions.size > 1) {
                     item { Text("Вариант дня", style = MaterialTheme.typography.titleMedium) }
                     items(book.mainEventOptions) { option ->
-                        OutlinedButton(onClick = { chooseVersion(book.key.copy(mainEvent = option.value)) }, enabled = !switchingPart,
+                        OutlinedButton(onClick = { currentEvents.chooseVersion(book.key.copy(mainEvent = option.value)) }, enabled = !switchingPart,
                             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(option.title) }
                     }
                 }
@@ -1103,12 +1269,14 @@ internal fun bookPartAction(kind: WorshipKind): String = when (kind) {
 
 @Composable
 internal fun BookModePicker(mode: BookReadingMode, onSelect: (BookReadingMode) -> Unit, onOpen: () -> Unit,
-    compact: Boolean = false, iconOnly: Boolean = false) {
+    compact: Boolean = false, iconOnly: Boolean = false, meaningEnabled: Boolean = true,
+    meaningFocus: FocusRequester? = null) {
     var expanded by remember { mutableStateOf(false) }
     val density = LocalDensity.current
     val measurer = rememberTextMeasurer()
     val style = MaterialTheme.typography.labelLarge
     // Measure the actual font, including the user's scale, before allocating touch targets.
+    val languages = listOf(BookReadingMode.ORIGINAL, BookReadingMode.RUSSIAN)
     val minimumWidths = BookReadingMode.entries.map { value ->
         val measured = measurer.measure(AnnotatedString(value.title), style = style, softWrap = false, maxLines = 1)
         with(density) { measured.size.width.toDp() + 18.dp }.coerceAtLeast(48.dp)
@@ -1116,21 +1284,29 @@ internal fun BookModePicker(mode: BookReadingMode, onSelect: (BookReadingMode) -
     BoxWithConstraints(if (iconOnly) Modifier else Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         val needsMenu = compact || minimumWidths.fold(24.dp) { total, width -> total + width } > maxWidth
         if (needsMenu) {
-            if (iconOnly) IconButton(onClick = { onOpen(); expanded = true }, modifier = Modifier.size(48.dp).testTag("book_mode_menu")) {
-                Icon(Icons.Default.Translate, "Режим чтения: ${mode.title}")
-            } else OutlinedButton(onClick = { onOpen(); expanded = true },
-                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("book_mode_menu")) {
-                Text(mode.title, style = style, maxLines = 1, softWrap = false, modifier = Modifier.testTag("book_mode_menu_label"))
-                Spacer(Modifier.width(12.dp)); Icon(Icons.Default.ExpandMore, null)
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (iconOnly) IconButton(onClick = { onOpen(); expanded = true }, modifier = Modifier.size(48.dp).testTag("book_mode_menu")) {
+                    Icon(Icons.Default.Translate, "Язык текста: ${mode.title}")
+                } else OutlinedButton(onClick = { onOpen(); expanded = true },
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("book_mode_menu")) {
+                    Text(mode.title, style = style, modifier = Modifier.testTag("book_mode_menu_label"))
+                    Spacer(Modifier.width(12.dp)); Icon(Icons.Default.ExpandMore, null)
+                }
+                val meaningModifier = Modifier.testTag("book_mode_meaning")
+                    .then(if (meaningFocus != null) Modifier.focusRequester(meaningFocus) else Modifier)
+                if (iconOnly) IconButton(onClick = { onSelect(BookReadingMode.MEANING) }, enabled = meaningEnabled,
+                    modifier = meaningModifier.size(48.dp)) { Icon(Icons.Default.Info, "Смысл этого места") }
+                else OutlinedButton(onClick = { onSelect(BookReadingMode.MEANING) }, enabled = meaningEnabled,
+                    modifier = meaningModifier.heightIn(min = 48.dp)) { Text("Смысл") }
             }
             DropdownMenu(expanded, { expanded = false }) {
-                BookReadingMode.entries.forEach { value -> DropdownMenuItem(
+                languages.forEach { value -> DropdownMenuItem(
                     text = { Text(value.title, modifier = Modifier.testTag("book_mode_menu_label_${value.name.lowercase()}")) },
                     modifier = Modifier.testTag("book_mode_${value.name.lowercase()}").semantics { selected = mode == value },
                     onClick = { expanded = false; onSelect(value) }) }
             }
         } else Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            BookReadingMode.entries.forEachIndexed { index, value ->
+            languages.forEachIndexed { index, value ->
                 Surface(onClick = { onSelect(value) }, shape = MaterialTheme.shapes.small,
                     color = if (mode == value) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
                     contentColor = if (mode == value) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1141,6 +1317,13 @@ internal fun BookModePicker(mode: BookReadingMode, onSelect: (BookReadingMode) -
                             modifier = Modifier.testTag("book_mode_label_${value.name.lowercase()}"))
                     }
                 }
+            }
+            OutlinedButton(onClick = { onSelect(BookReadingMode.MEANING) }, enabled = meaningEnabled,
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 12.dp),
+                modifier = Modifier.weight(minimumWidths.last().value).heightIn(min = 48.dp)
+                    .testTag("book_mode_meaning")
+                    .then(if (meaningFocus != null) Modifier.focusRequester(meaningFocus) else Modifier)) {
+                Text("Смысл", style = style, maxLines = 1, softWrap = false, modifier = Modifier.testTag("book_mode_label_meaning"))
             }
         }
     }

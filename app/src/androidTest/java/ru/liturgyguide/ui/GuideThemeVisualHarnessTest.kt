@@ -101,7 +101,7 @@ class GuideThemeVisualHarnessTest {
             .put("scheduleOrigin", "fixed_visual_fixture_not_live_schedule_validation")
             .put("captureSource", "frame commit + active Window PixelCopy, then two identical native screenshots")
             .put("windowImageSuffix", "-window.png: current app/dialog pixels; primary .png also includes system bars and popups")
-            .put("intentionalEllipsisExcludedFromTextCheck", "book_chapter: compact current-section summary")
+            .put("intentionalEllipsisExcludedFromTextCheck", "book_chapter: compact current-section summary; book_meaning_excerpt: collapsed two-line excerpt")
         try {
             withNativeCompactDisplay {
                 report.put("actualWidthDp", compose.activity.resources.configuration.screenWidthDp)
@@ -153,11 +153,30 @@ class GuideThemeVisualHarnessTest {
                 compose.onNodeWithTag("book_text_${readingTarget.second.id}", useUnmergedTree = true)
                     .assertTextEquals(requireNotNull(readingTarget.second.russian)).assertIsDisplayed()
                 capture("06-reader-russian")
-                selectMode(BookReadingMode.MEANING)
+                val beforeMeaning = saved()
+                val russianTop = compose.onNodeWithTag("book_text_${readingTarget.second.id}", useUnmergedTree = true)
+                    .getUnclippedBoundsInRoot().top
+                target("book_mode_meaning").performClick()
+                settle()
+                compose.onNodeWithTag("book_meaning_sheet").assertIsDisplayed()
                 assertAnchor(before, saved())
-                compose.onNodeWithTag("book_text_${readingTarget.second.id}", useUnmergedTree = true).assertDoesNotExist()
-                compose.onNodeWithText(readingTarget.first.meaning, useUnmergedTree = true).assertIsDisplayed()
+                assertEquals(BookReadingMode.RUSSIAN, saved().mode)
+                compose.onNodeWithTag("book_meaning_title").performScrollTo().assertTextEquals(readingTarget.first.title)
+                compose.onNodeWithTag("book_meaning_excerpt").assertTextEquals(requireNotNull(readingTarget.second.russian))
+                if (compose.onAllNodesWithTag("book_meaning_more").fetchSemanticsNodes().isNotEmpty())
+                    compose.onNodeWithTag("book_meaning_more").performScrollTo().performClick()
+                compose.onNodeWithTag("book_meaning_detail").performScrollTo()
+                    .assertTextEquals(BookMeaningCatalog.displayMeaning(book, readingTarget.first))
+                assertEquals(beforeMeaning, saved())
                 capture("07-reader-meaning")
+                target("book_meaning_close").performClick()
+                settle()
+                compose.onNodeWithTag("book_meaning_sheet").assertDoesNotExist()
+                assertVisibleMode(BookReadingMode.RUSSIAN)
+                compose.onNodeWithTag("book_play").assertContentDescriptionEquals("Прокручивать текст")
+                assertTrue("Closing Meaning must restore the same Russian line", abs((compose.onNodeWithTag(
+                    "book_text_${readingTarget.second.id}", useUnmergedTree = true).getUnclippedBoundsInRoot().top - russianTop).value) <= 2f)
+                assertEquals(beforeMeaning, saved())
                 selectMode(BookReadingMode.ORIGINAL)
                 assertAnchor(before, saved())
 
@@ -207,12 +226,17 @@ class GuideThemeVisualHarnessTest {
     }
 
     private fun selectMode(mode: BookReadingMode, captureMenu: Boolean = false) {
+        require(mode != BookReadingMode.MEANING) { "Meaning opens independently of the language picker" }
+        val languages = listOf(BookReadingMode.ORIGINAL, BookReadingMode.RUSSIAN)
+        target("book_mode_meaning")
         if (compose.onAllNodesWithTag("book_mode_menu").fetchSemanticsNodes().isNotEmpty()) {
             target("book_mode_menu").performClick()
-            for (value in BookReadingMode.entries) checkText("book_mode_menu_label_${value.name.lowercase()}", value.title, singleLine = true)
+            for (value in languages) checkText("book_mode_menu_label_${value.name.lowercase()}", value.title, singleLine = true)
+            compose.onNodeWithTag("book_mode_menu_label_meaning", useUnmergedTree = true).assertDoesNotExist()
             if (captureMenu) capture("reader-language-menu")
         } else {
-            for (value in BookReadingMode.entries) checkText("book_mode_label_${value.name.lowercase()}", value.title, singleLine = true)
+            for (value in languages) checkText("book_mode_label_${value.name.lowercase()}", value.title, singleLine = true)
+            checkText("book_mode_label_meaning", "Смысл", singleLine = true)
         }
         target("book_mode_${mode.name.lowercase()}").performClick()
         settle()
@@ -226,7 +250,7 @@ class GuideThemeVisualHarnessTest {
         } else if (compose.onAllNodesWithTag("book_mode_menu_label", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()) {
             compose.onNodeWithTag("book_mode_menu_label", useUnmergedTree = true).assertTextEquals(mode.title).assertIsDisplayed()
         } else {
-            compose.onNodeWithContentDescription("Режим чтения: ${mode.title}").assertIsDisplayed()
+            compose.onNodeWithContentDescription("Язык текста: ${mode.title}").assertIsDisplayed()
         }
     }
 
@@ -249,7 +273,8 @@ class GuideThemeVisualHarnessTest {
         for (i in nodes.fetchSemanticsNodes().indices) {
             val node = nodes[i]
             if (!node.isDisplayed()) continue
-            if (node.fetchSemanticsNode().config.getOrElse(SemanticsProperties.TestTag) { "" } == "book_chapter") continue
+            if (node.fetchSemanticsNode().config.getOrElse(SemanticsProperties.TestTag) { "" } in
+                setOf("book_chapter", "book_meaning_excerpt")) continue
             val layouts = mutableListOf<TextLayoutResult>()
             node.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
             for (layout in layouts) {

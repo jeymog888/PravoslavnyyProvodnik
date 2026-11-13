@@ -14,10 +14,20 @@ import ru.liturgyguide.service.schedule.ScheduleTransport
 import java.io.IOException
 import java.nio.file.Files
 
+/** Protocol regressions for the previous eleven-pair edition; revision3 full coverage is tested separately. */
 class FeoriaTranslationCatalogTest {
     private val directory = Files.createTempDirectory("feoria-catalog-").toFile()
     private val cache = FileBookCache(directory)
-    private val own = BookTranslationIndex.fromFeoriaCatalog()
+    // Preserve the previous eleven-pair protocol scenarios; the full105-body extension has its own coverage test.
+    private val own by lazy {
+        val rows = com.google.gson.JsonParser.parseString(requireNotNull(javaClass.classLoader?.getResource(
+            "russian-coverage-12/previous11-approved.json")).readText()).asJsonArray
+        BookTranslationIndex.decode(JsonArray().apply { rows.forEach { value -> add(JsonObject().apply {
+            val row = value.asJsonObject
+            add("original", row["original"]); add("russian", row["russian"])
+            addProperty("source", "Перевод Феории"); addProperty("url", "https://github.com/jeymog888/PravoslavnyyProvodnik")
+        }) } }.toString())
+    }
     private val source = BookSource("Перевод Феории", "https://github.com/jeymog888/PravoslavnyyProvodnik")
     private val published = BookTranslationIndex.TIMROT_SOURCE
     private val plain by lazy { MatinsRankFixtures.parse() }
@@ -37,7 +47,8 @@ class FeoriaTranslationCatalogTest {
     @After fun clean() { directory.deleteRecursively() }
 
     @Test fun previousEightApprovedPairsStayUnchangedAndLegacyParaphrasesRemainSeparate() {
-        assertEquals(2, FeoriaTranslationCatalog.REVISION)
+        assertEquals(3, FeoriaTranslationCatalog.REVISION)
+        assertEquals(116, BookTranslationIndex.fromFeoriaCatalog().size)
         assertEquals(11, own.size)
         assertEquals(source, BookTranslationIndex.FEORIA_TRANSLATION_SOURCE)
         assertEquals(BookSource("Русское изложение: редакция Феории", source.url), BookTranslationIndex.EDITORIAL_SOURCE)
@@ -61,7 +72,7 @@ class FeoriaTranslationCatalogTest {
         assertNull(SavedBookEnrichment.apply(plain, index(target.original, "Поддельный перевод", source)))
     }
 
-    @Test fun realRankedSourceGainsExactly104ReviewedBlocksWithoutChangingItsStructure() {
+    @Test fun previousEightPackageGainsExactly104RankedBlocksWithoutChangingItsStructure() {
         val after = ServiceBookParser().parse(MatinsRankFixtures.document(ranked = true), plain.key, plain.fetchedAtMillis,
             translations = own, rankRequest = MatinsRankSource.resolve(MatinsRankFixtures.document(), plain.key))
         val changed = plain.blocks.zip(after.blocks).filter { (old, new) -> old != new }
@@ -76,7 +87,7 @@ class FeoriaTranslationCatalogTest {
         assertFalse(BookTranslationIndex.ALL_PARALLEL_SOURCES.contains(source))
     }
 
-    @Test fun freshAndSavedPublishedTextWinOverLocalFallbackAndChangedOriginalNeverInheritsIt() = runBlocking {
+    @Test fun previousElevenPairFallbackRetainsPublishedTextAndNeverFollowsChangedOriginal() = runBlocking {
         // These published strings are synthetic protocol fixtures, not editorial translations.
         val oldPublished = replace(plain, target.id) { it.copy(russian = "Прежний опубликованный перевод QA", translationSource = published) }
         assertTrue(cache.write(oldPublished))
@@ -104,7 +115,7 @@ class FeoriaTranslationCatalogTest {
         assertEquals(fresh, cache.readVersion(fresh.key, fresh.contentHash)?.copy(fetchedAtMillis = fresh.fetchedAtMillis))
     }
 
-    @Test fun actualLocalRepositoryPublishesOfflineOnceAndLaterPublishedPairCanSupersedeOwn() = runBlocking {
+    @Test fun previousElevenPairRepositoryPublishesOfflineOnceAndPublishedPairCanSupersedeOwn() = runBlocking {
         assertTrue(cache.write(plain))
         val oldFile = directory.listFiles()!!.single { it.name.endsWith("-${plain.contentHash}.json") }
         val oldBytes = oldFile.readBytes()
@@ -131,7 +142,7 @@ class FeoriaTranslationCatalogTest {
         assertNull(offline.enrichSaved(upgraded, allowNetwork = false))
     }
 
-    @Test fun acceptingLocalEditionKeepsEveryCursorFieldAndResetsOnlyChangedVisibleRussianOffset() {
+    @Test fun acceptingPreviousElevenPairEditionKeepsCursorAndResetsOnlyChangedRussianOffset() {
         val next = requireNotNull(SavedBookEnrichment.apply(plain, own))
         val chapter = plain.chapters.single { target in it.blocks }
         for (mode in listOf(BookReadingMode.RUSSIAN, BookReadingMode.ORIGINAL)) {

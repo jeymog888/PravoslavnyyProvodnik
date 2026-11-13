@@ -98,11 +98,22 @@ class BookCalendarFlowTest {
             selectMode(BookReadingMode.MEANING)
             settle()
             val meaning = saved()
-            assertEquals(BookReadingMode.MEANING, meaning.mode)
+            assertEquals(BookReadingMode.ORIGINAL, meaning.mode)
+            compose.onNodeWithTag("book_meaning_sheet").assertIsDisplayed()
+            compose.onNodeWithTag("book_meaning_excerpt").assertTextEquals(originalText)
             assertSameAnchor(before, meaning)
-            compose.onNodeWithTag("book_open_calendar").performScrollTo().assertIsDisplayed()
+            compose.onNodeWithTag("book_meaning_close").assertIsDisplayed().performClick()
+            settle()
+            compose.onNodeWithTag("book_meaning_sheet").assertDoesNotExist()
+            compose.onNodeWithTag("book_play").assertContentDescriptionEquals("Прокручивать текст")
+            assertSameAnchor(before, saved())
+            // The intro is outside the lazy viewport. Open details without moving the prayer.
+            compose.onNodeWithContentDescription("Настроить чтение").assertIsDisplayed().performClick()
+            compose.onNodeWithTag("book_options").assertIsDisplayed()
+            compose.onNodeWithTag("book_options_offline").performScrollTo().assertIsDisplayed()
                 .assertHeightIsAtLeast(48.dp).performClick()
             compose.onNodeWithTag("book_calendar").assertIsDisplayed()
+            compose.onNodeWithTag("book_options").assertDoesNotExist()
             calendarText("11 ноября 2026")
             calendarText(day.weekTitle)
             calendarText("Глас 6 - одна из восьми групп церковных напевов")
@@ -122,11 +133,8 @@ class BookCalendarFlowTest {
             pressBack()
             settle()
             compose.onNodeWithTag("book_calendar").assertDoesNotExist()
-            assertEquals(BookReadingMode.MEANING, saved().mode)
-            assertSameAnchor(before, saved())
-            selectMode(BookReadingMode.ORIGINAL)
-            settle()
             assertEquals(BookReadingMode.ORIGINAL, saved().mode)
+            compose.onNodeWithTag("book_meaning_sheet").assertDoesNotExist()
             assertSameAnchor(before, saved())
             val returned = compose.onNodeWithTag("book_text_${target.id}", useUnmergedTree = true).assertIsDisplayed()
             returned.assertTextEquals(originalText)
@@ -162,9 +170,19 @@ class BookCalendarFlowTest {
                 onBack = {}, onOpenUrl = {}, onChooseVersion = { fail("Context must not change the service") }, onSettings = {})
         } }
         settle()
-        for (mode in BookReadingMode.entries) {
+        for (mode in listOf(BookReadingMode.ORIGINAL, BookReadingMode.RUSSIAN)) {
             selectMode(mode)
             settle()
+            val beforeMeaning = saved()
+            selectMode(BookReadingMode.MEANING)
+            compose.onNodeWithTag("book_meaning_sheet").assertIsDisplayed()
+            assertEquals(mode, saved().mode)
+            assertSameAnchor(beforeMeaning, saved())
+            compose.onNodeWithTag("book_meaning_close").performClick()
+            settle()
+            compose.onNodeWithTag("book_meaning_sheet").assertDoesNotExist()
+            compose.onNodeWithTag("book_play").assertContentDescriptionEquals("Прокручивать текст")
+            assertSameAnchor(beforeMeaning, saved())
             compose.onNodeWithTag("book_content").performScrollToNode(hasTestTag("book_open_calendar"))
             compose.onNodeWithTag("book_selected_event").assertDoesNotExist()
             compose.onNodeWithTag("book_open_calendar").performScrollTo().assertIsDisplayed().performClick()
@@ -247,9 +265,14 @@ class BookCalendarFlowTest {
     }
 
     private fun selectMode(mode: BookReadingMode) {
-        if (compose.onAllNodesWithTag("book_mode_menu").fetchSemanticsNodes().isNotEmpty())
+        if (mode != BookReadingMode.MEANING && compose.onAllNodesWithTag("book_mode_menu").fetchSemanticsNodes().isNotEmpty()) {
             compose.onNodeWithTag("book_mode_menu").performClick()
+            compose.onNodeWithTag("book_mode_original").assertIsDisplayed()
+            compose.onNodeWithTag("book_mode_russian").assertIsDisplayed()
+            compose.onNodeWithTag("book_mode_menu_label_meaning", useUnmergedTree = true).assertDoesNotExist()
+        }
         compose.onNodeWithTag("book_mode_${mode.name.lowercase()}").performClick()
+        settle()
     }
 
     private fun calendarText(value: String) {
@@ -267,10 +290,12 @@ class BookCalendarFlowTest {
     private fun assertSameAnchor(expected: BookReadingPosition, actual: BookReadingPosition) {
         assertEquals(expected.key, actual.key)
         assertEquals(expected.contentHash, actual.contentHash)
+        assertEquals(expected.parishId, actual.parishId)
         assertEquals(expected.chapterId, actual.chapterId)
         assertEquals(expected.blockId, actual.blockId)
         assertEquals(expected.anchorKind, actual.anchorKind)
         assertEquals(expected.fraction, actual.fraction, .001f)
+        assertEquals(expected.followingGapFraction, actual.followingGapFraction, .001f)
     }
 
     private fun withCompactNativeDisplay(body: () -> Unit) {

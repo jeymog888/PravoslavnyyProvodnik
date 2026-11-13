@@ -31,6 +31,13 @@ data class BookReadingPosition(
     val followingGapFraction: Float = 0f
 )
 
+/** Meaning used to be a saved chapter feed. Reopen its exact anchor in its text language. */
+fun BookReadingPosition.forTextReading(): BookReadingPosition {
+    val textMode = mode.takeUnless { it == BookReadingMode.MEANING }
+        ?: lastTextMode?.takeUnless { it == BookReadingMode.MEANING } ?: BookReadingMode.ORIGINAL
+    return copy(mode = textMode, lastTextMode = textMode)
+}
+
 object BookReadingCodec {
     private val gson = Gson()
     fun decode(json: String?): BookReadingPosition? {

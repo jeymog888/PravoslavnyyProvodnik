@@ -104,6 +104,40 @@ class ChildChurchOwnSiteTest {
         assertTrue(network.calls.containsAll(listOf(source, about, contact)))
     }
 
+    @Test fun `explicitly confirming a fresh source does not revalidate or restore the previous child relationship`() = runBlocking {
+        val network = Source(); val cache = Cache(); val selected = parish()
+        val old = InternetScheduleRepository(network, cache).refresh(selected, now, force = true)
+        assertEquals(ScheduleBindingMethod.CHILD_CHURCH_OWN_SITE, old.siteBinding?.method)
+        val nextSite = "https://fresh-own.example/"
+        val suggestion = ScheduleSourceCandidate(selectedIdentity = ScheduleEntityIdentity.fingerprint(selected),
+            provider = "independent_index", providerLabel = "Публичный справочник", providerObjectId = "new42",
+            name = selected.name, address = selected.address, sourceUrl = nextSite,
+            evidenceUrl = "https://index.example/church/42", evidenceSha256 = "a".repeat(64),
+            checkedAt = now.toString(), latitude = selected.latitude!!, longitude = selected.longitude!!,
+            outcome = ScheduleIdentityOutcome.INSUFFICIENT, reason = "Проверьте источник выбранного храма")
+        assertTrue(suggestion.canConfirm(selected))
+        cache.write(selected.id, ScheduleCacheCodec.encode(old.copy(sourceCandidates = listOf(suggestion),
+            candidateSearchIdentity = ScheduleEntityIdentity.fingerprint(selected))))
+        val calls = mutableListOf<String>()
+        val resolver = object : ScheduleSiteResolver {
+            override suspend fun resolve(parish: Parish): ScheduleSite? = error("An explicit confirmation already chose the source")
+            override suspend fun candidates(parish: Parish, excludedUrls: Set<String>) = ScheduleCandidateDiscovery(listOf(suggestion))
+        }
+        val repo = InternetScheduleRepository(ScheduleTransport { url ->
+            calls += url
+            check(url == nextSite) { "The previous monastery must not overwrite the new accepted source" }
+            response(url, "<h1>${selected.name}</h1><article data-day=\"2026-11-13\"><li><time>09:00</time><span>Литургия</span></li></article>")
+        }, cache, siteResolver = resolver)
+        val ready = repo.confirmCandidate(selected, suggestion.id, now.plusSeconds(60))
+        assertEquals(InternetScheduleStatus.READY, ready.status)
+        assertEquals(listOf(nextSite), calls)
+        assertEquals(nextSite, ready.website)
+        assertEquals(ScheduleBindingMethod.USER_CONFIRMED, ready.siteBinding?.method)
+        assertEquals(suggestion.id, ready.siteBinding?.candidateConfirmation?.candidate?.id)
+        assertEquals("09:00", ready.publication?.events?.single()?.time)
+        assertEquals(ready, repo.cached(selected))
+    }
+
     @Test fun `same structures on another host with different dedication city and address are not hardcoded to Novosibirsk`() = runBlocking {
         val network = Source()
         fun renamed(raw: String) = raw.replace("nskmonastyr.cerkov.ru", "monastery.example.org")

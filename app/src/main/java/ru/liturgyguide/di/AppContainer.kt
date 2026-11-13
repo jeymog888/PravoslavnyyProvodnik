@@ -63,6 +63,12 @@ class AppContainer(context: Context, private val discoveryOverride: PlaceDiscove
                 if (!preferences.contains(parishId) && preferences.all.size >= 100) preferences.all.keys.firstOrNull()?.let(edit::remove)
                 edit.apply()
             }
+            override fun writeSafety(parishId: String, value: String) {
+                require(value.length <= 200_000)
+                val edit = preferences.edit().putString(parishId, value)
+                if (!preferences.contains(parishId) && preferences.all.size >= 100) preferences.all.keys.firstOrNull()?.let(edit::remove)
+                check(edit.commit()) { "Schedule safety observation was not saved" }
+            }
         }, AndroidScheduleDocumentExtractor(appContext),
             siteResolver = productionScheduleSiteResolver(transport, directories))
     }

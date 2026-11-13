@@ -53,6 +53,8 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     readingEntryLabel: (LocalDate) -> String = { "Читать литургию" },
     internetSchedule: InternetScheduleState? = null, onRefreshSchedule: (() -> Unit)? = null,
     onSetScheduleSource: ((String) -> Unit)? = null,
+    onConfirmScheduleCandidate: ((String) -> Unit)? = null,
+    onDismissScheduleCandidate: ((String) -> Unit)? = null,
     onSelectionCancelled: () -> Unit = {}, searchQuery: String, onSearchQueryChange: (String) -> Unit,
     onOpenService: ((ParishService) -> Unit)? = null, now: Instant? = null,
     onReadServiceText: ((LocalDate, WorshipKind) -> Unit)? = null) {
@@ -307,6 +309,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                         Text(date.format(DateTimeFormatter.ofPattern("d MMMM uuuu, EEEE", Locale.forLanguageTag("ru"))),
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.testTag("schedule_date"))
+                        ownState?.let { ScheduleSourceChangeNotice(it) }
                         if (featured != null) {
                             Text(featured.time, style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.testTag("church_service_time"))
@@ -349,6 +352,14 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                             if (schedule.next == null) Text(scheduleEmptyDescription(ownState, source != null), style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                             schedule.next?.let { offer -> UpcomingScheduleOffer(offer, "church", onOpenService) }
+                            if (ownState != null && onConfirmScheduleCandidate != null) {
+                                val ownerId = church.id
+                                ScheduleCandidateChoices(church, ownState,
+                                    onConfirm = { id -> if (currentChurchId == ownerId) onConfirmScheduleCandidate(id) },
+                                    onDismiss = onDismissScheduleCandidate?.let { dismiss ->
+                                        { id: String -> if (currentChurchId == ownerId) dismiss(id) }
+                                    }, onOpenUrl = onOpenUrl)
+                            }
                             onRefreshSchedule?.let { refresh -> OutlinedButton(onClick = refresh, enabled = ownState?.loading != true,
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("refresh_schedule")) {
                                 Icon(Icons.Default.Refresh, null, Modifier.size(20.dp)); Spacer(Modifier.width(12.dp)); Text("Обновить расписание")

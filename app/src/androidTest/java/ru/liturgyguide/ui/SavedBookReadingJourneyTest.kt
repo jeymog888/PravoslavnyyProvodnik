@@ -170,33 +170,60 @@ class SavedBookReadingJourneyTest {
                 writeReport()
                 var minimumBlockHeightPx = afterDrag.blockHeightPx
                 if (sampleIndex == 0) capture(output, "original", screenshots)
+                var sheetTop: Float? = null
                 for ((index, mode) in sequence.withIndex()) {
-                    selectMode(mode)
-                    if (mode == BookReadingMode.MEANING) assertMeaning(sample)
-                    else {
+                    val action: String
+                    val expectedLanguage: BookReadingMode
+                    if (mode == BookReadingMode.MEANING) {
+                        expectedLanguage = saved().mode
+                        sheetTop = paragraphTop(sample.block.id)
+                        openMeaning()
+                        assertMeaning(book, sample, expectedLanguage)
+                        action = "open_meaning"
+                    } else {
+                        if (compose.onAllNodesWithTag("book_meaning_sheet").fetchSemanticsNodes().isNotEmpty()) {
+                            compose.onNodeWithTag("book_meaning_close").assertIsDisplayed().performClick()
+                            settle()
+                            compose.onNodeWithTag("book_meaning_sheet").assertDoesNotExist()
+                            assertEquals("Closing help must keep the preceding text language", mode, saved().mode)
+                            assertTrue("Closing help must restore the same rendered line",
+                                abs(paragraphTop(sample.block.id) - requireNotNull(sheetTop)) <= 2f / physicalDensity())
+                            action = "close_meaning"
+                        } else {
+                            selectMode(mode)
+                            action = "select_language"
+                        }
+                        expectedLanguage = mode
                         assertTextPassage(sample, mode)
                         minimumBlockHeightPx = min(minimumBlockHeightPx, blockHeightPx(sample.block.id))
                     }
                     val current = saved()
+                    assertEquals(baseline.key, current.key)
                     assertEquals(baseline.contentHash, current.contentHash)
+                    assertEquals(baseline.parishId, current.parishId)
+                    assertEquals(baseline.followingGapFraction, current.followingGapFraction, .001f)
+                    assertEquals(baseline.showAltar, current.showAltar)
+                    assertEquals(baseline.wordsPerMinute, current.wordsPerMinute)
                     assertEquals(baseline.chapterId, current.chapterId)
                     assertEquals(baseline.blockId, current.blockId)
                     assertEquals(BookAnchorKind.BLOCK, current.anchorKind)
-                    assertEquals(mode, current.mode)
+                    assertEquals(expectedLanguage, current.mode)
+                    assertEquals(expectedLanguage, current.lastTextMode)
                     // Each layout can round down by one physical pixel. Bound accumulated
                     // drift against the initial anchor, not only against the previous step.
                     val tolerance = (2f * (index + 1) + 1f) / minimumBlockHeightPx + .0001f
-                    assertEquals("Mode changes must retain the initial fragment", baseline.fraction, current.fraction, tolerance)
-                    assertStill(sample, mode)
+                    assertEquals("Language changes and help must retain the initial fragment", baseline.fraction, current.fraction, tolerance)
+                    assertStill(sample, sheetOpen = mode == BookReadingMode.MEANING)
                     transitions.put(JSONObject().put("sample", sampleIndex).put("step", index + 1)
-                        .put("chapterId", sample.chapter.id).put("blockId", sample.block.id).put("mode", mode.name)
+                        .put("chapterId", sample.chapter.id).put("blockId", sample.block.id)
+                        .put("action", action).put("mode", current.mode.name).put("sheetOpen", mode == BookReadingMode.MEANING)
                         .put("initialFraction", baseline.fraction.toDouble()).put("fraction", current.fraction.toDouble())
                         .put("allowedFractionDrift", tolerance.toDouble()))
                     if (sampleIndex == 0 && index < 2) capture(output, mode.name.lowercase(), screenshots)
                     writeReport()
                 }
             }
-            assertEquals("Five real passages, six actual mode transitions each", 30, transitions.length())
+            assertEquals("Five real passages, six actual language/help actions each", 30, transitions.length())
 
             // A separate final selection keeps the offline acceptance in Russian, as in the user flow.
             selectMode(BookReadingMode.RUSSIAN)
@@ -221,11 +248,11 @@ class SavedBookReadingJourneyTest {
             assertEquals(before.fraction, after.fraction, tolerance)
             assertTrue("Reopened text must return to the same visible line",
                 abs(paragraphTop(last.block.id) - beforeTop) <= 2f / physicalDensity())
-            assertStill(last, BookReadingMode.RUSSIAN)
+            assertStill(last)
             capture(output, "reopened-russian", screenshots)
             assertEquals("Every attempted network request is a harness failure", 0, networkAttempts.get())
             assertArrayEquals("Input archive must remain unchanged", originalBytes, archive.readBytes())
-            report.put("modeTransitions", transitions.length()).put("additionalFinalRussianSelection", 1)
+            report.put("languageAndHelpActions", transitions.length()).put("additionalFinalRussianSelection", 1)
                 .put("reopenedPosition", JSONObject().put("blockId", after.blockId).put("chapterId", after.chapterId)
                     .put("fraction", after.fraction.toDouble()).put("mode", after.mode.name).put("contentHash", after.contentHash))
                 .put("allPassed", true)
@@ -313,15 +340,28 @@ class SavedBookReadingJourneyTest {
     }
 
     private fun selectMode(mode: BookReadingMode) {
+        require(mode != BookReadingMode.MEANING) { "Meaning is an independent temporary sheet" }
         assertNotEquals("Each counted selection must change the mode", mode, saved().mode)
-        if (compose.onAllNodesWithTag("book_mode_menu").fetchSemanticsNodes().isNotEmpty())
+        if (compose.onAllNodesWithTag("book_mode_menu").fetchSemanticsNodes().isNotEmpty()) {
             compose.onNodeWithTag("book_mode_menu").performClick()
+            compose.onNodeWithTag("book_mode_original").assertIsDisplayed()
+            compose.onNodeWithTag("book_mode_russian").assertIsDisplayed()
+            compose.onNodeWithTag("book_mode_menu_label_meaning", useUnmergedTree = true).assertDoesNotExist()
+            val menuLabel = compose.onNodeWithTag("book_mode_menu_label_${mode.name.lowercase()}", useUnmergedTree = true)
+                .assertIsDisplayed().assertTextEquals(mode.title)
+            assertTextFitsLayout(layout(menuLabel), mode.title, singleLine = true)
+        }
         compose.onNodeWithTag("book_mode_${mode.name.lowercase()}").assertIsDisplayed().performClick()
         settle()
-        val menu = compose.onAllNodesWithTag("book_mode_menu_label", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
-        val label = compose.onNodeWithTag(if (menu) "book_mode_menu_label" else "book_mode_label_${mode.name.lowercase()}",
-            useUnmergedTree = true).assertIsDisplayed().assertTextEquals(mode.title)
-        assertTextFitsLayout(layout(label), mode.title, singleLine = true)
+        val menu = compose.onAllNodesWithTag("book_mode_menu").fetchSemanticsNodes().isNotEmpty()
+        val hasMenuLabel = compose.onAllNodesWithTag("book_mode_menu_label", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        if (menu && !hasMenuLabel) {
+            compose.onNodeWithTag("book_mode_menu").assertIsDisplayed().assertContentDescriptionEquals("Язык текста: ${mode.title}")
+        } else {
+            val label = compose.onNodeWithTag(if (menu) "book_mode_menu_label" else "book_mode_label_${mode.name.lowercase()}",
+                useUnmergedTree = true).assertIsDisplayed().assertTextEquals(mode.title)
+            assertTextFitsLayout(layout(label), mode.title, singleLine = true)
+        }
         assertEquals(mode, saved().mode)
     }
 
@@ -338,21 +378,33 @@ class SavedBookReadingJourneyTest {
         compose.onNodeWithTag("book_save_error").assertDoesNotExist()
     }
 
-    private fun assertMeaning(sample: Sample) {
-        compose.onNodeWithTag("book_chapter", useUnmergedTree = true).assertTextEquals(sample.chapter.title)
-        val viewport = compose.onNodeWithTag("book_content").fetchSemanticsNode().boundsInRoot
-        assertTrue("The corresponding explanation must intersect the visible reading viewport",
-            compose.onAllNodesWithText(sample.chapter.meaning, useUnmergedTree = true).fetchSemanticsNodes().any {
-                val intersection = it.boundsInRoot.intersect(viewport)
-                intersection.width > 0f && intersection.height > 0f
-            })
+    private fun openMeaning() {
+        val before = saved()
+        compose.onNodeWithTag("book_mode_meaning").assertIsDisplayed().performClick()
+        settle()
+        compose.onNodeWithTag("book_meaning_sheet").assertIsDisplayed()
+        assertEquals("Opening help must retain the entire durable cursor", before, saved())
     }
 
-    private fun assertStill(sample: Sample, mode: BookReadingMode) {
-        compose.onNodeWithTag("book_play").assertContentDescriptionEquals(
-            if (mode == BookReadingMode.MEANING) "Вернуться к тексту" else "Прокручивать текст")
+    private fun assertMeaning(book: ServiceBook, sample: Sample, language: BookReadingMode) {
         val before = saved()
-        val top = if (mode == BookReadingMode.MEANING) null else paragraphTop(sample.block.id)
+        val content = requireNotNull(BookMeaningContent.capture(book, before))
+        compose.onNodeWithTag("book_meaning_title").performScrollTo().assertTextEquals(content.chapterTitle)
+        val excerpt = if (language == BookReadingMode.RUSSIAN) requireNotNull(sample.block.russian) else sample.block.original
+        compose.onNodeWithTag("book_meaning_excerpt").assertTextEquals(excerpt)
+        compose.onNodeWithTag("book_meaning_excerpt_toggle").performScrollTo().performClick()
+        if (compose.onAllNodesWithTag("book_meaning_more").fetchSemanticsNodes().isNotEmpty())
+            compose.onNodeWithTag("book_meaning_more").performScrollTo().performClick()
+        compose.onNodeWithTag("book_meaning_detail").performScrollTo()
+            .assertTextEquals(content.detail.ifBlank { "Для этой части пока нет пояснения" })
+        assertEquals("Scrolling the complete excerpt and explanation must not move the book", before, saved())
+    }
+
+    private fun assertStill(sample: Sample, sheetOpen: Boolean = false) {
+        if (sheetOpen) compose.onNodeWithTag("book_meaning_close").assertIsDisplayed()
+        else compose.onNodeWithTag("book_play").assertContentDescriptionEquals("Прокручивать текст")
+        val before = saved()
+        val top = if (sheetOpen) null else paragraphTop(sample.block.id)
         compose.mainClock.advanceTimeBy(600)
         compose.waitForIdle()
         assertEquals("An unstarted player must not move the saved cursor", before, saved())
@@ -368,14 +420,19 @@ class SavedBookReadingJourneyTest {
 
     private fun capture(output: File, name: String, screenshots: JSONArray) {
         compose.waitForIdle()
-        val bitmap = compose.onNodeWithTag("saved_reading_journey_host").captureToImage().asAndroidBitmap()
+        val sheetOpen = compose.onAllNodesWithTag("book_meaning_sheet").fetchSemanticsNodes().isNotEmpty()
+        // The modal owns a separate Android window, outside the tagged reader host.
+        val bitmap = if (sheetOpen) requireNotNull(InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot())
+            else compose.onNodeWithTag("saved_reading_journey_host").captureToImage().asAndroidBitmap()
         val destination = File(output, "$name.png")
         try {
             destination.outputStream().use { check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)) }
             screenshots.put(JSONObject().put("file", destination.name).put("sha256", sha256(destination.readBytes()))
                 .put("widthPx", bitmap.width).put("heightPx", bitmap.height)
                 .put("mode", saved().mode.name).put("chapterId", saved().chapterId).put("blockId", saved().blockId)
-                .put("source", "Compose captureToImage of the tagged constrained host"))
+                .put("sheetOpen", sheetOpen)
+                .put("source", if (sheetOpen) "Native screenshot including the modal window"
+                    else "Compose captureToImage of the tagged constrained host"))
         } finally { bitmap.recycle() }
     }
 

@@ -14,6 +14,17 @@ fun interface ScheduleSiteResolver {
     suspend fun resolve(parish: Parish): ScheduleSite?
     suspend fun resolve(parish: Parish, excludedUrls: Set<String>): ScheduleSite? =
         resolve(parish)?.takeUnless { ScheduleSourceExclusions(excludedUrls).contains(it.url) }
+    suspend fun candidates(parish: Parish, excludedUrls: Set<String>): ScheduleCandidateDiscovery =
+        ScheduleCandidateDiscovery(unavailable = true)
+    suspend fun discover(parish: Parish, excludedUrls: Set<String>): ScheduleSourceDiscovery {
+        val site = resolve(parish, excludedUrls)
+        if (site != null && site.binding?.validFor(parish, site.url, site.evidenceUrl) == true)
+            return ScheduleSourceDiscovery(ScheduleIdentityOutcome.PROVED, site)
+        val found = candidates(parish, excludedUrls)
+        val outcome = if (found.candidates.isNotEmpty() && found.candidates.all { it.outcome == ScheduleIdentityOutcome.CONFLICT })
+            ScheduleIdentityOutcome.CONFLICT else ScheduleIdentityOutcome.INSUFFICIENT
+        return ScheduleSourceDiscovery(outcome, candidates = found)
+    }
     /** One scope for primary/alternative lookup; test/custom resolvers keep their existing behavior. */
     fun forRefresh(): ScheduleSiteResolver = this
 }
@@ -21,7 +32,10 @@ fun interface ScheduleSiteResolver {
 /** Exact OSM identity first, then an identified encyclopedia entity, never the first search hit. */
 class OpenScheduleSiteResolver(private val transport: ScheduleTransport,
     directoryCache: OfficialDirectoryCacheStore = MemoryOfficialDirectoryCacheStore(),
-    moscowSearch: MoscowDirectorySearchTransport? = null) : ScheduleSiteResolver {
+    moscowSearch: MoscowDirectorySearchTransport? = null,
+    private val candidateProvider: ScheduleCandidateProvider = CompositeScheduleCandidateProvider(listOf(
+        OfficialMapCandidateProvider.PROVIDER to OfficialMapCandidateProvider(transport),
+        ElitsyMapCandidateProvider.PROVIDER to ElitsyMapCandidateProvider(transport)))) : ScheduleSiteResolver {
     private val directories = OfficialDirectoryResolver(transport, directoryCache)
     private val moscow = moscowSearch?.let { MoscowOfficialDirectoryResolver(transport, it) }
     override suspend fun resolve(parish: Parish): ScheduleSite? = resolve(parish, emptySet())
@@ -29,11 +43,16 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport,
     override suspend fun resolve(parish: Parish, excludedUrls: Set<String>): ScheduleSite? =
         resolveInSession(parish, excludedUrls, mutableMapOf(), mutableMapOf(), mutableMapOf())
 
+    override suspend fun candidates(parish: Parish, excludedUrls: Set<String>): ScheduleCandidateDiscovery =
+        candidateProvider.discover(parish, excludedUrls)
+
     override fun forRefresh(): ScheduleSiteResolver {
         val directoryMemo = mutableMapOf<String, OfficialDirectorySnapshot?>()
         val contactMemo = mutableMapOf<String, ScheduleSite?>()
         val moscowMemo = mutableMapOf<String, ScheduleSite?>()
         return object : ScheduleSiteResolver {
+            override suspend fun candidates(parish: Parish, excludedUrls: Set<String>): ScheduleCandidateDiscovery =
+                candidateProvider.discover(parish, excludedUrls)
             override suspend fun resolve(parish: Parish): ScheduleSite? = resolve(parish, emptySet())
             override suspend fun resolve(parish: Parish, excludedUrls: Set<String>): ScheduleSite? =
                 resolveInSession(parish, excludedUrls, directoryMemo, contactMemo, moscowMemo)

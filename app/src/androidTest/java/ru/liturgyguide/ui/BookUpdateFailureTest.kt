@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import kotlin.math.abs
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
@@ -53,9 +54,19 @@ class BookUpdateFailureTest {
                 onBack = {}, onSettings = {}, onOpenUrl = {}, onOpenCommonLiturgy = {})
         } }
         awaitBook()
+        val restored = requireNotNull(store.last(parish))
+        assertEquals("A legacy Meaning bookmark must reopen in its previous text language", BookReadingMode.RUSSIAN, restored.mode)
+        assertEquals(BookReadingMode.RUSSIAN, restored.lastTextMode)
+        assertEquals("prayer", restored.blockId)
+        assertEquals("chapter", restored.chapterId)
+        assertEquals(BookAnchorKind.BLOCK, restored.anchorKind)
+        assertEquals(.37f, restored.fraction, .001f)
+        compose.onNodeWithTag("book_meaning_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("book_play").assertContentDescriptionEquals("Прокручивать текст")
+        val beforeTop = compose.onNodeWithTag("book_text_prayer", useUnmergedTree = true).getUnclippedBoundsInRoot().top
+        assertExplanation(old)
         val before = requireNotNull(store.last(parish))
         val beforeValues = backing.all.toMap()
-        compose.onNodeWithText(old.chapters.single().meaning).assertIsDisplayed()
         compose.onNodeWithTag("book_accept_update").assertIsDisplayed()
         compose.runOnIdle { storage.failHashOnce = newer.contentHash }
         compose.onNodeWithTag("book_accept_update").performClick()
@@ -67,8 +78,11 @@ class BookUpdateFailureTest {
             assertEquals(beforeValues, backing.all)
             assertEquals(before, BookReadingStore(backing).last(parish))
         }
-        compose.onNodeWithText(old.chapters.single().meaning).assertIsDisplayed()
+        assertExplanation(old)
         compose.onNodeWithText(newer.chapters.single().meaning).assertDoesNotExist()
+        assertEquals(before, store.last(parish))
+        assertTrue("A refused edition must retain the visible Russian line", abs((compose.onNodeWithTag("book_text_prayer", useUnmergedTree = true)
+            .getUnclippedBoundsInRoot().top - beforeTop).value) <= 2f)
         compose.onNodeWithTag("book_accept_update").assertIsDisplayed()
         compose.onNodeWithText("Не удалось сохранить место. Открытый текст остался на месте").assertExists()
 
@@ -77,7 +91,8 @@ class BookUpdateFailureTest {
         compose.runOnIdle { mounted.value = true }
         awaitBook()
         assertEquals("Reentry must still pin the old edition", old.contentHash, store.last(parish)!!.contentHash)
-        compose.onNodeWithText(old.chapters.single().meaning).assertIsDisplayed()
+        assertEquals(before, store.last(parish))
+        assertExplanation(old)
         compose.onNodeWithTag("book_accept_update").performClick()
         compose.runOnIdle {
             assertEquals(newer.contentHash, store.last(parish)!!.contentHash)
@@ -85,14 +100,37 @@ class BookUpdateFailureTest {
         }
         settle()
         compose.onNodeWithTag("book_accept_update").assertDoesNotExist()
-        compose.onNodeWithText(newer.chapters.single().meaning).assertIsDisplayed()
+        assertExplanation(newer)
         val accepted = requireNotNull(store.last(parish))
         assertEquals(before.key, accepted.key)
         assertEquals(before.parishId, accepted.parishId)
         assertEquals(before.blockId, accepted.blockId)
+        assertEquals(before.chapterId, accepted.chapterId)
+        assertEquals(before.anchorKind, accepted.anchorKind)
+        assertEquals(before.followingGapFraction, accepted.followingGapFraction, .001f)
         assertEquals(before.mode, accepted.mode)
         assertEquals(before.lastTextMode, accepted.lastTextMode)
         assertEquals(before.fraction, accepted.fraction, .001f)
+    }
+
+    private fun assertExplanation(book: ServiceBook) {
+        val before = requireNotNull(store.last(parish))
+        compose.onNodeWithTag("book_mode_meaning").performClick()
+        settle()
+        compose.onNodeWithTag("book_meaning_sheet").assertIsDisplayed()
+        compose.onNodeWithTag("book_meaning_detail").performScrollTo().assertTextEquals(book.chapters.single().meaning)
+        compose.onNodeWithTag("book_meaning_excerpt").assertTextEquals(requireNotNull(book.blocks.first().russian))
+        assertPosition(before, requireNotNull(store.last(parish)))
+        compose.onNodeWithTag("book_meaning_close").assertIsDisplayed().performClick()
+        settle()
+        compose.onNodeWithTag("book_meaning_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("book_play").assertContentDescriptionEquals("Прокручивать текст")
+        assertPosition(before, requireNotNull(store.last(parish)))
+    }
+
+    private fun assertPosition(expected: BookReadingPosition, actual: BookReadingPosition) {
+        assertEquals(expected.copy(fraction = actual.fraction), actual)
+        assertEquals(expected.fraction, actual.fraction, .001f)
     }
 
     private fun awaitBook() {

@@ -2,14 +2,14 @@ package ru.liturgyguide.service.book
 
 /** Reviewed project translations, separate from the older explanatory paraphrases. */
 internal object FeoriaTranslationCatalog {
-    const val REVISION = 2
+    const val REVISION = 3
     private const val ORIGINAL_SOURCE_URL = "https://azbyka.ru/worships/?date=2026-11-13&worship=matins&size=full&church=34&main_event=0&top_level=3"
 
     data class Entry(val id: String, val original: String, val russian: String,
         // Entry revisions describe their wording; adding new entries does not revise the old eight.
         val revision: Int = 1, val originalSourceUrl: String = ORIGINAL_SOURCE_URL)
 
-    val entries = listOf(
+    private val previousEntries = listOf(
         Entry("apostles_refrain",
             "Припев: Святи́и апóстоли, моли́те Бо́га о на́с.",
             "Припев: Святые апостолы, молитесь Богу о нас."),
@@ -48,8 +48,10 @@ internal object FeoriaTranslationCatalog {
             originalSourceUrl = "https://azbyka.ru/worships/?date=2026-11-13&worship=matins&size=full&church=20")
     )
 
+    val entries: List<Entry> = previousEntries + FeoriaCanonTranslations.entries
+
     fun recognizes(original: String, translation: BookTranslation): Boolean =
         translation.source == BookTranslationIndex.FEORIA_TRANSLATION_SOURCE && translation.meaning == null &&
-            entries.any { BookTranslationIndex.normal(it.original) == BookTranslationIndex.normal(original) &&
-                it.russian == translation.russian }
+            (previousEntries.any { BookTranslationIndex.normal(it.original) == BookTranslationIndex.normal(original) &&
+                it.russian == translation.russian } || FeoriaCanonTranslations.recognizes(original, translation))
 }

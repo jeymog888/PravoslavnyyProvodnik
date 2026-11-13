@@ -5,7 +5,7 @@ import java.security.MessageDigest
 import java.util.Locale
 
 /** What was actually checked: article scope, or a link on the exact selected map object. */
-enum class ScheduleBindingMethod { ARTICLE_SCOPE, EXACT_MAP_LINK, DIRECTORY_OWN_CONTACT, CHILD_CHURCH_OWN_SITE, PUBLISHER_GEOMETRY_CHAIN }
+enum class ScheduleBindingMethod { ARTICLE_SCOPE, EXACT_MAP_LINK, DIRECTORY_OWN_CONTACT, CHILD_CHURCH_OWN_SITE, PUBLISHER_GEOMETRY_CHAIN, USER_CONFIRMED }
 enum class ScheduleEntityScope { CHURCH, MONASTERY, SKETE, CHAPEL, COMPLEX, UNKNOWN }
 
 data class ScheduleSiteBinding(
@@ -19,6 +19,7 @@ data class ScheduleSiteBinding(
     val officialContactProof: OfficialContactProof? = null,
     val childChurchOwnSiteProof: ChildChurchOwnSiteProof? = null,
     val publisherGeometryProof: PublisherGeometryProof? = null,
+    val candidateConfirmation: ScheduleCandidateConfirmation? = null,
 ) {
     fun validFor(parish: Parish, website: String, evidence: String): Boolean =
         policyVersion == ScheduleEntityIdentity.POLICY_VERSION &&
@@ -38,7 +39,10 @@ data class ScheduleSiteBinding(
             else childChurchOwnSiteProof == null) &&
             (if (method == ScheduleBindingMethod.PUBLISHER_GEOMETRY_CHAIN)
                 publisherGeometryProof?.validFor(parish, this) == true
-            else publisherGeometryProof == null)
+            else publisherGeometryProof == null) &&
+            (if (method == ScheduleBindingMethod.USER_CONFIRMED)
+                candidateConfirmation?.validFor(parish, this) == true
+            else candidateConfirmation == null)
 }
 
 internal object ScheduleEntityIdentity {

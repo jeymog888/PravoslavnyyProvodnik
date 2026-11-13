@@ -3,8 +3,12 @@ package ru.liturgyguide.ui
 import android.content.Context
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.unit.Density
 import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -17,6 +21,7 @@ import org.junit.runner.RunWith
 import ru.liturgyguide.model.*
 import ru.liturgyguide.service.book.*
 import java.util.UUID
+import kotlin.math.abs
 
 /** A real accepted archive and real reader. No claim about a parish's performed order. */
 @RunWith(AndroidJUnit4::class)
@@ -28,6 +33,7 @@ class BookQuietMatinsFlowTest {
     private val prefs = context.getSharedPreferences(name, Context.MODE_PRIVATE)
     private val store = BookReadingStore(prefs)
     private val mounted = mutableStateOf(true)
+    private val testFontScale = mutableStateOf<Float?>(null)
     private val parish = "quiet-matins-reader"
     private val bytes = instrumentation.context.assets.open("quiet-matins/matins-accepted-unchanged.json").use { it.readBytes() }
     private val book = Gson().fromJson(bytes.toString(Charsets.UTF_8), ServiceBook::class.java)
@@ -83,20 +89,24 @@ class BookQuietMatinsFlowTest {
         for (mode in listOf(BookReadingMode.RUSSIAN, BookReadingMode.MEANING, BookReadingMode.ORIGINAL)) {
             compose.onNodeWithTag("book_mode_${mode.name.lowercase()}").performClick()
             settle()
-            assertEquals(mode, saved().mode)
+            val expectedLanguage = if (mode == BookReadingMode.MEANING) BookReadingMode.RUSSIAN else mode
+            assertEquals(expectedLanguage, saved().mode)
+            if (mode == BookReadingMode.MEANING) {
+                compose.onNodeWithText("О тихой молитве").assertIsDisplayed()
+                compose.onNodeWithTag("book_meaning_cue").assertDoesNotExist()
+            }
             assertEquals(privatePrayer.id, saved().blockId)
             assertEquals(initial.fraction, saved().fraction, .015f)
             compose.runOnIdle { mounted.value = false }
             compose.waitForIdle()
             compose.runOnIdle { mounted.value = true }
             settle()
-            assertEquals(mode, saved().mode)
+            assertEquals(expectedLanguage, saved().mode)
             assertEquals(privatePrayer.id, saved().blockId)
             assertEquals(initial.fraction, saved().fraction, .015f)
-            if (mode != BookReadingMode.MEANING) {
-                compose.onNodeWithTag("book_text_${privatePrayer.id}").assertIsDisplayed()
-                paused()
-            }
+            compose.onNodeWithTag("book_meaning_sheet").assertDoesNotExist()
+            compose.onNodeWithTag("book_text_${privatePrayer.id}").assertIsDisplayed()
+            paused()
         }
         unchanged()
     }
@@ -131,14 +141,91 @@ class BookQuietMatinsFlowTest {
         unchanged()
     }
 
+    @Test fun explainingTheRealVirtualQuietCardKeepsItsExactBoundsCollapsedAndExpanded() {
+        launch(BookReadingPosition(book.key, book.contentHash, parish, group.introductionId, chapter.id,
+            anchorKind = BookAnchorKind.BLOCK, showAltar = false))
+        for (expanded in listOf(false, true)) {
+            if (expanded) {
+                compose.onNodeWithTag("book_content").performScrollToNode(hasTestTag("book_quiet_group"))
+                compose.onNodeWithTag("book_quiet_toggle").performScrollTo().performClick()
+                settle()
+            }
+            alignQuietCard()
+            val beforeCard = compose.onNodeWithTag("book_quiet_group").getUnclippedBoundsInRoot()
+            val beforeText = compose.onNodeWithText(group.explanation).getUnclippedBoundsInRoot()
+            val before = saved()
+            assertEquals(expanded, before.showAltar)
+            assertEquals(group.introductionId, before.blockId)
+            repeat(3) {
+                compose.onNodeWithTag("book_mode_meaning").performClick(); settle()
+                compose.onNodeWithTag("book_meaning_title").assertTextEquals(group.title)
+                compose.onNodeWithTag("book_meaning_detail").performScrollTo().assertTextEquals(group.explanation)
+                compose.onNodeWithTag("book_meaning_what").assertDoesNotExist()
+                compose.onNodeWithTag("book_meaning_cue").assertDoesNotExist()
+                compose.onNodeWithTag("book_meaning_close").performClick(); settle()
+                assertEquals("Closing help must return to the virtual card, not its preceding rubric",
+                    beforeCard, compose.onNodeWithTag("book_quiet_group").getUnclippedBoundsInRoot())
+                assertEquals("The same visible explanation line must keep its exact bounds",
+                    beforeText, compose.onNodeWithText(group.explanation).getUnclippedBoundsInRoot())
+                assertEquals(before, saved())
+                paused()
+            }
+        }
+        unchanged()
+    }
+
+    @Test fun aQuietCardReflowUnderItsHelpRestoresTheSameCardFractionRatherThanTheIntroduction() {
+        testFontScale.value = 1f
+        launch(BookReadingPosition(book.key, book.contentHash, parish, group.introductionId, chapter.id,
+            anchorKind = BookAnchorKind.BLOCK, showAltar = false))
+        alignQuietCard()
+        val beforeCard = compose.onNodeWithTag("book_quiet_group").getUnclippedBoundsInRoot()
+        val beforeViewport = compose.onNodeWithTag("book_content").getBoundsInRoot()
+        val fraction = (beforeViewport.top - beforeCard.top).value / (beforeCard.bottom - beforeCard.top).value
+        val before = saved()
+        compose.onNodeWithTag("book_mode_meaning").performClick(); settle()
+        compose.runOnIdle { testFontScale.value = 1.5f }; settle()
+        compose.onNodeWithTag("book_meaning_close").performClick(); settle()
+        val afterCard = compose.onNodeWithTag("book_quiet_group").getUnclippedBoundsInRoot()
+        val afterViewport = compose.onNodeWithTag("book_content").getBoundsInRoot()
+        assertNotEquals("The regression must actually reflow the rendered card", (beforeCard.bottom - beforeCard.top), (afterCard.bottom - afterCard.top))
+        val expectedTop = afterViewport.top.value - (afterCard.bottom - afterCard.top).value * fraction
+        assertTrue("Reflow must preserve the temporary card fraction, not seek its source rubric",
+            abs(afterCard.top.value - expectedTop) <= 1f / compose.density.density)
+        assertEquals(before, saved())
+        assertFalse(saved().showAltar)
+        paused()
+        unchanged()
+    }
+
+    private fun alignQuietCard() {
+        val content = compose.onNodeWithTag("book_content")
+        content.performScrollToNode(hasTestTag("book_quiet_group")); settle()
+        val card = compose.onNodeWithTag("book_quiet_group").getUnclippedBoundsInRoot()
+        val viewport = content.getBoundsInRoot()
+        val distance = card.top - viewport.top + (card.bottom - card.top) * .28f
+        content.performSemanticsAction(SemanticsActions.ScrollBy) { scroll ->
+            assertTrue(scroll(0f, with(compose.density) { distance.toPx() }))
+        }
+        settle()
+        val aligned = compose.onNodeWithTag("book_quiet_group").getUnclippedBoundsInRoot()
+        assertTrue("The virtual card itself must be partly above the viewport", aligned.top < content.getBoundsInRoot().top)
+        assertTrue("The card must still cross the viewport start", aligned.bottom > content.getBoundsInRoot().top)
+    }
+
     private fun launch(position: BookReadingPosition) {
         assertEquals("bfa4f3adad38e8df5ae64dce5100b9e92e4c00d75919ff3eb0029e12037c9587", book.contentHash)
         assertTrue(ServiceBookIntegrity.valid(book))
         assertTrue(store.save(position))
-        compose.setContent { GuideTheme(false) {
-            if (mounted.value) BookReaderScreen(book, parish, store, 0, onBack = {}, onOpenUrl = {},
-                onChooseVersion = {}, onSettings = {})
-        } }
+        compose.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides (testFontScale.value?.let { Density(density.density, it) } ?: density)) {
+                GuideTheme(false) {
+                    if (mounted.value) BookReaderScreen(book, parish, store, 0, onBack = {}, onOpenUrl = {},
+                        onChooseVersion = {}, onSettings = {})
+                }
+            }
+        }
         settle()
     }
     private fun saved() = requireNotNull(store.positionFor(book.key, parish))
