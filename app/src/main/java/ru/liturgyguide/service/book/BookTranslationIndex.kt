@@ -194,6 +194,15 @@ class BookTranslationIndex private constructor(
             normal(it.original) to BookTranslation(it.russian, FEORIA_TRANSLATION_SOURCE)
         })
 
+        /** Reviewed local translations and one independently attributed published whole pair. */
+        fun fromBundledRussian(): BookTranslationIndex = fromFeoriaCatalog().fillingMissing(fromBundledPsalm19())
+
+        internal fun fromBundledPsalm19(json: String? = BookPublishedPsalm19.JSON): BookTranslationIndex {
+            val pair = BookPublishedPsalm19.read(json) ?: return empty()
+            val key = normal(pair.original)
+            return BookTranslationIndex(mapOf(key to BookTranslation(pair.russian, PSALTER_SOURCE)), setOf(key))
+        }
+
         fun fromAssets(legacyStagesJson: String?, commonJson: String? = null): BookTranslationIndex {
             val result = linkedMapOf<String, BookTranslation>()
             fun add(original: String?, russian: String?, source: BookSource = EDITORIAL_SOURCE, meaning: String? = null) {
@@ -234,7 +243,7 @@ class BookTranslationIndex private constructor(
             return BookTranslationIndex(result)
         }
 
-        /** The public bilingual edition is downloaded for this reading, never bundled into the APK. */
+        /** Parse a full downloaded edition; reviewed bundled whole pairs use a separate factory. */
         fun fromParallelPage(document: Document, source: BookSource = TIMROT_SOURCE.copy(
             url = document.location().ifBlank { TIMROT_SOURCE.url }
         )): BookTranslationIndex {

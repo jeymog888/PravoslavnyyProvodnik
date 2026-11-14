@@ -86,10 +86,10 @@ class AppContainer(context: Context, private val discoveryOverride: PlaceDiscove
             curatedPublishers = { parishes.getOrNull()?.directory?.churches.orEmpty() })
     }
     val serviceBooks: ServiceBooks by lazy {
-        // Only the small reviewed translation catalog supplements published exact pairs.
+        // Reviewed local translations and a separately attributed published correction supplement exact pairs.
         // The older short guide's explanatory paraphrases remain separate.
         booksOverride ?: ServiceBookRepository(FileBookCache(File(appContext.filesDir, "service-books-v2")),
-            translations = BookTranslationIndex.fromFeoriaCatalog(),
+            translations = BookTranslationIndex.fromBundledRussian(),
             calendar = PublishedCalendarSupplements(), patronalProofs = bookDedication.choices)
     }
     val placeDiscovery: PlaceDiscovery by lazy {
