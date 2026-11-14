@@ -163,15 +163,15 @@ internal fun UpcomingScheduleOffer(offer: ArrivalScheduleOffer, tagPrefix: Strin
 }
 
 /** No data is not the same thing as no services. Keep the distinction visible beside the date. */
-internal fun scheduleEmptyDescription(state: InternetScheduleState?, hasWebsite: Boolean = true): String = when {
+internal fun scheduleEmptyDescription(state: InternetScheduleState?, hasWebsite: Boolean = true, church: Parish? = null): String = when {
     state?.sourceNeedsVerification == true && state.loading -> "Проверяем, относится ли расписание к выбранному храму. Тексты службы уже можно читать"
     state?.loading == true -> "Проверяем сайт храма. Тексты службы уже можно читать"
-    state?.sourceCandidates?.any { it.id !in state.dismissedCandidateIds &&
-        it.id != state.siteBinding?.candidateConfirmation?.candidate?.id } == true ->
-        "Нашли возможные источники. Проверьте, что расписание относится к выбранному храму"
+    state?.publicationRejected == true -> "Источник не подтверждает прежнее расписание. Обновите его и проверьте изменения"
+    state?.sourceHasWithdrawals == true -> "В прежнем источнике есть отмены или изменения. Обновите его перед сменой сайта"
     state?.sourceNeedsVerification == true -> if (hasWebsite)
         "Пока не удалось подтвердить, что расписание относится к этому храму. Можно проверить на сайте или повторить поиск"
         else "Пока не удалось подтвердить, что расписание относится к этому храму. Можно повторить поиск. Тексты службы уже можно читать"
+    hasUnreviewedScheduleSources(state, church) -> "Проверьте название и адрес храма на найденном сайте"
     state?.candidateSearchUnavailable == true && state.website.isBlank() ->
         "Не удалось проверить источники расписания. Повторите поиск"
     state?.status == InternetScheduleStatus.UNAVAILABLE -> if (hasWebsite)
@@ -200,36 +200,44 @@ internal fun canChooseUnverifiedScheduleSource(church: Parish, state: InternetSc
         ScheduleUrl.publicSource(editorWebsite) != null
 }
 
-internal fun scheduleEmptyTitle(state: InternetScheduleState?, hasPublication: Boolean): String = when {
+internal fun scheduleEmptyTitle(state: InternetScheduleState?, hasPublication: Boolean, church: Parish? = null): String = when {
     state?.sourceNeedsVerification == true && state.loading -> "Проверяем источник расписания"
     state?.loading == true -> "Ищем расписание"
+    state?.publicationRejected == true -> "Расписание требует уточнения"
+    state?.sourceHasWithdrawals == true -> "В расписании есть изменения"
     state?.sourceNeedsVerification == true -> "Нужно уточнить расписание"
-    state?.sourceCandidates?.any { it.id !in state.dismissedCandidateIds &&
-        it.id != state.siteBinding?.candidateConfirmation?.candidate?.id } == true -> "Нужно проверить источник"
+    hasUnreviewedScheduleSources(state, church) -> "Найдены сайты для проверки"
     hasPublication -> "Нет записей на эту дату"
     else -> "Расписание пока не найдено"
 }
 
 /** A completed retry must remain visible even when it produced the same empty result. */
-internal fun scheduleCheckReceipt(state: InternetScheduleState?, timezone: String): String? {
+internal fun scheduleCheckReceipt(state: InternetScheduleState?, timezone: String, church: Parish? = null): String? {
     if (state == null || state.loading || state.status == InternetScheduleStatus.IDLE) return null
     val checked = runCatching {
         Instant.parse(state.checkedAt).atZone(ZoneId.of(timezone))
             .format(DateTimeFormatter.ofPattern("d MMMM yyyy, HH:mm:ss", Locale.forLanguageTag("ru")))
     }.getOrNull() ?: return null
-    val result = if (state.sourceNeedsVerification) "Источник требует проверки" else if (state.publicationRejected) "Расписание не подтверждено источником" else when (state.status) {
+    val result = when {
+        state.publicationRejected -> "Расписание не подтверждено источником"
+        state.sourceHasWithdrawals -> "В источнике есть отмены или изменения"
+        state.sourceNeedsVerification -> "Источник требует проверки"
+        state.status == InternetScheduleStatus.READY && state.publication != null -> "Расписание получено"
+        hasUnreviewedScheduleSources(state, church) -> "Найдены сайты, ожидается проверка"
+        else -> when (state.status) {
         InternetScheduleStatus.READY -> if (state.publication != null) "Расписание получено" else "Расписание не получено"
         InternetScheduleStatus.NO_WEBSITE -> "Источник расписания не найден"
         InternetScheduleStatus.UNSUPPORTED -> "Не удалось прочитать даты и время"
         InternetScheduleStatus.UNAVAILABLE -> "Обновление не удалось"
         InternetScheduleStatus.IDLE -> return null
+        }
     }
     return "$result\nПопытка обновления: $checked"
 }
 
 @Composable
-internal fun ScheduleCheckReceipt(state: InternetScheduleState?, timezone: String, modifier: Modifier = Modifier) {
-    val receipt = scheduleCheckReceipt(state, timezone) ?: return
+internal fun ScheduleCheckReceipt(state: InternetScheduleState?, timezone: String, modifier: Modifier = Modifier, church: Parish? = null) {
+    val receipt = scheduleCheckReceipt(state, timezone, church) ?: return
     Text(receipt, style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = modifier.semantics { liveRegion = LiveRegionMode.Polite })

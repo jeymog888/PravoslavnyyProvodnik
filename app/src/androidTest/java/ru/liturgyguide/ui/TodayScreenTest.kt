@@ -95,6 +95,24 @@ class TodayScreenTest {
         compose.runOnIdle { assertEquals(listOf(Request(LocalDate.of(2026, 11, 11), WorshipKind.LITURGY)), opened) }
     }
 
+    @Test fun combinedHoursActionPassesTheWholePublishedServiceToItsOwner() {
+        val morning = service("2026-11-11", "08:00", "Часы, литургия")
+        val opened = mutableListOf<ParishService>()
+        val legacy = mutableListOf<Request>()
+        compose.setContent { GuideTheme(false) {
+            TodayScreen(withServices(morning), Instant.parse("2026-11-11T05:30:00Z"), null, null, null,
+                onFindChurch = {}, onChurchDetails = {},
+                onOpenBook = { date, kind, evening -> legacy += Request(date, kind, evening) },
+                onResumeBook = {}, onRefresh = {}, onResumeLegacy = null, bottomBar = {},
+                onOpenService = { opened += it })
+        } }
+        scrollTo("open_service_book").assertTextEquals("Открыть часы и литургию").performClick()
+        compose.runOnIdle {
+            assertEquals(listOf(morning), opened)
+            assertEquals(emptyList<Request>(), legacy)
+        }
+    }
+
     @Test fun emptyScheduleAndRefreshNeverBlockReadingOrOfferADuplicateRequest() {
         val state = mutableStateOf(InternetScheduleState(parish.id, InternetScheduleStatus.UNAVAILABLE))
         var refreshes = 0

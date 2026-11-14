@@ -32,6 +32,7 @@ import ru.liturgyguide.service.book.ServiceBookSelection
 import ru.liturgyguide.service.schedule.InternetScheduleState
 import ru.liturgyguide.service.schedule.InternetScheduleStatus
 import ru.liturgyguide.service.schedule.ScheduleUrl
+import ru.liturgyguide.service.schedule.ScheduleEntityIdentity
 import java.time.Instant
 import java.time.ZoneId
 import java.time.LocalDate
@@ -57,7 +58,8 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     onDismissScheduleCandidate: ((String) -> Unit)? = null,
     onSelectionCancelled: () -> Unit = {}, searchQuery: String, onSearchQueryChange: (String) -> Unit,
     onOpenService: ((ParishService) -> Unit)? = null, now: Instant? = null,
-    onReadServiceText: ((LocalDate, WorshipKind) -> Unit)? = null) {
+    onReadServiceText: ((LocalDate, WorshipKind) -> Unit)? = null,
+    sourceReviewRequest: Int = 0, sourceReviewIdentity: String? = null) {
     val church = churches.firstOrNull { it.id == selectedId }
     var picker by rememberSaveable { mutableStateOf(false) }
     var adding by rememberSaveable { mutableStateOf(false) }
@@ -205,8 +207,34 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     val ownState = internetSchedule?.takeIf { it.parishId == church?.id }
     val arrival = church?.let { arrivalSchedule(it, date, now, ownState) }
     val listState = rememberLazyListState()
+    val sourceReviewOwner = church?.let(ScheduleEntityIdentity::fingerprint)
+    val currentSourceReviewOwner by rememberUpdatedState(sourceReviewOwner)
+    var handledSourceReview by rememberSaveable(sourceReviewOwner) { mutableIntStateOf(0) }
     val readingBeforeSchedule = rememberReadingBeforeSchedule(listState, church?.id, date, arrival?.featured != null || arrival?.next != null,
         readingKey = "church_reading", personalKey = "church_personal")
+    val sourceSectionVisible = church != null && ownState != null && onConfirmScheduleCandidate != null &&
+        (scheduleCandidateGroups(church, ownState).isNotEmpty() || ownState.candidateSearchUnavailable && !ownState.loading)
+    // Header (optional), identity, day chips, then the optional retained reading cards.
+    val hasPersonalCard = church != null && personalStartForDate(userStarts, church, date) != null
+    val hasReadingCard = church != null && ((onReadLiturgy != null && !hasPersonalCard) ||
+        ((arrival?.featured == null || onOpenService == null) && onReadServiceText != null))
+    val scheduleItemIndex = (if (showBack) 0 else 1) + 2 +
+        (if (readingBeforeSchedule) (if (hasPersonalCard) 1 else 0) + (if (hasReadingCard) 1 else 0) else 0)
+    // Sources are the next stable item, independent of the selected date or featured service.
+    val reviewItemIndex = scheduleItemIndex + if (sourceSectionVisible) 1 else 0
+    val currentReviewItemIndex by rememberUpdatedState(reviewItemIndex)
+    LaunchedEffect(sourceReviewRequest, sourceReviewIdentity, sourceReviewOwner, sourceSectionVisible,
+        ownState?.loading, reviewItemIndex) {
+        if (church == null || sourceReviewRequest == 0 || sourceReviewRequest == handledSourceReview ||
+            sourceReviewIdentity != null && sourceReviewIdentity != sourceReviewOwner) return@LaunchedEffect
+        // A pending request may wait for this attempt, but never reset the person's date.
+        if (!sourceSectionVisible && ownState?.loading == true) return@LaunchedEffect
+        picker = false; adding = false; locate = false
+        withFrameNanos { }
+        listState.scrollToItem(currentReviewItemIndex)
+        withFrameNanos { }
+        handledSourceReview = sourceReviewRequest
+    }
     Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = { Column(Modifier.statusBarsPadding()) {
         if (showBack) PageHeader("Храм", onBack)
     } }, bottomBar = bottomBar) { padding ->
@@ -345,54 +373,33 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                                 }
                             }
                         } else {
-                            Text(scheduleEmptyTitle(ownState, schedule.publication != null || church.schedule.isNotEmpty()),
+                            Text(scheduleEmptyTitle(ownState, schedule.publication != null || church.schedule.isNotEmpty(), church),
                                 style = if (schedule.next == null) MaterialTheme.typography.titleLarge else MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.testTag("church_schedule_empty"))
                             val source = scheduleSourceFor(church, ownState)
-                            if (schedule.next == null) Text(scheduleEmptyDescription(ownState, source != null), style = MaterialTheme.typography.bodyMedium,
+                            if (schedule.next == null) Text(scheduleEmptyDescription(ownState, source != null, church), style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                             schedule.next?.let { offer -> UpcomingScheduleOffer(offer, "church", onOpenService) }
-                            if (ownState != null && onConfirmScheduleCandidate != null) {
-                                val ownerId = church.id
-                                ScheduleCandidateChoices(church, ownState,
-                                    onConfirm = { id -> if (currentChurchId == ownerId) onConfirmScheduleCandidate(id) },
-                                    onDismiss = onDismissScheduleCandidate?.let { dismiss ->
-                                        { id: String -> if (currentChurchId == ownerId) dismiss(id) }
-                                    }, onOpenUrl = onOpenUrl)
-                            }
-                            onRefreshSchedule?.let { refresh -> OutlinedButton(onClick = refresh, enabled = ownState?.loading != true,
-                                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("refresh_schedule")) {
-                                Icon(Icons.Default.Refresh, null, Modifier.size(20.dp)); Spacer(Modifier.width(12.dp)); Text("Обновить расписание")
-                            } }
-                            source?.let { url ->
-                                OutlinedButton(onClick = { onOpenUrl(url) }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
-                                    .testTag("open_schedule_website")) {
-                                    Icon(Icons.Default.OpenInNew, null, Modifier.size(20.dp))
-                                    Spacer(Modifier.width(12.dp)); Text("Открыть сайт")
-                                }
-                            }
-                            if (onSetScheduleSource != null && canChooseUnverifiedScheduleSource(church, ownState)) {
-                                Text("Проверьте на сайте, что это расписание вашего храма", style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                OutlinedButton(onClick = openSourceEditor,
-                                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("church_schedule_source_choice")) {
-                                    Icon(Icons.Default.Edit, null, Modifier.size(20.dp))
-                                    Spacer(Modifier.width(12.dp)); Text("Указать источник")
-                                }
-                            }
-                            if (source == null && onSetScheduleSource != null) {
-                                OutlinedButton(onClick = openSourceEditor,
-                                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("edit_schedule_website")) {
-                                    Icon(Icons.Default.Edit, null, Modifier.size(20.dp))
-                                    Spacer(Modifier.width(12.dp)); Text("Указать сайт")
-                                }
-                            }
+                            if (!sourceSectionVisible) ChurchScheduleSourceActions(church, ownState,
+                                onRefreshSchedule, openSourceEditor.takeIf { onSetScheduleSource != null }, onOpenUrl)
                         }
                         if (ownState?.loading == true) Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                             Text("Обновляем расписание", style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("schedule_loading_summary"))
                         }
-                        ScheduleCheckReceipt(ownState, church.timezone, Modifier.testTag("church_schedule_checked"))
+                        ScheduleCheckReceipt(ownState, church.timezone, Modifier.testTag("church_schedule_checked"), church)
+                    }
+                }
+                if (sourceSectionVisible && ownState != null) item(key = "church_schedule_sources") {
+                    ArrivalCard(Modifier.testTag("church_sources_card")) {
+                        val ownerIdentity = ScheduleEntityIdentity.fingerprint(church)
+                        ScheduleCandidateChoices(church, ownState,
+                            onConfirm = { id -> if (currentSourceReviewOwner == ownerIdentity) onConfirmScheduleCandidate?.invoke(id) },
+                            onDismiss = onDismissScheduleCandidate?.let { dismiss ->
+                                { id: String -> if (currentSourceReviewOwner == ownerIdentity) dismiss(id) }
+                            }, onOpenUrl = onOpenUrl)
+                        if (featured == null) ChurchScheduleSourceActions(church, ownState,
+                            onRefreshSchedule, openSourceEditor.takeIf { onSetScheduleSource != null }, onOpenUrl)
                     }
                 }
                 if (!readingBeforeSchedule) {
@@ -404,7 +411,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                     ArrivalCard(Modifier.testTag("church_information_card")) {
                         Text("О храме", style = MaterialTheme.typography.titleMedium)
                         if (ownState != null && onRefreshSchedule != null) InternetScheduleControls(
-                            state = ownState, timezone = church.timezone, onRefresh = onRefreshSchedule,
+                            state = ownState, church = church, timezone = church.timezone, onRefresh = onRefreshSchedule,
                             onOpenUrl = onOpenUrl,
                             onEditSource = openSourceEditor.takeIf {
                                 onSetScheduleSource != null && (featured != null || scheduleSourceFor(church, ownState) != null)
@@ -478,7 +485,40 @@ internal fun churchAddressLine(church: Parish): String {
 }
 
 @Composable
-private fun InternetScheduleControls(state: InternetScheduleState, timezone: String, onRefresh: () -> Unit,
+private fun ChurchScheduleSourceActions(church: Parish, state: InternetScheduleState?,
+    onRefreshSchedule: (() -> Unit)?, onEditSource: (() -> Unit)?, onOpenUrl: (String) -> Unit) {
+    val source = scheduleSourceFor(church, state)
+    onRefreshSchedule?.let { refresh -> OutlinedButton(onClick = refresh, enabled = state?.loading != true,
+        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("refresh_schedule")) {
+        Icon(Icons.Default.Refresh, null, Modifier.size(20.dp)); Spacer(Modifier.width(12.dp)); Text("Обновить расписание")
+    } }
+    source?.let { url ->
+        OutlinedButton(onClick = { onOpenUrl(url) }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
+            .testTag("open_schedule_website")) {
+            Icon(Icons.Default.OpenInNew, null, Modifier.size(20.dp))
+            Spacer(Modifier.width(12.dp)); Text("Открыть сайт")
+        }
+    }
+    if (onEditSource != null && canChooseUnverifiedScheduleSource(church, state)) {
+        Text("Проверьте на сайте, что это расписание вашего храма", style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        OutlinedButton(onClick = onEditSource,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("church_schedule_source_choice")) {
+            Icon(Icons.Default.Edit, null, Modifier.size(20.dp))
+            Spacer(Modifier.width(12.dp)); Text("Указать источник")
+        }
+    }
+    if (source == null && onEditSource != null) {
+        OutlinedButton(onClick = onEditSource,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("edit_schedule_website")) {
+            Icon(Icons.Default.Edit, null, Modifier.size(20.dp))
+            Spacer(Modifier.width(12.dp)); Text("Указать сайт")
+        }
+    }
+}
+
+@Composable
+private fun InternetScheduleControls(state: InternetScheduleState, church: Parish, timezone: String, onRefresh: () -> Unit,
     onOpenUrl: (String) -> Unit, onEditSource: (() -> Unit)?, showRefresh: Boolean = true, showWebsite: Boolean = true) {
     val source = state.sourceUrl.ifBlank { state.website }
     val fetched = state.publication?.fetchedAt?.let { timestamp -> runCatching {
@@ -487,7 +527,12 @@ private fun InternetScheduleControls(state: InternetScheduleState, timezone: Str
     Column(Modifier.fillMaxWidth().testTag("internet_schedule"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         val message = when {
             state.loading -> "Проверяем расписание на сайте"
-            state.status == InternetScheduleStatus.READY -> "Расписание загружено с сайта"
+            state.publicationRejected -> "Расписание не подтверждено источником"
+            state.sourceHasWithdrawals -> "В источнике есть отмены или изменения"
+            state.sourceNeedsVerification -> "Источник требует проверки"
+            state.status == InternetScheduleStatus.READY && state.publication != null -> "Расписание загружено с сайта"
+            hasUnreviewedScheduleSources(state, church) -> "Найдены сайты, ожидается проверка"
+            state.status == InternetScheduleStatus.READY -> "Расписание не получено"
             state.status == InternetScheduleStatus.NO_WEBSITE -> "У этого храма пока не указан сайт"
             state.status == InternetScheduleStatus.UNSUPPORTED -> "Не удалось прочитать даты и время на сайте"
             state.status == InternetScheduleStatus.UNAVAILABLE -> "Не удалось обновить расписание"

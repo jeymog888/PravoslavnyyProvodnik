@@ -53,7 +53,7 @@ class ScheduleCandidateChoicesTest {
         val open = compose.onNodeWithTag("open_candidate_${candidate.id}").getUnclippedBoundsInRoot()
         val confirm = compose.onNodeWithTag("confirm_candidate_${candidate.id}").getUnclippedBoundsInRoot()
         assertTrue(confirm.top - open.bottom >= 12.dp)
-        compose.onNodeWithTag("confirm_candidate_${candidate.id}").assertTextContains("Это расписание моего храма").performClick()
+        compose.onNodeWithTag("confirm_candidate_${candidate.id}").assertTextContains("Выбрать сайт").performClick()
         compose.onNodeWithTag("schedule_website_input").assertDoesNotExist()
         compose.runOnIdle { assertEquals(listOf(candidate.id), confirmed); assertEquals(listOf(candidate.sourceUrl), opened) }
     }
@@ -84,6 +84,7 @@ class ScheduleCandidateChoicesTest {
                 })
         } }
         reveal("confirm_candidate_${candidate.id}").assertIsNotEnabled()
+        reveal("source_details_${candidate.id}").performClick()
         reveal("dismiss_candidate_${candidate.id}").assertIsNotEnabled()
         compose.runOnIdle { state.value = state.value.copy(loading = false) }
         reveal("dismiss_candidate_${candidate.id}").performClick()

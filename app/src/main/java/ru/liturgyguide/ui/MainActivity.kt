@@ -35,6 +35,7 @@ import ru.liturgyguide.model.ServiceBookKey
 import ru.liturgyguide.model.ParishService
 import ru.liturgyguide.model.WorshipKind
 import ru.liturgyguide.service.schedule.InternetScheduleState
+import ru.liturgyguide.service.schedule.ScheduleEntityIdentity
 import ru.liturgyguide.service.schedule.ScheduleUrl
 import ru.liturgyguide.service.schedule.withInternetSchedule
 import java.time.Instant
@@ -113,6 +114,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     var churchSearchQuery by rememberSaveable { mutableStateOf("") }
     var churchSearchMode by rememberSaveable { mutableStateOf(ChurchSearchMode.NAME) }
     var personalTimeRequest by rememberSaveable { mutableIntStateOf(0) }
+    var scheduleSourcesRequest by rememberSaveable { mutableIntStateOf(0) }
+    var scheduleSourcesOwner by rememberSaveable { mutableStateOf<String?>(null) }
     var availableTextsDate by rememberSaveable { mutableStateOf<String?>(null) }
     var eveningChoiceJson by rememberSaveable { mutableStateOf<String?>(null) }
     var arrivalDraft by rememberSaveable(stateSaver = ArrivalDraft.Saver) { mutableStateOf<ArrivalDraft?>(null) }
@@ -550,6 +553,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
             // Their consumed request counters were cleared with the saved route.
             churchPickerRequest = 0
             personalTimeRequest = 0
+            scheduleSourcesRequest = 0
+            scheduleSourcesOwner = null
         }
         churchId = id; hasChurchSelection = true
         return true
@@ -672,6 +677,13 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         importProgress = scheduleImport, lastBook = lastBook,
                         onFindChurch = { churchOrigin = Screen.MAIN; churchSelectionOrigin = ChurchSelectionOrigin.FIRST_HOME; navigate(Screen.DISCOVERY) },
                         onChurchDetails = { openChurch(fromHome = false) },
+                        onReviewScheduleSources = {
+                            if (screen == Screen.MAIN && churchId == resumeChurchId) {
+                                scheduleSourcesOwner = church?.let(ScheduleEntityIdentity::fingerprint)
+                                scheduleSourcesRequest++
+                                openChurch(fromHome = false)
+                            }
+                        },
                         onOpenBook = { date, kind, evening ->
                             if (screen == Screen.MAIN && churchId == resumeChurchId) openBookOnDate(date, kind, evening)
                         },
@@ -877,6 +889,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         searchQuery = churchSearchQuery, onSearchQueryChange = { churchSearchQuery = it },
                         pickerRequest = churchPickerRequest,
                         personalTimeRequest = personalTimeRequest,
+                        sourceReviewRequest = scheduleSourcesRequest,
+                        sourceReviewIdentity = scheduleSourcesOwner,
                         onGoToService = { navigate(Screen.MAIN) },
                         onReadLiturgy = { openBookOnDate(it, WorshipKind.LITURGY) },
                         onReadServiceText = { date, kind ->

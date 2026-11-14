@@ -34,7 +34,8 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
     userStarts: List<UserServiceStart> = emptyList(), readingNotice: String? = null,
     onOpenScheduleSource: (() -> Unit)? = null, legacyReadingSummary: String? = null,
     onSetScheduleSource: ((String) -> Unit)? = null,
-    onOpenService: ((ParishService) -> Unit)? = null) {
+    onOpenService: ((ParishService) -> Unit)? = null,
+    onReviewScheduleSources: (() -> Unit)? = null) {
     val zone = remember(church?.timezone) {
         runCatching { ZoneId.of(church?.timezone ?: "Europe/Moscow") }.getOrDefault(ZoneId.of("Europe/Moscow"))
     }
@@ -54,10 +55,13 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
     var chooserDateIso by rememberSaveable(church?.id) { mutableStateOf<String?>(null) }
     var editingSource by rememberSaveable(church?.id) { mutableStateOf(false) }
     val currentChurchId by rememberUpdatedState(church?.id)
+    val sourceReviewOwner = church?.let(ScheduleEntityIdentity::fingerprint)
+    val currentSourceReviewOwner by rememberUpdatedState(sourceReviewOwner)
     val chooserDate = chooserDateIso?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
     val kind = featured?.let { ServiceBookSelection.kindFor(it.title) }
     val format = remember { DateTimeFormatter.ofPattern("d MMMM", Locale.forLanguageTag("ru")) }
     val loading = ownState?.loading == true
+    val reviewSources = church != null && hasReviewableScheduleSources(church, ownState)
     val phase = importProgress?.takeIf { it.parishId == church?.id }?.phase
     val loadingTitle = when (phase) {
         ScheduleImportPhase.FINDING_SITE -> "Находим сайт храма"
@@ -177,7 +181,7 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                                     color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("schedule_inferred_year"))
                             }
                             if (kind != null) Button(onClick = { open(featured) }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("open_service_book")) {
-                                Text(if (ServiceBookSelection.isHoursLiturgy(featured.title)) "Открыть часы и литургию"
+                                Text(if (onOpenService != null && ServiceBookSelection.isHoursLiturgy(featured.title)) "Открыть часы и литургию"
                                     else if (kind == WorshipKind.LITURGY && featured.kind == "service_block") "Открыть литургию" else "Открыть службу")
                             } else OutlinedButton(onClick = { open(featured) }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("today_choose_unknown_service")) {
                                 Text("Выбрать текст службы")
@@ -193,13 +197,20 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                                     subtitle = serviceActionSubtitle(service.title, service.time + " · " + date.format(format)))
                             }
                         } else {
-                            Text(scheduleEmptyTitle(ownState, schedule?.publication != null || church.schedule.isNotEmpty()),
+                            Text(scheduleEmptyTitle(ownState, schedule?.publication != null || church.schedule.isNotEmpty(), church),
                                 style = if (schedule?.next == null) MaterialTheme.typography.titleLarge else MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.testTag("today_schedule_empty"))
-                            if (schedule?.next == null) Text(scheduleEmptyDescription(ownState, onOpenScheduleSource != null),
+                            if (schedule?.next == null) Text(scheduleEmptyDescription(ownState, onOpenScheduleSource != null, church),
                                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             schedule?.next?.let { offer ->
                                 UpcomingScheduleOffer(offer, "today", onOpenService ?: { open(it) })
+                            }
+                            if (reviewSources) Button(onClick = {
+                                if (currentSourceReviewOwner == sourceReviewOwner && currentChurchId == church.id)
+                                    (onReviewScheduleSources ?: onChurchDetails)()
+                            }, enabled = !loading,
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("today_review_schedule_sources")) {
+                                Text("Проверить сайты")
                             }
                             if (!loading) OutlinedButton(onClick = onRefresh,
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("today_refresh_schedule")) {
@@ -233,7 +244,7 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                             CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                             Text(loadingTitle, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("today_schedule_loading"))
                         }
-                        ScheduleCheckReceipt(ownState, church.timezone, Modifier.testTag("today_schedule_checked"))
+                        ScheduleCheckReceipt(ownState, church.timezone, Modifier.testTag("today_schedule_checked"), church)
                     }
                 }
                 if (!readingBeforeSchedule) personalItem()
