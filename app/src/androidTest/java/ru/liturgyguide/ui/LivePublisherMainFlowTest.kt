@@ -127,8 +127,10 @@ class LivePublisherMainFlowTest {
             await(20_000) { exists("main_content") || exists("church_content") || exists("book_content") }
             if (exists("book_content")) compose.onNodeWithTag("book_back").assertIsDisplayed().performClick()
             compose.onNodeWithTag("nav_church").assertIsDisplayed().performClick()
-            awaitTag("church_content")
-            reveal("change_church", "church_content").performClick()
+            await(20_000) { exists("church_content") || exists("discovery_query") }
+            if (exists("church_content")) {
+                reveal("change_church", "church_content").performClick()
+            }
             awaitTag("discovery_query")
             reveal("discovery_mode_name", "discovery_content").performClick()
             val field = reveal("discovery_query", "discovery_content")

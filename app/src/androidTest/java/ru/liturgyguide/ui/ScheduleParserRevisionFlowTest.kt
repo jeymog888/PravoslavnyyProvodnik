@@ -76,7 +76,7 @@ class ScheduleParserRevisionFlowTest(private val churchDetails: Boolean, private
         } }
         assertNoTimedOffer()
         scroll("${prefix}_schedule_empty").assertTextEquals("Обновите расписание")
-        scroll(receiptTag).assertTextContains("Обновите расписание")
+        scroll(receiptTag).assertTextEquals("Обновите расписание\nПопытка обновления: 12 ноября 2026, 06:00:00")
         if (churchDetails) scroll("schedule_network_status").assertTextEquals("Обновите расписание")
         scroll(tomorrowChip).performClick()
         assertNoTimedOffer()
@@ -96,7 +96,7 @@ class ScheduleParserRevisionFlowTest(private val churchDetails: Boolean, private
         }
         assertNoTimedOffer()
         scroll("${prefix}_schedule_empty").assertTextEquals("Обновите расписание")
-        scroll(receiptTag).assertTextContains("Обновление не удалось")
+        scroll(receiptTag).assertTextEquals("Обновление не удалось\nПопытка обновления: 12 ноября 2026, 06:00:01")
         if (churchDetails) scroll("schedule_network_status").assertTextEquals("Не удалось обновить расписание")
         scroll(refreshTag).assertIsEnabled()
         compose.runOnIdle {
@@ -140,7 +140,8 @@ class ScheduleParserRevisionFlowTest(private val churchDetails: Boolean, private
                 onRefresh = {}, onResumeLegacy = null, bottomBar = {}, userStarts = personal, onOpenService = {})
         } }
         scroll(serviceTime).assertTextEquals("10:15")
-        scroll(if (churchDetails) "personal_start_summary" else "today_personal_summary").assertTextContains("06:30")
+        scroll(if (churchDetails) "personal_start_summary" else "today_personal_summary")
+            .assertTextEquals(if (churchDetails) "06:30 · Литургия" else "12 ноября · 06:30 · Литургия")
         compose.onNodeWithTag("${prefix}_next_service").assertDoesNotExist()
     }
 
