@@ -136,22 +136,29 @@ class InternetScheduleRepository(
             previous.siteBinding?.candidateConfirmation?.candidate?.id == candidate.id)
             return@withContext refreshInternal(parish, now, force = true, sourceOverride = null)
         // Review is one action. Refresh its public evidence before activating any new events.
-        val discovery = try { siteResolver.forRefresh().candidates(parish, emptySet()) }
+        val discovery = try { siteResolver.forRefresh().candidatesForConfirmation(parish, emptySet(), candidate) }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (_: Exception) { ScheduleCandidateDiscovery(unavailable = true) }
         currentCoroutineContext().ensureActive()
         val fresh = mergeCandidateEvidence(parish, previous.sourceCandidates, discovery.candidates)
         val checked = fresh.singleOrNull { it.id == candidate.id }
-        if (discovery.candidates.singleOrNull { it.id == candidate.id }?.canConfirm(parish) != true || checked?.canConfirm(parish) != true) {
-            val conflict = candidateConflictsWithAcceptedSource(checked, previous.siteBinding, previous.publication)
+        val raw = discovery.candidates.singleOrNull { it.id == candidate.id }
+        val freshContact = raw?.let { row -> discovery.freshContactEvidence?.get(row.id)?.takeIf { it.matchesFresh(parish, row) } }
+        val missingContact = candidate.provider == OwnContactCandidateProvider.PROVIDER && freshContact == null
+        val requestedConflict = discovery.candidates.any { it.validFor(parish) && it.provider == candidate.provider &&
+            it.outcome == ScheduleIdentityOutcome.CONFLICT && !it.verificationUnavailable && sameCandidateSource(it.sourceUrl, candidate.sourceUrl) }
+        if (raw?.canConfirm(parish) != true || checked?.canConfirm(parish) != true || missingContact) {
+            val conflict = candidateConflictsWithAcceptedSource(checked, previous.siteBinding, previous.publication) ||
+                discovery.candidates.any { it.validFor(parish) && candidateConflictsWithAcceptedSource(it, previous.siteBinding, previous.publication) }
             val next = previous.copy(status = InternetScheduleStatus.UNAVAILABLE, checkedAt = now.toString(),
                 publication = previous.publication.takeUnless { conflict },
                 sourceNeedsVerification = previous.sourceNeedsVerification || conflict,
                 siteBinding = previous.siteBinding.takeUnless { conflict },
-                sourceCandidates = fresh.ifEmpty { previous.sourceCandidates }, candidateSearchUnavailable = discovery.unavailable,
-                sourceChangeBlock = if (checked?.outcome == ScheduleIdentityOutcome.CONFLICT) ScheduleSourceChangeBlock.CONFLICT
+                sourceCandidates = fresh.ifEmpty { previous.sourceCandidates }, candidateSearchUnavailable = discovery.unavailable || missingContact,
+                sourceChangeBlock = if (requestedConflict || checked?.outcome == ScheduleIdentityOutcome.CONFLICT) ScheduleSourceChangeBlock.CONFLICT
                     else ScheduleSourceChangeBlock.NONE)
-            runCatching { cache.write(parish.id, ScheduleCacheCodec.encode(next)) }
+            if (conflict) cache.writeSafety(parish.id, ScheduleCacheCodec.encode(next))
+            else runCatching { cache.write(parish.id, ScheduleCacheCodec.encode(next)) }
             return@withContext next
         }
         refreshInternal(parish, now, force = true, sourceOverride = null, confirmedCandidate = checked,
@@ -162,6 +169,7 @@ class InternetScheduleRepository(
         confirmedCandidate: ScheduleSourceCandidate? = null,
         confirmedDiscovery: ScheduleCandidateDiscovery? = null): InternetScheduleState = withContext(Dispatchers.IO) {
         val previous = cached(parish)
+        if (confirmedCandidate != null && confirmedCandidate.id in previous.dismissedCandidateIds) return@withContext previous
         // The URL editor and a suggested source are the same change of authority. A
         // manual URL cannot wipe a cancellation that the candidate route must preserve.
         if (sourceOverride != null && previous.sourceHasWithdrawals) {
@@ -217,6 +225,13 @@ class InternetScheduleRepository(
             candidateIncomplete = found.incomplete
         }
         confirmedDiscovery?.let(::recordCandidates)
+        var freshContactEvidence = confirmedCandidate?.let { candidate ->
+            confirmedDiscovery?.candidates?.singleOrNull { it.id == candidate.id }?.let { raw ->
+                confirmedDiscovery?.freshContactEvidence?.get(raw.id)?.takeIf { it.matchesFresh(parish, raw) }
+            }
+        }
+        if (confirmedCandidate?.provider == OwnContactCandidateProvider.PROVIDER && freshContactEvidence == null)
+            return@withContext previous.copy(status = InternetScheduleStatus.UNAVAILABLE, candidateSearchUnavailable = true)
         val recheckUserConfirmation = confirmedCandidate == null && sourceOverride == null && custom.isBlank() &&
             previous.siteBinding?.method == ScheduleBindingMethod.USER_CONFIRMED
         // A saved relationship permits offline reading, not a fresh network publication
@@ -303,18 +318,27 @@ class InternetScheduleRepository(
                 if (recheckUserConfirmation) {
                     phase(ScheduleImportPhase.FINDING_SITE)
                     val approved = requireNotNull(previous.siteBinding?.candidateConfirmation?.candidate)
-                    val current = resolverSession.candidates(parish, emptySet())
+                    val current = resolverSession.candidatesForConfirmation(parish, emptySet(), approved)
                     recordCandidates(current)
                     val candidate = sourceCandidates.singleOrNull { it.id == approved.id }
+                    val raw = current.candidates.singleOrNull { it.id == approved.id }
+                    val contact = raw?.let { row -> current.freshContactEvidence?.get(row.id)?.takeIf { it.matchesFresh(parish, row) } }
+                    val missingContact = approved.provider == OwnContactCandidateProvider.PROVIDER && contact == null
+                    val sameSourceConflict = current.candidates.any { it.validFor(parish) && it.provider == approved.provider &&
+                        it.outcome == ScheduleIdentityOutcome.CONFLICT && !it.verificationUnavailable && sameCandidateSource(it.sourceUrl, approved.sourceUrl) }
                     // Fresh network rows require a fresh public identity check. Offline reading retains the old accepted copy.
-                    if (current.candidates.singleOrNull { it.id == approved.id }?.canConfirm(parish) != true || candidate?.canConfirm(parish) != true) {
-                        val conflict = candidate?.outcome == ScheduleIdentityOutcome.CONFLICT && candidate?.verificationUnavailable != true
+                    if (raw?.canConfirm(parish) != true || candidate?.canConfirm(parish) != true || missingContact) {
+                        val conflict = candidate?.outcome == ScheduleIdentityOutcome.CONFLICT && candidate?.verificationUnavailable != true || sameSourceConflict
                         val replacement = current.candidates.any { it.provider == approved.provider &&
                             it.providerObjectId == approved.providerObjectId && it.sourceUrl != approved.sourceUrl }
                         if (conflict || replacement) { needsVerification = true; binding = null }
+                        if (sameSourceConflict) recordSafety(previous.website, approved.sourceUrl,
+                            ScheduleParseResult(ScheduleParseDisposition.REJECTED, safetyConflict = true), previous.siteEvidenceUrl, null)
+                        if (missingContact) candidateUnavailable = true
                         status = InternetScheduleStatus.UNAVAILABLE
                         return@withTimeoutOrNull true
                     }
+                    freshContactEvidence = contact
                 }
                 if (website.isNotBlank() && sourceCandidates.any {
                         candidateConflictsWithAcceptedSource(it, binding, previous.publication.takeUnless { changedSource })
@@ -367,7 +391,12 @@ class InternetScheduleRepository(
                         val snapshotState = snapshot.getOrNull()?.let { ScheduleCacheCodec.decode(it, parish) }
                             ?: initialScheduleState(parish)
                         if (snapshot.isSuccess && snapshotState == previous) {
-                            val early = try { resolverSession.initialFastDiscovery(parish, emptySet()) }
+                            val early = try { resolverSession.initialFastDiscovery(parish, emptySet(), { found ->
+                                val merged = mergeCandidateEvidence(parish, sourceCandidates, found.candidates)
+                                hasActionableFastCandidate(parish, previous, found, merged, emptySet())
+                            }, (previous.dismissedCandidateIds + sourceCandidates.filter {
+                                it.outcome == ScheduleIdentityOutcome.CONFLICT && !it.verificationUnavailable
+                            }.map { it.id }).toSet()) }
                                 catch (cancelled: CancellationException) { throw cancelled }
                                 catch (_: Exception) { null }
                             currentCoroutineContext().ensureActive()
@@ -424,7 +453,12 @@ class InternetScheduleRepository(
                 }
                 val primaryEvidence = evidence
                 val primaryBinding = binding
-                val primary = importSource(parish, website, date, now, primaryBinding, prefetchedSchedule,
+                val contactResponse = primaryBinding?.candidateConfirmation?.candidate?.let { approved ->
+                    freshContactEvidence?.responseForApproved(parish, approved, website)
+                }
+                val primary = importSource(parish, website, date, now, primaryBinding, prefetchedSchedule ?: contactResponse,
+                    freshContactEvidence = freshContactEvidence?.takeIf { proof -> primaryBinding?.candidateConfirmation?.candidate
+                        ?.let { proof.matchesApproved(parish, it, website) } == true },
                     sourceConflict = ::knownConflict) { checkedWebsite, checkedSource, safety ->
                     recordSafety(checkedWebsite, checkedSource, safety, primaryEvidence, primaryBinding)
                 }
@@ -521,12 +555,15 @@ class InternetScheduleRepository(
     /** Each attempt has the same small crawl budget; refresh owns the single shared deadline. */
     private suspend fun importSource(parish: Parish, root: String, date: LocalDate, now: Instant, binding: ScheduleSiteBinding?,
         initialResponse: ScheduleResponse? = null,
+        freshContactEvidence: PublishedChildContactEvidence? = null,
         sourceConflict: (String) -> Boolean = { false },
         onSafety: (website: String, sourceUrl: String, safety: ScheduleParseResult) -> Unit): SourceAttempt {
         var website = root
         var source = root
         var rejectedPublication = false
         var hasWithdrawal = false
+        val navigationAttempt = Any()
+        var linkedPermit: LinkedAttachmentNavigationPermit? = null
         fun phase(value: ScheduleImportPhase) { importProgress.value = ScheduleImportProgress(parish.id, value) }
         data class QueuedDocument(val link: ScheduleDocumentLink, val rescue: Boolean = false)
         val pending = ArrayDeque<QueuedDocument>()
@@ -605,6 +642,7 @@ class InternetScheduleRepository(
             val firstPage = visited.size == 1
             phase(if (next.document) ScheduleImportPhase.READING_DOCUMENT else ScheduleImportPhase.LOADING_PAGE)
             attempted += next.url
+            val linkedUse = linkedPermit?.reserve(parish, root, binding, next, queued.rescue, navigationAttempt)
             val response = try {
                 initialResponse?.takeIf { firstPage && next.url == root && it.url == root } ?: transport.fetch(next.url)
             }
@@ -620,22 +658,59 @@ class InternetScheduleRepository(
                 previousImage = null; previousImageParent = ""
                 continue
             }
-            val html = response.html()
-            if (html != null) { previousImage = null; previousImageParent = "" }
+            val approved = binding?.takeIf { it.method == ScheduleBindingMethod.USER_CONFIRMED }?.candidateConfirmation?.candidate
+            val exactFreshRoot = firstPage && rootRequest && next.url == root && next.linkedFrom.isEmpty() && response.url == root &&
+                OwnContactChildIdentity.ordinaryOsm(parish) && approved != null &&
+                freshContactEvidence?.matchesCurrentResponse(parish, approved, root, response) == true
+            // ScheduleHtmlParser itself recursively extracts HTML. Bounds therefore precede both ordinary parsers and response DOM reuse.
+            if (exactFreshRoot && ContactNavigationRootAudit.sourceBounds(response) != null) {
+                onSafety(website, response.url, ScheduleParseResult(ScheduleParseDisposition.REJECTED, safetyConflict = true))
+                rejectedPublication = true; bestEvents = emptyList(); source = response.url
+                break
+            }
+            val linkedRead = linkedUse?.read(response, date, parish, binding,
+                runCatching { curatedPublishers() }.getOrDefault(emptyList()), navigationAttempt)
+            val linkedResponse = linkedRead != null && linkedUse?.owns(linkedRead) == true
+            val html = if (linkedResponse) null else response.html()
+            if (html != null || linkedResponse) { previousImage = null; previousImageParent = "" }
             // External hosts are authorized only for a directly linked PDF/image. A
             // filename ending in .pdf cannot turn a foreign HTML page into this parish.
-            if (html != null && !ScheduleDocumentLinks.sameSite(website, response.url)) continue
+            if ((html != null || linkedResponse) && !ScheduleDocumentLinks.sameSite(website, response.url)) continue
             if (firstPage && html != null) website = response.url
             val format: String
             val parsed: ScheduleParseResult
+            var rootAudit: ContactRootAuditResult? = null
+            var linkedNavigation = false
             var publicationSource = response.url
-            if (html != null) {
+            if (linkedResponse) {
+                val read = requireNotNull(linkedRead)
+                val use = requireNotNull(linkedUse)
+                parsed = requireNotNull(use.parsedFor(read))
+                format = "html"
+                use.linksFor(read).filter { it.url !in visited }.forEach { pending += QueuedDocument(it) }
+                linkedNavigation = use.grants(read)
+            } else if (html != null) {
                 val existing = ScheduleHtmlParser.inspect(html, date, parish)
-                parsed = if (existing.disposition != ScheduleParseDisposition.UNSUPPORTED) existing else
-                    ScheduleDocumentParser.inspect(HtmlScheduleDocumentExtractor.fromHtml(html), date, parish)
+                val auditFreshRoot = exactFreshRoot && existing.disposition == ScheduleParseDisposition.REJECTED &&
+                    existing.events.isEmpty() && existing.withdrawnDates.isEmpty() && existing.withdrawnStarts.isEmpty() &&
+                    !existing.withdrawsAll && !existing.safetyConflict && existing.rejectionReason == null
+                val wholeDocument = if (rootAudit == null && (auditFreshRoot || existing.disposition == ScheduleParseDisposition.UNSUPPORTED))
+                    HtmlScheduleDocumentExtractor.fromHtml(html) else null
+                val documentResult = wholeDocument?.let { ScheduleDocumentParser.inspect(it, date, parish) }
+                fun hasSafety(result: ScheduleParseResult) = result.safetyConflict || result.withdrawsAll ||
+                    result.withdrawnDates.isNotEmpty() || result.withdrawnStarts.isNotEmpty()
+                // Preserve both actual results. A stronger actual document safety observation cannot be hidden by a generic HTML rejection.
+                parsed = when {
+                    hasSafety(existing) -> existing
+                    exactFreshRoot && documentResult != null && hasSafety(documentResult) -> documentResult
+                    existing.disposition != ScheduleParseDisposition.UNSUPPORTED || rootAudit != null -> existing
+                    else -> requireNotNull(documentResult)
+                }
                 format = "html"
                 ScheduleDocumentLinks.find(html).filter { it.url !in visited && (!queued.rescue || it.document) }
                     .forEach { pending += QueuedDocument(it, rescue = queued.rescue) }
+                if (auditFreshRoot && rootAudit == null) rootAudit = requireNotNull(freshContactEvidence).auditNavigationRoot(parish,
+                    requireNotNull(approved), root, response, existing, requireNotNull(wholeDocument), requireNotNull(documentResult), navigationAttempt)
             } else {
                 phase(ScheduleImportPhase.READING_DOCUMENT)
                 val document = try { documentExtractor.extract(response) }
@@ -655,8 +730,11 @@ class InternetScheduleRepository(
                 parsed = if (selectedDocument != null && continuation == null && !rootRequest && next.document &&
                     next.linkedFrom.isNotBlank() && selectedDocument.sourceUrl == response.url && format == "image" &&
                     response.contentType.substringBefore(';').trim().startsWith("image/", ignoreCase = true)) {
-                    val witness = KnownOtherScheduleVenue.resolve(parish, website, next.linkedFrom,
-                        runCatching { curatedPublishers() }.getOrDefault(emptyList()))
+                    val owners = runCatching { curatedPublishers() }.getOrDefault(emptyList())
+                    val witness = KnownOtherScheduleVenue.resolve(parish, website, next.linkedFrom, owners)
+                        ?: KnownOtherScheduleVenue.fromFreshContact(parish, website, next.linkedFrom,
+                            binding?.takeIf { it.method == ScheduleBindingMethod.USER_CONFIRMED }?.candidateConfirmation?.candidate,
+                            freshContactEvidence, owners)
                     ScheduleForeignImage.certify(selectedDocument, date, parish, website, next.linkedFrom, witness, inspected)
                 } else inspected
             }
@@ -670,6 +748,24 @@ class InternetScheduleRepository(
                 break
             }
             val withdraws = parsed.withdrawsAll || parsed.withdrawnDates.isNotEmpty() || parsed.withdrawnStarts.isNotEmpty()
+            when (rootAudit?.disposition) {
+                ContactRootAuditDisposition.PROVED_NAVIGATION_ROOT -> if (!withdraws) {
+                    // This complete response is only an audited navigation entrypoint. Both raw REJECTED results remain unchanged.
+                    // Only the private transition from this same successful audit can authorize its exact queued HTML target.
+                    linkedPermit = freshContactEvidence?.takeLinkedNavigation(requireNotNull(rootAudit), navigationAttempt)
+                    continue
+                }
+                ContactRootAuditDisposition.OBSERVED_UNCLASSIFIED_SAFETY -> {
+                    onSafety(website, publicationSource, ScheduleParseResult(ScheduleParseDisposition.REJECTED, safetyConflict = true))
+                    rejectedPublication = true; bestEvents = emptyList(); source = publicationSource
+                    break
+                }
+                else -> Unit
+            }
+            if (linkedNavigation && !withdraws) {
+                // The index grants navigation only. Every attachment retains its complete existing content/venue/safety checks.
+                continue
+            }
             if (parsed.rejectionReason == ScheduleRejectionReason.OTHER_ENTITY_ONLY &&
                 parsed.disposition == ScheduleParseDisposition.REJECTED && parsed.events.isEmpty() &&
                 !parsed.safetyConflict && !withdraws && !rootRequest && next.document && format == "image" &&

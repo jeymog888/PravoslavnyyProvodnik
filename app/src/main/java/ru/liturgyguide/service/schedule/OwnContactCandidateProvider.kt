@@ -15,32 +15,28 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
-/** Candidate-only discovery. It creates neither an automatic site binding nor a foreign-image witness. */
+/** Candidate-only discovery. It creates no automatic binding or foreign-image certificate. */
 class OwnContactCandidateProvider(private val transport: ScheduleTransport, private val pool: PublisherSeedPool,
     private val clock: Clock = Clock.systemUTC(), private val timeoutMillis: Long = 25_000) : ScheduleCandidateProvider {
     init { require(timeoutMillis in 1..25_000) }
 
     override suspend fun discover(parish: Parish, excludedUrls: Set<String>) = discover(parish, excludedUrls, emptySet())
 
-    /** The future fast stage may pass dismissed/conflicted IDs without excluding their whole publisher. */
-    suspend fun discover(parish: Parish, excludedUrls: Set<String>, excludedCandidateIds: Set<String>): ScheduleCandidateDiscovery {
+    suspend fun discover(parish: Parish, excludedUrls: Set<String>, excludedCandidateIds: Set<String>): ScheduleCandidateDiscovery =
+        attempt(parish, excludedUrls, excludedCandidateIds, { pool }, { pool }, null) { found -> found.candidates.any { it.canConfirm(parish) } }
+
+    internal suspend fun discoverFromPools(parish: Parish, excludedUrls: Set<String>, excludedCandidateIds: Set<String>,
+        pools: OwnContactPoolFactories, preferredSourceUrl: String? = null,
+        useful: (ScheduleCandidateDiscovery) -> Boolean): ScheduleCandidateDiscovery =
+        attempt(parish, excludedUrls, excludedCandidateIds, { pools.direct(parish) }, { pools.websites(parish) }, preferredSourceUrl, useful)
+
+    /** One context owns both lazy tiers, all six dispatches, three scopes and the complete 25s lifetime. */
+    private suspend fun attempt(parish: Parish, excludedUrls: Set<String>, excludedCandidateIds: Set<String>,
+        directPool: suspend () -> PublisherSeedPool, websitePool: suspend () -> PublisherSeedPool,
+        preferredSourceUrl: String?, useful: (ScheduleCandidateDiscovery) -> Boolean): ScheduleCandidateDiscovery {
         if (!OwnContactChildIdentity.ordinaryOsm(parish)) return ScheduleCandidateDiscovery()
-        val startedNanos = System.nanoTime()
         val selectedIdentity = ScheduleEntityIdentity.fingerprint(parish)
-        val seeds = try {
-            pool.seeds(parish, 10_000.0, 60).take(60).filter { it.valid() && distance(parish, it.provenance) <= 10_000 }
-        } catch (cancelled: CancellationException) { throw cancelled }
-        catch (_: Exception) { return ScheduleCandidateDiscovery(unavailable = true) }
-        val targets = seeds.groupBy { it.url }.mapNotNull { (url, sameUrl) ->
-            // Preserve every origin for exact-URL duplicates. Conflicting tenant scopes are not widened.
-            val scopes = sameUrl.map { it.publisherScopeUrl }.distinct().sortedByDescending(String::length)
-            val scope = scopes.firstOrNull() ?: return@mapNotNull null
-            if (scopes.any { !PublisherContactScope.contains(it, scope) }) return@mapNotNull null
-            Target(url, if (sameUrl.any { it.role == PublisherSeedRole.CONTACT_REFERENCE }) PublisherSeedRole.CONTACT_REFERENCE else
-                PublisherSeedRole.WEBSITE, scope, sameUrl.map { it.provenance }.distinct(), sameUrl.minOf { distance(parish, it.provenance) })
-        }.sortedWith(compareBy({ if (it.role == PublisherSeedRole.CONTACT_REFERENCE) 0 else
-            if (it.origins.any { origin -> origin.origin == PublisherSeedOrigin.CURATED }) 1 else 2 }, { it.distance }, { it.url }))
-        val groups = targets.groupBy { it.scope }.entries.take(3).map { Group(it.key, it.value) }
+        val groups = linkedMapOf<String, Group>()
         val attempts = AtomicInteger()
         val unavailable = AtomicBoolean(false)
         val workers = Semaphore(2)
@@ -49,6 +45,40 @@ class OwnContactCandidateProvider(private val transport: ScheduleTransport, priv
         val excluded = ScheduleSourceExclusions(excludedUrls)
         val found = mutableListOf<ScheduleSourceCandidate>()
         val observed = mutableListOf<String>()
+        val evidence = linkedMapOf<String, PublishedChildContactEvidence>()
+
+        suspend fun addPool(factory: suspend () -> PublisherSeedPool) {
+            val loaded = factory()
+            currentCoroutineContext().ensureActive()
+            val seeds = loaded.seeds(parish, 10_000.0, 60).take(60)
+                .filter { it.valid() && distance(parish, it.provenance) <= 10_000 }
+            val targets = seeds.groupBy { it.url }.mapNotNull { (url, sameUrl) ->
+                val scopes = sameUrl.map { it.publisherScopeUrl }.distinct().sortedByDescending(String::length)
+                val scope = scopes.firstOrNull() ?: return@mapNotNull null
+                if (scopes.any { !PublisherContactScope.contains(it, scope) }) return@mapNotNull null
+                Target(url, if (sameUrl.any { it.role == PublisherSeedRole.CONTACT_REFERENCE }) PublisherSeedRole.CONTACT_REFERENCE else
+                    PublisherSeedRole.WEBSITE, scope, sameUrl.map { it.provenance }.distinct(), sameUrl.minOf { distance(parish, it.provenance) })
+            }.sortedWith(compareBy({ if (it.url == preferredSourceUrl) 0 else 1 }, { if (it.role == PublisherSeedRole.CONTACT_REFERENCE) 0 else
+                if (it.origins.any { origin -> origin.origin == PublisherSeedOrigin.CURATED }) 1 else 2 }, { it.distance }, { it.url }))
+            for ((scope, additions) in targets.groupBy { it.scope }) {
+                val old = groups[scope]
+                if (old == null && groups.size >= 3) continue
+                val joined = (old?.targets.orEmpty() + additions).groupBy { it.url }.map { (_, rows) ->
+                    rows.first().copy(origins = rows.flatMap { it.origins }.distinct(),
+                        role = if (rows.any { it.role == PublisherSeedRole.CONTACT_REFERENCE }) PublisherSeedRole.CONTACT_REFERENCE else PublisherSeedRole.WEBSITE)
+                }
+                groups[scope] = Group(scope, joined)
+            }
+        }
+
+        fun snapshot(): ScheduleCandidateDiscovery {
+            val rows = found.groupBy { it.id }.values.map { versions ->
+                val latest = versions.last()
+                latest.copy(ownContact = latest.ownContact?.copy(seedOrigins = versions.flatMap { it.ownContact?.seedOrigins.orEmpty() }.distinct()))
+            }.take(20)
+            return ScheduleCandidateDiscovery(rows, observed.distinct().take(200), incomplete = true, unavailable = unavailable.get(),
+                freshContactEvidence = evidence.filter { (id, proof) -> rows.singleOrNull { it.id == id }?.let { proof.matchesFresh(parish, it) } == true })
+        }
 
         suspend fun load(url: String, scope: String): ScheduleResponse? {
             if (excluded.contains(url) || !PublisherContactScope.contains(scope, url)) return null
@@ -72,15 +102,17 @@ class OwnContactCandidateProvider(private val transport: ScheduleTransport, priv
                     require(document.body().text().isNotBlank() && !Regex("(?iu)домен прода[её]тся|domain (?:is )?parked|сайт заблокирован")
                         .containsMatchIn(document.body().text()))
                     pages[url] = response
+                    pages[response.url] = response
                     response
                 } catch (cancelled: CancellationException) { throw cancelled }
                 catch (_: Exception) { unavailable.set(true); null }
             }
         }
 
-        fun candidates(response: ScheduleResponse, origins: List<PublisherSeedProvenance>): PhaseResult {
+        fun candidates(response: ScheduleResponse, scope: String, origins: List<PublisherSeedProvenance>): PhaseResult {
             val parsed = PublishedChildContactParser.parse(response)
             if (parsed.ambiguous) unavailable.set(true)
+            val fresh = linkedMapOf<String, PublishedChildContactEvidence>()
             val values = parsed.children.filter { OwnContactChildIdentity.pointAgrees(parish, it.latitude, it.longitude) }.mapNotNull { child ->
                 val conflict = OwnContactChildIdentity.conflict(parish, child.name, child.locality, child.phone)
                 val candidate = ScheduleSourceCandidate(selectedIdentity = selectedIdentity, provider = PROVIDER,
@@ -93,9 +125,11 @@ class OwnContactCandidateProvider(private val transport: ScheduleTransport, priv
                         "На странице контактов назван приписной храм рядом с выбранной точкой. Подтвердите источник",
                     geometryEvidence = ScheduleGeometryEvidence(response.url, ScheduleSourceCandidate.sha(response.bytes)),
                     ownContact = OwnContactCandidateMetadata(child.blockKey, child.phone, origins))
-                candidate.takeIf { it.id !in excludedCandidateIds && it.validFor(parish) }
+                candidate.takeIf { it.id !in excludedCandidateIds && it.validFor(parish) }?.also { row ->
+                    PublishedChildContactEvidence.fromFreshResponse(parish, response, scope, row)?.let { fresh[row.id] = it }
+                }
             }
-            return PhaseResult(values, parsed.observedKeys.map { ScheduleSourceCandidate.sha("${response.url}\u0000$it") })
+            return PhaseResult(values, parsed.observedKeys.map { ScheduleSourceCandidate.sha("${response.url}\u0000$it") }, fresh)
         }
 
         suspend fun process(group: Group, direct: Boolean): PhaseResult {
@@ -104,7 +138,7 @@ class OwnContactCandidateProvider(private val transport: ScheduleTransport, priv
             val origins = group.targets.flatMap { it.origins }.distinct()
             if (origins.size > 20) { unavailable.set(true); return PhaseResult() }
             val first = load(target.url, group.scope) ?: return PhaseResult()
-            if (direct) return candidates(first, origins)
+            if (direct) return candidates(first, group.scope, origins)
             val document = first.html() ?: return PhaseResult()
             val links = document.select("nav a[href],header a[href],[role=navigation] a[href]").filter {
                 it.closest("aside,footer,#comments,.comments,blockquote") == null &&
@@ -116,31 +150,35 @@ class OwnContactCandidateProvider(private val transport: ScheduleTransport, priv
             }.distinct()
             if (links.size > 1) { unavailable.set(true); return PhaseResult() }
             val contact = links.singleOrNull()?.takeIf { it != first.url } ?: return PhaseResult()
-            return load(contact, group.scope)?.let { candidates(it, origins) } ?: PhaseResult()
+            return load(contact, group.scope)?.let { candidates(it, group.scope, origins) } ?: PhaseResult()
         }
 
         suspend fun phase(direct: Boolean): Boolean = coroutineScope {
-            val eligible = groups.filter { group -> group.targets.any { (it.role == PublisherSeedRole.CONTACT_REFERENCE) == direct } }
+            val eligible = groups.values.filter { group -> group.targets.any { (it.role == PublisherSeedRole.CONTACT_REFERENCE) == direct } }
             val channel = Channel<PhaseResult>(eligible.size.coerceAtLeast(1))
             val jobs = eligible.map { group -> launch {
                 val result = process(group, direct)
-                channel.send(result)
+                channel.trySend(result)
             } }
             try {
                 repeat(eligible.size) {
                     val result = channel.receive()
                     found += result.candidates
                     observed += result.observed + result.candidates.map { it.providerObjectId }
-                    if (result.candidates.any { it.canConfirm(parish) }) return@coroutineScope true
+                    evidence.putAll(result.evidence)
+                    if (useful(snapshot())) return@coroutineScope true
                 }
                 false
             } finally { jobs.forEach { it.cancel() }; channel.close() }
         }
 
         try {
-            val remaining = timeoutMillis - (System.nanoTime() - startedNanos) / 1_000_000
-            val finished = withTimeoutOrNull(remaining.coerceAtLeast(0)) {
-                if (!phase(direct = true)) phase(direct = false)
+            val finished = withTimeoutOrNull(timeoutMillis) {
+                addPool(directPool)
+                if (!phase(direct = true)) {
+                    addPool(websitePool)
+                    phase(direct = false)
+                }
                 true
             }
             if (finished != true) unavailable.set(true)
@@ -148,14 +186,14 @@ class OwnContactCandidateProvider(private val transport: ScheduleTransport, priv
         catch (_: Exception) { unavailable.set(true) }
         currentCoroutineContext().ensureActive()
         if (selectedIdentity != ScheduleEntityIdentity.fingerprint(parish)) return ScheduleCandidateDiscovery(unavailable = true)
-        return ScheduleCandidateDiscovery(found.distinctBy { it.id }.take(20), observed.distinct().take(200),
-            incomplete = true, unavailable = unavailable.get())
+        return snapshot()
     }
 
     private data class Target(val url: String, val role: PublisherSeedRole, val scope: String,
         val origins: List<PublisherSeedProvenance>, val distance: Double)
     private data class Group(val scope: String, val targets: List<Target>)
-    private data class PhaseResult(val candidates: List<ScheduleSourceCandidate> = emptyList(), val observed: List<String> = emptyList())
+    private data class PhaseResult(val candidates: List<ScheduleSourceCandidate> = emptyList(), val observed: List<String> = emptyList(),
+        val evidence: Map<String, PublishedChildContactEvidence> = emptyMap())
     private fun distance(parish: Parish, provenance: PublisherSeedProvenance) = OpenScheduleSiteResolver.distanceMeters(
         requireNotNull(parish.latitude), requireNotNull(parish.longitude), provenance.latitude, provenance.longitude)
 

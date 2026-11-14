@@ -1,0 +1,155 @@
+{
+  "origin": "actual native22 results; copied unchanged; not current parser output",
+  "image3Events": 12,
+  "classifications": [
+    "REJECTED_OTHER_ENTITY_ONLY",
+    "UNSUPPORTED",
+    "PARSED"
+  ],
+  "inputs": [
+    {
+      "file": "image-1.jpg",
+      "source": "app/src/androidTest/assets/contact-wiring/image-1.jpg",
+      "sha256": "9469ef7ddcd5675fb936d3af12db4e4499144be202a7a117c1b8e936770ea35a",
+      "bytes": 504642
+    },
+    {
+      "file": "image-1.document.json",
+      "source": ".local/release12/integration/own-contact-first-failure-artifacts/own-contact-92779929-0966-4a74-b14a-eec9f5d7c06d/image-1.jpg.document.json",
+      "sha256": "941d567c64b1d0e845ea448dd567d9a16a548222ba7e7da878ec838b16c9fabb",
+      "bytes": 13075
+    },
+    {
+      "file": "image-2.jpg",
+      "source": "app/src/androidTest/assets/contact-wiring/image-2.jpg",
+      "sha256": "95e26deb7c576e1810b592f8d81496ea652dd80a25b5bf36828f69ede3314512",
+      "bytes": 469508
+    },
+    {
+      "file": "image-2.document.json",
+      "source": ".local/release12/integration/own-contact-first-failure-artifacts/own-contact-92779929-0966-4a74-b14a-eec9f5d7c06d/image-2.jpg.document.json",
+      "sha256": "736485f3da818ad8c7d5885e4c545d4dac9a8a970dc6f32dcee97aa43d024431",
+      "bytes": 11597
+    },
+    {
+      "file": "image-3.jpg",
+      "source": "app/src/androidTest/assets/contact-wiring/image-3.jpg",
+      "sha256": "ca81a3175085d690479d91ecc5f5365847ec1964e436cb66ef6502e47c76d3a6",
+      "bytes": 433169
+    },
+    {
+      "file": "image-3.document.json",
+      "source": ".local/release12/integration/own-contact-first-failure-artifacts/own-contact-92779929-0966-4a74-b14a-eec9f5d7c06d/image-3.jpg.document.json",
+      "sha256": "c5fceb27c15c3cbabe078b2d4b5cda6c9e847624114cc146666eae0a647d4d0e",
+      "bytes": 10826
+    }
+  ],
+  "parseResultsSource": {
+    "source": ".local/release12/integration/own-contact-first-failure-artifacts/own-contact-92779929-0966-4a74-b14a-eec9f5d7c06d/actual-certified-parses.json",
+    "sha256": "2b90ac8a051bb5f50734ba7d66890149b13b131a963cd58b69fcb27352b7eca3",
+    "bytes": 1634
+  },
+  "parseResults": [
+    {
+      "disposition": "REJECTED",
+      "events": [],
+      "rejectionReason": "OTHER_ENTITY_ONLY",
+      "safetyConflict": false,
+      "withdrawnDates": [],
+      "withdrawnStarts": [],
+      "withdrawsAll": false,
+      "yearInferred": false
+    },
+    {
+      "disposition": "UNSUPPORTED",
+      "events": [],
+      "safetyConflict": false,
+      "withdrawnDates": [],
+      "withdrawnStarts": [],
+      "withdrawsAll": false,
+      "yearInferred": false
+    },
+    {
+      "disposition": "PARSED",
+      "events": [
+        {
+          "date": "2026-11-13",
+          "kind": "service_block",
+          "time": "17:00",
+          "title": "Вечерняя служба"
+        },
+        {
+          "date": "2026-11-14",
+          "kind": "liturgy",
+          "time": "08:00",
+          "title": "Литургия Панихида"
+        },
+        {
+          "date": "2026-11-14",
+          "kind": "service_block",
+          "time": "17:00",
+          "title": "Всенощная"
+        },
+        {
+          "date": "2026-11-15",
+          "kind": "liturgy",
+          "time": "08:00",
+          "title": "Литургия Молебен Лития"
+        },
+        {
+          "date": "2026-11-20",
+          "kind": "service_block",
+          "time": "17:00",
+          "title": "Вечерняя служба"
+        },
+        {
+          "date": "2026-11-21",
+          "kind": "liturgy",
+          "time": "08:00",
+          "title": "Литургия Панихида"
+        },
+        {
+          "date": "2026-11-21",
+          "kind": "service_block",
+          "time": "17:00",
+          "title": "Всенощная"
+        },
+        {
+          "date": "2026-11-22",
+          "kind": "liturgy",
+          "time": "08:00",
+          "title": "Литургия Молебен"
+        },
+        {
+          "date": "2026-11-27",
+          "kind": "service_block",
+          "time": "17:00",
+          "title": "Вечерняя служба"
+        },
+        {
+          "date": "2026-11-28",
+          "kind": "liturgy",
+          "time": "08:00",
+          "title": "Литургия Панихида"
+        },
+        {
+          "date": "2026-11-28",
+          "kind": "service_block",
+          "time": "17:00",
+          "title": "Всенощная"
+        },
+        {
+          "date": "2026-11-29",
+          "kind": "liturgy",
+          "time": "08:00",
+          "title": "Литургия Молебен"
+        }
+      ],
+      "safetyConflict": false,
+      "withdrawnDates": [],
+      "withdrawnStarts": [],
+      "withdrawsAll": false,
+      "yearInferred": false
+    }
+  ]
+}

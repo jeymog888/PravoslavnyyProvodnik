@@ -20,6 +20,8 @@ import ru.liturgyguide.service.schedule.UrlConnectionScheduleTransport
 import ru.liturgyguide.service.schedule.AndroidScheduleDocumentExtractor
 import ru.liturgyguide.service.schedule.FileOfficialDirectoryCacheStore
 import ru.liturgyguide.service.schedule.productionScheduleSiteResolver
+import ru.liturgyguide.service.schedule.BundledCuratedPublisherMetadata
+import ru.liturgyguide.service.schedule.BundledPublisherPoolFactories
 import ru.liturgyguide.service.book.FileBookCache
 import ru.liturgyguide.service.book.ServiceBookRepository
 import ru.liturgyguide.service.book.ServiceBooks
@@ -40,6 +42,16 @@ class AppContainer(context: Context, private val discoveryOverride: PlaceDiscove
     private val readAsset: (String) -> String = assetReader ?: { name ->
         appContext.assets.open(name).bufferedReader(Charsets.UTF_8).use { it.readText() }
     }
+    // Creation is lazy and does not open an asset. Both consumers share the same suspended decoder.
+    private val bundledChurchCatalog by lazy { BundledChurchCatalog(open = {
+        assetReader?.invoke(BundledChurchCatalog.ASSET_PATH)?.reader()
+            ?: appContext.assets.open(BundledChurchCatalog.ASSET_PATH).bufferedReader(Charsets.UTF_8)
+    }) }
+    private val curatedPublisherMetadata by lazy { BundledCuratedPublisherMetadata(open = {
+        assetReader?.invoke(BundledCuratedPublisherMetadata.ASSET_PATH)?.byteInputStream(Charsets.UTF_8)
+            ?: appContext.assets.open(BundledCuratedPublisherMetadata.ASSET_PATH)
+    }) }
+    private val ownContactPools by lazy { BundledPublisherPoolFactories(curatedPublisherMetadata, bundledChurchCatalog) }
     val historical05Content = Historical05Content(readAsset)
     val historical06Content = Historical06Content(readAsset)
     val bookDedication: BookDedicationServices by lazy {
@@ -70,7 +82,7 @@ class AppContainer(context: Context, private val discoveryOverride: PlaceDiscove
                 check(edit.commit()) { "Schedule safety observation was not saved" }
             }
         }, AndroidScheduleDocumentExtractor(appContext),
-            siteResolver = productionScheduleSiteResolver(transport, directories),
+            siteResolver = productionScheduleSiteResolver(transport, directories, ownPools = ownContactPools),
             curatedPublishers = { parishes.getOrNull()?.directory?.churches.orEmpty() })
     }
     val serviceBooks: ServiceBooks by lazy {
@@ -81,10 +93,7 @@ class AppContainer(context: Context, private val discoveryOverride: PlaceDiscove
             calendar = PublishedCalendarSupplements(), patronalProofs = bookDedication.choices)
     }
     val placeDiscovery: PlaceDiscovery by lazy {
-        discoveryOverride ?: CatalogPlaceDiscovery(BundledChurchCatalog(open = {
-            assetReader?.invoke(BundledChurchCatalog.ASSET_PATH)?.reader()
-                ?: appContext.assets.open(BundledChurchCatalog.ASSET_PATH).bufferedReader(Charsets.UTF_8)
-        }), DefaultPlaceDiscovery(cache = object : DiscoveryCacheStore {
+        discoveryOverride ?: CatalogPlaceDiscovery(bundledChurchCatalog, DefaultPlaceDiscovery(cache = object : DiscoveryCacheStore {
             private val cache = appContext.getSharedPreferences("place_discovery_cache", Context.MODE_PRIVATE)
             override fun read(slot: String): String? = if (slot in setOf("cities", "churches", "places", "landmarks"))
                 runCatching { cache.getString(slot, null) }.getOrNull() else null

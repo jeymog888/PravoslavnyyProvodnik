@@ -206,5 +206,6 @@ internal object MoscowChurchIdentity {
 
 /** App composition and its test use the same resolver graph; ordinary fake resolvers remain offline. */
 internal fun productionScheduleSiteResolver(transport: ScheduleTransport, cache: OfficialDirectoryCacheStore,
-    moscowSearch: MoscowDirectorySearchTransport = UrlConnectionMoscowDirectorySearchTransport()): ScheduleSiteResolver =
-    OpenScheduleSiteResolver(transport, cache, moscowSearch)
+    moscowSearch: MoscowDirectorySearchTransport = UrlConnectionMoscowDirectorySearchTransport(),
+    ownPools: OwnContactPoolFactories? = null, clock: java.time.Clock = java.time.Clock.systemUTC()): ScheduleSiteResolver =
+    OpenScheduleSiteResolver(transport, cache, moscowSearch, ownPools = ownPools, clock = clock)

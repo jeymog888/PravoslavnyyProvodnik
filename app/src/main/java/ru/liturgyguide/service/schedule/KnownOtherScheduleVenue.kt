@@ -34,6 +34,23 @@ internal class KnownOtherScheduleVenue private constructor(
             return KnownOtherScheduleVenue(owner, selectedIdentity, requireNotNull(ScheduleUrl.publicSource(owner.website)))
         }
 
+        /** A distinct ordinary-OSM route; cached candidate metadata cannot issue this capability. */
+        fun fromFreshContact(selected: Parish, website: String, parent: String,
+            approved: ScheduleSourceCandidate?, fresh: PublishedChildContactEvidence?, curated: List<Parish>): KnownOtherScheduleVenue? {
+            if (approved == null || fresh == null || !fresh.matchesApproved(selected, approved, website) ||
+                !CuratedPublisherScope.owns(fresh.publisherScope, website) ||
+                !CuratedPublisherScope.owns(fresh.publisherScope, parent) ||
+                curated.size !in 2..100 || curated.map { it.id }.distinct().size != curated.size) return null
+            val owner = curated.filter { trusted(it) && owns(it.website, fresh.contactUrl) &&
+                owns(it.website, fresh.publisherScope) && owns(it.website, website) && owns(it.website, parent) }.singleOrNull() ?: return null
+            if (owner.id == selected.id || OwnContactChildIdentity.sameName(owner.name, selected.name)) return null
+            val selectedPoint = point(selected) ?: return null
+            val ownerPoint = point(owner) ?: return null
+            if (selectedPoint.distanceMeters(ownerPoint) <= 650.0) return null
+            return KnownOtherScheduleVenue(owner, ScheduleEntityIdentity.fingerprint(selected),
+                requireNotNull(ScheduleUrl.publicSource(owner.website)))
+        }
+
         private fun trusted(parish: Parish): Boolean =
             parish.id.isNotBlank() && parish.name.length in 3..300 && parish.name.none(Char::isISOControl) &&
                 parish.city.isNotBlank() && parish.address.isNotBlank() && point(parish) != null &&

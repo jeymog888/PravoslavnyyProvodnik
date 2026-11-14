@@ -12,6 +12,11 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import ru.liturgyguide.service.schedule.ScheduleUrl
+import ru.liturgyguide.service.schedule.PublisherSeed
+import ru.liturgyguide.service.schedule.PublisherSeedOrigin
+import ru.liturgyguide.service.schedule.PublisherSeedProvenance
+import ru.liturgyguide.service.schedule.PublisherSeedRole
+import ru.liturgyguide.service.schedule.PublisherContactScope
 import java.io.FilterReader
 import java.io.IOException
 import java.io.Reader
@@ -30,16 +35,26 @@ class BundledChurchCatalog(private val open: () -> Reader, private val clock: Cl
         lock.withLock {
             if (!loaded) {
                 val context = currentCoroutineContext()
-                catalog = try {
+                val parsed = try {
                     open().use { LocalChurchCatalog.decode(it, clock.instant()) { context.ensureActive() } }
                 } catch (cancelled: CancellationException) { throw cancelled }
                 catch (_: Exception) { null }
+                context.ensureActive()
+                catalog = parsed
                 // A missing/corrupt packaged asset cannot become valid until the application is updated.
                 // Cancellation, in contrast, must allow the next search to load it again.
                 loaded = true
             }
             catalog
         }
+    }
+
+    /** Read-only website hints share this exact catalog instance with place discovery. */
+    suspend fun publisherSeeds(center: GeoPoint, radiusMeters: Int, limit: Int): List<PublisherSeed> = withContext(Dispatchers.IO) {
+        require(center.isValid && radiusMeters in 1..10_000 && limit in 1..60)
+        val current = get() ?: return@withContext emptyList()
+        val context = currentCoroutineContext()
+        current.publisherSeeds(center, radiusMeters, limit) { context.ensureActive() }
     }
 
     companion object { const val ASSET_PATH = "discovery/churches-ru.json" }
@@ -128,7 +143,8 @@ class CatalogPlaceDiscovery(private val local: BundledChurchCatalog, private val
     private fun validQuery(value: String) = value.length in 2..DefaultPlaceDiscovery.MAX_QUERY_LENGTH && value.none(Char::isISOControl)
 }
 
-internal class LocalChurchCatalog private constructor(val fetchedAt: Long, entries: List<Entry>) {
+internal class LocalChurchCatalog private constructor(val fetchedAt: Long, entries: List<Entry>,
+    private val upstreamUrl: String, private val upstreamSha256: String) {
     internal data class Entry(val church: DiscoveredChurch, val aliases: List<String>) {
         val names = (listOf(church.name) + aliases).map(CatalogWords::normalized)
         val nameWords = names.flatMap(CatalogWords::words).toSet()
@@ -150,6 +166,15 @@ internal class LocalChurchCatalog private constructor(val fetchedAt: Long, entri
         // The remote response cap does not apply to an already bounded local snapshot.
         // Keep the whole radius so the screen's name filter can find a church after row 60.
         .map { it.first }
+
+    fun publisherSeeds(center: GeoPoint, radius: Int, limit: Int, checkCancelled: () -> Unit): List<PublisherSeed> =
+        nearby(center, radius, checkCancelled).asSequence().mapNotNull { church ->
+            checkCancelled()
+            val website = church.website?.takeIf(PublisherContactScope::valid) ?: return@mapNotNull null
+            PublisherSeed(website, PublisherSeedRole.WEBSITE, website,
+                PublisherSeedProvenance(PublisherSeedOrigin.OSM, church.id, church.name, church.center.latitude,
+                    church.center.longitude, upstreamUrl, upstreamSha256))
+        }.take(limit).toList()
 
     fun search(query: String, checkCancelled: () -> Unit): List<DiscoveredChurch> {
         val raw = CatalogWords.words(query)
@@ -285,7 +310,7 @@ internal class LocalChurchCatalog private constructor(val fetchedAt: Long, entri
             require(source.integer("sizeBytes") > 0)
             val timestamp = Instant.parse(source.string("dumpTimestamp", 64))
             require(timestamp >= Instant.EPOCH && timestamp <= now.plusSeconds(86_400))
-            return LocalChurchCatalog(timestamp.toEpochMilli(), entries)
+            return LocalChurchCatalog(timestamp.toEpochMilli(), entries, origin.toASCIIString(), source.string("sha256", 64))
         }
 
         private fun parseEntry(value: JsonObject): Entry {

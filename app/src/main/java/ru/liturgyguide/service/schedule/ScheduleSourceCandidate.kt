@@ -27,6 +27,7 @@ data class ScheduleCandidateDiscovery(
     val observedIds: List<String> = emptyList(),
     val incomplete: Boolean = true,
     val unavailable: Boolean = false,
+    @Transient val freshContactEvidence: Map<String, PublishedChildContactEvidence>? = null,
 )
 
 data class ScheduleSourceDiscovery(

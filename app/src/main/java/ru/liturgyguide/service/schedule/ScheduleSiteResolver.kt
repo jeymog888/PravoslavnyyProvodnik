@@ -4,9 +4,13 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
 import ru.liturgyguide.model.Parish
 import java.net.URLEncoder
 import java.util.Locale
+import java.time.Clock
 import kotlin.math.*
 
 data class ScheduleSite(val url: String, val evidenceUrl: String, val matchedName: String,
@@ -17,6 +21,9 @@ fun interface ScheduleSiteResolver {
         resolve(parish)?.takeUnless { ScheduleSourceExclusions(excludedUrls).contains(it.url) }
     suspend fun candidates(parish: Parish, excludedUrls: Set<String>): ScheduleCandidateDiscovery =
         ScheduleCandidateDiscovery(unavailable = true)
+    /** Existing custom resolvers remain authoritative; expected-aware production review is optional. */
+    suspend fun candidatesForConfirmation(parish: Parish, excludedUrls: Set<String>, expected: ScheduleSourceCandidate): ScheduleCandidateDiscovery =
+        candidates(parish, excludedUrls)
     suspend fun discover(parish: Parish, excludedUrls: Set<String>): ScheduleSourceDiscovery {
         val site = resolve(parish, excludedUrls)
         if (site != null && site.binding?.validFor(parish, site.url, site.evidenceUrl) == true)
@@ -28,6 +35,10 @@ fun interface ScheduleSiteResolver {
     }
     /** Optional cold-source prelude. Existing custom discover contracts remain authoritative. */
     suspend fun initialFastDiscovery(parish: Parish, excludedUrls: Set<String>): ScheduleSourceDiscovery? = null
+    /** Eligibility is owned by the repository. Custom old hooks still receive exactly their old call. */
+    suspend fun initialFastDiscovery(parish: Parish, excludedUrls: Set<String>,
+        useful: (ScheduleCandidateDiscovery) -> Boolean, excludedCandidateIds: Set<String> = emptySet()): ScheduleSourceDiscovery? =
+        initialFastDiscovery(parish, excludedUrls)
     /** One scope for primary/alternative lookup; test/custom resolvers keep their existing behavior. */
     fun forRefresh(): ScheduleSiteResolver = this
 }
@@ -38,7 +49,8 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport,
     moscowSearch: MoscowDirectorySearchTransport? = null,
     private val candidateProvider: ScheduleCandidateProvider = CompositeScheduleCandidateProvider(listOf(
         OfficialMapCandidateProvider.PROVIDER to OfficialMapCandidateProvider(transport),
-        ElitsyMapCandidateProvider.PROVIDER to ElitsyMapCandidateProvider(transport)))) : ScheduleSiteResolver {
+        ElitsyMapCandidateProvider.PROVIDER to ElitsyMapCandidateProvider(transport))),
+    private val ownPools: OwnContactPoolFactories? = null, private val clock: Clock = Clock.systemUTC()) : ScheduleSiteResolver {
     private val directories = OfficialDirectoryResolver(transport, directoryCache)
     private val moscow = moscowSearch?.let { MoscowOfficialDirectoryResolver(transport, it) }
     override suspend fun resolve(parish: Parish): ScheduleSite? = resolve(parish, emptySet())
@@ -47,10 +59,17 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport,
         resolveInSession(parish, excludedUrls, mutableMapOf(), mutableMapOf(), mutableMapOf(), mutableMapOf())
 
     override suspend fun candidates(parish: Parish, excludedUrls: Set<String>): ScheduleCandidateDiscovery =
-        candidateProvider.discover(parish, excludedUrls)
+        forRefresh().candidates(parish, excludedUrls)
+
+    override suspend fun candidatesForConfirmation(parish: Parish, excludedUrls: Set<String>, expected: ScheduleSourceCandidate) =
+        forRefresh().candidatesForConfirmation(parish, excludedUrls, expected)
 
     override suspend fun initialFastDiscovery(parish: Parish, excludedUrls: Set<String>): ScheduleSourceDiscovery? =
         forRefresh().initialFastDiscovery(parish, excludedUrls)
+
+    override suspend fun initialFastDiscovery(parish: Parish, excludedUrls: Set<String>,
+        useful: (ScheduleCandidateDiscovery) -> Boolean, excludedCandidateIds: Set<String>) =
+        forRefresh().initialFastDiscovery(parish, excludedUrls, useful, excludedCandidateIds)
 
     private data class CandidateRequest(val identity: String, val excluded: Set<String>)
 
@@ -59,48 +78,112 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport,
         val contactMemo = mutableMapOf<String, ScheduleSite?>()
         val moscowMemo = mutableMapOf<String, ScheduleSite?>()
         val osmMemo = mutableMapOf<String, JsonObject?>()
-        val candidateMemo = mutableMapOf<CandidateRequest, ScheduleCandidateDiscovery>()
+        val mapMemo = mutableMapOf<CandidateRequest, ScheduleCandidateDiscovery>()
+        val wholeMemo = mutableMapOf<CandidateRequest, ScheduleCandidateDiscovery>()
+        val ownProvider = OwnContactCandidateProvider(transport, LocalPublisherSeedPool(emptyList()), clock)
         return object : ScheduleSiteResolver {
             private fun request(parish: Parish, excludedUrls: Set<String>) =
                 CandidateRequest(ScheduleEntityIdentity.fingerprint(parish), excludedUrls.toSet())
-            override suspend fun candidates(parish: Parish, excludedUrls: Set<String>): ScheduleCandidateDiscovery {
+
+            private suspend fun maps(parish: Parish, excludedUrls: Set<String>): ScheduleCandidateDiscovery {
                 val key = request(parish, excludedUrls)
-                candidateMemo[key]?.let { return it }
+                mapMemo[key]?.let { return it }
                 val found = try {
-                    // Leave headroom for Composite to retain a ready neighbor after its own 30s timeout.
+                    // Production Composite owns its 30s limit; retain its completed neighbor with 35s headroom.
                     withTimeoutOrNull(35_000) { candidateProvider.discover(parish, excludedUrls) }
                         ?: ScheduleCandidateDiscovery(unavailable = true)
                 } catch (cancelled: CancellationException) { throw cancelled }
                 catch (_: Exception) { ScheduleCandidateDiscovery(unavailable = true) }
-                candidateMemo[key] = found
+                mapMemo[key] = found
                 return found
             }
-            override suspend fun initialFastDiscovery(parish: Parish, excludedUrls: Set<String>): ScheduleSourceDiscovery? {
+
+            private suspend fun own(parish: Parish, excludedUrls: Set<String>, excludedIds: Set<String>,
+                expected: ScheduleSourceCandidate? = null, useful: (ScheduleCandidateDiscovery) -> Boolean): ScheduleCandidateDiscovery {
+                val pools = ownPools ?: return ScheduleCandidateDiscovery()
+                val actual = if (expected?.provider == OwnContactCandidateProvider.PROVIDER)
+                    expectedHintPools(parish, expected, pools) else pools
+                return ownProvider.discoverFromPools(parish, excludedUrls, excludedIds, actual, expected?.sourceUrl, useful)
+            }
+
+            private suspend fun whole(parish: Parish, excludedUrls: Set<String>, expected: ScheduleSourceCandidate? = null): ScheduleCandidateDiscovery {
+                if (ownPools == null) return maps(parish, excludedUrls)
+                val completed = ConcurrentHashMap<Int, ScheduleCandidateDiscovery>()
+                // Map30 and Own25 run in parallel. A local timeout cannot erase a completed neighbor.
+                withTimeoutOrNull(35_000) { coroutineScope {
+                    launch { completed[0] = maps(parish, excludedUrls) }
+                    launch { completed[1] = own(parish, excludedUrls, emptySet(), expected) { found ->
+                        if (expected == null) found.candidates.any { it.canConfirm(parish) }
+                        else found.candidates.any { row -> row.id == expected.id && row.canConfirm(parish) ||
+                            row.provider == expected.provider && row.outcome == ScheduleIdentityOutcome.CONFLICT &&
+                                !row.verificationUnavailable && sameCandidateSource(row.sourceUrl, expected.sourceUrl) }
+                    } }
+                } }
+                return mergeFreshScheduleDiscoveries(parish, completed[0] ?: ScheduleCandidateDiscovery(unavailable = true),
+                    completed[1] ?: ScheduleCandidateDiscovery(unavailable = true))
+            }
+
+            override suspend fun candidates(parish: Parish, excludedUrls: Set<String>): ScheduleCandidateDiscovery {
+                val key = request(parish, excludedUrls)
+                wholeMemo[key]?.let { return it }
+                return whole(parish, excludedUrls).also { wholeMemo[key] = it }
+            }
+
+            override suspend fun candidatesForConfirmation(parish: Parish, excludedUrls: Set<String>, expected: ScheduleSourceCandidate): ScheduleCandidateDiscovery =
+                if (expected.provider == OwnContactCandidateProvider.PROVIDER) whole(parish, excludedUrls, expected)
+                else maps(parish, excludedUrls)
+
+            override suspend fun initialFastDiscovery(parish: Parish, excludedUrls: Set<String>): ScheduleSourceDiscovery? =
+                initialFastDiscovery(parish, excludedUrls, { found -> found.candidates.any { it.canConfirm(parish) } }, emptySet())
+
+            override suspend fun initialFastDiscovery(parish: Parish, excludedUrls: Set<String>,
+                useful: (ScheduleCandidateDiscovery) -> Boolean, excludedCandidateIds: Set<String>): ScheduleSourceDiscovery? {
                 val url = osmObjectUrl(parish) ?: return null
                 val excluded = ScheduleSourceExclusions(excludedUrls)
-                val exact = withTimeoutOrNull(3_000) {
-                    exactOsmSite(parish, osmTags(parish, osmMemo), url, excluded)
-                }
-                // Our own bounded timeout is a completed negative only within this attempt.
-                // A parent cancellation still propagates and cannot populate a later session.
+                val exact = withTimeoutOrNull(3_000) { exactOsmSite(parish, osmTags(parish, osmMemo), url, excluded) }
                 if (!osmMemo.containsKey(osmMemoKey(parish, url))) osmMemo[osmMemoKey(parish, url)] = null
                 if (exact?.binding?.validFor(parish, exact.url, exact.evidenceUrl) == true)
                     return ScheduleSourceDiscovery(ScheduleIdentityOutcome.PROVED, exact)
-                val found = candidates(parish, excludedUrls)
+                val map = maps(parish, excludedUrls)
+                if (useful(map) || ownPools == null) return candidateDiscovery(map)
+                // This starts its own single 25s Own context only after Maps are found ineligible.
+                val contact = own(parish, excludedUrls, excludedCandidateIds) { found ->
+                    useful(mergeFreshScheduleDiscoveries(parish, map, found))
+                }
+                val found = mergeFreshScheduleDiscoveries(parish, map, contact)
+                wholeMemo[request(parish, excludedUrls)] = found
                 return candidateDiscovery(found)
             }
+
             override suspend fun discover(parish: Parish, excludedUrls: Set<String>): ScheduleSourceDiscovery {
                 val site = resolve(parish, excludedUrls)
-                val alreadyRead = candidateMemo[request(parish, excludedUrls)]
+                val alreadyRead = wholeMemo[request(parish, excludedUrls)] ?: mapMemo[request(parish, excludedUrls)]
                 if (site?.binding?.validFor(parish, site.url, site.evidenceUrl) == true)
-                    return ScheduleSourceDiscovery(ScheduleIdentityOutcome.PROVED, site,
-                        alreadyRead ?: ScheduleCandidateDiscovery())
+                    return ScheduleSourceDiscovery(ScheduleIdentityOutcome.PROVED, site, alreadyRead ?: ScheduleCandidateDiscovery())
                 return candidateDiscovery(candidates(parish, excludedUrls))
             }
             override suspend fun resolve(parish: Parish): ScheduleSite? = resolve(parish, emptySet())
             override suspend fun resolve(parish: Parish, excludedUrls: Set<String>): ScheduleSite? =
                 resolveInSession(parish, excludedUrls, directoryMemo, contactMemo, moscowMemo, osmMemo)
         }
+    }
+
+    /** An accepted URL is only a public fetch hint; current bytes still have to create the witness. */
+    private fun expectedHintPools(parish: Parish, expected: ScheduleSourceCandidate, pools: OwnContactPoolFactories) = object : OwnContactPoolFactories {
+        override suspend fun direct(parish: Parish): PublisherSeedPool {
+            val ordinary = pools.direct(parish)
+            val owners = pools.curatedOwners().filter { it.latitude != null && it.longitude != null &&
+                CuratedPublisherScope.owns(it.website, expected.sourceUrl) }
+            val scope = owners.singleOrNull()?.website?.let(ScheduleUrl::publicSource) ?: expected.sourceUrl
+            val hints = expected.ownContact?.seedOrigins.orEmpty().filter { it.valid() }.map {
+                PublisherSeed(expected.sourceUrl, PublisherSeedRole.CONTACT_REFERENCE, scope, it)
+            }.filter { it.valid() }
+            return PublisherSeedPool { selected, radius, limit ->
+                (hints + ordinary.seeds(selected, radius, limit)).distinct().take(limit)
+            }
+        }
+        override suspend fun websites(parish: Parish) = pools.websites(parish)
+        override suspend fun curatedOwners() = pools.curatedOwners()
     }
 
     private suspend fun resolveInSession(parish: Parish, excludedUrls: Set<String>,

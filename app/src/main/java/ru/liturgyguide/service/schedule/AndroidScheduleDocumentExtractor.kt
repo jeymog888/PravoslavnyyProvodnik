@@ -23,8 +23,18 @@ import kotlin.coroutines.resumeWithException
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
+/** An optional read-only observation of a completed native pass, before the existing parser. */
+data class NativeScheduleOcrCapture(
+    val stage: String, val sourceUrl: String, val width: Int, val height: Int, val hocr: String
+)
+
 /** Extracts real PDF text first, then runs Russian OCR for scanned or unreliable pages. */
-class AndroidScheduleDocumentExtractor(context: Context) : ScheduleDocumentExtractor {
+class AndroidScheduleDocumentExtractor(context: Context,
+    private val observer: ((NativeScheduleOcrCapture) -> Unit)? = null) : ScheduleDocumentExtractor {
+    private fun observe(stage: String, response: ScheduleResponse, bitmap: Bitmap, hocr: String) {
+        // Diagnostics cannot change the result, cancellation, or native parser contract.
+        runCatching { observer?.invoke(NativeScheduleOcrCapture(stage, response.url, bitmap.width, bitmap.height, hocr)) }
+    }
     private val app = context.applicationContext
 
     override suspend fun extract(response: ScheduleResponse): ScheduleDocument? {
@@ -88,6 +98,7 @@ class AndroidScheduleDocumentExtractor(context: Context) : ScheduleDocumentExtra
                             engine.setImage(bitmap)
                             // getHOCRText supports stop(), unlike the synchronous getUTF8Text convenience method.
                             val hocr = engine.getHOCRText(0).orEmpty()
+                            observe("initial", response, bitmap, hocr)
                             if (complete.get()) throw IOException("Recognition cancelled")
                             if (ScheduleSuperscriptTable.needsSupplement(hocr)) {
                                 // At most two bounded supplementary passes for a proven dated
@@ -107,11 +118,12 @@ class AndroidScheduleDocumentExtractor(context: Context) : ScheduleDocumentExtra
                                         engine.setPageSegMode(TessBaseAPI.PageSegMode.PSM_SPARSE_TEXT)
                                         engine.setImage(bitmap)
                                         sparse = engine.getHOCRText(0).orEmpty()
+                                        observe("sparse", response, bitmap, sparse)
                                         checkCancelled()
                                         supplemental = if (enlarged === bitmap) sparse else {
                                             engine.clear()
                                             engine.setImage(enlarged)
-                                            engine.getHOCRText(0).orEmpty()
+                                            engine.getHOCRText(0).orEmpty().also { observe("supplemental", response, enlarged, it) }
                                         }
                                         checkCancelled()
                                     }

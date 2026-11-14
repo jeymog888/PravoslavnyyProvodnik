@@ -30,7 +30,9 @@ class AndroidPdfTextScheduleTest {
         val file = File(app.filesDir, relative).canonicalFile
         require(file.path.startsWith(app.filesDir.canonicalPath + File.separator) && file.isFile)
         val decoded = PdfScheduleTextExtractor(app).extract(file) { false }
-        val output = app.filesDir.resolve("monthly-pdf-proof").apply { mkdirs() }
+        val output = app.filesDir.resolve(args.getString("monthlyPdfProofDir") ?: "monthly-pdf-proof").canonicalFile
+        require(output.path.startsWith(app.filesDir.canonicalPath + File.separator))
+        output.mkdirs()
         output.resolve("glyph-pages.json").writeText(com.google.gson.Gson().toJson(decoded))
         assertEquals(2, decoded.size)
         assertTrue("Every monthly page must pass the glyph route", decoded.all { it != null })

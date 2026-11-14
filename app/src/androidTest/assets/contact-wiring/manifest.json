@@ -1,0 +1,120 @@
+{
+  "status": "DRAFT_NOT_RUN",
+  "networkUsedByHarness": false,
+  "fixtureNow": "2026-11-14T10:00:00Z",
+  "selectedId": "osm:way:226509018",
+  "inputs": [
+    {
+      "asset": "contacts.html",
+      "url": "https://xn----7sbbgncsdakjgxi3cgfp8d.xn--p1ai/contacts",
+      "contentType": "text/html; charset=UTF-8",
+      "sha256": "cfa400bf4123d60f239bce4094efac569791ec7078a49ad3b98a9a881f129309",
+      "bytes": 36982,
+      "origin": ".local/release12/schedule/raw/elisavetinsky-current-contacts.body",
+      "receipt": "contacts.html.receipt.json",
+      "role": "PRIMARY_SAVED_HTTP_RESPONSE"
+    },
+    {
+      "asset": "home.html",
+      "url": "https://xn----7sbbgncsdakjgxi3cgfp8d.xn--p1ai/",
+      "contentType": "text/html; charset=UTF-8",
+      "sha256": "69090b8836848247bf0b96c4509770d5420ddee7224f96fd2efd0be5a4bfb370",
+      "bytes": 164511,
+      "origin": ".local/release12/schedule/raw/elisavetinsky-current-home.body",
+      "receipt": "home.html.receipt.json",
+      "role": "PRIMARY_SAVED_HTTP_RESPONSE"
+    },
+    {
+      "asset": "schedule.html",
+      "url": "https://xn----7sbbgncsdakjgxi3cgfp8d.xn--p1ai/schedule",
+      "contentType": "text/html; charset=UTF-8",
+      "sha256": "8cf4d0a03195b2ae36256082a4c2168b84132f0f1f11ed7a608c7e7307873c0d",
+      "bytes": 31095,
+      "origin": ".local/release12/schedule/raw/elisavetinsky-current-schedule.body",
+      "receipt": "schedule.html.receipt.json",
+      "role": "PRIMARY_SAVED_HTTP_RESPONSE"
+    },
+    {
+      "asset": "image-1.jpg",
+      "url": "https://static.tildacdn.com/tila3733-6433-4166-b433-333039663365/__1.jpg",
+      "contentType": "image/jpeg",
+      "sha256": "9469ef7ddcd5675fb936d3af12db4e4499144be202a7a117c1b8e936770ea35a",
+      "bytes": 504642,
+      "origin": ".local/release11/next-core/schedule/elisavetinsky-image-1.jpg",
+      "receipt": "image-1.jpg.receipt.json",
+      "role": "PRIMARY_SAVED_HTTP_RESPONSE"
+    },
+    {
+      "asset": "image-2.jpg",
+      "url": "https://static.tildacdn.com/tila6563-3962-4730-b334-656133333966/__2.jpg",
+      "contentType": "image/jpeg",
+      "sha256": "95e26deb7c576e1810b592f8d81496ea652dd80a25b5bf36828f69ede3314512",
+      "bytes": 469508,
+      "origin": ".local/release11/next-core/schedule/elisavetinsky-image-2.jpg",
+      "receipt": "image-2.jpg.receipt.json",
+      "role": "PRIMARY_SAVED_HTTP_RESPONSE"
+    },
+    {
+      "asset": "image-3.jpg",
+      "url": "https://static.tildacdn.com/tila3563-3130-4934-a236-316330623066/_.jpg",
+      "contentType": "image/jpeg",
+      "sha256": "ca81a3175085d690479d91ecc5f5365847ec1964e436cb66ef6502e47c76d3a6",
+      "bytes": 433169,
+      "origin": ".local/release11/next-core/schedule/elisavetinsky-image-3.jpg",
+      "receipt": "image-3.jpg.receipt.json",
+      "role": "PRIMARY_SAVED_HTTP_RESPONSE"
+    },
+    {
+      "asset": "selected-oracle.json",
+      "sha256": "0a6c5dcc32776263145cebd7825e90e397718ac81935e909435e584f0c2c4f94",
+      "bytes": 3992,
+      "origin": "app/src/test/resources/schedule/contact-pool/oracle.json",
+      "role": "INDEPENDENT_SELECTED_OSM_OR_CURATED_METADATA"
+    },
+    {
+      "asset": "curated.json",
+      "sha256": "fb58eff6520fa9f99ac902b510e2719347af9f867191499dd991c0c3ad353b7e",
+      "bytes": 17977,
+      "origin": "app/src/main/assets/churches.json",
+      "role": "INDEPENDENT_SELECTED_OSM_OR_CURATED_METADATA"
+    }
+  ],
+  "expectedControlStarts": [
+    "2026-11-13T17:00",
+    "2026-11-14T08:00",
+    "2026-11-14T17:00",
+    "2026-11-15T08:00"
+  ],
+  "expectedImageDispositions": [
+    "REJECTED_OTHER_ENTITY_ONLY",
+    "UNSUPPORTED",
+    "PARSED"
+  ],
+  "bookSources": [
+    {
+      "asset": "liturgy-2026-11-14-church20.html",
+      "url": "https://azbyka.ru/worships/?date=2026-11-14&worship=liturgy&size=full&church=20",
+      "contentType": "text/html; charset=UTF-8",
+      "sha256": "38f2e01f2aac33db66acdbaccc49c5fab177f010677adaa07282abd7f0c36edf",
+      "bytes": 253297,
+      "origin": ".local/release12/shared-source/liturgy14-church20-live/liturgy-2026-11-14-church20.html",
+      "receipt": "liturgy-2026-11-14-church20.html.receipt.json",
+      "role": "PRIMARY_SAVED_HTTP_RESPONSE"
+    }
+  ],
+  "bookGate": {
+    "status": "PRIMARY_SOURCE_PRESENT_RUNTIME_NOT_RUN",
+    "requiredUrl": "https://azbyka.ru/worships/?date=2026-11-14&worship=liturgy&size=full&church=20",
+    "wrongChurch30NotSubstituted": true
+  },
+  "syntheticProtocolControls": [
+    "Exact OSM JSON reconstructs only the saved sourceTags and the same exact object ID, without website",
+    "Map frontend HTML/script plus empty FeatureCollection and empty Elitsy points are protocol-negative controls, not captured live responses",
+    "Injected cancellation/failure at image 2 dispatch is an explicit deterministic transport control; image bytes and OCR documents are never changed"
+  ],
+  "bookWholePairOracle": {
+    "asset": "book-expected.json",
+    "sha256": "fe7adabd6edad68acda2e081226bbc4bbc30fc74101d9228c30ce690f2e5ad8a",
+    "source": "independent common10 accepted JSON, item 9; no production catalog count assertion"
+  }
+}
