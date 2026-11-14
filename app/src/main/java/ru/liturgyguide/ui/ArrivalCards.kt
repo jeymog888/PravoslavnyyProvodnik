@@ -153,10 +153,12 @@ internal fun UpcomingScheduleOffer(offer: ArrivalScheduleOffer, tagPrefix: Strin
             color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("${tagPrefix}_next_saved"))
         if (offer.yearInferred) Text("Год не указан - проверьте дату в расписании", style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("${tagPrefix}_next_inferred_year"))
+        PublishedServiceScopeNote(service.title, "${tagPrefix}_next")
         onOpen?.let { open ->
             OutlinedButton(onClick = { open(service) }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                 .testTag("${tagPrefix}_open_next_service")) {
-                Text(if (ServiceBookSelection.kindFor(service.title) == null) "Выбрать текст службы" else "Открыть службу")
+                Text(if (ServiceBookSelection.readingScope(service.title) != null) ServiceBookSelection.readingAction(service.title)
+                    else if (ServiceBookSelection.kindFor(service.title) == null) "Выбрать текст службы" else "Открыть службу")
             }
         }
     }
@@ -353,5 +355,15 @@ internal fun ArrivalServiceSourceTitle(title: String, tagPrefix: String) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(original, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag(tagPrefix + "_title"))
         }
+    }
+}
+
+/** One short boundary beside an opening action, separate from the published title. */
+@Composable
+internal fun PublishedServiceScopeNote(title: String, tagPrefix: String) {
+    ServiceBookSelection.readingScope(title)?.let { note ->
+        Text(note, style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.testTag("${tagPrefix}_scope"))
     }
 }

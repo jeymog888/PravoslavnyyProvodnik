@@ -371,6 +371,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("church_open_service")) {
                                 Text(serviceReadingAction(featured))
                             }
+                            PublishedServiceScopeNote(featured.title, "church_service")
                             ArrivalServiceSourceTitle(featured.title, "church_service")
                             if (cachedPublication?.yearInferred == true && (schedule.saved || cachedPublication.sourceUrl == church.sourceUrl)) {
                                 OutlinedButton(onClick = { onOpenUrl(cachedPublication.sourceUrl) },
@@ -389,6 +390,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                                         Text(serviceKindTitle(service.title) ?: service.title, style = MaterialTheme.typography.bodyLarge)
                                         serviceSourceTitle(service.title)?.let { Text("В расписании храма: " + it, style = MaterialTheme.typography.bodyMedium) }
                                     }
+                                    PublishedServiceScopeNote(service.title, "church_other_${service.time}")
                                 }
                             }
                         } else {
@@ -485,18 +487,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     }
 }
 
-internal fun serviceReadingAction(service: ParishService): String = if (ServiceBookSelection.isHoursLiturgy(service.title))
-    "Открыть часы и литургию" else when (ServiceBookSelection.kindFor(service.title)) {
-    WorshipKind.LITURGY -> "Открыть литургию"
-    WorshipKind.VESPERS -> "Открыть вечерню"
-    WorshipKind.MATINS -> "Открыть утреню"
-    WorshipKind.VIGIL -> "Открыть всенощное бдение"
-    WorshipKind.HOUR1 -> "Открыть первый час"
-    WorshipKind.HOUR3 -> "Открыть третий час"
-    WorshipKind.HOUR6 -> "Открыть шестой час"
-    WorshipKind.HOUR9 -> "Открыть девятый час"
-    null -> "Выбрать доступные тексты"
-}
+internal fun serviceReadingAction(service: ParishService): String = ServiceBookSelection.readingAction(service.title)
 
 internal fun churchAddressLine(church: Parish): String {
     val address = church.address.trim()

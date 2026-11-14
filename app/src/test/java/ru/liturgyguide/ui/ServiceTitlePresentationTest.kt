@@ -17,6 +17,11 @@ class ServiceTitlePresentationTest {
         assertEquals(WorshipKind.VESPERS, ServiceBookSelection.kindFor("Вечерня после литургии"))
         assertEquals(WorshipKind.LITURGY, ServiceBookSelection.kindFor("После вечерни - Литургия"))
         assertEquals(WorshipKind.LITURGY, ServiceBookSelection.kindFor("После утрени - Литургия"))
+        for (title in listOf("После вечерни – Божественная литургия", "После утрени — Литургия"))
+            assertEquals(title, WorshipKind.LITURGY, ServiceBookSelection.kindFor(title))
+        for (title in listOf("Панихида после литургии и вечерни", "Панихида после литургии - и вечерни",
+            "После литургии - вечерни", "После вечерни - Литургия отменена"))
+            assertNull(title, ServiceBookSelection.kindFor(title))
     }
 
     @Test fun dayCommemorationDoesNotHideTheActualServiceAndTheOriginalSurvives() {

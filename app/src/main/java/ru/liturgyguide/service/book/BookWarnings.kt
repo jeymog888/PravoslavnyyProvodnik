@@ -11,7 +11,7 @@ object BookWarnings {
             if (book.enrichment.scripture == BookSupplementStatus.RETRY_NEEDED) add("русские чтения Писания")
         }
         return missing.takeIf { it.isNotEmpty() }?.let {
-            "Оригинал службы загружен целиком. Пока не удалось получить полностью ${it.joinToString(" и ")}. Можно попробовать обновить книгу"
+            "Оригинал открытого текста загружен целиком. Пока не удалось получить полностью ${it.joinToString(" и ")}. Можно попробовать обновить книгу"
         }
     }
 }

@@ -900,7 +900,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                                 Text(currentSectionTitle, style = MaterialTheme.typography.titleSmall,
                                     maxLines = if (compactLabels && !expandedCompactToolbar) 1 else 2, overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.testTag("book_chapter"))
-                                if (!compactLabels) Text(if (journey?.isEveningTexts == true) "${book.key.worship.title} · базовый текст" else if (journey != null)
+                                if (!compactLabels) Text(if (journey?.isEveningTexts == true) "${book.key.worship.title} · базовый текст" else if (journey != null && journey.parts.size > 1)
                                     "${book.key.worship.title} · ${journey.parts.indexOf(book.key) + 1} из ${journey.parts.size}" else book.key.worship.title,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -1184,11 +1184,11 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 corpusLoader = searchCorpusLoader, onSelectLocated = { currentEvents.chooseLocatedHit(it) },
                 selectionError = partSwitchError, selecting = switchingPart)
             "order" -> LazyColumn(Modifier.fillMaxWidth().heightIn(max = 560.dp).testTag("book_order_list"),
-                state = rememberLazyListState(initialFirstVisibleItemIndex = if (journey != null) 0 else
+                state = rememberLazyListState(initialFirstVisibleItemIndex = if (journey != null && journey.parts.size > 1) 0 else
                     book.chapters.indexOfFirst { it.id == currentChapter.id }.coerceAtLeast(0) + 1),
                 contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 item { Text("Порядок службы", style = MaterialTheme.typography.headlineSmall) }
-                journey?.let { context -> item {
+                journey?.takeIf { it.parts.size > 1 }?.let { context -> item {
                     BookJourneyParts(context, book.key, { currentEvents.choosePart(it) }, "book_journey_parts", switchingPart)
                 } }
                 itemsIndexed(book.chapters, key = { _, chapter -> chapter.id }) { index, chapter ->
@@ -1324,14 +1324,23 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
 internal fun BookJourneyDescription(journey: BookJourneyContext, key: ServiceBookKey) {
     val format = remember { DateTimeFormatter.ofPattern("d MMMM", Locale.forLanguageTag("ru")) }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(if (journey.isEveningTexts) "В расписании: ${LocalDate.parse(journey.civilDate).format(format)}, ${journey.time}"
+        Text(if (journey.isEveningTexts || journey.isPartialPublishedText) "В расписании: ${LocalDate.parse(journey.civilDate).format(format)}, ${journey.time}"
             else "По расписанию: ${LocalDate.parse(journey.civilDate).format(format)}, ${journey.time} - начало всей службы",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.testTag("book_journey_schedule"))
-        Text(if (journey.isHoursLiturgyTexts) "Тексты на ${LocalDate.parse(key.date).format(format)}"
+        Text(if (journey.isHoursLiturgyTexts || journey.isPartialPublishedText && key.worship == WorshipKind.LITURGY)
+            "Тексты на ${LocalDate.parse(key.date).format(format)}"
             else "Тексты на ${LocalDate.parse(key.date).format(format)}. Вечерняя служба относится к следующему церковному дню",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.testTag("book_journey_date"))
+        if (journey.isPartialPublishedText) {
+            Text("Доступный текст: " + if (key.worship == WorshipKind.VESPERS) "вечерня" else "литургия",
+                style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("book_partial_available"))
+            ServiceBookSelection.excludedScope(journey.title)?.let { note ->
+                Text(note, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.testTag("book_partial_scope"))
+            }
+        }
         if (journey.isEveningTexts) Text("Это базовые тексты. Расписание не уточняет порядок службы; песнопения и дополнительные части в храме могут отличаться",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.testTag("book_evening_texts_note"))

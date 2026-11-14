@@ -39,12 +39,12 @@ class PolyeleosJourneyTest {
         for ((name, kind) in listOf("Вечерня перед полиелейной утреней" to WorshipKind.VESPERS,
             "Утреня после полиелейной утрени" to WorshipKind.MATINS,
             "Утреня без полиелея" to WorshipKind.MATINS, "Утреня" to WorshipKind.MATINS,
-            "Всенощное бдение. Полиелейная утреня" to WorshipKind.VIGIL,
-            "Литургия. Полиелейная утреня" to WorshipKind.LITURGY)) {
+            "Всенощное бдение. Полиелейная утреня" to WorshipKind.VIGIL)) {
             val route = requireNotNull(resolve(name))
             assertEquals(name, kind, route.activeKey.worship)
             assertNull(name, route.activeKey.topLevel); assertNull(name, route.journeyContext)
         }
+        assertNull("Independent liturgy and matins are not a ranked matins request", resolve("Литургия. Полиелейная утреня"))
         assertEquals(listOf(vespers, daily), resolve("Вечерня. Утреня")?.journeyContext?.parts)
     }
 

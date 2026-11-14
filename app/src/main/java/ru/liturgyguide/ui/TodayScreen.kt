@@ -80,7 +80,10 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
             return
         }
         val selectedKind = ServiceBookSelection.kindFor(service.title)
-        if (selectedKind == null) { if (onSourceSearchInteraction()) chooserDateIso = service.date } else onOpenBook(LocalDate.parse(service.date), selectedKind,
+        // The date/kind-only callback cannot carry a mandatory published scope.
+        if (selectedKind == null || ServiceBookSelection.readingScope(service.title) != null) {
+            if (onSourceSearchInteraction()) chooserDateIso = service.date
+        } else onOpenBook(LocalDate.parse(service.date), selectedKind,
             selectedKind == WorshipKind.MATINS && runCatching { LocalTime.parse(service.time).hour >= 12 }.getOrDefault(false))
     }
     Scaffold(containerColor = MaterialTheme.colorScheme.background, bottomBar = bottomBar) { padding ->
@@ -191,11 +194,15 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                                     color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("schedule_inferred_year"))
                             }
                             if (kind != null) Button(onClick = { open(featured) }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("open_service_book")) {
-                                Text(if (onOpenService != null && ServiceBookSelection.isHoursLiturgy(featured.title)) "Открыть часы и литургию"
-                                    else if (kind == WorshipKind.LITURGY && featured.kind == "service_block") "Открыть литургию" else "Открыть службу")
+                                Text(if (onOpenService == null && ServiceBookSelection.readingScope(featured.title) != null)
+                                    "Выбрать доступные тексты"
+                                else if (onOpenService != null && ServiceBookSelection.readingScope(featured.title) != null)
+                                    ServiceBookSelection.readingAction(featured.title)
+                                else if (kind == WorshipKind.LITURGY && featured.kind == "service_block") "Открыть литургию" else "Открыть службу")
                             } else OutlinedButton(onClick = { open(featured) }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("today_choose_unknown_service")) {
                                 Text("Выбрать текст службы")
                             }
+                            PublishedServiceScopeNote(featured.title, "today_service")
                             ArrivalServiceSourceTitle(featured.title, "today_service")
                             if (inferredYear) onOpenScheduleSource?.let { source -> OutlinedButton(onClick = source,
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("today_verify_schedule_source")) {
@@ -205,6 +212,7 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                 ArrivalAction(serviceKindTitle(service.title) ?: service.title, Icons.Default.Schedule, { open(service) },
                                     subtitle = serviceActionSubtitle(service.title, service.time + " · " + date.format(format)))
+                                PublishedServiceScopeNote(service.title, "today_other_${service.time}")
                             }
                         } else {
                             Text(scheduleEmptyTitle(ownState, schedule?.publication != null || church.schedule.isNotEmpty(), church),

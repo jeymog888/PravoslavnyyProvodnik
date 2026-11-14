@@ -480,8 +480,8 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         }
     fun openBook(key: ServiceBookKey, journeyContext: BookJourneyContext? = null) {
         if (!key.isValid()) return
-        bookRequestJson = BookRouteCodec.encode(BookRoute(key, church?.id,
-            journeyContext?.validatedFor(key, church?.id)))
+        val route = BookRoute(key, church?.id, journeyContext).validated() ?: return
+        bookRequestJson = BookRouteCodec.encode(route)
         navigate(Screen.BOOK)
     }
     fun openFreshBook(route: BookRoute) {
@@ -844,7 +844,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                             if (screen == Screen.MAIN && churchId == resumeChurchId) openBookOnDate(date, kind, evening)
                         },
                         onResumeBook = { if (screen == Screen.MAIN && churchId == resumeChurchId)
-                            openBook(it.key, it.journeyContext?.validatedFor(it.key, church?.id)) },
+                            openBook(it.key, it.journeyContext) },
                         onOpenService = { if (screen == Screen.MAIN && churchId == resumeChurchId) openPublishedBook(it) },
                         onRefresh = { refreshVisibleSources(Screen.MAIN) },
                         onSetScheduleSource = { url ->

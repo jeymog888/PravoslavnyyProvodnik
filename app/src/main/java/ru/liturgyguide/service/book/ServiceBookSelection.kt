@@ -8,13 +8,9 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 object ServiceBookSelection {
-    // "A memorial service after the liturgy" names the memorial service, not another liturgy.
-    // Remove only dependent timing references; a separately named service remains eligible.
-    private val timingReference = Regex("\\b(?:после(?: окончания| завершения)?|по окончании|по завершении|перед|до)\\s+" +
-        "(?:(?:(?:ранн|поздн|божественн|праздничн|архиерейск|полиелейн)[а-я]*|(?:утренн|вечерн)(?:ей|его|юю|ее|яя|ий|ем))\\s+){0,3}" +
-        "(?:литурги[а-я]*|вечерн[а-я]*|утрен[а-я]*|всенощ[а-я]*(?:\\s+бдени[а-я]*)?|бдени[а-я]*)\\b")
-
-    private fun independentTitle(title: String) = timingReference.replace(BookText.normalized(title), " ")
+    private fun independentTitle(title: String): String = PublishedServiceTextScope.analyze(title).let {
+        if (it.ambiguous) "" else it.independent
+    }
     private val vespersNoun = Regex("\\bвечерн(?:я|и|ю|е)\\b")
     private val matinsNoun = Regex("\\bутрен(?:я|и|ю|е)\\b")
 
@@ -80,10 +76,35 @@ object ServiceBookSelection {
             !Regex("\\b(?:после|перед|до|окончании|завершении)\\s+час(?:ы|ов|ами)\\b").containsMatchIn(value)
     }
 
-    fun hoursLiturgyScope(title: String): String = if (listOf("молеб", "панихид", "акафист", "исповед").any {
-            it in BookText.normalized(title) })
-        "Тексты третьего и шестого часов и литургии. Остальные службы из этой записи в набор не входят"
-    else "Тексты третьего и шестого часов и литургии. Местные сокращения и выбор песнопений могут отличаться"
+    fun hoursLiturgyScope(title: String): String =
+        if (PublishedServiceTextScope.analyze(title).extras.isNotEmpty())
+            "Тексты третьего и шестого часов и литургии. Остальные службы из этой записи в набор не входят"
+        else "Тексты третьего и шестого часов и литургии. Местные сокращения и выбор песнопений могут отличаться"
+
+    internal fun partialBookKind(title: String): WorshipKind? = if (title.any { it.isISOControl() }) null
+        else PublishedServiceTextScope.partialKind(PublishedServiceTextScope.analyze(title))
+
+    fun excludedScope(title: String): String? = if (partialBookKind(title) == null) null
+        else PublishedServiceTextScope.exclusion(PublishedServiceTextScope.analyze(title))
+
+    fun readingScope(title: String): String? {
+        if (isHoursLiturgy(title)) return hoursLiturgyScope(title)
+        val kind = partialBookKind(title) ?: return null
+        val available = if (kind == WorshipKind.VESPERS) "вечерни" else "литургии"
+        return "В приложении текст $available. " + excludedScope(title)
+    }
+
+    fun readingAction(title: String): String = if (isHoursLiturgy(title)) "Открыть часы и литургию" else when (kindFor(title)) {
+        WorshipKind.LITURGY -> "Открыть литургию"
+        WorshipKind.VESPERS -> "Открыть вечерню"
+        WorshipKind.MATINS -> "Открыть утреню"
+        WorshipKind.VIGIL -> "Открыть всенощное бдение"
+        WorshipKind.HOUR1 -> "Открыть первый час"
+        WorshipKind.HOUR3 -> "Открыть третий час"
+        WorshipKind.HOUR6 -> "Открыть шестой час"
+        WorshipKind.HOUR9 -> "Открыть девятый час"
+        null -> "Выбрать доступные тексты"
+    }
 
     /** Both schedule entry points resolve the original publication exactly once. */
     fun resolve(service: ParishService, parish: Parish?): BookRoute? = runCatching {
@@ -102,7 +123,12 @@ object ServiceBookSelection {
         val matinsRank = if (isPolyeleosMatins(service.title)) "3" else null
         val key = forCivilDate(date, kind, parish, eveningMatins)
             .let { if (kind == WorshipKind.MATINS) it.copy(topLevel = matinsRank) else it }
-        val journey = if (parish != null && isCombinedEvening(service.title)) BookJourneyContext(
+        val partial = partialBookKind(service.title)
+        if (partial != null && parish == null) return null
+        val journey = if (partial != null) BookJourneyContext(requireNotNull(parish).id,
+            service.date, service.time, service.title, listOf(key), schemaVersion = 2,
+            partSet = BookPartSetKind.PARTIAL_PUBLISHED_TEXT).validatedFor(key, parish.id) ?: return null
+        else if (parish != null && isCombinedEvening(service.title)) BookJourneyContext(
             parish.id, service.date, service.time, service.title,
             listOf(key, forCivilDate(date, WorshipKind.MATINS, parish, eveningMatins = true).copy(topLevel = matinsRank)))
             .validatedFor(key, parish.id) else null
@@ -110,7 +136,10 @@ object ServiceBookSelection {
     }.getOrNull()
 
     fun kindFor(title: String): WorshipKind? {
-        val value = independentTitle(title)
+        val analysis = PublishedServiceTextScope.analyze(title)
+        if (analysis.ambiguous || analysis.extras.isNotEmpty() && !isHoursLiturgy(title) &&
+            partialBookKind(title) == null) return null
+        val value = analysis.independent
         return when {
             "всенощ" in value || "бдение" in value -> WorshipKind.VIGIL
             "литург" in value -> WorshipKind.LITURGY

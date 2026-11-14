@@ -9,7 +9,7 @@ import ru.liturgyguide.model.WorshipKind
 import java.time.LocalDate
 import java.time.LocalTime
 
-enum class BookPartSetKind { PUBLISHED_ORDER, EVENING_TEXTS, HOURS_LITURGY_TEXTS }
+enum class BookPartSetKind { PUBLISHED_ORDER, EVENING_TEXTS, HOURS_LITURGY_TEXTS, PARTIAL_PUBLISHED_TEXT }
 
 /** Local navigation metadata for one published service, never part of a book or its hash. */
 data class BookJourneyContext(
@@ -25,14 +25,22 @@ data class BookJourneyContext(
     val effectivePartSet: BookPartSetKind get() = partSet ?: BookPartSetKind.PUBLISHED_ORDER
     val isEveningTexts: Boolean get() = effectivePartSet == BookPartSetKind.EVENING_TEXTS
     val isHoursLiturgyTexts: Boolean get() = effectivePartSet == BookPartSetKind.HOURS_LITURGY_TEXTS
+    val isPartialPublishedText: Boolean get() = effectivePartSet == BookPartSetKind.PARTIAL_PUBLISHED_TEXT
+    // Invalid v2 metadata remains mandatory; callers cannot turn it into an absent legacy journey.
+    val requiresPublishedScope: Boolean get() = schemaVersion == 2 || isPartialPublishedText || parts.size == 1
 
     fun validatedFor(key: ServiceBookKey, parishId: String?): BookJourneyContext? = runCatching {
         val date = LocalDate.parse(civilDate)
         val start = LocalTime.parse(time)
-        val valid = schemaVersion == 1 && this.parishId == parishId && this.parishId.length in 1..160 &&
+        val valid = schemaVersion == (if (isPartialPublishedText) 2 else 1) && this.parishId == parishId && this.parishId.length in 1..160 &&
             date.toString() == civilDate && time.matches(Regex("[0-2][0-9]:[0-5][0-9]")) &&
             title.length in 1..500 &&
-            (if (isHoursLiturgyTexts) {
+            (if (isPartialPublishedText) {
+                title.none { it.isISOControl() } && parts.size == 1 && parts.single().isValid() && key == parts.single() &&
+                    ServiceBookSelection.partialBookKind(title) == key.worship &&
+                    key.worship in setOf(WorshipKind.VESPERS, WorshipKind.LITURGY) && key.topLevel == null &&
+                    key.date == (if (key.worship == WorshipKind.VESPERS) date.plusDays(1).toString() else civilDate)
+            } else if (isHoursLiturgyTexts) {
                 ServiceBookSelection.isHoursLiturgy(title) && parts.size == 3 &&
                     parts.map { it.worship } == listOf(WorshipKind.HOUR3, WorshipKind.HOUR6, WorshipKind.LITURGY) &&
                     parts.all { it.isValid() && it.date == civilDate && it.topLevel == null }
@@ -105,10 +113,13 @@ data class BookRoute(
     val pendingDedication: BookDedicationRequest? = null,
     val sourceReturn: BookSourceReturn? = null
 ) {
+    val requiresPublishedScope: Boolean get() = journeyContext?.requiresPublishedScope == true ||
+        sourceReturn?.position?.journeyContext?.requiresPublishedScope == true
+
     fun validated(): BookRoute? = runCatching {
         if (!activeKey.isValid() || (parishId != null && parishId.length !in 1..160)) return null
         val journey = journeyContext?.validatedFor(activeKey, parishId)
-        if (journeyContext?.isHoursLiturgyTexts == true && journey == null) return null
+        if ((journeyContext?.isHoursLiturgyTexts == true || journeyContext?.requiresPublishedScope == true) && journey == null) return null
         // New source transactions must never silently lose their occurrence or
         // previous cursor. Legacy routes keep their existing context fallback.
         if ((pendingDedication != null || sourceReturn != null) && journeyContext != null && journey == null) return null
@@ -129,7 +140,7 @@ data class BookRoute(
         if (activeKey.churchType != key.churchType &&
             (activeKey.patronalId != null || pendingDedication != null || sourceReturn != null)) return null
         val changed = journeyContext?.replacePart(activeKey, key)
-        if (savedCurrentPart && journeyContext != null && changed == null) return null
+        if ((savedCurrentPart || journeyContext?.requiresPublishedScope == true) && journeyContext != null && changed == null) return null
         return finish(copy(activeKey = key, journeyContext = changed,
             lastSuccessfulKey = if (savedCurrentPart) activeKey else lastSuccessfulKey,
             pendingSearchTarget = null))
@@ -214,11 +225,13 @@ object BookRouteCodec {
     fun decode(json: String?): BookRoute? {
         if (json.isNullOrBlank() || json.length > 8192) return null
         return runCatching {
-            val parsed = JsonParser.parseString(json).asJsonObject
+            val partialScope = StrictBookJson.hasPartialPublishedScope(json)
+            val parsed = if (partialScope) StrictBookJson.objectValue(json, maximumDepth = 16, maximumValues = 4096)
+                else JsonParser.parseString(json).asJsonObject
             val morningJourney = parsed.get("journeyContext")?.takeIf { it.isJsonObject }?.asJsonObject?.get("partSet")?.let {
                 it.isJsonPrimitive && it.asJsonPrimitive.isString && it.asString == BookPartSetKind.HOURS_LITURGY_TEXTS.name
             } == true
-            val objectValue = if (parsed.has("pendingDedication") || parsed.has("sourceReturn") || morningJourney)
+            val objectValue = if (partialScope || parsed.has("pendingDedication") || parsed.has("sourceReturn") || morningJourney)
                 StrictBookJson.objectValue(json, maximumDepth = 16, maximumValues = 4096) else parsed
             val journey = objectValue.remove("journeyContext")
             val previous = objectValue.remove("lastSuccessfulKey")
@@ -245,8 +258,12 @@ object BookRouteCodec {
                 BookSourceReturn(position, gson.fromJson(value.get("lastSuccessfulKey"), ServiceBookKey::class.java))
             }
             val decodedJourney = BookJourneyCodec.decode(journey, route.activeKey, route.parishId)
-            if (morningJourney && (decodedJourney == null || !validJourneyJson(journey))) return null
-            if (requestedDedication != null || previousSource != null) {
+            // A raw v2 occurrence cannot disappear through a wrong-type/array context.
+            if (partialScope && decodedJourney?.isPartialPublishedText != true) return null
+            val requiredJourney = journey?.let { it.isJsonObject &&
+                runCatching { gson.fromJson(it, BookJourneyContext::class.java).requiresPublishedScope }.getOrDefault(false) } == true
+            if ((morningJourney || requiredJourney) && (decodedJourney == null || !validJourneyJson(journey))) return null
+            if (requiredJourney || requestedDedication != null || previousSource != null) {
                 if (!objectValue.keySet().all { it in setOf("activeKey", "parishId") } ||
                     !validKeyJson(objectValue.get("activeKey")) || !nullableString(objectValue.get("parishId")) ||
                     !validJourneyJson(journey) || previous != null && !previous.isJsonNull && !validKeyJson(previous) ||
@@ -258,7 +275,10 @@ object BookRouteCodec {
         }.getOrNull()
     }
 
-    fun encode(route: BookRoute): String = gson.toJson(requireNotNull(route.validated())).also { require(it.length <= 8192) }
+    fun encode(route: BookRoute): String = gson.toJson(requireNotNull(route.validated())).also {
+        require(it.length <= 8192)
+        if (route.requiresPublishedScope) require(decode(it) == route)
+    }
 
     private fun string(value: JsonElement?) = value != null && value.isJsonPrimitive && value.asJsonPrimitive.isString
     private fun nullableString(value: JsonElement?) = value == null || value.isJsonNull || string(value)
@@ -278,17 +298,19 @@ object BookRouteCodec {
             gson.fromJson(proof, PatronalEventProof::class.java).isValid()
     }.getOrDefault(false)
 
-    private fun validJourneyJson(value: JsonElement?): Boolean = runCatching {
+    internal fun validJourneyJson(value: JsonElement?): Boolean = runCatching {
         if (value == null || value.isJsonNull) return true
         val context = value.asJsonObject
+        val partSet = context.get("partSet")
+        val partial = string(partSet) && partSet.asString == BookPartSetKind.PARTIAL_PUBLISHED_TEXT.name
+        val morning = string(partSet) && partSet.asString == BookPartSetKind.HOURS_LITURGY_TEXTS.name
         context.keySet().all { it in setOf("parishId", "civilDate", "time", "title", "parts", "schemaVersion", "partSet") } &&
             listOf("parishId", "civilDate", "time", "title").all { string(context.get(it)) } &&
-            context.get("schemaVersion").let { it != null && it.isJsonPrimitive && it.asJsonPrimitive.isNumber && it.toString() == "1" } &&
+            context.get("schemaVersion").let { it != null && it.isJsonPrimitive && it.asJsonPrimitive.isNumber &&
+                it.toString() == (if (partial) "2" else "1") } &&
             context.get("parts").let { it != null && it.isJsonArray &&
-                it.asJsonArray.size() == (if (context.get("partSet")?.let { kind ->
-                    string(kind) && kind.asString == BookPartSetKind.HOURS_LITURGY_TEXTS.name } == true) 3 else 2) &&
-                it.asJsonArray.all(::validKeyJson) } &&
-            context.get("partSet").let { it == null || it.isJsonNull || string(it) && BookPartSetKind.entries.any { kind -> kind.name == it.asString } }
+                it.asJsonArray.size() == (if (partial) 1 else if (morning) 3 else 2) && it.asJsonArray.all(::validKeyJson) } &&
+            partSet.let { it == null || it.isJsonNull || string(it) && BookPartSetKind.entries.any { kind -> kind.name == it.asString } }
     }.getOrDefault(false)
 
     private fun validDedicationJson(value: JsonElement): Boolean = runCatching {
@@ -299,8 +321,13 @@ object BookRouteCodec {
 
     private fun validSourceReturnJson(value: JsonElement): Boolean = runCatching {
         val previous = value.asJsonObject
-        if (!previous.keySet().all { it in setOf("position", "lastSuccessfulKey") }) return false
-        val position = previous.getAsJsonObject("position")
+        previous.keySet().all { it in setOf("position", "lastSuccessfulKey") } &&
+            validPositionJson(previous.get("position")) &&
+            previous.get("lastSuccessfulKey").let { it == null || it.isJsonNull || validKeyJson(it) }
+    }.getOrDefault(false)
+
+    internal fun validPositionJson(value: JsonElement?): Boolean = runCatching {
+        val position = requireNotNull(value).asJsonObject
         val fields = setOf("key", "contentHash", "parishId", "blockId", "chapterId", "fraction", "mode", "wordsPerMinute",
             "showAltar", "anchorKind", "lastTextMode", "journeyContext", "followingGapFraction")
         position.keySet().all { it in fields } && validKeyJson(position.get("key")) &&
@@ -314,7 +341,7 @@ object BookRouteCodec {
                 it.toString().matches(Regex("[0-9]{1,4}")) } &&
             listOf("fraction", "followingGapFraction").all { name ->
                 position.get(name).let { it == null || it.isJsonPrimitive && it.asJsonPrimitive.isNumber }
-            } && previous.get("lastSuccessfulKey").let { it == null || it.isJsonNull || validKeyJson(it) }
+            }
     }.getOrDefault(false)
 
     private fun validTargetJson(element: JsonElement): Boolean = runCatching {

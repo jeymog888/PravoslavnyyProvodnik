@@ -47,7 +47,6 @@ class BookJourneyTest {
             "Утреня по окончании вечерни" to WorshipKind.MATINS,
             "Утреня после окончания вечерни" to WorshipKind.MATINS,
             "Всенощное бдение. Вечерня и утреня" to WorshipKind.VIGIL,
-            "Вечерня. Утреня. Литургия" to WorshipKind.LITURGY,
             "Вечерня" to WorshipKind.VESPERS,
             "Полиелейная утреня" to WorshipKind.MATINS,
             "Литургия" to WorshipKind.LITURGY)
@@ -57,6 +56,8 @@ class BookJourneyTest {
             assertNull(name, route.journeyContext)
             assertEquals(name, if (kind == WorshipKind.LITURGY) "2026-11-12" else "2026-11-13", route.activeKey.date)
         }
+        assertNull("An ambiguous composition needs an explicit text choice", resolve("Вечерня. Утреня. Литургия"))
+        assertEquals("Выбрать доступные тексты", ServiceBookSelection.readingAction("Вечерня. Утреня. Литургия"))
         assertNull(resolve("Молебен после литургии"))
         assertNull(ServiceBookSelection.resolve(ParishService("2026-11-12", "17:00", title, "service"), null)?.journeyContext)
     }

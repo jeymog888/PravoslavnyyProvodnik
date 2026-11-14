@@ -28,8 +28,15 @@ class BookReviewedMeaningsTest {
         assertFalse(shown.contains("чередуются"))
         assertNotEquals(shown, BookMeaningCatalog.displayMeaning(book, stichera))
         assertEquals(shown, BookMeaningCatalog.meaningFor(praises.title, praises.blocks.first().original, "matins"))
-        // The remaining old help is not silently fed through the broad fallback catalog.
-        for (title in listOf("Перед началом", "Ектения сугубая", "Песнь Пресвятыя Богородицы", "Шестопсалмие")) {
+        val opening = book.chapters.first()
+        assertEquals("Перед началом", opening.title)
+        assertEquals("Начало утрени", BookMatinsOpeningDisplay.of(book).title(opening))
+        val openingHelp = BookMeaningCatalog.displayMeaning(book, opening)
+        assertTrue(openingHelp.startsWith("Это начало утрени:"))
+        assertTrue(openingHelp.contains("псалмы 19 и 20"))
+        assertTrue(openingHelp.contains("Далее следуют сугубая ектения и шестопсалмие"))
+        // Other old help is not silently fed through the broad fallback catalog.
+        for (title in listOf("Ектения сугубая", "Песнь Пресвятыя Богородицы", "Шестопсалмие")) {
             val chapter = book.chapters.single { it.title == title }
             assertEquals(chapter.meaning, BookMeaningCatalog.displayMeaning(book, chapter))
         }

@@ -40,6 +40,21 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
     // AppNavigation owns managed routes. Direct standalone readers retain their existing API.
     var standaloneRequest by remember(initialKey, parishId) { mutableStateOf(initialKey) }
     val ownedRoute = route?.validated()?.takeIf { it.parishId == parishId }
+    if (route?.requiresPublishedScope == true && ownedRoute == null) {
+        // A malformed published scope is not authorization to mount a standalone book.
+        Scaffold(containerColor = MaterialTheme.colorScheme.surface,
+            topBar = { Column(Modifier.statusBarsPadding()) { PageHeader("Текст службы", onBack) } }) { padding ->
+            Column(Modifier.fillMaxSize().padding(padding).padding(24.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                Text("Не удалось восстановить службу", style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.testTag("book_published_scope_unreadable"))
+                Text("Сохраненное описание службы повреждено. Вернитесь к расписанию и откройте ее заново. Текст и прежнее место остаются на телефоне",
+                    style = MaterialTheme.typography.bodyLarge)
+                Button(onClick = onBack, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("К расписанию") }
+            }
+        }
+        return
+    }
     val requested = ownedRoute?.activeKey ?: standaloneRequest
     val journey = ownedRoute?.journeyContext?.validatedFor(requested, parishId)
     var preparedDedication by remember(requested, parishId, journey, ownedRoute?.sourceReturn) { mutableStateOf(false) }
@@ -625,7 +640,7 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
             journeyContext = journey,
             onChoosePart = { selectPart(it, savedCurrentPart = true) },
             onChooseJourneyVersion = { changeRequest(it, savedCurrentPart = true) },
-            searchCorpusLoader = if (journey != null && ownedRoute != null) {
+            searchCorpusLoader = if (journey != null && journey.parts.size > 1 && ownedRoute != null) {
                 { BookSearchCorpusLoader.load(loaded, journey, parishId, books, readingStore) }
             } else null,
             onChooseSearchHit = { target ->

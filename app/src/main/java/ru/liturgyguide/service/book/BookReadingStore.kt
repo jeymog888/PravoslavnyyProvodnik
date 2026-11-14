@@ -43,7 +43,10 @@ object BookReadingCodec {
     fun decode(json: String?): BookReadingPosition? {
         if (json.isNullOrBlank() || json.length > 8192) return null
         return runCatching {
-            val value = JsonParser.parseString(json).asJsonObject
+            val partialScope = StrictBookJson.hasPartialPublishedScope(json)
+            val value = if (partialScope) StrictBookJson.objectValue(json, maximumDepth = 16, maximumValues = 4096)
+                else JsonParser.parseString(json).asJsonObject
+            if (partialScope && !BookRouteCodec.validPositionJson(value)) return null
             val journey = value.remove("journeyContext")
             if (value.has("followingGapFraction") && value.get("followingGapFraction").let {
                     !it.isJsonPrimitive || !it.asJsonPrimitive.isNumber
@@ -59,14 +62,30 @@ object BookReadingCodec {
                     (it.followingGapFraction == 0f || it.fraction == 1f && it.anchorKind != BookAnchorKind.END) &&
                     it.wordsPerMinute in BookAutoScroll.MIN_RATE..BookAutoScroll.MAX_RATE
             } ?: return null
-            position.copy(journeyContext = BookJourneyCodec.decode(journey, position.key, position.parishId))
+            val context = BookJourneyCodec.decode(journey, position.key, position.parishId)
+            if (partialScope && context?.isPartialPublishedText != true) return null
+            position.copy(journeyContext = context)
         }.getOrNull()
     }
     fun encode(position: BookReadingPosition): String = gson.toJsonTree(position).asJsonObject.apply {
         // A new gap coordinate is optional. Ordinary legacy positions retain their
         // exact serialized form, avoiding a rewrite merely because the app was updated.
         if (position.followingGapFraction == 0f) remove("followingGapFraction")
-    }.let { gson.toJson(it) }.also { require(decode(it) != null) }
+    }.let { gson.toJson(it) }.also {
+        val restored = decode(it)
+        require(restored != null)
+        if (position.journeyContext?.requiresPublishedScope == true) require(restored == position)
+    }
+
+    /** A damaged mandatory scope must not become a never-opened standalone reading. */
+    internal fun unreadablePartialFor(json: String?, key: ServiceBookKey, parishId: String?): Boolean = runCatching {
+        if (json.isNullOrBlank() || json.length > 8192 || !StrictBookJson.hasPartialPublishedScope(json)) return false
+        val value = JsonParser.parseString(json).asJsonObject
+        val owner = value.get("parishId")
+        val storedOwner = if (owner == null || owner.isJsonNull) null
+            else owner.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isString }?.asString ?: return false
+        storedOwner == parishId && gson.fromJson(value.get("key"), ServiceBookKey::class.java) == key
+    }.getOrDefault(false)
 }
 
 data class BookViewport(val chapterId: String, val blockId: String, val fraction: Float, val kind: BookAnchorKind,
@@ -234,8 +253,11 @@ class BookReadingStore(private val preferences: SharedPreferences) {
             if (!values.containsKey(storageKey)) {
                 // The bounded per-book index can evict a pointer while this parish's last
                 // reading still proves its accepted edition. Never borrow another book's last.
-                val last = (values[lastKey(parishId)] as? String)?.let(BookReadingCodec::decode)
+                val lastRaw = values[lastKey(parishId)] as? String
+                val last = lastRaw?.let(BookReadingCodec::decode)
                     ?.takeIf { it.parishId == parishId && it.key == key }
+                if (last == null && BookReadingCodec.unreadablePartialFor(lastRaw, key, parishId))
+                    return@runCatching BookReadingLookup.Unreadable
                 return@runCatching last?.let { BookReadingLookup.Found(it) } ?: BookReadingLookup.Absent
             }
             val raw = values[storageKey] as? String ?: return@runCatching BookReadingLookup.Unreadable
