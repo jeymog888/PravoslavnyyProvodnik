@@ -49,7 +49,7 @@ internal fun BookMeaningPanel(content: BookMeaningContent, textSize: Int,
             .padding(horizontal = 24.dp).padding(bottom = 24.dp).testTag("book_meaning_content"),
             verticalArrangement = Arrangement.spacedBy(24.dp)) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(if (content.privateText) "О тихой молитве" else "Об этой части службы",
+                if (content.privateText) Text("О тихой молитве",
                     style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(content.chapterTitle, style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.testTag("book_meaning_title").semantics { heading() })

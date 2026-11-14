@@ -1,9 +1,11 @@
 package ru.liturgyguide.ui
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.os.ParcelFileDescriptor
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.input.InputMode
 import androidx.compose.ui.input.InputModeManager
 import androidx.compose.ui.input.key.Key
@@ -26,6 +28,7 @@ import org.junit.runner.RunWith
 import ru.liturgyguide.model.*
 import ru.liturgyguide.service.book.*
 import java.util.UUID
+import java.io.File
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -57,6 +60,7 @@ class BookMeaningSheetFlowTest {
         val top = paragraphTop()
         compose.onNodeWithTag("book_mode_meaning").performClick(); settle()
         compose.onNodeWithTag("book_meaning_title").assertTextEquals("Неизвестная часть")
+        assertPublicHeading()
         compose.onNodeWithTag("book_meaning_what").assertDoesNotExist()
         compose.onNodeWithTag("book_meaning_excerpt_toggle").performScrollTo().performClick()
         compose.onNodeWithTag("book_meaning_detail").performScrollTo().assertTextEquals(DETAIL)
@@ -103,7 +107,13 @@ class BookMeaningSheetFlowTest {
         launch()
         val before = saved()
         compose.onNodeWithTag("book_mode_meaning").performClick(); settle()
+        assertPublicHeading()
         compose.onNodeWithTag("book_meaning_what").performScrollTo().assertIsDisplayed()
+            .assertTextContains("престол - главный стол в алтаре", substring = true)
+        for (theme in listOf(false, true)) {
+            compose.runOnIdle { dark.value = theme }; settle()
+            capture("cherubic-normal-dark$theme")
+        }
         compose.onNodeWithTag("book_meaning_cue").performScrollTo().assertTextEquals("Иже Херувимы")
         compose.onNodeWithTag("book_meaning_detail").assertDoesNotExist()
         compose.onNodeWithTag("book_meaning_more").performScrollTo().performClick()
@@ -124,6 +134,9 @@ class BookMeaningSheetFlowTest {
         val before = saved()
         compose.onNodeWithTag("book_mode_meaning").performClick(); settle()
         compose.onNodeWithText("О тихой молитве").assertIsDisplayed()
+        compose.onNodeWithTag("book_meaning_sheet").assert(SemanticsMatcher.expectValue(
+            SemanticsProperties.PaneTitle, "Об этой части службы"))
+        compose.onNodeWithText("Объяснение Феории").assertIsDisplayed()
         compose.onNodeWithTag("book_meaning_cue").assertDoesNotExist()
         restoration.emulateSavedInstanceStateRestore(); settle()
         compose.onNodeWithTag("book_meaning_sheet").assertDoesNotExist()
@@ -158,13 +171,25 @@ class BookMeaningSheetFlowTest {
             for (theme in listOf(false, true)) {
                 compose.runOnIdle { dark.value = theme }; settle()
                 val close = compose.onNodeWithTag("book_meaning_close").assertIsDisplayed().assertHeightIsAtLeast(48.dp)
+                assertPublicHeading()
+                compose.onNodeWithTag("book_meaning_title").performScrollTo()
+                capture("cherubic-heading-200-dark$theme")
                 compose.onNodeWithTag("book_meaning_what").performScrollTo()
+                    .assertTextContains("престол - главный стол в алтаре", substring = true)
                 val layouts = mutableListOf<TextLayoutResult>()
                 compose.onNodeWithTag("book_meaning_what").performSemanticsAction(SemanticsActions.GetTextLayoutResult) {
                     assertTrue(it(layouts))
                 }
                 assertEquals(2f, layouts.single().layoutInput.density.fontScale, .001f)
                 assertFalse("Summary text must wrap instead of clipping", layouts.single().didOverflowWidth)
+                val summary = layouts.single()
+                val characters = summary.layoutInput.text.text
+                for (line in 1 until summary.lineCount) {
+                    val split = summary.getLineStart(line)
+                    assertFalse("Plain explanation words must not break into stray letters", split > 0 && split < characters.length &&
+                        characters[split - 1].isLetter() && characters[split].isLetter())
+                }
+                capture("cherubic-200-dark$theme")
                 val range = compose.onNodeWithTag("book_meaning_content").fetchSemanticsNode()
                     .config[SemanticsProperties.VerticalScrollAxisRange]
                 assertTrue(range.maxValue() > 0f)
@@ -172,12 +197,48 @@ class BookMeaningSheetFlowTest {
                 compose.onNodeWithTag("book_meaning_source").performScrollTo().assertIsDisplayed()
                 val contentBounds = compose.onNodeWithTag("book_meaning_content").getBoundsInRoot()
                 assertTrue("The fixed return must not overlap the scrolling text", contentBounds.bottom <= close.getBoundsInRoot().top)
+                capture("cherubic-expanded-200-dark$theme")
                 // Collapse again, keeping both theme passes in the same captured session.
                 compose.onNodeWithTag("book_meaning_more").performScrollTo().performClick()
             }
             compose.onNodeWithTag("book_meaning_close").performClick(); settle()
             compose.onNodeWithTag("book_play").assertContentDescriptionEquals("Прокручивать текст")
         }
+    }
+
+    @Test fun acceptedCommunionOffersANonParticipantAnOptionalPlaceAtTwoHundredPercentWithoutMovingTheBook() {
+        withNativeCompactFont {
+            book.value = fixture(communion = true)
+            val accepted = com.google.gson.Gson().toJson(book.value)
+            seed(); launch()
+            val before = saved()
+            for (theme in listOf(false, true)) {
+                compose.runOnIdle { dark.value = theme }; settle()
+                compose.onNodeWithTag("book_mode_meaning").performClick(); settle()
+                assertPublicHeading()
+                compose.onNodeWithTag("book_meaning_detail").performScrollTo().assertTextContains(
+                    "Если сегодня не причащаетесь, можно остаться на месте и молиться вместе со всеми", substring = true)
+                capture("communion-200-dark$theme")
+                assertAnchor(before)
+                compose.onNodeWithTag("book_meaning_close").assertIsDisplayed().performClick(); settle()
+                assertAnchor(before)
+                assertEquals(accepted, com.google.gson.Gson().toJson(book.value))
+            }
+        }
+    }
+
+    private fun capture(name: String) {
+        val output = File(context.getExternalFilesDir("meaning-clarity-qa"), preferenceName).apply { mkdirs() }
+        File(output, "$name.png").outputStream().use {
+            compose.onNodeWithTag("book_meaning_sheet").captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)
+        }
+    }
+
+    private fun assertPublicHeading() {
+        compose.onAllNodesWithText("Об этой части службы").assertCountEquals(0)
+        compose.onNodeWithTag("book_meaning_sheet").assert(SemanticsMatcher.expectValue(
+            SemanticsProperties.PaneTitle, "Об этой части службы"))
+        compose.onNodeWithText("Объяснение Феории").assertExists()
     }
 
     private fun launch(): StateRestorationTester = StateRestorationTester(compose).also { restoration ->
@@ -209,13 +270,22 @@ class BookMeaningSheetFlowTest {
     }
     private fun paragraphTop() = compose.onNodeWithTag("book_block_long").getUnclippedBoundsInRoot().top
     private fun settle() { compose.waitForIdle(); compose.mainClock.advanceTimeBy(750); compose.waitForIdle() }
-    private fun fixture(cherubic: Boolean = false, privateText: Boolean = false, detail: String = DETAIL): ServiceBook {
+    private fun fixture(cherubic: Boolean = false, privateText: Boolean = false, detail: String = DETAIL,
+        communion: Boolean = false): ServiceBook {
         val key = ServiceBookKey("2026-11-14")
-        val text = (if (cherubic) "Иже Херувимы тайно образующе. " else "Молитва выбранной части. ") +
+        val text = (when {
+            cherubic -> "Иже Херувимы тайно образующе. "
+            communion -> "Со страхом Божиим и верою приступите. "
+            else -> "Молитва выбранной части. "
+        }) +
             "Помоги нам сохранить мир и любовь в наших сердцах. ".repeat(65)
         val value = ServiceBook(key = key, title = "Литургия Иоанна Златоуста", sourceUrl = key.sourceUrl(),
             sourceTitle = "Сохраненная книга", fetchedAtMillis = 1, selectedEventTitle = null,
-            chapters = listOf(BookChapter("chapter", if (cherubic) "Херувимская песнь" else "Неизвестная часть", detail,
+            chapters = listOf(BookChapter("chapter", when {
+                cherubic -> "Херувимская песнь"
+                communion -> "Причащение народа в храме"
+                else -> "Неизвестная часть"
+            }, detail,
                 listOf(BookBlock("long", BookBlockKind.PRAYER, null, text, "Русское изложение: $text", isAltarText = privateText)))),
             contentHash = "")
         return value.copy(contentHash = ServiceBookIntegrity.contentHash(value))

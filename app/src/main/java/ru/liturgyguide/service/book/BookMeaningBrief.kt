@@ -93,7 +93,7 @@ object BookMeaningBriefCatalog {
                 starts("иже херувимы тайно образующе") &&
                 chapter.blocks.none { block -> replacements.any { BookText.normalized(block.original).contains(it) } } ->
                 BookMeaningBrief("cherubic-ordinary",
-                    "Во время этой песни священнослужители переносят хлеб и вино на престол в алтаре",
+                    "Во время этой песни хлеб и вино переносят на престол - главный стол в алтаре",
                     "Песня приглашает отложить повседневные заботы и вместе с ангелами прославить Бога",
                     BookMeaningCue(BookMeaningCueKind.HEAR, "Иже Херувимы"),
                     "https://www.oca.org/orthodoxy/the-orthodox-faith/worship/the-divine-liturgy/offertory-great-entrance")

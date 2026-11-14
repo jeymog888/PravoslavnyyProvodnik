@@ -7,6 +7,8 @@ import java.util.Locale
 
 /** Editorial explanations, not quotations and not a claim about a parish's actual actions. */
 object BookMeaningCatalog {
+    private const val PEOPLE_COMMUNION = "Чашу выносят из алтаря, и подготовившиеся к Причащению подходят к ней. Звучит приглашение \"Со страхом Божиим и верою приступите\"; порядок подготовки и участия можно заранее уточнить у священника. Если сегодня не причащаетесь, можно остаться на месте и молиться вместе со всеми"
+
     val sourceUrls = listOf(
         "https://azbyka.ru/worships/o-proekte/",
         "https://azbyka.ru/stepenny",
@@ -83,7 +85,7 @@ object BookMeaningCatalog {
             titleHas("Молитва перед св. Причащением", "Молитва перед Причащением") ->
                 "Перед Причащением человек исповедует веру во Христа и просит прощения и исцеления. В центре молитвы - надежда на милость Бога, а не утверждение собственной безгрешности"
             titleHas("Причащение народа", "Причащение мирян") ->
-                "Чашу выносят из алтаря, и подготовившиеся к Причащению подходят к ней. Звучит приглашение \"Со страхом Божиим и верою приступите\"; порядок подготовки и участия можно заранее уточнить у священника"
+                PEOPLE_COMMUNION
             titleHas("По причащении") ->
                 "После Причащения община благодарит Бога и просит сохранить этот дар в своей жизни. Пение постепенно переходит к заключительным молитвам литургии"
             titleHas("Причастен", "Причастны") ->
@@ -161,7 +163,15 @@ object BookMeaningCatalog {
         val beatitudesAlias = Regex("^блаженны, третий изобразительный антифон(?: \\(на (?:4|6|8|10|12)\\))?$").matches(heading) &&
             Regex("^во царствии твоем помяни нас господи(?:\\b|$)").containsMatchIn(
                 text.replace(Regex("[,.!?;:/]"), " ").replace(Regex("\\s+"), " ").trim())
+        val ordinaryCommunionBook = bookTitle.isBlank() || normalize(bookTitle) in setOf(
+            "литургия", "литургия иоанна златоуста", "литургия святителя иоанна златоуста",
+            "литургия василия великого", "литургия святителя василия великого")
+        // This small read-only override also reaches previously accepted editions.
+        // A similar heading, another rite or an unrelated body keeps its saved help.
+        val peopleCommunion = heading in setOf("причащение народа", "причащение народа в храме", "причащение мирян") &&
+            text.contains("со страхом божиим и верою приступите")
         return when {
+            liturgy && ordinaryCommunionBook && peopleCommunion -> PEOPLE_COMMUNION
             liturgy && anaphora ->
                 "В этой молитве Церковь благодарит Бога, вспоминая Тайную вечерю, смерть и воскресение Христа, и просит Бога освятить Дары действием Святого Духа. По вере Церкви хлеб и вино становятся Телом и Кровью Христовыми. Слышны возгласы и ответы хора, в том числе \"Тебе поем\"; часть молитвы священник может читать тихо"
             liturgy && heading in setOf("херувимская", "херувимская песнь") &&
