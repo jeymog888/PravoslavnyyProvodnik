@@ -162,13 +162,6 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         automaticSourceController.beginEpoch(scheduleSearchOwner, scheduleRefresh, parishDay?.toString().orEmpty())
     }
     val scheduleActionSurface = remember(scheduleSearchOwner) { ScheduleActionSurface(screen.name) }
-    // Explicit navigation rotates this synchronously; recovery routes also expire old callbacks.
-    remember(scheduleSearchOwner, screen) {
-        if (scheduleActionSurface.route != screen.name) {
-            automaticSourceController.revoke()
-            scheduleActionSurface.enter(screen.name)
-        }
-    }
     val scheduleClickOwner = scheduleActionSurface.token
     var scheduleSearchIntent by remember(scheduleSearchOwner) { mutableStateOf<ManualScheduleSearchIntent?>(null) }
     DisposableEffect(scheduleSearchOwner) { onDispose { scheduleSearchOwner.invalidate() } }
@@ -783,7 +776,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         if (screen == Screen.SERVICE && player.reading == null) {
             val pending = if (invalidRecovery) null else restoredReading ?: legacyCandidate
             if (pending == null || !beginReading(pending, resetBookmarks = false, resetReaderUi = false,
-                    preserveRestoreNotice = true)) screen = Screen.MAIN
+                    preserveRestoreNotice = true)) navigate(Screen.MAIN)
         } else if (screen == Screen.SERVICE && invalidRecovery) navigate(Screen.MAIN)
     }
     BackHandler(enabled = screen != Screen.MAIN) { back() }
