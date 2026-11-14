@@ -10,10 +10,14 @@ data class ScheduleDocumentLink(val url: String, val linkedFrom: String, val doc
 object ScheduleDocumentLinks {
     private val extension = Regex("(?i)\\.(pdf|jpe?g|png|webp)(?:\\?|$)")
     private val schedule = Regex("(?iu)(расписан|raspisan|schedule|богослужен)")
+    private val serviceSchedule = Regex("(?iu)(?<![а-яё])расписани[ея][\\s\\p{P}]+(?:богослужени[йя]|служб)(?![а-яё])")
+    private val pageControl = Regex("(?iu)(?:следующ[а-яё]*\\s+страниц|предыдущ[а-яё]*\\s+страниц|страниц[а-яё]*\\s*\\d)")
     private val decorativeImage = Regex("(?iu)(?:^|[\\s/_.-])(logo|логотип|icon|иконка|tildacopy|t-tildalabel)(?=$|[\\s/_.-])")
 
     fun find(page: Document): List<ScheduleDocumentLink> {
         val links = mutableListOf<ScheduleDocumentLink>()
+        val preferredHtml = mutableSetOf<String>()
+        val pinnedHtml = mutableSetOf<String>()
         val requireDocumentLabel = MyPrihodScheduleHtml.appliesTo(page)
         val copy = page.clone()
         ScheduleHtmlDiscussion.removeFrom(copy)
@@ -62,6 +66,11 @@ object ScheduleDocumentLinks {
             val url = if (binary) publishedUrl else secureHtmlLink(page.baseUri(), publishedUrl)
             if (!binary && !sameSite(page.baseUri(), url)) return@forEach
             links += ScheduleDocumentLink(url, page.baseUri(), binary)
+            if (!binary) {
+                // Every old eligible occurrence can pin safety, even in navigation or a hidden wrapper.
+                if (ScheduleCancellation.containsMatchIn(anchor.text() + " " + decoded(anchor.attr("href")))) pinnedHtml += url
+                if (preferredHtmlAnchor(anchor, url)) preferredHtml += url
+            }
         }
         content.select("img[src],img[data-src],img[data-original],img[data-img-zoom-url]").take(30).forEach { picture ->
             // Lazy-loaded previews may be transparent placeholders. OCR needs the published
@@ -79,8 +88,28 @@ object ScheduleDocumentLinks {
             if (small || (!schedule.containsMatchIn(label) && (requireDocumentLabel || !inSchedule(picture)))) return@forEach
             links += ScheduleDocumentLink(url, page.baseUri(), true)
         }
-        return links.distinctBy { it.url }.take(12)
+        val admitted = links.distinctBy { it.url }.take(12)
+        // Keep the old admitted set and every binary/safety slot; reorder only the other HTML slots.
+        val movable = admitted.filter { !it.document && it.url !in pinnedHtml }
+        val (preferred, fallback) = movable.partition { it.url in preferredHtml }
+        val ordered = (preferred + fallback).iterator()
+        return admitted.map { if (it.document || it.url in pinnedHtml) it else ordered.next() }
     }
+
+    private fun preferredHtmlAnchor(anchor: Element, url: String): Boolean {
+        if (anchor.closest("nav,header,footer,[role=navigation],[role=menu],[role=menubar],.menu,.pager,.pagination,[hidden],[aria-hidden=true],.modal") != null)
+            return false
+        // Hidden descendants cannot lend their label to a visible news link. Do not alter the source DOM.
+        val visible = anchor.clone().apply { select("[hidden],[aria-hidden=true],.modal").remove() }.text()
+            .replace('\u00a0', ' ')
+        if (!serviceSchedule.containsMatchIn(visible) || pageControl.containsMatchIn(visible)) return false
+        if (anchor.attr("rel").split(Regex("\\s+")).any { it.equals("next", true) || it.equals("prev", true) }) return false
+        return url.substringAfter('?', "").substringBefore('#').split('&').none { part ->
+            val key = decoded(part.substringBefore('='))
+            key.equals("page", true) || key.equals("paged", true)
+        }
+    }
+
     private fun secureHtmlLink(pageUrl: String, publishedUrl: String): String {
         val page = ScheduleUrl.publicSource(pageUrl) ?: return publishedUrl
         if (!page.startsWith("https://") || !publishedUrl.startsWith("http://")) return publishedUrl
