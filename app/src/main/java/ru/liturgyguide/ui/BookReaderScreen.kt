@@ -171,6 +171,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     val uncheckedPolyeleosJourney = book.key.worship == WorshipKind.MATINS && book.key.topLevel == null &&
         journey?.let { ServiceBookSelection.isPolyeleosMatins(it.title) } == true
     val visibility = remember(book.key, book.contentHash) { BookVisibilityScope.of(book) }
+    val openingDisplay = remember(book) { BookMatinsOpeningDisplay.of(book) }
     val restored = remember(book.contentHash, parishId) { readingStore.restore(book, parishId) }
     val initial = remember(restored) { restored?.forTextReading() }
     val initialSearch = remember(book.contentHash, parishId) { pendingSearchTarget?.validatedFor(book) }
@@ -330,7 +331,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     val currentChapter = currentItem.chapter
     val currentSectionTitle = remember(book, currentItem.id) { currentItem.block?.let {
         BookAfterCommunionMeaning.forPlace(book, currentChapter, it)?.title
-    } ?: currentChapter.title }
+    } ?: openingDisplay.title(currentChapter) }
     val currentLocalVariation by remember(itemKeys, list) { derivedStateOf {
         val measured = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == list.firstVisibleItemIndex }
         (measured?.key as? String)?.let(itemKeys::get)?.block?.takeIf { it.kind == BookBlockKind.LOCAL_VARIATION }
@@ -1054,8 +1055,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                             BookDetailsButton(offlineControls, isSaved, { currentEvents.openCalendar() }, Modifier.testTag("book_open_calendar"))
                         }
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        Text(item.chapter.title, style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.semantics { heading() })
+                        Text(openingDisplay.title(item.chapter), style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.testTag("book_section_title_${item.chapter.id}").semantics { heading() })
                     } else BookTextBlock(book.key, item.block, mode, textSize,
                         searchHit = pendingSearch?.takeIf { it.blockId == item.block.id && it.mode == mode },
                         searchRevision = seekRevision,
@@ -1201,7 +1202,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                         .semantics { selected = isCurrent },
                         colors = ButtonDefaults.outlinedButtonColors(containerColor = if (isCurrent) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface)) {
                         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(chapter.title)
+                            Text(openingDisplay.title(chapter), Modifier.testTag("book_order_title_${chapter.id}"))
                             Text(if (isCurrent) "${index + 1} · Вы здесь" else "${index + 1}", style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
@@ -1614,6 +1615,9 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
     val resultScopes = remember(corpus.books.map { it.key to it.contentHash }) {
         corpus.books.associate { it.key to BookVisibilityScope.of(it) }
     }
+    val resultDisplays = remember(corpus.books) {
+        corpus.books.associate { (it.key to it.contentHash) to BookMatinsOpeningDisplay.of(it) }
+    }
     var corpusLoading by remember { mutableStateOf(corpusLoader != null) }
     var manualRevision by remember { mutableLongStateOf(0L) }
     var voiceRevision by remember { mutableStateOf<Long?>(null) }
@@ -1793,7 +1797,9 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
                 OutlinedCard(onClick = { if (!selecting) onSelectLocated(located) }, modifier = Modifier.fillMaxWidth().testTag(tag)) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(located.bookKey.worship.title, style = MaterialTheme.typography.labelLarge)
-                        Text(hit.chapterTitle, style = MaterialTheme.typography.titleMedium)
+                        Text(resultDisplays[located.bookKey to located.contentHash]?.title(located) ?: hit.chapterTitle,
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.testTag("book_hit_title_${located.identity}"))
                         corpus.books.singleOrNull { it.key == located.bookKey }?.blocks?.singleOrNull { it.id == hit.blockId }?.let { block ->
                             val scope = resultScopes[located.bookKey]
                             if (scope?.isPrivate(block) == true) Text(

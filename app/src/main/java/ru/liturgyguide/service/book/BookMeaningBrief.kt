@@ -28,6 +28,7 @@ data class BookMeaningContent(val position: BookReadingPosition, val chapterTitl
             val block = chapter.blocks.singleOrNull { it.id == position.blockId } ?: return null
             val textPosition = position.forTextReading()
             val visibility = BookVisibilityScope.of(book)
+            val openingDisplay = BookMatinsOpeningDisplay.of(book)
             val privateText = visibility.isPrivate(block)
             val excerpt = if (position.anchorKind == BookAnchorKind.END) null else
                 (if (textPosition.mode == BookReadingMode.RUSSIAN)
@@ -41,13 +42,13 @@ data class BookMeaningContent(val position: BookReadingPosition, val chapterTitl
                 fragment != null -> fragment.detail
                 visibility.isQuiet(block.id) -> requireNotNull(visibility.quietGroup).explanation
                 privateText -> BookMeaningCatalog.meaningFor("В алтаре").orEmpty()
-                else -> BookMeaningCatalog.displayMeaning(book, chapter)
+                else -> BookMeaningCatalog.displayMeaning(book, chapter, openingDisplay)
             }
             val brief = if (fragment != null) fragment.brief else if (privateText || block.kind == BookBlockKind.LOCAL_VARIATION) null
                 else BookMeaningBriefCatalog.forPlace(book, chapter, block.id)
             val scopedDetail = if (brief?.topicId == "vespers-psalm-103" && BookText.normalized(chapter.title) == "перед началом")
                 BookMeaningCatalog.meaningFor("Псалом 103", block.original, "vespers").orEmpty() else detail
-            return BookMeaningContent(textPosition, fragment?.title ?: brief?.title ?: chapter.title, excerpt, scopedDetail, brief, privateText)
+            return BookMeaningContent(textPosition, fragment?.title ?: brief?.title ?: openingDisplay.title(chapter), excerpt, scopedDetail, brief, privateText)
         }
     }
 }

@@ -25,7 +25,10 @@ object BookMeaningCatalog {
 
     /** Current app help, not a new accepted edition of the source text or its translation. */
     fun displayMeaning(book: ServiceBook, chapter: BookChapter): String =
-        reviewedMeaning(chapter.title, chapter.blocks.joinToString(" ") { it.original },
+        displayMeaning(book, chapter, BookMatinsOpeningDisplay.of(book))
+
+    internal fun displayMeaning(book: ServiceBook, chapter: BookChapter, opening: BookMatinsOpeningDisplay): String =
+        opening.takeIf { it.ownsSource(book) }?.meaning(chapter) ?: reviewedMeaning(chapter.title, chapter.blocks.joinToString(" ") { it.original },
             book.key.worship.queryValue, book.title) ?: chapter.meaning
 
     /** Unknown headings deliberately return null: a guessed explanation can misidentify a prayer. */
