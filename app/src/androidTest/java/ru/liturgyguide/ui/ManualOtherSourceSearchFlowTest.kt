@@ -161,6 +161,10 @@ class ManualOtherSourceSearchFlowTest(private val dark: Boolean, private val chu
                 ownPools = pools, clock = providerClock), curatedPublishers = { owners })
         // Recording only: all three actions call the real repository unchanged.
         val schedules = object : InternetSchedules by repository {
+            // This suite isolates the explicit manual entry. Automatic production entry
+            // has its own frame/lifecycle/cancellation suite using the real hook below.
+            override fun takeSourceContinuation(parish: Parish, now: Instant, delivered: InternetScheduleState,
+                owner: Any): ScheduleSourceContinuation? = null
             override suspend fun refresh(parish: Parish, now: Instant, force: Boolean, sourceOverride: String?): InternetScheduleState {
                 refreshCalls.incrementAndGet()
                 return repository.refresh(parish, now, force, sourceOverride).also { refreshCompleted.incrementAndGet() }

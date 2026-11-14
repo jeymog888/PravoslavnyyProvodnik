@@ -39,6 +39,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -59,7 +60,11 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     onSelectionCancelled: () -> Unit = {}, searchQuery: String, onSearchQueryChange: (String) -> Unit,
     onOpenService: ((ParishService) -> Unit)? = null, now: Instant? = null,
     onReadServiceText: ((LocalDate, WorshipKind) -> Unit)? = null,
-    sourceReviewRequest: Int = 0, sourceReviewIdentity: String? = null, sourceReviewParish: Parish? = null) {
+    sourceReviewRequest: Int = 0, sourceReviewIdentity: String? = null, sourceReviewParish: Parish? = null,
+    sourceSearchActive: Boolean? = null, sourceSearchOrder: List<String>? = null,
+    onReviewSourceSearch: (() -> Unit)? = null,
+    onSourceSearchDrawn: ((androidx.compose.ui.geometry.Rect, androidx.compose.ui.geometry.Rect) -> Unit)? = null,
+    onSourceSearchInteraction: () -> Boolean = { true }) {
     val church = churches.firstOrNull { it.id == selectedId }
     var picker by rememberSaveable { mutableStateOf(false) }
     var adding by rememberSaveable { mutableStateOf(false) }
@@ -75,7 +80,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     var editingSource by rememberSaveable(church?.id) { mutableStateOf(false) }
     var chooserDateIso by rememberSaveable(church?.id) { mutableStateOf<String?>(null) }
     val currentChurchId by rememberUpdatedState(church?.id)
-    val openSourceEditor: () -> Unit = { editingSource = true }
+    val openSourceEditor: () -> Unit = { if (onSourceSearchInteraction()) editingSource = true }
     // The draft belongs to this screen, even while the sheet uses a separate dialog registry.
     // There is at most one draft, and every explicit close/new attempt removes it.
     val churchDraft = rememberSaveableStateHolder()
@@ -201,6 +206,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
             } })
     }
     fun changeChurch() {
+        if (!onSourceSearchInteraction()) return
         if (onDiscover != null) onDiscover() else picker = true
     }
     val date = currentDate.plusDays(dayOffset.toLong())
@@ -224,6 +230,8 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     // Sources are the next stable item, independent of the selected date or featured service.
     val reviewItemIndex = scheduleItemIndex + if (sourceSectionVisible) 1 else 0
     val currentReviewItemIndex by rememberUpdatedState(reviewItemIndex)
+    val reviewScope = rememberCoroutineScope()
+
     LaunchedEffect(sourceReviewRequest, sourceReviewIdentity, sourceReviewOwner, sourceSectionVisible,
         ownState?.loading, reviewItemIndex) {
         if (church == null || sourceReviewRequest == 0 || sourceReviewRequest == handledSourceReview ||
@@ -239,7 +247,17 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = { Column(Modifier.statusBarsPadding()) {
         if (showBack) PageHeader("Храм", onBack)
     } }, bottomBar = bottomBar) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("church_content"), state = listState, contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        Column(Modifier.fillMaxSize().padding(padding)) {
+        sourceSearchActive?.let { searching ->
+            ScheduleSourceSearchStrip(searching, ownState?.candidateSearchUnavailable == true,
+                onReview = { if (currentSourceReviewOwner == sourceReviewOwner && currentChurchId == church?.id) {
+                    val review = onReviewSourceSearch
+                    if (review != null) review()
+                    else reviewScope.launch { withFrameNanos { }; listState.scrollToItem(currentReviewItemIndex) }
+                } },
+                onDrawn = onSourceSearchDrawn)
+        }
+        LazyColumn(Modifier.fillMaxWidth().weight(1f).testTag("church_content"), state = listState, contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
             if (!showBack) item(key = "church_header") {
                 Text("Мой храм", Modifier.testTag("church_title").semantics { heading() }, style = MaterialTheme.typography.titleLarge)
             }
@@ -298,7 +316,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                                     modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("church_read_liturgy")) { Text("Текст литургии на этот день") }
                             }
                             if (showChooser) {
-                                val choose = { chooserDateIso = date.toString() }
+                                val choose = { if (onSourceSearchInteraction()) chooserDateIso = date.toString() }
                                 if (read == null && (featured == null || onOpenService == null)) Button(onClick = choose, shape = MaterialTheme.shapes.small,
                                     modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("church_other_services")) { Text("Выбрать другой текст") }
                                 else OutlinedButton(onClick = choose,
@@ -320,9 +338,9 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                 }
                 item(key = "church_days") {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        FilterChip(selected = dayOffset == 0, onClick = { dayOffset = 0 }, label = { Text("Сегодня") },
+                        FilterChip(selected = dayOffset == 0, onClick = { if (onSourceSearchInteraction()) dayOffset = 0 }, label = { Text("Сегодня") },
                             modifier = Modifier.heightIn(min = 48.dp).testTag("schedule_today"))
-                        FilterChip(selected = dayOffset == 1, onClick = { dayOffset = 1 }, label = { Text("Завтра") },
+                        FilterChip(selected = dayOffset == 1, onClick = { if (onSourceSearchInteraction()) dayOffset = 1 }, label = { Text("Завтра") },
                             modifier = Modifier.heightIn(min = 48.dp).testTag("schedule_tomorrow"))
                     }
                 }
@@ -398,7 +416,8 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                             onConfirm = { id -> if (currentSourceReviewOwner == ownerIdentity) onConfirmScheduleCandidate?.invoke(id) },
                             onDismiss = onDismissScheduleCandidate?.let { dismiss ->
                                 { id: String -> if (currentSourceReviewOwner == ownerIdentity) dismiss(id) }
-                            }, onOpenUrl = onOpenUrl)
+                            }, onOpenUrl = onOpenUrl, stableSourceOrder = sourceSearchOrder,
+                            showSearchDiagnostic = sourceSearchActive == null)
                         if (featured == null) ChurchScheduleSourceActions(church, ownState,
                             onRefreshSchedule, openSourceEditor.takeIf { onSetScheduleSource != null }, onOpenUrl)
                     }
@@ -432,16 +451,17 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                             }
                             if (onSaveStart != null) ArrivalAction(
                                 if (personalStart == null) "Указать известное мне время" else "Изменить мое время", Icons.Default.Edit,
-                                { editingDate = date.toString() }, Modifier.testTag("edit_personal_time"))
+                                { if (onSourceSearchInteraction()) editingDate = date.toString() }, Modifier.testTag("edit_personal_time"))
                             if (SavedChurchCodec.isSafeWebsite(church.website)) ArrivalAction("Сайт прихода", Icons.Default.OpenInNew, { onOpenUrl(church.website) })
                             if (church.phone.isNotBlank()) ArrivalAction("Позвонить: " + church.phone, Icons.Default.Phone,
                                 { onOpenUrl("tel:" + church.phone.filter { it.isDigit() || it == '+' }) })
                             ArrivalAction("Сохраненные и избранные храмы", Icons.Default.StarBorder,
-                                { picker = true }, Modifier.testTag("saved_churches"))
+                                { if (onSourceSearchInteraction()) picker = true }, Modifier.testTag("saved_churches"))
                         }
                     }
                 }
             }
+        }
         }
     }
     if (church != null) {

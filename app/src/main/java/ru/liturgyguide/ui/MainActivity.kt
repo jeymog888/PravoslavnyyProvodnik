@@ -47,9 +47,11 @@ import java.time.ZoneId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.job
 
 private enum class Screen { MAIN, MANUAL, ARRIVAL, SERVICE, STAGE_SELECTOR, SEARCH, LISTENING, SETTINGS, SOURCES, CHURCH, DISCOVERY, BOOK }
 private enum class ChurchSelectionOrigin { FIRST_HOME, DIRECTORY }
+private enum class ScheduleViewingTransition { VIEW_SOURCES, VIEW_SCHEDULE }
 private class ListeningRoute(val origin: Screen, val draft: ArrivalDraft, val previousDraft: ArrivalDraft?,
     val churchId: String?, val generation: Int, val previousContext: ReadingContext?,
     val targetContext: ReadingContext, val speed: PlaybackSpeed)
@@ -149,32 +151,36 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     var scheduleSourceOverride by remember(baseChurch) { mutableStateOf<String?>(null) }
     var scheduleCandidateConfirmation by remember(baseChurch) { mutableStateOf<String?>(null) }
     val parishDay = baseChurch?.let { now.atZone(ZoneId.of(it.timezone)).toLocalDate() }
+    val automaticSourceController = remember { AutomaticScheduleSourceController() }
     val scheduleSearchOwner = remember(internetSchedules, baseChurch, parishDay) {
+        automaticSourceController.revoke()
         ManualScheduleSearchOwner(baseChurch?.let(ScheduleEntityIdentity::fingerprint).orEmpty(), parishDay?.toString().orEmpty())
     }
     val currentScheduleSearchOwner by rememberUpdatedState(scheduleSearchOwner)
-    // A surface that is left and later reopened has fresh callbacks, even for the same church/day.
-    val scheduleClickOwner = remember(scheduleSearchOwner, screen) { Any() }
-    val currentScheduleClickOwner by rememberUpdatedState(scheduleClickOwner)
+    // Capture the revocable right while creating this refresh, before its effect can suspend.
+    val automaticRefreshEpoch = remember(scheduleSearchOwner, scheduleRefresh) {
+        automaticSourceController.beginEpoch(scheduleSearchOwner, scheduleRefresh, parishDay?.toString().orEmpty())
+    }
+    val scheduleActionSurface = remember(scheduleSearchOwner) { ScheduleActionSurface(screen.name) }
+    // Explicit navigation rotates this synchronously; recovery routes also expire old callbacks.
+    remember(scheduleSearchOwner, screen) {
+        if (scheduleActionSurface.route != screen.name) {
+            automaticSourceController.revoke()
+            scheduleActionSurface.enter(screen.name)
+        }
+    }
+    val scheduleClickOwner = scheduleActionSurface.token
     var scheduleSearchIntent by remember(scheduleSearchOwner) { mutableStateOf<ManualScheduleSearchIntent?>(null) }
     DisposableEffect(scheduleSearchOwner) { onDispose { scheduleSearchOwner.invalidate() } }
-    LaunchedEffect(internetSchedules, baseChurch, parishDay, scheduleRefresh) {
-        val selected = baseChurch ?: return@LaunchedEffect
-        val owner = scheduleSearchOwner
-        val sequence = scheduleRefresh
-        val intent = scheduleSearchIntent
-        scheduleSearchIntent = null
-        val search = intent?.consume(owner, sequence, parishDay?.toString().orEmpty(), screen.name, currentScheduleClickOwner) == true
-        val candidate = scheduleCandidateConfirmation
-        scheduleCandidateConfirmation = null
-        internetSchedule = (internetSchedule ?: InternetScheduleState(selected.id)).copy(loading = true)
-        val result = if (candidate != null) internetSchedules.confirmCandidate(selected, candidate, now)
-            else if (search && scheduleSourceOverride == null) internetSchedules.searchOtherSources(selected, now)
-            else internetSchedules.refresh(selected, now, force = scheduleRefresh > 0, sourceOverride = scheduleSourceOverride)
-        currentCoroutineContext().ensureActive()
-        if (currentScheduleSearchOwner === owner && owner.isActive() && scheduleRefresh == sequence)
-            internetSchedule = result
+    var automaticSourcePresentation by remember(scheduleSearchOwner) {
+        mutableStateOf<AutomaticScheduleSourcePresentation?>(null)
     }
+    fun stopAutomaticSourceSearch(expireCallbacks: Boolean = false) {
+        automaticSourceController.revoke()
+        automaticSourcePresentation = null
+        if (expireCallbacks) scheduleActionSurface.rotate()
+    }
+    DisposableEffect(automaticSourceController) { onDispose { automaticSourceController.revoke() } }
     val church = baseChurch?.let { original -> internetSchedule?.let { original.withInternetSchedule(it, now) } ?: original }
     val churches = remember(baseChurches, church) { baseChurches.map { if (it.id == church?.id) requireNotNull(church) else it } }
     val contextEngine = remember(stages, clock) { if (stages.isEmpty()) null else ContextSuggestionEngine(stages, clock) }
@@ -310,9 +316,96 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         }
     }
     val awakeBinding = rememberReaderScreenAwakeBinding(player, visibleScreen == Screen.SERVICE,
-        lifecycle, activityForeground, screenAwakeOwner, onForegroundLost = listeningInterrupt::foregroundChanged) { lifecycleResumed = it }
+        lifecycle, activityForeground, screenAwakeOwner, onForegroundLost = {
+            stopAutomaticSourceSearch(expireCallbacks = true)
+            listeningInterrupt.foregroundChanged()
+        }) { lifecycleResumed = it }
     val playing = player.reading?.state?.isPlaying == true
     val topResumed = activityForeground?.isTopResumed != false
+    val currentVisibleScreen by rememberUpdatedState(visibleScreen)
+    LaunchedEffect(internetSchedules, baseChurch, parishDay, scheduleRefresh) {
+        val selected = baseChurch ?: return@LaunchedEffect
+        val owner = scheduleSearchOwner
+        val sequence = scheduleRefresh
+        val automaticEpoch = automaticRefreshEpoch
+        val intent = scheduleSearchIntent
+        scheduleSearchIntent = null
+        val search = intent?.consume(owner, sequence, parishDay?.toString().orEmpty(), screen.name, scheduleActionSurface.token) == true
+        val candidate = scheduleCandidateConfirmation
+        scheduleCandidateConfirmation = null
+        // Consume the explicit intent before joining the canceled background job.
+        automaticSourceController.stopAndJoin()
+        automaticSourcePresentation = null
+        currentCoroutineContext().ensureActive()
+        if (currentScheduleSearchOwner !== owner || !owner.isActive() || scheduleRefresh != sequence) return@LaunchedEffect
+        internetSchedule = (internetSchedule ?: InternetScheduleState(selected.id)).copy(loading = true)
+        val result = if (candidate != null) internetSchedules.confirmCandidate(selected, candidate, now)
+            else if (search && scheduleSourceOverride == null) internetSchedules.searchOtherSources(selected, now)
+            else internetSchedules.refresh(selected, now, force = scheduleRefresh > 0, sourceOverride = scheduleSourceOverride)
+        currentCoroutineContext().ensureActive()
+        if (currentScheduleSearchOwner === owner && owner.isActive() && scheduleRefresh == sequence) {
+            internetSchedule = result
+            val presentation = AutomaticScheduleSourcePresentation(owner, scheduleActionSurface.token, sequence,
+                currentVisibleScreen.name, parishDay?.toString().orEmpty(), result, automaticEpoch)
+            val ticket = internetSchedules.takeSourceContinuation(selected, now, result, presentation)
+            if (ticket != null) {
+                presentation.attach(ticket)
+                if (automaticSourceController.owns(automaticEpoch) && screen == currentVisibleScreen && screen in setOf(Screen.MAIN, Screen.CHURCH) &&
+                    lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) && activityForeground?.isTopResumed != false &&
+                    !result.loading && hasReviewableScheduleSources(selected, result)) {
+                    automaticSourceController.install(presentation)
+                    automaticSourcePresentation = presentation
+                } else presentation.revoke()
+            }
+        }
+    }
+    val visibleSourcePresentation = automaticSourcePresentation?.takeIf { presentation ->
+        !presentation.revoked && automaticSourceController.owns(presentation.epoch) && presentation.owner === scheduleSearchOwner &&
+            presentation.view.surface === scheduleClickOwner && presentation.sequence == scheduleRefresh &&
+            presentation.day == parishDay?.toString().orEmpty() && presentation.view.screen == visibleScreen.name &&
+            screen == visibleScreen && visibleScreen in setOf(Screen.MAIN, Screen.CHURCH)
+    }
+    val visibleSourceOrder = visibleSourcePresentation?.let { presentation ->
+        baseChurch?.let { selected -> internetSchedule?.let { state ->
+            presentation.orderedSources(scheduleCandidateGroups(selected, state).map { it.sourceUrl })
+        } }
+    }
+    // Viewing-only route transfers keep this same effect/job and the same receipt.
+    LaunchedEffect(automaticSourcePresentation, scheduleSearchOwner, lifecycleResumed, topResumed) {
+        val presentation = automaticSourcePresentation ?: return@LaunchedEffect
+        val selected = baseChurch ?: return@LaunchedEffect
+        fun current(): Boolean = !presentation.revoked && automaticSourceController.owns(presentation.epoch) &&
+            presentation.owner === currentScheduleSearchOwner &&
+            presentation.view.surface === scheduleActionSurface.token && presentation.sequence == scheduleRefresh &&
+            presentation.day == parishDay?.toString().orEmpty() && presentation.view.screen == screen.name &&
+            screen in setOf(Screen.MAIN, Screen.CHURCH) && lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) &&
+            activityForeground?.isTopResumed != false
+        if (!current()) { presentation.revoke(); return@LaunchedEffect }
+        presentation.attachJob(currentCoroutineContext().job)
+        try {
+            if (!presentation.awaitCurrentDrawAndFrame(::current)) return@LaunchedEffect
+            currentCoroutineContext().ensureActive()
+            if (!current() || !presentation.ticket().isActive()) return@LaunchedEffect
+            val result = internetSchedules.continueSourceSearch(selected, now, presentation.ticket(), presentation)
+            currentCoroutineContext().ensureActive()
+            if (result != null && current()) internetSchedule = result
+        } finally {
+            if (!presentation.revoked) presentation.searching = false
+        }
+    }
+    val sourceSearchDrawn: ((androidx.compose.ui.geometry.Rect, androidx.compose.ui.geometry.Rect) -> Unit)? =
+        visibleSourcePresentation?.let { captured ->
+            val view = captured.view
+            return@let { strip, action ->
+                if (!captured.revoked && automaticSourceController.owns(captured.epoch) &&
+                    captured.view === view && captured.owner === currentScheduleSearchOwner &&
+                    view.surface === scheduleActionSurface.token && internetSchedule === captured.delivered &&
+                    internetSchedule?.loading == false && captured.sequence == scheduleRefresh &&
+                    view.screen == screen.name && screen == currentVisibleScreen &&
+                    lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) && activityForeground?.isTopResumed != false)
+                    view.acknowledge(strip, action)
+            }
+        }
     LaunchedEffect(player, visibleScreen, lifecycleResumed, activityForeground, topResumed, playing, player.generation) {
         if (visibleScreen != Screen.SERVICE || !lifecycleResumed || !topResumed) {
             awakeBinding.pause()
@@ -326,7 +419,26 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         }
     }
 
-    fun navigate(destination: Screen) {
+    fun navigate(destination: Screen, viewing: ScheduleViewingTransition? = null) {
+        val presentation = automaticSourcePresentation
+        val viewingRoute = when (viewing) {
+            ScheduleViewingTransition.VIEW_SOURCES -> screen == Screen.MAIN && destination == Screen.CHURCH
+            ScheduleViewingTransition.VIEW_SCHEDULE -> screen in setOf(Screen.MAIN, Screen.CHURCH) &&
+                destination in setOf(Screen.MAIN, Screen.CHURCH)
+            null -> false
+        }
+        val preserve = viewingRoute && baseChurch != null && church?.id == baseChurch.id &&
+            currentScheduleSearchOwner === scheduleSearchOwner && scheduleSearchOwner.isActive() &&
+            automaticSourceController.matches(scheduleSearchOwner, scheduleRefresh, parishDay?.toString().orEmpty()) &&
+            (presentation == null || !presentation.revoked && automaticSourceController.owns(presentation.epoch) &&
+                presentation.owner === scheduleSearchOwner && presentation.sequence == scheduleRefresh &&
+                presentation.day == parishDay?.toString().orEmpty()) &&
+            ScheduleEntityIdentity.fingerprint(baseChurch) == scheduleSearchOwner.fingerprint
+        if (!preserve) stopAutomaticSourceSearch()
+        if (screen != destination) {
+            val nextSurface = scheduleActionSurface.enter(destination.name)
+            if (preserve) presentation?.moveView(nextSurface, destination.name)
+        }
         cancelChurchSelection()
         if (destination != Screen.CHURCH && destination != Screen.DISCOVERY) {
             churchSelectionOrigin = ChurchSelectionOrigin.DIRECTORY
@@ -399,10 +511,12 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
             navigate(Screen.BOOK)
     }
     fun openBookOnDate(date: LocalDate, kind: WorshipKind, eveningMatins: Boolean = false) {
+        stopAutomaticSourceSearch(expireCallbacks = true)
         openFreshBook(BookRoute(ServiceBookSelection.forCivilDate(date, kind, church, eveningMatins), church?.id))
     }
     fun openPublishedRoute(route: BookRoute) = openFreshBook(route)
     fun openPublishedBook(service: ParishService) {
+        stopAutomaticSourceSearch(expireCallbacks = true)
         val evening = ServiceBookSelection.eveningTexts(service, church, WorshipKind.VESPERS)
         if (evening != null) {
             // Keep the occurrence and owner through choice/recreation, without starting a book.
@@ -561,6 +675,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         return true
     }
     fun commitChurchChoice(id: String, preserveReading: Boolean): Boolean {
+        stopAutomaticSourceSearch(expireCallbacks = true)
         if (preserveReading) {
             if (hasChurchSelection && churchId == id) return true
             if (!readingAcceptanceStore.confirmChurch(id)) { savingFailed(); return false }
@@ -585,6 +700,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     fun availableChurchIds(): Set<String> = ChurchDirectory.merge(
         parishes?.directory?.churches.orEmpty(), churchStore.records()).map { it.id }.toSet()
     fun chooseChurch(id: String, onSelected: () -> Unit): ChurchSelectionResult {
+        stopAutomaticSourceSearch(expireCallbacks = true)
         val snapshot = churchChoiceSnapshot() ?: return ChurchSelectionResult.FAILED
         val completionScreen = when {
             churchSelectionOrigin == ChurchSelectionOrigin.FIRST_HOME -> Screen.MAIN
@@ -601,12 +717,12 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         churchSelectionFailed = false
         return result
     }
-    fun openChurch(fromHome: Boolean) {
+    fun openChurch(fromHome: Boolean, viewing: ScheduleViewingTransition? = null) {
         churchOrigin = Screen.MAIN
         churchSelectionOrigin = if (fromHome && church == null) ChurchSelectionOrigin.FIRST_HOME
             else ChurchSelectionOrigin.DIRECTORY
         if (church == null) churchPickerRequest++
-        navigate(Screen.CHURCH)
+        navigate(Screen.CHURCH, viewing.takeIf { church != null })
     }
     fun openPersonalTime() {
         if (church == null) { openChurch(fromHome = true); return }
@@ -642,6 +758,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         navigate(destination)
     }
     fun openExternal(intent: Intent) {
+        stopAutomaticSourceSearch(expireCallbacks = true)
         player.pause()
         try { context.startActivity(intent) }
         catch (_: android.content.ActivityNotFoundException) {
@@ -678,18 +795,27 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
     fun refreshVisibleSources(origin: Screen) {
         // Held callbacks carry this frame's owner, not merely a reusable numeric church ID.
         if (screen != origin || churchId != resumeChurchId || currentScheduleSearchOwner !== scheduleSearchOwner ||
-            currentScheduleClickOwner !== scheduleClickOwner || !scheduleSearchOwner.isActive() || internetSchedule?.loading == true) return
+            scheduleActionSurface.token !== scheduleClickOwner || !scheduleSearchOwner.isActive() || internetSchedule?.loading == true) return
+        stopAutomaticSourceSearch(expireCallbacks = true)
         scheduleCandidateConfirmation = null
         scheduleSourceOverride = null
         val sequence = scheduleRefresh + 1
-        scheduleSearchIntent = ManualScheduleSearchIntent(scheduleSearchOwner, sequence, origin.name, scheduleClickOwner)
+        scheduleSearchIntent = ManualScheduleSearchIntent(scheduleSearchOwner, sequence, origin.name, scheduleActionSurface.token)
         scheduleRefresh = sequence
+    }
+
+    fun reviewVisibleScheduleSources(origin: Screen) {
+        if (screen != origin || churchId != resumeChurchId || currentScheduleSearchOwner !== scheduleSearchOwner ||
+            scheduleActionSurface.token !== scheduleClickOwner || !scheduleSearchOwner.isActive()) return
+        scheduleSourcesOwner = baseChurch?.let(ScheduleEntityIdentity::fingerprint)
+        scheduleSourcesRequest++
+        if (origin == Screen.MAIN) openChurch(fromHome = false, viewing = ScheduleViewingTransition.VIEW_SOURCES)
     }
 
     val navigationBar: @Composable () -> Unit = {
         GuideBottomBar(selected = when (screen) { Screen.CHURCH -> "church"; Screen.SETTINGS -> "settings"; else -> "home" },
-            onHome = { navigate(Screen.MAIN) },
-            onChurch = { openChurch(fromHome = false) },
+            onHome = { navigate(Screen.MAIN, ScheduleViewingTransition.VIEW_SCHEDULE) },
+            onChurch = { openChurch(fromHome = false, viewing = ScheduleViewingTransition.VIEW_SCHEDULE) },
             onSettings = { settingsOrigin = Screen.MAIN; navigate(Screen.SETTINGS) })
     }
     GuideTheme(dark = dark) {
@@ -704,16 +830,16 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                 } else when (visibleScreen) {
                     Screen.MAIN -> TodayScreen(
                         church = church, now = now, internetSchedule = internetSchedule, sourceReviewParish = baseChurch,
+                        sourceSearchActive = visibleSourcePresentation?.searching, onSourceSearchDrawn = sourceSearchDrawn,
+                        onSourceSearchInteraction = {
+                            val valid = currentScheduleSearchOwner === scheduleSearchOwner && scheduleActionSurface.token === scheduleClickOwner
+                            if (valid) stopAutomaticSourceSearch(expireCallbacks = true)
+                            valid
+                        },
                         importProgress = scheduleImport, lastBook = lastBook,
                         onFindChurch = { churchOrigin = Screen.MAIN; churchSelectionOrigin = ChurchSelectionOrigin.FIRST_HOME; navigate(Screen.DISCOVERY) },
                         onChurchDetails = { openChurch(fromHome = false) },
-                        onReviewScheduleSources = {
-                            if (screen == Screen.MAIN && churchId == resumeChurchId) {
-                                scheduleSourcesOwner = church?.let(ScheduleEntityIdentity::fingerprint)
-                                scheduleSourcesRequest++
-                                openChurch(fromHome = false)
-                            }
-                        },
+                        onReviewScheduleSources = { reviewVisibleScheduleSources(Screen.MAIN) },
                         onOpenBook = { date, kind, evening ->
                             if (screen == Screen.MAIN && churchId == resumeChurchId) openBookOnDate(date, kind, evening)
                         },
@@ -722,7 +848,9 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         onOpenService = { if (screen == Screen.MAIN && churchId == resumeChurchId) openPublishedBook(it) },
                         onRefresh = { refreshVisibleSources(Screen.MAIN) },
                         onSetScheduleSource = { url ->
-                            if (screen == Screen.MAIN && churchId == resumeChurchId) {
+                            if (screen == Screen.MAIN && churchId == resumeChurchId && currentScheduleSearchOwner === scheduleSearchOwner &&
+                                scheduleActionSurface.token === scheduleClickOwner) {
+                                stopAutomaticSourceSearch(expireCallbacks = true)
                                 scheduleSearchIntent = null
                                 scheduleCandidateConfirmation = null
                                 scheduleSourceOverride = url; scheduleRefresh++
@@ -893,23 +1021,38 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                     Screen.CHURCH -> ChurchScreen(
                         churches = churches, selectedId = church?.id,
                         internetSchedule = internetSchedule, sourceReviewParish = baseChurch,
+                        sourceSearchActive = visibleSourcePresentation?.searching, sourceSearchOrder = visibleSourceOrder,
+                        onReviewSourceSearch = { reviewVisibleScheduleSources(Screen.CHURCH) },
+                        onSourceSearchDrawn = sourceSearchDrawn,
+                        onSourceSearchInteraction = {
+                            val valid = currentScheduleSearchOwner === scheduleSearchOwner && scheduleActionSurface.token === scheduleClickOwner
+                            if (valid) stopAutomaticSourceSearch(expireCallbacks = true)
+                            valid
+                        },
                         onRefreshSchedule = { refreshVisibleSources(Screen.CHURCH) },
                         onSetScheduleSource = { url ->
-                            if (screen == Screen.CHURCH && churchId == resumeChurchId) {
+                            if (screen == Screen.CHURCH && churchId == resumeChurchId && currentScheduleSearchOwner === scheduleSearchOwner &&
+                                scheduleActionSurface.token === scheduleClickOwner) {
+                                stopAutomaticSourceSearch(expireCallbacks = true)
                                 scheduleSearchIntent = null
                                 scheduleCandidateConfirmation = null
                                 scheduleSourceOverride = url; scheduleRefresh++
                             }
                         },
                         onConfirmScheduleCandidate = { candidateId ->
-                            if (screen == Screen.CHURCH && churchId == resumeChurchId && internetSchedule?.loading != true) {
+                            if (screen == Screen.CHURCH && churchId == resumeChurchId && internetSchedule?.loading != true &&
+                                currentScheduleSearchOwner === scheduleSearchOwner && scheduleActionSurface.token === scheduleClickOwner) {
+                                stopAutomaticSourceSearch(expireCallbacks = true)
                                 scheduleSearchIntent = null
                                 scheduleSourceOverride = null; scheduleCandidateConfirmation = candidateId; scheduleRefresh++
                             }
                         },
                         onDismissScheduleCandidate = { candidateId ->
-                            if (screen == Screen.CHURCH && churchId == resumeChurchId && internetSchedule?.loading != true)
+                            if (screen == Screen.CHURCH && churchId == resumeChurchId && internetSchedule?.loading != true &&
+                                currentScheduleSearchOwner === scheduleSearchOwner && scheduleActionSurface.token === scheduleClickOwner) {
+                                stopAutomaticSourceSearch(expireCallbacks = true)
                                 baseChurch?.let { selected -> internetSchedule = internetSchedules.dismissCandidate(selected, candidateId) }
+                            }
                         },
                         favorites = favoriteChurches,
                         onToggleFavorite = { id -> favoriteChurches = churchStore.toggleFavorite(id, churches.map { it.id }.toSet()) },
@@ -948,7 +1091,13 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         currentDate = currentDate,
                         onSelect = ::chooseChurch,
                         onSelectionCancelled = ::cancelChurchSelection,
-                        onOpenUrl = { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(it))) }, onBack = ::back,
+                        onOpenUrl = { url ->
+                            if (screen == Screen.CHURCH && churchId == resumeChurchId &&
+                                currentScheduleSearchOwner === scheduleSearchOwner && scheduleSearchOwner.isActive() &&
+                                scheduleActionSurface.token === scheduleClickOwner &&
+                                baseChurch?.let(ScheduleEntityIdentity::fingerprint) == scheduleSearchOwner.fingerprint)
+                                openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                        }, onBack = ::back,
                         showBack = churchOrigin != Screen.MAIN,
                         bottomBar = { if (churchOrigin == Screen.MAIN) navigationBar() }
                     )

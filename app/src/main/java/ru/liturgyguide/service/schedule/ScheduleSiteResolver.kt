@@ -187,7 +187,8 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport,
                 if (exact?.binding?.validFor(parish, exact.url, exact.evidenceUrl) == true)
                     return ScheduleSourceDiscovery(ScheduleIdentityOutcome.PROVED, exact)
                 val map = maps(parish, excludedUrls)
-                if (useful(map) || ownPools == null) return candidateDiscovery(map)
+                if (useful(map) || ownPools == null) return candidateDiscovery(map).copy(
+                    fastMapReceipt = if (ownPools != null) FastMapContinuationReceipt.issue(parish) else null)
                 // This starts its own single 25s Own context only after Maps are found ineligible.
                 val contact = own(parish, excludedUrls, excludedCandidateIds) { found ->
                     useful(mergeFreshScheduleDiscoveries(parish, map, found))

@@ -29,8 +29,12 @@ internal fun ScheduleSourceChangeNotice(state: InternetScheduleState) {
 /** Group only the presentation. Every action still owns a current raw candidate ID. */
 @Composable
 internal fun ScheduleCandidateChoices(church: Parish, state: InternetScheduleState,
-    onConfirm: (String) -> Unit, onDismiss: ((String) -> Unit)?, onOpenUrl: (String) -> Unit) {
-    val groups = scheduleCandidateGroups(church, state)
+    onConfirm: (String) -> Unit, onDismiss: ((String) -> Unit)?, onOpenUrl: (String) -> Unit,
+    stableSourceOrder: List<String>? = null, showSearchDiagnostic: Boolean = true) {
+    val currentGroups = scheduleCandidateGroups(church, state)
+    val groups = if (stableSourceOrder != null) currentGroups.sortedBy { group ->
+        stableSourceOrder.indexOf(group.sourceUrl).takeIf { it >= 0 } ?: Int.MAX_VALUE
+    } else currentGroups
     val currentChurch by rememberUpdatedState(church)
     val currentState by rememberUpdatedState(state)
     val currentConfirm by rememberUpdatedState(onConfirm)
@@ -60,7 +64,7 @@ internal fun ScheduleCandidateChoices(church: Parish, state: InternetScheduleSta
         }
         Text("Сверьте название и адрес на сайте, затем подтвердите источник",
             style = MaterialTheme.typography.bodyMedium)
-        if (state.candidateSearchUnavailable) Text("Не все источники удалось проверить. Можно повторить поиск",
+        if (showSearchDiagnostic && state.candidateSearchUnavailable) Text("Не все источники удалось проверить. Можно повторить поиск",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.testTag("schedule_candidates_unavailable"))
         groups.forEach { group -> key(owner, group.sourceUrl) {
@@ -103,7 +107,9 @@ internal fun ScheduleCandidateChoices(church: Parish, state: InternetScheduleSta
                         modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("open_candidate_${row.id}")) {
                         Text("Открыть сайт")
                     }
-                    group.confirmationCandidate?.let { candidate -> key(owner, candidate) {
+                    group.confirmationCandidate?.let { candidate ->
+                        // Composition identity only. The complete live candidate stays in the action below.
+                        key(owner, candidate.copy(checkedAt = "")) {
                         Button(onClick = {
                             val live = liveGroup(group.sourceUrl)
                             if (!currentState.loading && live != null && live.confirmationCandidate == candidate && !live.blockedByHistory)

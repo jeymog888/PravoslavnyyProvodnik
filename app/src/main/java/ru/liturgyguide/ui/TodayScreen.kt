@@ -35,7 +35,10 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
     onOpenScheduleSource: (() -> Unit)? = null, legacyReadingSummary: String? = null,
     onSetScheduleSource: ((String) -> Unit)? = null,
     onOpenService: ((ParishService) -> Unit)? = null,
-    onReviewScheduleSources: (() -> Unit)? = null, sourceReviewParish: Parish? = null) {
+    onReviewScheduleSources: (() -> Unit)? = null, sourceReviewParish: Parish? = null,
+    sourceSearchActive: Boolean? = null,
+    onSourceSearchDrawn: ((androidx.compose.ui.geometry.Rect, androidx.compose.ui.geometry.Rect) -> Unit)? = null,
+    onSourceSearchInteraction: () -> Boolean = { true }) {
     val zone = remember(church?.timezone) {
         runCatching { ZoneId.of(church?.timezone ?: "Europe/Moscow") }.getOrDefault(ZoneId.of("Europe/Moscow"))
     }
@@ -77,11 +80,17 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
             return
         }
         val selectedKind = ServiceBookSelection.kindFor(service.title)
-        if (selectedKind == null) chooserDateIso = service.date else onOpenBook(LocalDate.parse(service.date), selectedKind,
+        if (selectedKind == null) { if (onSourceSearchInteraction()) chooserDateIso = service.date } else onOpenBook(LocalDate.parse(service.date), selectedKind,
             selectedKind == WorshipKind.MATINS && runCatching { LocalTime.parse(service.time).hour >= 12 }.getOrDefault(false))
     }
     Scaffold(containerColor = MaterialTheme.colorScheme.background, bottomBar = bottomBar) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding).testTag("main_content"), state = listState, contentPadding = PaddingValues(20.dp),
+        Column(Modifier.fillMaxSize().padding(padding)) {
+        sourceSearchActive?.let { searching ->
+            ScheduleSourceSearchStrip(searching, ownState?.candidateSearchUnavailable == true,
+                onReview = { if (currentSourceReviewOwner == sourceReviewOwner && currentChurchId == church?.id)
+                    (onReviewScheduleSources ?: onChurchDetails)() }, onDrawn = onSourceSearchDrawn)
+        }
+        LazyColumn(Modifier.fillMaxWidth().weight(1f).testTag("main_content"), state = listState, contentPadding = PaddingValues(20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)) {
             fun personalItem() {
                 val start = personalStart ?: return
@@ -109,12 +118,12 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         if (featured == null && personalStart == null) Button(onClick = { onOpenBook(date, WorshipKind.LITURGY, false) },
                             modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("start_guide")) { Text("Открыть литургию") }
-                        if (featured != null || personalStart != null) OutlinedButton(onClick = { chooserDateIso = date.toString() },
+                        if (featured != null || personalStart != null) OutlinedButton(onClick = { if (onSourceSearchInteraction()) chooserDateIso = date.toString() },
                             modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("today_other_services")) { Text("Выбрать другой текст") }
                     }
                 }
                 if (featured == null && personalStart == null) item(key = "today_other_texts") {
-                    ArrivalAction("Выбрать другой текст", Icons.Default.MenuBook, { chooserDateIso = date.toString() },
+                    ArrivalAction("Выбрать другой текст", Icons.Default.MenuBook, { if (onSourceSearchInteraction()) chooserDateIso = date.toString() },
                         Modifier.testTag("today_other_services"))
                 }
             }
@@ -139,7 +148,7 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                     }
                 }
                 item(key = "today_without_church") {
-                    ArrivalAction("Открыть тексты без выбора храма", Icons.Default.MenuBook, { chooserDateIso = date.toString() },
+                    ArrivalAction("Открыть тексты без выбора храма", Icons.Default.MenuBook, { if (onSourceSearchInteraction()) chooserDateIso = date.toString() },
                         Modifier.testTag("today_choose_without_church"))
                 }
             } else {
@@ -156,8 +165,8 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                 }
                 item(key = "today_days") {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        FilterChip(dayOffset == 0, { dayOffset = 0 }, label = { Text("Сегодня") }, modifier = Modifier.heightIn(min = 48.dp).testTag("today_day_today"))
-                        FilterChip(dayOffset == 1, { dayOffset = 1 }, label = { Text("Завтра") }, modifier = Modifier.heightIn(min = 48.dp).testTag("today_day_tomorrow"))
+                        FilterChip(dayOffset == 0, { if (onSourceSearchInteraction()) dayOffset = 0 }, label = { Text("Сегодня") }, modifier = Modifier.heightIn(min = 48.dp).testTag("today_day_today"))
+                        FilterChip(dayOffset == 1, { if (onSourceSearchInteraction()) dayOffset = 1 }, label = { Text("Завтра") }, modifier = Modifier.heightIn(min = 48.dp).testTag("today_day_tomorrow"))
                     }
                 }
                 // Once reached, this group stays in place even if a publication arrives.
@@ -206,7 +215,7 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                             schedule?.next?.let { offer ->
                                 UpcomingScheduleOffer(offer, "today", onOpenService ?: { open(it) })
                             }
-                            if (reviewSources) Button(onClick = {
+                            if (reviewSources && sourceSearchActive == null) Button(onClick = {
                                 if (currentSourceReviewOwner == sourceReviewOwner && currentChurchId == church.id)
                                     (onReviewScheduleSources ?: onChurchDetails)()
                             }, enabled = !loading,
@@ -227,14 +236,14 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                             if (onOpenScheduleSource != null && onSetScheduleSource != null && canChooseUnverifiedScheduleSource(church, ownState)) {
                                 Text("Проверьте на сайте, что это расписание вашего храма", style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                OutlinedButton(onClick = { editingSource = true },
+                                OutlinedButton(onClick = { if (onSourceSearchInteraction()) editingSource = true },
                                     modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("today_schedule_source_choice")) {
                                     Icon(Icons.Default.Edit, null, Modifier.size(20.dp))
                                     Spacer(Modifier.width(12.dp)); Text("Указать источник")
                                 }
                             }
                             if (onOpenScheduleSource == null && onSetScheduleSource != null) {
-                                OutlinedButton(onClick = { editingSource = true },
+                                OutlinedButton(onClick = { if (onSourceSearchInteraction()) editingSource = true },
                                     modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("today_edit_schedule_website")) {
                                     Icon(Icons.Default.Edit, null, Modifier.size(20.dp))
                                     Spacer(Modifier.width(12.dp)); Text("Указать сайт")
@@ -272,6 +281,7 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                 ArrivalAction("Прежнее сохраненное чтение", Icons.Default.BookmarkBorder, resume,
                     Modifier.testTag("resume_guide"), subtitle = legacyReadingSummary)
             } }
+        }
         }
     }
     if (chooserDate != null) ServiceBookChooser(chooserDate, onDismiss = { chooserDateIso = null },

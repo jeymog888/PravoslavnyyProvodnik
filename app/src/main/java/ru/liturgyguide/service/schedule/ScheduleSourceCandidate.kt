@@ -34,6 +34,7 @@ data class ScheduleSourceDiscovery(
     val outcome: ScheduleIdentityOutcome,
     val site: ScheduleSite? = null,
     val candidates: ScheduleCandidateDiscovery = ScheduleCandidateDiscovery(),
+    @Transient val fastMapReceipt: FastMapContinuationReceipt? = null,
 )
 
 /** Evidence about a candidate is retained even when its old address prevents confirmation. */

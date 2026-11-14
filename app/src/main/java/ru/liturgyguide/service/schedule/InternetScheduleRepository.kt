@@ -77,6 +77,9 @@ interface InternetSchedules {
     suspend fun refresh(parish: Parish, now: Instant, force: Boolean = false, sourceOverride: String? = null): InternetScheduleState
     /** A manual action only. Compatibility defaults do not opt into an automatic continuation. */
     suspend fun searchOtherSources(parish: Parish, now: Instant): InternetScheduleState = refresh(parish, now, force = true)
+    /** Unsupported implementations perform no automatic network/import action. */
+    fun takeSourceContinuation(parish: Parish, now: Instant, delivered: InternetScheduleState, owner: Any): ScheduleSourceContinuation? = null
+    suspend fun continueSourceSearch(parish: Parish, now: Instant, ticket: ScheduleSourceContinuation, owner: Any): InternetScheduleState? = null
     suspend fun confirmCandidate(parish: Parish, candidateId: String, now: Instant): InternetScheduleState = cached(parish)
     fun dismissCandidate(parish: Parish, candidateId: String): InternetScheduleState = cached(parish)
 }
@@ -105,6 +108,9 @@ class InternetScheduleRepository(
     private val siteResolver = siteResolver ?: OpenScheduleSiteResolver(transport, directoryCache)
     private val importProgress = MutableStateFlow(ScheduleImportProgress("", ScheduleImportPhase.IDLE))
     override val progress: StateFlow<ScheduleImportProgress> = importProgress
+    private val continuationProducer = Any()
+    private val activeContinuation = AtomicReference<ScheduleSourceContinuation?>(null)
+    private val pendingContinuation = AtomicReference<ScheduleSourceContinuation?>(null)
     private val progressLock = Any()
     private var progressOwner: Any? = null
     private fun claimProgress(): Any = synchronized(progressLock) { Any().also { progressOwner = it } }
@@ -123,29 +129,74 @@ class InternetScheduleRepository(
         return next
     }
 
-    override suspend fun refresh(parish: Parish, now: Instant, force: Boolean, sourceOverride: String?): InternetScheduleState =
-        refreshInternal(parish, now, force, sourceOverride)
+    private suspend fun cancelSourceContinuation() {
+        val old = activeContinuation.getAndSet(null)
+        pendingContinuation.compareAndSet(old, null)
+        old?.revokeAndJoin()
+    }
+
+    override suspend fun refresh(parish: Parish, now: Instant, force: Boolean, sourceOverride: String?): InternetScheduleState {
+        cancelSourceContinuation()
+        return refreshInternal(parish, now, force, sourceOverride)
+    }
+
+    override fun takeSourceContinuation(parish: Parish, now: Instant, delivered: InternetScheduleState,
+        owner: Any): ScheduleSourceContinuation? {
+        val ticket = pendingContinuation.getAndSet(null) ?: return null
+        val bound = runCatching { ticket.bind(continuationProducer, parish, now, delivered, owner) {
+            val raw = cache.read(parish.id)
+            raw == ticket.rawSnapshot && ScheduleCacheCodec.decode(raw, parish)?.let {
+                permitsAutomaticSourceContinuation(parish, it)
+            } == true
+        } }.getOrDefault(false)
+        if (!bound) { ticket.revoke(); activeContinuation.compareAndSet(ticket, null); return null }
+        return ticket
+    }
+
+    override suspend fun continueSourceSearch(parish: Parish, now: Instant, ticket: ScheduleSourceContinuation,
+        owner: Any): InternetScheduleState? {
+        // Consume on the caller before dispatch/suspension, including an invalid owner.
+        val job = requireNotNull(currentCoroutineContext()[kotlinx.coroutines.Job])
+        val started = runCatching { ticket.begin(continuationProducer, parish, now, owner, job) {
+            val raw = cache.read(parish.id)
+            activeContinuation.get() === ticket && raw == ticket.rawSnapshot &&
+                ScheduleCacheCodec.decode(raw, parish)?.let { permitsAutomaticSourceContinuation(parish, it) } == true
+        } }.getOrDefault(false)
+        if (!started) { ticket.revoke(); activeContinuation.compareAndSet(ticket, null); return null }
+        return try { sourceSearch(parish, now, ticket) }
+        finally { ticket.finish(); activeContinuation.compareAndSet(ticket, null) }
+    }
 
     private data class SourceSearchSnapshot(val raw: String?, val state: InternetScheduleState)
     private class StaleSourceSearch : IllegalStateException()
 
-    override suspend fun searchOtherSources(parish: Parish, now: Instant): InternetScheduleState = withContext(Dispatchers.IO) {
+    override suspend fun searchOtherSources(parish: Parish, now: Instant): InternetScheduleState {
+        cancelSourceContinuation()
+        return sourceSearch(parish, now)
+    }
+
+    private suspend fun sourceSearch(parish: Parish, now: Instant,
+        automatic: ScheduleSourceContinuation? = null): InternetScheduleState = withContext(Dispatchers.IO) {
         fun unavailable() = cached(parish).copy(candidateSearchUnavailable = true)
         val initial = try {
             synchronized(cache.coordinationLock) {
+                automatic?.ensureActive()
                 val raw = cache.read(parish.id)
+                if (automatic != null && raw != automatic.rawSnapshot) return@withContext cached(parish)
                 val state = if (raw == null) initialScheduleState(parish) else
                     ScheduleCacheCodec.decode(raw, parish) ?: return@withContext unavailable()
                 SourceSearchSnapshot(raw, state)
             }
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (_: Exception) { return@withContext unavailable() }
+        if (automatic != null && !permitsAutomaticSourceContinuation(parish, initial.state)) return@withContext cached(parish)
         if (!permitsOtherSourceSearch(parish, initial.state))
-            return@withContext refreshInternal(parish, now, force = true, sourceOverride = null)
+            return@withContext if (automatic != null) cached(parish)
+                else refreshInternal(parish, now, force = true, sourceOverride = null)
 
         val context = currentCoroutineContext()
         val current = AtomicReference(initial)
-        val ownedProgress = claimProgress()
+        val ownedProgress = if (automatic == null) claimProgress() else null
         fun merged(base: InternetScheduleState, found: ScheduleCandidateDiscovery) =
             mergeCandidateEvidence(parish, base.sourceCandidates, found.candidates.sortedBy {
                 // A duplicate positive DTO must not hide a completed explicit negative.
@@ -160,8 +211,10 @@ class InternetScheduleRepository(
             it.outcome == ScheduleIdentityOutcome.CONFLICT && !it.verificationUnavailable }.map { it.sourceUrl }.toSet()
         val excludedIds = initial.state.dismissedCandidateIds.toSet() + initial.state.sourceCandidates.filter {
             it.validFor(parish) && it.outcome == ScheduleIdentityOutcome.CONFLICT && !it.verificationUnavailable }.map { it.id }
-        phase(ownedProgress, parish.id, ScheduleImportPhase.FINDING_SITE)
+        if (ownedProgress != null) phase(ownedProgress, parish.id, ScheduleImportPhase.FINDING_SITE)
         try {
+            context.ensureActive()
+            automatic?.ensureActive()
             val found = siteResolver.forRefresh().candidatesForSourceSearch(parish, excludedUrls, excludedIds,
                 useful = { fresh ->
                     val base = current.get().state
@@ -176,6 +229,7 @@ class InternetScheduleRepository(
                         context.ensureActive()
                         synchronized(cache.coordinationLock) {
                             context.ensureActive()
+                            automatic?.ensureActive()
                             // Map and Own may complete together. Re-read our own snapshot
                             // under the lock so one durable write cannot make the other
                             // look like an unrelated external CAS mutation.
@@ -208,7 +262,12 @@ class InternetScheduleRepository(
                 return@withContext unavailable()
             synchronized(cache.coordinationLock) {
                 context.ensureActive()
+                automatic?.ensureActive()
                 if (cache.read(parish.id) != before.raw) return@synchronized cached(parish)
+                if (automatic != null && !permitsAutomaticSourceContinuation(parish, before.state))
+                    return@synchronized cached(parish)
+                context.ensureActive()
+                automatic?.ensureActive()
                 cache.write(parish.id, encoded)
                 check(cache.read(parish.id) == encoded) { "Source suggestions were not saved" }
                 decoded
@@ -216,18 +275,24 @@ class InternetScheduleRepository(
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (_: StaleSourceSearch) { cached(parish) }
         catch (_: Exception) { unavailable() }
-        finally { phase(ownedProgress, parish.id, ScheduleImportPhase.FINISHED) }
+        finally { if (ownedProgress != null) phase(ownedProgress, parish.id, ScheduleImportPhase.FINISHED) }
     }
 
-    override fun dismissCandidate(parish: Parish, candidateId: String): InternetScheduleState = synchronized(cache.coordinationLock) {
+    override fun dismissCandidate(parish: Parish, candidateId: String): InternetScheduleState {
+        activeContinuation.get()?.revoke()
+        pendingContinuation.set(null)
+        return synchronized(cache.coordinationLock) {
         val previous = cached(parish)
         if (previous.sourceCandidates.none { it.id == candidateId && it.validFor(parish) }) return@synchronized previous
         val next = previous.copy(dismissedCandidateIds = (previous.dismissedCandidateIds + candidateId).distinct().takeLast(40))
         runCatching { cache.write(parish.id, ScheduleCacheCodec.encode(next)) }
         next
+        }
     }
 
-    override suspend fun confirmCandidate(parish: Parish, candidateId: String, now: Instant): InternetScheduleState = withContext(Dispatchers.IO) {
+    override suspend fun confirmCandidate(parish: Parish, candidateId: String, now: Instant): InternetScheduleState {
+        cancelSourceContinuation()
+        return withContext(Dispatchers.IO) {
         // A finishing older search cannot replace progress owned by this action.
         claimProgress()
         val previous = cached(parish)
@@ -270,6 +335,7 @@ class InternetScheduleRepository(
         }
         refreshInternal(parish, now, force = true, sourceOverride = null, confirmedCandidate = checked,
             confirmedDiscovery = discovery)
+        }
     }
 
     private suspend fun refreshInternal(parish: Parish, now: Instant, force: Boolean, sourceOverride: String?,
@@ -380,6 +446,7 @@ class InternetScheduleRepository(
         var blockedConflict = false
         var concurrentFastState: InternetScheduleState? = null
         var pendingFastReview: Pair<String?, InternetScheduleState>? = null
+        var pendingFastReceipt: FastMapContinuationReceipt? = null
         var safetyObserved = false
         var safetyRetained: SchedulePublication? = null
         val withdrawnDates = mutableSetOf<String>()
@@ -523,6 +590,7 @@ class InternetScheduleRepository(
                                 }
                                 if (fastSite == null && hasActionableFastCandidate(parish, previous,
                                         early.candidates, sourceCandidates, emptySet())) {
+                                    pendingFastReceipt = early.fastMapReceipt
                                     pendingFastReview = snapshot.getOrNull() to previous.copy(
                                         status = if (candidateUnavailable) InternetScheduleStatus.UNAVAILABLE else InternetScheduleStatus.NO_WEBSITE,
                                         checkedAt = now.toString(), sourceCandidates = sourceCandidates,
@@ -609,7 +677,23 @@ class InternetScheduleRepository(
                 refreshContext.ensureActive()
                 val current = runCatching { cache.read(parish.id) }
                 if (current.isFailure || current.getOrNull() != snapshot) cached(parish) else {
-                    runCatching { cache.write(parish.id, ScheduleCacheCodec.encode(review)) }
+                    val encoded = ScheduleCacheCodec.encode(review)
+                    val committed = try {
+                        refreshContext.ensureActive()
+                        cache.write(parish.id, encoded)
+                        check(cache.read(parish.id) == encoded)
+                        true
+                    } catch (cancelled: CancellationException) { throw cancelled }
+                    catch (_: Exception) { false }
+                    refreshContext.ensureActive()
+                    // A restored/cached result never mints a new process receipt.
+                    if (committed && snapshot == null && permitsAutomaticSourceContinuation(parish, review) &&
+                        pendingFastReceipt?.consume(parish) == true) {
+                        val ticket = ScheduleSourceContinuation(continuationProducer, review, encoded,
+                            ScheduleEntityIdentity.fingerprint(parish), date.toString(), cache.coordinationLock)
+                        activeContinuation.getAndSet(ticket)?.revoke()
+                        pendingContinuation.set(ticket)
+                    }
                     review
                 }
             }

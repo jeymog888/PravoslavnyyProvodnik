@@ -111,3 +111,12 @@ internal fun hasActionableOwnSearchCandidate(parish: Parish, state: InternetSche
 internal fun InternetScheduleState.withoutSearchMetadata(): InternetScheduleState = copy(
     sourceCandidates = emptyList(), candidateSearchIdentity = "", candidateObservedIds = emptyList(),
     candidateSearchIncomplete = true, candidateSearchUnavailable = false)
+
+/** Automatic discovery is colder than the manual action and never changes existing authority/history. */
+internal fun permitsAutomaticSourceContinuation(parish: Parish, state: InternetScheduleState): Boolean {
+    val maps = setOf(OfficialMapCandidateProvider.PROVIDER, ElitsyMapCandidateProvider.PROVIDER)
+    return OwnContactChildIdentity.ordinaryOsm(parish) && permitsInitialFastDiscovery(parish, state) &&
+        state.dismissedCandidateIds.isEmpty() && state.candidateSearchIdentity == ScheduleEntityIdentity.fingerprint(parish) &&
+        state.sourceCandidates.none { it.provider == OwnContactCandidateProvider.PROVIDER } &&
+        state.sourceCandidates.any { it.provider in maps && it.canConfirm(parish) }
+}
