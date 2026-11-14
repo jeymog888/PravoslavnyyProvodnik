@@ -150,7 +150,7 @@ class FeoriaThanksgivingTranslationsTest {
         assertEquals(oracle["previous141"].asJsonObject["projectionSha256"].asString,
             BookText.sha256(GsonBuilder().disableHtmlEscaping().create().toJson(projection)))
         for ((path, seal) in oracle["protectedFiles"].asJsonObject.entrySet())
-            assertEquals(path, seal.asString, BookText.sha256(WeekdayAntiphonFixtures.sourceFile(path).readText()))
+            ReviewedTranslationSourceRevisions.assertMatches(path, seal.asString)
         assertEquals(13, BookTranslationCorpus.VERSION)
     }
 

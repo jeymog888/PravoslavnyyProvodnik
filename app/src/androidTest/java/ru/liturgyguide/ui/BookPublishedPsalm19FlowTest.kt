@@ -180,10 +180,15 @@ class BookPublishedPsalm19FlowTest {
     private fun settle() { compose.waitForIdle(); compose.mainClock.advanceTimeBy(650); compose.waitForIdle() }
     private fun capture(label: String, sourceDialog: Boolean = false) {
         val out = File(context.getExternalFilesDir("published-psalm19-qa"), name).apply { mkdirs() }
+        compose.waitForIdle()
         File(out, "$label.png").outputStream().use {
-            val root = if (sourceDialog) compose.onNode(isRoot() and
-                hasAnyDescendant(hasText(BookTranslationIndex.PSALTER_SOURCE.title))) else compose.onRoot()
-            root.captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)
+            if (sourceDialog) {
+                val screenshot = requireNotNull(instrumentation.uiAutomation.takeScreenshot())
+                try { check(screenshot.compress(Bitmap.CompressFormat.PNG, 100, it)) }
+                finally { screenshot.recycle() }
+            } else {
+                check(compose.onRoot().captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it))
+            }
         }
     }
 }
