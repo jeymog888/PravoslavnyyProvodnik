@@ -570,6 +570,34 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (_: Exception) { /* Optional improvement must not interrupt offline reading. */ }
     }
+    val russianUpdateOwner = remember(books, requested, parishId, journey, ownedRoute?.sourceReturn) { Any() }
+    val latestRussianUpdateOwner by rememberUpdatedState(russianUpdateOwner)
+    val latestRussianLoadedHash by rememberUpdatedState(loaded?.contentHash)
+    val latestRussianCandidateHash by rememberUpdatedState(update?.book?.contentHash)
+    var russianUpdateDescriptor by remember(russianUpdateOwner) { mutableStateOf<BookRussianUpdateDescriptor?>(null) }
+    LaunchedEffect(russianUpdateOwner, loaded?.contentHash, update?.book?.contentHash, update?.saved) {
+        russianUpdateDescriptor = null
+        val accepted = loaded ?: return@LaunchedEffect
+        val candidate = update ?: return@LaunchedEffect
+        if (!candidate.saved || candidate.book.key != accepted.key || candidate.book.contentHash == accepted.contentHash)
+            return@LaunchedEffect
+        try {
+            val durable = withContext(Dispatchers.IO) {
+                books.cachedVersion(candidate.book.key, candidate.book.contentHash) == candidate.book
+            }
+            currentCoroutineContext().ensureActive()
+            if (!durable) return@LaunchedEffect
+            val descriptor = withContext(Dispatchers.Default) {
+                // Bounded occurrence metadata only, never a second book serialized on the UI thread.
+                val ownerIdentity = Gson().toJson(listOf(parishId, journey, ownedRoute?.sourceReturn))
+                BookRussianUpdateDescriptor.create(accepted, candidate, true, russianUpdateOwner, ownerIdentity)
+            }
+            currentCoroutineContext().ensureActive()
+            if (latestRussianUpdateOwner === russianUpdateOwner && latestRussianLoadedHash == accepted.contentHash &&
+                latestRussianCandidateHash == candidate.book.contentHash) russianUpdateDescriptor = descriptor
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { /* A generic offer stays available without a translation promise. */ }
+    }
     // Saved BOOK routes can reopen the same text for another church. Language and
     // visibility controls must share the same identity as the persisted reading cursor.
     if (loaded != null) key(loaded.key.canonical(), loaded.contentHash, parishId, ownedRoute?.sourceReturn) {
@@ -611,6 +639,7 @@ fun ServiceBookScreen(initialKey: ServiceBookKey, parishId: String?, books: Serv
             },
             onRefresh = { retry++ }, refreshing = refreshing,
             onAcceptUpdate = acceptUpdate.takeIf { update != null },
+            russianUpdate = russianUpdateDescriptor, russianUpdateOwner = russianUpdateOwner,
             offlineControls = offlineControls,
             dedicationControls = dedicationControls,
             isSaved = (result as? BookLoadResult.Ready)?.saved != false,

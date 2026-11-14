@@ -28,8 +28,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -39,6 +41,8 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -47,6 +51,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
@@ -153,7 +158,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     onChooseSearchHit: (BookLocatedSearchHit) -> Boolean = { false },
     pendingSearchTarget: BookLocatedSearchHit? = null,
     onPendingSearchHandled: (BookLocatedSearchHit) -> Boolean = { true },
-    offlineControls: BookOfflineControls? = null, dedicationControls: BookDedicationControls? = null) {
+    offlineControls: BookOfflineControls? = null, dedicationControls: BookDedicationControls? = null,
+    russianUpdate: BookRussianUpdateDescriptor? = null, russianUpdateOwner: Any? = null) {
     val journey = journeyContext?.validatedFor(book.key, parishId)
     val hourReview = remember(book.key, book.contentHash, journey?.isHoursLiturgyTexts) {
         BookHourSourceReview.of(book, journey?.isHoursLiturgyTexts == true)
@@ -205,6 +211,13 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     val meaningOwner = remember(book.key, book.contentHash, parishId) { Any() }
     var optionsOfferAtTop by remember(meaningOwner) { mutableStateOf(false) }
     var optionsOfferShown by remember(meaningOwner) { mutableStateOf(false) }
+    val noticeLifetime = remember(book.key, book.contentHash, parishId, journey, russianUpdateOwner) { Any() }
+    var russianGeometry by remember(noticeLifetime, mode) { mutableStateOf<BookRussianTextGeometry?>(null) }
+    var readerViewport by remember(noticeLifetime) { mutableStateOf<Rect?>(null) }
+    var optionsRussianTarget by remember(noticeLifetime) { mutableStateOf<BookRussianNoticeTarget?>(null) }
+    var optionsRussianClaim by remember(noticeLifetime) { mutableStateOf<BookRussianOptionsClaim?>(null) }
+    var optionsRussianSpace by remember(noticeLifetime) { mutableStateOf(false) }
+    LaunchedEffect(noticeLifetime) { if (sheet == "options") sheet = null }
     val latestMeaningOwner by rememberUpdatedState(meaningOwner)
     var meaningSession by remember(meaningOwner) { mutableStateOf<BookMeaningReaderSession?>(null) }
     var meaningOpening by remember(meaningOwner) { mutableStateOf(false) }
@@ -284,6 +297,36 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         (measured?.key as? String)?.let(itemKeys::get) ?: if (measured?.key == endKey) items.last()
         else items.firstOrNull { it.chapter.id == cursor.value.chapterId } ?: items.first()
     } }
+    val observedRussianTarget by remember(items, itemKeys, list, russianGeometry, readerViewport, mode) { derivedStateOf {
+        if (mode != BookReadingMode.RUSSIAN) return@derivedStateOf null
+        val measured = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == list.firstVisibleItemIndex }
+            ?: return@derivedStateOf null
+        if (measured.offset + measured.size <= list.layoutInfo.viewportStartOffset ||
+            measured.offset >= list.layoutInfo.viewportEndOffset) return@derivedStateOf null
+        val item = (measured.key as? String)?.let(itemKeys::get) ?: return@derivedStateOf null
+        val block = item.block ?: return@derivedStateOf null
+        if (item.quietGroup != null || visibility.isPrivate(block) || !BookBlockPresentation.isSpoken(book.key, block) ||
+            BookBlockPresentation.effectiveRussian(book.key, block) != null) return@derivedStateOf null
+        val geometry = russianGeometry?.takeIf { it.blockId == block.id } ?: return@derivedStateOf null
+        val viewport = readerViewport ?: return@derivedStateOf null
+        if (geometry.layout.layoutInput.text.text != block.original) return@derivedStateOf null
+        val line = (0 until geometry.layout.lineCount).firstOrNull { index ->
+            geometry.bounds.top + geometry.layout.getLineTop(index) >= viewport.top &&
+                geometry.bounds.top + geometry.layout.getLineBottom(index) <= viewport.bottom
+        } ?: return@derivedStateOf null
+        BookRussianNoticeTarget(block.id, Rect(maxOf(viewport.left, geometry.bounds.left),
+            geometry.bounds.top + geometry.layout.getLineTop(line), minOf(viewport.right, geometry.bounds.right),
+            geometry.bounds.top + geometry.layout.getLineBottom(line)))
+    } }
+    fun russianClaim(target: BookRussianNoticeTarget? = observedRussianTarget): BookRussianOptionsClaim? {
+        val descriptor = russianUpdate ?: return null
+        if (russianUpdateOwner == null || onAcceptUpdate == null || mode != BookReadingMode.RUSSIAN ||
+            positioning || targetUnresolved || switchingPart || superseded || meaningOpening || list.isScrollInProgress ||
+            target == null || observedRussianTarget?.blockId != target.blockId ||
+            !descriptor.matches(book.key, book.contentHash, russianUpdateOwner) || target.blockId !in descriptor.newlyRussianBlockIds)
+            return null
+        return BookRussianOptionsClaim(noticeLifetime, descriptor.pairIdentity, target.blockId)
+    }
     val currentChapter = currentItem.chapter
     val currentSectionTitle = remember(book, currentItem.id) { currentItem.block?.let {
         BookAfterCommunionMeaning.forPlace(book, currentChapter, it)?.title
@@ -725,6 +768,9 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         // Placement belongs to this opening, not to a later asynchronous candidate.
         optionsOfferAtTop = onAcceptUpdate != null
         optionsOfferShown = optionsOfferAtTop
+        optionsRussianTarget = observedRussianTarget
+        optionsRussianClaim = russianClaim(optionsRussianTarget)
+        optionsRussianSpace = optionsRussianClaim != null
         sheet = "options"
     }
     fun saveAndChangeBook(target: ServiceBookKey, accept: (ServiceBookKey) -> Boolean) {
@@ -811,12 +857,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     val currentEvents by eventState
     val acceptCalendarUpdate: () -> Unit = { currentEvents.acceptUpdate() }
     val chooseDedication: () -> Unit = { currentEvents.openDedication() }
-    val updateNotice = remember(meaningOwner) { SnackbarHostState() }
-    LaunchedEffect(meaningOwner, updateFailureRevision, loadWarning) {
-        if (updateFailureRevision > 0) updateNotice.showSnackbar(
-            loadWarning ?: "Не удалось открыть обновленный текст. Вы остались в прежней редакции",
-            withDismissAction = true, duration = SnackbarDuration.Indefinite)
-    }
+
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
     // Use this reader's actual space, including split-screen and in-app constraints.
@@ -827,7 +868,18 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     val compactLabels = shortViewport || density.fontScale > 1.5f ||
         (maxWidth < 360.dp && density.fontScale > 1.1f)
     Scaffold(containerColor = MaterialTheme.colorScheme.surface,
-        snackbarHost = { if (sheet == null && meaningSession == null) SnackbarHost(updateNotice) },
+        snackbarHost = {
+            BookUpdateNoticeHost(noticeLifetime, book.key, book.contentHash, russianUpdateOwner,
+                russianUpdate, observedRussianTarget, readerViewport,
+                visible = sheet == null && meaningSession == null,
+                allowInformation = mode == BookReadingMode.RUSSIAN && !positioning && !targetUnresolved &&
+                    !switchingPart && !superseded && !meaningOpening && !playing && !list.isScrollInProgress && isSaved,
+                updateAvailable = onAcceptUpdate != null, errorRevision = updateFailureRevision, errorMessage = loadWarning,
+                onReview = { blockId ->
+                    if (russianClaim()?.blockId == blockId && !positioning && !targetUnresolved && !superseded)
+                        currentEvents.openOptions()
+                })
+        },
         topBar = {
             Surface(color = MaterialTheme.colorScheme.surface, shadowElevation = 1.dp) {
                 Column(Modifier.statusBarsPadding()) {
@@ -943,6 +995,10 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
         }) { padding ->
         Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.TopCenter) {
             LazyColumn(Modifier.fillMaxHeight().widthIn(max = 600.dp).fillMaxWidth().nestedScroll(manualScroll)
+                .onGloballyPositioned { coordinates ->
+                    val bounds = coordinates.boundsInRoot()
+                    if (readerViewport != bounds) readerViewport = bounds
+                }
                 .pointerInput(Unit) {
                     // Touch means "let me read" even without dragging. Observe the
                     // initial event without consuming links, scrolling or other gestures.
@@ -1003,6 +1059,11 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                         searchHit = pendingSearch?.takeIf { it.blockId == item.block.id && it.mode == mode },
                         searchRevision = seekRevision,
                         onSearchLine = { line -> if (pendingSearch == line.hit) searchLine = line },
+                        russianGeometryOwner = noticeLifetime,
+                        onRussianGeometry = ({ geometry: BookRussianTextGeometry ->
+                            if (russianGeometry != geometry) russianGeometry = geometry
+                        }).takeIf { mode == BookReadingMode.RUSSIAN && currentItem.id == item.id &&
+                            BookBlockPresentation.effectiveRussian(book.key, item.block) == null },
                         onChooseDedication = chooseDedication.takeIf { dedicationControls != null && item.block.id == dedicationEntryId },
                         dedicationBusy = dedicationControls?.busy == true)
                 }
@@ -1152,11 +1213,23 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp).testTag("book_options"), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     val updateAvailable = onAcceptUpdate != null
                     val showOffer = optionsOfferShown || updateAvailable
-                    if (updateAvailable && !optionsOfferShown) SideEffect { optionsOfferShown = true }
+                    if (updateAvailable && !optionsOfferShown) SideEffect {
+                        optionsOfferShown = true
+                        // A newly appended bottom offer may freeze the current proof; a top
+                        // generic offer never grows when a descriptor arrives late.
+                        if (!optionsOfferAtTop) {
+                            optionsRussianClaim = russianClaim(optionsRussianTarget)
+                            optionsRussianSpace = optionsRussianClaim != null
+                        }
+                    }
+                    val contextualProof = optionsRussianClaim?.let { frozen ->
+                        frozen.owner === noticeLifetime && russianClaim(optionsRussianTarget) == frozen
+                    } == true
                     val updateWarning = loadWarning ?: if (updateFailureRevision > 0)
                         "Не удалось открыть обновленный текст. Вы остались в прежней редакции" else null
                     Text("Чтение", style = MaterialTheme.typography.headlineSmall)
                     if (showOffer && optionsOfferAtTop) BookUpdateOffer(updateAvailable, updateWarning,
+                        reserveRussianContext = optionsRussianSpace, russianContextCurrent = contextualProof,
                         onAccept = { currentEvents.acceptUpdate() })
                     BookDetailsButton(offlineControls, isSaved, { currentEvents.openCalendar() }, Modifier.testTag("book_options_offline"))
                     Text("Темп прокрутки: $wordsPerMinute слов/мин", style = MaterialTheme.typography.titleMedium)
@@ -1175,6 +1248,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                     }
                     if (!showOffer) loadWarning?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
                     if (showOffer && !optionsOfferAtTop) BookUpdateOffer(updateAvailable, updateWarning,
+                        reserveRussianContext = optionsRussianSpace, russianContextCurrent = contextualProof,
                         onAccept = { currentEvents.acceptUpdate() })
                 }
             }
@@ -1381,9 +1455,19 @@ internal fun BookModePicker(mode: BookReadingMode, onSelect: (BookReadingMode) -
 @Composable
 private fun BookTextBlock(key: ServiceBookKey, block: BookBlock, mode: BookReadingMode, textSize: Int,
     searchHit: BookSearchHit? = null, searchRevision: Int = 0, onSearchLine: (BookSearchLine) -> Unit = {},
-    onChooseDedication: (() -> Unit)? = null, dedicationBusy: Boolean = false) {
+    onChooseDedication: (() -> Unit)? = null, dedicationBusy: Boolean = false,
+    onRussianGeometry: ((BookRussianTextGeometry) -> Unit)? = null, russianGeometryOwner: Any? = null) {
     var textLayout by remember(block.id, mode) { mutableStateOf<TextLayoutResult?>(null) }
     var textTop by remember(block.id, mode) { mutableStateOf<Float?>(null) }
+    var textBounds by remember(block.id, mode) { mutableStateOf<Rect?>(null) }
+    val currentGeometryReceiver by rememberUpdatedState(onRussianGeometry)
+    // A new reader lifetime can reuse the measured Compose text node. Re-emit
+    // that unchanged geometry to its new owner instead of waiting for relayout.
+    LaunchedEffect(textLayout, textBounds, onRussianGeometry != null, russianGeometryOwner) {
+        val layout = textLayout
+        val bounds = textBounds
+        if (layout != null && bounds != null) currentGeometryReceiver?.invoke(BookRussianTextGeometry(block.id, bounds, layout))
+    }
     LaunchedEffect(searchHit, textLayout, textTop, searchRevision) {
         val hit = searchHit
         val layout = textLayout
@@ -1416,7 +1500,14 @@ private fun BookTextBlock(key: ServiceBookKey, block: BookBlock, mode: BookReadi
         Text(text, style = if (rubric) MaterialTheme.typography.bodyMedium else
             MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Serif, fontSize = (21 + textSize * 2).sp, lineHeight = (32 + textSize * 3).sp),
             color = if (rubric) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.testTag("book_text_${block.id}").onGloballyPositioned { textTop = it.positionInParent().y },
+            modifier = Modifier.testTag("book_text_${block.id}").onGloballyPositioned { coordinates ->
+                textTop = coordinates.positionInParent().y
+                if (onRussianGeometry != null) {
+                    val point = coordinates.positionInRoot()
+                    val bounds = Rect(point.x, point.y, point.x + coordinates.size.width, point.y + coordinates.size.height)
+                    if (textBounds != bounds) textBounds = bounds
+                }
+            },
             onTextLayout = { textLayout = it })
         if (localVariation) Text("Прокрутка останавливается здесь. После пения нажмите \"Дальше\"",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1444,9 +1535,16 @@ private fun BookReaderSettingsButton(updateAvailable: Boolean, onClick: () -> Un
 }
 
 @Composable
-private fun BookUpdateOffer(available: Boolean, warning: String?, onAccept: () -> Unit) {
+private fun BookUpdateOffer(available: Boolean, warning: String?, reserveRussianContext: Boolean = false,
+    russianContextCurrent: Boolean = false, onAccept: () -> Unit) {
     Column(Modifier.fillMaxWidth().testTag("book_update_offer"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Обновленный текст", style = MaterialTheme.typography.titleMedium)
+        if (reserveRussianContext) Text("В обновленной редакции есть перевод выбранного фрагмента",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = if (russianContextCurrent) Modifier.testTag("book_update_russian_context") else
+                Modifier.alpha(0f).clearAndSetSemantics { })
+        // The frozen line retains its measured space after withdrawal, without
+        // keeping a visible or accessible claim about the previous candidate.
         // A withdrawn offer keeps its space for this open panel but cannot retain an old action.
         Button(onClick = onAccept, enabled = available,
             modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
@@ -1467,10 +1565,28 @@ private fun BookReaderAction(label: String, icon: ImageVector, description: Stri
     // Keep full spoken names and large touch targets when space calls for icons.
     TextButton(onClick = onClick, modifier = modifier.heightIn(min = if (iconsOnly) 56.dp else 72.dp), contentPadding = PaddingValues(horizontal = 6.dp, vertical = 10.dp),
         colors = ButtonDefaults.textButtonColors(containerColor = if (emphasized) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLow)) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Icon(icon, description, Modifier.size(24.dp))
-            if (!iconsOnly) Text(label, modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center, style = MaterialTheme.typography.labelLarge)
+        val density = LocalDensity.current
+        val measurer = rememberTextMeasurer()
+        val labelStyle = MaterialTheme.typography.labelLarge
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val width = with(density) { maxWidth.roundToPx() }
+            val shorter = when (label) {
+                "Прокрутка" -> "Листать"
+                "Микрофон" -> "Голос"
+                else -> label
+            }
+            // Keep normal-size labels on narrow screens without breaking a word
+            // or reducing the user's text size. Only an unfit individual action
+            // falls back to its fully named icon.
+            val fittingLabel = if (iconsOnly) null else listOf(label, shorter).distinct().firstOrNull {
+                measurer.measure(AnnotatedString(it), labelStyle, softWrap = false, maxLines = 1).size.width <= width
+            }
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Icon(icon, description, Modifier.size(24.dp))
+                if (fittingLabel != null) Text(fittingLabel, modifier = Modifier.fillMaxWidth(), maxLines = 1, softWrap = false,
+                    textAlign = TextAlign.Center, style = labelStyle)
+            }
         }
     }
 }
