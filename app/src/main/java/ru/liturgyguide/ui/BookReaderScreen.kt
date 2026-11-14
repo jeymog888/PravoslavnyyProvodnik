@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewTreeObserver
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.focusable
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.Modifier
@@ -1399,22 +1401,37 @@ internal fun BookModePicker(mode: BookReadingMode, onSelect: (BookReadingMode) -
     }
     val embedded = meaningIconOnly && !iconOnly
     BoxWithConstraints(if (iconOnly || embedded) modifier else modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-        val availablePickerWidth = maxWidth
         val needsMenu = compact || minimumWidths.fold(24.dp) { total, width -> total + width } > maxWidth
         if (needsMenu) {
+            val horizontalPadding = 8.dp
+            val iconGap = 8.dp
+            val iconSize = 24.dp
+            val labelWidthPx = measurer.measure(AnnotatedString(mode.title), style = style,
+                softWrap = false, maxLines = 1).size.width
+            val meaningLabelWidthPx = measurer.measure(AnnotatedString(BookReadingMode.MEANING.title), style = style,
+                softWrap = false, maxLines = 1).size.width
+            // Fix the right-hand allocation before giving the remaining pixels to the language.
+            // width() also prevents Material's implicit minimum from exceeding this budget.
+            val meaningWidthPx = with(density) {
+                if (meaningIconOnly) 48.dp.roundToPx()
+                else maxOf(48.dp.roundToPx(), ButtonDefaults.MinWidth.roundToPx(),
+                    meaningLabelWidthPx + 2 * horizontalPadding.roundToPx())
+            }
+            val meaningWidth = with(density) { meaningWidthPx.toDp() }
+            val languageWidthPx = constraints.maxWidth - with(density) { 12.dp.roundToPx() } - meaningWidthPx
+            val showChevron = with(density) {
+                labelWidthPx + 2 * horizontalPadding.roundToPx() + iconGap.roundToPx() + iconSize.roundToPx() <= languageWidthPx
+            }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (iconOnly) IconButton(onClick = { onOpen(); expanded = true }, modifier = Modifier.size(48.dp).testTag("book_mode_menu")) {
                     Icon(Icons.Default.Translate, "Язык текста: ${mode.title}")
                 } else OutlinedButton(onClick = { onOpen(); expanded = true },
-                    contentPadding = if (embedded) PaddingValues(horizontal = 8.dp, vertical = 12.dp)
-                        else ButtonDefaults.ContentPadding,
+                    contentPadding = PaddingValues(horizontal = horizontalPadding, vertical = 12.dp),
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("book_mode_menu")
                         .semantics { contentDescription = "Язык текста: ${mode.title}" }) {
                     Text(mode.title, style = style, modifier = Modifier.testTag("book_mode_menu_label"))
-                    val labelWidth = with(density) { measurer.measure(AnnotatedString(mode.title), style, softWrap = false).size.width.toDp() }
-                    val languageWidth = if (embedded) availablePickerWidth - 60.dp else availablePickerWidth
-                    if (!embedded || labelWidth + 48.dp <= languageWidth) {
-                        Spacer(Modifier.width(if (embedded) 8.dp else 12.dp)); Icon(Icons.Default.ExpandMore, null)
+                    if (showChevron) {
+                        Spacer(Modifier.width(iconGap)); Icon(Icons.Default.ExpandMore, null, modifier = Modifier.size(iconSize))
                     }
                 }
                 val meaningModifier = Modifier.testTag("book_mode_meaning")
@@ -1422,7 +1439,8 @@ internal fun BookModePicker(mode: BookReadingMode, onSelect: (BookReadingMode) -
                 if (meaningIconOnly) IconButton(onClick = { onSelect(BookReadingMode.MEANING) }, enabled = meaningEnabled,
                     modifier = meaningModifier.size(48.dp)) { Icon(Icons.Default.Info, "Смысл этого места") }
                 else OutlinedButton(onClick = { onSelect(BookReadingMode.MEANING) }, enabled = meaningEnabled,
-                    modifier = meaningModifier.heightIn(min = 48.dp)) { Text("Смысл") }
+                    contentPadding = PaddingValues(horizontal = horizontalPadding, vertical = 12.dp),
+                    modifier = meaningModifier.width(meaningWidth).heightIn(min = 48.dp)) { Text("Смысл", style = style) }
             }
             DropdownMenu(expanded, { expanded = false }) {
                 languages.forEach { value -> DropdownMenuItem(
@@ -1593,6 +1611,12 @@ private fun BookReaderAction(label: String, icon: ImageVector, description: Stri
     }
 }
 
+private val BookSearchFocusGrantSaver = Saver<BookSearchFocusGrant, Boolean>(
+    save = { false }, restore = { BookSearchFocusGrant.restored() })
+// Restoring the same microphone opening is never another authorization to record.
+private val BookSearchInitialListenSaver = Saver<Boolean, Boolean>(save = { true }, restore = { true })
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, preferredMode: BookReadingMode,
     onSelect: (BookSearchHit) -> Unit,
@@ -1604,11 +1628,24 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
     onSelectLocated: (BookLocatedSearchHit) -> Unit = { onSelect(it.hit) },
     selectionError: String? = null, selecting: Boolean = false) {
     var query by rememberSaveable { mutableStateOf("") }
+    var microphoneRequested by rememberSaveable { mutableStateOf(startMicrophone) }
+    // Saving never serializes an unspent right or a live request. A restored opening is always spent.
+    val focusGrant = rememberSaveable(saver = BookSearchFocusGrantSaver) { BookSearchFocusGrant.opening(!startMicrophone) }
+    val opening = remember { Any() }
+    val searchView = LocalView.current
+    val searchLifecycle = LocalLifecycleOwner.current.lifecycle
+    val autofocus = remember(opening, book.key, book.contentHash, searchView, searchLifecycle) {
+        BookSearchFocusAttempt(opening, book.key, book.contentHash, searchView, searchLifecycle)
+    }
+    val currentAutofocus by rememberUpdatedState(autofocus)
+    val queryFocus = remember(autofocus) { FocusRequester() }
+    var queryPlaced by remember(autofocus) { mutableStateOf(false) }
+    fun revokeAutofocus() { focusGrant.take(); autofocus.revoke() }
     var speechState by remember { mutableStateOf(SpeechGuideState()) }
     var permissionMessage by remember { mutableStateOf<String?>(null) }
     var pendingPermission by remember { mutableStateOf<Long?>(null) }
     var mounted by remember { mutableStateOf(true) }
-    var initialRequestMade by remember { mutableStateOf(false) }
+    var initialRequestMade by rememberSaveable(stateSaver = BookSearchInitialListenSaver) { mutableStateOf(false) }
     var resolvingSpeech by remember { mutableStateOf(false) }
     var searchResult by remember { mutableStateOf<BookSearchResult?>(null) }
     var corpus by remember(book.key, book.contentHash) { mutableStateOf(BookSearchCorpus(listOf(book), otherPart)) }
@@ -1689,7 +1726,13 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
             }
         }
     } }
+    fun chooseMicrophone() {
+        // A presentation choice never grants a new listening request or autofocus right.
+        revokeAutofocus()
+        microphoneRequested = true
+    }
     fun listen(unchecked: Boolean = false) {
+        chooseMicrophone()
         focus.clearFocus()
         keyboard?.hide()
         permissionMessage = null
@@ -1715,6 +1758,43 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
         onDispose { mounted = false; resolver.cancel(); lifecycle.removeObserver(observer); request.dispose(); guide.destroy() }
     }
     DisposableEffect(book.key, book.contentHash, resolver) { onDispose { resolver.cancel(); resolvingSpeech = false } }
+    DisposableEffect(autofocus, searchLifecycle) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_PAUSE || event == Lifecycle.Event.ON_STOP || event == Lifecycle.Event.ON_DESTROY)
+                revokeAutofocus()
+        }
+        searchLifecycle.addObserver(observer)
+        onDispose { revokeAutofocus(); searchLifecycle.removeObserver(observer) }
+    }
+    // The function reads the current state delegates, including synchronous changes before recomposition.
+    val focusAllowed by rememberUpdatedState<(BookSearchFocusAttempt, Boolean) -> Boolean>({ candidate, needsWindow ->
+        mounted && currentAutofocus === candidate &&
+            candidate.matches(opening, book.key, book.contentHash, searchView, searchLifecycle) &&
+            candidate.valid && queryPlaced && searchView.isAttachedToWindow &&
+            (!needsWindow || searchView.hasWindowFocus()) &&
+            searchLifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) &&
+            !microphoneRequested && pendingPermission == null && !speechState.isActive && !resolvingSpeech
+    })
+    LaunchedEffect(autofocus) {
+        // Spend before the first suspension, including waiting for the first field layout.
+        if (!focusGrant.take()) return@LaunchedEffect
+        val job = requireNotNull(currentCoroutineContext()[Job])
+        autofocus.bind(job)
+        try {
+            snapshotFlow { queryPlaced }.first { it }
+            currentCoroutineContext().ensureActive()
+            if (!focusAllowed(autofocus, false)) return@LaunchedEffect
+            if (!searchView.awaitReaderWindowFocus()) return@LaunchedEffect
+            currentCoroutineContext().ensureActive()
+            if (!focusAllowed(autofocus, true)) return@LaunchedEffect
+            withFrameNanos { }
+            currentCoroutineContext().ensureActive()
+            if (!focusAllowed(autofocus, true) || !autofocus.claim()) return@LaunchedEffect
+            queryFocus.requestFocus()
+            // requestFocus may invoke synchronous callbacks; they can revoke this same request.
+            if (focusAllowed(autofocus, true)) keyboard?.show()
+        } finally { autofocus.unbind(job) }
+    }
     val searchAllowed = !speechState.isActive && pendingPermission == null && !resolvingSpeech && query.trim().length >= 2
     val requestedQuery = query
     val corpusIdentity = corpus.books.map { it.key to it.contentHash }
@@ -1732,25 +1812,51 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
     val currentResult = searchResult?.takeIf { it.bookKey == book.key && it.bookHash == book.contentHash && it.query == query && it.mode == preferredMode }
     val searching = resolvingSpeech || (searchAllowed && currentResult?.corpus != corpusIdentity)
     val hits = if (searchAllowed) currentResult?.hits.orEmpty() else emptyList()
+    val fullSpeechPanel = microphoneRequested || pendingPermission != null || permissionMessage != null ||
+        speechState.isActive || speechState.status == SpeechStatus.ERROR
+    fun microphoneAction() {
+        chooseMicrophone()
+        if (speechState.status == SpeechStatus.UNAVAILABLE) guide.refreshAvailability() else listen()
+    }
     LazyColumn(Modifier.fillMaxWidth().heightIn(max = 620.dp).imePadding().testTag("book_search_sheet")
         .semantics { stateDescription = if (searching) "Ищу в тексте службы" else "Поиск готов" }, contentPadding = PaddingValues(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
-            Text("Найти место", style = MaterialTheme.typography.headlineSmall)
+            Row(Modifier.fillMaxWidth().focusable().testTag("book_search_header"), horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                Text("Найти место", Modifier.weight(1f).testTag("book_search_title"),
+                    style = if (LocalDensity.current.fontScale >= 1.5f) MaterialTheme.typography.titleMedium
+                        else MaterialTheme.typography.headlineSmall)
+                if (!fullSpeechPanel) TooltipBox(positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                    tooltip = { PlainTooltip { Text("Микрофон") } }, state = rememberTooltipState()) {
+                    FilledTonalIconButton(onClick = { microphoneAction() },
+                        modifier = Modifier.size(48.dp).testTag("book_search_microphone")) {
+                        Icon(Icons.Default.Mic, if (speechState.status == SpeechStatus.UNAVAILABLE)
+                            "Найти по микрофону. Распознавание недоступно" else "Найти по микрофону")
+                    }
+                }
+            }
             Spacer(Modifier.height(20.dp))
             OutlinedTextField(query, {
+                revokeAutofocus()
                 resolver.cancel()
                 resolvingSpeech = false
                 manualRevision++
                 voiceRevision = null
                 query = it.take(300)
-            }, label = { Text("Какие слова вы услышали?") },
-                modifier = Modifier.fillMaxWidth().testTag("book_search_query"), singleLine = true,
+            }, label = { Text("Слова из службы", modifier = Modifier.testTag("book_search_query_label")) },
+                modifier = Modifier.fillMaxWidth().focusRequester(queryFocus).onGloballyPositioned {
+                    queryPlaced = it.isAttached && it.size.width > 0 && it.size.height > 0
+                }.testTag("book_search_query"), singleLine = true,
                 enabled = !speechState.isActive && pendingPermission == null)
+            Spacer(Modifier.height(12.dp))
+            Text((if (corpus.books.size == 1) "Текст: " else "Тексты: ") + corpus.books.joinToString(" · ") { it.key.worship.title },
+                modifier = Modifier.testTag("book_search_scope"), style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        item {
+        if (fullSpeechPanel) item {
             BookSpeechPanel(speechState, pendingPermission != null, permissionMessage,
-                onListen = { if (speechState.status == SpeechStatus.UNAVAILABLE) guide.refreshAvailability() else listen() },
+                onListen = { microphoneAction() },
                 onFinish = guide::finishListening, onCancel = request::stop,
                 onTryWithoutSupport = { listen(true) })
         }
@@ -1788,7 +1894,7 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
             }
             if (query.isBlank()) item { Text("Введите несколько слов подряд из того, что сейчас слышите", color = MaterialTheme.colorScheme.onSurfaceVariant) }
             if (!searching && hits.size > 1) item {
-                Text("Найдено мест: ${hits.size}. Сравните соседние фразы", style = MaterialTheme.typography.bodySmall,
+                Text("Совпадений: ${hits.size}", modifier = Modifier.testTag("book_search_count"), style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             items(hits, key = { it.identity }) { located ->

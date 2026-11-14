@@ -37,23 +37,29 @@ import java.util.concurrent.TimeUnit
 @RunWith(AndroidJUnit4::class)
 class BookReadingUsabilityTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
+    private val modeDiagnosticId = java.util.UUID.randomUUID().toString()
+    private var modeDiagnosticCase = ""
 
     @Test fun allReadingModeNamesFitAt320And360DpAcrossSystemFontSizes() {
         val width = mutableStateOf(320)
         val scale = mutableStateOf(1f)
         val selected = mutableStateOf(BookReadingMode.ORIGINAL)
         var menuOpens = 0
+        var meaningOpens = 0
         compose.setContent {
             val density = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(density.density, scale.value)) {
                 GuideTheme(false) {
                     Box(Modifier.width(width.value.dp)) {
-                        BookModePicker(selected.value, { selected.value = it }, { menuOpens++ })
+                        BookModePicker(selected.value, {
+                            if (it == BookReadingMode.MEANING) meaningOpens++ else selected.value = it
+                        }, { menuOpens++ })
                     }
                 }
             }
         }
         for (dp in listOf(320, 360)) for (font in listOf(1f, 1.3f, 1.5f, 2f)) {
+            modeDiagnosticCase = "$dp-$font"
             compose.runOnIdle { width.value = dp; scale.value = font; selected.value = BookReadingMode.ORIGINAL }
             compose.waitForIdle()
             val menuShown = compose.onAllNodesWithTag("book_mode_menu").fetchSemanticsNodes().isNotEmpty()
@@ -63,12 +69,18 @@ class BookReadingUsabilityTest {
                 val before = menuOpens
                 compose.onNodeWithTag("book_mode_menu").assertIsDisplayed().performClick()
                 compose.runOnIdle { assertEquals(before + 1, menuOpens) }
-                for (mode in BookReadingMode.entries) {
+                for (mode in listOf(BookReadingMode.ORIGINAL, BookReadingMode.RUSSIAN)) {
                     assertSingleUnclippedLine("book_mode_menu_label_${mode.name.lowercase()}", mode.title)
                 }
+                compose.onNodeWithTag("book_mode_menu_label_meaning").assertDoesNotExist()
                 compose.onNodeWithTag("book_mode_russian").performClick()
                 compose.runOnIdle { assertEquals(BookReadingMode.RUSSIAN, selected.value) }
                 assertSingleUnclippedLine("book_mode_menu_label", "Русский")
+                assertSingleUnclippedLine("meaning-action", "Смысл",
+                    compose.onNode(hasText("Смысл") and hasAnyAncestor(hasTestTag("book_mode_meaning")), useUnmergedTree = true))
+                val language = compose.onNodeWithTag("book_mode_menu").getBoundsInRoot()
+                val meaning = compose.onNodeWithTag("book_mode_meaning").assertIsDisplayed().assertHeightIsAtLeast(48.dp).getBoundsInRoot()
+                assertTrue(meaning.left - language.right >= 12.dp)
             } else {
                 val bounds = BookReadingMode.entries.map { mode ->
                     assertSingleUnclippedLine("book_mode_label_${mode.name.lowercase()}", mode.title)
@@ -80,6 +92,12 @@ class BookReadingUsabilityTest {
                 compose.onNodeWithTag("book_mode_russian").performClick().assertIsSelected()
                 compose.runOnIdle { assertEquals(BookReadingMode.RUSSIAN, selected.value) }
             }
+            val beforeMeaning = meaningOpens
+            compose.onNodeWithTag("book_mode_meaning").assertIsDisplayed().assertIsEnabled().performClick()
+            compose.runOnIdle {
+                assertEquals(beforeMeaning + 1, meaningOpens)
+                assertEquals(BookReadingMode.RUSSIAN, selected.value)
+            }
         }
     }
 
@@ -89,7 +107,7 @@ class BookReadingUsabilityTest {
         launchSheet(fake) { selected = it }
         compose.onNodeWithTag("book_search_query").performTextInput("мой запрос")
         closeSoftKeyboard()
-        compose.onNodeWithTag("book_listen").performScrollTo().assertTextEquals("Послушать службу").performClick()
+        compose.onNodeWithTag("book_search_microphone").assertContentDescriptionEquals("Найти по микрофону").performClick()
         compose.runOnIdle { assertEquals(1, fake.backend.starts) }
         compose.onNodeWithTag("book_listening_status").assertTextEquals("Включаю микрофон")
         compose.onNodeWithTag("book_microphone_level").assertDoesNotExist()
@@ -136,7 +154,7 @@ class BookReadingUsabilityTest {
         launchSheet(fake) { selections++ }
         compose.onNodeWithTag("book_search_query").performTextInput("мой запрос")
         closeSoftKeyboard()
-        compose.onNodeWithTag("book_listen").performScrollTo().performClick()
+        compose.onNodeWithTag("book_search_microphone").performClick()
         compose.runOnIdle { fake.backend.events!!.ready(); fake.backend.events!!.partial("Иже") }
         val old = fake.backend.events!!
         compose.onNodeWithTag("book_listening_cancel").performScrollTo().performClick()
@@ -170,7 +188,7 @@ class BookReadingUsabilityTest {
             } finally { returned.countDown() }
         } }) { selections++ }
         try {
-            compose.onNodeWithTag("book_listen").performScrollTo().performClick()
+            compose.onNodeWithTag("book_search_microphone").performClick()
             compose.runOnIdle { fake.backend.events!!.ready(); fake.backend.events!!.alternatives(listOf("ошибка", "Иже Херувимы")) }
             assertTrue("The background lookup must actually be in flight", entered.await(5, TimeUnit.SECONDS))
             compose.onNodeWithTag("book_search_query").performScrollTo().assertIsEnabled().performTextReplacement("мой ручной запрос")
@@ -196,16 +214,28 @@ class BookReadingUsabilityTest {
         }
     }
 
-    private fun assertSingleUnclippedLine(tag: String, expected: String) {
-        val node = compose.onNodeWithTag(tag, useUnmergedTree = true).assertIsDisplayed().assertTextEquals(expected)
-        val layouts = mutableListOf<TextLayoutResult>()
-        node.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { assertTrue(it(layouts)) }
-        val layout = layouts.single()
+    private fun assertSingleUnclippedLine(tag: String, expected: String,
+        interaction: SemanticsNodeInteraction = compose.onNodeWithTag(tag, useUnmergedTree = true)) {
         try {
+            val node = interaction.assertIsDisplayed().assertTextEquals(expected)
+            val layouts = mutableListOf<TextLayoutResult>()
+            node.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { assertTrue(it(layouts)) }
+            val layout = layouts.single()
             assertTextFitsLayout(layout, expected, singleLine = true)
-        } catch (failure: AssertionError) {
-            val target = java.io.File(InstrumentationRegistry.getInstrumentation().targetContext.cacheDir, "v09-reading-overflow.png")
-            target.outputStream().use { compose.onRoot().captureToImage().asAndroidBitmap().compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+        } catch (failure: Throwable) {
+            try {
+                val instrumentation = InstrumentationRegistry.getInstrumentation()
+                val out = java.io.File(instrumentation.targetContext.getExternalFilesDir("mode-label-qa"), modeDiagnosticId).apply { mkdirs() }
+                val data = org.json.JSONObject().put("case", modeDiagnosticCase)
+                    .put("tag", tag).put("expected", expected).put("failure", failure.toString())
+                try { data.put("node", interaction.printToString()) }
+                catch (missingNode: Throwable) { data.put("nodeLookupFailure", missingNode.toString()) }
+                java.io.File(out, "case.json").writeText(data.toString())
+                val bitmap = requireNotNull(instrumentation.uiAutomation.takeScreenshot())
+                try { java.io.File(out, "failure.png").outputStream().use {
+                    check(bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it))
+                } } finally { bitmap.recycle() }
+            } catch (diagnostic: Throwable) { failure.addSuppressed(diagnostic) }
             throw failure
         }
     }
