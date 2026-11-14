@@ -542,6 +542,7 @@ private fun InternetScheduleControls(state: InternetScheduleState, church: Paris
             state.publicationRejected -> "Расписание не подтверждено источником"
             state.sourceHasWithdrawals -> "В источнике есть отмены или изменения"
             state.sourceNeedsVerification -> "Источник требует проверки"
+            state.status == InternetScheduleStatus.READY && state.publication?.hasCurrentParserRevision == false -> "Обновите расписание"
             state.status == InternetScheduleStatus.READY && state.publication != null -> "Расписание загружено с сайта"
             hasUnreviewedScheduleSources(state, church) -> "Найдены сайты, ожидается проверка"
             state.status == InternetScheduleStatus.READY -> "Расписание не получено"

@@ -1,5 +1,5 @@
 {
-  "scope": "Mirrored unchanged AppContainer source DI, literal AppContainer books; frozen source metadata after accepted HTML link priority and synchronous route recovery fixes",
+  "scope": "Frozen source metadata for day-scope correction and derived schedule revision validation; runtime acceptance recorded separately",
   "sourceFactory": "ru.liturgyguide.di.AppContainer.internetSchedules",
   "sourceDi": {
     "getTransport": "UrlConnectionScheduleTransport(timeoutMillis=15000, limitBytes=AndroidScheduleDocumentExtractor.MAX_DOCUMENT_BYTES, allowExplicitHttp=true)",
@@ -16,7 +16,7 @@
   "inputSha256": {
     "app/src/main/java/ru/liturgyguide/di/AppContainer.kt": "3497d416c57098bc39c33d760066b9bd7515929b0dc64bedb69369490bd5fa5f",
     "app/src/main/java/ru/liturgyguide/service/schedule/MoscowOfficialDirectoryResolver.kt": "ae6550921c68408f2decb8986ae2d6e46b36d626f40ab53b1841b1d4ac8b4a3e",
-    "app/src/main/java/ru/liturgyguide/service/schedule/InternetScheduleRepository.kt": "7666c7a6b046a3e0882d82270fd423fe1892914f1b29ef49ea6e8e01f2d69786",
+    "app/src/main/java/ru/liturgyguide/service/schedule/InternetScheduleRepository.kt": "2204de9219bcb934897414be07257f93993c884095210fc32e612d67932531b8",
     "app/src/main/java/ru/liturgyguide/service/schedule/ScheduleSiteResolver.kt": "f74fbf8eaf0ff0f7e0bfb3c473f487030db72cb9bbce048876c43342e5c464c6",
     "app/src/main/java/ru/liturgyguide/service/schedule/ScheduleTransport.kt": "c67eeac10a887a1bda7be9ade4ff9a30457494aab55699992008d7cbf0e2ebb5",
     "app/src/main/java/ru/liturgyguide/service/schedule/MoscowDirectorySearchTransport.kt": "964c054f5117dde1d34828bbe87652f6f869d2a6b2f3a19750b0997f3b997000",
@@ -46,7 +46,11 @@
     "app/src/main/java/ru/liturgyguide/service/book/StrictBookJson.kt": "25502b068076d7c16fda346739561c1ea6fbf9df4c6faad57ba346af7ebe06bf",
     "app/src/main/java/ru/liturgyguide/service/schedule/ScheduleSourceCandidate.kt": "3b14c93366084c0b96dcc8571e825e2e27eb2494189527d481af7606a845a4fb",
     "app/src/main/java/ru/liturgyguide/service/schedule/ScheduleDocumentLinks.kt": "c70ef1d27857781e1d56a0519d18e53685d8bdad8aa17b81517e069334b89a27",
-    "app/src/main/java/ru/liturgyguide/ui/MainActivity.kt": "8b99ae431eebe393e11f9972fe2e54feb4dea7ebeadb4df00d8ce9b4b56b92a4"
+    "app/src/main/java/ru/liturgyguide/ui/MainActivity.kt": "8b99ae431eebe393e11f9972fe2e54feb4dea7ebeadb4df00d8ce9b4b56b92a4",
+    "app/src/main/java/ru/liturgyguide/service/schedule/ScheduleDocumentParser.kt": "55fd8107cc439421701b50c56728292df816c788adaca650127e1ef657163d13",
+    "app/src/main/java/ru/liturgyguide/service/schedule/ScheduleDocument.kt": "75e197ac218a6c6ac2c655abbab283944a2c80d391c31a61bb1af11ecf78cdc9",
+    "app/src/main/java/ru/liturgyguide/ui/ArrivalCards.kt": "f5aa49f36e2ad32ac22646f63beefa5455a5535a697016366d9f366917775198",
+    "app/src/main/java/ru/liturgyguide/ui/ChurchScreen.kt": "bee49df80b7d19d6f1ffe2ee45b7da215e61433232c29aa3efe52d53cc9565c7"
   },
   "notExecuted": [
     "Git",

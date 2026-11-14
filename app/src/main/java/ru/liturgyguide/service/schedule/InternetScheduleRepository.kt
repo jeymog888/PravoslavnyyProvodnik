@@ -27,10 +27,16 @@ data class SchedulePublication(
     val parishId: String, val timezone: String, val website: String, val sourceUrl: String,
     val fetchedAt: String, val events: List<InternetService>,
     val documentFormat: String = "html", val linkedFrom: String = "",
-    val yearInferred: Boolean = false
+    val yearInferred: Boolean = false,
+    val parserRevision: Int = CURRENT_PARSER_REVISION
 ) {
+    companion object {
+        const val LEGACY_PARSER_REVISION = 0
+        const val CURRENT_PARSER_REVISION = 1
+    }
+    val hasCurrentParserRevision: Boolean get() = parserRevision == CURRENT_PARSER_REVISION
     fun forDate(date: LocalDate): List<InternetService> = events.filter { it.date == date.toString() }
-    fun isFresh(now: Instant): Boolean = runCatching {
+    fun isFresh(now: Instant): Boolean = hasCurrentParserRevision && runCatching {
         val age = Duration.between(Instant.parse(fetchedAt), now)
         !age.isNegative && age <= Duration.ofHours(24)
     }.getOrDefault(false)
@@ -365,7 +371,8 @@ class InternetScheduleRepository(
         }
         val age = runCatching { Duration.between(Instant.parse(previous.checkedAt), now) }.getOrNull()
         val retryAfter = if (previous.status == InternetScheduleStatus.READY) Duration.ofHours(6) else Duration.ofMinutes(5)
-        if (!force && sourceOverride == null && confirmedCandidate == null && age != null && !age.isNegative && age < retryAfter) return@withContext previous
+        val needsParserRefresh = previous.status == InternetScheduleStatus.READY && previous.publication?.hasCurrentParserRevision == false
+        if (!force && !needsParserRefresh && sourceOverride == null && confirmedCandidate == null && age != null && !age.isNegative && age < retryAfter) return@withContext previous
         val date = runCatching { now.atZone(ZoneId.of(parish.timezone)).toLocalDate() }.getOrNull()
             ?: return@withContext previous.copy(status = InternetScheduleStatus.UNAVAILABLE)
         if (sourceOverride != null && ScheduleUrl.publicSource(sourceOverride) == null) return@withContext previous.copy(status = InternetScheduleStatus.UNAVAILABLE)
@@ -459,11 +466,11 @@ class InternetScheduleRepository(
             checkedEvidence: String, checkedBinding: ScheduleSiteBinding?) {
             // A failed trial of B is not evidence against the already accepted A.
             if (changedSource && knownConflict(checkedSource)) return
-            val withdrawal = safety.withdrawsAll || safety.withdrawnDates.isNotEmpty() || safety.withdrawnStarts.isNotEmpty()
+            val withdrawal = safety.unresolvedWithdrawal || safety.withdrawsAll || safety.withdrawnDates.isNotEmpty() || safety.withdrawnStarts.isNotEmpty()
             safetyObserved = true
             withdrawnDates += safety.withdrawnDates
             withdrawnStarts += safety.withdrawnStarts
-            withdrawAll = withdrawAll || safety.withdrawsAll || safety.safetyConflict ||
+            withdrawAll = withdrawAll || safety.unresolvedWithdrawal || safety.withdrawsAll || safety.safetyConflict ||
                 (safety.disposition == ScheduleParseDisposition.REJECTED && !withdrawal)
             safetyRetained = previous.publication?.takeIf { !changedSource &&
                 sameCandidateSource(it.website, checkedWebsite) && !withdrawAll }?.let { old ->
@@ -546,7 +553,7 @@ class InternetScheduleRepository(
                                 val existing = ScheduleHtmlParser.inspect(html, date, parish)
                                 val safety = if (existing.disposition != ScheduleParseDisposition.UNSUPPORTED) existing else
                                     ScheduleDocumentParser.inspect(HtmlScheduleDocumentExtractor.fromHtml(html), date, parish)
-                                val withdraws = safety.withdrawsAll || safety.withdrawnDates.isNotEmpty() || safety.withdrawnStarts.isNotEmpty()
+                                val withdraws = safety.unresolvedWithdrawal || safety.withdrawsAll || safety.withdrawnDates.isNotEmpty() || safety.withdrawnStarts.isNotEmpty()
                                 if (withdraws || safety.safetyConflict || safety.disposition == ScheduleParseDisposition.REJECTED)
                                     recordSafety(website, checked.observedSchedule.url, safety, evidence, binding)
                             }
@@ -657,7 +664,7 @@ class InternetScheduleRepository(
                             sourceConflict = ::knownConflict, importOwner = ownedProgress) { checkedWebsite, checkedSource, safety ->
                             // A different building at a new candidate cannot invalidate an
                             // older accepted source. Actual withdrawals of this parish can.
-                            if (safety.withdrawsAll || safety.withdrawnDates.isNotEmpty() || safety.withdrawnStarts.isNotEmpty())
+                            if (safety.unresolvedWithdrawal || safety.withdrawsAll || safety.withdrawnDates.isNotEmpty() || safety.withdrawnStarts.isNotEmpty())
                                 recordSafety(checkedWebsite, checkedSource, safety, alternative.evidenceUrl, alternative.binding)
                         }
                         if (next.publication != null || next.hasWithdrawal) accept(next, alternative.evidenceUrl, alternative.binding)
@@ -890,11 +897,11 @@ class InternetScheduleRepository(
                 val existing = ScheduleHtmlParser.inspect(html, date, parish)
                 val auditFreshRoot = exactFreshRoot && existing.disposition == ScheduleParseDisposition.REJECTED &&
                     existing.events.isEmpty() && existing.withdrawnDates.isEmpty() && existing.withdrawnStarts.isEmpty() &&
-                    !existing.withdrawsAll && !existing.safetyConflict && existing.rejectionReason == null
+                    !existing.withdrawsAll && !existing.unresolvedWithdrawal && !existing.safetyConflict && existing.rejectionReason == null
                 val wholeDocument = if (rootAudit == null && (auditFreshRoot || existing.disposition == ScheduleParseDisposition.UNSUPPORTED))
                     HtmlScheduleDocumentExtractor.fromHtml(html) else null
                 val documentResult = wholeDocument?.let { ScheduleDocumentParser.inspect(it, date, parish) }
-                fun hasSafety(result: ScheduleParseResult) = result.safetyConflict || result.withdrawsAll ||
+                fun hasSafety(result: ScheduleParseResult) = result.unresolvedWithdrawal || result.safetyConflict || result.withdrawsAll ||
                     result.withdrawnDates.isNotEmpty() || result.withdrawnStarts.isNotEmpty()
                 // Preserve both actual results. A stronger actual document safety observation cannot be hidden by a generic HTML rejection.
                 parsed = when {
@@ -935,7 +942,11 @@ class InternetScheduleRepository(
                     ScheduleForeignImage.certify(selectedDocument, date, parish, website, next.linkedFrom, witness, inspected)
                 } else inspected
             }
-            if (parsed.safetyConflict) {
+            val withdraws = parsed.unresolvedWithdrawal || parsed.withdrawsAll ||
+                parsed.withdrawnDates.isNotEmpty() || parsed.withdrawnStarts.isNotEmpty()
+            // Preserve the observed withdrawal even when a scope conflict stops this attempt.
+            hasWithdrawal = hasWithdrawal || withdraws
+            if (parsed.safetyConflict || parsed.unresolvedWithdrawal) {
                 // A newer OCR pass can contradict an already-readable page from this same
                 // source. Its unknown scope cannot be turned into global withdrawal dates,
                 // nor ignored while returning the earlier HTML as a successful publication.
@@ -944,7 +955,6 @@ class InternetScheduleRepository(
                 bestEvents = emptyList(); source = publicationSource
                 break
             }
-            val withdraws = parsed.withdrawsAll || parsed.withdrawnDates.isNotEmpty() || parsed.withdrawnStarts.isNotEmpty()
             when (rootAudit?.disposition) {
                 ContactRootAuditDisposition.PROVED_NAVIGATION_ROOT -> if (!withdraws) {
                     // This complete response is only an audited navigation entrypoint. Both raw REJECTED results remain unchanged.
@@ -972,7 +982,6 @@ class InternetScheduleRepository(
                 previousImage = null; previousImageParent = ""
                 continue
             }
-            hasWithdrawal = hasWithdrawal || withdraws
             if (parsed.disposition == ScheduleParseDisposition.REJECTED || withdraws) {
                 // Report safety evidence immediately: a later timeout must not restore an
                 // earlier cached service after this attempt already observed its withdrawal.
@@ -1109,7 +1118,11 @@ internal object ScheduleCacheCodec {
                 flag.asBoolean
             } ?: false
             if (yearInferred) require(events.all { java.time.YearMonth.from(LocalDate.parse(it.date)) == java.time.YearMonth.from(publicationDate) })
-            SchedulePublication(parish.id, parish.timezone, site, url, fetched, events, format, linkedFrom, yearInferred)
+            // Revision alone cannot invalidate the source/history stored around this publication.
+            val revision = value.get("parserRevision")?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isNumber }
+                ?.toString()?.takeIf { Regex("0|[1-9]\\d*").matches(it) }?.toIntOrNull()
+                ?: SchedulePublication.LEGACY_PARSER_REVISION
+            SchedulePublication(parish.id, parish.timezone, site, url, fetched, events, format, linkedFrom, yearInferred, revision)
         }
         require(!rejected || publication == null)
         val candidateIdentity = field("candidateSearchIdentity")

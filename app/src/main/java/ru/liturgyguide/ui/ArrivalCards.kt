@@ -77,7 +77,7 @@ internal fun arrivalSchedule(church: Parish, date: LocalDate, now: Instant?, sta
     val ownState = state?.takeIf { it.parishId == church.id }
     val currentSource = ownState?.sourceUrl.orEmpty()
     val publication = ownState?.takeUnless { it.publicationRejected || it.sourceNeedsVerification }?.publication?.takeIf {
-        it.parishId == church.id && it.timezone == church.timezone &&
+        it.hasCurrentParserRevision && it.parishId == church.id && it.timezone == church.timezone &&
             (currentSource.isBlank() || currentSource == it.sourceUrl)
     }
     val published = if (ownState?.sourceNeedsVerification == true) emptyList() else PublishedSchedule.forDate(church, date)
@@ -183,6 +183,7 @@ internal fun scheduleEmptyDescription(state: InternetScheduleState?, hasWebsite:
     state?.status == InternetScheduleStatus.UNSUPPORTED -> if (hasWebsite)
         "Не удалось автоматически прочитать даты и время. Откройте источник по кнопке ниже"
         else "Не удалось прочитать расписание. Можно повторить поиск или перейти к текстам службы"
+    state?.publication?.hasCurrentParserRevision == false -> "Обновите расписание, чтобы снова показать даты и время"
     else -> "Пока нет подтвержденных записей на эту дату. Это не означает, что служб не будет"
 }
 
@@ -209,6 +210,7 @@ internal fun scheduleEmptyTitle(state: InternetScheduleState?, hasPublication: B
     state?.sourceHasWithdrawals == true -> "В расписании есть изменения"
     state?.sourceNeedsVerification == true -> "Нужно уточнить расписание"
     hasUnreviewedScheduleSources(state, church) -> "Найдены сайты для проверки"
+    state?.publication?.hasCurrentParserRevision == false -> "Обновите расписание"
     hasPublication -> "Нет записей на эту дату"
     else -> "Расписание пока не найдено"
 }
@@ -224,6 +226,7 @@ internal fun scheduleCheckReceipt(state: InternetScheduleState?, timezone: Strin
         state.publicationRejected -> "Расписание не подтверждено источником"
         state.sourceHasWithdrawals -> "В источнике есть отмены или изменения"
         state.sourceNeedsVerification -> "Источник требует проверки"
+        state.status == InternetScheduleStatus.READY && state.publication?.hasCurrentParserRevision == false -> "Обновите расписание"
         state.status == InternetScheduleStatus.READY && state.publication != null -> "Расписание получено"
         hasUnreviewedScheduleSources(state, church) -> "Найдены сайты, ожидается проверка"
         else -> when (state.status) {

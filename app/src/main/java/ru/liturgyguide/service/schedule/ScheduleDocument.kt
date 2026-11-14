@@ -38,7 +38,10 @@ data class ScheduleParseResult(
     val yearInferred: Boolean = false,
     // Scope could not be proved. Stop this source; this is not a claim of a global withdrawal.
     val safetyConflict: Boolean = false,
-    val rejectionReason: ScheduleRejectionReason? = null
+    val rejectionReason: ScheduleRejectionReason? = null,
+    // An explicit cancellation was read, but its dates/building could not be proved.
+    // Keep source history without fabricating dated or global withdrawal markers.
+    val unresolvedWithdrawal: Boolean = false
 )
 
 fun interface ScheduleDocumentExtractor {
