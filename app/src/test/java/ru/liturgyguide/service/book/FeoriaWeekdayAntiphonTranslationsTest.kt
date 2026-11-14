@@ -37,6 +37,8 @@ internal object WeekdayAntiphonFixtures {
         }) }
     }.toString())
     val previousOwn126: BookTranslationIndex by lazy { ownIndex(previousRows) }
+    // Frozen independent old126+weekday15; later thanksgiving bodies have a separate exact9 replay.
+    val previousOwn141: BookTranslationIndex by lazy { ownIndex(previousRows + rows) }
     val previousPublished: BookTranslationIndex by lazy { BookTranslationIndex.decode(oracle["previousPublishedPairs"].toString()) }
     val key get() = oracle["bookKey"].asString.split('|').let { ServiceBookKey(it[0], WorshipKind.valueOf(it[1]), it[2]) }
     fun sourceHtml(): String = requireNotNull(javaClass.classLoader?.getResource(
@@ -49,7 +51,7 @@ internal object WeekdayAntiphonFixtures {
 class FeoriaWeekdayAntiphonTranslationsTest {
     private val directory = Files.createTempDirectory("weekday-antiphon-").toFile()
     private val source = BookTranslationIndex.FEORIA_TRANSLATION_SOURCE
-    private val own = BookTranslationIndex.fromFeoriaCatalog()
+    private val own = WeekdayAntiphonFixtures.previousOwn141
     private val oracle get() = WeekdayAntiphonFixtures.oracle
     private val rows get() = WeekdayAntiphonFixtures.rows
     @After fun clean() { directory.deleteRecursively() }
@@ -75,10 +77,10 @@ class FeoriaWeekdayAntiphonTranslationsTest {
     }
 
     @Test fun allFifteenFinalWholePairsAndSourcesEqualTheIndependentSemanticOracle() {
-        assertEquals(5, FeoriaTranslationCatalog.REVISION)
+        assertEquals(5, FeoriaTranslationCatalog.entries.take(141).maxOf { it.revision })
         assertEquals(141, own.size)
-        assertEquals(141, FeoriaTranslationCatalog.entries.size)
-        assertEquals(141, FeoriaTranslationCatalog.entries.map { BookText.normalized(it.original) }.distinct().size)
+        assertEquals(141, FeoriaTranslationCatalog.entries.take(141).size)
+        assertEquals(141, FeoriaTranslationCatalog.entries.take(141).map { BookText.normalized(it.original) }.distinct().size)
         assertEquals(15, rows.size)
         assertEquals(15, FeoriaWeekdayAntiphonTranslations.records.size)
         assertEquals(244, rows.sumOf { it["originalWords"].asInt })

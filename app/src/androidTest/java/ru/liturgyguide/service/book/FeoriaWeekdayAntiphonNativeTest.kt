@@ -46,8 +46,18 @@ class FeoriaWeekdayAntiphonNativeTest {
         val before = ServiceBookParser().parse(Jsoup.parse(html, key.sourceUrl()), key, 1L,
             translations = published.plus(oldOwn))
         assertTrue(ServiceBookIntegrity.valid(before))
-        val own = BookTranslationIndex.fromFeoriaCatalog()
-        assertEquals(5, FeoriaTranslationCatalog.REVISION); assertEquals(141, own.size)
+        // Pin this exact15 history to its independent old141; thanksgiving3 is tested separately.
+        val own = BookTranslationIndex.decode(JsonArray().apply {
+            (oracle["previous126"].asJsonArray.toList() + oracle["items"].asJsonArray.toList()).forEach { value ->
+                val row = value.asJsonObject
+                add(JsonObject().apply {
+                    add("original", row["original"]); add("russian", row["russian"])
+                    addProperty("source", BookTranslationIndex.FEORIA_TRANSLATION_SOURCE.title)
+                    addProperty("url", BookTranslationIndex.FEORIA_TRANSLATION_SOURCE.url)
+                })
+            }
+        }.toString())
+        assertEquals(5, FeoriaTranslationCatalog.entries.take(141).maxOf { it.revision }); assertEquals(141, own.size)
         assertEquals(13, BookTranslationCorpus.VERSION)
         val context = instrumentation.targetContext
         val name = "weekday-antiphon-${UUID.randomUUID()}"
