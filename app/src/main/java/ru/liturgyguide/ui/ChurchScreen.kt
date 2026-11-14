@@ -33,6 +33,7 @@ import ru.liturgyguide.service.schedule.InternetScheduleState
 import ru.liturgyguide.service.schedule.InternetScheduleStatus
 import ru.liturgyguide.service.schedule.ScheduleUrl
 import ru.liturgyguide.service.schedule.ScheduleEntityIdentity
+import ru.liturgyguide.service.schedule.permitsOtherSourceSearch
 import java.time.Instant
 import java.time.ZoneId
 import java.time.LocalDate
@@ -64,7 +65,8 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     sourceSearchActive: Boolean? = null, sourceSearchOrder: List<String>? = null,
     onReviewSourceSearch: (() -> Unit)? = null,
     onSourceSearchDrawn: ((androidx.compose.ui.geometry.Rect, androidx.compose.ui.geometry.Rect) -> Unit)? = null,
-    onSourceSearchInteraction: () -> Boolean = { true }) {
+    onSourceSearchInteraction: () -> Boolean = { true },
+    onFindOtherScheduleSources: (() -> Unit)? = null) {
     val church = churches.firstOrNull { it.id == selectedId }
     var picker by rememberSaveable { mutableStateOf(false) }
     var adding by rememberSaveable { mutableStateOf(false) }
@@ -422,6 +424,13 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                             showSearchDiagnostic = sourceSearchActive == null)
                         if (featured == null) ChurchScheduleSourceActions(church, ownState,
                             onRefreshSchedule, openSourceEditor.takeIf { onSetScheduleSource != null }, onOpenUrl)
+                        val findOtherSources = onFindOtherScheduleSources
+                            ?.takeIf { permitsOtherSourceSearch(requireNotNull(sourceChurch), ownState) }
+                        if (findOtherSources != null) OutlinedButton(onClick = findOtherSources,
+                            enabled = !ownState.loading,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("find_other_schedule_sources")) {
+                            Text("Искать другие сайты")
+                        }
                     }
                 }
                 if (!readingBeforeSchedule) {

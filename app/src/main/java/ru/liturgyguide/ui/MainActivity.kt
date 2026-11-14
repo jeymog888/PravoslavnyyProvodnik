@@ -38,6 +38,7 @@ import ru.liturgyguide.service.schedule.InternetScheduleState
 import ru.liturgyguide.service.schedule.ScheduleEntityIdentity
 import ru.liturgyguide.service.schedule.ScheduleUrl
 import ru.liturgyguide.service.schedule.withInternetSchedule
+import ru.liturgyguide.service.schedule.permitsOtherSourceSearch
 import java.time.Instant
 import com.google.gson.Gson
 import java.time.Duration
@@ -790,6 +791,19 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
         if (screen != origin || churchId != resumeChurchId || currentScheduleSearchOwner !== scheduleSearchOwner ||
             scheduleActionSurface.token !== scheduleClickOwner || !scheduleSearchOwner.isActive() || internetSchedule?.loading == true) return
         stopAutomaticSourceSearch(expireCallbacks = true)
+        scheduleSearchIntent = null
+        scheduleCandidateConfirmation = null
+        scheduleSourceOverride = null
+        scheduleRefresh++
+    }
+
+    fun findOtherVisibleSources(origin: Screen) {
+        if (screen != origin || churchId != resumeChurchId || currentScheduleSearchOwner !== scheduleSearchOwner ||
+            scheduleActionSurface.token !== scheduleClickOwner || !scheduleSearchOwner.isActive() || internetSchedule?.loading == true) return
+        val selected = baseChurch ?: return
+        val state = internetSchedule?.takeIf { it.parishId == selected.id } ?: return
+        if (!permitsOtherSourceSearch(selected, state)) return
+        stopAutomaticSourceSearch(expireCallbacks = true)
         scheduleCandidateConfirmation = null
         scheduleSourceOverride = null
         val sequence = scheduleRefresh + 1
@@ -1023,6 +1037,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                             valid
                         },
                         onRefreshSchedule = { refreshVisibleSources(Screen.CHURCH) },
+                        onFindOtherScheduleSources = { findOtherVisibleSources(Screen.CHURCH) },
                         onSetScheduleSource = { url ->
                             if (screen == Screen.CHURCH && churchId == resumeChurchId && currentScheduleSearchOwner === scheduleSearchOwner &&
                                 scheduleActionSurface.token === scheduleClickOwner) {

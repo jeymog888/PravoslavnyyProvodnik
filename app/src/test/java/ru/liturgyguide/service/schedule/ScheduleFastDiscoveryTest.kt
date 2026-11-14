@@ -291,7 +291,8 @@ class ScheduleFastDiscoveryTest {
     @Test fun lateFastResultCannotOverwriteDismissalCancellationOrAnotherAcceptedAuthority() = runBlocking {
         for (kind in listOf("dismissal", "withdrawal", "accepted")) {
             val entered = CompletableDeferred<Unit>(); val release = CompletableDeferred<Unit>(); val c = candidate()
-            val cache = Cache().apply { seed(pending(c)) }
+            // A fast pre-commit race starts cold; a serialized completed attempt now skips this branch.
+            val cache = Cache()
             val resolver = object : ScheduleSiteResolver {
                 override suspend fun resolve(parish: Parish): ScheduleSite? = error("No late heavy fallback")
                 override suspend fun initialFastDiscovery(parish: Parish, excludedUrls: Set<String>): ScheduleSourceDiscovery {
@@ -302,7 +303,7 @@ class ScheduleFastDiscoveryTest {
             val repo = InternetScheduleRepository(ScheduleTransport { error("No import") }, cache, siteResolver = resolver)
             val result = async { repo.refresh(selected, now, force = true) }; withTimeout(5_000) { entered.await() }
             when (kind) {
-                "dismissal" -> repo.dismissCandidate(selected, c.id)
+                "dismissal" -> cache.seed(pending(c).copy(dismissedCandidateIds = listOf(c.id)))
                 "withdrawal" -> cache.seed(pending(c).copy(website = source, sourceUrl = source,
                     publicationRejected = true, sourceHasWithdrawals = true))
                 else -> cache.seed(pending(c).copy(website = source, sourceUrl = source, siteEvidenceUrl = osmUrl,

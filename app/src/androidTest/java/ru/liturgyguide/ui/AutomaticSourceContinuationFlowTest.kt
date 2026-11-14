@@ -400,11 +400,11 @@ class AutomaticSourceContinuationFlowTest(private val dark: Boolean, private val
             assertNull(case.state().publication)
             assertFalse(case.state().sourceCandidates.any { it.provider == OwnContactCandidateProvider.PROVIDER })
             assertTrue(case.requests.contains(legacy["requestedUrl"].asString))
-            openEntry()
-            reveal(entryContent, refreshTag).performClick()
+            openOtherSourceSearch()
+            reveal("church_content", "find_other_schedule_sources").performClick()
             compose.waitUntil(15_000) { case.searchCompleted.get() == 1 }; settle()
             case.own()
-            val held = requireNotNull(reveal(entryContent, refreshTag).fetchSemanticsNode().config[SemanticsActions.OnClick].action)
+            val held = requireNotNull(reveal("church_content", "find_other_schedule_sources").fetchSemanticsNode().config[SemanticsActions.OnClick].action)
             requireNotNull(restoration).emulateSavedInstanceStateRestore(); settle()
             compose.runOnIdle { held() }; settle()
             assertEquals(1, case.searchCalls.get()); assertEquals(1, case.automaticCalls.get())
@@ -430,13 +430,36 @@ class AutomaticSourceContinuationFlowTest(private val dark: Boolean, private val
         }
         compose.waitUntil(15_000) { case.automaticCancelled.get() == 1 }; settle()
         if (action == "midnight" || action == "restore") compose.waitUntil(15_000) { case.refreshCompleted.get() >= 2 }
+        compose.waitUntil(15_000) { case.automaticFinished.get() == 1 }
+        assertFalse(case.releaseOwn.isCompleted)
+        val stateBeforeRelease = case.state()
+        if (action == "midnight") {
+            // A new day legitimately performs a fresh normal lookup before the
+            // canceled old-day contact is released. It must not be an auto replay.
+            val freshOwn = case.own()
+            assertEquals("2026-11-15", Instant.parse(freshOwn.checkedAt).atZone(ZoneOffset.UTC).toLocalDate().toString())
+            assertEquals(2, case.refreshCalls.get()); assertEquals(2, case.directPools.get())
+        } else {
+            assertFalse(stateBeforeRelease.sourceCandidates.any { it.provider == OwnContactCandidateProvider.PROVIDER })
+            assertEquals(1, case.directPools.get())
+        }
+        assertNull(stateBeforeRelease.publication); assertNull(stateBeforeRelease.siteBinding)
+        assertEquals(1, case.automaticCalls.get()); assertEquals(0, case.automaticCompleted.get())
+        assertEquals(1, case.automaticCancelled.get()); assertEquals(1, case.frameProofs.size)
+        fun effects() = listOf(case.automaticCalls.get(), case.automaticCompleted.get(), case.automaticCancelled.get(),
+            case.automaticFinished.get(), case.directPools.get(), case.websitePools.get(), case.refreshCalls.get(),
+            case.refreshCompleted.get(), case.cacheWrites.get(), case.safetyWrites.get(), case.requests.size,
+            case.frameProofs.size, case.searchCalls.get(), case.searchCompleted.get(), case.scheduleStops.get())
+        val effectsBeforeRelease = effects()
         val afterAction = case.raw()
         compose.runOnIdle { case.releaseOwn.complete(Unit) }; settle()
         assertEquals(afterAction, case.raw())
+        assertEquals(effectsBeforeRelease, effects())
         if (action != "midnight") assertEquals(raw, case.raw())
-        assertFalse(case.state().sourceCandidates.any { it.provider == OwnContactCandidateProvider.PROVIDER })
+        assertNull(case.state().publication); assertNull(case.state().siteBinding)
         if (action == "settings") { compose.onNodeWithTag("nav_home").performClick(); settle() }
-        assertEquals(1, case.automaticCalls.get()); assertEquals(1, case.directPools.get())
+        assertEquals(1, case.automaticCalls.get())
+        assertEquals(if (action == "midnight") 2 else 1, case.directPools.get())
         compose.onNodeWithTag("schedule_source_search_strip").assertDoesNotExist()
         assertTrue(case.confirmations.isEmpty())
     }
@@ -474,7 +497,7 @@ class AutomaticSourceContinuationFlowTest(private val dark: Boolean, private val
         // invalidated the preparation epoch and is not part of this launch.
         reveal(entryContent, refreshTag).performClick()
         compose.waitUntil(15_000) { case.fastCommitted.isCompleted }
-        assertEquals(1, case.searchCalls.get()); assertEquals(0, case.directPools.get())
+        assertEquals(0, case.searchCalls.get()); assertEquals(0, case.directPools.get())
         assertEquals(7, case.requests.size)
         reveal(entryContent, readingTag)
         var fastBounds: DpRect? = null
@@ -502,7 +525,7 @@ class AutomaticSourceContinuationFlowTest(private val dark: Boolean, private val
         assertEquals(before, compose.onNodeWithTag("church_reading_card").getUnclippedBoundsInRoot())
         assertEquals(scroll, compose.onNodeWithTag("church_content").fetchSemanticsNode().config[SemanticsProperties.VerticalScrollAxisRange].value(), .001f)
         case.own()
-        assertEquals(1, case.automaticCalls.get()); assertEquals(1, case.directPools.get()); assertEquals(1, case.refreshCalls.get())
+        assertEquals(1, case.automaticCalls.get()); assertEquals(1, case.directPools.get()); assertEquals(2, case.refreshCalls.get())
         compose.onNodeWithTag("nav_home").performClick(); settle()
         reveal("main_content", "today_day_today").assertIsSelected()
         compose.onNodeWithTag("nav_church").performClick(); settle()
@@ -752,6 +775,11 @@ class AutomaticSourceContinuationFlowTest(private val dark: Boolean, private val
     private fun openEntry() {
         compose.onNodeWithTag(if (churchPage) "nav_church" else "nav_home").performClick()
         compose.onNodeWithTag(entryContent).assertIsDisplayed()
+    }
+    private fun openOtherSourceSearch() {
+        openEntry()
+        if (!churchPage) reveal("main_content", "today_review_schedule_sources").performClick()
+        reveal("church_content", "find_other_schedule_sources").assertIsDisplayed()
     }
     private fun openSources() {
         compose.onNodeWithTag("nav_church").performClick()

@@ -569,7 +569,15 @@ class InternetScheduleRepository(
                 if (website.isBlank()) {
                     phase(ScheduleImportPhase.FINDING_SITE)
                     var fastSite: ScheduleSite? = null
-                    if (sourceOverride == null && confirmedCandidate == null && permitsInitialFastDiscovery(parish, previous)) {
+                    val coldFastDiscovery = previous.checkedAt.isBlank()
+                    val excludedFastCandidateIds = (previous.dismissedCandidateIds + sourceCandidates.filter {
+                        it.outcome == ScheduleIdentityOutcome.CONFLICT && !it.verificationUnavailable
+                    }.map { it.id }).toSet()
+                    // A retry still needs the state-aware Own traversal when an earlier
+                    // suggestion was dismissed; only a cold result may stop at its preview.
+                    if (sourceOverride == null && confirmedCandidate == null &&
+                        (coldFastDiscovery || excludedFastCandidateIds.isNotEmpty()) &&
+                        permitsInitialFastDiscovery(parish, previous)) {
                         val snapshot = runCatching { cache.read(parish.id) }
                         val snapshotState = snapshot.getOrNull()?.let { ScheduleCacheCodec.decode(it, parish) }
                             ?: initialScheduleState(parish)
@@ -577,9 +585,7 @@ class InternetScheduleRepository(
                             val early = try { resolverSession.initialFastDiscovery(parish, emptySet(), { found ->
                                 val merged = mergeCandidateEvidence(parish, sourceCandidates, found.candidates)
                                 hasActionableFastCandidate(parish, previous, found, merged, emptySet())
-                            }, (previous.dismissedCandidateIds + sourceCandidates.filter {
-                                it.outcome == ScheduleIdentityOutcome.CONFLICT && !it.verificationUnavailable
-                            }.map { it.id }).toSet()) }
+                            }, excludedFastCandidateIds) }
                                 catch (cancelled: CancellationException) { throw cancelled }
                                 catch (_: Exception) { null }
                             currentCoroutineContext().ensureActive()
@@ -595,7 +601,7 @@ class InternetScheduleRepository(
                                     sourceCandidates.any { it.outcome == ScheduleIdentityOutcome.CONFLICT &&
                                         candidateCoversSource(it, site.url) }
                                 }
-                                if (fastSite == null && hasActionableFastCandidate(parish, previous,
+                                if (coldFastDiscovery && fastSite == null && hasActionableFastCandidate(parish, previous,
                                         early.candidates, sourceCandidates, emptySet())) {
                                     pendingFastReceipt = early.fastMapReceipt
                                     pendingFastReview = snapshot.getOrNull() to previous.copy(

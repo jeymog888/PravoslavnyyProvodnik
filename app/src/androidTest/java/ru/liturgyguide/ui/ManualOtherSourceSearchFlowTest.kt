@@ -219,8 +219,8 @@ class ManualOtherSourceSearchFlowTest(private val dark: Boolean, private val chu
         val before = case.state()
         assertEquals(0, case.directPools.get())
         assertEquals(0, case.contactsFetched())
-        openEntry()
-        reveal(entryContent, refreshTag).assertHeightIsAtLeast(48.dp).performTouchInput { click(center) }
+        openOtherSourceSearch()
+        reveal("church_content", "find_other_schedule_sources").assertHeightIsAtLeast(48.dp).performTouchInput { click(center) }
         awaitSearch(case)
         assertEquals(1, case.searchCalls.get())
         assertProtected(before, case.state())
@@ -268,8 +268,8 @@ class ManualOtherSourceSearchFlowTest(private val dark: Boolean, private val chu
             assertNull(case.state().publication)
             val before = case.state()
             assertTrue(before.customSource.isBlank())
-            openEntry()
-            reveal(entryContent, refreshTag).performTouchInput { click(center) }
+            openOtherSourceSearch()
+            reveal("church_content", "find_other_schedule_sources").performTouchInput { click(center) }
             awaitSearch(case)
             assertEquals(1, case.searchCalls.get())
             val own = case.own()
@@ -277,8 +277,8 @@ class ManualOtherSourceSearchFlowTest(private val dark: Boolean, private val chu
             openSources()
             reveal("church_content", "confirm_candidate_${own.id}").assertIsDisplayed().assertIsEnabled()
             capture(case, "after-failed-map")
-            openEntry()
-            val held = requireNotNull(reveal(entryContent, refreshTag).fetchSemanticsNode().config[SemanticsActions.OnClick].action)
+            openOtherSourceSearch()
+            val held = requireNotNull(reveal("church_content", "find_other_schedule_sources").fetchSemanticsNode().config[SemanticsActions.OnClick].action)
             compose.onNodeWithTag("open_settings").performClick()
             compose.onNodeWithTag("settings_content").assertIsDisplayed()
             compose.runOnIdle { held() }; settle()
@@ -287,7 +287,7 @@ class ManualOtherSourceSearchFlowTest(private val dark: Boolean, private val chu
             compose.onNodeWithTag("settings_content").assertIsDisplayed()
             compose.runOnIdle { held() }; settle()
             assertEquals("Saved-state restoration must not replay manual intent", 1, case.searchCalls.get())
-            openEntry()
+            openOtherSourceSearch()
             compose.runOnIdle { held() }; settle()
             assertEquals("An old owner cannot become valid again after return", 1, case.searchCalls.get())
             val refreshes = case.refreshCompleted.get()
@@ -299,7 +299,6 @@ class ManualOtherSourceSearchFlowTest(private val dark: Boolean, private val chu
     }
 
     private val entryContent get() = if (churchPage) "church_content" else "main_content"
-    private val refreshTag get() = if (churchPage) "refresh_schedule" else "today_refresh_schedule"
     private fun mount(case: Case): StateRestorationTester {
         active.value = case
         return StateRestorationTester(compose).also { restoration ->
@@ -339,6 +338,11 @@ class ManualOtherSourceSearchFlowTest(private val dark: Boolean, private val chu
     private fun openEntry() {
         compose.onNodeWithTag(if (churchPage) "nav_church" else "nav_home").performClick()
         compose.onNodeWithTag(entryContent).assertIsDisplayed()
+    }
+    private fun openOtherSourceSearch() {
+        openEntry()
+        if (!churchPage) reveal("main_content", "today_review_schedule_sources").performClick()
+        reveal("church_content", "find_other_schedule_sources").assertIsDisplayed()
     }
     private fun openSources() {
         compose.onNodeWithTag("nav_church").performClick()

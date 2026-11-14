@@ -154,7 +154,8 @@ class AutomaticSourceContinuationTest {
         val r = Replay(); r.fast()
         val again = r.repository.refresh(f.selected(), f.now.plusSeconds(1), force = true)
         assertNull(r.repository.takeSourceContinuation(f.selected(), f.now.plusSeconds(1), again, Any()))
-        assertEquals(0, r.direct.get())
+        // This explicit forced retry may use the full resolver, but cannot restore a ticket.
+        assertEquals(1, r.direct.get()); assertEquals(0, r.whole.get())
     }
 
     @Test fun customDefaultHooksNeverCallTheCompatibilityForcedRefresh() = runBlocking<Unit> {
@@ -271,7 +272,8 @@ class AutomaticSourceContinuationTest {
         assertNull(r.repository.takeSourceContinuation(f.selected(), f.now, result, Any()))
         val restored = r.repository.refresh(f.selected(), f.now.plusSeconds(1), force = true)
         assertNull(r.repository.takeSourceContinuation(f.selected(), f.now.plusSeconds(1), restored, Any()))
-        assertEquals(1, r.whole.get()); assertEquals(1, r.direct.get())
+        // A new explicit retry is distinct from an automatic retry after the failed completion.
+        assertEquals(1, r.whole.get()); assertEquals(2, r.direct.get())
     }
 
     @Test fun aFailedFastCacheCommitAndACustomFastHookCannotMintAProductionReceipt() = runBlocking<Unit> {
