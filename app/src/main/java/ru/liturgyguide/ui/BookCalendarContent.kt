@@ -15,6 +15,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.intl.LocaleList
+import androidx.compose.ui.text.style.Hyphens
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.unit.dp
 import ru.liturgyguide.model.ServiceBook
 import ru.liturgyguide.model.ServiceBookKey
@@ -58,7 +61,8 @@ internal fun BookCalendarContent(book: ServiceBook, onOpenUrl: (String) -> Unit,
                 Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("В расписании храма", style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(journey.title, style = MaterialTheme.typography.titleMedium,
+                    Text(journey.title, style = MaterialTheme.typography.titleMedium.copy(localeList = LocaleList("ru"),
+                        hyphens = Hyphens.Auto, lineBreak = LineBreak.Heading),
                         modifier = Modifier.testTag("book_calendar_schedule_title"))
                     BookJourneyDescription(journey, book.key)
                 }
