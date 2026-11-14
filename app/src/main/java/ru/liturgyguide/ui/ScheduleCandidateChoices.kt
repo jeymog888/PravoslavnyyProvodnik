@@ -62,7 +62,7 @@ internal fun ScheduleCandidateChoices(church: Parish, state: InternetScheduleSta
         churchAddressLine(church).takeIf(String::isNotBlank)?.let {
             Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Text("Сверьте название и адрес на сайте, затем подтвердите источник",
+        Text("Откройте сайт и сверьте название и адрес храма. Если они совпадают, нажмите \"Выбрать сайт\" - приложение попробует загрузить расписание",
             style = MaterialTheme.typography.bodyMedium)
         if (showSearchDiagnostic && state.candidateSearchUnavailable) Text("Не все источники удалось проверить. Можно повторить поиск",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,

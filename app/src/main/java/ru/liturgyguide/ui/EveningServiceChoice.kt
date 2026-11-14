@@ -24,9 +24,9 @@ internal fun EveningServiceChoice(occurrence: BookJourneyContext, onDismiss: () 
         GuideSheetSystemBars()
         LazyColumn(Modifier.fillMaxWidth().heightIn(max = 600.dp).testTag("evening_service_choice"),
             contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            item { Text("Какая часть идет сейчас?", style = MaterialTheme.typography.headlineSmall) }
+            item { Text("Какой текст открыть?", style = MaterialTheme.typography.headlineSmall) }
             item { Text("$date · ${occurrence.time}\n${occurrence.title}", style = MaterialTheme.typography.bodyMedium) }
-            item { Text("Расписание не уточняет порядок вечернего богослужения. Выберите нужный базовый текст. В храме могут быть дополнительные части",
+            item { Text("Расписание не уточняет порядок вечернего богослужения. Можно открыть один из текстов и найти место по словам. В храме могут быть дополнительные части",
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             item {
                 OutlinedButton(onClick = { onSelect(WorshipKind.VESPERS) }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
@@ -36,7 +36,7 @@ internal fun EveningServiceChoice(occurrence: BookJourneyContext, onDismiss: () 
                 OutlinedButton(onClick = { onSelect(WorshipKind.MATINS) }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
                     .testTag("evening_choose_matins")) { Text("Утреня") }
             }
-            item { Text("Позже можно переключить текст в одно нажатие. Дата текстов - следующий церковный день",
+            item { Text("После открытия нажмите \"Найти\" (значок лупы) и введите услышанные слова. Дата текстов - следующий церковный день",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
     }

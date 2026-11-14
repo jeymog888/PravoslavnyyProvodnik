@@ -375,12 +375,32 @@ class BookJourneyNavigationTest {
     }
 
     @Test fun genericEveningRequiresChoiceSurvivesRecreationAndOpensTheOtherTextWithoutLosingItsDate() {
+        configureCompactDisplay()
         books.publish(fixture(vespers)); books.publish(fixture(matins))
         val restoration = launch("Вечернее богослужение")
         val before = rawReadingPreferences.all.toMap()
         home("today_choose_unknown_service").performClick()
         waitForTag("evening_service_choice")
         assertTrue("Opening the choice must not start a guessed book", books.requests.isEmpty())
+        assertEquals(before, rawReadingPreferences.all)
+        val choice = compose.onNodeWithTag("evening_service_choice")
+        choice.performScrollToNode(hasText("Какой текст открыть?"))
+        compose.onNodeWithText("Какой текст открыть?").assertIsDisplayed()
+        choice.performScrollToNode(hasTestTag("evening_choose_vespers"))
+        compose.onNodeWithTag("evening_choose_vespers").assertIsDisplayed().assertHeightIsAtLeast(48.dp)
+        choice.performScrollToNode(hasTestTag("evening_choose_matins"))
+        compose.onNodeWithTag("evening_choose_matins").assertIsDisplayed().assertHeightIsAtLeast(48.dp)
+        val noviceHint = "После открытия нажмите \"Найти\" (значок лупы) и введите услышанные слова. Дата текстов - следующий церковный день"
+        choice.performScrollToNode(hasText(noviceHint))
+        compose.onNodeWithText(noviceHint).assertIsDisplayed()
+        val noviceOut = File(context.getExternalFilesDir("novice-choice-qa"), prefix).apply { mkdirs() }
+        val noviceBitmap = requireNotNull(instrumentation.uiAutomation.takeScreenshot())
+        try {
+            File(noviceOut, "choice-320-font200.png").outputStream().use {
+                assertTrue("Novice choice screenshot must be written", noviceBitmap.compress(Bitmap.CompressFormat.PNG, 100, it))
+            }
+        } finally { noviceBitmap.recycle() }
+        assertTrue("Reading guidance must not start a guessed book", books.requests.isEmpty())
         assertEquals(before, rawReadingPreferences.all)
         dismissSheet()
         compose.onNodeWithTag("book_content").assertDoesNotExist()
