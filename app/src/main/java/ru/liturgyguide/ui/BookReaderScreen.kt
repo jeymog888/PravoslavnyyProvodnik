@@ -425,7 +425,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             targetOffset = if (gap > 0f)
                 height + (itemSpacingPx * gap).roundToInt().coerceIn(0, itemSpacingPx - 1)
             else if (presentation != null) (height * fraction).roundToInt().coerceIn(0, height)
-            else (height * fraction).toInt().coerceIn(0, height - 1)
+            // Repeated language changes must not lose a pixel on every round trip.
+            else (height * fraction).roundToInt().coerceIn(0, height - 1)
             list.scrollToItem(index, targetOffset)
         }
         val target = pendingSearch?.takeIf { it.mode == mode && it.blockId == anchor.blockId }
