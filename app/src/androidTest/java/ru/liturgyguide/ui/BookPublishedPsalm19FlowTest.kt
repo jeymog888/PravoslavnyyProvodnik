@@ -29,7 +29,7 @@ import java.io.File
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 
-/** Actual accepted MATINS and phone v12 corpus, real explicit update, then a new offline repository. */
+/** Historical own193 + Psalm19 edition; current bundled production has a separate three-psalm flow. */
 class BookPublishedPsalm19FlowTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
@@ -57,9 +57,11 @@ class BookPublishedPsalm19FlowTest {
         context.deleteSharedPreferences(name); directory.deleteRecursively()
     }
 
+    private fun previousBundled() = BookTranslationIndex.fromFeoriaCatalog().fillingMissing(BookTranslationIndex.fromBundledPsalm19())
+
     private fun repository() = ServiceBookRepository(cache, ScheduleTransport { url ->
         calls += url; error("Published Psalm19 must stay offline")
-    }, translations = BookTranslationIndex.fromBundledRussian(), downloadRussian = false)
+    }, translations = previousBundled(), downloadRussian = false)
 
     @Test fun acceptedMatinsReceivesTheFullPublishedPsalmOnlyAfterExplicitAcceptAndReopensWithItsSourceOffline() {
         val evidenceText = instrumentation.context.assets.open("published-psalm19/evidence.json").bufferedReader().use { it.readText() }
@@ -86,7 +88,7 @@ class BookPublishedPsalm19FlowTest {
         val corpus = BookTranslationCorpus.decode(corpusText)
         assertNull(corpus.index.find(original))
         val baseline = SavedBookEnrichment.apply(old, corpus.index.plus(BookTranslationIndex.fromFeoriaCatalog())) ?: old
-        val expected = requireNotNull(SavedBookEnrichment.apply(old, corpus.index.plus(BookTranslationIndex.fromBundledRussian())))
+        val expected = requireNotNull(SavedBookEnrichment.apply(old, corpus.index.plus(previousBundled())))
         val gained = baseline.blocks.zip(expected.blocks).filter { (a, b) -> a != b }
         assertEquals(listOf(targetId), gained.map { it.first.id })
         assertEquals(gained.single().first.copy(russian = russian, translationSource = BookTranslationIndex.PSALTER_SOURCE), gained.single().second)

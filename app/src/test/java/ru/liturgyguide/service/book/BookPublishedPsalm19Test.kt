@@ -34,6 +34,8 @@ class BookPublishedPsalm19Test {
     private val russian get() = evidence["published"].asJsonObject["russian"].asString
     private val blockId get() = evidence["book"].asJsonObject["blockId"].asString
     private val pair get() = BookTranslation(russian, source)
+    // The previous production edition: own193 plus only the independently reviewed Psalm19.
+    private fun previousBundled() = BookTranslationIndex.fromFeoriaCatalog().fillingMissing(BookTranslationIndex.fromBundledPsalm19())
     private fun raw() = GZIPInputStream(requireNotNull(javaClass.getResourceAsStream("/book/published-psalm19/psalter.html.gz")))
         .bufferedReader().use { it.readText() }
     private fun oldCorpus() = GZIPInputStream(asset("published-psalm19/phone-corpus-v12.json.gz").inputStream())
@@ -102,9 +104,9 @@ class BookPublishedPsalm19Test {
         assertEquals(source.title, whole.single().asJsonObject["source"].asString)
     }
 
-    @Test fun productionFactoryAddsOnePublishedPairWithoutChangingThe193OwnTranslationsAndRoundTripsItsFillOnlyFlag() {
+    @Test fun previousPsalm19FactoryAddsOnePublishedPairWithoutChangingThe193OwnTranslationsAndRoundTripsItsFillOnlyFlag() {
         val own = BookTranslationIndex.fromFeoriaCatalog()
-        val bundled = BookTranslationIndex.fromBundledRussian()
+        val bundled = previousBundled()
         assertEquals(8, FeoriaTranslationCatalog.REVISION); assertEquals(193, own.size); assertEquals(194, bundled.size)
         assertNull(own.find(target)); assertEquals(pair, bundled.find(target))
         assertEquals(1, BookTranslationIndex.fromBundledPsalm19().size)
@@ -219,7 +221,7 @@ class BookPublishedPsalm19Test {
         assertEquals(target, targetBlock.original); assertNull(targetBlock.russian)
         val corpusText = oldCorpus(); val corpus = BookTranslationCorpus.decode(corpusText)
         val baseline = SavedBookEnrichment.apply(old, corpus.index.plus(BookTranslationIndex.fromFeoriaCatalog())) ?: old
-        val expected = requireNotNull(SavedBookEnrichment.apply(old, corpus.index.plus(BookTranslationIndex.fromBundledRussian())))
+        val expected = requireNotNull(SavedBookEnrichment.apply(old, corpus.index.plus(previousBundled())))
         val delta = baseline.blocks.zip(expected.blocks).filter { (a, b) -> a != b }
         assertEquals(listOf(blockId), delta.map { it.first.id })
         assertEquals(delta.single().first.copy(russian = russian, translationSource = source), delta.single().second)
@@ -233,7 +235,7 @@ class BookPublishedPsalm19Test {
             fraction = .31f, mode = BookReadingMode.RUSSIAN, lastTextMode = BookReadingMode.RUSSIAN)
         assertTrue(store.save(position)); var requests = 0
         val repository = ServiceBookRepository(cache, ScheduleTransport { requests++; error("Bundled exact Psalm19 is offline") },
-            translations = BookTranslationIndex.fromBundledRussian())
+            translations = previousBundled())
         val result = requireNotNull(repository.enrichSaved(old, allowNetwork = false))
         assertTrue(result.saved); assertTrue(result.fromCache); assertEquals(expected, result.book)
         assertEquals(0, requests); assertEquals(position, store.last("psalm19"))
@@ -244,7 +246,7 @@ class BookPublishedPsalm19Test {
         assertEquals(accepted, store.last("psalm19"))
         val disk = FileBookCache(directory)
         val offline = ServiceBookRepository(disk, ScheduleTransport { requests++; error("Offline reopen") },
-            translations = BookTranslationIndex.fromBundledRussian())
+            translations = previousBundled())
         assertEquals(result.book, (offline.load(old.key) as BookLoadResult.Ready).book)
         assertEquals(accepted, store.restore(result.book, "psalm19")); assertEquals(old, offline.cachedVersion(old.key, old.contentHash))
         assertEquals(pair.russian, disk.read(old.key)?.blocks?.single { it.id == blockId }?.russian)

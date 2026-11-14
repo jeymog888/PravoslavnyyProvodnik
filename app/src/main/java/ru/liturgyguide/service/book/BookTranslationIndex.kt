@@ -194,13 +194,20 @@ class BookTranslationIndex private constructor(
             normal(it.original) to BookTranslation(it.russian, FEORIA_TRANSLATION_SOURCE)
         })
 
-        /** Reviewed local translations and one independently attributed published whole pair. */
+        /** Reviewed local translations and four independently attributed published whole pairs. */
         fun fromBundledRussian(): BookTranslationIndex = fromFeoriaCatalog().fillingMissing(fromBundledPsalm19())
+            .fillingMissing(fromBundledThreePsalms())
 
         internal fun fromBundledPsalm19(json: String? = BookPublishedPsalm19.JSON): BookTranslationIndex {
             val pair = BookPublishedPsalm19.read(json) ?: return empty()
             val key = normal(pair.original)
             return BookTranslationIndex(mapOf(key to BookTranslation(pair.russian, PSALTER_SOURCE)), setOf(key))
+        }
+
+        internal fun fromBundledThreePsalms(json: String? = BookPublishedThreePsalms.JSON): BookTranslationIndex {
+            val pairs = BookPublishedThreePsalms.read(json) ?: return empty()
+            val entries = pairs.associate { normal(it.original) to BookTranslation(it.russian, PSALTER_SOURCE) }
+            return BookTranslationIndex(entries, entries.keys)
         }
 
         fun fromAssets(legacyStagesJson: String?, commonJson: String? = null): BookTranslationIndex {
