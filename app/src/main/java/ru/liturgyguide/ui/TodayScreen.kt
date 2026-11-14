@@ -35,7 +35,7 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
     onOpenScheduleSource: (() -> Unit)? = null, legacyReadingSummary: String? = null,
     onSetScheduleSource: ((String) -> Unit)? = null,
     onOpenService: ((ParishService) -> Unit)? = null,
-    onReviewScheduleSources: (() -> Unit)? = null) {
+    onReviewScheduleSources: (() -> Unit)? = null, sourceReviewParish: Parish? = null) {
     val zone = remember(church?.timezone) {
         runCatching { ZoneId.of(church?.timezone ?: "Europe/Moscow") }.getOrDefault(ZoneId.of("Europe/Moscow"))
     }
@@ -55,13 +55,14 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
     var chooserDateIso by rememberSaveable(church?.id) { mutableStateOf<String?>(null) }
     var editingSource by rememberSaveable(church?.id) { mutableStateOf(false) }
     val currentChurchId by rememberUpdatedState(church?.id)
-    val sourceReviewOwner = church?.let(ScheduleEntityIdentity::fingerprint)
+    val sourceChurch = scheduleReviewParish(church, sourceReviewParish)
+    val sourceReviewOwner = sourceChurch?.let(ScheduleEntityIdentity::fingerprint)
     val currentSourceReviewOwner by rememberUpdatedState(sourceReviewOwner)
     val chooserDate = chooserDateIso?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
     val kind = featured?.let { ServiceBookSelection.kindFor(it.title) }
     val format = remember { DateTimeFormatter.ofPattern("d MMMM", Locale.forLanguageTag("ru")) }
     val loading = ownState?.loading == true
-    val reviewSources = church != null && hasReviewableScheduleSources(church, ownState)
+    val reviewSources = sourceChurch != null && hasReviewableScheduleSources(sourceChurch, ownState)
     val phase = importProgress?.takeIf { it.parishId == church?.id }?.phase
     val loadingTitle = when (phase) {
         ScheduleImportPhase.FINDING_SITE -> "Находим сайт храма"

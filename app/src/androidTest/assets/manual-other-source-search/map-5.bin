@@ -1,0 +1,964 @@
+var objMap, objectManager, buttons=[], ortoxPolygon, showArea=false, aArea=[], areaCollection, buttonFS, data_bounds, v_noAutoBounds=true, myClusterer;
+jQuery(document).ready(
+	function(){
+		jQuery("#box-filters #preloader-mapfilter").hide();
+		jQuery('#box-filters #country').change( function(){ selCountry()} );
+	 	// jQuery('#box-filters #btn-search').click(function() {	searchChurch(); });
+	 	// jQuery('#box-filters #church_search').keypress(function(e){ if(e.which == 13)  searchChurch(); });  
+	 	jQuery('#box-filters #btn-search-clear').click(function() {	clearFilters();	});
+	 	jQuery('#f_search').keypress(function(e){ if(e.which == 13)  getDataFilters(); });  
+	}
+);
+
+function init_map(mapID) {
+	ymaps.ready( function(){
+
+		if ( geoLoc ) {
+
+	    ymaps.geolocation.get().then(
+	    	function (res) {
+					var geoObject = res.geoObjects.get(0);
+					// mapOptions = geoObject && { bounds: geoObject.properties.get('boundedBy') };
+					if (geoObject) defaultMapOptions.center=geoObject.geometry.getCoordinates();
+					// mapOptions = geoObject && { center: , zoom: defaultMapOptions.zoom };
+					// mapOptions.controls = [];
+	        createMap(defaultMapOptions);
+		    }, function () {
+					createMap(defaultMapOptions);
+		    }
+	    );
+
+	  } else {
+			createMap(defaultMapOptions);
+	  } 
+
+		function createMap(options) {
+		  window.objMap = new ymaps.Map(mapID, options, { minZoom: 3, restrictMapArea: [[-85,-179.9],[85,179.9]] });
+			setMapOptions();
+		}
+
+	});
+}
+
+function setMapOptions() {
+	// BalloonContentLayout
+	var customBalloonContentLayout = ymaps.templateLayoutFactory.createClass([
+      '<div class="balloon-content"><ul class="marker-list">',
+      '{% for geoObject in properties.geoObjects %}',
+          '<li class="item"><a href="javascript:void(0)" data-placemarkid="{{ geoObject.properties.infoId }}" class="list_item"><img src="{{geoObject.properties.iconURL}}"> {{ geoObject.properties.hintContent|raw }}</a></li>',
+          '<li class="item-info" style="display:none"><div class="marker-info" id="marker-info-{{ geoObject.properties.infoId }}"></div></li>',
+      '{% endfor %}',
+      '</ul></div>'
+    ].join('')
+  );
+
+	objMap.events.add( 'click', function (e) { if (objMap.balloon.isOpen()) {objMap.balloon.close();	jQuery('#box-list li a').removeClass('is_sel');} } );
+
+	jQuery(document).on( "click", "div.balloon-content a.list_item", function() {
+      infoId = jQuery(this).data().placemarkid;
+     	get_info(infoId,true);
+    }
+  );
+
+	myClusterer = new ymaps.Clusterer(
+		{
+			minClusterSize: 2, gridSize:64, zoomMargin: 20,
+	    clusterIcons: [
+	    	{ href: '/images/map/circle.svg', size: [28, 28], offset: [-14, -14] },
+	    	{ href: '/images/map/circle.svg', size: [32, 32], offset: [-16, -16] },
+	    	{ href: '/images/map/circle.svg', size: [40, 40], offset: [-20, -20] },
+	    	{ href: '/images/map/circle.svg', size: [48, 48], offset: [-24, -24] },
+	    	{ href: '/images/map/circle.svg', size: [64, 64], offset: [-32, -32] }
+	    ], 
+	    clusterNumbers: [10,100,1000,10000],
+      clusterOpenBalloonOnClick: true,	geoObjectHideIconOnBalloonOpen: false, clusterBalloonContentLayout: customBalloonContentLayout
+		}
+	);
+
+  window.objectManager = new ymaps.ObjectManager({
+    clusterize: true,	minClusterSize: 2, gridSize:64, zoomMargin: 20, 
+    clusterIcons: [
+    	{ href: '/images/map/circle.svg', size: [28, 28], offset: [-14, -14] },
+    	{ href: '/images/map/circle.svg', size: [32, 32], offset: [-16, -16] },
+    	{ href: '/images/map/circle.svg', size: [40, 40], offset: [-20, -20] },
+    	{ href: '/images/map/circle.svg', size: [48, 48], offset: [-24, -24] },
+    	{ href: '/images/map/circle.svg', size: [64, 64], offset: [-32, -32] }
+    ], 
+    clusterNumbers: [10,100,1000,10000],
+    autoPan: true, autoPanCheckZoomRange: true,
+    // clusterIconContentLayout: null,
+    clusterOpenBalloonOnClick: true,	geoObjectHideIconOnBalloonOpen: false, clusterBalloonContentLayout: customBalloonContentLayout
+  });
+  window.objectManager.objects.events.add('click', function (e) {
+    var objectId = e.get('objectId');
+    if (hasBalloonData(objectId)) {
+			jQuery('#box-list li a').removeClass('is_sel');
+			jQuery('#box-list #i'+objectId).addClass('is_sel');
+    	objectManager.objects.balloon.open(objectId);
+    } else {
+      get_info(objectId,false);
+    }
+  });
+
+
+	window.objMap.geoObjects.add(window.objectManager);
+
+	// right
+  var buttonGeolocation = new ymaps.control.Button({
+    data: { content: "Вокруг меня", title: "Определить мое местоположение на карте", image: '/images/eye_16.png'}, 
+    options: { maxWidth: [28, 150, 178], selectOnClick: false }
+	});
+	window.objMap.controls.add(buttonGeolocation, { float: 'right', floatIndex:1 });
+	buttonGeolocation.events.add( 'click', function (e) { getMyGeolocation() } );
+  var button = new ymaps.control.TrafficControl({ state: { providerKey: 'traffic#actual', trafficShown: false } });
+  window.objMap.controls.add(button,{float: 'right', floatIndex:2 });
+	window.objMap.controls.add('typeSelector', { maxWidth: [30, 65, 85], float: 'right', floatIndex:30 });
+
+  // right-center
+	// window.objMap.controls.add('routeEditor', { float: 'none',  position: {right: 10, top: 50}, size: 'medium' });
+	buttonFS = new ymaps.control.FullscreenControl();
+	window.objMap.controls.add(buttonFS, { float: 'none',  position: {right: 10, top: 120} });
+	if ( fullscreenOn )	buttonFS.enterFullscreen();
+
+	window.objMap.controls.add('zoomControl', { float: 'none',  position: {right: 10, top: 160}/*, size: 'small'*/ });
+
+	if (filtersBox==2) {
+		buttonFS.onRemoveFromMap();
+
+	  LogoLayout = ymaps.templateLayoutFactory.createClass( "<div class='BoxYmapsLogo'><a href='http://prihod.ru' target='_blanck'><img src='http://prihod.ru/images/prihod-logo.png'></a></div><div class='BoxYmapsLink'>Официальная карта храмов Русской Православной Церкви</div>" );
+	  button = new ymaps.control.Button({ data: { content: "Prihod.ru" }, options: { layout: LogoLayout } });
+	  window.objMap.controls.add(button, { float: 'none',  position: { bottom: 5, left: 5 } });
+
+	  LogoLayout = ymaps.templateLayoutFactory.createClass( "<div class='BoxYmapsMsg'><a onclick='showMsgBox();'>Не нашли свой храм?</a></div>" );
+	  button = new ymaps.control.Button({ data: { content: "Не нашли свой храм?" }, options: { layout: LogoLayout } });
+	  window.objMap.controls.add(button, { float: 'none',  position: { bottom: 5, left: 300 } });
+
+		// Filters-Box-2
+		var customControl2 = setCustomControl('box-filters-2');
+	  window.objMap.controls.add(customControl2, { float: 'none',  position: { top: 5, left: 5 } });
+
+    window.objMap.options.set({ geoObjectOverlayFactory: 'default#interactiveGraphics'});
+    window.objMap.options.set({ avoidFractionalZoom: true});
+
+		objMap.events.add('boundschange', function (event) {
+	    if ( event.get('newZoom') != event.get('oldZoom') || event.get('newBounds') != event.get('oldBounds') ) {
+				var v_type =  jQuery("#box-filters #type").val();
+		    if ( v_noAutoBounds ) {
+					var checkZoom =( event.get('newZoom') < zoomFilter && event.get('oldZoom') < zoomFilter ) || ( event.get('newZoom') >= zoomFilter && event.get('oldZoom') >= zoomFilter );
+	   			if ( checkMapBounds() && checkZoom ) {
+						setBoxList();
+	   			} else{
+	   				if ( setDataBounds() ) getDataFilters();
+	   			}
+					var v_center=window.objMap.getCenter();
+					v_center=Math.round(v_center[0]*100000)/100000+','+Math.round(v_center[1]*100000)/100000;
+					var church =  jQuery("#box-filters #church_id").val();
+		    	window.history.replaceState( {} , '', '?map='+v_center+','+event.get('newZoom')+(v_type?'&t='+v_type:'') );
+		    } else {
+					var church =  jQuery("#box-filters #church_id").val();
+					var filter='';
+					if ( church ) {
+						filter=(church?"&cID="+church:'');
+					}
+		    	window.history.replaceState( {} , '', '?filter=1'+(v_type?'&t='+v_type:'')+(filter?filter:'') );
+		    }
+		  }
+		});	 	
+		if (setDataBounds()) getDataFilters();
+	}
+
+	if (searchControl) {
+		// provider: 'yandex#search' - 2.1.18 (релиз-кандидат)
+		window.objMap.controls.add('searchControl', { /*provider: 'yandex#search', */ float: 'left', floatIndex:1 /*,  position: {left: 150, top: 10}*/ });
+	}
+
+	// Mesage-Box
+	var customControl3 = setCustomControl('box-msg-email');
+  window.objMap.controls.add(customControl3, { float: 'none',  position: { bottom: 30, left: 5 } });		
+
+	//filtersBox==2
+	showTypeGrp();
+
+}
+
+function setCustomControl(div_id) {
+  CustomControlClass = function (options) {
+      CustomControlClass.superclass.constructor.call(this);
+      this._$content = null;
+  };
+  ymaps.util.augment(CustomControlClass, ymaps.collection.Item, {
+      onAddToMap: function (map) {
+          CustomControlClass.superclass.onAddToMap.call(this, map);
+          this._lastCenter = null;
+          this.getParent().getChildElement(this).then(this._onGetChildElement, this);
+      },
+      onRemoveFromMap: function (oldMap) {
+          this._lastCenter = null;
+          if (this._$content) {
+              this._$content.remove();
+              this._mapEventGroup.removeAll();
+          }
+          CustomControlClass.superclass.onRemoveFromMap.call(this, oldMap);
+      },
+      _onGetChildElement: function (parentDomContainer,options) {
+          // Создаем HTML-элемент с текстом.
+          this._$content = jQuery('#'+div_id).appendTo(parentDomContainer);
+      }
+  });
+  return new CustomControlClass(div_id);
+}
+
+function getMyGeolocation() {
+	var geolocation = ymaps.geolocation;
+  geolocation.get({
+      provider: 'auto',
+      mapStateAutoApply: true
+  }).then(
+  	function (result) {
+      //result.geoObjects.options.set('preset', 'islands#blueCircleIcon');
+     	// window.objMap.setZoom(5, {duration: 1000});
+      window.objMap.geoObjects.add(result.geoObjects);
+		}
+	)
+}
+
+function hasBalloonData (objectId) {
+  return objectManager.objects.getById(objectId).properties.balloonContent;
+}
+
+function clearFilters() {
+	jQuery("#box-filters #country option:selected").prop("selected", false);
+	jQuery("#box-filters #country option:first").prop("selected", "selected");
+	jQuery('#box-filters #clang').val('');
+	// jQuery("#box-filters #type_grp_0").attr('checked', true);
+	// jQuery('#box-filters #type_label').show();
+	// jQuery('#box-filters #type_name').text('');
+	// jQuery('#box-filters #t4').hide();
+	// jQuery('#divPrms :radio[value=-1]').attr('checked', true);;
+	jQuery('#box-list #box-list-items').html('');
+ 	jQuery("#box-filters #TypeGrp option:first").prop("selected", "selected");
+  jQuery('#divCT_0').removeClass('load');
+  jQuery("#f_search").val('');
+	clearChurchSel(); 
+	setTypeGrp(0);
+}
+
+function showTypeGrp() {
+	var sobj;
+	sobj = document.getElementById('TypeGrp');
+	jQuery.each(aTypeGrp, function(key, value) {
+		if ( value.id!=undefined ) {
+	    sobj.options.length = key+1;
+	    sobj.options[key].value = value.id;
+	    sobj.options[key].text = value.ti;
+	  }
+	});
+	if ( jQuery("#box-filters #type").val()>0) {
+		jQuery("#box-filters #TypeGrp").val(jQuery("#box-filters #type").val());
+		setTypeGrp(jQuery("#box-filters #type").val());
+	}
+	jQuery('#box-filters #TypeGrp').change( function(){ 
+		var type_id = jQuery(this).val();
+    // console.log(type_id);
+		setTypeGrp(type_id);
+		return;
+	} );
+}
+
+function setTypeGrp(type_id) {
+	if (type_id==0) {
+		jQuery("#box-filters #type").val(0);
+	} else {
+		jQuery("#box-filters #type").val(type_id);
+	}
+	setTypeParams(type_id);
+}
+
+function setTypeParams(type_id) {
+	if (type_id>0) {
+		// jQuery('#box-filters #divPrms').show();
+
+		jQuery("#box-filters #subtype").val('');
+		jQuery('#box-filters #divPrms').html('');
+
+		jQuery.ajax({  
+			type: "POST",  
+			url: "/ortox-ajax.php",  
+			data: "mode=12&id="+type_id+'&p=1',  
+			dataType: "html",
+			success: function(dataResp){
+				jQuery('#box-filters #divPrms').html(dataResp);
+				jQuery('#box-filters #box-params').show();
+				getDataFilters(); 	
+			}  
+		});  
+
+	} else {
+		jQuery("#box-filters #subtype").val('');
+		jQuery('#box-filters #box-params').hide();
+		// jQuery('#box-filters #divPrms').hide();
+		jQuery('#box-filters #divPrms').html('');
+		// jQuery('#divPrms :radio[value=-1]').attr('checked', true);;
+		getDataFilters(); 	
+	}
+	return true;
+}
+
+function setSubType(subtype) {
+	jQuery("#box-filters #subtype").val(subtype);
+	getDataFilters(); 	
+}
+
+function selCountry() {
+	var item_sel = jQuery('#box-filters #country :selected');
+	var lang = item_sel.attr('lang');
+	jQuery('#box-filters #clang').val(lang);
+  jQuery('#divCT_0').removeClass('load');
+	clearChurchSel();
+	getDataFilters();
+}
+
+
+function clearChurchSel() {
+	// jQuery("#church_search").val('');
+	jQuery('#box-filters #church_id').val('');
+	jQuery('#box-filters #church_type').val(0);
+	jQuery('#box-filters #church_name').val('');
+	// jQuery('#box-filters #divCList').html('');
+	// jQuery('#box-filters #divCList').hide();
+	// jQuery('#box-filters #divCNote').show();
+	// jQuery('#box-filters #divCList').removeClass('errorList');
+	if ( jQuery('#box-filters-2') ) jQuery('#box-filters-2 .ch_tree_item').removeClass('selected');
+}
+
+function selChurch(pid) {
+	if (pid!=0) {
+		if ( jQuery('#box-filters-2').is(':visible') ) {
+			jQuery('#box-filters-2 .ch_tree_item').removeClass('selected');
+			if ( jQuery('#box-filters-2 #i_'+pid).hasClass('is_selected') ) {
+				jQuery('#box-filters-2 #i_'+pid).addClass('selected');
+				var item_sel = jQuery('#box-filters-2 li.selected');
+			} else {
+				var item_sel = 0;
+			}
+		}
+
+		if ( item_sel.val()!=0 ) {
+			var id = item_sel.val();
+			var txt = item_sel.text();
+			var type = item_sel.attr('ctype');
+			jQuery('#box-filters #church_id').val(id);
+			jQuery('#box-filters #church_type').val(type);
+			jQuery('#box-filters #church_name').val(txt);
+		} else {
+			clearChurchSel();
+		}
+		jQuery("#box-filters-2").hide();
+		// showTab(3);
+		getDataFilters();
+	}
+}
+
+function getDataFilters(noAutoBounds) {
+	//jQuery("#map-filter-box").hide();
+	var f_search = jQuery("#f_search").val();
+	var country = jQuery("#box-filters #clang").val();
+	var church =  jQuery("#box-filters #church_id").val();
+	var ctype =  jQuery("#box-filters #church_type").val();
+	var in_type =  jQuery("#box-filters #type").val();
+	var subtype =	jQuery("#box-filters #subtype").val();
+	if ( subtype*1>0 && in_type!=subtype ) in_type=subtype;
+	
+	if ( typeof hide_map_code == 'function' ) hide_map_code();
+	
+	if ( f_search || country || church )	{
+		v_noAutoBounds=false;
+	}	else {
+		v_noAutoBounds=true;
+	}
+
+	jQuery("#box-filters-2").hide();
+	jQuery("#box-filters #filters-data").hide();
+	jQuery("#box-filters #preloader-mapfilter").show();
+	jQuery("#box-list-filters").show();
+
+	var openId;
+	if ( typeof window.objMap.balloon!='undefined') {
+		if ( v_noAutoBounds && window.objMap.balloon.isOpen() ) {
+			var tmp=window.objectManager.objects.balloon.getData();
+			if (tmp && tmp.id>0) openId=tmp.id;
+			// objMap.balloon.close();
+		} else {
+			window.objMap.balloon.close();
+		}
+	}
+
+	var p_mode=getModeParam();
+
+//debugger;
+	if (v_noAutoBounds) {
+		if ( !checkMapBounds() ) setDataBounds();
+		var z=objMap.getZoom();
+		var geo=JSON.stringify( data_bounds );
+		window.objectManager.removeAll();
+	} else {
+		window.objectManager.removeAll();
+		window.objMap.geoObjects.removeAll();
+		window.objMap.geoObjects.add(window.objectManager);
+	}
+
+	jQuery.ajax({
+		type: "GET", url: "/api/index.php", data: (v_noAutoBounds ? p_mode+'&zf='+zoomFilter+'&z='+z+'&geo='+geo : p_mode), dataType: "json", cache: false,
+		success: function (data) {
+			if (data != "ERROR") {
+
+				//if (jQuery("#type_grp_0").attr('checked') ) objectManager.setFilter('');
+
+				jQuery('#box-list #box-list-title').html('');
+				jQuery("#box-list #box-list-filters").html('');
+				jQuery("#box-list #box-list-items").html('');
+
+        jQuery("#box-list").show();
+				jQuery("#box-list #box-list-filters").show();
+				if (church>0) {
+					// title_txt = jQuery('#box-filters #church_name').val();
+					// if (title_txt.length>80) title_txt = title_txt.substr(0,80)+'...';
+	        var listItem=jQuery('<li>'+jQuery('#box-filters #church_name').val()+'<button type="button" class="close" onclick="clearChurchSel();getDataFilters();">×</button></li>');
+					listItem.appendTo('#box-list #box-list-filters');
+				}
+				if (country) {
+	        var listItem=jQuery('<li>'+jQuery('#box-filters #country :selected').text()+'<button type="button" class="close" onclick="jQuery(\'#box-filters #country option:first\').prop(\'selected\', \'selected\');selCountry();">×</button></li>');
+					listItem.appendTo('#box-list #box-list-filters');
+				}
+				if (in_type>0) {
+	        var listItem=jQuery('<li>'+jQuery('#box-filters #TypeGrp :selected').text()+'<button type="button" class="close" onclick="jQuery(\'#box-filters #TypeGrp option:first\').prop(\'selected\', \'selected\');setTypeGrp(0);">×</button></li>');
+					listItem.appendTo('#box-list #box-list-filters');
+				}
+				if (subtype*1>0 && subtype!=jQuery("#box-filters #type").val() ) {
+	        var listItem=jQuery('<li>'+jQuery('#box-filters #subtype :selected').text()+'<button type="button" class="close" onclick="jQuery(\'#box-filters #subtype\').val(jQuery(\'#box-filters #type\').val());getDataFilters();">×</button></li>');
+					listItem.appendTo('#box-list #box-list-filters');
+				}
+				var obj = jQuery('#divPrms .params option:selected');
+				if ( obj.length > 0 ) {
+			    jQuery.each(obj, function(i, value) { 
+			  		if ( jQuery(this).val()*1>=0 ) {
+			  			var objSel=jQuery(this).parent().attr('name');
+			        var listItem=jQuery('<li>'+jQuery(this).text()+'<button type="button" class="close" onclick="jQuery(\'#divPrms [name^='+objSel+']\').val(-1);getDataFilters();">×</button></li>');
+							listItem.appendTo('#box-list #box-list-filters');
+			  		}
+			    });
+				}
+				var obj = jQuery('#divPrms .params:checkbox').filter(":checked");
+				if ( obj.length > 0 ) {
+			    jQuery.each(obj, function(i, value) { 
+			  		if ( jQuery(this).val()*1>=0 ) {
+			  			var objSel=jQuery(this).attr('name');
+			        var listItem=jQuery('<li>'+jQuery(this).parent().text()+'<button type="button" class="close" onclick="jQuery(\'#divPrms [name^='+objSel+']\').prop(\'checked\', false);getDataFilters();">×</button></li>');
+							listItem.appendTo('#box-list #box-list-filters');
+			  		}
+			    });
+				}
+        if (z<zoomFilter) {
+        	if (nolimit!=='1' && (jQuery("#box-filters #type").val()==3 || jQuery("#box-filters #type").val()==0) ) {
+				    var listItem=jQuery('<p>На данном масштабе отображаются только епархии, для просмотра всех объектов измените масштаб карты либо выберите страну или епархию.</p>');
+						listItem.appendTo('#box-list #box-list-filters');
+        	}
+				}
+
+				if (data!='' && data.features.length>0 )	{
+					window.objectManager.add(data);
+					if (v_noAutoBounds==false) {
+						// 
+						var cnt = window.objectManager.objects.getLength();
+						if ( cnt<16000 ) {
+							var p_bounds = objectManager.getBounds();
+
+							// if ( p_bounds[0][1]>63 && p_bounds[1][1]<-165 ) {
+							// 	// чукотка
+							// 	var markers = new Array();
+							// 	for(i = 0; i < data.features.length; i++) {
+							// 		var list = data.features[i];
+							// 		var coord = list.geometry.coordinates;
+							// 		if (coord) {
+							// 			var m_ttl=list.properties.hintContent;
+							// 			var icon = list.properties.iconURL
+							// 			marker = new ymaps.Placemark( 
+							// 				coord, 
+							// 				{ hintContent: m_ttl, balloonContentHeader: m_ttl, infoId: list.id, iconURL: icon  },
+							// 				{ iconImageHref: icon, iconImageSize: [24, 28] , iconImageOffset: [-12, -28], iconLayout: 'default#image'}
+							// 			);  
+							// 			marker.infoId = list.id;
+							// 			markers.push(marker);
+							// 		}
+							// 	}
+							// 	window.objMap.geoObjects.removeAll();
+							// 	window.objMap.geoObjects.add(myClusterer); 
+							// 	window.myClusterer.add(markers);
+							// 	window.myClusterer.events.add('balloonopen', function (e) { get_info(e); });
+							// 	window.objMap.options.set({restrictMapArea:false})
+							// } else {
+							// 	window.objMap.options.set({restrictMapArea:[[-85,-179.9],[85,179.9]]})
+							// }
+
+							objMap.setBounds(p_bounds, { checkZoomRange: true } );
+						} else
+							objMap.setCenter(defaultMapOptions.center, defaultMapOptions.zoom);
+					} else {
+						var v_center=window.objMap.getCenter();
+						v_center=Math.round(v_center[0]*100000)/100000+','+Math.round(v_center[1]*100000)/100000;
+						var v_type =  jQuery("#box-filters #type").val();
+			    	window.history.replaceState( {} , '', '?map='+v_center+','+z+'&t='+v_type );
+					}
+					if (openId) show_info_by_id(openId);
+					
+					setBoxList();
+				} else {
+					jQuery('#box-list #box-list-title').html('Объектов не найдено. Измените параметры поиска и попробуйте еще раз.');
+					// showTab(2);
+				}
+			}
+			jQuery("#box-filters #preloader-mapfilter").hide();
+			jQuery("#box-filters #filters-data").show();
+		},
+		error: function(){
+			jQuery("#box-filters #preloader-mapfilter").hide();
+			jQuery("#box-filters #filters-data").show();
+ 		}
+	});
+	// google-analytics
+	ga('send', 'pageview', { 'page': p_mode, 'title': 'ortox-ajax.php' } );
+}
+
+function getModeParam() {
+	var f_search = jQuery("#f_search").val();
+	var country = jQuery("#box-filters #clang").val();
+	var church =  jQuery("#box-filters #church_id").val();
+	var ctype =  jQuery("#box-filters #church_type").val();
+	var in_type =  jQuery("#box-filters #type").val();
+	var subtype =	jQuery("#box-filters #subtype").val();
+	if ( subtype*1>0 && in_type!=subtype ) in_type=subtype;
+	var aParams = [];
+	var obj = jQuery('#divPrms .params:radio').filter(":checked");
+	if ( obj.length > 0 ) {
+    jQuery.each(obj, function(i, value) { 
+  		if ( jQuery(this).val()*1>=0 ) {
+  			aParams.push({ param: jQuery(this).attr('name'), item_val: jQuery(this).val() });
+  		}
+    });
+	}
+	var obj = jQuery('#divPrms .params:checkbox').filter(":checked");
+	if ( obj.length > 0 ) {
+    jQuery.each(obj, function(i, value) { 
+  		if ( jQuery(this).val()*1>=0 ) {
+  			aParams.push({ param: jQuery(this).attr('name'), item_val: jQuery(this).val() });
+  		}
+    });
+	}
+	var obj = jQuery('#divPrms .params option:selected');
+	if ( obj.length > 0 ) {
+    jQuery.each(obj, function(i, value) { 
+  		if ( jQuery(this).val()*1>=0 ) {
+  			aParams.push({ param: jQuery(this).attr('pname'), item_val: jQuery(this).val() });
+  		}
+    });
+	}
+	if (mlt=='1') {
+		aParams.push({ param: 'military', item_val: 1 });
+	}
+
+	var p_mode='token=c2cbe8cd873f8e4751a7f7bb5292e68a&country='+country+'&church='+church+'&ctype='+ctype+'&t='+in_type+'&s='+f_search+'&params='+JSON.stringify(aParams);
+	return p_mode;
+}
+
+function setBoxList() {
+ // debugger;
+	if (v_noAutoBounds) {
+		var geo=JSON.stringify( objMap.getBounds() );
+//console.log(geo);
+		var z=objMap.getZoom();
+		var p_mode=getModeParam();
+
+		jQuery.ajax({
+			type: "GET", url: "/api/index.php", data: p_mode+'&zf='+zoomFilter+'&z='+z+'&geo='+geo, dataType: "json",	cache: false,
+			success: function (data) {
+				if (data != "ERROR") {
+					jQuery('#box-list #box-list-title').html('');
+					jQuery("#box-list #box-list-items").html('');
+	        jQuery("#box-list").show();
+					var title_txt='';
+
+					if (data!='' && data.features.length>0 ) {
+						var cnt = data.features.length;
+						title_txt = title_txt+'<p>Показано на карте объектов - '+cnt+'</p>';
+
+						// список объектов
+						var v_cnt=0; var v_cnt_max=200;
+						if ( cnt>1000 ) {
+				      var listItem=jQuery('<li><p>Для отображения списка уменьшите выборку, например измените масштаб карты</p></li>');
+							listItem.appendTo('#box-list #box-list-items');
+						} else {
+							var list=data.features;
+					    list.forEach(function(item, i, list) {
+				    		v_cnt++;
+				     		if (v_cnt > v_cnt_max) return;
+				     		if (v_cnt == v_cnt_max) {
+					        var listItem=jQuery('<li><p>...</p></li>');
+									listItem.appendTo('#box-list #box-list-items');
+									return;
+				    		}
+								if (item.properties.type!=8) {
+				        	var listItem=jQuery('<li><a id="i'+item.id+'" onclick="show_info_by_id('+item.id+');"><img src="'+item.properties.iconURL+'">'+item.properties.hintContent+'</a></li>');
+									listItem.appendTo('#box-list #box-list-items');
+								}
+						  	if ( showArea && objMap.getZoom()<zoomFilter && item.properties.type==7) {
+						  		getAreaEparchy(item.id);
+			  				}
+							});
+						}
+
+					} else {
+						title_txt = title_txt+'<p>Объектов не найдено</p>';
+					}
+					jQuery('#box-list #box-list-title').html(title_txt);
+				}
+			}
+		});
+
+	} else {
+		var cnt = objectManager.objects.getLength();
+		var title_txt='';
+		aArea=[];
+		title_txt = title_txt+'<p>Найдено объектов - '+cnt+'</p>';
+		jQuery('#box-list #box-list-title').html(title_txt);
+		// список объектов
+		var v_cnt=0; var v_cnt_max=100;
+		if ( cnt>2500 ) {
+      var listItem=jQuery('<li><p>Для отображения списка уменьшите выборку, например выберите епархию - кнопка "Церковная принадлежность" или воспользуйтесь поиском по названию.</p></li>');
+			listItem.appendTo('#box-list #box-list-items');
+		} else {
+	    objectManager.objects.each(
+	    	function (object) {
+	    		v_cnt++;
+	     		if (v_cnt > v_cnt_max) return;
+	     		if (v_cnt == v_cnt_max) {
+		        var listItem=jQuery('<li><p>...</p></li>');
+						listItem.appendTo('#box-list #box-list-items');
+						return;
+	    		}
+					if (object.properties.type!=8) {
+	        	var listItem=jQuery('<li><a id="i'+object.id+'" onclick="show_info_by_id('+object.id+');"><img src="'+object.properties.iconURL+'">'+object.properties.hintContent+'</a></li>');
+						listItem.appendTo('#box-list #box-list-items');
+					}
+			  	if ( showArea && object.properties.type==7) {
+			  		getAreaEparchy(object.id);
+  				}
+	      }, 
+	      objMap
+	    );
+		}
+	}
+}
+
+function show_info_by_id(id) {
+	var obj = objectManager.objects.getById(id);
+	if ( obj ) {
+		var coord = obj.geometry.coordinates;
+		//window.objMap.setCenter(coord);
+		get_info(id,false);
+	}
+}
+
+function show_filter_box2() {
+	jQuery("#box-filters-2").toggle();
+	refreshChurch(0);
+}
+
+function refreshChurch(pid) {
+	var objDiv = document.getElementById("divCT_"+pid);
+	if (!objDiv) return;
+	var country = jQuery("#country").val();
+	var type = 'all';
+
+	if ( jQuery('#o_'+pid).hasClass('ch_tree_open') ) {
+	  jQuery('#o_'+pid).removeClass('ch_tree_open');
+	  jQuery('#o_'+pid).addClass('ch_tree_close');
+	  jQuery("#divCT_"+pid).hide();
+	  return;
+	} else {
+	  jQuery('#o_'+pid).removeClass('ch_tree_close');
+	  jQuery('#o_'+pid).addClass('ch_tree_open');
+	  if ( jQuery('#divCT_'+pid).hasClass('load') ) {
+		  jQuery("#divCT_"+pid).show();
+		  return;
+		}
+	}
+	jQuery('#church_select').val('');
+	objDiv.innerHTML = '<div id="preloader"><img src="/images/preloader.gif" alt="AJAX loader" title="AJAX loader"/> Идет загрузка...</div>';
+	jQuery.ajax({  
+			type: "POST",  
+			url: "/ortox-ajax.php",  
+			data: "mode=6&ht=1&cnt=1&country="+country+'&type='+type+'&pid='+(pid==0?'1':pid),  
+			dataType: "html",
+			cache: false,
+			error: function(){
+   			alert("Произошла ошибка. Пожалуйста, обратитесь к администрации за помощью.");
+   		},
+			success: function(dataResp){
+				var objDiv = document.getElementById("divCT_"+pid);
+				objDiv.innerHTML = dataResp;
+				jQuery("#divCT_"+pid).addClass('load');
+				autoOpenTree(pid);
+			}  
+	});  
+	return false;  
+}
+
+function autoOpenTree(pid){
+  obj = jQuery("#divCT_"+pid+" .ch_tree_item");
+  if (obj.length==1) refreshChurch(obj.first().val());
+	return true;
+}
+
+function showMsgBox() {
+	jQuery("#btnMsgSbm").show();
+	jQuery("#msgRes").html('');
+	var obj = jQuery("#box-msg-email [name^='feild']");
+  jQuery.each(obj, function(i, value) { jQuery(this).val('');});
+	jQuery("#box-msg-email").toggle();
+	jQuery('#feild_name').focus();
+}
+
+function sendMsg2email() {
+	var msg_s = jQuery("#feild_orgname").val();
+	if ( msg_s.length==0) {
+		alert('Укажите "'+jQuery("#feild_orgname").attr('title')+'"');
+		jQuery("#feild_orgname").focus();
+		return false;
+	}
+	var msg_s = jQuery("#feild_addr").val();
+	if ( msg_s.length==0) {
+		alert('Укажите "'+jQuery("#feild_addr").attr('title')+'"');
+		jQuery("#feild_addr").focus();
+		return false;
+	}
+
+	jQuery("#btnMsgSbm").hide();
+	jQuery("#msgRes").html('<div id="preloader"><img src="/images/preloader.gif" alt="AJAX loader" title="AJAX loader"/> Идет отправка сообщения...</div>');
+	var feilds = [];
+	var obj = jQuery("#box-msg-email [name^='feild']");
+  jQuery.each(obj, function(i, value) { 
+			feilds.push({ feild: jQuery(this).attr('title'), val: jQuery(this).val() });
+		});
+
+	jQuery.ajax({
+		type: "POST",
+		url: "/ortox-ajax.php",  
+		data: 'mode=56&_ajax_nonce='+_ajax_nonce_msg+'&feilds='+JSON.stringify(feilds),  
+		dataType: "html",
+		cache: false,
+		success: function (data) {
+			jQuery("#msgRes").html(data);
+		},
+		error: function () {
+			jQuery("#msgRes").html("Ошибка. Сервер не овечает на запрос.");
+		}
+	});
+}
+
+function setDataBounds() {
+	var p_bounds = objMap.getBounds();
+	var z=objMap.getZoom();
+// console.log(JSON.stringify(p_bounds));
+// console.log(z);
+	var p_delta=12/z;
+	var d_lat=(p_bounds[1][0]-p_bounds[0][0])/p_delta;
+	if ( p_bounds[1][1]>p_bounds[0][1] )
+		var d_lon=(p_bounds[1][1]-p_bounds[0][1])/p_delta;
+	else 
+		var d_lon=((180+(180+p_bounds[1][1]))-p_bounds[0][1])/p_delta;
+	var lat0 = getRoundCoord(p_bounds[0][0]-d_lat, 'lat',0);
+	var lon0 = getRoundCoord(p_bounds[0][1]-d_lon, 'lon',0);
+	var lat1 = getRoundCoord(p_bounds[1][0]+d_lat, 'lat',0);
+	var lon1 = getRoundCoord(p_bounds[1][1]+d_lon, 'lon',0);
+	data_bounds = [[lat0,lon0],[lat1,lon1]];
+// console.log(JSON.stringify(data_bounds));
+	return true;
+}
+
+function getRoundCoord(coord,pmode,pround) {
+	switch ( pround ) {
+		case 0:
+			var newCoord = Math.round(coord*100000)/100000;
+	  	break;
+		case 1:
+			// var newCoord = (coord<0 ? Math.floor(Math.abs(coord*2)/10):Math.ceil(Math.abs(coord*2)/10))*10*(coord<0 ? -1:1)/2;
+			var newCoord = (coord<0 ? Math.floor(Math.abs(coord)):Math.ceil(Math.abs(coord)))*(coord<0 ? -1:1);
+	  	break;
+		case 2:
+			// var newCoord = (coord<0 ? Math.ceil(Math.abs(coord*2)/10):Math.floor(Math.abs(coord*2)/10))*10*(coord<0 ? -1:1)/2;
+			var newCoord = (coord<0 ? Math.ceil(Math.abs(coord)):Math.floor(Math.abs(coord)))*(coord<0 ? -1:1);
+	  	break;
+  }
+	var coordLimit=0;
+	switch ( pmode ) {
+		case 'lat':
+			coordLimit=85;
+			newCoord=(newCoord>coordLimit ? coordLimit : ( newCoord<-coordLimit ? -coordLimit : newCoord ) );
+	  	break;
+		case 'lon':
+			coordLimit=180;
+			newCoord=(newCoord>coordLimit ? (-coordLimit + (newCoord-coordLimit) ) : ( newCoord<-coordLimit ? (coordLimit-(newCoord+coordLimit)) : newCoord ) );
+	  	break;
+  }
+	return newCoord;
+}
+
+function checkMapBounds() {
+	if (v_noAutoBounds) {
+		if (data_bounds==undefined) return false;
+		var p_bounds = objMap.getBounds();
+		var rectangle = new ymaps.geometry.base.Rectangle(data_bounds);
+		if ( rectangle.contains(p_bounds[0]) && rectangle.contains(p_bounds[1]) )
+			return true;
+		else
+			return false;
+	}	else
+		return true;
+}
+
+function getAreaEparchy(id) {
+// if (id==6660) id=11701;
+	if ( aArea[id] ) {
+		// show_area( aArea[id] );
+		return true;
+	} 
+	var p_mode='token=c2cbe8cd873f8e4751a7f7bb5292e68a&m=area&id='+id;
+	jQuery.ajax({
+		type: "GET", url: "/api/index.php", data: p_mode, dataType: "json",	cache: false,
+		success: function (data) {
+			if (data != "ERROR") {
+				// aArea[id] = data;
+				show_area(id,data);
+			}
+		}
+	});
+}
+
+
+var fillopacity_polygon = 0.3, opacity_line=0.9, width_line = 2;
+function show_area(id,data) {
+	if (data.area && data.area.coords.length>0) {
+		var color_polygon = data.area.color_polygon;
+		var color_line = data.area.color_line;
+		aArea[id]=true;
+
+		var Polygon = new ymaps.Polygon(jQuery.parseJSON(data.area.coords), 
+			{hintContent: data.area_name, },
+			{
+		    editorDrawingCursor: "crosshair",
+				fillColor: color_polygon,
+				strokeColor: color_line,
+				opacity: fillopacity_polygon,
+				strokeOpacity: opacity_line,
+				strokeWidth: width_line
+			}
+		);
+		//areaCollection.add(Polygon);
+		// objMap.geoObjects.add(areaCollection);       
+		objMap.geoObjects.add(Polygon);
+		Polygon=false;
+	}
+}
+
+function setAreaMode() {
+	var chk = jQuery('#area_e:checkbox').filter(":checked").val();
+	if (chk!=undefined) {
+		showArea=true;
+		// areaCollection = new ymaps.GeoObjectCollection();
+		if (v_noAutoBounds) {
+			var z=objMap.getZoom();
+			if  (z>=zoomFilter) {
+				objMap.setZoom(zoomFilter-1);
+			} else {
+				setBoxList();
+			}
+		} else {
+			setBoxList();
+		}
+	}	else {
+		showArea=false;
+		aArea=[];
+		// objMap.geoObjects.remove(areaCollection);  
+		//areaCollection.removeAll();
+		window.objMap.geoObjects.removeAll();
+		window.objMap.geoObjects.add(window.objectManager);
+		getDataFilters();
+	}
+}
+
+function get_info(infoId,clusterBalloon) {
+	if ( infoId==undefined ) return true;
+	jQuery('#box-list li a').removeClass('is_sel');
+	jQuery('#box-list #i'+infoId).addClass('is_sel');
+
+	var loadText='<div id="preloader"><img src="/images/preloader.gif" alt="AJAX loader" title="AJAX loader"/> Идет загрузка ...</div>';
+	if (clusterBalloon) {
+		var objDiv = jQuery("#marker-info-"+infoId)[0];
+		if ( jQuery(objDiv).html() ) {
+			showBalloonContent(infoId);
+			return true;
+		} 
+	} else {
+	  var obj = objectManager.objects.getById(infoId);
+	  obj.properties.balloonContent = loadText;
+	  objectManager.objects.balloon.open(infoId);
+	}
+
+	if (url_mode && url_mode==undefined) url_mode=0;
+
+	var p_mode='token=c2cbe8cd873f8e4751a7f7bb5292e68a&m=info&msg=1&id='+infoId+'&urlmode='+url_mode+'&lang=ru';
+	jQuery.ajax({
+		type: "GET", url: "/api/index.php", data: p_mode, dataType: "html",	cache: false,
+		success: function (data) {
+			if (data != "ERROR") {
+				if (clusterBalloon) {
+					jQuery(objDiv).html(data);
+					showBalloonContent(infoId);
+			  } else {
+				  obj.properties.balloonContent = data;
+			  	objectManager.objects.balloon.open(infoId);
+			  }
+			}
+		}
+	});
+}
+
+function showBalloonContent(infoId) {
+	jQuery("li.item-info").hide();
+	jQuery("li.item").show();
+	jQuery("#marker-info-"+infoId).parent().prev().filter('li.item').hide();
+	jQuery("#marker-info-"+infoId).parent().show();
+	return true;
+}
+
+function sendMsg2Support(id) {
+	var msg_s = jQuery("#msg_subject").val();
+	if ( msg_s && msg_s.length>0) {
+		jQuery("#btnMsgSend").hide();
+		jQuery("#li_msg_subject").html('<div id="preloader"><img src="/images/preloader.gif" alt="AJAX loader" title="AJAX loader"/> Идет отправка сообщения...</div>');
+		var object_url = jQuery("#m"+id).parent().find('h1>a').attr("href");
+		jQuery.ajax({
+			type: "POST",
+			url: "/ortox-ajax.php",  
+			data: 'mode=55&id='+id+'&url='+object_url+'&msg='+msg_s,  
+			dataType: "html",
+			cache: false,
+			success: function (data) {
+				jQuery("#li_msg_subject").html(data);
+			},
+			error: function () {
+				jQuery("#li_msg_subject").html("Ошибка. Сервер не овечает на запрос.");
+			}
+		});
+	}
+}

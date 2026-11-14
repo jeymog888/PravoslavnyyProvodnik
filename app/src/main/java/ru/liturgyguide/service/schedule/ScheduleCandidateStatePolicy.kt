@@ -72,3 +72,42 @@ internal fun hasActionableFastCandidate(parish: Parish, state: InternetScheduleS
                 candidateCoversSource(it, candidate.sourceUrl) }
     }
 }
+
+/** A retained conflict permits searching for information, never accepting that conflicted source. */
+internal fun permitsOtherSourceSearch(parish: Parish, state: InternetScheduleState): Boolean {
+    if (!OwnContactChildIdentity.ordinaryOsm(parish) || parish.website.isNotBlank() ||
+        state.configuredWebsite.isNotBlank() || state.customSource.isNotBlank() ||
+        state.publication != null || state.sourceHasWithdrawals) return false
+    val providers = setOf(OfficialMapCandidateProvider.PROVIDER, ElitsyMapCandidateProvider.PROVIDER)
+    val acceptedCandidate = state.siteBinding?.takeIf { it.method == ScheduleBindingMethod.USER_CONFIRMED }
+        ?.candidateConfirmation?.candidate
+    // Retained Map offers must not intercept retry/import of an already accepted
+    // Own or other non-Map authority after its schedule leaf temporarily failed.
+    if (state.siteBinding != null && acceptedCandidate?.provider !in providers) return false
+    val offered = state.sourceCandidates.any { row -> row.provider in providers && row.validFor(parish) &&
+        (row.canConfirm(parish) || row.outcome == ScheduleIdentityOutcome.CONFLICT && !row.verificationUnavailable) }
+    val accepted = acceptedCandidate?.let { it.provider in providers && it.validFor(parish) } == true
+    return offered || accepted
+}
+
+/** The predicate mirrors confirmation visibility without turning a grouped URL into authority. */
+internal fun hasActionableOwnSearchCandidate(parish: Parish, state: InternetScheduleState,
+    fresh: ScheduleCandidateDiscovery, merged: List<ScheduleSourceCandidate>, excludedUrls: Set<String>): Boolean {
+    val excluded = ScheduleSourceExclusions(excludedUrls)
+    val chosen = state.siteBinding?.takeIf { it.validFor(parish, it.siteUrl, it.evidenceUrl) }
+        ?.candidateConfirmation?.candidate?.sourceUrl
+    return fresh.candidates.filter { it.provider == OwnContactCandidateProvider.PROVIDER }.groupBy { it.id }.values.any { rows ->
+        if (rows.size != 1) return@any false
+        val raw = rows.single()
+        val candidate = merged.singleOrNull { it.id == raw.id } ?: return@any false
+        raw.canConfirm(parish) && candidate.canConfirm(parish) && candidate.id !in state.dismissedCandidateIds &&
+            candidate.sourceUrl != chosen && !candidateChangeBlockedByHistory(state, candidate) &&
+            !excluded.contains(candidate.sourceUrl) && merged.none { it.validFor(parish) &&
+                it.outcome == ScheduleIdentityOutcome.CONFLICT && candidateCoversSource(it, candidate.sourceUrl) }
+    }
+}
+
+/** Only these five fields are allowed to change in an ordinary metadata search, including after decoding. */
+internal fun InternetScheduleState.withoutSearchMetadata(): InternetScheduleState = copy(
+    sourceCandidates = emptyList(), candidateSearchIdentity = "", candidateObservedIds = emptyList(),
+    candidateSearchIncomplete = true, candidateSearchUnavailable = false)

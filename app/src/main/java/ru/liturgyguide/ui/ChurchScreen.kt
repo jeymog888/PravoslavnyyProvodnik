@@ -59,7 +59,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     onSelectionCancelled: () -> Unit = {}, searchQuery: String, onSearchQueryChange: (String) -> Unit,
     onOpenService: ((ParishService) -> Unit)? = null, now: Instant? = null,
     onReadServiceText: ((LocalDate, WorshipKind) -> Unit)? = null,
-    sourceReviewRequest: Int = 0, sourceReviewIdentity: String? = null) {
+    sourceReviewRequest: Int = 0, sourceReviewIdentity: String? = null, sourceReviewParish: Parish? = null) {
     val church = churches.firstOrNull { it.id == selectedId }
     var picker by rememberSaveable { mutableStateOf(false) }
     var adding by rememberSaveable { mutableStateOf(false) }
@@ -207,13 +207,14 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     val ownState = internetSchedule?.takeIf { it.parishId == church?.id }
     val arrival = church?.let { arrivalSchedule(it, date, now, ownState) }
     val listState = rememberLazyListState()
-    val sourceReviewOwner = church?.let(ScheduleEntityIdentity::fingerprint)
+    val sourceChurch = scheduleReviewParish(church, sourceReviewParish)
+    val sourceReviewOwner = sourceChurch?.let(ScheduleEntityIdentity::fingerprint)
     val currentSourceReviewOwner by rememberUpdatedState(sourceReviewOwner)
     var handledSourceReview by rememberSaveable(sourceReviewOwner) { mutableIntStateOf(0) }
     val readingBeforeSchedule = rememberReadingBeforeSchedule(listState, church?.id, date, arrival?.featured != null || arrival?.next != null,
         readingKey = "church_reading", personalKey = "church_personal")
-    val sourceSectionVisible = church != null && ownState != null && onConfirmScheduleCandidate != null &&
-        (scheduleCandidateGroups(church, ownState).isNotEmpty() || ownState.candidateSearchUnavailable && !ownState.loading)
+    val sourceSectionVisible = sourceChurch != null && ownState != null && onConfirmScheduleCandidate != null &&
+        (scheduleCandidateGroups(sourceChurch, ownState).isNotEmpty() || ownState.candidateSearchUnavailable && !ownState.loading)
     // Header (optional), identity, day chips, then the optional retained reading cards.
     val hasPersonalCard = church != null && personalStartForDate(userStarts, church, date) != null
     val hasReadingCard = church != null && ((onReadLiturgy != null && !hasPersonalCard) ||
@@ -392,8 +393,8 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                 }
                 if (sourceSectionVisible && ownState != null) item(key = "church_schedule_sources") {
                     ArrivalCard(Modifier.testTag("church_sources_card")) {
-                        val ownerIdentity = ScheduleEntityIdentity.fingerprint(church)
-                        ScheduleCandidateChoices(church, ownState,
+                        val ownerIdentity = ScheduleEntityIdentity.fingerprint(requireNotNull(sourceChurch))
+                        ScheduleCandidateChoices(requireNotNull(sourceChurch), ownState,
                             onConfirm = { id -> if (currentSourceReviewOwner == ownerIdentity) onConfirmScheduleCandidate?.invoke(id) },
                             onDismiss = onDismissScheduleCandidate?.let { dismiss ->
                                 { id: String -> if (currentSourceReviewOwner == ownerIdentity) dismiss(id) }

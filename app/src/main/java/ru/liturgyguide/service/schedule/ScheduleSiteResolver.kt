@@ -21,6 +21,12 @@ fun interface ScheduleSiteResolver {
         resolve(parish)?.takeUnless { ScheduleSourceExclusions(excludedUrls).contains(it.url) }
     suspend fun candidates(parish: Parish, excludedUrls: Set<String>): ScheduleCandidateDiscovery =
         ScheduleCandidateDiscovery(unavailable = true)
+    /** Explicit metadata search; custom resolvers keep their previous candidate contract. */
+    suspend fun candidatesForSourceSearch(parish: Parish, excludedUrls: Set<String>, excludedCandidateIds: Set<String>,
+        useful: (ScheduleCandidateDiscovery) -> Boolean,
+        onProviderCompleted: (ScheduleCandidateDiscovery) -> Unit): ScheduleCandidateDiscovery =
+        withTimeoutOrNull(35_000) { candidates(parish, excludedUrls).also(onProviderCompleted) }
+            ?: ScheduleCandidateDiscovery(unavailable = true)
     /** Existing custom resolvers remain authoritative; expected-aware production review is optional. */
     suspend fun candidatesForConfirmation(parish: Parish, excludedUrls: Set<String>, expected: ScheduleSourceCandidate): ScheduleCandidateDiscovery =
         candidates(parish, excludedUrls)
@@ -60,6 +66,10 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport,
 
     override suspend fun candidates(parish: Parish, excludedUrls: Set<String>): ScheduleCandidateDiscovery =
         forRefresh().candidates(parish, excludedUrls)
+
+    override suspend fun candidatesForSourceSearch(parish: Parish, excludedUrls: Set<String>, excludedCandidateIds: Set<String>,
+        useful: (ScheduleCandidateDiscovery) -> Boolean, onProviderCompleted: (ScheduleCandidateDiscovery) -> Unit) =
+        forRefresh().candidatesForSourceSearch(parish, excludedUrls, excludedCandidateIds, useful, onProviderCompleted)
 
     override suspend fun candidatesForConfirmation(parish: Parish, excludedUrls: Set<String>, expected: ScheduleSourceCandidate) =
         forRefresh().candidatesForConfirmation(parish, excludedUrls, expected)
@@ -127,6 +137,38 @@ class OpenScheduleSiteResolver(private val transport: ScheduleTransport,
                 val key = request(parish, excludedUrls)
                 wholeMemo[key]?.let { return it }
                 return whole(parish, excludedUrls).also { wholeMemo[key] = it }
+            }
+
+            override suspend fun candidatesForSourceSearch(parish: Parish, excludedUrls: Set<String>, excludedCandidateIds: Set<String>,
+                useful: (ScheduleCandidateDiscovery) -> Boolean,
+                onProviderCompleted: (ScheduleCandidateDiscovery) -> Unit): ScheduleCandidateDiscovery {
+                // No wholeMemo: dismissal, chosen URL and the predicate belong to this action.
+                if (ownPools == null) return maps(parish, excludedUrls).also(onProviderCompleted)
+                val completed = ConcurrentHashMap<Int, ScheduleCandidateDiscovery>()
+                withTimeoutOrNull(35_000) { coroutineScope {
+                    launch {
+                        val found = maps(parish, excludedUrls)
+                        completed[0] = found
+                        // Either provider's fresh negative reaches durable storage before
+                        // waiting for its neighbor. The callback has no suspension point.
+                        onProviderCompleted(found)
+                    }
+                    launch {
+                        val found = own(parish, excludedUrls, excludedCandidateIds) { found ->
+                            useful(mergeFreshScheduleDiscoveries(parish, found,
+                                completed[0] ?: ScheduleCandidateDiscovery()))
+                        }
+                        completed[1] = found
+                        // A completed Own negative can target the exact accepted
+                        // Map endpoint too. Persist it before awaiting Map.
+                        onProviderCompleted(found)
+                    }
+                } }
+                // Own comes first in this explicit alternative search. It cannot be
+                // crowded out merely because the old Map proposal is ready again.
+                return mergeFreshScheduleDiscoveries(parish,
+                    completed[1] ?: ScheduleCandidateDiscovery(unavailable = true),
+                    completed[0] ?: ScheduleCandidateDiscovery(unavailable = true))
             }
 
             override suspend fun candidatesForConfirmation(parish: Parish, excludedUrls: Set<String>, expected: ScheduleSourceCandidate): ScheduleCandidateDiscovery =

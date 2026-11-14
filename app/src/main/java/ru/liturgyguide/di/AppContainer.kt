@@ -16,6 +16,7 @@ import ru.liturgyguide.service.discovery.CatalogPlaceDiscovery
 import ru.liturgyguide.service.schedule.InternetSchedules
 import ru.liturgyguide.service.schedule.InternetScheduleRepository
 import ru.liturgyguide.service.schedule.ScheduleCacheStore
+import ru.liturgyguide.service.schedule.ScheduleCacheCoordination
 import ru.liturgyguide.service.schedule.UrlConnectionScheduleTransport
 import ru.liturgyguide.service.schedule.AndroidScheduleDocumentExtractor
 import ru.liturgyguide.service.schedule.FileOfficialDirectoryCacheStore
@@ -68,7 +69,8 @@ class AppContainer(context: Context, private val discoveryOverride: PlaceDiscove
         val directories = FileOfficialDirectoryCacheStore(File(appContext.cacheDir, "official-parish-directories"))
         scheduleOverride ?: InternetScheduleRepository(transport, object : ScheduleCacheStore {
             private val preferences = appContext.getSharedPreferences("internet_schedule_cache", Context.MODE_PRIVATE)
-            override fun read(parishId: String): String? = runCatching { preferences.getString(parishId, null) }.getOrNull()
+            override val coordinationLock: Any get() = ScheduleCacheCoordination.productionLock
+            override fun read(parishId: String): String? = preferences.getString(parishId, null)
             override fun write(parishId: String, value: String) {
                 if (value.length > 200_000) return
                 val edit = preferences.edit().putString(parishId, value)

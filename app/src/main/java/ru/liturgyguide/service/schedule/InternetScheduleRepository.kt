@@ -19,6 +19,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZoneOffset
+import java.util.concurrent.atomic.AtomicReference
 
 enum class InternetScheduleStatus { IDLE, READY, NO_WEBSITE, UNSUPPORTED, UNAVAILABLE }
 enum class ScheduleSourceChangeBlock { NONE, HISTORY, CONFLICT }
@@ -59,6 +60,8 @@ data class InternetScheduleState(
 )
 
 interface ScheduleCacheStore {
+    /** Shared by all instances that write the same storage; no suspension is allowed while held. */
+    val coordinationLock: Any get() = this
     fun read(parishId: String): String?
     fun write(parishId: String, value: String)
     /** Completed safety observations must survive cancellation of the next network request. */
@@ -72,6 +75,8 @@ interface InternetSchedules {
     val progress: StateFlow<ScheduleImportProgress>? get() = null
     fun cached(parish: Parish): InternetScheduleState
     suspend fun refresh(parish: Parish, now: Instant, force: Boolean = false, sourceOverride: String? = null): InternetScheduleState
+    /** A manual action only. Compatibility defaults do not opt into an automatic continuation. */
+    suspend fun searchOtherSources(parish: Parish, now: Instant): InternetScheduleState = refresh(parish, now, force = true)
     suspend fun confirmCandidate(parish: Parish, candidateId: String, now: Instant): InternetScheduleState = cached(parish)
     fun dismissCandidate(parish: Parish, candidateId: String): InternetScheduleState = cached(parish)
 }
@@ -89,16 +94,23 @@ private fun initialScheduleState(parish: Parish): InternetScheduleState {
 
 class InternetScheduleRepository(
     private val transport: ScheduleTransport,
-    private val cache: ScheduleCacheStore,
+    cache: ScheduleCacheStore,
     private val documentExtractor: ScheduleDocumentExtractor = HtmlScheduleDocumentExtractor,
     siteResolver: ScheduleSiteResolver? = null,
     directoryCache: OfficialDirectoryCacheStore = MemoryOfficialDirectoryCacheStore(),
     // Only the shipped reviewed parish directory may supply independent publisher identities.
     private val curatedPublishers: () -> List<Parish> = { emptyList() }
 ) : InternetSchedules {
+    private val cache: ScheduleCacheStore = CoordinatedScheduleCacheStore(cache)
     private val siteResolver = siteResolver ?: OpenScheduleSiteResolver(transport, directoryCache)
     private val importProgress = MutableStateFlow(ScheduleImportProgress("", ScheduleImportPhase.IDLE))
     override val progress: StateFlow<ScheduleImportProgress> = importProgress
+    private val progressLock = Any()
+    private var progressOwner: Any? = null
+    private fun claimProgress(): Any = synchronized(progressLock) { Any().also { progressOwner = it } }
+    private fun phase(owner: Any, parishId: String, phase: ScheduleImportPhase) = synchronized(progressLock) {
+        if (progressOwner === owner) importProgress.value = ScheduleImportProgress(parishId, phase)
+    }
 
     override fun cached(parish: Parish): InternetScheduleState =
         ScheduleCacheCodec.decode(runCatching { cache.read(parish.id) }.getOrNull(), parish)
@@ -114,15 +126,110 @@ class InternetScheduleRepository(
     override suspend fun refresh(parish: Parish, now: Instant, force: Boolean, sourceOverride: String?): InternetScheduleState =
         refreshInternal(parish, now, force, sourceOverride)
 
-    override fun dismissCandidate(parish: Parish, candidateId: String): InternetScheduleState {
+    private data class SourceSearchSnapshot(val raw: String?, val state: InternetScheduleState)
+    private class StaleSourceSearch : IllegalStateException()
+
+    override suspend fun searchOtherSources(parish: Parish, now: Instant): InternetScheduleState = withContext(Dispatchers.IO) {
+        fun unavailable() = cached(parish).copy(candidateSearchUnavailable = true)
+        val initial = try {
+            synchronized(cache.coordinationLock) {
+                val raw = cache.read(parish.id)
+                val state = if (raw == null) initialScheduleState(parish) else
+                    ScheduleCacheCodec.decode(raw, parish) ?: return@withContext unavailable()
+                SourceSearchSnapshot(raw, state)
+            }
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { return@withContext unavailable() }
+        if (!permitsOtherSourceSearch(parish, initial.state))
+            return@withContext refreshInternal(parish, now, force = true, sourceOverride = null)
+
+        val context = currentCoroutineContext()
+        val current = AtomicReference(initial)
+        val ownedProgress = claimProgress()
+        fun merged(base: InternetScheduleState, found: ScheduleCandidateDiscovery) =
+            mergeCandidateEvidence(parish, base.sourceCandidates, found.candidates.sortedBy {
+                // A duplicate positive DTO must not hide a completed explicit negative.
+                if (it.outcome == ScheduleIdentityOutcome.CONFLICT && !it.verificationUnavailable) 0 else 1
+            })
+        fun metadata(base: InternetScheduleState, found: ScheduleCandidateDiscovery) = base.copy(
+            sourceCandidates = merged(base, found),
+            candidateSearchIdentity = ScheduleEntityIdentity.fingerprint(parish),
+            candidateObservedIds = found.observedIds.takeIf { it.isNotEmpty() }?.take(200) ?: base.candidateObservedIds,
+            candidateSearchIncomplete = found.incomplete, candidateSearchUnavailable = found.unavailable)
+        val excludedUrls = initial.state.sourceCandidates.filter { it.validFor(parish) &&
+            it.outcome == ScheduleIdentityOutcome.CONFLICT && !it.verificationUnavailable }.map { it.sourceUrl }.toSet()
+        val excludedIds = initial.state.dismissedCandidateIds.toSet() + initial.state.sourceCandidates.filter {
+            it.validFor(parish) && it.outcome == ScheduleIdentityOutcome.CONFLICT && !it.verificationUnavailable }.map { it.id }
+        phase(ownedProgress, parish.id, ScheduleImportPhase.FINDING_SITE)
+        try {
+            val found = siteResolver.forRefresh().candidatesForSourceSearch(parish, excludedUrls, excludedIds,
+                useful = { fresh ->
+                    val base = current.get().state
+                    hasActionableOwnSearchCandidate(parish, base, fresh, merged(base, fresh), excludedUrls)
+                },
+                onProviderCompleted = { batch ->
+                    val negatives = batch.candidates.filter { row -> row.validFor(parish) &&
+                        row.outcome == ScheduleIdentityOutcome.CONFLICT && !row.verificationUnavailable }
+                    if (negatives.isNotEmpty()) {
+                        // AUTHORITY_CONFLICT is the sole non-metadata outcome. Both
+                        // completed providers use this exact accepted-ID/source gate.
+                        context.ensureActive()
+                        synchronized(cache.coordinationLock) {
+                            context.ensureActive()
+                            // Map and Own may complete together. Re-read our own snapshot
+                            // under the lock so one durable write cannot make the other
+                            // look like an unrelated external CAS mutation.
+                            val before = current.get()
+                            if (negatives.any { candidateConflictsWithAcceptedSource(it,
+                                    before.state.siteBinding, before.state.publication) }) {
+                                if (cache.read(parish.id) != before.raw) throw StaleSourceSearch()
+                                val next = metadata(before.state, batch).copy(
+                                    status = InternetScheduleStatus.UNAVAILABLE, checkedAt = now.toString(),
+                                    publication = null, siteBinding = null, publicationRejected = true,
+                                    sourceNeedsVerification = true, sourceChangeBlock = ScheduleSourceChangeBlock.CONFLICT)
+                                val encoded = ScheduleCacheCodec.encode(next)
+                                val decoded = ScheduleCacheCodec.decode(encoded, parish)
+                                check(decoded == next) { "Conflict observation did not survive the schedule codec" }
+                                cache.writeSafety(parish.id, encoded)
+                                check(cache.read(parish.id) == encoded) { "Conflict observation was not saved" }
+                                current.set(SourceSearchSnapshot(encoded, requireNotNull(decoded)))
+                            }
+                        }
+                    }
+                })
+            context.ensureActive()
+            val before = current.get()
+            val next = metadata(before.state, found)
+            val encoded = ScheduleCacheCodec.encode(next)
+            val decoded = ScheduleCacheCodec.decode(encoded, parish)
+            // METADATA_ONLY must preserve authority/history after serialization too.
+            // A new unrelated conflict cannot implicitly revoke an accepted source.
+            if (decoded == null || decoded.withoutSearchMetadata() != before.state.withoutSearchMetadata())
+                return@withContext unavailable()
+            synchronized(cache.coordinationLock) {
+                context.ensureActive()
+                if (cache.read(parish.id) != before.raw) return@synchronized cached(parish)
+                cache.write(parish.id, encoded)
+                check(cache.read(parish.id) == encoded) { "Source suggestions were not saved" }
+                decoded
+            }
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: StaleSourceSearch) { cached(parish) }
+        catch (_: Exception) { unavailable() }
+        finally { phase(ownedProgress, parish.id, ScheduleImportPhase.FINISHED) }
+    }
+
+    override fun dismissCandidate(parish: Parish, candidateId: String): InternetScheduleState = synchronized(cache.coordinationLock) {
         val previous = cached(parish)
-        if (previous.sourceCandidates.none { it.id == candidateId && it.validFor(parish) }) return previous
+        if (previous.sourceCandidates.none { it.id == candidateId && it.validFor(parish) }) return@synchronized previous
         val next = previous.copy(dismissedCandidateIds = (previous.dismissedCandidateIds + candidateId).distinct().takeLast(40))
         runCatching { cache.write(parish.id, ScheduleCacheCodec.encode(next)) }
-        return next
+        next
     }
 
     override suspend fun confirmCandidate(parish: Parish, candidateId: String, now: Instant): InternetScheduleState = withContext(Dispatchers.IO) {
+        // A finishing older search cannot replace progress owned by this action.
+        claimProgress()
         val previous = cached(parish)
         val candidate = previous.sourceCandidates.singleOrNull { it.id == candidateId }
             ?.takeIf { it.canConfirm(parish) && it.id !in previous.dismissedCandidateIds }
@@ -168,6 +275,8 @@ class InternetScheduleRepository(
     private suspend fun refreshInternal(parish: Parish, now: Instant, force: Boolean, sourceOverride: String?,
         confirmedCandidate: ScheduleSourceCandidate? = null,
         confirmedDiscovery: ScheduleCandidateDiscovery? = null): InternetScheduleState = withContext(Dispatchers.IO) {
+        val ownedProgress = claimProgress()
+        val refreshContext = currentCoroutineContext()
         val previous = cached(parish)
         if (confirmedCandidate != null && confirmedCandidate.id in previous.dismissedCandidateIds) return@withContext previous
         // The URL editor and a suggested source are the same change of authority. A
@@ -276,7 +385,7 @@ class InternetScheduleRepository(
         val withdrawnDates = mutableSetOf<String>()
         val withdrawnStarts = mutableSetOf<String>()
         var withdrawAll = false
-        fun phase(value: ScheduleImportPhase) { importProgress.value = ScheduleImportProgress(parish.id, value) }
+        fun phase(value: ScheduleImportPhase) { this@InternetScheduleRepository.phase(ownedProgress, parish.id, value) }
         fun knownConflict(url: String) = sourceCandidates.any { it.validFor(parish) &&
             it.outcome == ScheduleIdentityOutcome.CONFLICT && !it.verificationUnavailable && candidateCoversSource(it, url) }
         fun recordSafety(checkedWebsite: String, checkedSource: String, safety: ScheduleParseResult,
@@ -459,7 +568,7 @@ class InternetScheduleRepository(
                 val primary = importSource(parish, website, date, now, primaryBinding, prefetchedSchedule ?: contactResponse,
                     freshContactEvidence = freshContactEvidence?.takeIf { proof -> primaryBinding?.candidateConfirmation?.candidate
                         ?.let { proof.matchesApproved(parish, it, website) } == true },
-                    sourceConflict = ::knownConflict) { checkedWebsite, checkedSource, safety ->
+                    sourceConflict = ::knownConflict, importOwner = ownedProgress) { checkedWebsite, checkedSource, safety ->
                     recordSafety(checkedWebsite, checkedSource, safety, primaryEvidence, primaryBinding)
                 }
                 if (primary.conflictingRoot && changedSource) {
@@ -477,7 +586,7 @@ class InternetScheduleRepository(
                             candidateCoversSource(it, site.url) } }
                     if (alternative != null) {
                         val next = importSource(parish, alternative.url, date, now, alternative.binding, alternative.observedSchedule,
-                            sourceConflict = ::knownConflict) { checkedWebsite, checkedSource, safety ->
+                            sourceConflict = ::knownConflict, importOwner = ownedProgress) { checkedWebsite, checkedSource, safety ->
                             // A different building at a new candidate cannot invalidate an
                             // older accepted source. Actual withdrawals of this parish can.
                             if (safety.withdrawsAll || safety.withdrawnDates.isNotEmpty() || safety.withdrawnStarts.isNotEmpty())
@@ -496,10 +605,14 @@ class InternetScheduleRepository(
         concurrentFastState?.let { return@withContext it }
         pendingFastReview?.let { (snapshot, review) ->
             // No suspension between the last check and this metadata-only write.
-            val current = runCatching { cache.read(parish.id) }
-            if (current.isFailure || current.getOrNull() != snapshot) return@withContext cached(parish)
-            runCatching { cache.write(parish.id, ScheduleCacheCodec.encode(review)) }
-            return@withContext review
+            return@withContext synchronized(cache.coordinationLock) {
+                refreshContext.ensureActive()
+                val current = runCatching { cache.read(parish.id) }
+                if (current.isFailure || current.getOrNull() != snapshot) cached(parish) else {
+                    runCatching { cache.write(parish.id, ScheduleCacheCodec.encode(review)) }
+                    review
+                }
+            }
         }
         if (blockedConflict) return@withContext blockedSourceChange(previous, now, ScheduleSourceChangeBlock.CONFLICT)
         val retainedPublication = (publication ?: if (safetyObserved) safetyRetained else
@@ -556,7 +669,7 @@ class InternetScheduleRepository(
     private suspend fun importSource(parish: Parish, root: String, date: LocalDate, now: Instant, binding: ScheduleSiteBinding?,
         initialResponse: ScheduleResponse? = null,
         freshContactEvidence: PublishedChildContactEvidence? = null,
-        sourceConflict: (String) -> Boolean = { false },
+        sourceConflict: (String) -> Boolean = { false }, importOwner: Any,
         onSafety: (website: String, sourceUrl: String, safety: ScheduleParseResult) -> Unit): SourceAttempt {
         var website = root
         var source = root
@@ -564,7 +677,7 @@ class InternetScheduleRepository(
         var hasWithdrawal = false
         val navigationAttempt = Any()
         var linkedPermit: LinkedAttachmentNavigationPermit? = null
-        fun phase(value: ScheduleImportPhase) { importProgress.value = ScheduleImportProgress(parish.id, value) }
+        fun phase(value: ScheduleImportPhase) { this@InternetScheduleRepository.phase(importOwner, parish.id, value) }
         data class QueuedDocument(val link: ScheduleDocumentLink, val rescue: Boolean = false)
         val pending = ArrayDeque<QueuedDocument>()
         pending += QueuedDocument(ScheduleDocumentLink(website, "", false))
