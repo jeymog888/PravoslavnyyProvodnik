@@ -53,8 +53,18 @@ class FeoriaThanksgivingNativeTest {
         assertTrue(ServiceBookIntegrity.valid(before))
         val rows = oracle["items"].asJsonArray.map { it.asJsonObject }.associateBy { it["id"].asString }
         val expected = case["expected"].asJsonArray.map { it.asJsonObject }.associateBy { it["blockId"].asString }
-        val own = BookTranslationIndex.fromFeoriaCatalog()
-        assertEquals(6, FeoriaTranslationCatalog.REVISION); assertEquals(144, own.size)
+        // Retain the exact3 history on the independently pinned144; common-tail19 is tested separately.
+        val own = BookTranslationIndex.decode(JsonArray().apply {
+            (previous["previous126"].asJsonArray.toList() + previous["items"].asJsonArray.toList() + oracle["items"].asJsonArray.toList()).forEach { value ->
+                val row = value.asJsonObject
+                add(JsonObject().apply {
+                    add("original", row["original"]); add("russian", row["russian"])
+                    addProperty("source", BookTranslationIndex.FEORIA_TRANSLATION_SOURCE.title)
+                    addProperty("url", BookTranslationIndex.FEORIA_TRANSLATION_SOURCE.url)
+                })
+            }
+        }.toString())
+        assertEquals(6, FeoriaTranslationCatalog.entries.take(144).maxOf { it.revision }); assertEquals(144, own.size)
         assertEquals(13, BookTranslationCorpus.VERSION)
         val context = instrumentation.targetContext
         val name = "thanksgiving-three-${UUID.randomUUID()}"

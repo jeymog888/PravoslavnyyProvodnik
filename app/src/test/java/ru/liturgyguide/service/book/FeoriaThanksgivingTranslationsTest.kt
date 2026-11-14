@@ -28,6 +28,7 @@ internal object ThanksgivingTranslationFixtures {
     val cases get() = oracle["cases"].asJsonArray.map { it.asJsonObject }
     val previousRows get() = WeekdayAntiphonFixtures.previousRows + WeekdayAntiphonFixtures.rows
     val previousOwn141 get() = WeekdayAntiphonFixtures.previousOwn141
+    val previousOwn144: BookTranslationIndex by lazy { WeekdayAntiphonFixtures.ownIndex(previousRows + rows) }
     fun text(path: String) = requireNotNull(javaClass.classLoader?.getResource(path)).readText()
     fun key(case: JsonObject) = case["bookKey"].asString.split('|').let { ServiceBookKey(it[0], WorshipKind.valueOf(it[1]), it[2]) }
     fun baselinePublished(case: JsonObject): BookTranslationIndex {
@@ -63,7 +64,7 @@ internal object ThanksgivingTranslationFixtures {
 
 class FeoriaThanksgivingTranslationsTest {
     private val directory = Files.createTempDirectory("thanksgiving-three-").toFile()
-    private val own = BookTranslationIndex.fromFeoriaCatalog()
+    private val own = ThanksgivingTranslationFixtures.previousOwn144
     private val source = BookTranslationIndex.FEORIA_TRANSLATION_SOURCE
     private val rows get() = ThanksgivingTranslationFixtures.rows
     private val cases get() = ThanksgivingTranslationFixtures.cases
@@ -93,9 +94,9 @@ class FeoriaThanksgivingTranslationsTest {
     }
 
     @Test fun allThreeFinalPairsMatchTheirIndependentFullSemanticHashesAndSource() {
-        assertEquals(6, FeoriaTranslationCatalog.REVISION)
-        assertEquals(144, FeoriaTranslationCatalog.entries.size); assertEquals(144, own.size)
-        assertEquals(144, FeoriaTranslationCatalog.entries.map { BookText.normalized(it.original) }.distinct().size)
+        assertEquals(6, FeoriaTranslationCatalog.entries.take(144).maxOf { it.revision })
+        assertEquals(144, FeoriaTranslationCatalog.entries.take(144).size); assertEquals(144, own.size)
+        assertEquals(144, FeoriaTranslationCatalog.entries.take(144).map { BookText.normalized(it.original) }.distinct().size)
         assertEquals(3, rows.size); assertEquals(3, FeoriaThanksgivingTranslations.records.size)
         assertEquals(340, rows.sumOf { WeekdayAntiphonFixtures.words(it["original"].asString) })
         assertEquals(340, rows.sumOf { it["originalWords"].asInt })

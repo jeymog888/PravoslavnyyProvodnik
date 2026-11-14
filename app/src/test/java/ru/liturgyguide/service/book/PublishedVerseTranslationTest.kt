@@ -1,6 +1,7 @@
 package ru.liturgyguide.service.book
 
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
@@ -22,6 +23,58 @@ class PublishedVerseTranslationTest {
     private val psalter = BookTranslationIndex.PSALTER_SOURCE
     private val vigil = BookTranslationIndex.VIGIL_SOURCE
     @After fun clean() { directory.deleteRecursively() }
+
+    // Historical checkpoint36a/r2, frozen catalog SHA 4aa93ade903b3da3cbd529f98a29a9ab3469ac002b3354f52a9c854fad1f4944.
+    // Revision1/8 complete pairs, independently corroborated by the original approved test and PASS receipt.
+    private data class HistoricalOwn36aPair(val id: String, val original: String, val russian: String,
+        val expectedCount: Int, val revision: Int = 1,
+        val originalSourceUrl: String = "https://azbyka.ru/worships/?date=2026-11-13&worship=matins&size=full&church=34&main_event=0&top_level=3")
+    private val historicalOwn36aRows = listOf(
+        HistoricalOwn36aPair("apostles_refrain",
+            "Припев: Святи́и апóстоли, моли́те Бо́га о на́с.",
+            "Припев: Святые апостолы, молитесь Богу о нас.", 48),
+        HistoricalOwn36aPair("alleluia_refrain_three_times",
+            "Припев: Аллилу́ия (трижды).",
+            "Припев: Хвалите Господа (трижды).", 43),
+        HistoricalOwn36aPair("come_worship_god_our_king",
+            "Прииди́те, поклони́мся Царе́ви на́шему Бо́гу.",
+            "Придите, поклонимся Богу, нашему Царю.", 1),
+        HistoricalOwn36aPair("come_worship_christ_our_king_and_god",
+            "Прииди́те, поклони́мся и припаде́м Христу́, Царе́ви на́шему Бо́гу.",
+            "Придите, поклонимся и падем ниц перед Христом, нашим Царем и Богом.", 1),
+        HistoricalOwn36aPair("come_worship_christ_himself",
+            "Прииди́те, поклони́мся и припаде́м Самому́ Христу́, Царе́ви и Бо́гу на́шему.",
+            "Придите, поклонимся и падем ниц перед Самим Христом, нашим Царем и Богом.", 1),
+        HistoricalOwn36aPair("apostles_magnification",
+            "Велича́ем ва́с, святи́и апо́столи, ве́сь ми́р уче́ньми свои́ми просвети́вшыя, и вся́ концы́ ко Христу́ приве́дшыя.",
+            "Прославляем вас, святые апостолы, которые своим учением просветили весь мир и привели ко Христу все края земли.", 6),
+        HistoricalOwn36aPair("for_you_are_our_god",
+            "Я́ко Ты еси́ Бог наш, и Тебе́ сла́ву возсыла́ем, Отцу́, и Сы́ну, и Свято́му Ду́ху, ны́не и при́сно, и во ве́ки веко́в. Ами́нь.",
+            "Ибо Ты - наш Бог, и Тебе мы воздаем славу: Отцу, Сыну и Святому Духу, сейчас, всегда и вечно. Аминь.", 2),
+        HistoricalOwn36aPair("their_voice_all_the_earth",
+            "Во всю зе́млю изы́де веща́ние их / и в концы́ вселе́нныя глаго́лы их.",
+            "Их голос прозвучал по всей земле, и их слова достигли краев мира.", 2)
+    )
+    private fun historicalOwn36aIndex(): BookTranslationIndex {
+        assertEquals(8, historicalOwn36aRows.size)
+        assertEquals(104, historicalOwn36aRows.sumOf { it.expectedCount })
+        val projection = JsonArray().apply { historicalOwn36aRows.forEach { row ->
+            add(JsonArray().apply { add(row.id); add(row.original); add(row.russian); add(row.revision); add(row.originalSourceUrl) })
+        } }
+        assertEquals("bf51aef631f6b30c083fa6aaaf20b798bd37368b2f18eea50f816a5a36dba603",
+            BookText.sha256(GsonBuilder().disableHtmlEscaping().create().toJson(projection)))
+        val source = BookSource("Перевод Феории", "https://github.com/jeymog888/PravoslavnyyProvodnik")
+        assertEquals(source, BookTranslationIndex.FEORIA_TRANSLATION_SOURCE)
+        val index = BookTranslationIndex.decode(JsonArray().apply { historicalOwn36aRows.forEach { row ->
+            add(JsonObject().apply {
+                addProperty("original", row.original); addProperty("russian", row.russian)
+                addProperty("source", source.title); addProperty("url", source.url)
+            })
+        } }.toString())
+        assertEquals(8, index.size)
+        historicalOwn36aRows.forEach { row -> assertEquals(BookTranslation(row.russian, source), index.find(row.original)) }
+        return index
+    }
 
     @Test fun directVerseBoundariesPreserveInlineWordsAndTheOldWholeRowWithoutJoiningVerses() {
         val good = row("${m(1)}Первое <em>слово</em>. ${m(2)}Второе <span>слово</span>.",
@@ -198,13 +251,24 @@ class PublishedVerseTranslationTest {
             // Native and JVM serializers may hash differently. Only its hash is adapted for this JVM cache.
             val old = rawBook.copy(contentHash = ServiceBookIntegrity.contentHash(rawBook))
             assertTrue(ServiceBookIntegrity.valid(old))
-            val before = requireNotNull(SavedBookEnrichment.apply(old, BookTranslationIndex.fromFeoriaCatalog()))
+            val historicalOwn = historicalOwn36aIndex()
+            val before = requireNotNull(SavedBookEnrichment.apply(old, historicalOwn))
             val ownBefore = before.blocks.filter { it.translationSource == BookTranslationIndex.FEORIA_TRANSLATION_SOURCE }
             assertEquals(104, ownBefore.size)
+            for (row in historicalOwn36aRows) {
+                val actual = ownBefore.filter { BookText.normalized(it.original) == BookText.normalized(row.original) }
+                assertEquals(row.id, row.expectedCount, actual.size)
+                actual.forEach { block ->
+                    assertEquals(row.russian, block.russian)
+                    assertEquals(BookTranslationIndex.FEORIA_TRANSLATION_SOURCE, block.translationSource)
+                }
+            }
+            receipt["historicalOwnEdition"] = mapOf("checkpoint" to "36a/r2", "revision" to 1,
+                "entries" to 8, "projectionSha256" to "bf51aef631f6b30c083fa6aaaf20b798bd37368b2f18eea50f816a5a36dba603")
             receipt["additionalFullCorpusMatches"] = before.blocks.filter { block ->
                 block.russian == null && full.find(block.original) != null && matins.find(block.original) == null
             }.map { block -> mapOf("id" to block.id, "source" to full.find(block.original)?.source) }
-            val after = requireNotNull(SavedBookEnrichment.apply(before, matins.plus(BookTranslationIndex.fromFeoriaCatalog())))
+            val after = requireNotNull(SavedBookEnrichment.apply(before, matins.plus(historicalOwn)))
             val gained = before.blocks.zip(after.blocks).filter { (a, b) -> a.russian == null && b.russian != null }
             val targets = expected.getAsJsonArray("expected").map { it.asJsonObject }
             assertEquals(targets.map { it["id"].asString }.toSet(), gained.map { it.second.id }.toSet())
