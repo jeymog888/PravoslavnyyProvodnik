@@ -1,0 +1,2082 @@
+{
+  "status": "APPROVED_FINAL_TEXT_ORACLE_RUNTIME_NOT_RUN",
+  "sourceCandidateSha256": "7761e4c27749b4b290efc63a01b9ec630c9dba50d8bec83258e7b7f8d70b78dd",
+  "semanticReviewSha256": "8d98f3827d87e25d8dc25e86a0ba12381a2ba28b18cff24c071dc55262772eea",
+  "approvedFinalProjectionSha256": "23df0b34f3f9f32dc3916c5b8305f833a2433cdea44e5f2ad23473145cd4ca63",
+  "approvedFinalProjectionDefinition": "SHA256 UTF-8 JSON of items projected in existing candidate order to keys id,rank,originalSha256,finalRussian; ensure_ascii=false,separators=(comma,colon), no trailing newline",
+  "newCatalogRevision": 8,
+  "newCatalogEntries": 193,
+  "scope": {
+    "wholeBodies": 30,
+    "sourceOccurrences": 32,
+    "uniqueWholeSourceWords": 369,
+    "wholeSourceWordsWithOccurrences": 386,
+    "commonStageBodies": 22,
+    "changingBodies": 8,
+    "newPrayerTranslationBodies": 28,
+    "newPrayerTranslationBodyOccurrences": 29,
+    "newPrayerTranslationUniqueSourceWords": 319,
+    "newPrayerTranslationSourceWordsWithOccurrences": 325,
+    "existingRussianMetadataUniqueWords": 36,
+    "existingRussianMetadataWordsWithOccurrences": 40,
+    "announcementUniqueSourceWords": 14,
+    "announcementSourceWordsWithOccurrences": 21,
+    "staticProjectedMissingOnlyThreePinnedPublicPrayerBooks": {
+      "2026-11-13": 0,
+      "2026-11-15": 0,
+      "2026-11-22": 0
+    },
+    "newMatchingCapabilitiesClaimed": false,
+    "runtimeGainMeasuredHere": false
+  },
+  "items": [
+    {
+      "id": "remaining-thirty-b9c578798bdb29a7eeeb",
+      "inventoryId": "liturgy-next-b9c578798bdb29a7",
+      "rank": 26,
+      "group": "COMMON_STAGES_22",
+      "original": "И чтец надписание Апостола: Ко Ефессе́ем посла́ния свята́го Апо́стола Па́вла чте́ние.",
+      "originalSha256": "d0613629100a7fba9c6a32f5604ddcbadce540020900396de5b85c775b6de8ed",
+      "normalizedWholeOriginalSha256": "b9c578798bdb29a7eeebde0dcc91df7e4fe5f5c18daafc3b14f97b8d342e229c",
+      "russian": "Чтец объявляет: Чтение Послания святого Апостола Павла к ефесянам.",
+      "russianSha256": "77ba9600f2577e3e49e15cd7a964043bf844d561a6ff1ae35332d9d8e88f0c32",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-15&worship=liturgy&size=full&church=30",
+      "originalWords": 11,
+      "newPrayerWords": 0,
+      "countAsNewPrayerTranslationBody": false,
+      "existingRussianMetadataWords": 4,
+      "announcementSourceWords": 7,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:4609a995db301eec:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+      "segmentMetadata": [
+        {
+          "kind": "EXISTING_RUSSIAN_DIRECTION",
+          "original": "И чтец надписание Апостола:",
+          "russian": "Чтец объявляет:",
+          "originalWords": 4
+        },
+        {
+          "kind": "READING_ANNOUNCEMENT_NOT_PRAYER",
+          "original": "Ко Ефессе́ем посла́ния свята́го Апо́стола Па́вла чте́ние.",
+          "russian": "Чтение Послания святого Апостола Павла к ефесянам.",
+          "originalWords": 7
+        }
+      ],
+      "citationsOutsideSpokenRussian": [],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-15|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:4609a995db301eec:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+          "sourcePrefix": "",
+          "paragraphIndexZeroBased": 187,
+          "optionalPostCommunion": false
+        },
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:4609a995db301eec:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourcePrefix": "",
+          "paragraphIndexZeroBased": 301,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-f6ff7f82636c3a7fc44f",
+      "inventoryId": "liturgy-next-f6ff7f82636c3a7f",
+      "rank": 30,
+      "group": "CHANGING_HYMNS_8",
+      "original": "В тебе́, ма́ти, изве́стно спасе́ся, еже по о́бразу:/ прии́мши бо крест, после́довала еси́ Христу́,/ и де́ющи учи́ла еси́ презира́ти у́бо плоть, прехо́дит бо;/ прилежа́ти же о души́, ве́щи безсме́ртней;/ те́мже и со а́нгелы сра́дуется, преподо́бная Матро́но, дух твой.",
+      "originalSha256": "52e29fb6e66bc3dada68d433949ceb35c363a6ef3e420513a2d9753b3f01d863",
+      "normalizedWholeOriginalSha256": "f6ff7f82636c3a7fc44f7e8655b42a25d263ef2a07fd48e7058cd3cd4b34cecb",
+      "russian": "В тебе, мать, ясно сохранился образ Божий: / ведь, взяв крест, ты последовала за Христом / и своими делами учила пренебрегать плотью, потому что она преходяща, / заботиться же о душе, которая бессмертна. / Поэтому вместе с ангелами радуется, преподобная Матрона, твой дух.",
+      "russianSha256": "ad2fafa67c21ba221129a952a5247cbd43e8c6e6a0a31c5c55d1e6b7b2538fdc",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-22&worship=liturgy&size=full&church=30",
+      "originalWords": 38,
+      "newPrayerWords": 38,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 0,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-06714216a0de-1:578305a74c779e3d:1",
+      "sourceChapterId": "liturgy-06714216a0de-1",
+      "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+      "segmentMetadata": [],
+      "citationsOutsideSpokenRussian": [],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "blockId": "liturgy-06714216a0de-1:578305a74c779e3d:1",
+          "chapterId": "liturgy-06714216a0de-1",
+          "chapterTitle": "Малый вход с Евангелием",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourcePrefix": "",
+          "paragraphIndexZeroBased": 254,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-861255dc606bb32b9249",
+      "inventoryId": "liturgy-next-861255dc606bb32b",
+      "rank": 31,
+      "group": "CHANGING_HYMNS_8",
+      "original": "Тро́ичен: Све́т Оте́ц, све́т Сы́н и Сло́во, све́т Ду́х Святы́й: но еди́н Све́т три́, еди́н бо Бо́г в трие́х у́бо Ли́цех, еди́нем же естестве́ и нача́ле, несеко́м и неслия́н, Сы́й преве́чный.",
+      "originalSha256": "79e39f1e50c4848e69e36be28e60047b163ed0234f320ac267fc6f3564dcc5fb",
+      "normalizedWholeOriginalSha256": "861255dc606bb32b9249ac297684673a4895c257dc11be3401eb5986ee8420e3",
+      "russian": "Троичен: Отец - Свет, Сын и Слово - Свет, Святой Дух - Свет. Но Три - один Свет, ибо один Бог в трех Лицах, единой природы и начала, нераздельный и неслиянный, существующий прежде всех веков.",
+      "russianSha256": "405dc2453690bde6f4f3569d7d6485db087fb99dc8c8b1fbdef51471580587b4",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-15&worship=liturgy&size=full&church=30",
+      "originalWords": 31,
+      "newPrayerWords": 30,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 1,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-82484d23212b-1:867018481763828b:1",
+      "sourceChapterId": "liturgy-82484d23212b-1",
+      "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+      "segmentMetadata": [
+        {
+          "kind": "EXISTING_RUSSIAN_LABEL_OR_TONE",
+          "original": "Тро́ичен:",
+          "russian": "Троичен:",
+          "originalWords": 1
+        },
+        {
+          "kind": "PRAYER_OR_HYMN",
+          "original": "Све́т Оте́ц, све́т Сы́н и Сло́во, све́т Ду́х Святы́й: но еди́н Све́т три́, еди́н бо Бо́г в трие́х у́бо Ли́цех, еди́нем же естестве́ и нача́ле, несеко́м и неслия́н, Сы́й преве́чный.",
+          "russian": "Отец - Свет, Сын и Слово - Свет, Святой Дух - Свет. Но Три - один Свет, ибо один Бог в трех Лицах, единой природы и начала, нераздельный и неслиянный, существующий прежде всех веков.",
+          "originalWords": 30
+        }
+      ],
+      "citationsOutsideSpokenRussian": [],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-15|LITURGY|30|~|~",
+          "blockId": "liturgy-82484d23212b-1:867018481763828b:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "chapterTitle": "Блаженны, третий изобразительный антифон (на 8)",
+          "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+          "sourcePrefix": "",
+          "paragraphIndexZeroBased": 123,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-bd17a875310b7c3ff4b0",
+      "inventoryId": "liturgy-next-bd17a875310b7c3f",
+      "rank": 33,
+      "group": "CHANGING_HYMNS_8",
+      "original": "Богоро́дичен: Родила́ еси́ Сы́на и Сло́во О́тчее, пло́тию на́с ра́ди, я́коже ве́сть, Богоро́дице, Са́м. Те́мже, Де́во Ма́ти, обоже́ни бы́вше Тобо́ю, ра́дуйся, Тебе́ зове́м, христиа́ном упова́ние.",
+      "originalSha256": "0e12e77b49d6352fadb03f77f110bf1aa2b97c1bb98185e9ce2c8c69e47594db",
+      "normalizedWholeOriginalSha256": "bd17a875310b7c3ff4b086faabacc7e976ef7821316cc3dfe7a8b145998663dd",
+      "russian": "Богородичен: Ты родила по плоти ради нас Сына и Слово Отца, Богородица, как знает Он Сам. Поэтому, Дева-Мать, став через Тебя обоженными, мы взываем к Тебе: радуйся, надежда христиан.",
+      "russianSha256": "afb0d10185a1b6191dd4f619e95c4496790df63577088b02f5cf24b6d973c1b9",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-15&worship=liturgy&size=full&church=30",
+      "originalWords": 25,
+      "newPrayerWords": 24,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 1,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-82484d23212b-1:f7bab75395daa578:1",
+      "sourceChapterId": "liturgy-82484d23212b-1",
+      "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+      "segmentMetadata": [
+        {
+          "kind": "EXISTING_RUSSIAN_LABEL_OR_TONE",
+          "original": "Богоро́дичен:",
+          "russian": "Богородичен:",
+          "originalWords": 1
+        },
+        {
+          "kind": "PRAYER_OR_HYMN",
+          "original": "Родила́ еси́ Сы́на и Сло́во О́тчее, пло́тию на́с ра́ди, я́коже ве́сть, Богоро́дице, Са́м. Те́мже, Де́во Ма́ти, обоже́ни бы́вше Тобо́ю, ра́дуйся, Тебе́ зове́м, христиа́ном упова́ние.",
+          "russian": "Ты родила по плоти ради нас Сына и Слово Отца, Богородица, как знает Он Сам. Поэтому, Дева-Мать, став через Тебя обоженными, мы взываем к Тебе: радуйся, надежда христиан.",
+          "originalWords": 24
+        }
+      ],
+      "citationsOutsideSpokenRussian": [],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-15|LITURGY|30|~|~",
+          "blockId": "liturgy-82484d23212b-1:f7bab75395daa578:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "chapterTitle": "Блаженны, третий изобразительный антифон (на 8)",
+          "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+          "sourcePrefix": "",
+          "paragraphIndexZeroBased": 125,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-8169f6ad52f70b38a278",
+      "inventoryId": "liturgy-next-8169f6ad52f70b38",
+      "rank": 35,
+      "group": "CHANGING_HYMNS_8",
+      "original": "Пригвозди́л еси́ на Кресте́, Ще́дре, грехи́ на́шя, Христе́, и Твое́ю сме́ртию сме́рть умертви́л еси́ воздви́гнувый уме́ршыя из ме́ртвых: те́мже покланя́емся Твоему́ свято́му воскресе́нию.",
+      "originalSha256": "ba3ad4e7f5a392066019ee2716dd52ff0c3efe4362bdc3e12ea3e98d8cf77817",
+      "normalizedWholeOriginalSha256": "8169f6ad52f70b38a2781d61d23a496691e83566e3a2900299b219eac9b1edf5",
+      "russian": "Ты пригвоздил ко Кресту наши грехи, милосердный Христе, и Твоей смертью умертвил смерть, воскресив умерших из мертвых. Поэтому мы поклоняемся Твоему святому Воскресению.",
+      "russianSha256": "f1c062ca51ce13a3e268015ae94f500f950e305487be1b79c10ee72055e88b49",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-15&worship=liturgy&size=full&church=30",
+      "originalWords": 23,
+      "newPrayerWords": 23,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 0,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-82484d23212b-1:0282f7c8a3d8d86a:1",
+      "sourceChapterId": "liturgy-82484d23212b-1",
+      "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+      "segmentMetadata": [],
+      "citationsOutsideSpokenRussian": [],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-15|LITURGY|30|~|~",
+          "blockId": "liturgy-82484d23212b-1:0282f7c8a3d8d86a:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "chapterTitle": "Блаженны, третий изобразительный антифон (на 8)",
+          "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+          "sourcePrefix": "",
+          "paragraphIndexZeroBased": 115,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-c42e4309a9769149c0a8",
+      "inventoryId": "liturgy-next-c42e4309a9769149",
+      "rank": 42,
+      "group": "CHANGING_HYMNS_8",
+      "original": "Тро́ичен: Безнача́льная Тро́ице, Неразде́льное Существо́, Сопресто́льная Еди́нице, Единоче́стная сла́вою, Пренача́льное Естество́ и Ца́рство, спаса́й и́же ве́рою воспева́ющих Тя́.",
+      "originalSha256": "0a0e072ccf1044fd64204c14c745511155148d1817651016f3bf9d3412a69634",
+      "normalizedWholeOriginalSha256": "c42e4309a9769149c0a8194c20c5918026f022aa2f0e859031593368d298839f",
+      "russian": "Троичен: Безначальная Троица, нераздельное Существо, Единство сопрестольных Лиц, равных по чести и славе, превышающее всякое начало Естество и Царство, спасай тех, кто с верой воспевает Тебя.",
+      "russianSha256": "61abc4d0cd1d9f1a39ac1a111363f0857b7fead0d921e06633101bfe323fbffc",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-22&worship=liturgy&size=full&church=30",
+      "originalWords": 18,
+      "newPrayerWords": 17,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 1,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-82484d23212b-1:36f5363cccd1f2f9:1",
+      "sourceChapterId": "liturgy-82484d23212b-1",
+      "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+      "segmentMetadata": [
+        {
+          "kind": "EXISTING_RUSSIAN_LABEL_OR_TONE",
+          "original": "Тро́ичен:",
+          "russian": "Троичен:",
+          "originalWords": 1
+        },
+        {
+          "kind": "PRAYER_OR_HYMN",
+          "original": "Безнача́льная Тро́ице, Неразде́льное Существо́, Сопресто́льная Еди́нице, Единоче́стная сла́вою, Пренача́льное Естество́ и Ца́рство, спаса́й и́же ве́рою воспева́ющих Тя́.",
+          "russian": "Безначальная Троица, нераздельное Существо, Единство сопрестольных Лиц, равных по чести и славе, превышающее всякое начало Естество и Царство, спасай тех, кто с верой воспевает Тебя.",
+          "originalWords": 17
+        }
+      ],
+      "citationsOutsideSpokenRussian": [],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "blockId": "liturgy-82484d23212b-1:36f5363cccd1f2f9:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "chapterTitle": "Блаженны, третий изобразительный антифон (на 8)",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourcePrefix": "",
+          "paragraphIndexZeroBased": 233,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-eca1bd3f61878d8448d9",
+      "inventoryId": "liturgy-next-eca1bd3f61878d84",
+      "rank": 43,
+      "group": "CHANGING_HYMNS_8",
+      "original": "Богоро́дичен: Ра́дуйся, Бо́жие простра́нное Вмести́лище: ра́дуйся, Ковче́же но́ваго заве́та: ра́дуйся, ру́чко, из Нея́же ма́нна все́м даде́ся небе́сная.",
+      "originalSha256": "8b039e4890ab2462ce97d32f36c59b2622ad98e0582ab46d7d919b399ea83232",
+      "normalizedWholeOriginalSha256": "eca1bd3f61878d8448d9f47172cec2b7a0d1469a2bd865fe859a27382f99f66a",
+      "russian": "Богородичен: Радуйся, пространное вместилище Бога; радуйся, Ковчег нового завета; радуйся, сосуд, из которого всем была дана небесная манна.",
+      "russianSha256": "bcc9f33261824085b9194611a29db03e22df7ac80bcadcec521db0518ea65f64",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-22&worship=liturgy&size=full&church=30",
+      "originalWords": 17,
+      "newPrayerWords": 16,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 1,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-82484d23212b-1:2495adecbeb0ac64:1",
+      "sourceChapterId": "liturgy-82484d23212b-1",
+      "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+      "segmentMetadata": [
+        {
+          "kind": "EXISTING_RUSSIAN_LABEL_OR_TONE",
+          "original": "Богоро́дичен:",
+          "russian": "Богородичен:",
+          "originalWords": 1
+        },
+        {
+          "kind": "PRAYER_OR_HYMN",
+          "original": "Ра́дуйся, Бо́жие простра́нное Вмести́лище: ра́дуйся, Ковче́же но́ваго заве́та: ра́дуйся, ру́чко, из Нея́же ма́нна все́м даде́ся небе́сная.",
+          "russian": "Радуйся, пространное вместилище Бога; радуйся, Ковчег нового завета; радуйся, сосуд, из которого всем была дана небесная манна.",
+          "originalWords": 16
+        }
+      ],
+      "citationsOutsideSpokenRussian": [],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "blockId": "liturgy-82484d23212b-1:2495adecbeb0ac64:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "chapterTitle": "Блаженны, третий изобразительный антифон (на 8)",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourcePrefix": "",
+          "paragraphIndexZeroBased": 235,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-3bfdc02e4cf4cbac3e8a",
+      "inventoryId": "liturgy-next-3bfdc02e4cf4cbac",
+      "rank": 45,
+      "group": "CHANGING_HYMNS_8",
+      "original": "Дне́сь Христо́с воскре́с от гро́ба, все́м ве́рным подая́ нетле́ние, и ра́дость обновля́ет мироно́сицам по стра́сти и Воскресе́нии.",
+      "originalSha256": "e3848ba1a61abed684a2af5667ee38be8774d27eb0cb798b6a1db9cf0d754183",
+      "normalizedWholeOriginalSha256": "3bfdc02e4cf4cbac3e8a7e41f1f8857d398028250b2c416a3da12a4665e5fc10",
+      "russian": "Сегодня Христос воскрес из гроба, даруя всем верующим нетление, и обновляет радость мироносиц после Своих страданий и Воскресения.",
+      "russianSha256": "875eb0cfa279e0b63a5149bea0e5251813336f0a6cc61a4d9f459814a90f5c5f",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-22&worship=liturgy&size=full&church=30",
+      "originalWords": 17,
+      "newPrayerWords": 17,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 0,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-82484d23212b-1:df21f5e2672524fd:1",
+      "sourceChapterId": "liturgy-82484d23212b-1",
+      "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+      "segmentMetadata": [],
+      "citationsOutsideSpokenRussian": [],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "blockId": "liturgy-82484d23212b-1:df21f5e2672524fd:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "chapterTitle": "Блаженны, третий изобразительный антифон (на 8)",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourcePrefix": "",
+          "paragraphIndexZeroBased": 227,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-192f89d883868d611f40",
+      "inventoryId": "liturgy-next-192f89d883868d61",
+      "rank": 46,
+      "group": "COMMON_STAGES_22",
+      "original": "Прокимен, глас 4: Святы́м, и́же суть на земли́ Его́, / удиви́ Госпо́дь вся хоте́ния Своя́ в них.",
+      "originalSha256": "5dbe79249c6921fb76752985cd9f9b5555fb534d24c472a60367880042e85faf",
+      "normalizedWholeOriginalSha256": "192f89d883868d611f402b67bb4026fc1fe626f1ac0e40d30d8ca37ebb338a8c",
+      "russian": "Прокимен, глас 4: Святым, живущим на Его земле, / Господь дивно явил в них всю Свою волю.",
+      "russianSha256": "03b1e2e11710e5d544bd6ad521fadfd7b6e150fce8959ec2a68ed6d8bc7b5e68",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-15&worship=liturgy&size=full&church=30",
+      "originalWords": 16,
+      "newPrayerWords": 13,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 3,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:01e1304107c26970:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+      "segmentMetadata": [
+        {
+          "kind": "EXISTING_RUSSIAN_LABEL_OR_TONE",
+          "original": "Прокимен, глас 4:",
+          "russian": "Прокимен, глас 4:",
+          "originalWords": 3
+        },
+        {
+          "kind": "PRAYER_OR_HYMN",
+          "original": "Святы́м, и́же суть на земли́ Его́, / удиви́ Госпо́дь вся хоте́ния Своя́ в них.",
+          "russian": "Святым, живущим на Его земле, / Господь дивно явил в них всю Свою волю.",
+          "originalWords": 13
+        }
+      ],
+      "citationsOutsideSpokenRussian": [
+        {
+          "label": "Пс 15:3",
+          "system": "Liturgical/Septuagint psalm numbering",
+          "kind": "PROVENANCE_ONLY_NOT_PART_OF_TRANSLATION",
+          "basisPrimaryWitnessId": "psalter:88"
+        }
+      ],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-15|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:01e1304107c26970:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+          "sourcePrefix": "Чтец:",
+          "paragraphIndexZeroBased": 183,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-156e55f3ee4be9184a6f",
+      "inventoryId": "liturgy-next-156e55f3ee4be918",
+      "rank": 48,
+      "group": "COMMON_STAGES_22",
+      "original": "Прокимен, глас 7: Возноси́те Го́спода Бо́га на́шего, / и покланя́йтеся подно́жию но́гу Его́, я́ко свя́то есть.",
+      "originalSha256": "dd95d1245432553f9ab445243a813bbe693083db2174032b188ef6e7f473d5e8",
+      "normalizedWholeOriginalSha256": "156e55f3ee4be9184a6fab59c72b4e99d0503b7941111c355ea4e63b38a177ff",
+      "russian": "Прокимен, глас 7: Превозносите Господа, Бога нашего, / и поклоняйтесь подножию Его ног, ибо оно свято.",
+      "russianSha256": "5e8c2dbe394038b4efbe6158d149c7e1a2312b243f303cd32698961934312d4a",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-13&worship=liturgy&size=full&church=30",
+      "originalWords": 15,
+      "newPrayerWords": 12,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 3,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:00f6151364d010de:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+      "segmentMetadata": [
+        {
+          "kind": "EXISTING_RUSSIAN_LABEL_OR_TONE",
+          "original": "Прокимен, глас 7:",
+          "russian": "Прокимен, глас 7:",
+          "originalWords": 3
+        },
+        {
+          "kind": "PRAYER_OR_HYMN",
+          "original": "Возноси́те Го́спода Бо́га на́шего, / и покланя́йтеся подно́жию но́гу Его́, я́ко свя́то есть.",
+          "russian": "Превозносите Господа, Бога нашего, / и поклоняйтесь подножию Его ног, ибо оно свято.",
+          "originalWords": 12
+        }
+      ],
+      "citationsOutsideSpokenRussian": [
+        {
+          "label": "Пс 98:5",
+          "system": "Liturgical/Septuagint psalm numbering",
+          "kind": "PROVENANCE_ONLY_NOT_PART_OF_TRANSLATION",
+          "basisPrimaryWitnessId": "psalter:449"
+        }
+      ],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-13|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:00f6151364d010de:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+          "sourcePrefix": "Чтец:",
+          "paragraphIndexZeroBased": 207,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-bb6b4950442c3eb7d662",
+      "inventoryId": "liturgy-next-bb6b4950442c3eb7",
+      "rank": 49,
+      "group": "CHANGING_HYMNS_8",
+      "original": "Ра́дуйтеся му́дрыя жены́ мироно́сицы, пе́рвыя Христо́во Воскресе́ние ви́девшя, и его́ возвести́вшя апо́столом, всего́ ми́ра воззва́ние.",
+      "originalSha256": "b4964ab0519b210d6e54707d866dfd764182fb65fcdcb536a04f555e8faa7340",
+      "normalizedWholeOriginalSha256": "bb6b4950442c3eb7d6629e3173bfd22ece7d39ddd353d9368d1f7c8c9de29d6e",
+      "russian": "Радуйтесь, мудрые жены-мироносицы, первыми увидевшие Воскресение Христово и возвестившие апостолам о нем - о возрождении всего мира.",
+      "russianSha256": "ffef6a48fcbfec897fdac0cec65b72d1d98b315215d70ca1e1fecc3e4655ff96",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-22&worship=liturgy&size=full&church=30",
+      "originalWords": 15,
+      "newPrayerWords": 15,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 0,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-82484d23212b-1:b7638cb497e6af4a:1",
+      "sourceChapterId": "liturgy-82484d23212b-1",
+      "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+      "segmentMetadata": [],
+      "citationsOutsideSpokenRussian": [],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "blockId": "liturgy-82484d23212b-1:b7638cb497e6af4a:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "chapterTitle": "Блаженны, третий изобразительный антифон (на 8)",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourcePrefix": "",
+          "paragraphIndexZeroBased": 229,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-3b94d1f0632d20af52ce",
+      "inventoryId": "liturgy-next-3b94d1f0632d20af",
+      "rank": 53,
+      "group": "COMMON_STAGES_22",
+      "original": "Прокимен, глас 7: Госпо́дь кре́пость лю́дем Свои́м даст, / Госпо́дь благослови́т лю́ди Своя́ ми́ром.",
+      "originalSha256": "e93d8aa509f426c3f0ff07030e0928ef6461dae98843d53f8aefc38dc5b1a18d",
+      "normalizedWholeOriginalSha256": "3b94d1f0632d20af52ce21778f682edfe55a7e5a3002d072b85c2eb64ecd8cdb",
+      "russian": "Прокимен, глас 7: Господь даст силу Своему народу, / Господь благословит Свой народ миром.",
+      "russianSha256": "b8b2b0a1f16ecfc22c85c13a20d7cfb6ff4a0c843396ef074dfd594f08028c06",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-15&worship=liturgy&size=full&church=30",
+      "originalWords": 13,
+      "newPrayerWords": 10,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 3,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:55c9cac11a670383:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+      "segmentMetadata": [
+        {
+          "kind": "EXISTING_RUSSIAN_LABEL_OR_TONE",
+          "original": "Прокимен, глас 7:",
+          "russian": "Прокимен, глас 7:",
+          "originalWords": 3
+        },
+        {
+          "kind": "PRAYER_OR_HYMN",
+          "original": "Госпо́дь кре́пость лю́дем Свои́м даст, / Госпо́дь благослови́т лю́ди Своя́ ми́ром.",
+          "russian": "Господь даст силу Своему народу, / Господь благословит Свой народ миром.",
+          "originalWords": 10
+        }
+      ],
+      "citationsOutsideSpokenRussian": [
+        {
+          "label": "Пс 28:11",
+          "system": "Liturgical/Septuagint psalm numbering",
+          "kind": "PROVENANCE_ONLY_NOT_PART_OF_TRANSLATION",
+          "basisPrimaryWitnessId": "psalter:149"
+        }
+      ],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-15|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:55c9cac11a670383:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+          "sourcePrefix": "Чтец:",
+          "paragraphIndexZeroBased": 179,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-6733d83166f00c0fa223",
+      "inventoryId": "liturgy-next-6733d83166f00c0f",
+      "rank": 57,
+      "group": "COMMON_STAGES_22",
+      "original": "И чтец надписание Апостола: К Солу́няном посла́ния свята́го Апо́стола Па́вла чте́ние.",
+      "originalSha256": "c34838d25e981d9138d5519548c5d994ef33d4f67cd9d3bc72f313c194c39f88",
+      "normalizedWholeOriginalSha256": "6733d83166f00c0fa22368b89c5dc0c77535eecfbf0c838a2a8eec24550e6057",
+      "russian": "Чтец объявляет: Чтение Послания святого Апостола Павла к солунянам.",
+      "russianSha256": "f1ec363c7837bddcaf6b35015fb4849d356ffca4f33f20fb8ff5f8ea558f5a6e",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-13&worship=liturgy&size=full&church=30",
+      "originalWords": 11,
+      "newPrayerWords": 0,
+      "countAsNewPrayerTranslationBody": false,
+      "existingRussianMetadataWords": 4,
+      "announcementSourceWords": 7,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:dd4324ba4469be19:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+      "segmentMetadata": [
+        {
+          "kind": "EXISTING_RUSSIAN_DIRECTION",
+          "original": "И чтец надписание Апостола:",
+          "russian": "Чтец объявляет:",
+          "originalWords": 4
+        },
+        {
+          "kind": "READING_ANNOUNCEMENT_NOT_PRAYER",
+          "original": "К Солу́няном посла́ния свята́го Апо́стола Па́вла чте́ние.",
+          "russian": "Чтение Послания святого Апостола Павла к солунянам.",
+          "originalWords": 7
+        }
+      ],
+      "citationsOutsideSpokenRussian": [],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-13|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:dd4324ba4469be19:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+          "sourcePrefix": "",
+          "paragraphIndexZeroBased": 215,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-116063ffa6b6050e4267",
+      "inventoryId": "liturgy-next-116063ffa6b6050e",
+      "rank": 58,
+      "group": "COMMON_STAGES_22",
+      "original": "Стих: Бог же Царь наш пре́жде ве́ка, соде́ла спасе́ние посреде́ земли́.",
+      "originalSha256": "ca1d2c337670e03e64c0ca8a29eb5a374b0689a81b268ad7d1c8d042c57a6f97",
+      "normalizedWholeOriginalSha256": "116063ffa6b6050e42674756970c394cb99894042b58ee96a02f33171dd2a921",
+      "russian": "Стих: Но Бог, наш Царь от вечности, совершил спасение посреди земли.",
+      "russianSha256": "14e071180efbda34bfaca7b45d63e6ddbfbaa2bbe14b116e1bde87a12b39fbf5",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-13&worship=liturgy&size=full&church=30",
+      "originalWords": 11,
+      "newPrayerWords": 10,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 1,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:c0093014dff8dcc9:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+      "segmentMetadata": [
+        {
+          "kind": "EXISTING_RUSSIAN_LABEL_OR_TONE",
+          "original": "Стих:",
+          "russian": "Стих:",
+          "originalWords": 1
+        },
+        {
+          "kind": "PRAYER_OR_HYMN",
+          "original": "Бог же Царь наш пре́жде ве́ка, соде́ла спасе́ние посреде́ земли́.",
+          "russian": "Но Бог, наш Царь от вечности, совершил спасение посреди земли.",
+          "originalWords": 10
+        }
+      ],
+      "citationsOutsideSpokenRussian": [
+        {
+          "label": "Пс 73:12",
+          "system": "Liturgical/Septuagint psalm numbering",
+          "kind": "PROVENANCE_ONLY_NOT_PART_OF_TRANSLATION",
+          "basisPrimaryWitnessId": "psalter:343"
+        }
+      ],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-13|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:c0093014dff8dcc9:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+          "sourcePrefix": "Чтец:",
+          "paragraphIndexZeroBased": 226,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-c095d943fac05117225b",
+      "inventoryId": "liturgy-next-c095d943fac05117",
+      "rank": 59,
+      "group": "COMMON_STAGES_22",
+      "original": "Стих: Возвеща́ти зау́тра ми́лость Твою́, и и́стину Твою́ на вся́ку нощь.",
+      "originalSha256": "f4904b71a228a9bc9fa12dd526a18492dcd999a7a83b73f0729693caa06aa11d",
+      "normalizedWholeOriginalSha256": "c095d943fac05117225b1a77cb6d0e2b78e4da66d04cae690006894901f61199",
+      "russian": "Стих: Возвещать поутру Твою милость и Твою истину каждую ночь.",
+      "russianSha256": "d3360e5f9444221c9cbe923118652567756f41468c826606183571ef978070b8",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-15&worship=liturgy&size=full&church=30",
+      "originalWords": 11,
+      "newPrayerWords": 10,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 1,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:f64f428b9e5879a6:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+      "segmentMetadata": [
+        {
+          "kind": "EXISTING_RUSSIAN_LABEL_OR_TONE",
+          "original": "Стих:",
+          "russian": "Стих:",
+          "originalWords": 1
+        },
+        {
+          "kind": "PRAYER_OR_HYMN",
+          "original": "Возвеща́ти зау́тра ми́лость Твою́, и и́стину Твою́ на вся́ку нощь.",
+          "russian": "Возвещать поутру Твою милость и Твою истину каждую ночь.",
+          "originalWords": 10
+        }
+      ],
+      "citationsOutsideSpokenRussian": [
+        {
+          "label": "Пс 91:3",
+          "system": "Liturgical/Septuagint psalm numbering",
+          "kind": "PROVENANCE_ONLY_NOT_PART_OF_TRANSLATION",
+          "basisPrimaryWitnessId": "psalter:426"
+        }
+      ],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-15|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:f64f428b9e5879a6:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+          "sourcePrefix": "Чтец:",
+          "paragraphIndexZeroBased": 199,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-01a1d0a01446c46e819d",
+      "inventoryId": "liturgy-next-01a1d0a01446c46e",
+      "rank": 60,
+      "group": "COMMON_STAGES_22",
+      "original": "Стих: Предвари́м лице́ Его́ во испове́дании, и во псалме́х воскли́кнем Ему́.",
+      "originalSha256": "87d75569250201b00b60f4997a8af42c446d8bf825bb9c2f7b854bd262c643da",
+      "normalizedWholeOriginalSha256": "01a1d0a01446c46e819d36205c72b1157dc715d92c309087628d4b21d4a130d6",
+      "russian": "Стих: Поспешим предстать пред Его лицом со славословием и в псалмах воскликнем Ему.",
+      "russianSha256": "47d3dd7590f65e1d7fd35d82cc115b4e2e08b4e93cd1cfcd771a0bea2086c2a9",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-22&worship=liturgy&size=full&church=30",
+      "originalWords": 11,
+      "newPrayerWords": 10,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 1,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:ade929eb97d015df:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+      "segmentMetadata": [
+        {
+          "kind": "EXISTING_RUSSIAN_LABEL_OR_TONE",
+          "original": "Стих:",
+          "russian": "Стих:",
+          "originalWords": 1
+        },
+        {
+          "kind": "PRAYER_OR_HYMN",
+          "original": "Предвари́м лице́ Его́ во испове́дании, и во псалме́х воскли́кнем Ему́.",
+          "russian": "Поспешим предстать пред Его лицом со славословием и в псалмах воскликнем Ему.",
+          "originalWords": 10
+        }
+      ],
+      "citationsOutsideSpokenRussian": [
+        {
+          "label": "Пс 94:2",
+          "system": "Liturgical/Septuagint psalm numbering",
+          "kind": "PROVENANCE_ONLY_NOT_PART_OF_TRANSLATION",
+          "basisPrimaryWitnessId": "psalter:436"
+        }
+      ],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:ade929eb97d015df:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourcePrefix": "Чтец:",
+          "paragraphIndexZeroBased": 312,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-9e9cc728eb7ab9eabc3b",
+      "inventoryId": "liturgy-next-9e9cc728eb7ab9ea",
+      "rank": 61,
+      "group": "COMMON_STAGES_22",
+      "original": "Стих: Ве́дом во Иуде́и Бог, во Изра́или ве́лие И́мя Его́.",
+      "originalSha256": "0bc62b61e34c8c15eea8ec69bb4f1be577b614fa865a723df405488afd312086",
+      "normalizedWholeOriginalSha256": "9e9cc728eb7ab9eabc3bcbe46d75118f63e1239d2392aba79d170429c9e8cd3f",
+      "russian": "Стих: Бог известен в Иудее, велико Его имя в Израиле.",
+      "russianSha256": "a7074225795607ccadb8a7f7d99211f9d38620c243814a9948d193397bf7513a",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-22&worship=liturgy&size=full&church=30",
+      "originalWords": 10,
+      "newPrayerWords": 9,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 1,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:f56d582f73383cf1:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+      "segmentMetadata": [
+        {
+          "kind": "EXISTING_RUSSIAN_LABEL_OR_TONE",
+          "original": "Стих:",
+          "russian": "Стих:",
+          "originalWords": 1
+        },
+        {
+          "kind": "PRAYER_OR_HYMN",
+          "original": "Ве́дом во Иуде́и Бог, во Изра́или ве́лие И́мя Его́.",
+          "russian": "Бог известен в Иудее, велико Его имя в Израиле.",
+          "originalWords": 9
+        }
+      ],
+      "citationsOutsideSpokenRussian": [
+        {
+          "label": "Пс 75:2",
+          "system": "Liturgical/Septuagint psalm numbering",
+          "kind": "PROVENANCE_ONLY_NOT_PART_OF_TRANSLATION",
+          "basisPrimaryWitnessId": "psalter:350"
+        }
+      ],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:f56d582f73383cf1:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourcePrefix": "Чтец:",
+          "paragraphIndexZeroBased": 295,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-c7259273e78a2785e7c2",
+      "inventoryId": "liturgy-next-c7259273e78a2785",
+      "rank": 63,
+      "group": "COMMON_STAGES_22",
+      "original": "Прокимен, глас 8: Помоли́теся и воздади́те / Го́сподеви Бо́гу на́шему.",
+      "originalSha256": "94f7ce5c47ac07f47e7201dd27706022130c3a0727824f49c75813a3542ee7b2",
+      "normalizedWholeOriginalSha256": "c7259273e78a2785e7c253b7c80a8718b6499afcef9eb5e8243647ae6622a3e5",
+      "russian": "Прокимен, глас 8: Дайте обеты и исполните их / Господу, Богу нашему.",
+      "russianSha256": "5150d50429f003558df1d8226699cfa803939a3cfe608b85f4c3de616f8cce37",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-22&worship=liturgy&size=full&church=30",
+      "originalWords": 9,
+      "newPrayerWords": 6,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 3,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:1cebf6e0aa3de294:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+      "segmentMetadata": [
+        {
+          "kind": "EXISTING_RUSSIAN_LABEL_OR_TONE",
+          "original": "Прокимен, глас 8:",
+          "russian": "Прокимен, глас 8:",
+          "originalWords": 3
+        },
+        {
+          "kind": "PRAYER_OR_HYMN",
+          "original": "Помоли́теся и воздади́те / Го́сподеви Бо́гу на́шему.",
+          "russian": "Дайте обеты и исполните их / Господу, Богу нашему.",
+          "originalWords": 6
+        }
+      ],
+      "citationsOutsideSpokenRussian": [
+        {
+          "label": "Пс 75:12А",
+          "system": "Liturgical/Septuagint psalm numbering",
+          "kind": "PROVENANCE_ONLY_NOT_PART_OF_TRANSLATION",
+          "basisPrimaryWitnessId": "psalter:350"
+        }
+      ],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:1cebf6e0aa3de294:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourcePrefix": "Чтец:",
+          "paragraphIndexZeroBased": 293,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-a8973881c021abfbb318",
+      "inventoryId": "liturgy-next-a8973881c021abfb",
+      "rank": 64,
+      "group": "COMMON_STAGES_22",
+      "original": "Стих: Принеси́те Го́сподеви сы́нове Бо́жии, принеси́те Го́сподеви сы́ны о́вни.",
+      "originalSha256": "c4610d86ea648f498252b03cb58a1610732504e0f1a4b2f01b65129383b1c4f4",
+      "normalizedWholeOriginalSha256": "a8973881c021abfbb318c9cfd66ec57952f2ce2edba8dc88e28906182667ee5d",
+      "russian": "Стих: Принесите Господу, сыны Божии, принесите Господу молодых овнов.",
+      "russianSha256": "a23048f1b37a571f10f37aee480a1d5e5e3241e6cee80b318de932fa132d681b",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-15&worship=liturgy&size=full&church=30",
+      "originalWords": 9,
+      "newPrayerWords": 8,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 1,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:a8db7ce6910be6b6:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+      "segmentMetadata": [
+        {
+          "kind": "EXISTING_RUSSIAN_LABEL_OR_TONE",
+          "original": "Стих:",
+          "russian": "Стих:",
+          "originalWords": 1
+        },
+        {
+          "kind": "PRAYER_OR_HYMN",
+          "original": "Принеси́те Го́сподеви сы́нове Бо́жии, принеси́те Го́сподеви сы́ны о́вни.",
+          "russian": "Принесите Господу, сыны Божии, принесите Господу молодых овнов.",
+          "originalWords": 8
+        }
+      ],
+      "citationsOutsideSpokenRussian": [
+        {
+          "label": "Пс 28:1А",
+          "system": "Liturgical/Septuagint psalm numbering",
+          "kind": "PROVENANCE_ONLY_NOT_PART_OF_TRANSLATION",
+          "basisPrimaryWitnessId": "psalter:149"
+        }
+      ],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-15|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:a8db7ce6910be6b6:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+          "sourcePrefix": "Чтец:",
+          "paragraphIndexZeroBased": 181,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-480c6d2659f5c67d4021",
+      "inventoryId": "liturgy-next-480c6d2659f5c67d",
+      "rank": 65,
+      "group": "COMMON_STAGES_22",
+      "original": "и покланя́йтеся подно́жию но́гу Его́, я́ко свя́то есть.",
+      "originalSha256": "4f7d628b30c7e5f78fc814f2943054692f1d04e444abdac85b11fff7a377eb1e",
+      "normalizedWholeOriginalSha256": "480c6d2659f5c67d4021b9317b7f117c21f9751a2a910dc942da9a2d6682d210",
+      "russian": "и поклоняйтесь подножию Его ног, ибо оно свято.",
+      "russianSha256": "e0baf9b31d0f82f72a4346c0b533803978fbc85b1f68418d54d7c10d414bcce4",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-13&worship=liturgy&size=full&church=30",
+      "originalWords": 8,
+      "newPrayerWords": 8,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 0,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:d8d2648e5b261c8e:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+      "segmentMetadata": [],
+      "citationsOutsideSpokenRussian": [
+        {
+          "label": "Пс 98:5 (part)",
+          "system": "Liturgical/Septuagint psalm numbering",
+          "kind": "PROVENANCE_ONLY_NOT_PART_OF_TRANSLATION",
+          "basisPrimaryWitnessId": "psalter:449"
+        }
+      ],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-13|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:d8d2648e5b261c8e:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+          "sourcePrefix": "Лик:",
+          "paragraphIndexZeroBased": 212,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-6450144f565f4e66ad88",
+      "inventoryId": "liturgy-next-6450144f565f4e66",
+      "rank": 66,
+      "group": "COMMON_STAGES_22",
+      "original": "Помяни́ сонм Твой, его́же стяжа́л еси́ испе́рва.",
+      "originalSha256": "8205c0cec88f0f1d45f6b8b34c31f428c4c2b0b3c2aaf600c4414ae02ecd6959",
+      "normalizedWholeOriginalSha256": "6450144f565f4e66ad88e558cc4cf0171928ffefa37f9a54094ee20c861ff9df",
+      "russian": "Вспомни Твое собрание, которое Ты приобрел от начала.",
+      "russianSha256": "2104a8a9dd7947c0bc9136421e356453723a0b7bca592715c1b0e232ad95f744",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-13&worship=liturgy&size=full&church=30",
+      "originalWords": 7,
+      "newPrayerWords": 7,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 0,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:c45e0a01979cc719:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+      "segmentMetadata": [],
+      "citationsOutsideSpokenRussian": [
+        {
+          "label": "Пс 73:2А",
+          "system": "Liturgical/Septuagint psalm numbering",
+          "kind": "PROVENANCE_ONLY_NOT_PART_OF_TRANSLATION",
+          "basisPrimaryWitnessId": "psalter:343"
+        }
+      ],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-13|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:c45e0a01979cc719:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+          "sourcePrefix": "Чтец:",
+          "paragraphIndexZeroBased": 224,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-034e30b5146f4b3a8f33",
+      "inventoryId": "liturgy-next-034e30b5146f4b3a",
+      "rank": 67,
+      "group": "COMMON_STAGES_22",
+      "original": "Помоли́теся и воздади́те / Го́сподеви Бо́гу на́шему.",
+      "originalSha256": "bfcf3c717802a1a2a742f29cbb4300fa9d0b280f28f2a253f818b64eccf01e9f",
+      "normalizedWholeOriginalSha256": "034e30b5146f4b3a8f33bab72ea2be5ab38d66a97cd34cc8f356743394381358",
+      "russian": "Дайте обеты и исполните их / Господу, Богу нашему.",
+      "russianSha256": "bde98ebd60f63afd02f324f819454a7629116f2546d1eb7c35aca28fb760e3b7",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-22&worship=liturgy&size=full&church=30",
+      "originalWords": 6,
+      "newPrayerWords": 6,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 0,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:3ffd793b7b4473f1:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+      "segmentMetadata": [],
+      "citationsOutsideSpokenRussian": [
+        {
+          "label": "Пс 75:12А",
+          "system": "Liturgical/Septuagint psalm numbering",
+          "kind": "PROVENANCE_ONLY_NOT_PART_OF_TRANSLATION",
+          "basisPrimaryWitnessId": "psalter:350"
+        }
+      ],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:3ffd793b7b4473f1:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourcePrefix": "Лик:",
+          "paragraphIndexZeroBased": 294,
+          "optionalPostCommunion": false
+        },
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:3ffd793b7b4473f1:2",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourcePrefix": "Лик:",
+          "paragraphIndexZeroBased": 296,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-157f20039c8bcffe5ff1",
+      "inventoryId": "liturgy-next-157f20039c8bcffe",
+      "rank": 68,
+      "group": "COMMON_STAGES_22",
+      "original": "Спасе́ние соде́лал еси́ посреде́ земли́, Бо́же.",
+      "originalSha256": "893f52f683709e974405db0b409b27eceedd0f99b3b16965537f362eae4e8f6b",
+      "normalizedWholeOriginalSha256": "157f20039c8bcffe5ff1e17918069e0cc01cd1b82c615e2488472d29023090e2",
+      "russian": "Ты совершил спасение посреди земли, Боже.",
+      "russianSha256": "8abb57b055bc6d2f4e87cbb56ec2bc337f98c79067b053d81e3b1a376baf20ae",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-13&worship=liturgy&size=full&church=30",
+      "originalWords": 6,
+      "newPrayerWords": 6,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 0,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-d0363aa3a064-1:9c846150cf1b210a:1",
+      "sourceChapterId": "liturgy-d0363aa3a064-1",
+      "sourceFileSha256": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+      "segmentMetadata": [],
+      "citationsOutsideSpokenRussian": [
+        {
+          "label": "Cf. Пс 73:12Б (liturgical adaptation)",
+          "system": "Liturgical/Septuagint psalm numbering",
+          "kind": "PROVENANCE_ONLY_NOT_PART_OF_TRANSLATION",
+          "basisPrimaryWitnessId": "psalter:343"
+        }
+      ],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-13|LITURGY|30|~|~",
+          "blockId": "liturgy-d0363aa3a064-1:9c846150cf1b210a:1",
+          "chapterId": "liturgy-d0363aa3a064-1",
+          "chapterTitle": "Причастны",
+          "sourceFileSha256": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+          "sourcePrefix": "",
+          "paragraphIndexZeroBased": 495,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-d5bfd5e00b984abcd276",
+      "inventoryId": "liturgy-next-d5bfd5e00b984abc",
+      "rank": 69,
+      "group": "COMMON_STAGES_22",
+      "original": "Стих: Госпо́дь воцари́ся, да гне́ваются лю́дие.",
+      "originalSha256": "34f1ce86f2d053e6dc402dd9cd3b3b2a0de99e086a414980d4e586918a1e944e",
+      "normalizedWholeOriginalSha256": "d5bfd5e00b984abcd276bca017f40226bc0d8bddbc198209b9775f5e84a2446f",
+      "russian": "Стих: Господь воцарился, пусть гневаются народы.",
+      "russianSha256": "bcf191f35cc9ae1f9217ede7bfc688b2adefa974ac8fbc3dd08bbad70ae75796",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-13&worship=liturgy&size=full&church=30",
+      "originalWords": 6,
+      "newPrayerWords": 5,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 1,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:618f7e156969857e:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+      "segmentMetadata": [
+        {
+          "kind": "EXISTING_RUSSIAN_LABEL_OR_TONE",
+          "original": "Стих:",
+          "russian": "Стих:",
+          "originalWords": 1
+        },
+        {
+          "kind": "PRAYER_OR_HYMN",
+          "original": "Госпо́дь воцари́ся, да гне́ваются лю́дие.",
+          "russian": "Господь воцарился, пусть гневаются народы.",
+          "originalWords": 5
+        }
+      ],
+      "citationsOutsideSpokenRussian": [
+        {
+          "label": "Пс 98:1А",
+          "system": "Liturgical/Septuagint psalm numbering",
+          "kind": "PROVENANCE_ONLY_NOT_PART_OF_TRANSLATION",
+          "basisPrimaryWitnessId": "psalter:449"
+        }
+      ],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-13|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:618f7e156969857e:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+          "sourcePrefix": "Чтец:",
+          "paragraphIndexZeroBased": 209,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-95ede61013568ee30012",
+      "inventoryId": "liturgy-next-95ede61013568ee3",
+      "rank": 70,
+      "group": "COMMON_STAGES_22",
+      "original": "Аллилу́иа. Аллилу́иа. Аллилу́иа, глас 1.",
+      "originalSha256": "9404a3b2091e3b94657ed4be0a3942462dc3afcdc3c45f03899b5c5f755f2e15",
+      "normalizedWholeOriginalSha256": "95ede61013568ee30012e47384628ff88f0174779209cffe800937093f12a529",
+      "russian": "Хвалите Господа. Хвалите Господа. Хвалите Господа, глас 1.",
+      "russianSha256": "29023cdfaec31ebe399470c85ec276a18cff7b2d987dfc468e1b7c44cc8ee4c5",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-13&worship=liturgy&size=full&church=30",
+      "originalWords": 5,
+      "newPrayerWords": 3,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 2,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:bf1f49fe6336d8a0:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+      "segmentMetadata": [
+        {
+          "kind": "PRAYER_THREE_REPETITIONS",
+          "original": "Аллилу́иа. Аллилу́иа. Аллилу́иа",
+          "russian": "Хвалите Господа. Хвалите Господа. Хвалите Господа",
+          "originalWords": 3
+        },
+        {
+          "kind": "EXISTING_RUSSIAN_TONE_NOT_SPOKEN",
+          "original": "глас 1.",
+          "russian": "глас 1.",
+          "originalWords": 2
+        }
+      ],
+      "citationsOutsideSpokenRussian": [],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-13|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:bf1f49fe6336d8a0:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+          "sourcePrefix": "Чтец:",
+          "paragraphIndexZeroBased": 222,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-235765321b9902b7518f",
+      "inventoryId": "liturgy-next-235765321b9902b7",
+      "rank": 71,
+      "group": "COMMON_STAGES_22",
+      "original": "Аллилу́иа. Аллилу́иа. Аллилу́иа, глас 7.",
+      "originalSha256": "efd9c965b8fdf881ba9dba82313665ee20eb9d1b4fce45aff186d709ca70a562",
+      "normalizedWholeOriginalSha256": "235765321b9902b7518f6fd6a2c6bc45bfd0e5862172b1aadcd92d70b10746aa",
+      "russian": "Хвалите Господа. Хвалите Господа. Хвалите Господа, глас 7.",
+      "russianSha256": "f35f97c817f982474659d1fa655dc03a8c29cc3a5b17bbde074331e974a30a80",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-15&worship=liturgy&size=full&church=30",
+      "originalWords": 5,
+      "newPrayerWords": 3,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 2,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:24a9e3dbda99511a:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+      "segmentMetadata": [
+        {
+          "kind": "PRAYER_THREE_REPETITIONS",
+          "original": "Аллилу́иа. Аллилу́иа. Аллилу́иа",
+          "russian": "Хвалите Господа. Хвалите Господа. Хвалите Господа",
+          "originalWords": 3
+        },
+        {
+          "kind": "EXISTING_RUSSIAN_TONE_NOT_SPOKEN",
+          "original": "глас 7.",
+          "russian": "глас 7.",
+          "originalWords": 2
+        }
+      ],
+      "citationsOutsideSpokenRussian": [],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-15|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:24a9e3dbda99511a:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+          "sourcePrefix": "Чтец:",
+          "paragraphIndexZeroBased": 196,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-bcfdbf631577f304f04b",
+      "inventoryId": "liturgy-next-bcfdbf631577f304",
+      "rank": 72,
+      "group": "COMMON_STAGES_22",
+      "original": "Аллилу́иа. Аллилу́иа. Аллилу́иа, глас 8.",
+      "originalSha256": "085b195424be1dc2927af46ef4d1ca1a1940a96d8250397a4ec12d60f9a916fd",
+      "normalizedWholeOriginalSha256": "bcfdbf631577f304f04bb2bec3ced88302f277921661a2570a9ee96d70822d06",
+      "russian": "Хвалите Господа. Хвалите Господа. Хвалите Господа, глас 8.",
+      "russianSha256": "14179edbda333798c1f6e21b4f582cda6fe5742e9f068f2d254f6a1b5dfaad65",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-22&worship=liturgy&size=full&church=30",
+      "originalWords": 5,
+      "newPrayerWords": 3,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 2,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:1d94946993fc876a:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+      "segmentMetadata": [
+        {
+          "kind": "PRAYER_THREE_REPETITIONS",
+          "original": "Аллилу́иа. Аллилу́иа. Аллилу́иа",
+          "russian": "Хвалите Господа. Хвалите Господа. Хвалите Господа",
+          "originalWords": 3
+        },
+        {
+          "kind": "EXISTING_RUSSIAN_TONE_NOT_SPOKEN",
+          "original": "глас 8.",
+          "russian": "глас 8.",
+          "originalWords": 2
+        }
+      ],
+      "citationsOutsideSpokenRussian": [],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:1d94946993fc876a:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourcePrefix": "Чтец:",
+          "paragraphIndexZeroBased": 308,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-0d27ffad987d53e50a20",
+      "inventoryId": "liturgy-next-0d27ffad987d53e5",
+      "rank": 73,
+      "group": "COMMON_STAGES_22",
+      "original": "Возноси́те Го́спода Бо́га на́шего,",
+      "originalSha256": "397198e48e87c481d7cd8f1fd1e043087814817c9b78b2df4ddce259ad1d91ba",
+      "normalizedWholeOriginalSha256": "0d27ffad987d53e50a20fca898e83b2fce8be18fd0bb666f118af83c27f2bf7c",
+      "russian": "Превозносите Господа, Бога нашего,",
+      "russianSha256": "a68ecd0b167dbce856d8afdbfe1e2cf8c4836fd00cc0cad5b3162fd56df28ced",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-13&worship=liturgy&size=full&church=30",
+      "originalWords": 4,
+      "newPrayerWords": 4,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 0,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:f6b958db3ddfd1d5:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+      "segmentMetadata": [],
+      "citationsOutsideSpokenRussian": [
+        {
+          "label": "Пс 98:5 (part)",
+          "system": "Liturgical/Septuagint psalm numbering",
+          "kind": "PROVENANCE_ONLY_NOT_PART_OF_TRANSLATION",
+          "basisPrimaryWitnessId": "psalter:449"
+        }
+      ],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-13|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:f6b958db3ddfd1d5:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+          "sourcePrefix": "Чтец:",
+          "paragraphIndexZeroBased": 211,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-1e5004058891863205a7",
+      "inventoryId": "liturgy-next-1e50040588918632",
+      "rank": 74,
+      "group": "COMMON_STAGES_22",
+      "original": "Го́сподеви Бо́гу на́шему.",
+      "originalSha256": "9cf972d358ec0e7f2a9558a81399c10a7d1451686fec4311e8d6688cee197ac1",
+      "normalizedWholeOriginalSha256": "1e5004058891863205a75475ce05a7732856ccce4a0fb8a5f19413693526661a",
+      "russian": "Господу, Богу нашему.",
+      "russianSha256": "9640ad91ba3533e0ca9925899ae5c6d84f3b995b5291b9d5bd567ef63eb349f7",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-22&worship=liturgy&size=full&church=30",
+      "originalWords": 3,
+      "newPrayerWords": 3,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 0,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:4bfa9026858e7b26:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+      "segmentMetadata": [],
+      "citationsOutsideSpokenRussian": [
+        {
+          "label": "Пс 75:12А (part)",
+          "system": "Liturgical/Septuagint psalm numbering",
+          "kind": "PROVENANCE_ONLY_NOT_PART_OF_TRANSLATION",
+          "basisPrimaryWitnessId": "psalter:350"
+        }
+      ],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:4bfa9026858e7b26:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourcePrefix": "Лик:",
+          "paragraphIndexZeroBased": 298,
+          "optionalPostCommunion": false
+        }
+      ]
+    },
+    {
+      "id": "remaining-thirty-5bd7cf521572db08e915",
+      "inventoryId": "liturgy-next-5bd7cf521572db08",
+      "rank": 75,
+      "group": "COMMON_STAGES_22",
+      "original": "Помоли́теся и воздади́те",
+      "originalSha256": "2af74d802c4b03f655955738b797aabbc1fcb013838ca7a13089a9eae4fadad2",
+      "normalizedWholeOriginalSha256": "5bd7cf521572db08e9159dc3ed9116989dc757c0d9a223ad8bdfd49936a6a8f9",
+      "russian": "Дайте обеты и исполните их",
+      "russianSha256": "76827f28fcfba4707f9666de6cb88eaa7af11ae64118520435094f14101482bd",
+      "revision": 8,
+      "originalSourceUrl": "https://azbyka.ru/worships/?date=2026-11-22&worship=liturgy&size=full&church=30",
+      "originalWords": 3,
+      "newPrayerWords": 3,
+      "countAsNewPrayerTranslationBody": true,
+      "existingRussianMetadataWords": 0,
+      "announcementSourceWords": 0,
+      "semanticFinalDecision": "approved",
+      "sourceBlockId": "liturgy-21d28bc25f3d-1:be0f724091e4aada:1",
+      "sourceChapterId": "liturgy-21d28bc25f3d-1",
+      "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+      "segmentMetadata": [],
+      "citationsOutsideSpokenRussian": [
+        {
+          "label": "Пс 75:12А (part)",
+          "system": "Liturgical/Septuagint psalm numbering",
+          "kind": "PROVENANCE_ONLY_NOT_PART_OF_TRANSLATION",
+          "basisPrimaryWitnessId": "psalter:350"
+        }
+      ],
+      "occurrences": [
+        {
+          "bookKey": "2026-11-22|LITURGY|30|~|~",
+          "blockId": "liturgy-21d28bc25f3d-1:be0f724091e4aada:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "chapterTitle": "Чтение Апостола",
+          "sourceFileSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+          "sourcePrefix": "Чтец:",
+          "paragraphIndexZeroBased": 297,
+          "optionalPostCommunion": false
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "bookKey": "2026-11-13|LITURGY|30|~|~",
+      "fixtureResource": "russian-common-12/liturgy-2026-11-13.html",
+      "sourceFixtureSha256": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+      "expected": [
+        {
+          "itemId": "remaining-thirty-156e55f3ee4be9184a6f",
+          "rank": 48,
+          "blockId": "liturgy-21d28bc25f3d-1:00f6151364d010de:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "dd95d1245432553f9ab445243a813bbe693083db2174032b188ef6e7f473d5e8",
+          "russianSha256": "5e8c2dbe394038b4efbe6158d149c7e1a2312b243f303cd32698961934312d4a",
+          "originalWords": 15,
+          "newPrayerWords": 12,
+          "sourcePrefix": "Чтец:",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-6733d83166f00c0fa223",
+          "rank": 57,
+          "blockId": "liturgy-21d28bc25f3d-1:dd4324ba4469be19:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "c34838d25e981d9138d5519548c5d994ef33d4f67cd9d3bc72f313c194c39f88",
+          "russianSha256": "f1ec363c7837bddcaf6b35015fb4849d356ffca4f33f20fb8ff5f8ea558f5a6e",
+          "originalWords": 11,
+          "newPrayerWords": 0,
+          "sourcePrefix": "",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-116063ffa6b6050e4267",
+          "rank": 58,
+          "blockId": "liturgy-21d28bc25f3d-1:c0093014dff8dcc9:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "ca1d2c337670e03e64c0ca8a29eb5a374b0689a81b268ad7d1c8d042c57a6f97",
+          "russianSha256": "14e071180efbda34bfaca7b45d63e6ddbfbaa2bbe14b116e1bde87a12b39fbf5",
+          "originalWords": 11,
+          "newPrayerWords": 10,
+          "sourcePrefix": "Чтец:",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-480c6d2659f5c67d4021",
+          "rank": 65,
+          "blockId": "liturgy-21d28bc25f3d-1:d8d2648e5b261c8e:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "4f7d628b30c7e5f78fc814f2943054692f1d04e444abdac85b11fff7a377eb1e",
+          "russianSha256": "e0baf9b31d0f82f72a4346c0b533803978fbc85b1f68418d54d7c10d414bcce4",
+          "originalWords": 8,
+          "newPrayerWords": 8,
+          "sourcePrefix": "Лик:",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-6450144f565f4e66ad88",
+          "rank": 66,
+          "blockId": "liturgy-21d28bc25f3d-1:c45e0a01979cc719:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "8205c0cec88f0f1d45f6b8b34c31f428c4c2b0b3c2aaf600c4414ae02ecd6959",
+          "russianSha256": "2104a8a9dd7947c0bc9136421e356453723a0b7bca592715c1b0e232ad95f744",
+          "originalWords": 7,
+          "newPrayerWords": 7,
+          "sourcePrefix": "Чтец:",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-157f20039c8bcffe5ff1",
+          "rank": 68,
+          "blockId": "liturgy-d0363aa3a064-1:9c846150cf1b210a:1",
+          "chapterId": "liturgy-d0363aa3a064-1",
+          "originalSha256": "893f52f683709e974405db0b409b27eceedd0f99b3b16965537f362eae4e8f6b",
+          "russianSha256": "8abb57b055bc6d2f4e87cbb56ec2bc337f98c79067b053d81e3b1a376baf20ae",
+          "originalWords": 6,
+          "newPrayerWords": 6,
+          "sourcePrefix": "",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-d5bfd5e00b984abcd276",
+          "rank": 69,
+          "blockId": "liturgy-21d28bc25f3d-1:618f7e156969857e:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "34f1ce86f2d053e6dc402dd9cd3b3b2a0de99e086a414980d4e586918a1e944e",
+          "russianSha256": "bcf191f35cc9ae1f9217ede7bfc688b2adefa974ac8fbc3dd08bbad70ae75796",
+          "originalWords": 6,
+          "newPrayerWords": 5,
+          "sourcePrefix": "Чтец:",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-95ede61013568ee30012",
+          "rank": 70,
+          "blockId": "liturgy-21d28bc25f3d-1:bf1f49fe6336d8a0:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "9404a3b2091e3b94657ed4be0a3942462dc3afcdc3c45f03899b5c5f755f2e15",
+          "russianSha256": "29023cdfaec31ebe399470c85ec276a18cff7b2d987dfc468e1b7c44cc8ee4c5",
+          "originalWords": 5,
+          "newPrayerWords": 3,
+          "sourcePrefix": "Чтец:",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-0d27ffad987d53e50a20",
+          "rank": 73,
+          "blockId": "liturgy-21d28bc25f3d-1:f6b958db3ddfd1d5:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "397198e48e87c481d7cd8f1fd1e043087814817c9b78b2df4ddce259ad1d91ba",
+          "russianSha256": "a68ecd0b167dbce856d8afdbfe1e2cf8c4836fd00cc0cad5b3162fd56df28ced",
+          "originalWords": 4,
+          "newPrayerWords": 4,
+          "sourcePrefix": "Чтец:",
+          "optionalPostCommunion": false
+        }
+      ],
+      "previousSundaySources": [],
+      "baselinePublishedKind": "WEEKDAY201",
+      "expectedPublicMissingBefore": 9,
+      "expectedPublicMissingAfter": 0,
+      "publicPrayerCoverage": {
+        "blockCount": 346,
+        "wholeSourceWords": 4759,
+        "availableBlocksBefore": 337,
+        "availableBlocksAfter": 346,
+        "availableWholeSourceWordsBefore": 4686,
+        "availableWholeSourceWordsAfter": 4759,
+        "gainWholeBlocks": 9,
+        "gainWholeSourceWords": 73,
+        "newPrayerTranslationSourceWords": 55
+      },
+      "nativeSourceAsset": "russian-weekday-antiphons/liturgy-2026-11-13.html"
+    },
+    {
+      "bookKey": "2026-11-15|LITURGY|30|~|~",
+      "fixtureResource": "book/liturgy-2026-11-15.html",
+      "sourceFixtureSha256": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+      "expected": [
+        {
+          "itemId": "remaining-thirty-b9c578798bdb29a7eeeb",
+          "rank": 26,
+          "blockId": "liturgy-21d28bc25f3d-1:4609a995db301eec:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "d0613629100a7fba9c6a32f5604ddcbadce540020900396de5b85c775b6de8ed",
+          "russianSha256": "77ba9600f2577e3e49e15cd7a964043bf844d561a6ff1ae35332d9d8e88f0c32",
+          "originalWords": 11,
+          "newPrayerWords": 0,
+          "sourcePrefix": "",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-861255dc606bb32b9249",
+          "rank": 31,
+          "blockId": "liturgy-82484d23212b-1:867018481763828b:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "originalSha256": "79e39f1e50c4848e69e36be28e60047b163ed0234f320ac267fc6f3564dcc5fb",
+          "russianSha256": "405dc2453690bde6f4f3569d7d6485db087fb99dc8c8b1fbdef51471580587b4",
+          "originalWords": 31,
+          "newPrayerWords": 30,
+          "sourcePrefix": "",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-bd17a875310b7c3ff4b0",
+          "rank": 33,
+          "blockId": "liturgy-82484d23212b-1:f7bab75395daa578:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "originalSha256": "0e12e77b49d6352fadb03f77f110bf1aa2b97c1bb98185e9ce2c8c69e47594db",
+          "russianSha256": "afb0d10185a1b6191dd4f619e95c4496790df63577088b02f5cf24b6d973c1b9",
+          "originalWords": 25,
+          "newPrayerWords": 24,
+          "sourcePrefix": "",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-8169f6ad52f70b38a278",
+          "rank": 35,
+          "blockId": "liturgy-82484d23212b-1:0282f7c8a3d8d86a:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "originalSha256": "ba3ad4e7f5a392066019ee2716dd52ff0c3efe4362bdc3e12ea3e98d8cf77817",
+          "russianSha256": "f1c062ca51ce13a3e268015ae94f500f950e305487be1b79c10ee72055e88b49",
+          "originalWords": 23,
+          "newPrayerWords": 23,
+          "sourcePrefix": "",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-192f89d883868d611f40",
+          "rank": 46,
+          "blockId": "liturgy-21d28bc25f3d-1:01e1304107c26970:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "5dbe79249c6921fb76752985cd9f9b5555fb534d24c472a60367880042e85faf",
+          "russianSha256": "03b1e2e11710e5d544bd6ad521fadfd7b6e150fce8959ec2a68ed6d8bc7b5e68",
+          "originalWords": 16,
+          "newPrayerWords": 13,
+          "sourcePrefix": "Чтец:",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-3b94d1f0632d20af52ce",
+          "rank": 53,
+          "blockId": "liturgy-21d28bc25f3d-1:55c9cac11a670383:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "e93d8aa509f426c3f0ff07030e0928ef6461dae98843d53f8aefc38dc5b1a18d",
+          "russianSha256": "b8b2b0a1f16ecfc22c85c13a20d7cfb6ff4a0c843396ef074dfd594f08028c06",
+          "originalWords": 13,
+          "newPrayerWords": 10,
+          "sourcePrefix": "Чтец:",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-c095d943fac05117225b",
+          "rank": 59,
+          "blockId": "liturgy-21d28bc25f3d-1:f64f428b9e5879a6:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "f4904b71a228a9bc9fa12dd526a18492dcd999a7a83b73f0729693caa06aa11d",
+          "russianSha256": "d3360e5f9444221c9cbe923118652567756f41468c826606183571ef978070b8",
+          "originalWords": 11,
+          "newPrayerWords": 10,
+          "sourcePrefix": "Чтец:",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-a8973881c021abfbb318",
+          "rank": 64,
+          "blockId": "liturgy-21d28bc25f3d-1:a8db7ce6910be6b6:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "c4610d86ea648f498252b03cb58a1610732504e0f1a4b2f01b65129383b1c4f4",
+          "russianSha256": "a23048f1b37a571f10f37aee480a1d5e5e3241e6cee80b318de932fa132d681b",
+          "originalWords": 9,
+          "newPrayerWords": 8,
+          "sourcePrefix": "Чтец:",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-235765321b9902b7518f",
+          "rank": 71,
+          "blockId": "liturgy-21d28bc25f3d-1:24a9e3dbda99511a:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "efd9c965b8fdf881ba9dba82313665ee20eb9d1b4fce45aff186d709ca70a562",
+          "russianSha256": "f35f97c817f982474659d1fa655dc03a8c29cc3a5b17bbde074331e974a30a80",
+          "originalWords": 5,
+          "newPrayerWords": 3,
+          "sourcePrefix": "Чтец:",
+          "optionalPostCommunion": false
+        }
+      ],
+      "previousSundaySources": [
+        {
+          "url": "https://azbyka.ru/bogosluzhenie/liturgiya-ioanna-zlatousta/",
+          "title": "Перевод иеромонаха Амвросия (Тимрота), Азбука веры",
+          "fixture": "book/sunday-opening/full-liturgy.html",
+          "sourceFileSha256": "ca80cb43bd94f28ed0bc774878f7883ef3a611f3f5904c9dd92b15e09212f0b3"
+        },
+        {
+          "url": "https://azbyka.ru/bogosluzhenie/oktoih-voskresnyj-glas-7/",
+          "title": "Перевод иеромонаха Амвросия (Тимрота), Азбука веры",
+          "fixture": "book/published-russian/sunday-7.html",
+          "sourceFileSha256": "51263d620a7141446d3133858c33acb41ea18ddbe99b54f14fac39ff436fb5a7"
+        }
+      ],
+      "baselinePublishedKind": "SUNDAY126_SAVED",
+      "expectedPublicMissingBefore": 9,
+      "expectedPublicMissingAfter": 0,
+      "publicPrayerCoverage": {
+        "blockCount": 386,
+        "wholeSourceWords": 5223,
+        "availableBlocksBefore": 377,
+        "availableBlocksAfter": 386,
+        "availableWholeSourceWordsBefore": 5079,
+        "availableWholeSourceWordsAfter": 5223,
+        "gainWholeBlocks": 9,
+        "gainWholeSourceWords": 144,
+        "newPrayerTranslationSourceWords": 121
+      },
+      "nativeSourceAsset": "russian-sunday-opening/liturgy-2026-11-15.html"
+    },
+    {
+      "bookKey": "2026-11-22|LITURGY|30|~|~",
+      "fixtureResource": "book/published-russian/liturgy-2026-11-22.html",
+      "sourceFixtureSha256": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+      "expected": [
+        {
+          "itemId": "remaining-thirty-b9c578798bdb29a7eeeb",
+          "rank": 26,
+          "blockId": "liturgy-21d28bc25f3d-1:4609a995db301eec:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "d0613629100a7fba9c6a32f5604ddcbadce540020900396de5b85c775b6de8ed",
+          "russianSha256": "77ba9600f2577e3e49e15cd7a964043bf844d561a6ff1ae35332d9d8e88f0c32",
+          "originalWords": 11,
+          "newPrayerWords": 0,
+          "sourcePrefix": "",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-f6ff7f82636c3a7fc44f",
+          "rank": 30,
+          "blockId": "liturgy-06714216a0de-1:578305a74c779e3d:1",
+          "chapterId": "liturgy-06714216a0de-1",
+          "originalSha256": "52e29fb6e66bc3dada68d433949ceb35c363a6ef3e420513a2d9753b3f01d863",
+          "russianSha256": "ad2fafa67c21ba221129a952a5247cbd43e8c6e6a0a31c5c55d1e6b7b2538fdc",
+          "originalWords": 38,
+          "newPrayerWords": 38,
+          "sourcePrefix": "",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-c42e4309a9769149c0a8",
+          "rank": 42,
+          "blockId": "liturgy-82484d23212b-1:36f5363cccd1f2f9:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "originalSha256": "0a0e072ccf1044fd64204c14c745511155148d1817651016f3bf9d3412a69634",
+          "russianSha256": "61abc4d0cd1d9f1a39ac1a111363f0857b7fead0d921e06633101bfe323fbffc",
+          "originalWords": 18,
+          "newPrayerWords": 17,
+          "sourcePrefix": "",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-eca1bd3f61878d8448d9",
+          "rank": 43,
+          "blockId": "liturgy-82484d23212b-1:2495adecbeb0ac64:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "originalSha256": "8b039e4890ab2462ce97d32f36c59b2622ad98e0582ab46d7d919b399ea83232",
+          "russianSha256": "bcc9f33261824085b9194611a29db03e22df7ac80bcadcec521db0518ea65f64",
+          "originalWords": 17,
+          "newPrayerWords": 16,
+          "sourcePrefix": "",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-3bfdc02e4cf4cbac3e8a",
+          "rank": 45,
+          "blockId": "liturgy-82484d23212b-1:df21f5e2672524fd:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "originalSha256": "e3848ba1a61abed684a2af5667ee38be8774d27eb0cb798b6a1db9cf0d754183",
+          "russianSha256": "875eb0cfa279e0b63a5149bea0e5251813336f0a6cc61a4d9f459814a90f5c5f",
+          "originalWords": 17,
+          "newPrayerWords": 17,
+          "sourcePrefix": "",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-bb6b4950442c3eb7d662",
+          "rank": 49,
+          "blockId": "liturgy-82484d23212b-1:b7638cb497e6af4a:1",
+          "chapterId": "liturgy-82484d23212b-1",
+          "originalSha256": "b4964ab0519b210d6e54707d866dfd764182fb65fcdcb536a04f555e8faa7340",
+          "russianSha256": "ffef6a48fcbfec897fdac0cec65b72d1d98b315215d70ca1e1fecc3e4655ff96",
+          "originalWords": 15,
+          "newPrayerWords": 15,
+          "sourcePrefix": "",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-01a1d0a01446c46e819d",
+          "rank": 60,
+          "blockId": "liturgy-21d28bc25f3d-1:ade929eb97d015df:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "87d75569250201b00b60f4997a8af42c446d8bf825bb9c2f7b854bd262c643da",
+          "russianSha256": "47d3dd7590f65e1d7fd35d82cc115b4e2e08b4e93cd1cfcd771a0bea2086c2a9",
+          "originalWords": 11,
+          "newPrayerWords": 10,
+          "sourcePrefix": "Чтец:",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-9e9cc728eb7ab9eabc3b",
+          "rank": 61,
+          "blockId": "liturgy-21d28bc25f3d-1:f56d582f73383cf1:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "0bc62b61e34c8c15eea8ec69bb4f1be577b614fa865a723df405488afd312086",
+          "russianSha256": "a7074225795607ccadb8a7f7d99211f9d38620c243814a9948d193397bf7513a",
+          "originalWords": 10,
+          "newPrayerWords": 9,
+          "sourcePrefix": "Чтец:",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-c7259273e78a2785e7c2",
+          "rank": 63,
+          "blockId": "liturgy-21d28bc25f3d-1:1cebf6e0aa3de294:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "94f7ce5c47ac07f47e7201dd27706022130c3a0727824f49c75813a3542ee7b2",
+          "russianSha256": "5150d50429f003558df1d8226699cfa803939a3cfe608b85f4c3de616f8cce37",
+          "originalWords": 9,
+          "newPrayerWords": 6,
+          "sourcePrefix": "Чтец:",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-034e30b5146f4b3a8f33",
+          "rank": 67,
+          "blockId": "liturgy-21d28bc25f3d-1:3ffd793b7b4473f1:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "bfcf3c717802a1a2a742f29cbb4300fa9d0b280f28f2a253f818b64eccf01e9f",
+          "russianSha256": "bde98ebd60f63afd02f324f819454a7629116f2546d1eb7c35aca28fb760e3b7",
+          "originalWords": 6,
+          "newPrayerWords": 6,
+          "sourcePrefix": "Лик:",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-034e30b5146f4b3a8f33",
+          "rank": 67,
+          "blockId": "liturgy-21d28bc25f3d-1:3ffd793b7b4473f1:2",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "bfcf3c717802a1a2a742f29cbb4300fa9d0b280f28f2a253f818b64eccf01e9f",
+          "russianSha256": "bde98ebd60f63afd02f324f819454a7629116f2546d1eb7c35aca28fb760e3b7",
+          "originalWords": 6,
+          "newPrayerWords": 6,
+          "sourcePrefix": "Лик:",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-bcfdbf631577f304f04b",
+          "rank": 72,
+          "blockId": "liturgy-21d28bc25f3d-1:1d94946993fc876a:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "085b195424be1dc2927af46ef4d1ca1a1940a96d8250397a4ec12d60f9a916fd",
+          "russianSha256": "14179edbda333798c1f6e21b4f582cda6fe5742e9f068f2d254f6a1b5dfaad65",
+          "originalWords": 5,
+          "newPrayerWords": 3,
+          "sourcePrefix": "Чтец:",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-1e5004058891863205a7",
+          "rank": 74,
+          "blockId": "liturgy-21d28bc25f3d-1:4bfa9026858e7b26:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "9cf972d358ec0e7f2a9558a81399c10a7d1451686fec4311e8d6688cee197ac1",
+          "russianSha256": "9640ad91ba3533e0ca9925899ae5c6d84f3b995b5291b9d5bd567ef63eb349f7",
+          "originalWords": 3,
+          "newPrayerWords": 3,
+          "sourcePrefix": "Лик:",
+          "optionalPostCommunion": false
+        },
+        {
+          "itemId": "remaining-thirty-5bd7cf521572db08e915",
+          "rank": 75,
+          "blockId": "liturgy-21d28bc25f3d-1:be0f724091e4aada:1",
+          "chapterId": "liturgy-21d28bc25f3d-1",
+          "originalSha256": "2af74d802c4b03f655955738b797aabbc1fcb013838ca7a13089a9eae4fadad2",
+          "russianSha256": "76827f28fcfba4707f9666de6cb88eaa7af11ae64118520435094f14101482bd",
+          "originalWords": 3,
+          "newPrayerWords": 3,
+          "sourcePrefix": "Чтец:",
+          "optionalPostCommunion": false
+        }
+      ],
+      "previousSundaySources": [
+        {
+          "url": "https://azbyka.ru/bogosluzhenie/liturgiya-ioanna-zlatousta/",
+          "title": "Перевод иеромонаха Амвросия (Тимрота), Азбука веры",
+          "fixture": "book/sunday-opening/full-liturgy.html",
+          "sourceFileSha256": "ca80cb43bd94f28ed0bc774878f7883ef3a611f3f5904c9dd92b15e09212f0b3"
+        },
+        {
+          "url": "https://azbyka.ru/bogosluzhenie/oktoih-voskresnyj-glas-8/",
+          "title": "Перевод иеромонаха Амвросия (Тимрота), Азбука веры",
+          "fixture": "book/published-russian/sunday-8.html",
+          "sourceFileSha256": "57cf0a46adf64ab73690f6d155c1e7557a72af8124190d8204de6bb435b6ba8b"
+        }
+      ],
+      "baselinePublishedKind": "SUNDAY126_SAVED",
+      "expectedPublicMissingBefore": 14,
+      "expectedPublicMissingAfter": 0,
+      "publicPrayerCoverage": {
+        "blockCount": 386,
+        "wholeSourceWords": 5151,
+        "availableBlocksBefore": 372,
+        "availableBlocksAfter": 386,
+        "availableWholeSourceWordsBefore": 4982,
+        "availableWholeSourceWordsAfter": 5151,
+        "gainWholeBlocks": 14,
+        "gainWholeSourceWords": 169,
+        "newPrayerTranslationSourceWords": 149
+      },
+      "nativeSourceAsset": "russian-remaining-thirty/liturgy-2026-11-22.html"
+    }
+  ],
+  "previous163": {
+    "weekday141Asset": "russian-weekday-antiphons/oracle.json",
+    "weekday141Sha256": "ae58a078ec768a1082a956066e9d49bf17958f9d918e8a5c894df9a3831b11d0",
+    "thanksgiving3Asset": "russian-thanksgiving-three/oracle.json",
+    "thanksgiving3Sha256": "2cee98edf7fc1029c8fdaaa80352295eab86f871ce604479a991f4bc1230ff1a",
+    "common19Asset": "russian-liturgy-common-tail/oracle.json",
+    "common19Sha256": "66f6cef7e7debc91d3eeed3010ddc3e251022daaa2cb2450cede5df6778850f8",
+    "projectionSha256": "88ae1477bcee23039f2a8ede107cfd2ba6d132e738d6c1611b317b6fae0c1ebb",
+    "entries": 163,
+    "revision": 7
+  },
+  "nativeSunday8": {
+    "asset": "russian-sunday-opening/oracle.json",
+    "sha256": "27f11ba6634f0f844d860cf1fd98b9ed2a5cdb813be99af561aa396d18da0c1e",
+    "baselineAsset": "russian-sunday-opening/current126-baseline.json",
+    "baselineSha256": "fb6bd2e3e091fa6969f8452f5c0c1aa4fe0db5af7abae90eceb5d160abe2ca37"
+  },
+  "matinsC1": {
+    "asset": "quiet-matins/matins-accepted-unchanged.json",
+    "jvmResource": "legacy-presentation/matins-accepted-unchanged.json",
+    "sha256": "c1a622cb4fad548172bf44179d0c34433cff89a6e7b377fb8a8d14b3adbe7ca1",
+    "literalAcceptedContentHash": "bfa4f3adad38e8df5ae64dce5100b9e92e4c00d75919ff3eb0029e12037c9587",
+    "historical111AndCommon19TwoGuardsUnchanged": true,
+    "newApprovedOccurrencesOnly": [
+      {
+        "itemId": "remaining-thirty-116063ffa6b6050e4267",
+        "rank": 58,
+        "blockId": "matins-1225cd0d0b52-1:1a96d2e4446d42f4:1",
+        "chapterId": "matins-1225cd0d0b52-1",
+        "original": "Стих: Бо́г же Ца́рь на́ш пре́жде ве́ка, соде́ла спасе́ние посреде́ земли́.",
+        "originalSha256": "6d1ae8528566847470851ea84825f70ef6c54e3d257f160ed5fee027d7eeeeea",
+        "canonicalOriginalSha256": "ca1d2c337670e03e64c0ca8a29eb5a374b0689a81b268ad7d1c8d042c57a6f97",
+        "russianSha256": "14e071180efbda34bfaca7b45d63e6ddbfbaa2bbe14b116e1bde87a12b39fbf5"
+      }
+    ]
+  },
+  "publishedNearOriginalsNotAccepted": [
+    {
+      "witnessId": "mary:68",
+      "original": "В тебе, мати, известно спасеся еже по образу, / приимши бо крест, последовала еси Христу, / и деющи учила еси презирати убо плоть, преходит бо, / прилежати же о души, вещи безсмертней. / Темже и со Ангелы срадуется, преподобная Марие, дух твой.",
+      "originalSha256": "0c944b1f538ce58d3e1759184b05e958c77093c42ef7926a1ce5f81fe5a1afe7",
+      "sourceFileSha256": "4c70096f177e9c850368f9ef176d34c2c2f2bad07b5d54ede3387994d374124d",
+      "sourcePath": ".local/release12/russian/sources/tropari-i-kondaki-iz-triodi-postnoj.html",
+      "reason": "Wrong saint or mixed-script/metadata variant is not this approved whole original"
+    },
+    {
+      "witnessId": "sunday8:187",
+      "original": "Днесь Христос воскрес от гроба, / всем верным подая нетление, / и радость обновляет мvроносицам по страсти и Воскресении.",
+      "originalSha256": "699a1d61aa04a0f5543d2ff9f77c184cab7fba5d7682cf8e52768d6baa4ff30e",
+      "sourceFileSha256": "57cf0a46adf64ab73690f6d155c1e7557a72af8124190d8204de6bb435b6ba8b",
+      "sourcePath": "app/src/test/resources/book/published-russian/sunday-8.html",
+      "reason": "Wrong saint or mixed-script/metadata variant is not this approved whole original"
+    },
+    {
+      "witnessId": "sunday8:189",
+      "original": "Радуйтеся мудрыя жены мvроносицы, / первыя Христово Воскресение видевша, / и Его возвестивша апостолом, всего мiра воззвание.",
+      "originalSha256": "a34b65fac614ca35a9209292bcacba60cdbbfe6c12fd03ab925b2fe838912ea6",
+      "sourceFileSha256": "57cf0a46adf64ab73690f6d155c1e7557a72af8124190d8204de6bb435b6ba8b",
+      "sourcePath": "app/src/test/resources/book/published-russian/sunday-8.html",
+      "reason": "Wrong saint or mixed-script/metadata variant is not this approved whole original"
+    }
+  ],
+  "protectedFiles": {
+    "app/src/main/java/ru/liturgyguide/service/book/FeoriaCanonTranslations.kt": "9f0e14eac8cdeb47be580b79a9b10730f5901826c3606a49105a9c24d88b3b26",
+    "app/src/main/java/ru/liturgyguide/service/book/FeoriaCommonTranslations.kt": "5bb729de474427a45121021275516feedc87ab952dd05cca14bcd1d5306ee675",
+    "app/src/main/java/ru/liturgyguide/service/book/FeoriaWeekdayAntiphonTranslations.kt": "c6770e244d3fc2bf7982b1e4e58f83aef631350f4315acd016e3b02889b2393b",
+    "app/src/main/java/ru/liturgyguide/service/book/BookTranslationIndex.kt": "ba4d0a5c2c2b504c429c93150471c4c8b5fe505f5f147a8457431574be5a9272",
+    "app/src/main/java/ru/liturgyguide/service/book/BookTranslationCorpus.kt": "94d917145ef331259ec1476f91d6185e91880fb4ad291b4e055ddb3428dabb86",
+    "app/src/main/java/ru/liturgyguide/service/book/BookText.kt": "402c23a146e30661c91b8d8e233481bd0da6162498ed2e2bdfd1226525323e55",
+    "app/src/main/java/ru/liturgyguide/service/book/BookSundayOpening.kt": "c62a6be8d96680f2c8f9b173baada5449d7fdc48d83989093b455dd80a3be524",
+    "app/src/androidTest/assets/quiet-matins/matins-accepted-unchanged.json": "c1a622cb4fad548172bf44179d0c34433cff89a6e7b377fb8a8d14b3adbe7ca1",
+    "app/src/test/resources/legacy-presentation/matins-accepted-unchanged.json": "c1a622cb4fad548172bf44179d0c34433cff89a6e7b377fb8a8d14b3adbe7ca1",
+    "app/src/test/resources/legacy-presentation/vespers-accepted-unchanged.json": "7febeccf38455f650eaea4e8c03ed4a81d96942f31ace90f9dc5c26482905607",
+    "app/src/androidTest/assets/russian-weekday-antiphons/oracle.json": "ae58a078ec768a1082a956066e9d49bf17958f9d918e8a5c894df9a3831b11d0",
+    "app/src/test/resources/book/sunday-opening/oracle.json": "27f11ba6634f0f844d860cf1fd98b9ed2a5cdb813be99af561aa396d18da0c1e",
+    "app/src/test/resources/book/sunday-opening/current126-baseline.json": "fb6bd2e3e091fa6969f8452f5c0c1aa4fe0db5af7abae90eceb5d160abe2ca37",
+    "app/src/test/resources/russian-common-12/liturgy-2026-11-13.html": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+    "app/src/test/resources/book/liturgy-2026-11-15.html": "b02b71c3c7290a3705ccc3c2dee969c2c5de4d54ebc1ede25947936af77b3343",
+    "app/src/test/resources/book/published-russian/liturgy-2026-11-22.html": "c18df8f3d3525e962906506ced21cfb12605fe4c1c1a1ea24288634c4f5a279e",
+    "app/src/androidTest/assets/russian-weekday-antiphons/liturgy-2026-11-13.html": "9edee9dea1ba23d3c468b48ff8471b7641618d10e760f80f25817885f7145354",
+    "app/src/test/resources/book/sunday-opening/full-liturgy.html": "ca80cb43bd94f28ed0bc774878f7883ef3a611f3f5904c9dd92b15e09212f0b3",
+    "app/src/test/resources/book/published-russian/sunday-7.html": "51263d620a7141446d3133858c33acb41ea18ddbe99b54f14fac39ff436fb5a7",
+    "app/src/test/resources/book/published-russian/sunday-8.html": "57cf0a46adf64ab73690f6d155c1e7557a72af8124190d8204de6bb435b6ba8b",
+    "app/src/main/java/ru/liturgyguide/service/book/FeoriaThanksgivingTranslations.kt": "39cf9b08ee0891a5e93ece47099944c6f3d22d502079e6dff894de38b21b5230",
+    "app/src/androidTest/assets/russian-thanksgiving-three/oracle.json": "2cee98edf7fc1029c8fdaaa80352295eab86f871ce604479a991f4bc1230ff1a",
+    "app/src/androidTest/java/ru/liturgyguide/ui/BookCanonRussianFlowTest.kt": "8fc8d24965354052059f3643dd042a463acf8b0401d0e34ac866078de589be07",
+    "app/src/test/java/ru/liturgyguide/service/book/FeoriaCanonTranslationsTest.kt": "729f8e1a6e1eba6ac635a0e79163a7c569298818656d5ec7ea242922e25cf478",
+    "app/src/test/java/ru/liturgyguide/service/book/FeoriaCommonTranslationsTest.kt": "43a0eab0b786775aee276137ae5c71df8fbf0cce70b42a2ef843501edf00706b",
+    "app/src/test/java/ru/liturgyguide/service/book/BookSundayOpeningTest.kt": "f3d4232d9b416f94bde32883995118ff348f2e5fd5b8a2103a1a3be1458f77d2",
+    "app/src/main/java/ru/liturgyguide/service/book/FeoriaLiturgyCommonTailTranslations.kt": "03ea047e19fdcf9d6f7c1b0c094d05f31a000b2a642d0a0477203efe019ed42f",
+    "app/src/androidTest/assets/russian-liturgy-common-tail/oracle.json": "66f6cef7e7debc91d3eeed3010ddc3e251022daaa2cb2450cede5df6778850f8",
+    "app/src/androidTest/assets/russian-sunday-opening/oracle.json": "27f11ba6634f0f844d860cf1fd98b9ed2a5cdb813be99af561aa396d18da0c1e",
+    "app/src/androidTest/assets/russian-sunday-opening/current126-baseline.json": "fb6bd2e3e091fa6969f8452f5c0c1aa4fe0db5af7abae90eceb5d160abe2ca37",
+    "app/src/test/java/ru/liturgyguide/service/book/PublishedVerseTranslationTest.kt": "83768f8da17319184613b4a13d29c55207a35408513d6243ffb9a86bb66f48f9"
+  },
+  "scopeNote": "Zero missing is public PRAYER availability only for these three pinned sources; private/quiet, RUBRIC and SCRIPTURE excluded. Internal labels/directions and non-prayer announcements do not count as new prayer translation words",
+  "rank58AlreadySupportedInOptionalThursdaySource": true,
+  "rank58NewParserBoundaryGainClaimed": false,
+  "fourthDateOrFullServicebookClaimed": false,
+  "runtime": "NOT_RUN",
+  "productionApplied": false
+}

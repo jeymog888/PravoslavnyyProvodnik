@@ -2,7 +2,7 @@ package ru.liturgyguide.service.book
 
 /** Reviewed project translations, separate from the older explanatory paraphrases. */
 internal object FeoriaTranslationCatalog {
-    const val REVISION = 7
+    const val REVISION = 8
     private const val ORIGINAL_SOURCE_URL = "https://azbyka.ru/worships/?date=2026-11-13&worship=matins&size=full&church=34&main_event=0&top_level=3"
 
     data class Entry(val id: String, val original: String, val russian: String,
@@ -50,7 +50,7 @@ internal object FeoriaTranslationCatalog {
 
     val entries: List<Entry> = previousEntries + FeoriaCanonTranslations.entries + FeoriaCommonTranslations.entries +
         FeoriaWeekdayAntiphonTranslations.entries + FeoriaThanksgivingTranslations.entries +
-        FeoriaLiturgyCommonTailTranslations.entries
+        FeoriaLiturgyCommonTailTranslations.entries + FeoriaRemainingThirtyTranslations.entries
 
     fun recognizes(original: String, translation: BookTranslation): Boolean =
         translation.source == BookTranslationIndex.FEORIA_TRANSLATION_SOURCE && translation.meaning == null &&
@@ -59,5 +59,6 @@ internal object FeoriaTranslationCatalog {
                 FeoriaCommonTranslations.recognizes(original, translation) ||
                 FeoriaWeekdayAntiphonTranslations.recognizes(original, translation) ||
                 FeoriaThanksgivingTranslations.recognizes(original, translation) ||
-                FeoriaLiturgyCommonTailTranslations.recognizes(original, translation))
+                FeoriaLiturgyCommonTailTranslations.recognizes(original, translation) ||
+                FeoriaRemainingThirtyTranslations.recognizes(original, translation))
 }

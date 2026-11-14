@@ -57,8 +57,18 @@ class FeoriaLiturgyCommonTailNativeTest {
         val rows = oracle["items"].asJsonArray.map { it.asJsonObject }.associateBy { it["id"].asString }
         val expected = case["expected"].asJsonArray.map { it.asJsonObject }.associateBy { it["blockId"].asString }
         assertEquals(19, rows.size); assertEquals(22, expected.size)
-        val own = BookTranslationIndex.fromFeoriaCatalog()
-        assertEquals(7, FeoriaTranslationCatalog.REVISION); assertEquals(163, own.size); assertEquals(13, BookTranslationCorpus.VERSION)
+        // Frozen approved163 preserves the exact old22 scenario independently of remaining30.
+        val own = BookTranslationIndex.decode(JsonArray().apply {
+            (oldRows + oracle["items"].asJsonArray.toList()).forEach { value ->
+                val row = value.asJsonObject
+                add(JsonObject().apply {
+                    add("original", row["original"]); add("russian", row["russian"])
+                    addProperty("source", BookTranslationIndex.FEORIA_TRANSLATION_SOURCE.title)
+                    addProperty("url", BookTranslationIndex.FEORIA_TRANSLATION_SOURCE.url)
+                })
+            }
+        }.toString())
+        assertEquals(7, FeoriaTranslationCatalog.entries.take(163).maxOf { it.revision }); assertEquals(163, own.size); assertEquals(13, BookTranslationCorpus.VERSION)
         val context = instrumentation.targetContext
         val name = "liturgy-common-tail-${UUID.randomUUID()}"
         val preferences = context.getSharedPreferences(name, Context.MODE_PRIVATE)

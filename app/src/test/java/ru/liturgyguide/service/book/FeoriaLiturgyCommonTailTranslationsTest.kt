@@ -28,6 +28,7 @@ internal object LiturgyCommonTailFixtures {
     val cases get() = oracle["cases"].asJsonArray.map { it.asJsonObject }
     val previousRows get() = ThanksgivingTranslationFixtures.previousRows + ThanksgivingTranslationFixtures.rows
     val previousOwn144 get() = ThanksgivingTranslationFixtures.previousOwn144
+    val previousOwn163: BookTranslationIndex by lazy { WeekdayAntiphonFixtures.ownIndex(previousRows + rows) }
     fun before(case: JsonObject): ServiceBook {
         val old141 = ThanksgivingTranslationFixtures.before(case)
         return SavedBookEnrichment.apply(old141, previousOwn144) ?: old141
@@ -40,7 +41,7 @@ internal object LiturgyCommonTailFixtures {
 
 class FeoriaLiturgyCommonTailTranslationsTest {
     private val directory = Files.createTempDirectory("liturgy-common-tail-").toFile()
-    private val own = BookTranslationIndex.fromFeoriaCatalog()
+    private val own = LiturgyCommonTailFixtures.previousOwn163
     private val source = BookTranslationIndex.FEORIA_TRANSLATION_SOURCE
     private val rows get() = LiturgyCommonTailFixtures.rows
     private val cases get() = LiturgyCommonTailFixtures.cases
@@ -74,9 +75,9 @@ class FeoriaLiturgyCommonTailTranslationsTest {
     }
 
     @Test fun nineteenFinalWholeSlotsHaveExactApprovedTextSourceAndHonestSixteenPrayerMetrics() {
-        assertEquals(7, FeoriaTranslationCatalog.REVISION)
-        assertEquals(163, FeoriaTranslationCatalog.entries.size); assertEquals(163, own.size)
-        assertEquals(163, FeoriaTranslationCatalog.entries.map { BookText.normalized(it.original) }.distinct().size)
+        assertEquals(7, FeoriaTranslationCatalog.entries.take(163).maxOf { it.revision })
+        assertEquals(163, FeoriaTranslationCatalog.entries.take(163).size); assertEquals(163, own.size)
+        assertEquals(163, FeoriaTranslationCatalog.entries.take(163).map { BookText.normalized(it.original) }.distinct().size)
         assertEquals(19, rows.size); assertEquals(19, FeoriaLiturgyCommonTailTranslations.records.size)
         assertEquals(setOf(1) + (5..22).toSet(), rows.map { it["rank"].asInt }.toSet())
         assertEquals(648, rows.sumOf { WeekdayAntiphonFixtures.words(it["original"].asString) })
