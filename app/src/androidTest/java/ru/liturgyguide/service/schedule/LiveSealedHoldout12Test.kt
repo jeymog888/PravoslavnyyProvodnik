@@ -55,6 +55,9 @@ class LiveSealedHoldout12Test {
         val run = requireNotNull(args.getString("holdoutRun")) { "A unique holdoutRun is required" }
         require(run.matches(Regex("[A-Za-z0-9_-]{1,100}")))
         val batch = args.getString("holdoutBatch", "1")!!.toInt().also { require(it in 1..5) }
+        val knownIndexArg = args.getString("holdoutKnownIndex")
+        // Reject subset requests for unopened batches before any asset/catalog lookup or network.
+        require(knownIndexArg == null || batch in 1..3) { "Known-case replay is limited to batches 1..3" }
         val output = File(requireNotNull(app.getExternalFilesDir("feoria12-holdout")), run)
         check(!output.exists() && output.mkdirs()) { "Refusing to overwrite evidence; use a new holdoutRun" }
         val original = protectedFiles()
@@ -73,23 +76,32 @@ class LiveSealedHoldout12Test {
         val catalogJson = JsonParser.parseString(catalogBytes.toString(Charsets.UTF_8)).asJsonObject
         val catalogRows = catalogJson.getAsJsonArray("churches").associate { it.asJsonObject["id"].asString to it }
         records.forEach { check(catalogRows[it.getAsJsonObject("selected")["id"].asString] == it["selected"]) }
+        val batchIndices = records.indices.filter { records[it]["batch"].asInt == batch }
+        val selectedIndices = holdout12SelectedIndices(batchIndices, batch, knownIndexArg)
+        val selectionMode = if (knownIndexArg == null) "FIXED_SEALED_BATCH" else "KNOWN_DEVELOPMENT_CASE"
+        val requestedIndex = if (knownIndexArg == null) null else selectedIndices.single()
         val decoded = LocalChurchCatalog.decode(catalogBytes.toString(Charsets.UTF_8).reader(), Instant.now())
-        val resultRows = records.mapIndexedNotNull { index, sample ->
-            if (sample["batch"].asInt != batch) return@mapIndexedNotNull null
+        val resultRows = selectedIndices.map { index ->
+            val sample = records[index]
             linkedMapOf<String, Any?>(
             "sealedIndex" to index, "batch" to sample["batch"].asInt,
             "stratum" to sample["stratum"].asString, "sealed100SamplingProbability" to sample["samplingProbability"].asDouble,
             "originalSelected" to sample["selected"], "state" to "NOT_RUN",
             "activity" to "NOT_VERIFIED; sourceTags preserved; no ruins/graves/activity filtering",
             "applicationSuccess" to false, "primarySourceOracle" to "NOT_REVIEWED",
-            "workflowPolicy" to Holdout12SourceCoordinator.WORKFLOW_POLICY
+            "workflowPolicy" to Holdout12SourceCoordinator.WORKFLOW_POLICY,
+            "selectionMode" to selectionMode, "fixedBatchSize" to 20,
+            "selectedDenominator" to selectedIndices.size, "requestedIndex" to requestedIndex
         ) }
         val receipt = linkedMapOf<String, Any?>(
             "run" to run, "batch" to batch, "workflowPolicy" to Holdout12SourceCoordinator.WORKFLOW_POLICY, "startedAt" to Instant.now().toString(),
             "sealedSha256" to SEALED_SHA, "catalogSha256" to CATALOG_SHA,
             "sourcePins" to JsonParser.parseString(instrumentation.context.assets.open(PINS_ASSET).bufferedReader().use { it.readText() }),
             "apkSha256" to sha(File(app.applicationInfo.sourceDir)),
-            "selectedBatchSize" to 20, "sealedDenominator" to 100,
+            "selectedBatchSize" to selectedIndices.size, "fixedBatchSize" to 20, "sealedDenominator" to 100,
+            "selectionMode" to selectionMode, "selectedDenominator" to selectedIndices.size, "requestedIndex" to requestedIndex,
+            "selectionInterpretation" to if (knownIndexArg == null) "Full fixed batch; no subset filtering" else
+                "Known development case only; not an independent sample or cohort coverage estimate",
             "population" to sealed["population"], "stratumPopulations" to sealed["stratumPopulations"],
             "measurement" to "Exact selected map object -> source resolver/importer -> featured published occurrence -> one book part -> fresh disk reopen",
             "notMeasured" to listOf("name/GPS search", "UI/20 seconds", "human source confirmation", "physical process restart", "microphone", "all composite book parts", "all services full translation"),
@@ -99,7 +111,7 @@ class LiveSealedHoldout12Test {
         )
         writeJson(File(output, "report.json"), receipt)
         try {
-            records.indices.filter { records[it]["batch"].asInt == batch }.forEach { index ->
+            selectedIndices.forEach { index ->
                 currentCoroutineContext().ensureActive()
                 val sample = records[index]
                 val selected = sample.getAsJsonObject("selected")
@@ -133,10 +145,13 @@ class LiveSealedHoldout12Test {
                 holdout12SourceSummary(resultRows.filter { it["stratum"] == stratum })
             }
             receipt["applicationSuccess"] = false
-            receipt["harnessPass"] = failures.isEmpty() && receipt["completedBatchRows"] == 20
+            receipt["harnessPass"] = failures.isEmpty() && receipt["completedBatchRows"] == selectedIndices.size
             writeJson(File(output, "summary.json"), linkedMapOf(
                 "run" to run, "batch" to batch, "workflowPolicy" to Holdout12SourceCoordinator.WORKFLOW_POLICY,
                 "finishedAt" to receipt["finishedAt"], "selectedBatchDenominator" to resultRows.size,
+                "selectionMode" to selectionMode, "fixedBatchSize" to 20,
+                "selectedDenominator" to selectedIndices.size, "requestedIndex" to requestedIndex,
+                "selectionInterpretation" to receipt["selectionInterpretation"],
                 "sourceWorkflow" to receipt["sourceWorkflowSummary"],
                 "sourceWorkflowByStratum" to receipt["sourceWorkflowSummaryByStratum"],
                 "strata" to receipt["strata"], "applicationSuccess" to false,
@@ -926,4 +941,20 @@ internal fun holdout12SourceSummary(rows: List<Map<String, Any?>>): Map<String, 
         "observableTransportCounters" to Holdout12SourceCoordinator.COUNTER_NAMES.associateWith { name -> rows.sumOf { transport(it, name) } },
         "transportCounterScope" to Holdout12SourceCoordinator.COUNTER_CAVEAT,
         "readyInterpretation" to "PENDING_PRIMARY_SOURCE_REVIEW", "applicationSuccess" to false)
+}
+
+/** Test-only selection. A known development replay is never an independent coverage cohort. */
+internal fun holdout12SelectedIndices(batchIndices: List<Int>, batch: Int, rawArg: String?): List<Int> {
+    require(batch in 1..5) { "A fixed batch from 1..5 is required" }
+    require(rawArg == null || batch in 1..3) { "Known-case replay is limited to batches 1..3" }
+    val requested = rawArg?.let { value ->
+        require(value.matches(Regex("(?:0|[1-9][0-9]?)"))) { "holdoutKnownIndex must be one canonical index from 0..99" }
+        value.toInt()
+    }
+    require(batchIndices.size == 20 && batchIndices.all { it in 0..99 } && batchIndices.distinct().size == 20) {
+        "The original batch must contain exactly 20 unique bounded indices"
+    }
+    if (requested == null) return batchIndices.toList()
+    require(requested in batchIndices) { "The requested known index must already belong to this batch" }
+    return listOf(requested)
 }
