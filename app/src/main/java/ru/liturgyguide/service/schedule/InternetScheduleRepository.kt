@@ -32,7 +32,7 @@ data class SchedulePublication(
 ) {
     companion object {
         const val LEGACY_PARSER_REVISION = 0
-        const val CURRENT_PARSER_REVISION = 2
+        const val CURRENT_PARSER_REVISION = 3
     }
     val hasCurrentParserRevision: Boolean get() = parserRevision == CURRENT_PARSER_REVISION
     fun forDate(date: LocalDate): List<InternetService> = events.filter { it.date == date.toString() }

@@ -8,6 +8,7 @@ import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
 import com.googlecode.tesseract.android.TessBaseAPI
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.CancellationException
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.ArrayBlockingQueue
@@ -107,7 +108,31 @@ class AndroidScheduleDocumentExtractor(context: Context,
                                     checkCancelled()
                                     bitmap.getPixels(row, 0, bitmap.width, 0, y, bitmap.width, 1)
                                 }
-                            }, hocr)
+                            }, hocr) { request ->
+                                checkCancelled()
+                                val bounds = request.crop
+                                val crop = Bitmap.createBitmap(bitmap, bounds.left, bounds.top, bounds.width, bounds.height)
+                                try {
+                                    checkCancelled()
+                                    engine.clear()
+                                    check(engine.setVariable("hocr_char_boxes", "0"))
+                                    engine.setPageSegMode(if (request.kind == ScheduleRuledDateCells.CellKind.DATE)
+                                        TessBaseAPI.PageSegMode.PSM_SINGLE_BLOCK else TessBaseAPI.PageSegMode.PSM_SPARSE_TEXT)
+                                    checkCancelled(); engine.setImage(crop); checkCancelled()
+                                    val cellHocr = engine.getHOCRText(0).orEmpty()
+                                    observe("grid-${request.kind.name.lowercase(java.util.Locale.ROOT)}-${request.band}", response, crop, cellHocr)
+                                    checkCancelled()
+                                    request.capture(crop.width, crop.height, cellHocr)
+                                } catch (cancelled: CancellationException) { throw cancelled }
+                                catch (_: Exception) { checkCancelled(); null }
+                                finally {
+                                    try {
+                                        engine.clear(); engine.setVariable("hocr_char_boxes", "0")
+                                        engine.setPageSegMode(TessBaseAPI.PageSegMode.PSM_AUTO)
+                                    } finally { crop.recycle() }
+                                }
+                            }
+                            checkCancelled()
                             // Refused ruled grids never fall through to flat/supplementary OCR.
                             if (ruled != null) return ruled
                             if (ScheduleSuperscriptTable.needsSupplement(hocr)) {
