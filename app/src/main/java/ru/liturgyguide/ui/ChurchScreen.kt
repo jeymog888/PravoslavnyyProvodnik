@@ -481,6 +481,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                             Text("Обновляем расписание", style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("schedule_loading_summary"))
                         }
                         ScheduleCheckReceipt(ownState, church.timezone, Modifier.testTag("church_schedule_checked"), church)
+                        if (onOpenService != null) ScheduleAgendaEntry(church, ownState, now, onOpenService, onOpenUrl, onSourceSearchInteraction)
                     }
                 }
                 if (sourceSectionVisible && ownState != null) item(key = "church_schedule_sources") {
