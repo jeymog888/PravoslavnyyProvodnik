@@ -68,7 +68,7 @@ class FeoriaLiturgyCommonTailNativeTest {
                 })
             }
         }.toString())
-        assertEquals(7, FeoriaTranslationCatalog.entries.take(163).maxOf { it.revision }); assertEquals(163, own.size); assertEquals(13, BookTranslationCorpus.VERSION)
+        assertEquals(7, FeoriaTranslationCatalog.entries.take(163).maxOf { it.revision }); assertEquals(163, own.size); assertEquals(14, BookTranslationCorpus.VERSION)
         val context = instrumentation.targetContext
         val name = "liturgy-common-tail-${UUID.randomUUID()}"
         val preferences = context.getSharedPreferences(name, Context.MODE_PRIVATE)

@@ -65,7 +65,7 @@ class FeoriaRemainingThirtyNativeTest {
         val rows = oracle["items"].asJsonArray.map { it.asJsonObject }.associateBy { it["id"].asString }
         val cases = oracle["cases"].asJsonArray.map { it.asJsonObject }
         val own = BookTranslationIndex.fromFeoriaCatalog()
-        assertEquals(8, FeoriaTranslationCatalog.REVISION); assertEquals(193, own.size); assertEquals(13, BookTranslationCorpus.VERSION)
+        assertEquals(8, FeoriaTranslationCatalog.REVISION); assertEquals(193, own.size); assertEquals(14, BookTranslationCorpus.VERSION)
         val seenItems = mutableSetOf<String>(); val seenOccurrences = mutableSetOf<Pair<String, String>>()
         for (case in cases) {
             val fields = case["bookKey"].asString.split('|')

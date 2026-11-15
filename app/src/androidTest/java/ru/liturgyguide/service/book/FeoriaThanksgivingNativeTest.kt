@@ -65,7 +65,7 @@ class FeoriaThanksgivingNativeTest {
             }
         }.toString())
         assertEquals(6, FeoriaTranslationCatalog.entries.take(144).maxOf { it.revision }); assertEquals(144, own.size)
-        assertEquals(13, BookTranslationCorpus.VERSION)
+        assertEquals(14, BookTranslationCorpus.VERSION)
         val context = instrumentation.targetContext
         val name = "thanksgiving-three-${UUID.randomUUID()}"
         val preferences = context.getSharedPreferences(name, Context.MODE_PRIVATE)

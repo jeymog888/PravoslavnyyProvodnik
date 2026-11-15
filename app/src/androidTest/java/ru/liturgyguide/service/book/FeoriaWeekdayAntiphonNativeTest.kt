@@ -58,7 +58,7 @@ class FeoriaWeekdayAntiphonNativeTest {
             }
         }.toString())
         assertEquals(5, FeoriaTranslationCatalog.entries.take(141).maxOf { it.revision }); assertEquals(141, own.size)
-        assertEquals(13, BookTranslationCorpus.VERSION)
+        assertEquals(14, BookTranslationCorpus.VERSION)
         val context = instrumentation.targetContext
         val name = "weekday-antiphon-${UUID.randomUUID()}"
         val preferences = context.getSharedPreferences(name, Context.MODE_PRIVATE)
