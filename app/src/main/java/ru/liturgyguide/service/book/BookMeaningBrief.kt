@@ -8,7 +8,7 @@ import ru.liturgyguide.model.WorshipKind
 enum class BookMeaningCueKind { HEAR, SEE, QUIET }
 data class BookMeaningCue(val kind: BookMeaningCueKind, val text: String)
 data class BookMeaningBrief(val topicId: String, val whatHappens: String, val why: String,
-    val cue: BookMeaningCue? = null, val sourceUrl: String, val title: String? = null)
+    val cue: BookMeaningCue? = null, val sourceUrl: String, val title: String? = null, val detail: String? = null)
 
 /** A temporary explanation owns no reading cursor and cannot rewrite an accepted edition. */
 data class BookMeaningContent(val position: BookReadingPosition, val chapterTitle: String,
@@ -34,9 +34,15 @@ data class BookMeaningContent(val position: BookReadingPosition, val chapterTitl
                 (if (textPosition.mode == BookReadingMode.RUSSIAN)
                     BookBlockPresentation.effectiveRussian(book.key, block) ?: block.original else block.original)
                     .takeIf { it.isNotBlank() }
+            val candidateBrief = (if (privateText || block.kind == BookBlockKind.LOCAL_VARIATION) null
+                else BookMeaningBriefCatalog.forPlace(book, chapter, block.id))?.takeUnless {
+                    it.topicId == BookMeaningBriefCatalog.HOURS_COMMON_PRAYER_TOPIC && position.anchorKind != BookAnchorKind.BLOCK
+                }
+            // Only the exact public Hours paragraph can precede a heading-based unknown fragment.
+            val hoursPrayer = candidateBrief?.topicId == BookMeaningBriefCatalog.HOURS_COMMON_PRAYER_TOPIC
             // Old accepted Matins copied the public six-psalms help onto every quiet
             // prayer. That block.meaning cannot identify this private paragraph.
-            val fragment = if (privateText || block.kind == BookBlockKind.LOCAL_VARIATION) null
+            val fragment = if (hoursPrayer || privateText || block.kind == BookBlockKind.LOCAL_VARIATION) null
                 else BookAfterCommunionMeaning.forPlace(book, chapter, block)
             val detail = when {
                 fragment != null -> fragment.detail
@@ -44,9 +50,8 @@ data class BookMeaningContent(val position: BookReadingPosition, val chapterTitl
                 privateText -> BookMeaningCatalog.meaningFor("В алтаре").orEmpty()
                 else -> BookMeaningCatalog.displayMeaning(book, chapter, openingDisplay)
             }
-            val brief = if (fragment != null) fragment.brief else if (privateText || block.kind == BookBlockKind.LOCAL_VARIATION) null
-                else BookMeaningBriefCatalog.forPlace(book, chapter, block.id)
-            val scopedDetail = if (brief?.topicId == "vespers-psalm-103" && BookText.normalized(chapter.title) == "перед началом")
+            val brief = if (fragment != null) fragment.brief else candidateBrief
+            val scopedDetail = brief?.detail ?: if (brief?.topicId == "vespers-psalm-103" && BookText.normalized(chapter.title) == "перед началом")
                 BookMeaningCatalog.meaningFor("Псалом 103", block.original, "vespers").orEmpty() else detail
             return BookMeaningContent(textPosition, fragment?.title ?: brief?.title ?: openingDisplay.title(chapter), excerpt, scopedDetail, brief, privateText)
         }
@@ -55,7 +60,10 @@ data class BookMeaningContent(val position: BookReadingPosition, val chapterTitl
 
 /** Narrow reviewed help. A familiar title without a positively checked body is insufficient. */
 object BookMeaningBriefCatalog {
+    internal const val HOURS_COMMON_PRAYER_TOPIC = "hours-common-prayer"
+
     fun forPlace(book: ServiceBook, chapter: BookChapter, blockId: String): BookMeaningBrief? {
+        hoursPrayerForPlace(book, chapter, blockId)?.let { return it }
         forChapter(book, chapter)?.let { return it }
         // The real Vespers source marks Psalm 103 with h4 inside "Перед началом".
         // Only its positively checked public body (or its immediately preceding label)
@@ -67,6 +75,28 @@ object BookMeaningBriefCatalog {
             chapter.blocks.getOrNull(index + 1) ?: return null else selected
         if (candidate.kind != BookBlockKind.PRAYER || candidate.isAltarText) return null
         return forChapter(book, chapter.copy(title = "Псалом 103", blocks = listOf(candidate)))?.copy(title = "Псалом 103")
+    }
+
+    /** Full public prayer only. Heading, translation availability and a familiar prefix do not identify it. */
+    private fun hoursPrayerForPlace(book: ServiceBook, chapter: BookChapter, blockId: String): BookMeaningBrief? {
+        if (!book.key.isValid()) return null
+        val source = when (book.key.worship) {
+            WorshipKind.HOUR1 -> BookTranslationIndex.HOUR1_SOURCE
+            WorshipKind.HOUR3 -> BookTranslationIndex.HOUR3_SOURCE
+            WorshipKind.HOUR6 -> BookTranslationIndex.HOUR6_SOURCE
+            WorshipKind.HOUR9 -> BookTranslationIndex.HOUR9_SOURCE
+            else -> return null
+        }
+        val owned = book.chapters.singleOrNull { it.id == chapter.id }?.takeIf { it == chapter } ?: return null
+        val block = owned.blocks.singleOrNull { it.id == blockId } ?: return null
+        if (book.blocks.count { it.id == blockId } != 1 || block.kind != BookBlockKind.PRAYER ||
+            BookVisibilityScope.of(book).isPrivate(block) || BookText.sha256(BookText.normalized(block.original)) !=
+            "b34617e4f9f0b3d91df6d72415ffcb814b020f7e58791f6aa4083105f3f3b4aa") return null
+        return BookMeaningBrief(HOURS_COMMON_PRAYER_TOPIC,
+            "Эту молитву Христу читают на Часах - коротких службах из псалмов и молитв",
+            "Просим Христа направить нашу жизнь по Его заповедям, очистить мысли и сохранить нас от зла",
+            BookMeaningCue(BookMeaningCueKind.HEAR, "Иже на всякое время и на всякий час"),
+            source.url, title = "Молитва о нашей жизни", detail = "Молитва обращена ко Христу, Который любит праведных, милует грешников и зовет всех к спасению. Просьба \"исправи живот наш\" означает: направь нашу жизнь по Твоим заповедям. Мы просим освятить душу, очистить тело и мысли, избавить от бед и болезней. Христа просят оградить нас Ангелами - то есть даровать через них защиту и наставление. Завершение говорит о единстве в вере и познании Божьей славы")
     }
 
     fun forChapter(book: ServiceBook, chapter: BookChapter): BookMeaningBrief? {
