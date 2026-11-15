@@ -189,7 +189,7 @@ class LiveSealedHoldout12Test {
                 val pools = BundledPublisherPoolFactories(BundledCuratedPublisherMetadata(open = {
                     owned.assets.open(BundledCuratedPublisherMetadata.ASSET_PATH)
                 }), BundledChurchCatalog(open = { owned.assets.open(BundledChurchCatalog.ASSET_PATH).bufferedReader(Charsets.UTF_8) }))
-                val native = AndroidScheduleDocumentExtractor(owned)
+                val native = AndroidScheduleDocumentExtractor(owned, observer = source::nativeOcr)
                 val extractor = ScheduleDocumentExtractor { response ->
                     native.extract(response).also { doc -> source.document(doc) }
                 }
@@ -574,6 +574,7 @@ class LiveSealedHoldout12Test {
     private inner class Recorder(private val output: File) {
         private val events = mutableListOf<Map<String, Any?>>()
         private var sequence = 0
+        private var nativeOcrBytes = 0
         @Synchronized fun event(value: Map<String, Any?>) {
             events += value + mapOf("observedAt" to Instant.now().toString())
             runCatching { writeJson(File(output, "calls.json"), events.toList()) }.onFailure {
@@ -621,6 +622,31 @@ class LiveSealedHoldout12Test {
             val name = "documents/${next().toString().padStart(4, '0')}.json"
             writeSafeBytes(File(output, name), gson.toJson(sanitized(gson.toJsonTree(doc))).toByteArray(), "application/json", this)
             event(mapOf("type" to "ANDROID_EXTRACTOR_DOCUMENT", "sourceUrl" to doc.sourceUrl, "format" to doc.format, "pages" to doc.pages.size, "file" to name.takeIf { File(output, it).isFile }))
+        }
+        @Synchronized fun nativeOcr(capture: NativeScheduleOcrCapture) {
+            val metadata = mapOf("stage" to capture.stage, "sourceUrl" to capture.sourceUrl,
+                "width" to capture.width, "height" to capture.height, "characters" to capture.hocr.length,
+                "coordinateScope" to if (capture.stage == "initial") "SOURCE_BITMAP"
+                    else "CAPTURE_BITMAP_ONLY_NO_SOURCE_OFFSET")
+            if (!Regex("[A-Za-z0-9-]{1,64}").matches(capture.stage) || capture.hocr.length > 1_000_000) {
+                event(mapOf("type" to "EVIDENCE_OMITTED", "reason" to "OCR_STAGE_OR_CHARACTER_LIMIT",
+                    "metadata" to metadata, "sha256" to null, "hashScope" to "NOT_COMPUTED_FOR_REJECTED_CAPTURE"))
+                return
+            }
+            val bytes = capture.hocr.toByteArray(Charsets.UTF_8)
+            if (bytes.size > 4_000_000 - nativeOcrBytes) {
+                omitted("native-ocr", bytes.size, sha(bytes), "CASE_OCR_EVIDENCE_BUDGET", metadata)
+                return
+            }
+            nativeOcrBytes += bytes.size
+            val name = "ocr/" + next().toString().padStart(4, '0') + "-" + capture.stage + ".hocr"
+            val file = File(output, name)
+            val evidence = writeSafeBytes(file, bytes, "application/xhtml+xml; charset=utf-8", this,
+                sensitiveBinaryUrl = SensitiveKeys.sensitiveQuery(capture.sourceUrl))
+            event(mapOf("type" to "NATIVE_OCR_PASS", "metadata" to metadata, "originalSha256" to sha(bytes),
+                "file" to name.takeIf { file.isFile }, "writtenSha256" to file.takeIf { it.isFile }?.let { sha(it) },
+                "bodyEvidence" to evidence,
+                "scope" to "Read-only completed-pass evidence. No recognition, parser or authority override. Missing exports remain explicit."))
         }
         fun progress(value: ScheduleImportProgress) = event(mapOf("type" to "PRODUCTION_PROGRESS", "progress" to value, "at" to Instant.now().toString()))
         fun finish() = event(mapOf("type" to "CASE_FINISHED", "at" to Instant.now().toString()))

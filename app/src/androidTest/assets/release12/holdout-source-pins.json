@@ -5,7 +5,7 @@
     "getTransport": "UrlConnectionScheduleTransport(timeoutMillis=15000, limitBytes=AndroidScheduleDocumentExtractor.MAX_DOCUMENT_BYTES, allowExplicitHttp=true)",
     "postTransport": "UrlConnectionMoscowDirectorySearchTransport() defaults, no interception of bootstrap/headers/cookies",
     "cache": "internet_schedule_cache with same productionLock/cap100/length200000/apply/writeSafety-commit logic",
-    "extractor": "AndroidScheduleDocumentExtractor(ownedContext) defaults",
+    "extractor": "AndroidScheduleDocumentExtractor(ownedContext) production defaults with existing read-only completed-pass observer; diagnostic export limits and omissions do not alter recognition/parser/authority",
     "siteResolver": "productionScheduleSiteResolver(realRecordingTransport, FileOfficialDirectoryCacheStore(ownedCache/official-parish-directories), moscowSearch=recordingRealDefaultPost, ownPools=actualBundledFactories)",
     "curatedPublishers": "literal AppContainer.parishes.getOrNull()?.directory?.churches.orEmpty()",
     "pools": "BundledCuratedPublisherMetadata and BundledChurchCatalog using actual bundled assets and default clocks",
