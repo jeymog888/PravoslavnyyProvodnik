@@ -786,7 +786,8 @@ class InternetScheduleRepository(
         // Issued at most once from the original root; denial is sticky for this attempt.
         var publisherBanner: QualifiedPublisherBanner? = null
         fun phase(value: ScheduleImportPhase) { this@InternetScheduleRepository.phase(importOwner, parish.id, value) }
-        data class QueuedDocument(val link: ScheduleDocumentLink, val rescue: Boolean = false)
+        data class QueuedDocument(val link: ScheduleDocumentLink, val rescue: Boolean = false,
+            val intent: ScheduleNavigationIntent? = null)
         val pending = ArrayDeque<QueuedDocument>()
         pending += QueuedDocument(ScheduleDocumentLink(website, "", false))
         val visited = mutableSetOf<String>()
@@ -931,10 +932,27 @@ class InternetScheduleRepository(
                     publisherBanner = QualifiedPublisherBanner.fromRoot(parish, binding, freshMapRow, root, response)
                 parsed = if (rootRequest) rawParsed else publisherBanner?.inspect(parish, binding, next, response, rawParsed, date) ?: rawParsed
                 format = "html"
-                ScheduleDocumentLinks.find(html).filter { it.url !in visited && (!queued.rescue || it.document) }
-                    .forEach { pending += QueuedDocument(it, rescue = queued.rescue) }
                 if (auditFreshRoot && rootAudit == null) rootAudit = requireNotNull(freshContactEvidence).auditNavigationRoot(parish,
                     requireNotNull(approved), root, response, existing, requireNotNull(wholeDocument), requireNotNull(documentResult), navigationAttempt)
+                val admitted = ScheduleDocumentLinks.find(html)
+                val ordinaryDiscovery = !queued.rescue && !next.document && linkedPermit == null && rootAudit == null
+                val discovered = if (ordinaryDiscovery) queued.intent?.discover(parish, root, navigationAttempt,
+                    next, response, parsed, admitted) ?: admitted else admitted
+                // No relay: a queued consumer can never issue a new hint, even if its use failed.
+                val intents = if (ordinaryDiscovery && queued.intent == null)
+                    ScheduleNavigationIntent.issue(parish, root, navigationAttempt, response, parsed, admitted) else emptyMap()
+                discovered.filter { it.url !in visited && (!queued.rescue || it.document) }
+                    .forEach { link ->
+                        val intent = intents[link.url]
+                        if (intent != null) {
+                            // A later own-page cue may enrich the first pending exact HTML URL.
+                            // Keep its FIFO slot and original parser/authority edge unchanged.
+                            val first = pending.indexOfFirst { !it.rescue && !it.link.document && it.link.url == link.url }
+                            if (first >= 0 && pending[first].intent == null)
+                                pending[first] = pending[first].copy(intent = intent)
+                        }
+                        pending += QueuedDocument(link, rescue = queued.rescue, intent = intent)
+                    }
             } else {
                 phase(ScheduleImportPhase.READING_DOCUMENT)
                 val document = try { documentExtractor.extract(response) }

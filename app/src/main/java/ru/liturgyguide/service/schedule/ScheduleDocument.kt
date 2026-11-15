@@ -46,6 +46,10 @@ data class ScheduleParseResult(
 
 fun interface ScheduleDocumentExtractor {
     suspend fun extract(response: ScheduleResponse): ScheduleDocument?
+
+    companion object {
+        const val MAX_IMAGE_PIXELS = 4_000_000
+    }
 }
 
 object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {

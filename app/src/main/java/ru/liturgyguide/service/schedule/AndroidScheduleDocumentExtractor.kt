@@ -215,7 +215,7 @@ class AndroidScheduleDocumentExtractor(context: Context,
 
     companion object {
         const val MAX_DOCUMENT_BYTES = 12_582_912
-        private const val MAX_PIXELS = 4_000_000
+        private const val MAX_PIXELS = ScheduleDocumentExtractor.MAX_IMAGE_PIXELS
         private const val MODEL_BYTES = 3_861_738L
         private val modelLock = Any()
         private fun daemon(job: Runnable) = Thread(job, "feoria-document-ocr").apply { isDaemon = true }
