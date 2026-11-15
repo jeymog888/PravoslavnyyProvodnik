@@ -93,6 +93,7 @@ class BookHoursMeaningFlowTest {
             launched = true; compose.runOnIdle { mounted.value = true }; settle()
             val before = requireNotNull(store.last(name)); record["before"] = before
             assertEquals(target.id, before.blockId); assertEquals(BookAnchorKind.BLOCK, before.anchorKind)
+            compose.onNodeWithTag("book_chapter", useUnmergedTree = true).assertIsDisplayed().assertTextEquals(expected["title"].asString)
             // This controlled slice has no verified dated Hours annotation. Meaning must
             // preserve its existing safety gate as well as its paused reading position.
             val review = BookHourSourceReview.of(book)

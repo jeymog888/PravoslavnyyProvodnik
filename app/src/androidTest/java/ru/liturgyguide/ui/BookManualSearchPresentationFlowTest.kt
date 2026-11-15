@@ -154,6 +154,69 @@ class BookManualSearchPresentationFlowTest(private val dark: Boolean) {
         assertTrue(selected.isEmpty())
     }
 
+    @Test fun twoHourWarningsStayCompactAndKeepManualResultsWhileDetailsOpenAndClose() = compactNative(widthDp = 360, fontScale = 1.3f) {
+        currentBook.value = fixture(currentBook.value.key.copy(worship = WorshipKind.LITURGY))
+        val current = currentBook.value
+        val third = fixture(current.key.copy(worship = WorshipKind.HOUR3))
+        val sixth = fixture(current.key.copy(worship = WorshipKind.HOUR6))
+        val warnings = listOf(
+            "Третий час: кондак не сопоставлен с указаниями. Поиск выполняется в сохраненном тексте",
+            "Шестой час: кондак не сопоставлен с указаниями. Поиск выполняется в сохраненном тексте")
+        launch(holdCorpus = true)
+        ime(true); query().assertIsFocused().performTextInput(PHRASE)
+        compose.runOnIdle {
+            requireNotNull(corpusContinuation).resume(BookSearchCorpus(listOf(current, third, sixth),
+                otherParts = listOf(WorshipKind.HOUR3, WorshipKind.HOUR6), warnings = warnings))
+            corpusContinuation = null
+        }
+        compose.awaitBookSearch(); closeSoftKeyboard(); ime(false)
+        scope("Литургия · Третий час · Шестой час")
+        compose.onNodeWithTag("book_search_count").assertTextEquals("Совпадений: 6")
+        compose.onAllNodesWithTag("book_search_corpus_warning").assertCountEquals(0)
+        wholeWords("book_search_corpus_review_summary", "Есть тексты, требующие сверки")
+        wholeWords("book_search_corpus_review_toggle_label", "Подробнее")
+        val summary = compose.onNodeWithTag("book_search_corpus_review_summary", useUnmergedTree = true)
+        val toggle = compose.onNodeWithTag("book_search_corpus_review_toggle").assertIsDisplayed()
+            .assertTextEquals("Подробнее").assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp)
+        assertTrue("Summary and details control must have at least 12 dp between them",
+            toggle.getBoundsInRoot().left - summary.getBoundsInRoot().right >= 12.dp)
+        val firstHit = compose.onNodeWithTag("book_hit_target-one").assertIsDisplayed()
+        assertTrue("First result must expose a 48 dp touch area without scrolling past warnings",
+            firstHit.getBoundsInRoot().bottom - firstHit.getBoundsInRoot().top >= 48.dp)
+        record("warnings-collapsed-initial-result", JSONObject().put("displayedWithoutScroll", true))
+        capture("warnings-collapsed-initial-result")
+        toggle.performClick(); ime(false)
+        for (message in warnings) {
+            val warning = compose.onNodeWithText(message, useUnmergedTree = true).performScrollTo().assertIsDisplayed()
+            val layouts = mutableListOf<TextLayoutResult>()
+            warning.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+            val layout = layouts.single()
+            assertEquals(message, layout.layoutInput.text.text)
+            assertEquals(warning.getUnclippedBoundsInRoot(), warning.getBoundsInRoot())
+            assertFalse(layout.didOverflowWidth); assertFalse(layout.didOverflowHeight)
+            assertTrue((0 until layout.lineCount).none(layout::isLineEllipsized))
+            assertEquals(message.length, layout.getLineEnd(layout.lineCount - 1, visibleEnd = true))
+        }
+        compose.onNodeWithTag("book_search_corpus_review_toggle").performScrollTo().assertTextEquals("Свернуть").performClick()
+        ime(false)
+        compose.onAllNodesWithTag("book_search_corpus_warning").assertCountEquals(0)
+        compose.onNodeWithTag("book_search_sheet").performScrollToNode(hasTestTag("book_search_query"))
+        query().assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString(PHRASE)))
+        compose.onNodeWithTag("book_search_count").assertTextEquals("Совпадений: 6")
+        compose.onNodeWithTag("book_search_corpus_review_toggle").assertTextEquals("Подробнее")
+        compose.onNodeWithTag("book_listening_status").assertDoesNotExist()
+        compose.runOnIdle { assertEquals(0, fake.backend.starts); assertEquals(0, permission.requests) }
+        ime(false); capture("warnings-collapsed-again")
+        compose.onNodeWithTag("book_hit_target-one").assertIsDisplayed().performClick()
+        compose.runOnIdle {
+            assertEquals(1, selected.size)
+            assertEquals(current.key, selected.single().bookKey)
+            assertEquals(current.contentHash, selected.single().contentHash)
+            assertEquals("target-one", selected.single().hit.blockId)
+            assertEquals(selected.single(), selected.single().validatedFor(current))
+        }
+    }
+
     @Test fun failedNeighbourListsOnlyTheActuallyLoadedBookAndKeepsTheExactError() = compactNative {
         launch(holdCorpus = true)
         ime(true)
@@ -621,16 +684,16 @@ class BookManualSearchPresentationFlowTest(private val dark: Boolean) {
             it.relativeTo(File(context.applicationInfo.dataDir)).path to digest
         }.toList() }.toMap()
     }
-    private fun compactNative(body: () -> Unit) {
+    private fun compactNative(widthDp: Int = 320, fontScale: Float = 2f, body: () -> Unit) {
         fun shell(command: String) = ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand(command)).use { it.readBytes().toString(Charsets.UTF_8).trim() }
         val oldFont = shell("settings get system font_scale").toFloatOrNull()
         val oldSize = Regex("Override size: (\\d+x\\d+)").find(shell("wm size"))?.groupValues?.get(1)
         val density = compose.activity.resources.displayMetrics.density
         try {
-            shell("settings put system font_scale 2.0")
-            shell("wm size ${(320 * density).roundToInt()}x${(640 * density).roundToInt()}")
+            shell("settings put system font_scale $fontScale")
+            shell("wm size ${(widthDp * density).roundToInt()}x${(640 * density).roundToInt()}")
             compose.waitUntil(10_000) { var ready = false; compose.activityRule.scenario.onActivity {
-                ready = abs(it.resources.configuration.fontScale - 2f) < .001f && it.resources.configuration.screenWidthDp in 318..322 && it.window.decorView.hasWindowFocus()
+                ready = abs(it.resources.configuration.fontScale - fontScale) < .001f && it.resources.configuration.screenWidthDp in (widthDp - 2)..(widthDp + 2) && it.window.decorView.hasWindowFocus()
             }; ready }
             body()
         } finally {

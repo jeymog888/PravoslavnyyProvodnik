@@ -332,7 +332,9 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     }
     val currentChapter = currentItem.chapter
     val currentSectionTitle = remember(book, currentItem.id) { currentItem.block?.let {
-        BookAfterCommunionMeaning.forPlace(book, currentChapter, it)?.title
+        BookMeaningBriefCatalog.forPlace(book, currentChapter, it.id)
+            ?.takeIf { brief -> brief.topicId == BookMeaningBriefCatalog.HOURS_COMMON_PRAYER_TOPIC }?.title
+            ?: BookAfterCommunionMeaning.forPlace(book, currentChapter, it)?.title
     } ?: openingDisplay.title(currentChapter) }
     val currentLocalVariation by remember(itemKeys, list) { derivedStateOf {
         val measured = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == list.firstVisibleItemIndex }
@@ -1658,6 +1660,7 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
     var resolvingSpeech by remember { mutableStateOf(false) }
     var searchResult by remember { mutableStateOf<BookSearchResult?>(null) }
     var corpus by remember(book.key, book.contentHash) { mutableStateOf(BookSearchCorpus(listOf(book), otherPart)) }
+    var warningsExpanded by remember(corpus.warnings) { mutableStateOf(false) }
     val resultScopes = remember(corpus.books.map { it.key to it.contentHash }) {
         corpus.books.associate { it.key to BookVisibilityScope.of(it) }
     }
@@ -1876,9 +1879,24 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
         corpus.error?.let { message -> item {
             Text(message, modifier = Modifier.testTag("book_search_corpus_error"), color = MaterialTheme.colorScheme.error)
         } }
-        items(corpus.warnings) { message ->
-            Text(message, modifier = Modifier.testTag("book_search_corpus_warning"),
-                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (corpus.warnings.isNotEmpty()) {
+            item {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Text("Есть тексты, требующие сверки", modifier = Modifier.weight(1f).testTag("book_search_corpus_review_summary"),
+                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    TextButton(onClick = { warningsExpanded = !warningsExpanded },
+                        modifier = Modifier.heightIn(min = 48.dp).widthIn(min = 48.dp).testTag("book_search_corpus_review_toggle")
+                            .semantics { stateDescription = if (warningsExpanded) "Подробности открыты" else "Подробности скрыты" }) {
+                        Text(if (warningsExpanded) "Свернуть" else "Подробнее",
+                            modifier = Modifier.testTag("book_search_corpus_review_toggle_label"))
+                    }
+                }
+            }
+            if (warningsExpanded) items(corpus.warnings) { message ->
+                Text(message, modifier = Modifier.testTag("book_search_corpus_warning"),
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
         selectionError?.let { message -> item {
             Text(message, modifier = Modifier.testTag("book_search_selection_error"), color = MaterialTheme.colorScheme.error)
