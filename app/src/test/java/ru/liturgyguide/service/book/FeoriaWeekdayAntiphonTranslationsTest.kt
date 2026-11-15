@@ -141,8 +141,8 @@ class FeoriaWeekdayAntiphonTranslationsTest {
         for ((path, seal) in oracle["previous126InputSeals"].asJsonObject.entrySet())
             assertEquals(path, seal.asString, BookText.sha256(WeekdayAntiphonFixtures.sourceFile(path).readText()))
         for ((path, seal) in oracle["protectedFiles"].asJsonObject.entrySet())
-            assertEquals(path, seal.asString, BookText.sha256(WeekdayAntiphonFixtures.sourceFile(path).readText()))
-        assertEquals(13, BookTranslationCorpus.VERSION)
+            ReviewedTranslationSourceRevisions.assertMatches(path, seal.asString)
+        assertEquals(14, BookTranslationCorpus.VERSION)
     }
 
     @Test fun literalSourceParagraphsKeepAllWholeBodiesAndSeparateAlternatingChoirRoles() {
@@ -199,7 +199,7 @@ class FeoriaWeekdayAntiphonTranslationsTest {
         val oldEncoded = old.encode()
         val combined = BookTranslationCorpus(old.index.plus(decodedOwn), old.completedSources)
         val roundTrip = BookTranslationCorpus.decode(combined.encode())
-        assertEquals(13, roundTrip.version)
+        assertEquals(14, roundTrip.version)
         assertEquals(old.completedSources, roundTrip.completedSources)
         assertEquals(oldEncoded, old.encode())
         for (row in rows) {

@@ -255,7 +255,7 @@ class BookSundayOpeningTest {
         assertEquals(before.blocks.single { it.id == target }, after.blocks.single { it.id == target })
     }
 
-    @Test fun corpusTwelveMigrationKeepsEveryOldPairOfflineAndOnlyMarksTheThreeChangedPagesIncomplete() {
+    @Test fun corpusTwelveMigrationKeepsEveryOldPairOfflineAndOnlyMarksTheChangedPagesIncomplete() {
         val captured = BookTranslationIndex.decode(text("book/published-russian/corpus11-3694.json").let {
             JsonParser.parseString(it).asJsonObject["entries"].toString()
         })
@@ -264,9 +264,9 @@ class BookSundayOpeningTest {
         val old = BookTranslationCorpus(captured, all, version = 12)
         val oldEncoded = old.encode()
         val decoded = BookTranslationCorpus.decode(oldEncoded)
-        assertEquals(13, decoded.version); assertTrue(decoded.current)
+        assertEquals(14, decoded.version); assertTrue(decoded.current)
         assertEquals(captured.encode(), decoded.index.encode())
-        assertEquals(all - BookTranslationCorpus.REEXTRACTED_SOURCES, decoded.completedSources)
+        assertEquals(all - BookTranslationCorpus.REEXTRACTED_SOURCES - BookTranslationCorpus.HOUR_PRAYER_REEXTRACTED_SOURCES, decoded.completedSources)
         assertEquals(setOf(full.url, BookTranslationIndex.OCTOECHOS_SOURCES[6].url, BookTranslationIndex.OCTOECHOS_SOURCES[7].url),
             BookTranslationCorpus.REEXTRACTED_SOURCES)
         assertFalse(decoded.completeFor(WorshipKind.LITURGY))
@@ -279,7 +279,7 @@ class BookSundayOpeningTest {
         assertEquals(oldEncoded, old.encode())
     }
 
-    @Test fun migratedNetworkPassRequestsOnlyFullEditionAndTheSelectedSundayAndKeepsAcceptedPublishedBlocks() = runBlocking {
+    @Test fun migratedNetworkPassRequestsOnlyChangedFullHourAndSelectedSundayPagesAndKeepsAcceptedPublishedBlocks() = runBlocking {
         val case = cases.first()
         val before = before(case)
         val directory = Files.createTempDirectory("sunday-selected-refresh-").toFile()
@@ -297,12 +297,13 @@ class BookSundayOpeningTest {
                 val fixture = when (url) {
                     full.url -> row(24)["source"].asJsonObject["fixture"].asString
                     selected.url -> row(32)["source"].asJsonObject["fixture"].asString
+                    BookTranslationIndex.HOUR3_SOURCE.url -> "book/hour-prayer/paired-row.html"
                     else -> error("Unchanged or unrelated source must not be fetched: $url")
                 }
                 ScheduleResponse(url, text(fixture).toByteArray(), "text/html;charset=utf-8")
             }, translations = BookTranslationIndex.empty())
             val candidate = requireNotNull(repository.enrichSaved(before)).book
-            assertEquals(listOf(full.url, selected.url), requests)
+            assertEquals(listOf(full.url, BookTranslationIndex.HOUR3_SOURCE.url, selected.url), requests)
             assertGains(before, candidate, case)
             assertEquals(before, cache.readVersion(before.key, before.contentHash))
             assertFalse(BookTranslationCorpus.decode(cache.readTranslationCorpus()).completedSources.contains(source(row(39)).url))

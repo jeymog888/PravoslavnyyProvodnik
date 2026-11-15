@@ -149,7 +149,7 @@ class FeoriaRemainingThirtyTranslationsTest {
             BookText.sha256(GsonBuilder().disableHtmlEscaping().create().toJson(projection)))
         for ((path, seal) in oracle["protectedFiles"].asJsonObject.entrySet())
             ReviewedTranslationSourceRevisions.assertMatches(path, seal.asString)
-        assertEquals(13, BookTranslationCorpus.VERSION)
+        assertEquals(14, BookTranslationCorpus.VERSION)
     }
 
     @Test fun threeRealDatesGainOnlyThirtyTwoExactIdsAndReachZeroPublicPrayerGapsWithoutBiblePrivateOrDirectionClaims() {
@@ -205,7 +205,7 @@ class FeoriaRemainingThirtyTranslationsTest {
         val decoded = BookTranslationIndex.decode(own.encode())
         val corpus = BookTranslationCorpus(WeekdayAntiphonFixtures.previousPublished.plus(decoded), setOf(BookTranslationIndex.HOUR3_SOURCE.url))
         val roundTrip = BookTranslationCorpus.decode(corpus.encode())
-        assertEquals(13, roundTrip.version); assertEquals(corpus.completedSources, roundTrip.completedSources)
+        assertEquals(14, roundTrip.version); assertEquals(corpus.completedSources, roundTrip.completedSources)
         for (row in rows) {
             val original = row["original"].asString; val pair = requireNotNull(own.find(original))
             assertEquals(pair, decoded.find(original)); assertEquals(pair, roundTrip.index.find(original))

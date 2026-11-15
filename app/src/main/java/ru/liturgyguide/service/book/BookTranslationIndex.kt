@@ -83,8 +83,6 @@ class BookTranslationIndex private constructor(
         return BookTranslationIndex(retained, fillOnlyKeys.intersect(retained.keys) + restoredBodyKeys, retainedOpening)
     }
 
-    private fun sourcePage(url: String?): URI? = url?.let { runCatching { URI(it) }.getOrNull() }
-
     private fun trustedToneSource(source: BookSource): Boolean {
         // Seasonal irmoi have their own whole-body, voice6 and Russian-hash contract.
         // They must never enter the generic constructor tone-wrapper path.
@@ -99,15 +97,6 @@ class BookTranslationIndex private constructor(
         if (date.toString() != dateText || date.year !in 1900..2200) return false
         return source.title == "Азбука веры: календарь и API" || source.title == "Азбука веры · календарь на $dateText"
     }
-
-    // The primary loader records the response URL. Query/fragment aliases retain their
-    // attribution and page priority, but never normalize a path or admit another origin.
-    private fun samePublishedPage(actual: URI?, published: URI): Boolean =
-        actual != null && actual.scheme.equals("https", ignoreCase = true) && actual.rawUserInfo == null &&
-            actual.host != null && published.scheme.equals("https", ignoreCase = true) && published.rawUserInfo == null &&
-            actual.host.equals(published.host, ignoreCase = true) &&
-            (if (actual.port == -1) 443 else actual.port) == (if (published.port == -1) 443 else published.port) &&
-            actual.rawPath == published.rawPath
 
     fun plus(other: BookTranslationIndex): BookTranslationIndex {
         val merged = other.entries.toMutableMap()
@@ -147,6 +136,17 @@ class BookTranslationIndex private constructor(
     }.toString()
 
     companion object {
+        private fun sourcePage(url: String?): URI? = url?.let { runCatching { URI(it) }.getOrNull() }
+
+        // The primary loader records the response URL. Query/fragment aliases retain their
+        // attribution and page priority, but never normalize a path or admit another origin.
+        private fun samePublishedPage(actual: URI?, published: URI): Boolean =
+            actual != null && actual.scheme.equals("https", ignoreCase = true) && actual.rawUserInfo == null &&
+                actual.host != null && published.scheme.equals("https", ignoreCase = true) && published.rawUserInfo == null &&
+                actual.host.equals(published.host, ignoreCase = true) &&
+                (if (actual.port == -1) 443 else actual.port) == (if (published.port == -1) 443 else published.port) &&
+                actual.rawPath == published.rawPath
+
         val EDITORIAL_SOURCE = BookSource("Русское изложение: редакция Феории", "https://github.com/jeymog888/PravoslavnyyProvodnik")
         // The project URL identifies the local edition, not a web publication of these translations.
         val FEORIA_TRANSLATION_SOURCE = BookSource("Перевод Феории", "https://github.com/jeymog888/PravoslavnyyProvodnik")
@@ -261,6 +261,7 @@ class BookTranslationIndex private constructor(
             val result = linkedMapOf<String, BookTranslation>()
             val structuralBodies = linkedMapOf<String, BookTranslation>()
             val sundayOpeningBodies = linkedMapOf<String, BookTranslation>()
+            val hoursPrayerBodies = linkedMapOf<String, BookTranslation>()
             val qualifiedOpening = linkedMapOf<BookSundayOpening.Key, BookTranslation>()
             val reviewedLiturgyEdition = isReviewedLiturgyEdition(source)
             val rows = if (BookSundayRussianPage.registered(source))
@@ -301,6 +302,9 @@ class BookTranslationIndex private constructor(
                 pairedLeadingNumber(cells[0], cells[1])?.let { (left, right) ->
                     addParallel(structuralBodies, left, right, source)
                 }
+                pairedHoursPrayer(cells[0], cells[1], source)?.let { (left, right) ->
+                    addParallel(hoursPrayerBodies, left, right, source)
+                }
                 BookSundayOpening.fromRow(page, source, cells[0], cells[1])?.let { body ->
                     addParallel(sundayOpeningBodies, body.original, body.russian, source)
                     body.count?.let { count -> BookSundayOpening.key(count, body.original)?.let { key ->
@@ -319,7 +323,9 @@ class BookTranslationIndex private constructor(
             structuralBodies.forEach { (key, value) -> result.putIfAbsent(key, value) }
             val addedOpeningKeys = sundayOpeningBodies.keys - result.keys
             sundayOpeningBodies.forEach { (key, value) -> result.putIfAbsent(key, value) }
-            return BookTranslationIndex(result, addedOpeningKeys, qualifiedOpening)
+            val addedHoursKeys = hoursPrayerBodies.keys - result.keys
+            hoursPrayerBodies.forEach { (key, value) -> result.putIfAbsent(key, value) }
+            return BookTranslationIndex(result, addedOpeningKeys + addedHoursKeys, qualifiedOpening)
         }
 
         // Reviewed full rows 409/470 (also short row 371), not generic speaker synonyms.
@@ -463,6 +469,42 @@ class BookTranslationIndex private constructor(
             val b = body(right) ?: return null
             if (a.first != b.first || BookText.withoutSpeaker(a.second).first != BookText.withoutSpeaker(b.second).first) return null
             return a.second to b.second
+        }
+
+        /** One inspected common Hours prayer, following the same explicit40-fold response
+         * in both columns. Whole lexical hashes also bind both complete prayer bodies;
+         * altered counts, trailing replies, shortened translations or similar prayers stay absent. */
+        private fun pairedHoursPrayer(left: Element, right: Element, source: BookSource): Pair<String, String>? {
+            val editions = listOf(HOUR1_SOURCE, HOUR3_SOURCE, HOUR6_SOURCE, HOUR9_SOURCE)
+            if (editions.none { source.title == it.title && samePublishedPage(sourcePage(source.url), URI(it.url)) }) return null
+            fun body(cell: Element, count: String, firstLetter: String, expectedKeySha256: String): String? {
+                val copy = cell.clone().apply {
+                    // The captured tables have one stray closing </p> before the full prayer.
+                    children().filter { it.tagName() == "p" && it.children().isEmpty() && !it.hasText() }
+                        .forEach { it.remove() }
+                }
+                val prayer = copy.children().singleOrNull { it.tagName() == "p" } ?: return null
+                val marker = copy.children().singleOrNull { it.tagName() == "span" && it.classNames() == setOf("k") } ?: return null
+                if (copy.children().size != 2 || marker.children().isNotEmpty() || BookText.clean(marker.text()) != count) return null
+                val nodes = copy.childNodes()
+                val prayerIndex = nodes.indexOfFirst { it === prayer }
+                val markerIndex = nodes.indexOfFirst { it === marker }
+                if (markerIndex !in 0 until prayerIndex ||
+                    nodes.take(prayerIndex).any { it !== marker && it !is TextNode } ||
+                    nodes.drop(prayerIndex + 1).any { it !is TextNode || BookText.clean(it.text()).isNotEmpty() }) return null
+                prayer.remove()
+                if (BookText.normalized(copy.text()) != "господи помилуй 40") return null
+                val letter = prayer.children().singleOrNull() ?: return null
+                if (letter.tagName() != "span" || letter.classNames() != setOf("letter") ||
+                    letter.children().isNotEmpty() || BookText.clean(letter.text()) != firstLetter ||
+                    firstMeaningfulNode(prayer) !== letter ||
+                    prayer.childNodes().any { it !== letter && it !is TextNode }) return null
+                val value = BookText.clean(prayer.text())
+                return value.takeIf { BookText.sha256(normal(it)) == expectedKeySha256 }
+            }
+            val original = body(left, "40.", "И", "b34617e4f9f0b3d91df6d72415ffcb814b020f7e58791f6aa4083105f3f3b4aa") ?: return null
+            val russian = body(right, "(40)", "В", "5416885d1328e81e4954e9955be79d380bef37115c27d0acae1b1c95e6a19f3b") ?: return null
+            return original to russian
         }
 
         private fun firstMeaningfulNode(cell: Element) = cell.childNodes().firstOrNull { node ->

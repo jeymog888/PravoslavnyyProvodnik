@@ -154,7 +154,7 @@ class PublishedVerseTranslationTest {
     }
 
     @Test fun versionTenRemainsReadableOfflineButCannotClaimCompletenessUnderVersionTwelve() {
-        assertEquals(13, BookTranslationCorpus.VERSION); assertEquals(4_000_000, BookTranslationCorpus.MAX_BYTES)
+        assertEquals(14, BookTranslationCorpus.VERSION); assertEquals(4_000_000, BookTranslationCorpus.MAX_BYTES)
         val index = pair("Старая молитва", "Старый опубликованный перевод QA", vigil)
         val all = BookTranslationIndex.ALL_PARALLEL_SOURCES.map { it.url }.toSet()
         val old = BookTranslationCorpus(index, all, version = 10).encode()
