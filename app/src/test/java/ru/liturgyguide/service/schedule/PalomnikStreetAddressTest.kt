@@ -45,4 +45,25 @@ class PalomnikStreetAddressTest {
             assertNull(value, PalomnikStreetAddress.parse(value))
         }
     }
+    @Test fun `literal alley prefix and suffix preserve full building identity without new aliases`() {
+        val selected = address("Закрытая аллея, 19 к2 с1")
+        assertEquals("аллея", selected.streetKind)
+        assertTrue(selected.sameBuilding(address("аллея Закрытая, 19 корп.2 стр.1")))
+        assertTrue(selected.sameBuilding(address("Московская область, Закрытая аллея, 19 к2 с1")))
+        assertFalse(selected.sameBuilding(address("Закрытая аллея, 19 к2 с2")))
+        assertFalse(selected.sameBuilding(address("Закрытая аллея, 19 с1")))
+        assertNull(PalomnikStreetAddress.parse("Закрытая алл., 19"))
+        assertNull(PalomnikStreetAddress.parse("Закрытой аллеи, 19"))
+        assertNull(PalomnikStreetAddress.parse("Закрытая аллея улица, 19"))
+    }
+
+    @Test fun `alley never becomes a street alias and contradictory street identity stays a veto`() {
+        val selected = address("Закрытая аллея, 19")
+        for (value in listOf("Закрытая улица, 19", "Открытая аллея, 19", "Другая улица, 77")) {
+            val other = address(value)
+            assertFalse(value, selected.sameBuilding(other))
+            assertTrue(value, MoscowChurchIdentity.definitelyOtherAddress(selected, other))
+        }
+    }
+
 }

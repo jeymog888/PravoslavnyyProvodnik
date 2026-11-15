@@ -407,6 +407,12 @@ class InternetScheduleRepository(
             candidateIncomplete = found.incomplete
         }
         confirmedDiscovery?.let(::recordCandidates)
+        // A cached/merged candidate cannot qualify a publisher banner. Carry only
+        // this action's current raw confirmation row into its primary import.
+        var freshMapRow = confirmedCandidate?.takeIf { it.provider == OfficialMapCandidateProvider.PROVIDER }?.let { approved ->
+            confirmedDiscovery?.candidates?.singleOrNull { it.id == approved.id &&
+                it.provider == OfficialMapCandidateProvider.PROVIDER && it.canConfirm(parish) }
+        }
         var freshContactEvidence = confirmedCandidate?.let { candidate ->
             confirmedDiscovery?.candidates?.singleOrNull { it.id == candidate.id }?.let { raw ->
                 confirmedDiscovery?.freshContactEvidence?.get(raw.id)?.takeIf { it.matchesFresh(parish, raw) }
@@ -522,6 +528,7 @@ class InternetScheduleRepository(
                         return@withTimeoutOrNull true
                     }
                     freshContactEvidence = contact
+                    freshMapRow = raw?.takeIf { it.provider == OfficialMapCandidateProvider.PROVIDER }
                 }
                 if (website.isNotBlank() && sourceCandidates.any {
                         candidateConflictsWithAcceptedSource(it, binding, previous.publication.takeUnless { changedSource })
@@ -649,6 +656,7 @@ class InternetScheduleRepository(
                 val primary = importSource(parish, website, date, now, primaryBinding, prefetchedSchedule ?: contactResponse,
                     freshContactEvidence = freshContactEvidence?.takeIf { proof -> primaryBinding?.candidateConfirmation?.candidate
                         ?.let { proof.matchesApproved(parish, it, website) } == true },
+                    freshMapRow = freshMapRow,
                     sourceConflict = ::knownConflict, importOwner = ownedProgress) { checkedWebsite, checkedSource, safety ->
                     recordSafety(checkedWebsite, checkedSource, safety, primaryEvidence, primaryBinding)
                 }
@@ -766,6 +774,7 @@ class InternetScheduleRepository(
     private suspend fun importSource(parish: Parish, root: String, date: LocalDate, now: Instant, binding: ScheduleSiteBinding?,
         initialResponse: ScheduleResponse? = null,
         freshContactEvidence: PublishedChildContactEvidence? = null,
+        freshMapRow: ScheduleSourceCandidate? = null,
         sourceConflict: (String) -> Boolean = { false }, importOwner: Any,
         onSafety: (website: String, sourceUrl: String, safety: ScheduleParseResult) -> Unit): SourceAttempt {
         var website = root
@@ -774,6 +783,8 @@ class InternetScheduleRepository(
         var hasWithdrawal = false
         val navigationAttempt = Any()
         var linkedPermit: LinkedAttachmentNavigationPermit? = null
+        // Issued at most once from the original root; denial is sticky for this attempt.
+        var publisherBanner: QualifiedPublisherBanner? = null
         fun phase(value: ScheduleImportPhase) { this@InternetScheduleRepository.phase(importOwner, parish.id, value) }
         data class QueuedDocument(val link: ScheduleDocumentLink, val rescue: Boolean = false)
         val pending = ArrayDeque<QueuedDocument>()
@@ -910,12 +921,15 @@ class InternetScheduleRepository(
                 fun hasSafety(result: ScheduleParseResult) = result.unresolvedWithdrawal || result.safetyConflict || result.withdrawsAll ||
                     result.withdrawnDates.isNotEmpty() || result.withdrawnStarts.isNotEmpty()
                 // Preserve both actual results. A stronger actual document safety observation cannot be hidden by a generic HTML rejection.
-                parsed = when {
+                val rawParsed = when {
                     hasSafety(existing) -> existing
                     exactFreshRoot && documentResult != null && hasSafety(documentResult) -> documentResult
                     existing.disposition != ScheduleParseDisposition.UNSUPPORTED || rootAudit != null -> existing
                     else -> requireNotNull(documentResult)
                 }
+                if (firstPage && rootRequest)
+                    publisherBanner = QualifiedPublisherBanner.fromRoot(parish, binding, freshMapRow, root, response)
+                parsed = if (rootRequest) rawParsed else publisherBanner?.inspect(parish, binding, next, response, rawParsed, date) ?: rawParsed
                 format = "html"
                 ScheduleDocumentLinks.find(html).filter { it.url !in visited && (!queued.rescue || it.document) }
                     .forEach { pending += QueuedDocument(it, rescue = queued.rescue) }
