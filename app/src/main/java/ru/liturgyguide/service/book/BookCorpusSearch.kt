@@ -42,6 +42,12 @@ data class BookLocatedSearchHit(val bookKey: ServiceBookKey, val contentHash: St
 /** Pure search only: callers choose editions and own loading, acceptance and reading positions. */
 object BookCorpusSearch {
     fun find(books: List<ServiceBook>, query: String, preferredMode: BookReadingMode = BookReadingMode.RUSSIAN,
+        checkActive: () -> Unit = {}): List<BookLocatedSearchHit> =
+        find(books, query, preferredMode, emptyMap(), checkActive)
+
+    /** The reader can retain verified scopes while the query changes. Owners remain key + hash. */
+    internal fun find(books: List<ServiceBook>, query: String, preferredMode: BookReadingMode,
+        dismissals: Map<Pair<ServiceBookKey, String>, BookFirstHourDismissalScope>,
         checkActive: () -> Unit = {}): List<BookLocatedSearchHit> {
         if (BookText.normalized(query).length < 2) return emptyList()
         require(books.map { it.key }.distinct().size == books.size) { "Choose exactly one edition for each book key" }
@@ -50,7 +56,7 @@ object BookCorpusSearch {
             checkActive()
             // Carry visibility from the cancellable search pass. A preliminary full
             // traversal would read the whole book even after the user closes search.
-            BookSearch.scan(book, query, preferredMode, checkActive).forEach { (kind, isPrivate, hit) ->
+            BookSearch.scan(book, query, preferredMode, checkActive, dismissals[book.key to book.contentHash]).forEach { (kind, isPrivate, hit) ->
                 candidates += Triple(kind, isPrivate, BookLocatedSearchHit(book.key, book.contentHash, hit))
             }
         }

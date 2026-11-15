@@ -25,11 +25,14 @@ object BookMeaningCatalog {
 
     /** Current app help, not a new accepted edition of the source text or its translation. */
     fun displayMeaning(book: ServiceBook, chapter: BookChapter): String =
-        displayMeaning(book, chapter, BookMatinsOpeningDisplay.of(book))
+        displayMeaning(book, chapter, BookMatinsOpeningDisplay.of(book), BookFirstHourDismissalScope.of(book))
 
-    internal fun displayMeaning(book: ServiceBook, chapter: BookChapter, opening: BookMatinsOpeningDisplay): String =
-        opening.takeIf { it.ownsSource(book) }?.meaning(chapter) ?: reviewedMeaning(chapter.title, chapter.blocks.joinToString(" ") { it.original },
-            book.key.worship.queryValue, book.title) ?: chapter.meaning
+    internal fun displayMeaning(book: ServiceBook, chapter: BookChapter, opening: BookMatinsOpeningDisplay,
+        dismissal: BookFirstHourDismissalScope = BookFirstHourDismissalScope.of(book),
+        selectedBlockId: String? = null): String =
+        dismissal.meaning(book, chapter, selectedBlockId) ?: opening.takeIf { it.ownsSource(book) }?.meaning(chapter) ?: reviewedMeaning(chapter.title, chapter.blocks.joinToString(" ") { it.original },
+            book.key.worship.queryValue, book.title) ?: chapter.meaning.takeUnless(BookFirstHourDismissal::isReviewedMeaning)
+            ?: meaningFor(chapter.title, chapter.blocks.joinToString(" ") { it.original }, book.key.worship.queryValue).orEmpty()
 
     /** Unknown headings deliberately return null: a guessed explanation can misidentify a prayer. */
     fun meaningFor(title: String, original: String = "", worship: String = "liturgy"): String? {

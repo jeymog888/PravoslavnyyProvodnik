@@ -15,14 +15,16 @@ data class BookMeaningContent(val position: BookReadingPosition, val chapterTitl
     val excerpt: String?, val detail: String, val brief: BookMeaningBrief?, val privateText: Boolean) {
     companion object {
         /** The virtual card and its real introduction deliberately share only the persisted cursor. */
-        fun captureQuietGroup(book: ServiceBook, position: BookReadingPosition): BookMeaningContent? {
+        fun captureQuietGroup(book: ServiceBook, position: BookReadingPosition,
+            dismissal: BookFirstHourDismissalScope = BookFirstHourDismissalScope.of(book)): BookMeaningContent? {
             val group = BookVisibilityScope.of(book).quietGroup ?: return null
             if (position.chapterId != group.chapterId || position.blockId != group.introductionId) return null
-            return capture(book, position)?.copy(chapterTitle = group.title, excerpt = null,
+            return capture(book, position, dismissal)?.copy(chapterTitle = group.title, excerpt = null,
                 detail = group.explanation, brief = null, privateText = true)
         }
 
-        fun capture(book: ServiceBook, position: BookReadingPosition): BookMeaningContent? {
+        fun capture(book: ServiceBook, position: BookReadingPosition,
+            dismissal: BookFirstHourDismissalScope = BookFirstHourDismissalScope.of(book)): BookMeaningContent? {
             if (position.key != book.key || position.contentHash != book.contentHash) return null
             val chapter = book.chapters.singleOrNull { it.id == position.chapterId } ?: return null
             val block = chapter.blocks.singleOrNull { it.id == position.blockId } ?: return null
@@ -32,7 +34,7 @@ data class BookMeaningContent(val position: BookReadingPosition, val chapterTitl
             val privateText = visibility.isPrivate(block)
             val excerpt = if (position.anchorKind == BookAnchorKind.END) null else
                 (if (textPosition.mode == BookReadingMode.RUSSIAN)
-                    BookBlockPresentation.effectiveRussian(book.key, block) ?: block.original else block.original)
+                    BookBlockPresentation.effectiveRussian(book, block, dismissal) ?: block.original else block.original)
                     .takeIf { it.isNotBlank() }
             val candidateBrief = (if (privateText || block.kind == BookBlockKind.LOCAL_VARIATION) null
                 else BookMeaningBriefCatalog.forPlace(book, chapter, block.id))?.takeUnless {
@@ -44,11 +46,15 @@ data class BookMeaningContent(val position: BookReadingPosition, val chapterTitl
             // prayer. That block.meaning cannot identify this private paragraph.
             val fragment = if (hoursPrayer || privateText || block.kind == BookBlockKind.LOCAL_VARIATION) null
                 else BookAfterCommunionMeaning.forPlace(book, chapter, block)
+            val dismissalMeaning = if (!privateText && position.anchorKind == BookAnchorKind.BLOCK)
+                dismissal.meaning(book, chapter, block.id) else null
             val detail = when {
+                dismissalMeaning != null -> dismissalMeaning
                 fragment != null -> fragment.detail
                 visibility.isQuiet(block.id) -> requireNotNull(visibility.quietGroup).explanation
                 privateText -> BookMeaningCatalog.meaningFor("В алтаре").orEmpty()
-                else -> BookMeaningCatalog.displayMeaning(book, chapter, openingDisplay)
+                else -> BookMeaningCatalog.displayMeaning(book, chapter, openingDisplay, dismissal,
+                    block.id.takeIf { position.anchorKind == BookAnchorKind.BLOCK } ?: "")
             }
             val brief = if (fragment != null) fragment.brief else candidateBrief
             val scopedDetail = brief?.detail ?: if (brief?.topicId == "vespers-psalm-103" && BookText.normalized(chapter.title) == "перед началом")

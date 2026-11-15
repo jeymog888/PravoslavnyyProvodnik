@@ -135,11 +135,11 @@ class BookPublishedThreePsalmsTest {
         assertEquals(3, BookTranslationIndex.fromBundledThreePsalms().size)
     }
 
-    @Test fun currentProductionHasExactlyTheOld193AndFourPublishedBodiesAndRetainsFillOnlyAcrossCodecsAndSources() {
+    @Test fun currentProductionHasExactlyThe195OwnAndFourPublishedBodiesAndRetainsFillOnlyAcrossCodecsAndSources() {
         val own = BookTranslationIndex.fromFeoriaCatalog(); val old = oldBundled()
         val current = BookTranslationIndex.fromBundledRussian()
-        assertEquals(193, own.size); assertEquals(8, FeoriaTranslationCatalog.REVISION)
-        assertEquals(194, old.size); assertEquals(197, current.size); assertEquals(14, BookTranslationCorpus.VERSION)
+        assertEquals(195, own.size); assertEquals(9, FeoriaTranslationCatalog.REVISION)
+        assertEquals(196, old.size); assertEquals(199, current.size); assertEquals(14, BookTranslationCorpus.VERSION)
         val old19 = JsonParser.parseString(asset("published-psalm19/evidence.json").readText()).asJsonObject
         val target19 = old19["book"].asJsonObject["original"].asString
         assertEquals(old.find(target19), current.find(target19))

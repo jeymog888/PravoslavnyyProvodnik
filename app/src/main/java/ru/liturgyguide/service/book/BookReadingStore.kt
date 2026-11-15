@@ -6,6 +6,7 @@ import com.google.gson.JsonParser
 import ru.liturgyguide.service.SinglePreferenceCommit
 import ru.liturgyguide.model.ServiceBook
 import ru.liturgyguide.model.ServiceBookKey
+import ru.liturgyguide.model.WorshipKind
 import ru.liturgyguide.model.BookBlockKind
 import ru.liturgyguide.model.BookChapter
 import ru.liturgyguide.model.BookBlock
@@ -376,17 +377,28 @@ object BookSearch {
         checkActive: () -> Unit = {}): List<BookSearchHit> =
         scan(book, query, preferredMode, checkActive).sortedBy { it.first.ordinal }.map { it.third }
 
+    /** Keep checkActive last for existing trailing-lambda callers. */
+    internal fun scan(book: ServiceBook, query: String, preferredMode: BookReadingMode,
+        checkActive: () -> Unit): List<Triple<BookTextMatchKind, Boolean, BookSearchHit>> =
+        scan(book, query, preferredMode, checkActive, null)
+
     /** Source-order matches retain their quality for one global sort across related books. */
     internal fun scan(book: ServiceBook, query: String, preferredMode: BookReadingMode,
-        checkActive: () -> Unit): List<Triple<BookTextMatchKind, Boolean, BookSearchHit>> {
+        checkActive: () -> Unit, verifiedDismissal: BookFirstHourDismissalScope?): List<Triple<BookTextMatchKind, Boolean, BookSearchHit>> {
         if (BookText.normalized(query).length < 2) return emptyList()
         val candidates = mutableListOf<Triple<BookTextMatchKind, Boolean, BookSearchHit>>()
         val visibility = BookVisibilityScope.of(book)
+        val dismissal = verifiedDismissal ?: run {
+            // Only these two kinds need whole-edition validation. Keep the old
+            // cancellation cadence for other books and already verified scopes.
+            if (book.key.worship in setOf(WorshipKind.HOUR1, WorshipKind.VIGIL)) checkActive()
+            BookFirstHourDismissalScope.of(book)
+        }
         for (chapter in book.chapters) for (index in chapter.blocks.indices) {
             checkActive()
             val block = chapter.blocks[index]
             val original = BookSearchText.find(block.original, query)
-            val russianText = BookBlockPresentation.effectiveRussian(book.key, block)
+            val russianText = BookBlockPresentation.effectiveRussian(book, block, dismissal)
             val russian = russianText?.let { BookSearchText.find(it, query) }
             val inRussian = russian != null && (original == null || russian.kind < original.kind ||
                 russian.kind == original.kind && preferredMode == BookReadingMode.RUSSIAN)
@@ -394,7 +406,7 @@ object BookSearch {
             val mode = if (inRussian) BookReadingMode.RUSSIAN else BookReadingMode.ORIGINAL
             val text = if (inRussian) russianText.orEmpty() else block.original
             candidates += Triple(match.kind, visibility.isPrivate(block), BookSearchHit(chapter.id, chapter.title, block.id,
-                contextualExcerpt(book.key, chapter, index, text, match.start, mode, visibility), mode, match.start, match.endExclusive))
+                contextualExcerpt(book, chapter, index, text, match.start, mode, visibility, dismissal), mode, match.start, match.endExclusive))
         }
         // A common response can occur more than thirty times. Keep later occurrences
         // accessible, and do not let early unordered words hide a later exact phrase.
@@ -402,17 +414,17 @@ object BookSearch {
         return candidates
     }
 
-    private fun contextualExcerpt(key: ServiceBookKey, chapter: BookChapter, index: Int, text: String, matchStart: Int,
-        mode: BookReadingMode, visibility: BookVisibilityScope): String {
+    private fun contextualExcerpt(book: ServiceBook, chapter: BookChapter, index: Int, text: String, matchStart: Int,
+        mode: BookReadingMode, visibility: BookVisibilityScope, dismissal: BookFirstHourDismissalScope): String {
         if (text.length > 100) return excerpt(text, matchStart)
         val current = BookText.normalized(text)
         // Nearby context only, with bounded work even for thousands of identical responses.
         for (previousIndex in index - 1 downTo (index - 8).coerceAtLeast(0)) {
             val previous = chapter.blocks[previousIndex]
-            if (visibility.isPrivate(previous) || !BookBlockPresentation.isSpoken(key, previous)) continue
+            if (visibility.isPrivate(previous) || !BookBlockPresentation.isSpoken(book, previous, dismissal)) continue
             // Do not borrow an older translated petition across an untranslated one.
             val source = (if (mode == BookReadingMode.RUSSIAN)
-                BookBlockPresentation.effectiveRussian(key, previous) else previous.original) ?: break
+                BookBlockPresentation.effectiveRussian(book, previous, dismissal) else previous.original) ?: break
             val normalized = BookText.normalized(source)
             if (normalized == current || normalized.split(' ').size < 3) continue
             return text + "\nПеред этим: " + excerpt(source, source.length, 120)

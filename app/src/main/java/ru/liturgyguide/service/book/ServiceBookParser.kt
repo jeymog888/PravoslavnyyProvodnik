@@ -42,12 +42,15 @@ class ServiceBookParser {
         val content = (if (rankSelection == null) document.selectFirst(".article-single-content.main-page-content")
             else document.select(".article-single-content.main-page-content").singleOrNull())?.clone()
             ?: throw InvalidServiceBook("Не найден текст службы")
+        // Check the untouched region before cleanup can remove an unexpected placeholder.
+        val firstHourBody = BookFirstHourDismissal.terminalBody(content, key)
         content.select(".worship_menu,.bg_data_tooltip,script,style,button,input,select,iframe,nav").remove()
         val title = document.select("section.worship h1, .main-area-content.worship h1").lastOrNull()?.text()
             ?: document.select("h1").lastOrNull()?.text() ?: key.worship.title
         validateTitle(title, key.worship)
         val wholeText = BookText.clean(content.text())
         validateCompleteness(wholeText, key.worship)
+        val firstHourMeaning = firstHourBody?.let { BookFirstHourDismissal.forBody(it.text())?.meaning }
 
         data class DraftChapter(val id: String, val title: String, val blocks: MutableList<BookBlock>)
         val drafts = mutableListOf<DraftChapter>()
@@ -62,7 +65,8 @@ class ServiceBookParser {
             headingOccurrences[root] = occurrence
             return DraftChapter("$root-$occurrence", clean, mutableListOf()).also { drafts += it; current = it; sectionTitle = clean }
         }
-        fun add(originalText: String, kind: BookBlockKind, altar: Boolean, references: List<String> = emptyList()) {
+        fun add(originalText: String, kind: BookBlockKind, altar: Boolean, references: List<String> = emptyList(),
+            reviewedMeaning: String? = null) {
             val raw = BookText.clean(originalText)
             if (raw.isEmpty()) return
             if (raw.length > 60_000) throw InvalidServiceBook("Необычно длинный фрагмент службы")
@@ -71,7 +75,7 @@ class ServiceBookParser {
             if (body.isBlank()) return
             val found = if (kind == BookBlockKind.SCRIPTURE && references.size == 1) scripture.russian(references.first())
                 else if (kind == BookBlockKind.PRAYER) translations.find(body) else null
-            val meaning = found?.meaning ?: when (kind) {
+            val meaning = reviewedMeaning ?: found?.meaning ?: when (kind) {
                 BookBlockKind.RUBRIC -> body
                 BookBlockKind.LOCAL_VARIATION -> "Песнопение зависит от посвящения этого храма. В выбранном источнике его текст не указан"
                 else -> BookMeaningCatalog.meaningFor(owner.title, body, key.worship.queryValue)
@@ -90,9 +94,10 @@ class ServiceBookParser {
             if (node is TextNode) {
                 val text = BookText.clean(node.text())
                 if (text.length >= 3) add(text,
-                    if (!altar && key.worship in setOf(WorshipKind.MATINS, WorshipKind.VESPERS) &&
-                        (isWholePublishedDismissal(node) || isPublishedDoxologyRun(node)))
-                        BookBlockKind.PRAYER else BookBlockKind.RUBRIC, altar)
+                    if (!altar && (node === firstHourBody || key.worship in setOf(WorshipKind.MATINS, WorshipKind.VESPERS) &&
+                        (isWholePublishedDismissal(node) || isPublishedDoxologyRun(node))))
+                        BookBlockKind.PRAYER else BookBlockKind.RUBRIC, altar,
+                    reviewedMeaning = firstHourMeaning.takeIf { !altar && node === firstHourBody })
                 return
             }
             if (node !is Element) return
@@ -177,7 +182,9 @@ class ServiceBookParser {
         content.childNodes().forEach { walk(it) }
         val chapters = drafts.filter { it.blocks.isNotEmpty() }.map { draft ->
             BookChapter(draft.id, draft.title,
-                BookMeaningCatalog.meaningFor(draft.title, draft.blocks.firstOrNull()?.original.orEmpty(), key.worship.queryValue)
+                firstHourMeaning.takeIf { firstHourBody != null && BookText.normalized(draft.title) == "отпуст" &&
+                    draft.blocks.firstOrNull()?.original == BookText.clean(firstHourBody.text()) }
+                    ?: BookMeaningCatalog.meaningFor(draft.title, draft.blocks.firstOrNull()?.original.orEmpty(), key.worship.queryValue)
                     ?: genericMeaning(key.worship), draft.blocks.toList())
         }
         val blocks = chapters.flatMap { it.blocks }
@@ -393,7 +400,7 @@ class ServiceBookParser {
         if (!expected) throw InvalidServiceBook("Источник вернул \"${BookText.clean(title)}\" вместо \"${kind.title}\"")
     }
 
-    private fun validateCompleteness(text: String, kind: WorshipKind) {
+    internal fun validateCompleteness(text: String, kind: WorshipKind) {
         val normalized = BookText.normalized(text)
         // An Amen somewhere near the end is not proof of an intact ending: it occurs
         // throughout every service. Match the actual terminal prayer for each order.

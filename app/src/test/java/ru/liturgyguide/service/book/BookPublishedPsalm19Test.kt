@@ -34,7 +34,7 @@ class BookPublishedPsalm19Test {
     private val russian get() = evidence["published"].asJsonObject["russian"].asString
     private val blockId get() = evidence["book"].asJsonObject["blockId"].asString
     private val pair get() = BookTranslation(russian, source)
-    // The previous production edition: own193 plus only the independently reviewed Psalm19.
+    // The Psalm19-only supplement factory, combined with the current own catalog.
     private fun previousBundled() = BookTranslationIndex.fromFeoriaCatalog().fillingMissing(BookTranslationIndex.fromBundledPsalm19())
     private fun raw() = GZIPInputStream(requireNotNull(javaClass.getResourceAsStream("/book/published-psalm19/psalter.html.gz")))
         .bufferedReader().use { it.readText() }
@@ -104,16 +104,16 @@ class BookPublishedPsalm19Test {
         assertEquals(source.title, whole.single().asJsonObject["source"].asString)
     }
 
-    @Test fun previousPsalm19FactoryAddsOnePublishedPairWithoutChangingThe193OwnTranslationsAndRoundTripsItsFillOnlyFlag() {
+    @Test fun previousPsalm19FactoryAddsOnePublishedPairWithoutChangingThe195OwnTranslationsAndRoundTripsItsFillOnlyFlag() {
         val own = BookTranslationIndex.fromFeoriaCatalog()
         val bundled = previousBundled()
-        assertEquals(8, FeoriaTranslationCatalog.REVISION); assertEquals(193, own.size); assertEquals(194, bundled.size)
+        assertEquals(9, FeoriaTranslationCatalog.REVISION); assertEquals(195, own.size); assertEquals(196, bundled.size)
         assertNull(own.find(target)); assertEquals(pair, bundled.find(target))
         assertEquals(1, BookTranslationIndex.fromBundledPsalm19().size)
         assertNotEquals(BookTranslationIndex.FEORIA_TRANSLATION_SOURCE, requireNotNull(bundled.find(target)).source)
         for (entry in FeoriaTranslationCatalog.entries) assertEquals(own.find(entry.original), bundled.find(entry.original))
         val restored = BookTranslationIndex.decode(bundled.encode())
-        assertEquals(pair, restored.find(target)); assertEquals(194, restored.size)
+        assertEquals(pair, restored.find(target)); assertEquals(196, restored.size)
         val existing = index(encoded(target, "Прежний точный опубликованный перевод", BookSource("Fixture", "https://example.org/old")))
         assertEquals(existing.find(target), restored.plus(existing).find(target))
         assertEquals(existing.find(target), existing.plus(restored).find(target))

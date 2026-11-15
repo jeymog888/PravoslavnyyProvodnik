@@ -173,6 +173,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     val uncheckedPolyeleosJourney = book.key.worship == WorshipKind.MATINS && book.key.topLevel == null &&
         journey?.let { ServiceBookSelection.isPolyeleosMatins(it.title) } == true
     val visibility = remember(book.key, book.contentHash) { BookVisibilityScope.of(book) }
+    val dismissal = remember(book) { BookFirstHourDismissalScope.of(book) }
     val openingDisplay = remember(book) { BookMatinsOpeningDisplay.of(book) }
     val restored = remember(book.contentHash, parishId) { readingStore.restore(book, parishId) }
     val initial = remember(restored) { restored?.forTextReading() }
@@ -286,7 +287,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
     }
     val spokenWords = remember(items, mode, book.key) {
         items.associate { item -> item.id to item.block?.takeIf { item.quietGroup == null && visible(it) }?.let { block ->
-            BookBlockPresentation.spokenText(book.key, block, mode)?.let(BookAutoScroll::wordCount)
+            BookBlockPresentation.spokenText(book, block, dismissal, mode)?.let(BookAutoScroll::wordCount)
         } }
     }
     val list = rememberLazyListState()
@@ -308,8 +309,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
             measured.offset >= list.layoutInfo.viewportEndOffset) return@derivedStateOf null
         val item = (measured.key as? String)?.let(itemKeys::get) ?: return@derivedStateOf null
         val block = item.block ?: return@derivedStateOf null
-        if (item.quietGroup != null || visibility.isPrivate(block) || !BookBlockPresentation.isSpoken(book.key, block) ||
-            BookBlockPresentation.effectiveRussian(book.key, block) != null) return@derivedStateOf null
+        if (item.quietGroup != null || visibility.isPrivate(block) || !BookBlockPresentation.isSpoken(book, block, dismissal) ||
+            BookBlockPresentation.effectiveRussian(book, block, dismissal) != null) return@derivedStateOf null
         val geometry = russianGeometry?.takeIf { it.blockId == block.id } ?: return@derivedStateOf null
         val viewport = readerViewport ?: return@derivedStateOf null
         if (geometry.layout.layoutInput.text.text != block.original) return@derivedStateOf null
@@ -597,8 +598,8 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 if (latestMeaningOwner !== owner || positioning || targetUnresolved || switchingPart || superseded || sheet != null) return@launch
                 val captured = position()
                 val presentation = meaningPresentationAnchor()
-                val content = (if (presentation != null) BookMeaningContent.captureQuietGroup(book, captured)
-                    else BookMeaningContent.capture(book, captured)) ?: return@launch
+                val content = (if (presentation != null) BookMeaningContent.captureQuietGroup(book, captured, dismissal)
+                    else BookMeaningContent.capture(book, captured, dismissal)) ?: return@launch
                 if (isSaved) saveError = !readingStore.saveReading(captured)
                 meaningSession = BookMeaningReaderSession(owner, content, presentation)
             } finally {
@@ -1061,7 +1062,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         Text(openingDisplay.title(item.chapter), style = MaterialTheme.typography.titleLarge,
                             modifier = Modifier.testTag("book_section_title_${item.chapter.id}").semantics { heading() })
-                    } else BookTextBlock(book.key, item.block, mode, textSize,
+                    } else BookTextBlock(book, item.block, mode, textSize, dismissal,
                         searchHit = pendingSearch?.takeIf { it.blockId == item.block.id && it.mode == mode },
                         searchRevision = seekRevision,
                         onSearchLine = { line -> if (pendingSearch == line.hit) searchLine = line },
@@ -1069,7 +1070,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                         onRussianGeometry = ({ geometry: BookRussianTextGeometry ->
                             if (russianGeometry != geometry) russianGeometry = geometry
                         }).takeIf { mode == BookReadingMode.RUSSIAN && currentItem.id == item.id &&
-                            BookBlockPresentation.effectiveRussian(book.key, item.block) == null },
+                            BookBlockPresentation.effectiveRussian(book, item.block, dismissal) == null },
                         onChooseDedication = chooseDedication.takeIf { dedicationControls != null && item.block.id == dedicationEntryId },
                         dedicationBusy = dedicationControls?.busy == true)
                 }
@@ -1184,7 +1185,7 @@ fun BookReaderScreen(book: ServiceBook, parishId: String?, readingStore: BookRea
                 otherPart = journey?.parts?.singleOrNull { it != book.key }?.worship,
                 onOpenOtherPart = { journey?.parts?.singleOrNull { it != book.key }?.let { currentEvents.choosePart(it) } },
                 corpusLoader = searchCorpusLoader, onSelectLocated = { currentEvents.chooseLocatedHit(it) },
-                selectionError = partSwitchError, selecting = switchingPart)
+                selectionError = partSwitchError, selecting = switchingPart, dismissal = dismissal)
             "order" -> LazyColumn(Modifier.fillMaxWidth().heightIn(max = 560.dp).testTag("book_order_list"),
                 state = rememberLazyListState(initialFirstVisibleItemIndex = if (journey != null && journey.parts.size > 1) 0 else
                     book.chapters.indexOfFirst { it.id == currentChapter.id }.coerceAtLeast(0) + 1),
@@ -1490,7 +1491,8 @@ internal fun BookModePicker(mode: BookReadingMode, onSelect: (BookReadingMode) -
 }
 
 @Composable
-private fun BookTextBlock(key: ServiceBookKey, block: BookBlock, mode: BookReadingMode, textSize: Int,
+private fun BookTextBlock(book: ServiceBook, block: BookBlock, mode: BookReadingMode, textSize: Int,
+    dismissal: BookFirstHourDismissalScope,
     searchHit: BookSearchHit? = null, searchRevision: Int = 0, onSearchLine: (BookSearchLine) -> Unit = {},
     onChooseDedication: (() -> Unit)? = null, dedicationBusy: Boolean = false,
     onRussianGeometry: ((BookRussianTextGeometry) -> Unit)? = null, russianGeometryOwner: Any? = null) {
@@ -1516,8 +1518,8 @@ private fun BookTextBlock(key: ServiceBookKey, block: BookBlock, mode: BookReadi
     }
     val rubric = block.kind == BookBlockKind.RUBRIC || block.kind == BookBlockKind.LOCAL_VARIATION
     val localVariation = block.kind == BookBlockKind.LOCAL_VARIATION
-    val effectiveRussian = BookBlockPresentation.effectiveRussian(key, block)
-    val legacyPrayer = BookBlockPresentation.isLegacyPrayer(key, block)
+    val effectiveRussian = BookBlockPresentation.effectiveRussian(book, block, dismissal)
+    val legacyPrayer = BookBlockPresentation.isLegacyPrayer(book, block, dismissal)
     val container = Modifier.fillMaxWidth().testTag("book_block_${block.id}").let {
         if (localVariation) it.background(MaterialTheme.colorScheme.surfaceContainerLow, MaterialTheme.shapes.large).padding(16.dp) else it
     }
@@ -1643,7 +1645,7 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
     otherPart: WorshipKind? = null, onOpenOtherPart: () -> Unit = {},
     corpusLoader: (suspend () -> BookSearchCorpus)? = null,
     onSelectLocated: (BookLocatedSearchHit) -> Unit = { onSelect(it.hit) },
-    selectionError: String? = null, selecting: Boolean = false) {
+    selectionError: String? = null, selecting: Boolean = false, dismissal: BookFirstHourDismissalScope? = null) {
     var query by rememberSaveable { mutableStateOf("") }
     var microphoneRequested by rememberSaveable { mutableStateOf(startMicrophone) }
     // Saving never serializes an unspent right or a live request. A restored opening is always spent.
@@ -1669,6 +1671,11 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
     var warningsExpanded by remember(corpus.warnings) { mutableStateOf(false) }
     val resultScopes = remember(corpus.books.map { it.key to it.contentHash }) {
         corpus.books.associate { it.key to BookVisibilityScope.of(it) }
+    }
+    val dismissalScopes = remember(corpus.books, dismissal) {
+        corpus.books.associate { candidate -> (candidate.key to candidate.contentHash) to
+            (dismissal?.takeIf { candidate.key == book.key && candidate.contentHash == book.contentHash }
+                ?: BookFirstHourDismissalScope.of(candidate)) }
     }
     val resultDisplays = remember(corpus.books) {
         corpus.books.associate { (it.key to it.contentHash) to BookMatinsOpeningDisplay.of(it) }
@@ -1822,7 +1829,7 @@ internal fun BookSearchSheet(book: ServiceBook, startMicrophone: Boolean, prefer
         delay(100)
         val found = withContext(Dispatchers.Default) {
             val searchContext = currentCoroutineContext()
-            BookCorpusSearch.find(corpus.books, requestedQuery, preferredMode) { searchContext.ensureActive() }
+            BookCorpusSearch.find(corpus.books, requestedQuery, preferredMode, dismissalScopes) { searchContext.ensureActive() }
         }
         currentCoroutineContext().ensureActive()
         searchResult = BookSearchResult(book.key, book.contentHash, requestedQuery, preferredMode, corpusIdentity, found)

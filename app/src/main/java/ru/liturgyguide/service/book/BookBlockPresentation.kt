@@ -2,6 +2,7 @@ package ru.liturgyguide.service.book
 
 import ru.liturgyguide.model.BookBlock
 import ru.liturgyguide.model.BookBlockKind
+import ru.liturgyguide.model.ServiceBook
 import ru.liturgyguide.model.ServiceBookKey
 import ru.liturgyguide.model.WorshipKind
 
@@ -25,6 +26,25 @@ object BookBlockPresentation {
         if (mode == BookReadingMode.MEANING || !isSpoken(key, block)) return null
         if (mode == BookReadingMode.RUSSIAN) effectiveRussian(key, block)?.let { return it }
         return legacyPrayerBody(key, block) ?: block.original
+    }
+
+    /** Whole-edition overloads require the checked key/hash owner as well as its target block. */
+    fun isLegacyPrayer(book: ServiceBook, block: BookBlock, scope: BookFirstHourDismissalScope): Boolean =
+        isLegacyPrayer(book.key, block) || scope.isLegacyPrayer(book, block)
+
+    fun effectiveRussian(book: ServiceBook, block: BookBlock, scope: BookFirstHourDismissalScope): String? =
+        block.russian.takeUnless {
+            it == block.original && block.translationSource == null && isLegacyPrayer(book, block, scope)
+        }
+
+    fun isSpoken(book: ServiceBook, block: BookBlock, scope: BookFirstHourDismissalScope): Boolean =
+        isSpoken(book.key, block) || scope.isLegacyPrayer(book, block)
+
+    fun spokenText(book: ServiceBook, block: BookBlock, scope: BookFirstHourDismissalScope,
+        mode: BookReadingMode = BookReadingMode.ORIGINAL): String? {
+        if (mode == BookReadingMode.MEANING || !isSpoken(book, block, scope)) return null
+        if (mode == BookReadingMode.RUSSIAN) effectiveRussian(book, block, scope)?.let { return it }
+        return legacyPrayerBody(book.key, block) ?: block.original
     }
 
     private fun legacyPrayerBody(key: ServiceBookKey, block: BookBlock): String? {

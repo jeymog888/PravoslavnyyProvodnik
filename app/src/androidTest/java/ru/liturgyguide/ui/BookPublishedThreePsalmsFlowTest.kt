@@ -31,7 +31,7 @@ import java.io.File
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 
-/** Current production bundled197; the separate Psalm19 flow retains the historical194 contract. */
+/** Current production bundles own195 and four published bodies; archived inputs stay pinned. */
 @RunWith(Parameterized::class)
 class BookPublishedThreePsalmsFlowTest(private val dark: Boolean) {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
@@ -84,7 +84,7 @@ class BookPublishedThreePsalmsFlowTest(private val dark: Boolean) {
         val own = BookTranslationIndex.fromFeoriaCatalog()
         val previous = own.fillingMissing(BookTranslationIndex.fromBundledPsalm19())
         val current = BookTranslationIndex.fromBundledRussian()
-        assertEquals(193, own.size); assertEquals(194, previous.size); assertEquals(197, current.size)
+        assertEquals(195, own.size); assertEquals(196, previous.size); assertEquals(199, current.size)
         val baseline193 = requireNotNull(SavedBookEnrichment.apply(old, corpus.index.plus(own)))
         val baseline194 = requireNotNull(SavedBookEnrichment.apply(old, corpus.index.plus(previous)))
         val expected = requireNotNull(SavedBookEnrichment.apply(old, corpus.index.plus(current)))

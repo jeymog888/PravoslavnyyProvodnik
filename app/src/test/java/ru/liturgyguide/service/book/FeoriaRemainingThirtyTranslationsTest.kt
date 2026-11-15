@@ -76,9 +76,9 @@ class FeoriaRemainingThirtyTranslationsTest {
     }
 
     @Test fun thirtyFinalWholeSlotsHaveExactApprovedHashesSourceAndSeparatePrayerAnnouncementMetadata() {
-        assertEquals(8, FeoriaTranslationCatalog.REVISION)
-        assertEquals(193, FeoriaTranslationCatalog.entries.size); assertEquals(193, own.size)
-        assertEquals(193, FeoriaTranslationCatalog.entries.map { BookText.normalized(it.original) }.distinct().size)
+        assertEquals(9, FeoriaTranslationCatalog.REVISION)
+        assertEquals(195, FeoriaTranslationCatalog.entries.size); assertEquals(195, own.size)
+        assertEquals(195, FeoriaTranslationCatalog.entries.map { BookText.normalized(it.original) }.distinct().size)
         assertEquals(30, rows.size); assertEquals(30, FeoriaRemainingThirtyTranslations.records.size)
         assertEquals(22, rows.count { it["group"].asString == "COMMON_STAGES_22" })
         assertEquals(8, rows.count { it["group"].asString == "CHANGING_HYMNS_8" })
