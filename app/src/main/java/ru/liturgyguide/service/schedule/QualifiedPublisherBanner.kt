@@ -45,7 +45,8 @@ internal class QualifiedPublisherBanner private constructor(
         val removed = externalBanner(clone, rootUrl) ?: return null
         removed.remove()
         val filtered = HtmlScheduleDocumentExtractor.fromHtml(clone)
-        val target = ScheduleDocumentLine(heading.text(), headingLevel = 1)
+        val target = ScheduleDocumentLine(heading.text(), headingLevel = 1,
+            htmlScopeText = heading.wholeText().takeIf { it.length <= 2_000 })
         var removedLines = 0
         val expected = original.copy(pages = original.pages.map { sourcePage ->
             sourcePage.copy(lines = sourcePage.lines.filterNot { line ->

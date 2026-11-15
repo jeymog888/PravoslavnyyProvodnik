@@ -26,6 +26,8 @@ object ScheduleDocumentParser {
     private val generalServices = Regex("(?iu)(?:все\\s+(?:службы|богослужения)|богослужения|службы)")
     private val exactLiturgy = Regex("(?iu)^(?:(?:божественная|ранняя|поздняя)\\s+)*литургия\\b")
 
+    private data class SharedVenueEvidence(val raw: String, val title: String, val venue: String)
+
     fun parse(document: ScheduleDocument, today: LocalDate, parish: Parish? = null): List<InternetService> = inspect(document, today, parish).events
 
     fun inspect(document: ScheduleDocument, today: LocalDate, parish: Parish? = null): ScheduleParseResult {
@@ -51,6 +53,13 @@ object ScheduleDocumentParser {
             var sectionVenueLine = -1
             var scope: YearMonth? = null
             var currentDate: LocalDate? = null
+            data class BoundHtmlDay(val container: Int, val date: LocalDate)
+            var boundDay: BoundHtmlDay? = null
+            val safeSharedPage = document.format == "html" && listOfNotNull(parish?.name, parish?.shortName, parish?.city, parish?.address)
+                .none(ScheduleVenue::hasUnsafeSharedInput) && page.lines.none {
+                ScheduleVenue.hasUnsafeSharedInput(it.text) || it.htmlEventRow?.let(ScheduleVenue::hasUnsafeSharedInput) == true ||
+                    it.htmlDayHeading?.let(ScheduleVenue::hasUnsafeSharedInput) == true
+            }
             // Ranges and unreadable day boundaries cannot supply an inherited day.
             var requiresDay = false
             var rangeScope: ClosedRange<LocalDate>? = null
@@ -58,6 +67,7 @@ object ScheduleDocumentParser {
             var pendingTitle = ""
             var pendingDate: LocalDate? = null
             var pendingVenue: String? = null
+            var pendingSharedVenue: SharedVenueEvidence? = null
             var rejected = false
             data class DayContainerScope(val venue: String?, val venueLine: Int, val month: YearMonth?, val date: LocalDate?,
                 val headings: Map<Int, HeadingScope>, val requiresDay: Boolean, val rangeScope: ClosedRange<LocalDate>?)
@@ -69,11 +79,11 @@ object ScheduleDocumentParser {
                     rejectedScope = true
                     cancelledStarts += "${day}T$time"
                 }
-                if (!rejected && day != null && time != null) event(day, time, pendingTitle, today, parish, pendingVenue)?.let(events::add)
-                pendingDate = null; pendingClock = null; pendingTitle = ""; pendingVenue = null; rejected = false
+                if (!rejected && day != null && time != null) event(day, time, pendingTitle, today, parish, pendingVenue, pendingSharedVenue)?.let(events::add)
+                pendingDate = null; pendingClock = null; pendingTitle = ""; pendingVenue = null; pendingSharedVenue = null; rejected = false
             }
             fun clearDay() {
-                flush(); currentDate = null
+                flush(); currentDate = null; boundDay = null
                 headings.keys.toList().forEach { level -> headings[level] = headings.getValue(level).copy(date = null) }
             }
             fun enterMonth(text: String): MatchResult? {
@@ -91,12 +101,13 @@ object ScheduleDocumentParser {
                 rangeScope?.let { scope = YearMonth.from(it.start) }
             }
             page.lines.take(2_000).forEachIndexed lineLoop@{ lineIndex, line ->
+                if (line.htmlDayContainer != boundDay?.container) boundDay = null
                 // A named venue inside one ISO calendar card belongs to that card. Keep all
                 // outer restrictions, then restore them before reading its sibling card.
                 if (line.startsDayContainer) {
                     flush()
                     dayContainers.addLast(DayContainerScope(sectionVenue, sectionVenueLine, scope, currentDate, headings.toMap(), requiresDay, rangeScope))
-                    currentDate = null; requiresDay = false; rangeScope = null
+                    currentDate = null; boundDay = null; requiresDay = false; rangeScope = null
                 }
                 if (line.endsDayContainer) {
                     flush()
@@ -108,7 +119,7 @@ object ScheduleDocumentParser {
                     return@lineLoop
                 }
                 if (line.endsTable) {
-                    flush()
+                    flush(); boundDay = null
                     currentDate = headings.values.mapNotNull { it.date }.lastOrNull()
                     return@lineLoop
                 }
@@ -117,7 +128,7 @@ object ScheduleDocumentParser {
                 if (line.struck || line.confidence < 45 || line.temporalConfidence < 55) {
                     if (hasDateRange(clean) || looksLikeDateHeading(clean)) {
                         clearDay(); requiresDay = true; rangeScope = null
-                    } else { flush(); currentDate = null }
+                    } else { flush(); currentDate = null; boundDay = null }
                     if (monthYear.containsMatchIn(clean)) scope = null
                     return@lineLoop
                 }
@@ -126,24 +137,26 @@ object ScheduleDocumentParser {
                 val rangeHeading = singlePhysicalLine && hasDateRange(clean)
                 val month = if (singlePhysicalLine) enterMonth(clean) else null
                 inferredMonths[pageIndex]?.takeIf { lineIndex in it.headingIndices }?.let { inferred ->
-                    flush(); scope = inferred.value; currentDate = null
+                    flush(); scope = inferred.value; currentDate = null; boundDay = null
                 }
                 if (rangeHeading) enterRange(clean)
                 val venueEvidence = line.venueEvidence ?: clean
                 val venueLabel = venueEvidence.takeIf(ScheduleVenue::isLabel)?.let { ScheduleVenue.inlineLabel(it) ?: it }
                 if (line.headingLevel > 0) {
-                    flush()
+                    flush(); boundDay = null
                     headings.keys.filter { it >= line.headingLevel }.toList().forEach(headings::remove)
                     val headingDate = dateIn(clean, scope)?.first
                     headings[line.headingLevel] = HeadingScope(cancellation.containsMatchIn(clean) && (!requiresDay || headingDate != null),
                         venueLabel, headingDate, lineIndex)
                     currentDate = headings.values.mapNotNull { it.date }.lastOrNull()
                 } else if (venueLabel != null) {
+                    boundDay = null
                     flush(); sectionVenue = venueLabel; sectionVenueLine = lineIndex
                     currentDate = headings.values.mapNotNull { it.date }.lastOrNull()
                     if (!cancellation.containsMatchIn(clean)) return@lineLoop
                 }
                 val locatedRowDate = dateIn(clean, scope)
+                if (locatedRowDate != null && line.htmlDayHeading == null) boundDay = null
                 val rowDate = locatedRowDate?.first ?: currentDate
                 val venueText = dateIn(venueEvidence, scope)?.let { venueEvidence.removeRange(it.second) } ?: venueEvidence
                 // A plain venue label and an active venue heading are both explicit
@@ -155,7 +168,36 @@ object ScheduleDocumentParser {
                 val scopedVenue = line.venue ?: ScheduleVenue.inlineLabel(venueText, rowDate, datedPreface = locatedRowDate != null) ?:
                     inheritedVenue
                 val scopedCancellation = headings.values.any { it.cancelled }
-                if (!ScheduleVenue.matches(scopedVenue, parish)) { flush(); currentDate = null; rejectedScope = true; return@lineLoop }
+                fun rawScopeRestricted(index: Int): Boolean {
+                    val raw = page.lines.getOrNull(index)?.htmlScopeText
+                    return raw == null || ScheduleVenue.hasSharedScopeRestriction(raw)
+                }
+                val sharedScopeRestricted = headings.values.any { rawScopeRestricted(it.lineIndex) } ||
+                    (sectionVenue != null && sectionVenueLine > (headingVenue?.lineIndex ?: -1) &&
+                        rawScopeRestricted(sectionVenueLine))
+                val wholeEventRow = line.htmlEventRow?.takeIf { raw ->
+                    !ScheduleVenue.hasUnsafeSharedInput(raw) && raw.replace('\u00a0', ' ').replace(Regex("[ ]+"), " ").trim(' ') == clean
+                }
+                val provenDay = boundDay?.takeIf { it.container == line.htmlDayContainer && it.date == currentDate }
+                val sharedVenue = if (safeSharedPage && !sharedScopeRestricted && wholeEventRow != null && provenDay != null &&
+                    singlePhysicalLine && locatedRowDate == null && rowDate == provenDay.date && !rangeHeading &&
+                    line.venue == null && line.venueEvidence == null && line.serviceText == null &&
+                    line.confidence == 100 && line.temporalConfidence == 100 &&
+                    ScheduleVenue.matches(inheritedVenue, parish) && !scopedCancellation)
+                    ScheduleVenue.sharedEventVenue(wholeEventRow, parish) else null
+                if (!ScheduleVenue.matches(scopedVenue, parish) && sharedVenue == null) {
+                    flush()
+                    // Preserve only a date actually parsed from this same DOM heading/list.
+                    // A new date, withdrawal, foreign heading or table boundary never borrows it.
+                    val sameParentDay = safeSharedPage && !sharedScopeRestricted && wholeEventRow != null && provenDay != null &&
+                        !requiresDay && locatedRowDate == null && singlePhysicalLine && !rangeHeading &&
+                        line.headingLevel == 0 && line.venue == null && ScheduleVenue.matches(inheritedVenue, parish) &&
+                        !scopedCancellation && !cancellation.containsMatchIn(clean) &&
+                        ScheduleVenue.isConcreteForeignEvent(wholeEventRow, parish)
+                    if (!sameParentDay) { currentDate = null; boundDay = null }
+                    rejectedScope = true
+                    return@lineLoop
+                }
                 if (scopedCancellation) rejectedScope = true
                 clean.split('\n').forEach { physical ->
                     var text = physical.trim()
@@ -169,7 +211,7 @@ object ScheduleDocumentParser {
                     if (Regex("(?iu)^(?:кажд(?:ый|ую|ое|ые|ая)|ежедневно|еженедельно)(?=\\s|:)").containsMatchIn(text)) {
                         // This can be a <br>-separated footer inside the same HTML paragraph.
                         // A weekly/daily rule never inherits the last printed date.
-                        flush(); currentDate = null
+                        flush(); currentDate = null; boundDay = null
                         headings.keys.toList().forEach { level -> headings[level] = headings.getValue(level).copy(date = null) }
                         return@forEach
                     }
@@ -186,6 +228,8 @@ object ScheduleDocumentParser {
                             return@forEach
                         }
                         requiresDay = false; rangeScope = null
+                        boundDay = line.htmlDayContainer?.takeIf { safeSharedPage && line.htmlDayHeading != null && line.headingLevel > 0 }
+                            ?.let { BoundHtmlDay(it, currentDate!!) }
                         text = ScheduleWeekdays.removeFromDateRemainder(text).trim(' ', '|', ',', '.')
                         titleText = titleText?.let { title ->
                             val titleDate = dateIn(title, scope)
@@ -237,6 +281,8 @@ object ScheduleDocumentParser {
                             pendingDate = currentDate
                             pendingVenue = scopedVenue
                             pendingTitle = (lead + " " + tail).trim(' ', '|', ',', '.', '-')
+                            pendingSharedVenue = sharedVenue?.takeIf { matches.size == 1 && currentDate == rowDate }
+                                ?.let { SharedVenueEvidence(requireNotNull(wholeEventRow), pendingTitle, it) }
                             rejected = scopedCancellation || cancellation.containsMatchIn(text)
                             if (rejected) {
                                 rejectedScope = true
@@ -330,12 +376,14 @@ object ScheduleDocumentParser {
         !Regex("(?iu)^\\s*\\d+\\s*[-‐‑–—]\\s*лети[еяю]\\b").containsMatchIn(text) &&
             Regex("(?iu)^\\s*\\d{1,2}\\s*(?:[.,/-]|[а-яё]{2,}|\\|)").containsMatchIn(text) && !clocks.find(text).let { it?.range?.first == 0 }
 
-    private fun event(date: LocalDate, clock: String, raw: String, today: LocalDate, parish: Parish?, scopedVenue: String?): InternetService? {
+    private fun event(date: LocalDate, clock: String, raw: String, today: LocalDate, parish: Parish?, scopedVenue: String?, sharedVenue: SharedVenueEvidence?): InternetService? {
         if (date !in today.minusDays(1)..today.plusDays(45)) return null
         val title = raw.replace('|', ' ').replace(Regex("\\s+"), " ").trim(' ', '.', ',')
         if (title.length !in 2..300 || title.any(Char::isISOControl) || !service.containsMatchIn(title) || cancellation.containsMatchIn(title)) return null
         // Another named building is not automatically part of the selected parish.
-        if (!ScheduleVenue.matches(scopedVenue, parish) || !ScheduleVenue.matches(ScheduleVenue.inlineLabel(title), parish)) return null
+        val shared = sharedVenue != null && sharedVenue.title == raw &&
+            ScheduleVenue.sharedEventVenue(sharedVenue.raw, parish) == sharedVenue.venue
+        if (!shared && (!ScheduleVenue.matches(scopedVenue, parish) || !ScheduleVenue.matches(ScheduleVenue.inlineLabel(title), parish))) return null
         val anotherRite = Regex("(?iu)(преждеосвящ|василия|иакова|якова)").containsMatchIn(title)
         return InternetService(date.toString(), clock, title, if (!anotherRite && exactLiturgy.containsMatchIn(title)) "liturgy" else "service_block")
     }

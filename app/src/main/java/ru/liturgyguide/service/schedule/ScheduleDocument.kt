@@ -16,7 +16,15 @@ data class ScheduleDocumentLine(val text: String, val confidence: Int = 100, val
     // Optional display-title material. Full text above still governs dates and cancellation.
     val serviceText: String? = null,
     // Only complete known calendar names reconstructed in a proven column may be removed.
-    val venueEvidence: String? = null)
+    val venueEvidence: String? = null,
+    // HTML-only provenance: one exact date heading and its following same-parent list.
+    val htmlDayContainer: Int? = null,
+    // Set only on the actual exact DOM date heading, never an arbitrary dated row.
+    val htmlDayHeading: String? = null,
+    // The complete direct li element before splitting; every fragment retains all notices.
+    val htmlEventRow: String? = null,
+    // Bounded complete HTML scope text before splitting; absent text grants no new authority.
+    val htmlScopeText: String? = null)
 enum class ScheduleOcrFailure { UNSUPPORTED_LAYOUT, CONFLICTING_EVIDENCE }
 data class ScheduleDocumentPage(val lines: List<ScheduleDocumentLine>,
     // Audit-only text from every completed pass, including an unsuccessful repair. Never
@@ -71,8 +79,26 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
         val lines = mutableListOf<ScheduleDocumentLine>()
         // An article's date heading may be its sibling. Only headings, never copyright/sidebar years.
         if (body != copy.body()) copy.select("h1").filter { it !in body.getAllElements() }.take(2)
-            .forEach { lines += ScheduleDocumentLine(it.text(), headingLevel = 1) }
-        fun plain(element: Element): List<ScheduleDocumentLine> {
+            .forEach { lines += ScheduleDocumentLine(it.text(), headingLevel = 1,
+                htmlScopeText = it.wholeText().takeIf { raw -> raw.length <= 2_000 }) }
+        val listDays = mutableMapOf<Element, Int>()
+        val dayMembers = mutableMapOf<Element, Int>()
+        body.select("ul,ol").take(500).forEachIndexed { index, list ->
+            if (list.closest("table,li") != null) return@forEachIndexed
+            val between = mutableListOf<Element>()
+            var previous = list.previousElementSibling()
+            while (between.size < 4) {
+                val paragraph = previous?.takeIf { it.tagName() == "p" } ?: break
+                between += paragraph
+                previous = paragraph.previousElementSibling()
+            }
+            val heading = previous?.takeIf { it.tagName().matches(Regex("h[1-6]")) && dateCell.matches(it.text().trim()) }
+                ?: return@forEachIndexed
+            val id = index + 1
+            listDays[list] = id
+            (between + heading).forEach { dayMembers[it] = id }
+        }
+        fun plain(element: Element, htmlDayContainer: Int? = null): List<ScheduleDocumentLine> {
             val clone = element.clone()
             // Known ISO calendar cards render the celebrant separately. Keep every word,
             // including cancellation notices, without joining it to the service name.
@@ -80,9 +106,15 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
                 it.before(" "); it.after(" ")
             }
             clone.select("br").forEach { it.before("\n") }
-            return clone.wholeText().lines().map { it.replace(Regex("[\\t ]+"), " ").trim() }
+            val wholeText = clone.wholeText()
+            val wholeRow = wholeText.takeIf { it.length <= 2_000 && element.tagName() == "li" && htmlDayContainer != null && element.parent()?.let(listDays::get) == htmlDayContainer }
+            return wholeText.lines().map { it.replace(Regex("[\\t ]+"), " ").trim() }
                 .filter(String::isNotBlank).map { ScheduleDocumentLine(it, struck = element.select("s,del,strike").isNotEmpty(),
-                    headingLevel = element.tagName().takeIf { tag -> tag.matches(Regex("h[1-6]")) }?.drop(1)?.toInt() ?: 0) }
+                    headingLevel = element.tagName().takeIf { tag -> tag.matches(Regex("h[1-6]")) }?.drop(1)?.toInt() ?: 0,
+                    htmlDayContainer = htmlDayContainer,
+                    htmlDayHeading = wholeText.takeIf { it.length <= 2_000 && element.tagName().matches(Regex("h[1-6]")) &&
+                        dayMembers[element] == htmlDayContainer && htmlDayContainer != null },
+                    htmlEventRow = wholeRow, htmlScopeText = wholeText.takeIf { raw -> raw.length <= 2_000 }) }
         }
         fun table(element: Element) {
             platform?.tables?.get(element)?.let { lines.addAll(it); return }
@@ -142,7 +174,8 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
             // Explicit outer date/building headings are handled by the parser separately.
             lines += ScheduleDocumentLine("", endsTable = true)
         }
-        fun walk(element: Element) {
+        fun walk(element: Element, parentDay: Int? = null) {
+            val htmlDay = listDays[element] ?: dayMembers[element] ?: parentDay
             if (element.hasClass("sch-day-item")) {
                 lines += ScheduleCalendarCards.extract(element, document.baseUri())
                 return
@@ -151,14 +184,14 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
             if (dayContainer) lines += ScheduleDocumentLine(element.attr("data-day"), startsDayContainer = true)
             when (element.tagName()) {
                 "table" -> table(element)
-                "p", "li", "h1", "h2", "h3", "h4", "h5", "h6", "pre" -> lines.addAll(plain(element))
+                "p", "li", "h1", "h2", "h3", "h4", "h5", "h6", "pre" -> lines.addAll(plain(element, htmlDay))
                 else -> {
                     val own = StringBuilder()
-                    fun flush() { if (own.isNotBlank()) { lines += ScheduleDocumentLine(own.toString().trim()); own.clear() } }
+                    fun flush() { if (own.isNotBlank()) { lines += ScheduleDocumentLine(own.toString().trim(), htmlDayContainer = htmlDay); own.clear() } }
                     element.childNodes().forEach { node ->
                         when (node) {
                             is TextNode -> own.append(node.text())
-                            is Element -> if (node.tagName() == "br") flush() else { flush(); walk(node) }
+                            is Element -> if (node.tagName() == "br") flush() else { flush(); walk(node, htmlDay) }
                         }
                     }
                     flush()

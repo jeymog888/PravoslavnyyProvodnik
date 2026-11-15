@@ -1,0 +1,352 @@
+[
+  {
+    "type": "PRODUCTION_PROGRESS",
+    "progress": {
+      "parishId": "",
+      "phase": "IDLE"
+    },
+    "at": "2026-11-15T14:25:36.230674Z",
+    "observedAt": "2026-11-15T14:25:36.230691Z"
+  },
+  {
+    "type": "PRODUCTION_PROGRESS",
+    "progress": {
+      "parishId": "osm:way:171771405",
+      "phase": "LOADING_PAGE"
+    },
+    "at": "2026-11-15T14:25:36.232152Z",
+    "observedAt": "2026-11-15T14:25:36.232167Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://hram-obuhovo.ru/",
+    "maximumBytes": null,
+    "observedAt": "2026-11-15T14:25:36.233893Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://hram-obuhovo.ru/",
+    "contentType": "text/html; charset\u003dUTF-8",
+    "bytes": 92992,
+    "originalSha256": "966a513f330f5f0a81690eba519ba43aa23b103b26e47a3dd83734d9095a807e",
+    "bodyFile": "responses/0000.body",
+    "writtenSha256": "966a513f330f5f0a81690eba519ba43aa23b103b26e47a3dd83734d9095a807e",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 92992,
+      "originalSha256": "966a513f330f5f0a81690eba519ba43aa23b103b26e47a3dd83734d9095a807e",
+      "writtenBytes": 92992,
+      "writtenSha256": "966a513f330f5f0a81690eba519ba43aa23b103b26e47a3dd83734d9095a807e"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T14:25:37.624936Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://hram-obuhovo.ru/",
+    "elapsedMillis": 1397,
+    "observedAt": "2026-11-15T14:25:37.629028Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://hram-obuhovo.ru/raspisanie/",
+    "maximumBytes": null,
+    "observedAt": "2026-11-15T14:25:37.776446Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://hram-obuhovo.ru/raspisanie/",
+    "contentType": "text/html; charset\u003dUTF-8",
+    "bytes": 42218,
+    "originalSha256": "e7cc359eed9ef7b9476db715e167c4bf0bcd981aabc2881a7731fd7460868e0b",
+    "bodyFile": "responses/0001.body",
+    "writtenSha256": "e7cc359eed9ef7b9476db715e167c4bf0bcd981aabc2881a7731fd7460868e0b",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 42218,
+      "originalSha256": "e7cc359eed9ef7b9476db715e167c4bf0bcd981aabc2881a7731fd7460868e0b",
+      "writtenBytes": 42218,
+      "writtenSha256": "e7cc359eed9ef7b9476db715e167c4bf0bcd981aabc2881a7731fd7460868e0b"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T14:25:38.374274Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://hram-obuhovo.ru/raspisanie/",
+    "elapsedMillis": 603,
+    "observedAt": "2026-11-15T14:25:38.379789Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://hram-obuhovo.ru/kalendar-bogosluzhenij/",
+    "maximumBytes": null,
+    "observedAt": "2026-11-15T14:25:38.470443Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://hram-obuhovo.ru/kalendar-bogosluzhenij/",
+    "contentType": "text/html; charset\u003dUTF-8",
+    "bytes": 47121,
+    "originalSha256": "c60dd78f85568eedb4142e77215238b47120f2caa1d40c64308d83feb654c785",
+    "bodyFile": "responses/0002.body",
+    "writtenSha256": "c60dd78f85568eedb4142e77215238b47120f2caa1d40c64308d83feb654c785",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 47121,
+      "originalSha256": "c60dd78f85568eedb4142e77215238b47120f2caa1d40c64308d83feb654c785",
+      "writtenBytes": 47121,
+      "writtenSha256": "c60dd78f85568eedb4142e77215238b47120f2caa1d40c64308d83feb654c785"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T14:25:39.244470Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://hram-obuhovo.ru/kalendar-bogosluzhenij/",
+    "elapsedMillis": 780,
+    "observedAt": "2026-11-15T14:25:39.251114Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://hram-obuhovo.ru/wp-content/uploads/2026/07/i-1.webp",
+    "maximumBytes": null,
+    "observedAt": "2026-11-15T14:25:39.333164Z"
+  },
+  {
+    "type": "PRODUCTION_PROGRESS",
+    "progress": {
+      "parishId": "osm:way:171771405",
+      "phase": "READING_DOCUMENT"
+    },
+    "at": "2026-11-15T14:25:39.333279Z",
+    "observedAt": "2026-11-15T14:25:39.336583Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://hram-obuhovo.ru/wp-content/uploads/2026/07/i-1.webp",
+    "contentType": "image/webp",
+    "bytes": 85060,
+    "originalSha256": "892fb5bf83c6be2cb69093fa5ea4942576918641f41c2c388c8a0d313ce43da7",
+    "bodyFile": "responses/0003.body",
+    "writtenSha256": "892fb5bf83c6be2cb69093fa5ea4942576918641f41c2c388c8a0d313ce43da7",
+    "bodyEvidence": {
+      "declaredCharset": null,
+      "originalCharset": null,
+      "writtenCharset": null,
+      "transformation": "EXACT_BINARY",
+      "omissionReason": null,
+      "originalBytes": 85060,
+      "originalSha256": "892fb5bf83c6be2cb69093fa5ea4942576918641f41c2c388c8a0d313ce43da7",
+      "writtenBytes": 85060,
+      "writtenSha256": "892fb5bf83c6be2cb69093fa5ea4942576918641f41c2c388c8a0d313ce43da7"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T14:25:39.384438Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://hram-obuhovo.ru/wp-content/uploads/2026/07/i-1.webp",
+    "elapsedMillis": 56,
+    "observedAt": "2026-11-15T14:25:39.389574Z"
+  },
+  {
+    "type": "NATIVE_OCR_PASS",
+    "metadata": {
+      "stage": "initial",
+      "sourceUrl": "https://hram-obuhovo.ru/wp-content/uploads/2026/07/i-1.webp",
+      "width": 1357,
+      "height": 1920,
+      "characters": 5246,
+      "coordinateScope": "SOURCE_BITMAP"
+    },
+    "originalSha256": "f1f0463cfe4c5cb0c381dcb70ec1452c144cb3aefaf89cd1c620d2ec736c41a4",
+    "file": "ocr/0004-initial.hocr",
+    "writtenSha256": "f1f0463cfe4c5cb0c381dcb70ec1452c144cb3aefaf89cd1c620d2ec736c41a4",
+    "bodyEvidence": {
+      "declaredCharset": "utf-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 5394,
+      "originalSha256": "f1f0463cfe4c5cb0c381dcb70ec1452c144cb3aefaf89cd1c620d2ec736c41a4",
+      "writtenBytes": 5394,
+      "writtenSha256": "f1f0463cfe4c5cb0c381dcb70ec1452c144cb3aefaf89cd1c620d2ec736c41a4"
+    },
+    "scope": "Read-only completed-pass evidence. No recognition, parser or authority override. Missing exports remain explicit.",
+    "observedAt": "2026-11-15T14:25:39.864679Z"
+  },
+  {
+    "type": "ANDROID_EXTRACTOR_DOCUMENT",
+    "sourceUrl": "https://hram-obuhovo.ru/wp-content/uploads/2026/07/i-1.webp",
+    "format": "image",
+    "pages": 1,
+    "file": "documents/0005.json",
+    "observedAt": "2026-11-15T14:25:39.881080Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://hram-obuhovo.ru/wp-content/uploads/2025/10/duhovnye-tropy.jpg",
+    "maximumBytes": null,
+    "observedAt": "2026-11-15T14:25:39.899038Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://hram-obuhovo.ru/wp-content/uploads/2025/10/duhovnye-tropy.jpg",
+    "contentType": "image/jpeg",
+    "bytes": 452864,
+    "originalSha256": "a02807141bb2213004b66e8d249b5d83458df9b87371013d9013e7d9d36faf75",
+    "bodyFile": "responses/0006.body",
+    "writtenSha256": "a02807141bb2213004b66e8d249b5d83458df9b87371013d9013e7d9d36faf75",
+    "bodyEvidence": {
+      "declaredCharset": null,
+      "originalCharset": null,
+      "writtenCharset": null,
+      "transformation": "EXACT_BINARY",
+      "omissionReason": null,
+      "originalBytes": 452864,
+      "originalSha256": "a02807141bb2213004b66e8d249b5d83458df9b87371013d9013e7d9d36faf75",
+      "writtenBytes": 452864,
+      "writtenSha256": "a02807141bb2213004b66e8d249b5d83458df9b87371013d9013e7d9d36faf75"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T14:25:39.995728Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://hram-obuhovo.ru/wp-content/uploads/2025/10/duhovnye-tropy.jpg",
+    "elapsedMillis": 103,
+    "observedAt": "2026-11-15T14:25:40.002033Z"
+  },
+  {
+    "type": "NATIVE_OCR_PASS",
+    "metadata": {
+      "stage": "initial",
+      "sourceUrl": "https://hram-obuhovo.ru/wp-content/uploads/2025/10/duhovnye-tropy.jpg",
+      "width": 905,
+      "height": 1280,
+      "characters": 5525,
+      "coordinateScope": "SOURCE_BITMAP"
+    },
+    "originalSha256": "b1035b39fc33a0653672b116ff524f82a8a85e27da8de18798c211375722b45e",
+    "file": "ocr/0007-initial.hocr",
+    "writtenSha256": "b1035b39fc33a0653672b116ff524f82a8a85e27da8de18798c211375722b45e",
+    "bodyEvidence": {
+      "declaredCharset": "utf-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 5626,
+      "originalSha256": "b1035b39fc33a0653672b116ff524f82a8a85e27da8de18798c211375722b45e",
+      "writtenBytes": 5626,
+      "writtenSha256": "b1035b39fc33a0653672b116ff524f82a8a85e27da8de18798c211375722b45e"
+    },
+    "scope": "Read-only completed-pass evidence. No recognition, parser or authority override. Missing exports remain explicit.",
+    "observedAt": "2026-11-15T14:25:40.222445Z"
+  },
+  {
+    "type": "ANDROID_EXTRACTOR_DOCUMENT",
+    "sourceUrl": "https://hram-obuhovo.ru/wp-content/uploads/2025/10/duhovnye-tropy.jpg",
+    "format": "image",
+    "pages": 1,
+    "file": "documents/0008.json",
+    "observedAt": "2026-11-15T14:25:40.237715Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://hram-obuhovo.ru/wp-content/uploads/2025/06/1-%E2%80%93-dobrovolczy-remontniki_page-0001-1-scaled.jpg",
+    "maximumBytes": null,
+    "observedAt": "2026-11-15T14:25:40.247156Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://hram-obuhovo.ru/wp-content/uploads/2025/06/1-%E2%80%93-dobrovolczy-remontniki_page-0001-1-scaled.jpg",
+    "contentType": "image/jpeg",
+    "bytes": 429593,
+    "originalSha256": "b02005e3367a8f6759ccb61566edf70bd501dabe0caad6831601bd8f18cdc998",
+    "bodyFile": "responses/0009.body",
+    "writtenSha256": "b02005e3367a8f6759ccb61566edf70bd501dabe0caad6831601bd8f18cdc998",
+    "bodyEvidence": {
+      "declaredCharset": null,
+      "originalCharset": null,
+      "writtenCharset": null,
+      "transformation": "EXACT_BINARY",
+      "omissionReason": null,
+      "originalBytes": 429593,
+      "originalSha256": "b02005e3367a8f6759ccb61566edf70bd501dabe0caad6831601bd8f18cdc998",
+      "writtenBytes": 429593,
+      "writtenSha256": "b02005e3367a8f6759ccb61566edf70bd501dabe0caad6831601bd8f18cdc998"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T14:25:40.323772Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://hram-obuhovo.ru/wp-content/uploads/2025/06/1-%E2%80%93-dobrovolczy-remontniki_page-0001-1-scaled.jpg",
+    "elapsedMillis": 83,
+    "observedAt": "2026-11-15T14:25:40.330801Z"
+  },
+  {
+    "type": "NATIVE_OCR_PASS",
+    "metadata": {
+      "stage": "initial",
+      "sourceUrl": "https://hram-obuhovo.ru/wp-content/uploads/2025/06/1-%E2%80%93-dobrovolczy-remontniki_page-0001-1-scaled.jpg",
+      "width": 906,
+      "height": 1280,
+      "characters": 7863,
+      "coordinateScope": "SOURCE_BITMAP"
+    },
+    "originalSha256": "fd26d7104b4130077992997365f4b60d712846211726fe2b166b2229644dfa75",
+    "file": "ocr/0010-initial.hocr",
+    "writtenSha256": "fd26d7104b4130077992997365f4b60d712846211726fe2b166b2229644dfa75",
+    "bodyEvidence": {
+      "declaredCharset": "utf-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 8158,
+      "originalSha256": "fd26d7104b4130077992997365f4b60d712846211726fe2b166b2229644dfa75",
+      "writtenBytes": 8158,
+      "writtenSha256": "fd26d7104b4130077992997365f4b60d712846211726fe2b166b2229644dfa75"
+    },
+    "scope": "Read-only completed-pass evidence. No recognition, parser or authority override. Missing exports remain explicit.",
+    "observedAt": "2026-11-15T14:25:40.647892Z"
+  },
+  {
+    "type": "ANDROID_EXTRACTOR_DOCUMENT",
+    "sourceUrl": "https://hram-obuhovo.ru/wp-content/uploads/2025/06/1-%E2%80%93-dobrovolczy-remontniki_page-0001-1-scaled.jpg",
+    "format": "image",
+    "pages": 1,
+    "file": "documents/0011.json",
+    "observedAt": "2026-11-15T14:25:40.664373Z"
+  },
+  {
+    "type": "PRODUCTION_PROGRESS",
+    "progress": {
+      "parishId": "osm:way:171771405",
+      "phase": "FINISHED"
+    },
+    "at": "2026-11-15T14:25:40.683513Z",
+    "observedAt": "2026-11-15T14:25:40.683531Z"
+  },
+  {
+    "type": "CASE_FINISHED",
+    "at": "2026-11-15T14:25:40.842794Z",
+    "observedAt": "2026-11-15T14:25:40.842824Z"
+  }
+]

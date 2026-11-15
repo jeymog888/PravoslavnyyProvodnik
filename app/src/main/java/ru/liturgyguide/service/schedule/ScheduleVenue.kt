@@ -258,6 +258,85 @@ internal object ScheduleVenue {
         else relative.isNotEmpty()
     }
 
+
+    private val sharedRestriction = Regex("(?iu)(?<![а-яё])(?:не|нет|ни|без|только|лишь|кроме|вместо|или|либо|соответственно|отмен[а-яё]*|перен[а-яё]*|исключ[а-яё]*|бывш[а-яё]*|ранее|истор[а-яё]*|припис[а-яё]*|упомин[а-яё]*|фото[а-яё]*|видео[а-яё]*|репортаж[а-яё]*|рассказ[а-яё]*|отч[её]т[а-яё]*|запис[а-яё]*|трансляц[а-яё]*|воспомин[а-яё]*|экскурс[а-яё]*|паломнич[а-яё]*|посещ[а-яё]*|вчера|прошл[а-яё]*|был[а-яё]*|состоя[а-яё]*|проводил[а-яё]*|совершал[а-яё]*|служил[а-яё]*)(?![а-яё])")
+    private val sharedRelation = Regex("(?iu)(?<![а-яё])(?:при|у|на|из|для|после|перед|рядом|возле|около|с|к|по|во|в|через)(?![а-яё])")
+    private val concreteServiceStart = Regex("(?iu)^(?:(?:часы|(?:(?:божественная|ранняя|поздняя)\\s+)*литургия|исповедь|утреня(?:\\s+с\\s+полиелеем)?|вечерня|всенощное\\s+бдение|молебен|панихида|акафист)(?:\\s*\\.\\s*|$))+$")
+    private val generalSharedScope = Regex("(?iu)(?<![а-яё])(?:все|всех|богослужени[а-яё]*|служб[а-яё]*|расписани[а-яё]*)(?![а-яё])")
+    private val sharedServiceStart = Regex("(?iu)^(?:часы\\s*\\.\\s*)?(?:(?:божественная|ранняя|поздняя)\\s+)*литургия(?=\\s|\\.|$)")
+    private val sharedSuffix = Regex("(?iu)\\(\\s*в\\s+([^()]+)\\s*\\)\\s*\\.?$")
+    private val sharedClause = Regex("(?iu)^([а-яё-]+(?:\\s+[а-яё-]+){0,7})\\s+(храме|церкви|соборе|часовне|приделе)\\s+(д\\.|деревне|деревня|с\\.|селе|село|г\\.|городе|город|пос\\.|поселке|поселок)\\s+([а-яё-]+(?:\\s+[а-яё-]+){0,3})$")
+
+    fun hasUnsafeSharedInput(value: String): Boolean = value.codePoints().anyMatch {
+        Character.isISOControl(it) || Character.getType(it) == Character.FORMAT.toInt() ||
+            Character.getType(it) == Character.SURROGATE.toInt()
+    }
+
+    /** Inspect original active scope text before inlineLabel can discard a negation. */
+    fun hasSharedScopeRestriction(value: String): Boolean = value.length > 2_000 ||
+        hasUnsafeSharedInput(value) || sharedRestriction.containsMatchIn(value)
+
+    /** One complete foreign concrete service, not a general/exclusive venue notice. */
+    fun isConcreteForeignEvent(raw: String, parish: Parish?): Boolean {
+        if (parish == null || raw.length > 2_000 || hasUnsafeSharedInput(raw) || sharedRestriction.containsMatchIn(raw) ||
+            generalSharedScope.containsMatchIn(raw) || ScheduleCancellation.containsMatchIn(raw)) return false
+        val times = ScheduleClocks.pattern.findAll(raw).take(2).toList()
+        if (times.size != 1 || raw.substring(0, times.single().range.first).isNotBlank() ||
+            runCatching { java.time.LocalTime.of(times.single().groupValues[1].toInt(), times.single().groupValues[2].toInt()) }.isFailure) return false
+        val suffix = sharedSuffix.find(raw) ?: return false
+        if (times.single().range.last >= suffix.range.first) return false
+        val prefix = raw.substring(times.single().range.last + 1, suffix.range.first).trim()
+        if (!concreteServiceStart.matches(prefix) || buildingMarkers(prefix).isNotEmpty() || prefix.any { it == '(' || it == ')' }) return false
+        val match = sharedClause.matchEntire(suffix.groupValues[1].trim()) ?: return false
+        if (Regex("(?iu)(?<![а-яё])и(?![а-яё])").containsMatchIn(match.groupValues[1]) ||
+            sharedRelation.containsMatchIn(match.groupValues[1]) || sharedRelation.containsMatchIn(match.groupValues[4]) ||
+            match.groupValues[4].split(Regex("\\s+")).any { !it.first().isUpperCase() }) return false
+        val clause = "${match.groupValues[1]} ${match.groupValues[2]} в ${match.groupValues[4]}"
+        val parsed = slices(clause)?.singleOrNull() ?: return false
+        return parsed.valid && distinctiveName(parsed.name).isNotEmpty() && parsed.locality.isNotBlank() && !matches(clause, parish)
+    }
+
+    /** A bounded positive event statement, never a general building alias. */
+    fun sharedEventVenue(raw: String, parish: Parish?): String? {
+        if (parish == null || raw.length > 2_000 || hasUnsafeSharedInput(raw) || raw.contains('|') ||
+            sharedRestriction.containsMatchIn(raw) || ScheduleCancellation.containsMatchIn(raw)) return null
+        val times = ScheduleClocks.pattern.findAll(raw).take(2).toList()
+        if (times.size != 1 || runCatching { java.time.LocalTime.of(times.single().groupValues[1].toInt(),
+                times.single().groupValues[2].toInt()) }.isFailure) return null
+        val suffix = sharedSuffix.find(raw) ?: return null
+        val prefix = raw.substring(0, suffix.range.first)
+        if (prefix.any { it == '(' || it == ')' } || buildingMarkers(prefix).isNotEmpty() || !service.containsMatchIn(prefix) ||
+            times.single().range.last >= suffix.range.first) return null
+        if (raw.substring(0, times.single().range.first).isNotBlank() ||
+            !sharedServiceStart.containsMatchIn(prefix.substring(times.single().range.last + 1).trim())) return null
+        val members = suffix.groupValues[1].trim().split(Regex("(?iu)\\s+и\\s+"))
+        if (members.size !in 2..4) return null
+        val clauses = members.map { member ->
+            val match = sharedClause.matchEntire(member.trim()) ?: return null
+            if (sharedRelation.containsMatchIn(match.groupValues[1]) || sharedRelation.containsMatchIn(match.groupValues[4]) ||
+                match.groupValues[4].split(Regex("\\s+")).any { !it.first().isUpperCase() }) return null
+            // A proven administrative marker becomes the existing location introducer.
+            // Preserve every locality word without requiring absent address-format tokens.
+            val clause = "${match.groupValues[1]} ${match.groupValues[2]} в ${match.groupValues[4]}"
+            val parsed = slices(clause)?.singleOrNull() ?: return null
+            if (!parsed.valid || distinctiveName(parsed.name).isEmpty() || parsed.locality.isBlank()) return null
+            clause to match.groupValues[4]
+        }
+        return clauses.firstOrNull { matches(it.first, parish) && exactSharedLocality(it.second, parish) }?.first
+    }
+
+    private fun exactSharedLocality(locality: String, parish: Parish): Boolean {
+        fun completePlace(value: String): String? {
+            if (hasUnsafeSharedInput(value)) return null
+            val normalized = value.lowercase(Locale.ROOT).replace('ё', 'е').replace(Regex("[ ]+"), " ").trim(' ')
+            val place = normalized.replace(Regex("^(?:д\\.|деревня |деревне |с\\.|село |селе |г\\.|город |городе |п\\.|пос\\.|поселок |поселке )\\s*"), "")
+            return place.takeIf { Regex("[а-я]+(?:-[а-я]+)*(?: [а-я]+(?:-[а-я]+)*){0,3}").matches(it) }
+        }
+        val wanted = completePlace(locality) ?: return false
+        // Validate the entire typed city: digits/punctuation/suffixes never disappear.
+        return completePlace(parish.city) == wanted
+    }
+
     private fun tokens(text: String): Set<String> = Regex("[а-яёa-z]{3,}").findAll(text.lowercase(Locale.ROOT))
         .map { it.value.replace('ё', 'е') }.filter { word -> word !in functional && generic.none(word::startsWith) }.map { it.take(5) }.toSet()
 }

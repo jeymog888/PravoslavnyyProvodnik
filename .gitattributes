@@ -4,3 +4,6 @@ app/src/main/java/com/skedgo/converter/TimezoneMapper.java -whitespace
 app/src/test/resources/book/*.html -whitespace
 app/src/test/resources/schedule/*.html -whitespace
 app/src/test/resources/schedule/troicy/*.html -whitespace
+# Captured evidence is byte-pinned, including CRLF and missing final LF
+app/src/test/resources/schedule/shared-venue-case039/** -text -whitespace
+app/src/androidTest/assets/shared-venue-case039-native/** -text -whitespace
