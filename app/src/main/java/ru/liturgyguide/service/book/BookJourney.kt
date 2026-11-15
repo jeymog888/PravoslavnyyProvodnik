@@ -38,8 +38,8 @@ data class BookJourneyContext(
             (if (isPartialPublishedText) {
                 title.none { it.isISOControl() } && parts.size == 1 && parts.single().isValid() && key == parts.single() &&
                     ServiceBookSelection.partialBookKind(title) == key.worship &&
-                    key.worship in setOf(WorshipKind.VESPERS, WorshipKind.LITURGY) && key.topLevel == null &&
-                    key.date == (if (key.worship == WorshipKind.VESPERS) date.plusDays(1).toString() else civilDate)
+                    key.worship in setOf(WorshipKind.VESPERS, WorshipKind.LITURGY, WorshipKind.VIGIL) && key.topLevel == null &&
+                    key.date == (if (key.worship in setOf(WorshipKind.VESPERS, WorshipKind.VIGIL)) date.plusDays(1).toString() else civilDate)
             } else if (isHoursLiturgyTexts) {
                 ServiceBookSelection.isHoursLiturgy(title) && parts.size == 3 &&
                     parts.map { it.worship } == listOf(WorshipKind.HOUR3, WorshipKind.HOUR6, WorshipKind.LITURGY) &&

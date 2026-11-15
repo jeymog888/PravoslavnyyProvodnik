@@ -1336,7 +1336,13 @@ internal fun BookJourneyDescription(journey: BookJourneyContext, key: ServiceBoo
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.testTag("book_journey_date"))
         if (journey.isPartialPublishedText) {
-            Text("Доступный текст: " + if (key.worship == WorshipKind.VESPERS) "вечерня" else "литургия",
+            val available = when (key.worship) {
+                WorshipKind.VESPERS -> "вечерня"
+                WorshipKind.VIGIL -> "всенощное бдение"
+                WorshipKind.LITURGY -> "литургия"
+                else -> key.worship.title.lowercase()
+            }
+            Text("Доступный текст: $available",
                 style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("book_partial_available"))
             ServiceBookSelection.excludedScope(journey.title)?.let { note ->
                 Text(note, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,

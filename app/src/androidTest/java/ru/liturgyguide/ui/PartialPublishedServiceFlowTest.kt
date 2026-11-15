@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.os.ParcelFileDescriptor
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.*
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -22,6 +23,7 @@ import org.junit.runners.Parameterized
 import ru.liturgyguide.model.*
 import ru.liturgyguide.service.ChurchSelectionResult
 import ru.liturgyguide.service.book.*
+import ru.liturgyguide.service.schedule.ScheduleResponse
 import ru.liturgyguide.service.schedule.ScheduleTransport
 import java.io.File
 import java.time.Instant
@@ -33,7 +35,9 @@ import kotlin.math.roundToInt
 
 /** Recorded title/text fixtures in real native windows. No live venue, ASR or process-death claim. */
 @RunWith(Parameterized::class)
-class PartialPublishedServiceFlowTest(private val dark: Boolean, private val evening: Boolean) {
+class PartialPublishedServiceFlowTest(private val dark: Boolean, private val kind: WorshipKind) {
+    private val evening get() = kind == WorshipKind.VESPERS
+    private val vigil get() = kind == WorshipKind.VIGIL
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val context = instrumentation.targetContext
@@ -46,8 +50,16 @@ class PartialPublishedServiceFlowTest(private val dark: Boolean, private val eve
     private val page = mutableStateOf("today")
     private val encodedRoute = mutableStateOf<String?>(null)
     private val invalid = mutableStateOf<BookRoute?>(null)
-    private val title get() = if (evening) "Вечерня с акафистом великомученику и целителю Пантелеимону" else "Литургия. Панихида"
-    private val service get() = ParishService(if (evening) "2026-11-12" else "2026-11-14", "17:00", title, "service_block")
+    private val title get() = when (kind) {
+        WorshipKind.VESPERS -> "Вечерня с акафистом великомученику и целителю Пантелеимону"
+        WorshipKind.VIGIL -> "Всенощное бдение. Исповедь"
+        else -> "Литургия. Панихида"
+    }
+    private val service get() = ParishService(when (kind) {
+        WorshipKind.VESPERS -> "2026-11-12"
+        WorshipKind.VIGIL -> "2026-11-11"
+        else -> "2026-11-14"
+    }, "17:00", title, "service_block")
     private val parish get() = Parish(id = "partial-fixture", name = if (evening) "Храм святителя Николая" else "Храм Новомучеников",
         shortName = "Храм", city = "Москва", address = "", phone = "", website = "https://example.org", timezone = "Europe/Moscow",
         sourceUrl = "https://example.org/schedule", scheduleSource = "Контролируемый пример для проверки интерфейса",
@@ -100,6 +112,20 @@ class PartialPublishedServiceFlowTest(private val dark: Boolean, private val eve
         assertEquals(position.blockId, accepted.blockId); assertEquals(position.mode, accepted.mode)
         assertEquals(position.fraction, accepted.fraction, .015f)
         assertEquals(chosen.journeyContext, accepted.journeyContext)
+        compose.onNodeWithTag("book_find").performClick()
+        compose.onNodeWithTag("book_search_query").performTextReplacement("несуществующая проверочная фраза")
+        compose.awaitBookSearch()
+        val emptyText = "Совпадений в открытой книге нет"
+        compose.onNodeWithTag("book_search_sheet").performScrollToNode(hasText(emptyText, substring = true))
+        compose.onNodeWithText(emptyText, substring = true).assertIsDisplayed()
+        compose.onNodeWithTag("book_search_sheet").performScrollToNode(hasTestTag("book_search_scope"))
+        compose.onNodeWithTag("book_search_scope").assertTextEquals("Текст: ${book.key.worship.title}")
+        compose.onNodeWithTag("book_search_other_part").assertDoesNotExist()
+        compose.onNodeWithTag("book_search_corpus_error").assertDoesNotExist()
+        assertTrue(calls.isEmpty()); assertEquals(accepted, store.last(parish.id)); capture("search")
+        compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsActions.Dismiss)).onFirst()
+            .performSemanticsAction(SemanticsActions.Dismiss) { assertTrue(it()) }
+        settle()
         compose.onNodeWithTag("book_order").performClick()
         compose.onNodeWithTag("book_journey_parts").assertDoesNotExist()
         compose.onAllNodesWithText("1 из 1", substring = true).assertCountEquals(0)
@@ -180,12 +206,39 @@ class PartialPublishedServiceFlowTest(private val dark: Boolean, private val eve
     }
     private fun now() = Instant.parse(service.date + "T13:55:00Z")
     private fun seedBook(): ServiceBook {
-        val path = if (evening) "polyeleos-journey/vespers-2026-11-13-church34.html" else "morning-hours/liturgy-2026-11-14-church30.html"
-        val html = instrumentation.context.assets.open(path).bufferedReader().use { it.readText() }
         val key = route.activeKey
-        val book = ServiceBookParser().parse(Jsoup.parse(html, key.sourceUrl()), key, 1)
+        val book = if (vigil) seedVigil(key) else {
+            val path = if (evening) "polyeleos-journey/vespers-2026-11-13-church34.html" else "morning-hours/liturgy-2026-11-14-church30.html"
+            val html = instrumentation.context.assets.open(path).bufferedReader().use { it.readText() }
+            ServiceBookParser().parse(Jsoup.parse(html, key.sourceUrl()), key, 1)
+        }
         assertTrue(ServiceBookIntegrity.valid(book)); assertTrue(FileBookCache(directory).write(book))
         return book
+    }
+    private fun seedVigil(key: ServiceBookKey): ServiceBook {
+        val cache = FileBookCache(directory)
+        val kinds = listOf(WorshipKind.VESPERS, WorshipKind.MATINS, WorshipKind.HOUR1)
+        val expected = kinds.associateBy { key.copy(worship = it).sourceUrl() }
+        val sourceCalls = mutableListOf<WorshipKind>()
+        val seedRepository = ServiceBookRepository(cache, ScheduleTransport { url ->
+            val part = expected[url]
+            if (part != null) sourceCalls += part
+            val name = when (part) {
+                WorshipKind.VESPERS -> "vespers"
+                WorshipKind.MATINS -> "matins"
+                WorshipKind.HOUR1 -> "hour1"
+                else -> null
+            }
+            val html = name?.let { instrumentation.context.assets.open("partial-vigil/$it-2026-11-12.html")
+                .bufferedReader().use { reader -> reader.readText() } } ?: "<html></html>"
+            ScheduleResponse(url, html.toByteArray(Charsets.UTF_8), "text/html; charset=UTF-8")
+        }, downloadRussian = false)
+        val ready = runBlocking { seedRepository.load(key) } as BookLoadResult.Ready
+        assertTrue(ready.saved); assertEquals(kinds, sourceCalls)
+        assertEquals(kinds.map { requireNotNull(cache.read(key.copy(worship = it))) }.flatMap { it.blocks }, ready.book.blocks)
+        assertEquals(ready.book, cache.readVersion(key, ready.book.contentHash))
+        assertTrue(ready.book.notices.any { "Переходы и сокращения" in it })
+        return ready.book
     }
     private fun repository() = ServiceBookRepository(FileBookCache(directory), ScheduleTransport { url ->
         calls += url; error("This accepted one-part book must reopen from disk")
@@ -198,7 +251,18 @@ class PartialPublishedServiceFlowTest(private val dark: Boolean, private val eve
         compose.onNodeWithTag("book_calendar_schedule_title").assertTextEquals(title)
         compose.onNodeWithTag("book_calendar").performScrollToNode(hasTestTag("book_partial_scope"))
         compose.onNodeWithTag("book_partial_scope").assertTextEquals(ServiceBookSelection.excludedScope(title)!!)
-        if (!evening) compose.onNodeWithTag("book_journey_date").assertTextEquals("Тексты на 14 ноября")
+        compose.onNodeWithTag("book_calendar").performScrollToNode(hasTestTag("book_partial_available"))
+        compose.onNodeWithTag("book_partial_available").assertTextEquals("Доступный текст: " + when (kind) {
+            WorshipKind.VESPERS -> "вечерня"
+            WorshipKind.VIGIL -> "всенощное бдение"
+            else -> "литургия"
+        })
+        compose.onNodeWithTag("book_calendar").performScrollToNode(hasTestTag("book_journey_date"))
+        compose.onNodeWithTag("book_journey_date").assertTextEquals(when (kind) {
+            WorshipKind.VESPERS -> "Тексты на 13 ноября. Вечерняя служба относится к следующему церковному дню"
+            WorshipKind.VIGIL -> "Тексты на 12 ноября. Вечерняя служба относится к следующему церковному дню"
+            else -> "Тексты на 14 ноября"
+        })
         assertEquals(book.key, store.last(parish.id)?.key); assertEquals(book.contentHash, store.last(parish.id)?.contentHash)
         capture("calendar")
     }
@@ -209,7 +273,7 @@ class PartialPublishedServiceFlowTest(private val dark: Boolean, private val eve
         compose.waitForIdle(); val bitmap = requireNotNull(instrumentation.uiAutomation.takeScreenshot())
         try {
             val out = File(context.getExternalFilesDir("partial-published-qa"), name).apply { mkdirs() }
-            val file = File(out, "${++captureIndex}-$label-dark$dark-evening$evening.png")
+            val file = File(out, "${++captureIndex}-$label-dark$dark-kind$kind.png")
             check(file.createNewFile())
             file.outputStream().use { check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)) }
         } finally { bitmap.recycle() }
@@ -237,7 +301,9 @@ class PartialPublishedServiceFlowTest(private val dark: Boolean, private val eve
         }
     }
     companion object {
-        @JvmStatic @Parameterized.Parameters(name = "dark={0},evening={1}")
-        fun configurations() = listOf(arrayOf(false, false), arrayOf(false, true), arrayOf(true, false), arrayOf(true, true))
+        @JvmStatic @Parameterized.Parameters(name = "dark={0},kind={1}")
+        fun configurations() = listOf(false, true).flatMap { dark ->
+            listOf(WorshipKind.LITURGY, WorshipKind.VESPERS, WorshipKind.VIGIL).map { kind -> arrayOf(dark, kind) }
+        }
     }
 }

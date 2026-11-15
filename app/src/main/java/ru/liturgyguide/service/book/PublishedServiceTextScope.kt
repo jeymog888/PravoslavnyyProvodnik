@@ -64,9 +64,20 @@ internal object PublishedServiceTextScope {
         return Analysis(positive, extraPatterns.filter { it.second.containsMatchIn(positive) }.map { it.first }, ambiguous)
     }
 
-    fun partialKind(analysis: Analysis): WorshipKind? {
+    // This new allowance sees the original punctuation, before the legacy analyzer removes it.
+    // A closed full-title grammar excludes unknown services, alternatives and residual words.
+    private val vigilConfessionTitle = Regex("всенощное бдение(?: *[.,] *исповедь| и исповедь| с исповедью)(?: *\\.)?")
+    private fun isVigilWithConfession(title: String): Boolean {
+        if (title.any { it.isISOControl() }) return false
+        val value = title.replace('\u00a0', ' ').trim().lowercase().replace(Regex("[\\s\\p{Zs}]+"), " ")
+        return vigilConfessionTitle.matches(value)
+    }
+
+    fun partialKind(analysis: Analysis, title: String): WorshipKind? {
         if (analysis.ambiguous || analysis.extras.isEmpty()) return null
         val value = analysis.independent
+        if (analysis.extras == listOf(Extra.CONFESSION) && isVigilWithConfession(title) &&
+            Regex("\\bвсенощное бдение\\b").containsMatchIn(value)) return WorshipKind.VIGIL
         if (matins.containsMatchIn(value) || listOf("всенощ", "бдени", "повечер", "полунощ", "изобразительн").any { it in value } ||
             Regex("\\b(?:часы|час|часа|часов)\\b").containsMatchIn(value)) return null
         val evening = vespers.containsMatchIn(value)

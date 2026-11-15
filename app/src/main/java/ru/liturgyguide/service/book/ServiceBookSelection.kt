@@ -82,7 +82,7 @@ object ServiceBookSelection {
         else "Тексты третьего и шестого часов и литургии. Местные сокращения и выбор песнопений могут отличаться"
 
     internal fun partialBookKind(title: String): WorshipKind? = if (title.any { it.isISOControl() }) null
-        else PublishedServiceTextScope.partialKind(PublishedServiceTextScope.analyze(title))
+        else PublishedServiceTextScope.partialKind(PublishedServiceTextScope.analyze(title), title)
 
     fun excludedScope(title: String): String? = if (partialBookKind(title) == null) null
         else PublishedServiceTextScope.exclusion(PublishedServiceTextScope.analyze(title))
@@ -90,7 +90,12 @@ object ServiceBookSelection {
     fun readingScope(title: String): String? {
         if (isHoursLiturgy(title)) return hoursLiturgyScope(title)
         val kind = partialBookKind(title) ?: return null
-        val available = if (kind == WorshipKind.VESPERS) "вечерни" else "литургии"
+        val available = when (kind) {
+            WorshipKind.VESPERS -> "вечерни"
+            WorshipKind.VIGIL -> "всенощного бдения"
+            WorshipKind.LITURGY -> "литургии"
+            else -> return null
+        }
         return "В приложении текст $available. " + excludedScope(title)
     }
 
