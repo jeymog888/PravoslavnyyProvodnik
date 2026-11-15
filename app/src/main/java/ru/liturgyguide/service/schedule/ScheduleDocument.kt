@@ -192,7 +192,10 @@ object ScheduleOcrLayout {
         return lines(words)
     }
 
-    fun lines(words: List<ScheduleWord>): List<ScheduleDocumentLine> {
+    internal fun hasProvenServiceColumn(words: List<ScheduleWord>): Boolean =
+        ScheduleOcrServiceColumn.texts(orderedRows(words)).isNotEmpty()
+
+    private fun orderedRows(words: List<ScheduleWord>): List<List<ScheduleWord>> {
         data class Row(val members: MutableList<ScheduleWord>) {
             val middle: Double get() = members.map { (it.top + it.bottom) / 2.0 }.average()
             val height: Double get() = members.map { it.bottom - it.top }.sorted().let { it[it.size / 2].toDouble() }
@@ -203,7 +206,11 @@ object ScheduleOcrLayout {
             val row = rows.lastOrNull { abs(it.middle - middle) <= max(it.height, (word.bottom - word.top).toDouble()) * .48 }
             if (row == null) rows += Row(mutableListOf(word)) else row.members += word
         }
-        val orderedRows = rows.sortedBy { it.middle }.map { it.members.sortedBy { word -> word.left } }
+        return rows.sortedBy { it.middle }.map { it.members.sortedBy { word -> word.left } }
+    }
+
+    fun lines(words: List<ScheduleWord>): List<ScheduleDocumentLine> {
+        val orderedRows = orderedRows(words)
         val serviceColumn = ScheduleOcrServiceColumn.texts(orderedRows)
         return orderedRows.mapIndexed { index, ordered ->
             ScheduleDocumentLine(ordered.joinToString(" ") { it.text }, ordered.map { it.confidence }.average().toInt(),

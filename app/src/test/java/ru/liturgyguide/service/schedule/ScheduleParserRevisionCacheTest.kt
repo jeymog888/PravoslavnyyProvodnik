@@ -52,7 +52,7 @@ class ScheduleParserRevisionCacheTest {
         assertTrue(current.isFresh(now.plusSeconds(24 * 3_600L)))
         assertFalse(current.isFresh(now.plusSeconds(24 * 3_600L + 1)))
         assertFalse(current.isFresh(now.minusSeconds(1)))
-        for (revision in listOf(0, 2, Int.MAX_VALUE)) {
+        for (revision in listOf(0, 1, 3, Int.MAX_VALUE)) {
             val older = current.copy(parserRevision = revision)
             assertFalse(older.hasCurrentParserRevision)
             assertFalse(older.isFresh(now))
@@ -61,7 +61,7 @@ class ScheduleParserRevisionCacheTest {
     }
 
     @Test fun malformedRevisionBecomesLegacyWithoutDiscardingEventsBindingOrWithdrawalHistory() {
-        val malformed = listOf<String?>(null, "null", "\"1\"", "true", "false", "1.0", "1e0", "-1", "2147483648", "[]", "{}")
+        val malformed = listOf<String?>(null, "null", "\"1\"", "\"2\"", "true", "false", "1.0", "1e0", "2.0", "2e0", "-1", "2147483648", "[]", "{}")
         for (token in malformed) {
             val restored = requireNotNull(ScheduleCacheCodec.decode(encoded(token), parish)) { "State lost for $token" }
             assertSourceHistoryRetained(restored)
@@ -70,16 +70,17 @@ class ScheduleParserRevisionCacheTest {
             assertEquals(restored, ScheduleCacheCodec.decode(ScheduleCacheCodec.encode(restored), parish))
             assertTrue(parish.withInternetSchedule(restored, now).schedule.isEmpty())
         }
-        for (revision in listOf(0, 1, 2, Int.MAX_VALUE)) {
+        for (revision in listOf(0, 1, 2, 3, Int.MAX_VALUE)) {
             val restored = requireNotNull(ScheduleCacheCodec.decode(encoded(revision.toString()), parish))
             assertSourceHistoryRetained(restored)
             assertEquals(revision, restored.publication?.parserRevision)
-            assertEquals(revision == 1, requireNotNull(restored.publication).hasCurrentParserRevision)
+            assertEquals(revision == SchedulePublication.CURRENT_PARSER_REVISION,
+                requireNotNull(restored.publication).hasCurrentParserRevision)
         }
     }
 
     @Test fun noncurrentReadyReparsesWithinSixHoursButCurrentReadyKeepsTheShortcut() = runBlocking {
-        for (revision in listOf(0, 2)) {
+        for (revision in listOf(0, 1, 3)) {
             val cache = Cache(encoded(revision.toString()))
             var calls = 0
             val repo = InternetScheduleRepository(ScheduleTransport { url ->
@@ -107,9 +108,9 @@ class ScheduleParserRevisionCacheTest {
         assertEquals(0, currentCalls)
     }
 
-    @Test fun failedLegacyReparseKeepsHistoryAndFiveMinuteCooldownWhileExplicitRefreshStillWorks() = runBlocking {
-        for (unavailable in listOf(true, false)) {
-            val cache = Cache(encoded(null))
+    @Test fun failedOlderReparseKeepsHistoryAndFiveMinuteCooldownWhileExplicitRefreshStillWorks() = runBlocking {
+        for (unavailable in listOf(true, false)) for (revisionToken in listOf(null, "1")) {
+            val cache = Cache(encoded(revisionToken))
             var calls = 0
             val repo = InternetScheduleRepository(ScheduleTransport { url ->
                 calls++
@@ -120,7 +121,7 @@ class ScheduleParserRevisionCacheTest {
             assertEquals(if (unavailable) InternetScheduleStatus.UNAVAILABLE else InternetScheduleStatus.UNSUPPORTED, failed.status)
             assertEquals(1, calls)
             assertSourceHistoryRetained(failed)
-            assertEquals(0, failed.publication?.parserRevision)
+            assertEquals(revisionToken?.toInt() ?: 0, failed.publication?.parserRevision)
             assertTrue(parish.withInternetSchedule(failed, now.plusSeconds(60)).schedule.isEmpty())
             assertEquals(failed, repo.cached(parish))
             repo.refresh(parish, now.plusSeconds(61))

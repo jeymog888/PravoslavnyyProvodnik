@@ -100,6 +100,16 @@ class AndroidScheduleDocumentExtractor(context: Context,
                             val hocr = engine.getHOCRText(0).orEmpty()
                             observe("initial", response, bitmap, hocr)
                             if (complete.get()) throw IOException("Recognition cancelled")
+                            val ruled = ScheduleRuledDateCells.inspect(object : ScheduleOcrRaster {
+                                override val width get() = bitmap.width
+                                override val height get() = bitmap.height
+                                override fun readArgbRow(y: Int, row: IntArray) {
+                                    checkCancelled()
+                                    bitmap.getPixels(row, 0, bitmap.width, 0, y, bitmap.width, 1)
+                                }
+                            }, hocr)
+                            // Refused ruled grids never fall through to flat/supplementary OCR.
+                            if (ruled != null) return ruled
                             if (ScheduleSuperscriptTable.needsSupplement(hocr)) {
                                 // At most two bounded supplementary passes for a proven dated
                                 // table. Original-scale headings and enlarged minutes complement
