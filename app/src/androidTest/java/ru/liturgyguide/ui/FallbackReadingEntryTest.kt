@@ -433,7 +433,7 @@ data class FallbackFixture(val now: Instant = Instant.parse("2026-11-12T06:00:00
 
 /** Native configuration only, as in PrimaryReadingActionHarness. No preference/cache/provider injection. */
 abstract class FallbackReadingHarness(protected val churchPage: Boolean, protected val width: Int,
-    private val height: Int, private val scale: Float) {
+    private val height: Int, private val scale: Float, private val darkTheme: Boolean = false) {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     protected var fixture by mutableStateOf(FallbackFixture())
     protected val calls = FallbackCalls()
@@ -484,7 +484,7 @@ abstract class FallbackReadingHarness(protected val churchPage: Boolean, protect
     }
 
     protected fun launch() {
-        compose.setContent { GuideTheme(false) {
+        compose.setContent { GuideTheme(darkTheme) {
             Box(Modifier.fillMaxSize().testTag("fallback_entry_host")) {
                 if (mounted) key(generation) {
                     val current = fixture

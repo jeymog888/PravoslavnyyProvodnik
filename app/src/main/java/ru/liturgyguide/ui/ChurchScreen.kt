@@ -240,8 +240,23 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     val currentCompactPending by rememberUpdatedState(compactPending)
     // Header (optional), identity, day chips, then the optional retained reading cards.
     val hasPersonalCard = church != null && personalStartForDate(userStarts, church, date) != null
-    val hasReadingCard = church != null && ((onReadLiturgy != null && !hasPersonalCard) ||
-        ((arrival?.featured == null || onOpenService == null) && onReadServiceText != null))
+    val readingOwner = church?.id.orEmpty() + "\u0000" + date.toString()
+    // One saved latch retains the full form and its control variants. Source-view
+    // replacement must not shrink or repurpose an already composed reading item.
+    var fullReadingForm by rememberSaveable(church?.id, date.toString()) { mutableStateOf<String?>(null) }
+    val retainedReadingControls = fullReadingForm?.takeIf {
+        it.length == readingOwner.length + 3 && it.startsWith(readingOwner + "\u0000")
+    }?.takeLast(2)?.takeIf { controls -> controls.all { it == '0' || it == '1' } }
+    val hasPersonalReading = hasPersonalCard && onReadLiturgy != null
+    val showReadingLiturgy = onReadLiturgy != null && !hasPersonalReading
+    val showReadingChooser = churchReadingChooser(arrival?.featured, hasPersonalReading,
+        onReadLiturgy != null, onReadServiceText != null, onOpenService != null,
+        retainedChooser = retainedReadingControls?.get(1)?.let { it == '1' })
+    val readingEntry = churchReadingEntry(church, date, arrival?.featured,
+        showLiturgy = showReadingLiturgy, showChooser = showReadingChooser,
+        hasChooser = onReadServiceText != null, hasOpenService = onOpenService != null,
+        keepFull = retainedReadingControls != null)
+    val hasReadingCard = readingEntry != ChurchReadingEntry.NONE
     val scheduleItemIndex = (if (showBack) 0 else 1) + 2 +
         (if (readingBeforeSchedule) (if (hasPersonalCard) 1 else 0) + (if (hasReadingCard) 1 else 0) else 0)
     // Sources are the next stable item, independent of the selected date or featured service.
@@ -336,29 +351,37 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                     }
                 }
                 fun readingItem() {
+                    if (readingEntry == ChurchReadingEntry.NONE) return
                     val read = onReadLiturgy
-                    val hasPersonalReading = personalStart != null && read != null
-                    val showLiturgy = read != null && !hasPersonalReading
-                    val showChooser = (arrival?.featured == null || onOpenService == null) && onReadServiceText != null
-                    if (!showLiturgy && !showChooser) return
+                    val primaryReading = retainedReadingControls?.get(0)?.let { it == '1' }
+                        ?: (featured == null || onOpenService == null || read == null && !hasPersonalReading)
+                    val choose = { if (onSourceSearchInteraction()) chooserDateIso = date.toString() }
                     item(key = "church_reading") {
-                        ArrivalCard(Modifier.testTag("church_reading_card"), accent = featured == null && !hasPersonalReading) {
-                            Text("Читать службу", style = MaterialTheme.typography.titleLarge)
-                            Text("Оригинал, доступный русский перевод и объяснения. Можно читать в своем темпе", style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            if (read != null && !hasPersonalReading) {
-                                if (featured == null || onOpenService == null) Button(onClick = { read(date) }, shape = MaterialTheme.shapes.small,
-                                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("church_read_liturgy")) {
-                                    Text(readingEntryLabel(date))
-                                } else OutlinedButton(onClick = { read(date) },
-                                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("church_read_liturgy")) { Text("Текст литургии на этот день") }
+                        if (readingEntry == ChurchReadingEntry.COMPACT) Box(Modifier.testTag("church_reading_card")) {
+                            ArrivalAction("Выбрать другой текст", Icons.Default.MenuBook, choose,
+                                Modifier.testTag("church_other_services"))
+                        } else {
+                            SideEffect {
+                                if (retainedReadingControls == null) fullReadingForm = readingOwner + "\u0000" +
+                                    (if (primaryReading) "1" else "0") + (if (showReadingChooser) "1" else "0")
                             }
-                            if (showChooser) {
-                                val choose = { if (onSourceSearchInteraction()) chooserDateIso = date.toString() }
-                                if (read == null && (featured == null || onOpenService == null)) Button(onClick = choose, shape = MaterialTheme.shapes.small,
-                                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("church_other_services")) { Text("Выбрать другой текст") }
-                                else OutlinedButton(onClick = choose,
-                                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("church_other_services")) { Text("Выбрать другой текст") }
+                            ArrivalCard(Modifier.testTag("church_reading_card"), accent = primaryReading && !hasPersonalReading) {
+                                Text("Читать службу", style = MaterialTheme.typography.titleLarge)
+                                Text("Оригинал, доступный русский перевод и объяснения. Можно читать в своем темпе", style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                if (read != null && showReadingLiturgy) {
+                                    if (primaryReading) Button(onClick = { read(date) }, shape = MaterialTheme.shapes.small,
+                                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("church_read_liturgy")) {
+                                        Text(readingEntryLabel(date))
+                                    } else OutlinedButton(onClick = { read(date) },
+                                        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("church_read_liturgy")) { Text("Текст литургии на этот день") }
+                                }
+                                if (showReadingChooser) {
+                                    if (read == null && primaryReading) Button(onClick = choose, shape = MaterialTheme.shapes.small,
+                                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("church_other_services")) { Text("Выбрать другой текст") }
+                                    else OutlinedButton(onClick = choose,
+                                        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("church_other_services")) { Text("Выбрать другой текст") }
+                                }
                             }
                         }
                     }

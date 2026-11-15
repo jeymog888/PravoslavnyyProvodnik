@@ -78,8 +78,8 @@ object ServiceBookSelection {
 
     fun hoursLiturgyScope(title: String): String =
         if (PublishedServiceTextScope.analyze(title).extras.isNotEmpty())
-            "Тексты третьего и шестого часов и литургии. Остальные службы из этой записи в набор не входят"
-        else "Тексты третьего и шестого часов и литургии. Местные сокращения и выбор песнопений могут отличаться"
+            "Часы: псалмы и молитвы перед литургией. Остальные службы из этой записи в набор не входят"
+        else "Часы: псалмы и молитвы перед литургией. Порядок в храме может отличаться"
 
     internal fun partialBookKind(title: String): WorshipKind? = if (title.any { it.isISOControl() }) null
         else PublishedServiceTextScope.partialKind(PublishedServiceTextScope.analyze(title), title)
