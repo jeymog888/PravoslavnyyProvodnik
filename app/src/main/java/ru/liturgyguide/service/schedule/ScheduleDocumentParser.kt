@@ -37,6 +37,9 @@ object ScheduleDocumentParser {
                 it.sourceTruncated || it.lines.size > 2_000 || it.ocrFailure == ScheduleOcrFailure.CONFLICTING_EVIDENCE })
             return ScheduleParseResult(ScheduleParseDisposition.REJECTED, safetyConflict = true)
         val events = mutableListOf<InternetService>()
+        data class CalendarAttempt(val date: LocalDate?, val month: YearMonth, val raw: String, val struck: Boolean)
+        val calendarAttempts = mutableMapOf<Pair<Int, String>, CalendarAttempt>()
+        val representedCalendarRows = mutableMapOf<Pair<Int, String>, InternetService>()
         val cancelledDates = mutableSetOf<LocalDate>()
         val cancelledStarts = mutableSetOf<String>()
         var rejectedScope = false
@@ -47,6 +50,10 @@ object ScheduleDocumentParser {
         val inferredMonths = ScheduleYearInference.months(document, today)
         document.pages.take(12).forEachIndexed { pageIndex, page ->
             if (page.ocrFailure != null) return@forEachIndexed
+            // A provenance marker alone is insufficient: walk may not emit its table.
+            val emittedCalendarScopes = page.lines.mapNotNull { line ->
+                line.htmlCalendarNotice?.takeIf { it.text == line.text }?.scope?.takeIf { it.text == line.text }
+            }.toSet()
             data class HeadingScope(val cancelled: Boolean, val venue: String?, val date: LocalDate?, val lineIndex: Int)
             val headings = sortedMapOf<Int, HeadingScope>()
             var sectionVenue: String? = null
@@ -68,6 +75,8 @@ object ScheduleDocumentParser {
             var pendingDate: LocalDate? = null
             var pendingVenue: String? = null
             var pendingSharedVenue: SharedVenueEvidence? = null
+            var pendingCalendarRow: Pair<Int, String>? = null
+            var activeCalendarRow: Pair<Int, String>? = null
             var rejected = false
             data class DayContainerScope(val venue: String?, val venueLine: Int, val month: YearMonth?, val date: LocalDate?,
                 val headings: Map<Int, HeadingScope>, val requiresDay: Boolean, val rangeScope: ClosedRange<LocalDate>?)
@@ -79,8 +88,11 @@ object ScheduleDocumentParser {
                     rejectedScope = true
                     cancelledStarts += "${day}T$time"
                 }
-                if (!rejected && day != null && time != null) event(day, time, pendingTitle, today, parish, pendingVenue, pendingSharedVenue)?.let(events::add)
-                pendingDate = null; pendingClock = null; pendingTitle = ""; pendingVenue = null; pendingSharedVenue = null; rejected = false
+                if (!rejected && day != null && time != null) event(day, time, pendingTitle, today, parish, pendingVenue, pendingSharedVenue)?.let { accepted ->
+                    events += accepted
+                    pendingCalendarRow?.let { representedCalendarRows[it] = accepted }
+                }
+                pendingDate = null; pendingClock = null; pendingTitle = ""; pendingVenue = null; pendingSharedVenue = null; pendingCalendarRow = null; rejected = false
             }
             fun clearDay() {
                 flush(); currentDate = null; boundDay = null
@@ -101,6 +113,42 @@ object ScheduleDocumentParser {
                 rangeScope?.let { scope = YearMonth.from(it.start) }
             }
             page.lines.take(2_000).forEachIndexed lineLoop@{ lineIndex, line ->
+                line.htmlCalendarNotice?.let { notice ->
+                    if (notice.text != line.text) {
+                        if (ScheduleWeekdayTable.cancellation(line.text)) { clearDay(); rejectUnresolvedWithdrawal() }
+                        return@lineLoop
+                    }
+                    if (!ScheduleWeekdayTable.cancellation(notice.text)) return@lineLoop
+                    val headingVenue = headings.values.filter { it.venue != null }.maxByOrNull { it.lineIndex }
+                    val inherited = if (sectionVenue != null && sectionVenueLine > (headingVenue?.lineIndex ?: -1))
+                        sectionVenue else headingVenue?.venue ?: sectionVenue
+                    val governingLines = headings.values.map { it.lineIndex } +
+                        listOfNotNull(sectionVenueLine.takeIf { sectionVenue != null && it > (headingVenue?.lineIndex ?: -1) })
+                    val restrictedAuthority = governingLines.any { index ->
+                        val source = page.lines.getOrNull(index)
+                        if (notice.scope != null && source?.htmlCalendarScope == notice.scope) false
+                        else source?.let { it.htmlCalendarScope?.text ?: it.htmlScopeText }
+                            ?.let(ScheduleVenue::hasSharedScopeRestriction) ?: true
+                    }
+                    if (restrictedAuthority) {
+                        clearDay(); requiresDay = true; rangeScope = null; rejectUnresolvedWithdrawal()
+                        return@lineLoop
+                    }
+                    if (!ScheduleVenue.matches(inherited, parish) || ScheduleWeekdayTable.clearlyForeignNotice(notice.text, parish)) return@lineLoop
+                    clearDay(); requiresDay = true; rangeScope = null
+                    val starts = notice.starts(parish)
+                    if (starts == null) rejectUnresolvedWithdrawal()
+                    else {
+                        // Caption/owner scope withdraws its proven listed starts, never the whole month or a sibling table.
+                        starts.filter { runCatching { LocalDate.parse(it.substringBefore('T')) in today.minusDays(1)..today.plusDays(45) }.getOrDefault(false) }
+                            .forEach(cancelledStarts::add)
+                    }
+                    return@lineLoop
+                }
+                val calendar = line.htmlCalendarRow
+                // Every calendar physical row owns its date; neither siblings nor a footer borrow it.
+                if (calendar != null || activeCalendarRow != null) { clearDay(); requiresDay = true; rangeScope = null }
+                activeCalendarRow = calendar?.let { pageIndex to "${it.tableKey}:${it.permitted}:${it.rowId}" }
                 if (line.htmlDayContainer != boundDay?.container) boundDay = null
                 // A named venue inside one ISO calendar card belongs to that card. Keep all
                 // outer restrictions, then restore them before reading its sibling card.
@@ -123,7 +171,25 @@ object ScheduleDocumentParser {
                     currentDate = headings.values.mapNotNull { it.date }.lastOrNull()
                     return@lineLoop
                 }
-                val clean = line.text.replace('\u00a0', ' ').replace(Regex("[\\t ]+"), " ").trim()
+                val raw = line.text.replace('\u00a0', ' ').replace(Regex("[\\t ]+"), " ").trim()
+                val calendarDate = calendar?.takeIf { it.validFor(raw) }?.date()
+                if (calendar != null) {
+                    if (!calendar.validFor(raw)) {
+                        if (cancellation.containsMatchIn(raw)) rejectUnresolvedWithdrawal()
+                        return@lineLoop
+                    }
+                    if (calendar.cells[3].any(Char::isDigit))
+                        calendarAttempts[requireNotNull(activeCalendarRow)] = CalendarAttempt(calendarDate, calendar.month(), raw, line.struck)
+                    if (!calendar.permitted || !calendar.hasDateColumns() || calendarDate == null || calendar.clock() == null) {
+                        // No unambiguous temporal row: retain a read cancellation conservatively.
+                        if (cancellation.containsMatchIn(raw)) {
+                            if (calendar.permitted && calendarDate != null && generalServices.containsMatchIn(raw)) cancelledDates += calendarDate
+                            else rejectUnresolvedWithdrawal()
+                        }
+                        return@lineLoop
+                    }
+                }
+                val clean = calendarDate?.let { "$it | $raw" } ?: raw
                 if (clean.isEmpty()) return@lineLoop
                 if (line.struck || line.confidence < 45 || line.temporalConfidence < 55) {
                     if (hasDateRange(clean) || looksLikeDateHeading(clean)) {
@@ -140,20 +206,31 @@ object ScheduleDocumentParser {
                     flush(); scope = inferred.value; currentDate = null; boundDay = null
                 }
                 if (rangeHeading) enterRange(clean)
-                val venueEvidence = line.venueEvidence ?: clean
+                val representedScope = line.htmlCalendarScope
+                val scopeOnly = representedScope != null || line.htmlCalendarScopeAmbiguous
+                val venueEvidence = representedScope?.text ?: line.venueEvidence ?: clean
                 val venueLabel = venueEvidence.takeIf(ScheduleVenue::isLabel)?.let { ScheduleVenue.inlineLabel(it) ?: it }
                 if (line.headingLevel > 0) {
                     flush(); boundDay = null
                     headings.keys.filter { it >= line.headingLevel }.toList().forEach(headings::remove)
-                    val headingDate = dateIn(clean, scope)?.first
-                    headings[line.headingLevel] = HeadingScope(cancellation.containsMatchIn(clean) && (!requiresDay || headingDate != null),
+                    val headingDate = dateIn(if (scopeOnly) venueEvidence else clean, scope)?.first
+                    headings[line.headingLevel] = HeadingScope(!scopeOnly && cancellation.containsMatchIn(clean) && (!requiresDay || headingDate != null),
                         venueLabel, headingDate, lineIndex)
                     currentDate = headings.values.mapNotNull { it.date }.lastOrNull()
                 } else if (venueLabel != null) {
                     boundDay = null
                     flush(); sectionVenue = venueLabel; sectionVenueLine = lineIndex
                     currentDate = headings.values.mapNotNull { it.date }.lastOrNull()
-                    if (!cancellation.containsMatchIn(clean)) return@lineLoop
+                    if (!scopeOnly && !cancellation.containsMatchIn(clean)) return@lineLoop
+                }
+                if (scopeOnly) {
+                    // Heading/venue/month authority above remains in its source position.
+                    // The complete emitted notice alone owns withdrawal scope. Orphan or
+                    // mixed origins cannot silently discard a cancellation.
+                    if (line.htmlCalendarScopeAmbiguous || representedScope !in emittedCalendarScopes)
+                        rejectUnresolvedWithdrawal()
+                    flush(); boundDay = null
+                    return@lineLoop
                 }
                 val locatedRowDate = dateIn(clean, scope)
                 if (locatedRowDate != null && line.htmlDayHeading == null) boundDay = null
@@ -169,12 +246,31 @@ object ScheduleDocumentParser {
                     inheritedVenue
                 val scopedCancellation = headings.values.any { it.cancelled }
                 fun rawScopeRestricted(index: Int): Boolean {
-                    val raw = page.lines.getOrNull(index)?.htmlScopeText
+                    val raw = page.lines.getOrNull(index)?.let { it.htmlCalendarScope?.text ?: it.htmlScopeText }
                     return raw == null || ScheduleVenue.hasSharedScopeRestriction(raw)
+                }
+                if (calendar != null && ScheduleWeekdayTable.cancellation(raw) && !cancellation.containsMatchIn(raw)) {
+                    val clock = calendar.clock()
+                    if (!scopedCancellation && calendar.permitted && calendarDate != null && clock != null &&
+                        ScheduleWeekdays.agrees(calendar.cells[0].removeSuffix("."), calendarDate) && ScheduleVenue.matches(inheritedVenue, parish))
+                        cancelledStarts += "${calendarDate}T$clock"
+                    else rejectUnresolvedWithdrawal()
+                    clearDay(); requiresDay = true; rangeScope = null
+                    return@lineLoop
                 }
                 val sharedScopeRestricted = headings.values.any { rawScopeRestricted(it.lineIndex) } ||
                     (sectionVenue != null && sectionVenueLine > (headingVenue?.lineIndex ?: -1) &&
                         rawScopeRestricted(sectionVenueLine))
+                fun calendarScopeRestricted(index: Int): Boolean = page.lines.getOrNull(index)?.let { it.htmlCalendarScope?.text ?: it.htmlScopeText }
+                    ?.let(ScheduleWeekdayTable::restricted) ?: true
+                val restrictedCalendarScope = calendar != null && (headings.values.any { calendarScopeRestricted(it.lineIndex) } ||
+                    (sectionVenue != null && sectionVenueLine > (headingVenue?.lineIndex ?: -1) && calendarScopeRestricted(sectionVenueLine)))
+                if (calendar != null && ((!scopedCancellation && restrictedCalendarScope) ||
+                        (ScheduleWeekdayTable.restricted(raw) && !cancellation.containsMatchIn(raw)))) {
+                    if (cancellation.containsMatchIn(raw)) rejectUnresolvedWithdrawal()
+                    clearDay(); requiresDay = true; rangeScope = null
+                    return@lineLoop
+                }
                 val wholeEventRow = line.htmlEventRow?.takeIf { raw ->
                     !ScheduleVenue.hasUnsafeSharedInput(raw) && raw.replace('\u00a0', ' ').replace(Regex("[ ]+"), " ").trim(' ') == clean
                 }
@@ -281,6 +377,7 @@ object ScheduleDocumentParser {
                             pendingDate = currentDate
                             pendingVenue = scopedVenue
                             pendingTitle = (lead + " " + tail).trim(' ', '|', ',', '.', '-')
+                            pendingCalendarRow = activeCalendarRow
                             pendingSharedVenue = sharedVenue?.takeIf { matches.size == 1 && currentDate == rowDate }
                                 ?.let { SharedVenueEvidence(requireNotNull(wholeEventRow), pendingTitle, it) }
                             rejected = scopedCancellation || cancellation.containsMatchIn(text)
@@ -303,6 +400,18 @@ object ScheduleDocumentParser {
         val accepted = events.filterNot { safetyConflict || cancelledAll || LocalDate.parse(it.date) in cancelledDates || "${it.date}T${it.time}" in cancelledStarts }
             .distinctBy { listOf(it.date, it.time, it.title) }
             .sortedWith(compareBy<InternetService> { it.date }.thenBy { it.time }).take(200)
+        val knownPartial = calendarAttempts.any { (id, row) ->
+            val relevant = row.date?.let { it in today..today.plusDays(45) } ?:
+                (row.month.atEndOfMonth() >= today && row.month.atDay(1) <= today.plusDays(45))
+            val times = ScheduleClocks.pattern.findAll(row.raw).mapNotNull { clock ->
+                runCatching { LocalTime.of(clock.groupValues[1].toInt(), clock.groupValues[2].toInt()).toString() }.getOrNull()
+            }.toList()
+            val withdrawn = cancelledAll || row.date?.let { date ->
+                date in cancelledDates || times.singleOrNull()?.let { time -> "${date}T$time" in cancelledStarts } == true
+            } == true
+            relevant && !row.struck && !withdrawn &&
+                representedCalendarRows[id]?.let { it in accepted } != true
+        }
         return ScheduleParseResult(when {
             safetyConflict -> ScheduleParseDisposition.REJECTED
             accepted.isNotEmpty() -> ScheduleParseDisposition.PARSED
@@ -310,7 +419,7 @@ object ScheduleDocumentParser {
             else -> ScheduleParseDisposition.UNSUPPORTED
         }, accepted, cancelledDates.map(LocalDate::toString).toSet(), cancelledStarts, cancelledAll,
             yearInferred = accepted.isNotEmpty() && inferredMonths.isNotEmpty(), safetyConflict = safetyConflict,
-            unresolvedWithdrawal = unresolvedWithdrawal)
+            unresolvedWithdrawal = unresolvedWithdrawal, knownPartial = knownPartial)
     }
 
     private fun monthNumber(word: String): Int = monthNames.indexOfFirst { word.lowercase(Locale.ROOT).startsWith(it) } + 1

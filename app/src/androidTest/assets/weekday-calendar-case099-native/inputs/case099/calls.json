@@ -1,0 +1,1461 @@
+[
+  {
+    "type": "PRODUCTION_PROGRESS",
+    "progress": {
+      "parishId": "",
+      "phase": "IDLE"
+    },
+    "at": "2026-11-15T16:35:41.236832Z",
+    "observedAt": "2026-11-15T16:35:41.236868Z"
+  },
+  {
+    "type": "PRODUCTION_PROGRESS",
+    "progress": {
+      "parishId": "osm:way:367166563",
+      "phase": "FINDING_SITE"
+    },
+    "at": "2026-11-15T16:35:41.238881Z",
+    "observedAt": "2026-11-15T16:35:41.238897Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://api.openstreetmap.org/api/0.6/way/367166563.json",
+    "maximumBytes": null,
+    "observedAt": "2026-11-15T16:35:41.240786Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://api.openstreetmap.org/api/0.6/way/367166563.json",
+    "contentType": "application/json; charset\u003dutf-8",
+    "bytes": 687,
+    "originalSha256": "ac4fd014cfbe5720892353cb5aab7bb20e54530a9475a52e4f757f98a40a87ee",
+    "bodyFile": "responses/0000.body",
+    "writtenSha256": "ac4fd014cfbe5720892353cb5aab7bb20e54530a9475a52e4f757f98a40a87ee",
+    "bodyEvidence": {
+      "declaredCharset": "utf-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 687,
+      "originalSha256": "ac4fd014cfbe5720892353cb5aab7bb20e54530a9475a52e4f757f98a40a87ee",
+      "writtenBytes": 687,
+      "writtenSha256": "ac4fd014cfbe5720892353cb5aab7bb20e54530a9475a52e4f757f98a40a87ee"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:41.334549Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://api.openstreetmap.org/api/0.6/way/367166563.json",
+    "elapsedMillis": 100,
+    "observedAt": "2026-11-15T16:35:41.338562Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://elitsy.ru/map/ajaxpoints/?lb\u003d55.45817654729729\u0026lb\u003d37.61125611631459\u0026rt\u003d55.463581952702704\u0026rt\u003d37.62078998368541\u0026z\u003d15",
+    "maximumBytes": 196608,
+    "observedAt": "2026-11-15T16:35:41.343598Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://map.patriarchia.ru/",
+    "maximumBytes": 262144,
+    "observedAt": "2026-11-15T16:35:41.347248Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://map.patriarchia.ru/",
+    "contentType": "text/html; charset\u003dUTF-8",
+    "bytes": 23377,
+    "originalSha256": "13963a20c43631c180d7b0000ab112bf686714b739950c913a2d51c49f3569d4",
+    "bodyFile": "responses/0001.body",
+    "writtenSha256": "ed091398ebb900cd9cfe4c4db8a0fb08d553745cb1124f3d951ca63c8725c9fa",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "BYTE_PRESERVING_CREDENTIAL_REDACTION",
+      "omissionReason": null,
+      "originalBytes": 23377,
+      "originalSha256": "13963a20c43631c180d7b0000ab112bf686714b739950c913a2d51c49f3569d4",
+      "writtenBytes": 23349,
+      "writtenSha256": "ed091398ebb900cd9cfe4c4db8a0fb08d553745cb1124f3d951ca63c8725c9fa"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:41.397241Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://map.patriarchia.ru/",
+    "elapsedMillis": 57,
+    "observedAt": "2026-11-15T16:35:41.400880Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://map.patriarchia.ru/wp-content/plugins/ortox-network-sites/js/ymap-filters-box.js?ver\u003d2.6.15",
+    "maximumBytes": 131072,
+    "observedAt": "2026-11-15T16:35:41.411442Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://map.patriarchia.ru/wp-content/plugins/ortox-network-sites/js/ymap-filters-box.js?ver\u003d2.6.15",
+    "contentType": "application/x-javascript",
+    "bytes": 35614,
+    "originalSha256": "5a4b0e9f916dab12575dfdf5865bc6b2bb8d466facf020b4935a9fd8b052eead",
+    "bodyFile": "responses/0002.body",
+    "writtenSha256": "5a4b0e9f916dab12575dfdf5865bc6b2bb8d466facf020b4935a9fd8b052eead",
+    "bodyEvidence": {
+      "declaredCharset": null,
+      "originalCharset": null,
+      "writtenCharset": null,
+      "transformation": "EXACT_BINARY",
+      "omissionReason": null,
+      "originalBytes": 35614,
+      "originalSha256": "5a4b0e9f916dab12575dfdf5865bc6b2bb8d466facf020b4935a9fd8b052eead",
+      "writtenBytes": 35614,
+      "writtenSha256": "5a4b0e9f916dab12575dfdf5865bc6b2bb8d466facf020b4935a9fd8b052eead"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:41.449360Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://map.patriarchia.ru/wp-content/plugins/ortox-network-sites/js/ymap-filters-box.js?ver\u003d2.6.15",
+    "elapsedMillis": 42,
+    "observedAt": "2026-11-15T16:35:41.454020Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026country\u003d\u0026church\u003d\u0026ctype\u003d\u0026t\u003d0\u0026s\u003d\u0026params\u003d%5B%5D\u0026zf\u003d8\u0026z\u003d16\u0026geo\u003d%5B%5B55.45502339414414%2C37.60569469368162%5D%2C%5B55.466735105855854%2C37.626351406318385%5D%5D",
+    "maximumBytes": 196608,
+    "observedAt": "2026-11-15T16:35:41.460591Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026country\u003d\u0026church\u003d\u0026ctype\u003d\u0026t\u003d0\u0026s\u003d\u0026params\u003d%5B%5D\u0026zf\u003d8\u0026z\u003d16\u0026geo\u003d%5B%5B55.45502339414414%2C37.60569469368162%5D%2C%5B55.466735105855854%2C37.626351406318385%5D%5D",
+    "contentType": "application/json",
+    "bytes": 473,
+    "originalSha256": "f256af8f4a957bbc6cf50ce1e4d3f7e7615d82dd2990abbab94b1623368e95b2",
+    "bodyFile": "responses/0003.body",
+    "writtenSha256": "f256af8f4a957bbc6cf50ce1e4d3f7e7615d82dd2990abbab94b1623368e95b2",
+    "bodyEvidence": {
+      "declaredCharset": null,
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 473,
+      "originalSha256": "f256af8f4a957bbc6cf50ce1e4d3f7e7615d82dd2990abbab94b1623368e95b2",
+      "writtenBytes": 473,
+      "writtenSha256": "f256af8f4a957bbc6cf50ce1e4d3f7e7615d82dd2990abbab94b1623368e95b2"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:41.526558Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026country\u003d\u0026church\u003d\u0026ctype\u003d\u0026t\u003d0\u0026s\u003d\u0026params\u003d%5B%5D\u0026zf\u003d8\u0026z\u003d16\u0026geo\u003d%5B%5B55.45502339414414%2C37.60569469368162%5D%2C%5B55.466735105855854%2C37.626351406318385%5D%5D",
+    "elapsedMillis": 70,
+    "observedAt": "2026-11-15T16:35:41.531553Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026m\u003dinfo\u0026msg\u003d1\u0026id\u003d2355\u0026urlmode\u003d0\u0026lang\u003dru",
+    "maximumBytes": 131072,
+    "observedAt": "2026-11-15T16:35:41.538536Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026m\u003dinfo\u0026msg\u003d1\u0026id\u003d2355\u0026urlmode\u003d0\u0026lang\u003dru",
+    "contentType": "text/html; charset\u003dutf-8",
+    "bytes": 5234,
+    "originalSha256": "7d9859901ad934de5fa8604ce29ce86791cabe638d35ecd71829596f71f58917",
+    "bodyFile": "responses/0004.body",
+    "writtenSha256": "7d9859901ad934de5fa8604ce29ce86791cabe638d35ecd71829596f71f58917",
+    "bodyEvidence": {
+      "declaredCharset": "utf-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 5234,
+      "originalSha256": "7d9859901ad934de5fa8604ce29ce86791cabe638d35ecd71829596f71f58917",
+      "writtenBytes": 5234,
+      "writtenSha256": "7d9859901ad934de5fa8604ce29ce86791cabe638d35ecd71829596f71f58917"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:41.574091Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026m\u003dinfo\u0026msg\u003d1\u0026id\u003d2355\u0026urlmode\u003d0\u0026lang\u003dru",
+    "elapsedMillis": 43,
+    "observedAt": "2026-11-15T16:35:41.582413Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://elitsy.ru/map/ajaxpoints/?lb\u003d55.45817654729729\u0026lb\u003d37.61125611631459\u0026rt\u003d55.463581952702704\u0026rt\u003d37.62078998368541\u0026z\u003d15",
+    "contentType": "application/json",
+    "bytes": 269,
+    "originalSha256": "f89f06167d9b8cb640b32a366b7bdcc9f6f1ba37cd12bd30fad8b7f649eee39f",
+    "bodyFile": "responses/0005.body",
+    "writtenSha256": "f89f06167d9b8cb640b32a366b7bdcc9f6f1ba37cd12bd30fad8b7f649eee39f",
+    "bodyEvidence": {
+      "declaredCharset": null,
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 269,
+      "originalSha256": "f89f06167d9b8cb640b32a366b7bdcc9f6f1ba37cd12bd30fad8b7f649eee39f",
+      "writtenBytes": 269,
+      "writtenSha256": "f89f06167d9b8cb640b32a366b7bdcc9f6f1ba37cd12bd30fad8b7f649eee39f"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:41.806418Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://elitsy.ru/map/ajaxpoints/?lb\u003d55.45817654729729\u0026lb\u003d37.61125611631459\u0026rt\u003d55.463581952702704\u0026rt\u003d37.62078998368541\u0026z\u003d15",
+    "elapsedMillis": 474,
+    "observedAt": "2026-11-15T16:35:41.818366Z"
+  },
+  {
+    "type": "PRODUCTION_PROGRESS",
+    "progress": {
+      "parishId": "osm:way:367166563",
+      "phase": "FINISHED"
+    },
+    "at": "2026-11-15T16:35:41.840649Z",
+    "observedAt": "2026-11-15T16:35:41.840675Z"
+  },
+  {
+    "type": "PRODUCTION_PROGRESS",
+    "progress": {
+      "parishId": "osm:way:367166563",
+      "phase": "FINDING_SITE"
+    },
+    "at": "2026-11-15T16:35:41.867717Z",
+    "observedAt": "2026-11-15T16:35:41.867743Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://api.openstreetmap.org/api/0.6/way/367166563.json",
+    "maximumBytes": null,
+    "observedAt": "2026-11-15T16:35:41.874316Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://api.openstreetmap.org/api/0.6/way/367166563.json",
+    "contentType": "application/json; charset\u003dutf-8",
+    "bytes": 687,
+    "originalSha256": "59375b12d1d514155f6398c14054fb8dd3de023dc9a66c9a0940c5b3500715be",
+    "bodyFile": "responses/0006.body",
+    "writtenSha256": "59375b12d1d514155f6398c14054fb8dd3de023dc9a66c9a0940c5b3500715be",
+    "bodyEvidence": {
+      "declaredCharset": "utf-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 687,
+      "originalSha256": "59375b12d1d514155f6398c14054fb8dd3de023dc9a66c9a0940c5b3500715be",
+      "writtenBytes": 687,
+      "writtenSha256": "59375b12d1d514155f6398c14054fb8dd3de023dc9a66c9a0940c5b3500715be"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:42.334440Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://api.openstreetmap.org/api/0.6/way/367166563.json",
+    "elapsedMillis": 482,
+    "observedAt": "2026-11-15T16:35:42.350916Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://ru.wikipedia.org/w/api.php?action\u003dquery\u0026format\u003djson\u0026generator\u003dsearch\u0026gsrnamespace\u003d0\u0026gsrlimit\u003d5\u0026prop\u003dcoordinates%7Cpageprops\u0026gsrsearch\u003d%D0%A6%D0%B5%D1%80%D0%BA%D0%BE%D0%B2%D1%8C+%D0%9D%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0%D1%8F+%D0%A7%D1%83%D0%B4%D0%BE%D1%82%D0%B2%D0%BE%D1%80%D1%86%D0%B0",
+    "maximumBytes": null,
+    "observedAt": "2026-11-15T16:35:42.365338Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://ru.wikipedia.org/w/api.php?action\u003dquery\u0026format\u003djson\u0026generator\u003dsearch\u0026gsrnamespace\u003d0\u0026gsrlimit\u003d5\u0026prop\u003dcoordinates%7Cpageprops\u0026gsrsearch\u003d%D0%A6%D0%B5%D1%80%D0%BA%D0%BE%D0%B2%D1%8C+%D0%9D%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0%D1%8F+%D0%A7%D1%83%D0%B4%D0%BE%D1%82%D0%B2%D0%BE%D1%80%D1%86%D0%B0",
+    "contentType": "application/json; charset\u003dutf-8",
+    "bytes": 2164,
+    "originalSha256": "1b5c34833368c5180de07cead138931887aad2a36699fe0d8b37fc7709803c1f",
+    "bodyFile": "responses/0007.body",
+    "writtenSha256": "1b5c34833368c5180de07cead138931887aad2a36699fe0d8b37fc7709803c1f",
+    "bodyEvidence": {
+      "declaredCharset": "utf-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 2164,
+      "originalSha256": "1b5c34833368c5180de07cead138931887aad2a36699fe0d8b37fc7709803c1f",
+      "writtenBytes": 2164,
+      "writtenSha256": "1b5c34833368c5180de07cead138931887aad2a36699fe0d8b37fc7709803c1f"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:42.844231Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://ru.wikipedia.org/w/api.php?action\u003dquery\u0026format\u003djson\u0026generator\u003dsearch\u0026gsrnamespace\u003d0\u0026gsrlimit\u003d5\u0026prop\u003dcoordinates%7Cpageprops\u0026gsrsearch\u003d%D0%A6%D0%B5%D1%80%D0%BA%D0%BE%D0%B2%D1%8C+%D0%9D%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0%D1%8F+%D0%A7%D1%83%D0%B4%D0%BE%D1%82%D0%B2%D0%BE%D1%80%D1%86%D0%B0",
+    "elapsedMillis": 491,
+    "observedAt": "2026-11-15T16:35:42.856517Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://elitsy.ru/map/ajaxpoints/?lb\u003d55.45817654729729\u0026lb\u003d37.61125611631459\u0026rt\u003d55.463581952702704\u0026rt\u003d37.62078998368541\u0026z\u003d15",
+    "maximumBytes": 196608,
+    "observedAt": "2026-11-15T16:35:42.873870Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026country\u003d\u0026church\u003d\u0026ctype\u003d\u0026t\u003d0\u0026s\u003d\u0026params\u003d%5B%5D\u0026zf\u003d8\u0026z\u003d16\u0026geo\u003d%5B%5B55.45502339414414%2C37.60569469368162%5D%2C%5B55.466735105855854%2C37.626351406318385%5D%5D",
+    "maximumBytes": 196608,
+    "observedAt": "2026-11-15T16:35:42.887252Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://elitsy.ru/map/ajaxpoints/?lb\u003d55.45817654729729\u0026lb\u003d37.61125611631459\u0026rt\u003d55.463581952702704\u0026rt\u003d37.62078998368541\u0026z\u003d15",
+    "contentType": "application/json",
+    "bytes": 269,
+    "originalSha256": "f89f06167d9b8cb640b32a366b7bdcc9f6f1ba37cd12bd30fad8b7f649eee39f",
+    "bodyFile": "responses/0008.body",
+    "writtenSha256": "f89f06167d9b8cb640b32a366b7bdcc9f6f1ba37cd12bd30fad8b7f649eee39f",
+    "bodyEvidence": {
+      "declaredCharset": null,
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 269,
+      "originalSha256": "f89f06167d9b8cb640b32a366b7bdcc9f6f1ba37cd12bd30fad8b7f649eee39f",
+      "writtenBytes": 269,
+      "writtenSha256": "f89f06167d9b8cb640b32a366b7bdcc9f6f1ba37cd12bd30fad8b7f649eee39f"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:42.924343Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://elitsy.ru/map/ajaxpoints/?lb\u003d55.45817654729729\u0026lb\u003d37.61125611631459\u0026rt\u003d55.463581952702704\u0026rt\u003d37.62078998368541\u0026z\u003d15",
+    "elapsedMillis": 70,
+    "observedAt": "2026-11-15T16:35:42.944144Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026country\u003d\u0026church\u003d\u0026ctype\u003d\u0026t\u003d0\u0026s\u003d\u0026params\u003d%5B%5D\u0026zf\u003d8\u0026z\u003d16\u0026geo\u003d%5B%5B55.45502339414414%2C37.60569469368162%5D%2C%5B55.466735105855854%2C37.626351406318385%5D%5D",
+    "contentType": "application/json",
+    "bytes": 473,
+    "originalSha256": "f256af8f4a957bbc6cf50ce1e4d3f7e7615d82dd2990abbab94b1623368e95b2",
+    "bodyFile": "responses/0009.body",
+    "writtenSha256": "f256af8f4a957bbc6cf50ce1e4d3f7e7615d82dd2990abbab94b1623368e95b2",
+    "bodyEvidence": {
+      "declaredCharset": null,
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 473,
+      "originalSha256": "f256af8f4a957bbc6cf50ce1e4d3f7e7615d82dd2990abbab94b1623368e95b2",
+      "writtenBytes": 473,
+      "writtenSha256": "f256af8f4a957bbc6cf50ce1e4d3f7e7615d82dd2990abbab94b1623368e95b2"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:42.980222Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026country\u003d\u0026church\u003d\u0026ctype\u003d\u0026t\u003d0\u0026s\u003d\u0026params\u003d%5B%5D\u0026zf\u003d8\u0026z\u003d16\u0026geo\u003d%5B%5B55.45502339414414%2C37.60569469368162%5D%2C%5B55.466735105855854%2C37.626351406318385%5D%5D",
+    "elapsedMillis": 118,
+    "observedAt": "2026-11-15T16:35:42.993087Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026m\u003dinfo\u0026msg\u003d1\u0026id\u003d2355\u0026urlmode\u003d0\u0026lang\u003dru",
+    "maximumBytes": 131072,
+    "observedAt": "2026-11-15T16:35:43.006854Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026m\u003dinfo\u0026msg\u003d1\u0026id\u003d2355\u0026urlmode\u003d0\u0026lang\u003dru",
+    "contentType": "text/html; charset\u003dutf-8",
+    "bytes": 5234,
+    "originalSha256": "7d9859901ad934de5fa8604ce29ce86791cabe638d35ecd71829596f71f58917",
+    "bodyFile": "responses/0010.body",
+    "writtenSha256": "7d9859901ad934de5fa8604ce29ce86791cabe638d35ecd71829596f71f58917",
+    "bodyEvidence": {
+      "declaredCharset": "utf-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 5234,
+      "originalSha256": "7d9859901ad934de5fa8604ce29ce86791cabe638d35ecd71829596f71f58917",
+      "writtenBytes": 5234,
+      "writtenSha256": "7d9859901ad934de5fa8604ce29ce86791cabe638d35ecd71829596f71f58917"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:43.044672Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026m\u003dinfo\u0026msg\u003d1\u0026id\u003d2355\u0026urlmode\u003d0\u0026lang\u003dru",
+    "elapsedMillis": 48,
+    "observedAt": "2026-11-15T16:35:43.055856Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://alekshrpodolsk.cerkov.ru/",
+    "maximumBytes": 1000000,
+    "observedAt": "2026-11-15T16:35:44.491179Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "http://kirill-mefodiy.cerkov.ru/",
+    "maximumBytes": 1000000,
+    "observedAt": "2026-11-15T16:35:44.503156Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://kirill-mefodiy.cerkov.ru/",
+    "contentType": "text/html; charset\u003dUTF-8",
+    "bytes": 99985,
+    "originalSha256": "ed000315dcf866ff61a54cc60450d8fc6abade108fc0a1cd363fc0161d5ac262",
+    "bodyFile": "responses/0011.body",
+    "writtenSha256": "ed000315dcf866ff61a54cc60450d8fc6abade108fc0a1cd363fc0161d5ac262",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 99985,
+      "originalSha256": "ed000315dcf866ff61a54cc60450d8fc6abade108fc0a1cd363fc0161d5ac262",
+      "writtenBytes": 99985,
+      "writtenSha256": "ed000315dcf866ff61a54cc60450d8fc6abade108fc0a1cd363fc0161d5ac262"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:45.728060Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "http://kirill-mefodiy.cerkov.ru/",
+    "elapsedMillis": 1251,
+    "observedAt": "2026-11-15T16:35:45.742942Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "http://strastoterpcev.cerkov.ru/",
+    "maximumBytes": 1000000,
+    "observedAt": "2026-11-15T16:35:45.763319Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://alekshrpodolsk.cerkov.ru/",
+    "contentType": "text/html; charset\u003dUTF-8",
+    "bytes": 26534,
+    "originalSha256": "1c68b27b81c32f56bf556270df6754557175d43b55c18f7485899f0bc1124f79",
+    "bodyFile": "responses/0012.body",
+    "writtenSha256": "1c68b27b81c32f56bf556270df6754557175d43b55c18f7485899f0bc1124f79",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 26534,
+      "originalSha256": "1c68b27b81c32f56bf556270df6754557175d43b55c18f7485899f0bc1124f79",
+      "writtenBytes": 26534,
+      "writtenSha256": "1c68b27b81c32f56bf556270df6754557175d43b55c18f7485899f0bc1124f79"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:47.151917Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://alekshrpodolsk.cerkov.ru/",
+    "elapsedMillis": 2674,
+    "observedAt": "2026-11-15T16:35:47.166087Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://strastoterpcev.cerkov.ru/",
+    "contentType": "text/html; charset\u003dUTF-8",
+    "bytes": 85687,
+    "originalSha256": "42591db353fd877c861ffc7402565f3ab7c985e340f5fee700f46e0ab7369f9e",
+    "bodyFile": "responses/0013.body",
+    "writtenSha256": "42591db353fd877c861ffc7402565f3ab7c985e340f5fee700f46e0ab7369f9e",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 85687,
+      "originalSha256": "42591db353fd877c861ffc7402565f3ab7c985e340f5fee700f46e0ab7369f9e",
+      "writtenBytes": 85687,
+      "writtenSha256": "42591db353fd877c861ffc7402565f3ab7c985e340f5fee700f46e0ab7369f9e"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:47.177711Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "http://strastoterpcev.cerkov.ru/",
+    "elapsedMillis": 1426,
+    "observedAt": "2026-11-15T16:35:47.189372Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://kirill-mefodiy.cerkov.ru/info/",
+    "maximumBytes": 1000000,
+    "observedAt": "2026-11-15T16:35:47.201672Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://strastoterpcev.cerkov.ru/kontakty/",
+    "maximumBytes": 1000000,
+    "observedAt": "2026-11-15T16:35:47.220268Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://strastoterpcev.cerkov.ru/kontakty/",
+    "contentType": "text/html; charset\u003dUTF-8",
+    "bytes": 67320,
+    "originalSha256": "b1c7db0b6f169721f9a7a009462d33be9cff7c2abab7f8cee836ee8caaba0699",
+    "bodyFile": "responses/0014.body",
+    "writtenSha256": "b1c7db0b6f169721f9a7a009462d33be9cff7c2abab7f8cee836ee8caaba0699",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 67320,
+      "originalSha256": "b1c7db0b6f169721f9a7a009462d33be9cff7c2abab7f8cee836ee8caaba0699",
+      "writtenBytes": 67320,
+      "writtenSha256": "b1c7db0b6f169721f9a7a009462d33be9cff7c2abab7f8cee836ee8caaba0699"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:47.882316Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://strastoterpcev.cerkov.ru/kontakty/",
+    "elapsedMillis": 680,
+    "observedAt": "2026-11-15T16:35:47.900599Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://kirill-mefodiy.cerkov.ru/info/",
+    "contentType": "text/html; charset\u003dUTF-8",
+    "bytes": 82823,
+    "originalSha256": "c60650b986b3a8313b89fedb965437725c699ff5722339e9a2b3b10aad3a7f5b",
+    "bodyFile": "responses/0015.body",
+    "writtenSha256": "c60650b986b3a8313b89fedb965437725c699ff5722339e9a2b3b10aad3a7f5b",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 82823,
+      "originalSha256": "c60650b986b3a8313b89fedb965437725c699ff5722339e9a2b3b10aad3a7f5b",
+      "writtenBytes": 82823,
+      "writtenSha256": "c60650b986b3a8313b89fedb965437725c699ff5722339e9a2b3b10aad3a7f5b"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:49.306738Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://kirill-mefodiy.cerkov.ru/info/",
+    "elapsedMillis": 2140,
+    "observedAt": "2026-11-15T16:35:49.322317Z"
+  },
+  {
+    "type": "PRODUCTION_PROGRESS",
+    "progress": {
+      "parishId": "osm:way:367166563",
+      "phase": "FINISHED"
+    },
+    "at": "2026-11-15T16:35:49.350990Z",
+    "observedAt": "2026-11-15T16:35:49.351012Z"
+  },
+  {
+    "type": "PRODUCTION_PROGRESS",
+    "progress": {
+      "parishId": "osm:way:367166563",
+      "phase": "FINDING_SITE"
+    },
+    "at": "2026-11-15T16:35:49.388548Z",
+    "observedAt": "2026-11-15T16:35:49.388569Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026country\u003d\u0026church\u003d\u0026ctype\u003d\u0026t\u003d0\u0026s\u003d\u0026params\u003d%5B%5D\u0026zf\u003d8\u0026z\u003d16\u0026geo\u003d%5B%5B55.45502339414414%2C37.60569469368162%5D%2C%5B55.466735105855854%2C37.626351406318385%5D%5D",
+    "maximumBytes": 196608,
+    "observedAt": "2026-11-15T16:35:49.402666Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://elitsy.ru/map/ajaxpoints/?lb\u003d55.45817654729729\u0026lb\u003d37.61125611631459\u0026rt\u003d55.463581952702704\u0026rt\u003d37.62078998368541\u0026z\u003d15",
+    "maximumBytes": 196608,
+    "observedAt": "2026-11-15T16:35:49.416097Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://alekshrpodolsk.cerkov.ru/",
+    "maximumBytes": 1000000,
+    "observedAt": "2026-11-15T16:35:49.429987Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "http://strastoterpcev.cerkov.ru/",
+    "maximumBytes": 1000000,
+    "observedAt": "2026-11-15T16:35:49.443020Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://elitsy.ru/map/ajaxpoints/?lb\u003d55.45817654729729\u0026lb\u003d37.61125611631459\u0026rt\u003d55.463581952702704\u0026rt\u003d37.62078998368541\u0026z\u003d15",
+    "contentType": "application/json",
+    "bytes": 269,
+    "originalSha256": "f89f06167d9b8cb640b32a366b7bdcc9f6f1ba37cd12bd30fad8b7f649eee39f",
+    "bodyFile": "responses/0016.body",
+    "writtenSha256": "f89f06167d9b8cb640b32a366b7bdcc9f6f1ba37cd12bd30fad8b7f649eee39f",
+    "bodyEvidence": {
+      "declaredCharset": null,
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 269,
+      "originalSha256": "f89f06167d9b8cb640b32a366b7bdcc9f6f1ba37cd12bd30fad8b7f649eee39f",
+      "writtenBytes": 269,
+      "writtenSha256": "f89f06167d9b8cb640b32a366b7bdcc9f6f1ba37cd12bd30fad8b7f649eee39f"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:49.459926Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://elitsy.ru/map/ajaxpoints/?lb\u003d55.45817654729729\u0026lb\u003d37.61125611631459\u0026rt\u003d55.463581952702704\u0026rt\u003d37.62078998368541\u0026z\u003d15",
+    "elapsedMillis": 82,
+    "observedAt": "2026-11-15T16:35:49.472605Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://alekshrpodolsk.cerkov.ru/",
+    "contentType": "text/html; charset\u003dUTF-8",
+    "bytes": 26534,
+    "originalSha256": "1c68b27b81c32f56bf556270df6754557175d43b55c18f7485899f0bc1124f79",
+    "bodyFile": "responses/0017.body",
+    "writtenSha256": "1c68b27b81c32f56bf556270df6754557175d43b55c18f7485899f0bc1124f79",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 26534,
+      "originalSha256": "1c68b27b81c32f56bf556270df6754557175d43b55c18f7485899f0bc1124f79",
+      "writtenBytes": 26534,
+      "writtenSha256": "1c68b27b81c32f56bf556270df6754557175d43b55c18f7485899f0bc1124f79"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:49.504033Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://alekshrpodolsk.cerkov.ru/",
+    "elapsedMillis": 108,
+    "observedAt": "2026-11-15T16:35:49.518234Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026country\u003d\u0026church\u003d\u0026ctype\u003d\u0026t\u003d0\u0026s\u003d\u0026params\u003d%5B%5D\u0026zf\u003d8\u0026z\u003d16\u0026geo\u003d%5B%5B55.45502339414414%2C37.60569469368162%5D%2C%5B55.466735105855854%2C37.626351406318385%5D%5D",
+    "contentType": "application/json",
+    "bytes": 473,
+    "originalSha256": "f256af8f4a957bbc6cf50ce1e4d3f7e7615d82dd2990abbab94b1623368e95b2",
+    "bodyFile": "responses/0018.body",
+    "writtenSha256": "f256af8f4a957bbc6cf50ce1e4d3f7e7615d82dd2990abbab94b1623368e95b2",
+    "bodyEvidence": {
+      "declaredCharset": null,
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 473,
+      "originalSha256": "f256af8f4a957bbc6cf50ce1e4d3f7e7615d82dd2990abbab94b1623368e95b2",
+      "writtenBytes": 473,
+      "writtenSha256": "f256af8f4a957bbc6cf50ce1e4d3f7e7615d82dd2990abbab94b1623368e95b2"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:49.534536Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026country\u003d\u0026church\u003d\u0026ctype\u003d\u0026t\u003d0\u0026s\u003d\u0026params\u003d%5B%5D\u0026zf\u003d8\u0026z\u003d16\u0026geo\u003d%5B%5B55.45502339414414%2C37.60569469368162%5D%2C%5B55.466735105855854%2C37.626351406318385%5D%5D",
+    "elapsedMillis": 166,
+    "observedAt": "2026-11-15T16:35:49.557018Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "http://kirill-mefodiy.cerkov.ru/",
+    "maximumBytes": 1000000,
+    "observedAt": "2026-11-15T16:35:49.573826Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026m\u003dinfo\u0026msg\u003d1\u0026id\u003d2355\u0026urlmode\u003d0\u0026lang\u003dru",
+    "maximumBytes": 131072,
+    "observedAt": "2026-11-15T16:35:49.589248Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://strastoterpcev.cerkov.ru/",
+    "contentType": "text/html; charset\u003dUTF-8",
+    "bytes": 85687,
+    "originalSha256": "42591db353fd877c861ffc7402565f3ab7c985e340f5fee700f46e0ab7369f9e",
+    "bodyFile": "responses/0019.body",
+    "writtenSha256": "42591db353fd877c861ffc7402565f3ab7c985e340f5fee700f46e0ab7369f9e",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 85687,
+      "originalSha256": "42591db353fd877c861ffc7402565f3ab7c985e340f5fee700f46e0ab7369f9e",
+      "writtenBytes": 85687,
+      "writtenSha256": "42591db353fd877c861ffc7402565f3ab7c985e340f5fee700f46e0ab7369f9e"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:49.611821Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "http://strastoterpcev.cerkov.ru/",
+    "elapsedMillis": 218,
+    "observedAt": "2026-11-15T16:35:49.628775Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026m\u003dinfo\u0026msg\u003d1\u0026id\u003d2355\u0026urlmode\u003d0\u0026lang\u003dru",
+    "contentType": "text/html; charset\u003dutf-8",
+    "bytes": 5234,
+    "originalSha256": "7d9859901ad934de5fa8604ce29ce86791cabe638d35ecd71829596f71f58917",
+    "bodyFile": "responses/0020.body",
+    "writtenSha256": "7d9859901ad934de5fa8604ce29ce86791cabe638d35ecd71829596f71f58917",
+    "bodyEvidence": {
+      "declaredCharset": "utf-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 5234,
+      "originalSha256": "7d9859901ad934de5fa8604ce29ce86791cabe638d35ecd71829596f71f58917",
+      "writtenBytes": 5234,
+      "writtenSha256": "7d9859901ad934de5fa8604ce29ce86791cabe638d35ecd71829596f71f58917"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:49.650363Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026m\u003dinfo\u0026msg\u003d1\u0026id\u003d2355\u0026urlmode\u003d0\u0026lang\u003dru",
+    "elapsedMillis": 94,
+    "observedAt": "2026-11-15T16:35:49.668859Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://kirill-mefodiy.cerkov.ru/",
+    "contentType": "text/html; charset\u003dUTF-8",
+    "bytes": 99985,
+    "originalSha256": "ed000315dcf866ff61a54cc60450d8fc6abade108fc0a1cd363fc0161d5ac262",
+    "bodyFile": "responses/0021.body",
+    "writtenSha256": "ed000315dcf866ff61a54cc60450d8fc6abade108fc0a1cd363fc0161d5ac262",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 99985,
+      "originalSha256": "ed000315dcf866ff61a54cc60450d8fc6abade108fc0a1cd363fc0161d5ac262",
+      "writtenBytes": 99985,
+      "writtenSha256": "ed000315dcf866ff61a54cc60450d8fc6abade108fc0a1cd363fc0161d5ac262"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:49.685105Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "http://kirill-mefodiy.cerkov.ru/",
+    "elapsedMillis": 166,
+    "observedAt": "2026-11-15T16:35:49.702610Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://strastoterpcev.cerkov.ru/kontakty/",
+    "maximumBytes": 1000000,
+    "observedAt": "2026-11-15T16:35:49.718014Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://kirill-mefodiy.cerkov.ru/info/",
+    "maximumBytes": 1000000,
+    "observedAt": "2026-11-15T16:35:49.740696Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://strastoterpcev.cerkov.ru/kontakty/",
+    "contentType": "text/html; charset\u003dUTF-8",
+    "bytes": 67320,
+    "originalSha256": "b1c7db0b6f169721f9a7a009462d33be9cff7c2abab7f8cee836ee8caaba0699",
+    "bodyFile": "responses/0022.body",
+    "writtenSha256": "b1c7db0b6f169721f9a7a009462d33be9cff7c2abab7f8cee836ee8caaba0699",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 67320,
+      "originalSha256": "b1c7db0b6f169721f9a7a009462d33be9cff7c2abab7f8cee836ee8caaba0699",
+      "writtenBytes": 67320,
+      "writtenSha256": "b1c7db0b6f169721f9a7a009462d33be9cff7c2abab7f8cee836ee8caaba0699"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:49.798967Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://strastoterpcev.cerkov.ru/kontakty/",
+    "elapsedMillis": 144,
+    "observedAt": "2026-11-15T16:35:49.816260Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://kirill-mefodiy.cerkov.ru/info/",
+    "contentType": "text/html; charset\u003dUTF-8",
+    "bytes": 82823,
+    "originalSha256": "c60650b986b3a8313b89fedb965437725c699ff5722339e9a2b3b10aad3a7f5b",
+    "bodyFile": "responses/0023.body",
+    "writtenSha256": "c60650b986b3a8313b89fedb965437725c699ff5722339e9a2b3b10aad3a7f5b",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 82823,
+      "originalSha256": "c60650b986b3a8313b89fedb965437725c699ff5722339e9a2b3b10aad3a7f5b",
+      "writtenBytes": 82823,
+      "writtenSha256": "c60650b986b3a8313b89fedb965437725c699ff5722339e9a2b3b10aad3a7f5b"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:49.832284Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://kirill-mefodiy.cerkov.ru/info/",
+    "elapsedMillis": 107,
+    "observedAt": "2026-11-15T16:35:49.848103Z"
+  },
+  {
+    "type": "PRODUCTION_PROGRESS",
+    "progress": {
+      "parishId": "osm:way:367166563",
+      "phase": "FINISHED"
+    },
+    "at": "2026-11-15T16:35:49.884188Z",
+    "observedAt": "2026-11-15T16:35:49.884209Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://elitsy.ru/map/ajaxpoints/?lb\u003d55.45817654729729\u0026lb\u003d37.61125611631459\u0026rt\u003d55.463581952702704\u0026rt\u003d37.62078998368541\u0026z\u003d15",
+    "maximumBytes": 196608,
+    "observedAt": "2026-11-15T16:35:49.928841Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026country\u003d\u0026church\u003d\u0026ctype\u003d\u0026t\u003d0\u0026s\u003d\u0026params\u003d%5B%5D\u0026zf\u003d8\u0026z\u003d16\u0026geo\u003d%5B%5B55.45502339414414%2C37.60569469368162%5D%2C%5B55.466735105855854%2C37.626351406318385%5D%5D",
+    "maximumBytes": 196608,
+    "observedAt": "2026-11-15T16:35:49.949785Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://elitsy.ru/map/ajaxpoints/?lb\u003d55.45817654729729\u0026lb\u003d37.61125611631459\u0026rt\u003d55.463581952702704\u0026rt\u003d37.62078998368541\u0026z\u003d15",
+    "contentType": "application/json",
+    "bytes": 269,
+    "originalSha256": "f89f06167d9b8cb640b32a366b7bdcc9f6f1ba37cd12bd30fad8b7f649eee39f",
+    "bodyFile": "responses/0024.body",
+    "writtenSha256": "f89f06167d9b8cb640b32a366b7bdcc9f6f1ba37cd12bd30fad8b7f649eee39f",
+    "bodyEvidence": {
+      "declaredCharset": null,
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 269,
+      "originalSha256": "f89f06167d9b8cb640b32a366b7bdcc9f6f1ba37cd12bd30fad8b7f649eee39f",
+      "writtenBytes": 269,
+      "writtenSha256": "f89f06167d9b8cb640b32a366b7bdcc9f6f1ba37cd12bd30fad8b7f649eee39f"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:49.972281Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://elitsy.ru/map/ajaxpoints/?lb\u003d55.45817654729729\u0026lb\u003d37.61125611631459\u0026rt\u003d55.463581952702704\u0026rt\u003d37.62078998368541\u0026z\u003d15",
+    "elapsedMillis": 62,
+    "observedAt": "2026-11-15T16:35:49.991064Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026country\u003d\u0026church\u003d\u0026ctype\u003d\u0026t\u003d0\u0026s\u003d\u0026params\u003d%5B%5D\u0026zf\u003d8\u0026z\u003d16\u0026geo\u003d%5B%5B55.45502339414414%2C37.60569469368162%5D%2C%5B55.466735105855854%2C37.626351406318385%5D%5D",
+    "contentType": "application/json",
+    "bytes": 473,
+    "originalSha256": "f256af8f4a957bbc6cf50ce1e4d3f7e7615d82dd2990abbab94b1623368e95b2",
+    "bodyFile": "responses/0025.body",
+    "writtenSha256": "f256af8f4a957bbc6cf50ce1e4d3f7e7615d82dd2990abbab94b1623368e95b2",
+    "bodyEvidence": {
+      "declaredCharset": null,
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 473,
+      "originalSha256": "f256af8f4a957bbc6cf50ce1e4d3f7e7615d82dd2990abbab94b1623368e95b2",
+      "writtenBytes": 473,
+      "writtenSha256": "f256af8f4a957bbc6cf50ce1e4d3f7e7615d82dd2990abbab94b1623368e95b2"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:50.042084Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026country\u003d\u0026church\u003d\u0026ctype\u003d\u0026t\u003d0\u0026s\u003d\u0026params\u003d%5B%5D\u0026zf\u003d8\u0026z\u003d16\u0026geo\u003d%5B%5B55.45502339414414%2C37.60569469368162%5D%2C%5B55.466735105855854%2C37.626351406318385%5D%5D",
+    "elapsedMillis": 132,
+    "observedAt": "2026-11-15T16:35:50.061543Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026m\u003dinfo\u0026msg\u003d1\u0026id\u003d2355\u0026urlmode\u003d0\u0026lang\u003dru",
+    "maximumBytes": 131072,
+    "observedAt": "2026-11-15T16:35:50.079590Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026m\u003dinfo\u0026msg\u003d1\u0026id\u003d2355\u0026urlmode\u003d0\u0026lang\u003dru",
+    "contentType": "text/html; charset\u003dutf-8",
+    "bytes": 5234,
+    "originalSha256": "7d9859901ad934de5fa8604ce29ce86791cabe638d35ecd71829596f71f58917",
+    "bodyFile": "responses/0026.body",
+    "writtenSha256": "7d9859901ad934de5fa8604ce29ce86791cabe638d35ecd71829596f71f58917",
+    "bodyEvidence": {
+      "declaredCharset": "utf-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 5234,
+      "originalSha256": "7d9859901ad934de5fa8604ce29ce86791cabe638d35ecd71829596f71f58917",
+      "writtenBytes": 5234,
+      "writtenSha256": "7d9859901ad934de5fa8604ce29ce86791cabe638d35ecd71829596f71f58917"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:50.122369Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://map.patriarchia.ru/api/index.php?token\u003dREDACTED\u0026m\u003dinfo\u0026msg\u003d1\u0026id\u003d2355\u0026urlmode\u003d0\u0026lang\u003dru",
+    "elapsedMillis": 60,
+    "observedAt": "2026-11-15T16:35:50.140124Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://hram-strelkovo.ru/",
+    "maximumBytes": null,
+    "observedAt": "2026-11-15T16:35:50.178952Z"
+  },
+  {
+    "type": "PRODUCTION_PROGRESS",
+    "progress": {
+      "parishId": "osm:way:367166563",
+      "phase": "LOADING_PAGE"
+    },
+    "at": "2026-11-15T16:35:50.179052Z",
+    "observedAt": "2026-11-15T16:35:50.196347Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://hram-strelkovo.ru/",
+    "contentType": "text/html; charset\u003dUTF-8",
+    "bytes": 73411,
+    "originalSha256": "c3ba618d5d17131496443746f502c5a9f2d3a924c877a14f97052b3a86a32ce4",
+    "bodyFile": "responses/0027.body",
+    "writtenSha256": "c3ba618d5d17131496443746f502c5a9f2d3a924c877a14f97052b3a86a32ce4",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 73411,
+      "originalSha256": "c3ba618d5d17131496443746f502c5a9f2d3a924c877a14f97052b3a86a32ce4",
+      "writtenBytes": 73411,
+      "writtenSha256": "c3ba618d5d17131496443746f502c5a9f2d3a924c877a14f97052b3a86a32ce4"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:51.523135Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://hram-strelkovo.ru/",
+    "elapsedMillis": 1362,
+    "observedAt": "2026-11-15T16:35:51.541504Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://hram-strelkovo.ru/%d1%80%d0%b0%d1%81%d0%bf%d0%b8%d1%81%d0%b0%d0%bd%d0%b8%d0%b5-%d0%b1%d0%be%d0%b3%d0%be%d1%81%d0%bb%d1%83%d0%b6%d0%b5%d0%bd%d0%b8%d0%b9-%d0%b2-%d1%81%d0%b5%d0%bd%d1%82%d1%8f%d0%b1%d1%80%d0%b5-2022.html",
+    "maximumBytes": null,
+    "observedAt": "2026-11-15T16:35:51.958929Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://hram-strelkovo.ru/%d1%80%d0%b0%d1%81%d0%bf%d0%b8%d1%81%d0%b0%d0%bd%d0%b8%d0%b5-%d0%b1%d0%be%d0%b3%d0%be%d1%81%d0%bb%d1%83%d0%b6%d0%b5%d0%bd%d0%b8%d0%b9-%d0%b2-%d1%81%d0%b5%d0%bd%d1%82%d1%8f%d0%b1%d1%80%d0%b5-2022.html",
+    "contentType": "text/html; charset\u003dUTF-8",
+    "bytes": 66208,
+    "originalSha256": "064d1ef71856b08c2b0213e82dd57ef18f6b7c51b9ba1353e0ad89f44acf5365",
+    "bodyFile": "responses/0028.body",
+    "writtenSha256": "064d1ef71856b08c2b0213e82dd57ef18f6b7c51b9ba1353e0ad89f44acf5365",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 66208,
+      "originalSha256": "064d1ef71856b08c2b0213e82dd57ef18f6b7c51b9ba1353e0ad89f44acf5365",
+      "writtenBytes": 66208,
+      "writtenSha256": "064d1ef71856b08c2b0213e82dd57ef18f6b7c51b9ba1353e0ad89f44acf5365"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:52.109677Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://hram-strelkovo.ru/%d1%80%d0%b0%d1%81%d0%bf%d0%b8%d1%81%d0%b0%d0%bd%d0%b8%d0%b5-%d0%b1%d0%be%d0%b3%d0%be%d1%81%d0%bb%d1%83%d0%b6%d0%b5%d0%bd%d0%b8%d0%b9-%d0%b2-%d1%81%d0%b5%d0%bd%d1%82%d1%8f%d0%b1%d1%80%d0%b5-2022.html",
+    "elapsedMillis": 175,
+    "observedAt": "2026-11-15T16:35:52.134493Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://hram-strelkovo.ru/category/raspisanie-bogosluzhenij",
+    "maximumBytes": null,
+    "observedAt": "2026-11-15T16:35:52.334234Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://hram-strelkovo.ru/category/raspisanie-bogosluzhenij",
+    "contentType": "text/html; charset\u003dUTF-8",
+    "bytes": 72338,
+    "originalSha256": "ef767c606c0e3da559ba99db8fef10fca56d88b98c36d5813b41244b8b1722be",
+    "bodyFile": "responses/0029.body",
+    "writtenSha256": "ef767c606c0e3da559ba99db8fef10fca56d88b98c36d5813b41244b8b1722be",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 72338,
+      "originalSha256": "ef767c606c0e3da559ba99db8fef10fca56d88b98c36d5813b41244b8b1722be",
+      "writtenBytes": 72338,
+      "writtenSha256": "ef767c606c0e3da559ba99db8fef10fca56d88b98c36d5813b41244b8b1722be"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:52.575078Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://hram-strelkovo.ru/category/raspisanie-bogosluzhenij",
+    "elapsedMillis": 265,
+    "observedAt": "2026-11-15T16:35:52.599314Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://hram-strelkovo.ru/wp-content/uploads/2026/10/file-001-750x380.png",
+    "maximumBytes": null,
+    "observedAt": "2026-11-15T16:35:52.998707Z"
+  },
+  {
+    "type": "PRODUCTION_PROGRESS",
+    "progress": {
+      "parishId": "osm:way:367166563",
+      "phase": "READING_DOCUMENT"
+    },
+    "at": "2026-11-15T16:35:52.998829Z",
+    "observedAt": "2026-11-15T16:35:53.022392Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://hram-strelkovo.ru/wp-content/uploads/2026/10/file-001-750x380.png",
+    "contentType": "image/png",
+    "bytes": 186539,
+    "originalSha256": "d85a97a1764bff432a1f50411dff1906d400eb452c442da72eda22492bee697a",
+    "bodyFile": "responses/0030.body",
+    "writtenSha256": "d85a97a1764bff432a1f50411dff1906d400eb452c442da72eda22492bee697a",
+    "bodyEvidence": {
+      "declaredCharset": null,
+      "originalCharset": null,
+      "writtenCharset": null,
+      "transformation": "EXACT_BINARY",
+      "omissionReason": null,
+      "originalBytes": 186539,
+      "originalSha256": "d85a97a1764bff432a1f50411dff1906d400eb452c442da72eda22492bee697a",
+      "writtenBytes": 186539,
+      "writtenSha256": "d85a97a1764bff432a1f50411dff1906d400eb452c442da72eda22492bee697a"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:57.449866Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://hram-strelkovo.ru/wp-content/uploads/2026/10/file-001-750x380.png",
+    "elapsedMillis": 4491,
+    "observedAt": "2026-11-15T16:35:57.490236Z"
+  },
+  {
+    "type": "NATIVE_OCR_PASS",
+    "metadata": {
+      "stage": "initial",
+      "sourceUrl": "https://hram-strelkovo.ru/wp-content/uploads/2026/10/file-001-750x380.png",
+      "width": 750,
+      "height": 380,
+      "characters": 5051,
+      "coordinateScope": "SOURCE_BITMAP"
+    },
+    "originalSha256": "6ac756fc3cf1df2f06a360922f6be3ee1187ab29927e8c84cfaeb5502f800f88",
+    "file": "ocr/0031-initial.hocr",
+    "writtenSha256": "6ac756fc3cf1df2f06a360922f6be3ee1187ab29927e8c84cfaeb5502f800f88",
+    "bodyEvidence": {
+      "declaredCharset": "utf-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 5145,
+      "originalSha256": "6ac756fc3cf1df2f06a360922f6be3ee1187ab29927e8c84cfaeb5502f800f88",
+      "writtenBytes": 5145,
+      "writtenSha256": "6ac756fc3cf1df2f06a360922f6be3ee1187ab29927e8c84cfaeb5502f800f88"
+    },
+    "scope": "Read-only completed-pass evidence. No recognition, parser or authority override. Missing exports remain explicit.",
+    "observedAt": "2026-11-15T16:35:57.673954Z"
+  },
+  {
+    "type": "ANDROID_EXTRACTOR_DOCUMENT",
+    "sourceUrl": "https://hram-strelkovo.ru/wp-content/uploads/2026/10/file-001-750x380.png",
+    "format": "image",
+    "pages": 1,
+    "file": "documents/0032.json",
+    "observedAt": "2026-11-15T16:35:57.718006Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://hram-strelkovo.ru/wp-content/uploads/2026/10/Screenshot_1-750x380.png",
+    "maximumBytes": null,
+    "observedAt": "2026-11-15T16:35:57.797230Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://hram-strelkovo.ru/wp-content/uploads/2026/10/Screenshot_1-750x380.png",
+    "contentType": "image/png",
+    "bytes": 352473,
+    "originalSha256": "d61e819daea514cf1b085ce55fd8c426288c554fac3f4477d3cc085a62a65f94",
+    "bodyFile": "responses/0033.body",
+    "writtenSha256": "d61e819daea514cf1b085ce55fd8c426288c554fac3f4477d3cc085a62a65f94",
+    "bodyEvidence": {
+      "declaredCharset": null,
+      "originalCharset": null,
+      "writtenCharset": null,
+      "transformation": "EXACT_BINARY",
+      "omissionReason": null,
+      "originalBytes": 352473,
+      "originalSha256": "d61e819daea514cf1b085ce55fd8c426288c554fac3f4477d3cc085a62a65f94",
+      "writtenBytes": 352473,
+      "writtenSha256": "d61e819daea514cf1b085ce55fd8c426288c554fac3f4477d3cc085a62a65f94"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:57.919974Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://hram-strelkovo.ru/wp-content/uploads/2026/10/Screenshot_1-750x380.png",
+    "elapsedMillis": 166,
+    "observedAt": "2026-11-15T16:35:57.964219Z"
+  },
+  {
+    "type": "NATIVE_OCR_PASS",
+    "metadata": {
+      "stage": "initial",
+      "sourceUrl": "https://hram-strelkovo.ru/wp-content/uploads/2026/10/Screenshot_1-750x380.png",
+      "width": 750,
+      "height": 380,
+      "characters": 188,
+      "coordinateScope": "SOURCE_BITMAP"
+    },
+    "originalSha256": "a1698fc88f62b04d41bdee40f735e20206f39b70708011e5f3ec685774ab2869",
+    "file": "ocr/0034-initial.hocr",
+    "writtenSha256": "a1698fc88f62b04d41bdee40f735e20206f39b70708011e5f3ec685774ab2869",
+    "bodyEvidence": {
+      "declaredCharset": "utf-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 188,
+      "originalSha256": "a1698fc88f62b04d41bdee40f735e20206f39b70708011e5f3ec685774ab2869",
+      "writtenBytes": 188,
+      "writtenSha256": "a1698fc88f62b04d41bdee40f735e20206f39b70708011e5f3ec685774ab2869"
+    },
+    "scope": "Read-only completed-pass evidence. No recognition, parser or authority override. Missing exports remain explicit.",
+    "observedAt": "2026-11-15T16:35:58.027815Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://hram-strelkovo.ru/wp-content/uploads/2026/10/5314728936396757737_121-750x380.jpg",
+    "maximumBytes": null,
+    "observedAt": "2026-11-15T16:35:58.055874Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://hram-strelkovo.ru/wp-content/uploads/2026/10/5314728936396757737_121-750x380.jpg",
+    "contentType": "image/jpeg",
+    "bytes": 64046,
+    "originalSha256": "d453e04c5d3837a33e100169a602cebc0a8592993cf7e650d49ef21118b3067f",
+    "bodyFile": "responses/0035.body",
+    "writtenSha256": "d453e04c5d3837a33e100169a602cebc0a8592993cf7e650d49ef21118b3067f",
+    "bodyEvidence": {
+      "declaredCharset": null,
+      "originalCharset": null,
+      "writtenCharset": null,
+      "transformation": "EXACT_BINARY",
+      "omissionReason": null,
+      "originalBytes": 64046,
+      "originalSha256": "d453e04c5d3837a33e100169a602cebc0a8592993cf7e650d49ef21118b3067f",
+      "writtenBytes": 64046,
+      "writtenSha256": "d453e04c5d3837a33e100169a602cebc0a8592993cf7e650d49ef21118b3067f"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:58.103991Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://hram-strelkovo.ru/wp-content/uploads/2026/10/5314728936396757737_121-750x380.jpg",
+    "elapsedMillis": 71,
+    "observedAt": "2026-11-15T16:35:58.127076Z"
+  },
+  {
+    "type": "NATIVE_OCR_PASS",
+    "metadata": {
+      "stage": "initial",
+      "sourceUrl": "https://hram-strelkovo.ru/wp-content/uploads/2026/10/5314728936396757737_121-750x380.jpg",
+      "width": 750,
+      "height": 380,
+      "characters": 4820,
+      "coordinateScope": "SOURCE_BITMAP"
+    },
+    "originalSha256": "9854eedb63434172291d14c27081fbe346cde79ea5deba93516eed349d21b198",
+    "file": "ocr/0036-initial.hocr",
+    "writtenSha256": "9854eedb63434172291d14c27081fbe346cde79ea5deba93516eed349d21b198",
+    "bodyEvidence": {
+      "declaredCharset": "utf-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 4908,
+      "originalSha256": "9854eedb63434172291d14c27081fbe346cde79ea5deba93516eed349d21b198",
+      "writtenBytes": 4908,
+      "writtenSha256": "9854eedb63434172291d14c27081fbe346cde79ea5deba93516eed349d21b198"
+    },
+    "scope": "Read-only completed-pass evidence. No recognition, parser or authority override. Missing exports remain explicit.",
+    "observedAt": "2026-11-15T16:35:58.357224Z"
+  },
+  {
+    "type": "ANDROID_EXTRACTOR_DOCUMENT",
+    "sourceUrl": "https://hram-strelkovo.ru/wp-content/uploads/2026/10/5314728936396757737_121-750x380.jpg",
+    "format": "image",
+    "pages": 1,
+    "file": "documents/0037.json",
+    "observedAt": "2026-11-15T16:35:58.386396Z"
+  },
+  {
+    "type": "PRODUCTION_PROGRESS",
+    "progress": {
+      "parishId": "osm:way:367166563",
+      "phase": "LOADING_PAGE"
+    },
+    "at": "2026-11-15T16:35:58.432707Z",
+    "observedAt": "2026-11-15T16:35:58.432741Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://hram-strelkovo.ru/wp-json/wp/v2/pages?search\u003d%D1%80%D0%B0%D1%81%D0%BF%D0%B8%D1%81%D0%B0%D0%BD%D0%B8%D0%B5\u0026per_page\u003d10\u0026page\u003d1\u0026orderby\u003drelevance\u0026order\u003ddesc\u0026status\u003dpublish\u0026context\u003dview\u0026_fields\u003did%2Cstatus%2Ctype%2Clink%2Ctitle%2Cexcerpt",
+    "maximumBytes": 262144,
+    "observedAt": "2026-11-15T16:35:58.465490Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://hram-strelkovo.ru/wp-json/wp/v2/pages?search\u003d%D1%80%D0%B0%D1%81%D0%BF%D0%B8%D1%81%D0%B0%D0%BD%D0%B8%D0%B5\u0026per_page\u003d10\u0026page\u003d1\u0026orderby\u003drelevance\u0026order\u003ddesc\u0026status\u003dpublish\u0026context\u003dview\u0026_fields\u003did%2Cstatus%2Ctype%2Clink%2Ctitle%2Cexcerpt",
+    "contentType": "application/json; charset\u003dUTF-8",
+    "bytes": 2,
+    "originalSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "bodyFile": "responses/0038.body",
+    "writtenSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 2,
+      "originalSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "writtenBytes": 2,
+      "writtenSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:58.569940Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://hram-strelkovo.ru/wp-json/wp/v2/pages?search\u003d%D1%80%D0%B0%D1%81%D0%BF%D0%B8%D1%81%D0%B0%D0%BD%D0%B8%D0%B5\u0026per_page\u003d10\u0026page\u003d1\u0026orderby\u003drelevance\u0026order\u003ddesc\u0026status\u003dpublish\u0026context\u003dview\u0026_fields\u003did%2Cstatus%2Ctype%2Clink%2Ctitle%2Cexcerpt",
+    "elapsedMillis": 159,
+    "observedAt": "2026-11-15T16:35:58.593576Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://hram-strelkovo.ru/wp-json/wp/v2/posts?search\u003d%D1%80%D0%B0%D1%81%D0%BF%D0%B8%D1%81%D0%B0%D0%BD%D0%B8%D0%B5\u0026per_page\u003d10\u0026page\u003d1\u0026orderby\u003drelevance\u0026order\u003ddesc\u0026status\u003dpublish\u0026context\u003dview\u0026_fields\u003did%2Cstatus%2Ctype%2Clink%2Ctitle%2Cexcerpt",
+    "maximumBytes": 262144,
+    "observedAt": "2026-11-15T16:35:58.619722Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://hram-strelkovo.ru/wp-json/wp/v2/posts?search\u003d%D1%80%D0%B0%D1%81%D0%BF%D0%B8%D1%81%D0%B0%D0%BD%D0%B8%D0%B5\u0026per_page\u003d10\u0026page\u003d1\u0026orderby\u003drelevance\u0026order\u003ddesc\u0026status\u003dpublish\u0026context\u003dview\u0026_fields\u003did%2Cstatus%2Ctype%2Clink%2Ctitle%2Cexcerpt",
+    "contentType": "application/json; charset\u003dUTF-8",
+    "bytes": 13210,
+    "originalSha256": "79f52f70292d56945e49d8910e5cab9c15c60d7b39ff442710fe994a0dd2c1ff",
+    "bodyFile": "responses/0039.body",
+    "writtenSha256": "79f52f70292d56945e49d8910e5cab9c15c60d7b39ff442710fe994a0dd2c1ff",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 13210,
+      "originalSha256": "79f52f70292d56945e49d8910e5cab9c15c60d7b39ff442710fe994a0dd2c1ff",
+      "writtenBytes": 13210,
+      "writtenSha256": "79f52f70292d56945e49d8910e5cab9c15c60d7b39ff442710fe994a0dd2c1ff"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:58.792737Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://hram-strelkovo.ru/wp-json/wp/v2/posts?search\u003d%D1%80%D0%B0%D1%81%D0%BF%D0%B8%D1%81%D0%B0%D0%BD%D0%B8%D0%B5\u0026per_page\u003d10\u0026page\u003d1\u0026orderby\u003drelevance\u0026order\u003ddesc\u0026status\u003dpublish\u0026context\u003dview\u0026_fields\u003did%2Cstatus%2Ctype%2Clink%2Ctitle%2Cexcerpt",
+    "elapsedMillis": 199,
+    "observedAt": "2026-11-15T16:35:58.818844Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://hram-strelkovo.ru/%d1%80%d0%b0%d1%81%d0%bf%d0%b8%d1%81%d0%b0%d0%bd%d0%b8%d0%b5-%d0%b1%d0%be%d0%b3%d0%be%d1%81%d0%bb%d1%83%d0%b6%d0%b5%d0%bd%d0%b8%d0%b9-%d0%b2-%d0%bd%d0%be%d1%8f%d0%b1%d1%80%d0%b5-2026-%d0%b3%d0%be.html",
+    "maximumBytes": null,
+    "observedAt": "2026-11-15T16:35:58.852394Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://hram-strelkovo.ru/%d1%80%d0%b0%d1%81%d0%bf%d0%b8%d1%81%d0%b0%d0%bd%d0%b8%d0%b5-%d0%b1%d0%be%d0%b3%d0%be%d1%81%d0%bb%d1%83%d0%b6%d0%b5%d0%bd%d0%b8%d0%b9-%d0%b2-%d0%bd%d0%be%d1%8f%d0%b1%d1%80%d0%b5-2026-%d0%b3%d0%be.html",
+    "contentType": "text/html; charset\u003dUTF-8",
+    "bytes": 59789,
+    "originalSha256": "1e87ee032275e9654be3d4185dc284c28b1d332c3ac866e00214bd7f97bd9a38",
+    "bodyFile": "responses/0040.body",
+    "writtenSha256": "1e87ee032275e9654be3d4185dc284c28b1d332c3ac866e00214bd7f97bd9a38",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 59789,
+      "originalSha256": "1e87ee032275e9654be3d4185dc284c28b1d332c3ac866e00214bd7f97bd9a38",
+      "writtenBytes": 59789,
+      "writtenSha256": "1e87ee032275e9654be3d4185dc284c28b1d332c3ac866e00214bd7f97bd9a38"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:59.007419Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://hram-strelkovo.ru/%d1%80%d0%b0%d1%81%d0%bf%d0%b8%d1%81%d0%b0%d0%bd%d0%b8%d0%b5-%d0%b1%d0%be%d0%b3%d0%be%d1%81%d0%bb%d1%83%d0%b6%d0%b5%d0%bd%d0%b8%d0%b9-%d0%b2-%d0%bd%d0%be%d1%8f%d0%b1%d1%80%d0%b5-2026-%d0%b3%d0%be.html",
+    "elapsedMillis": 180,
+    "observedAt": "2026-11-15T16:35:59.033036Z"
+  },
+  {
+    "type": "GET_START",
+    "url": "https://hram-strelkovo.ru/%d1%80%d0%b0%d1%81%d0%bf%d0%b8%d1%81%d0%b0%d0%bd%d0%b8%d0%b5-%d0%b1%d0%be%d0%b3%d0%be%d1%81%d0%bb%d1%83%d0%b6%d0%b5%d0%bd%d0%b8%d0%b9-%d0%b2-%d0%be%d0%ba%d1%82%d1%8f%d0%b1%d1%80%d0%b5-2026-%d0%b3.html",
+    "maximumBytes": null,
+    "observedAt": "2026-11-15T16:35:59.169157Z"
+  },
+  {
+    "type": "GET_RESPONSE",
+    "url": "https://hram-strelkovo.ru/%d1%80%d0%b0%d1%81%d0%bf%d0%b8%d1%81%d0%b0%d0%bd%d0%b8%d0%b5-%d0%b1%d0%be%d0%b3%d0%be%d1%81%d0%bb%d1%83%d0%b6%d0%b5%d0%bd%d0%b8%d0%b9-%d0%b2-%d0%be%d0%ba%d1%82%d1%8f%d0%b1%d1%80%d0%b5-2026-%d0%b3.html",
+    "contentType": "text/html; charset\u003dUTF-8",
+    "bytes": 58662,
+    "originalSha256": "44cc45d8d8a436b0486dc6629e52b6f292c64999c69ae202ccdeb7f6a830d353",
+    "bodyFile": "responses/0041.body",
+    "writtenSha256": "44cc45d8d8a436b0486dc6629e52b6f292c64999c69ae202ccdeb7f6a830d353",
+    "bodyEvidence": {
+      "declaredCharset": "UTF-8",
+      "originalCharset": "UTF-8",
+      "writtenCharset": "UTF-8",
+      "transformation": "EXACT_TEXT_BYTES",
+      "omissionReason": null,
+      "originalBytes": 58662,
+      "originalSha256": "44cc45d8d8a436b0486dc6629e52b6f292c64999c69ae202ccdeb7f6a830d353",
+      "writtenBytes": 58662,
+      "writtenSha256": "44cc45d8d8a436b0486dc6629e52b6f292c64999c69ae202ccdeb7f6a830d353"
+    },
+    "bodyScope": "Known scalar credential keys only. Same-charset byte redaction; exact original bytes iff written SHA equals original SHA. Omission is explicit.",
+    "observedAt": "2026-11-15T16:35:59.331850Z"
+  },
+  {
+    "type": "GET_END",
+    "url": "https://hram-strelkovo.ru/%d1%80%d0%b0%d1%81%d0%bf%d0%b8%d1%81%d0%b0%d0%bd%d0%b8%d0%b5-%d0%b1%d0%be%d0%b3%d0%be%d1%81%d0%bb%d1%83%d0%b6%d0%b5%d0%bd%d0%b8%d0%b9-%d0%b2-%d0%be%d0%ba%d1%82%d1%8f%d0%b1%d1%80%d0%b5-2026-%d0%b3.html",
+    "elapsedMillis": 187,
+    "observedAt": "2026-11-15T16:35:59.356971Z"
+  },
+  {
+    "type": "PRODUCTION_PROGRESS",
+    "progress": {
+      "parishId": "osm:way:367166563",
+      "phase": "FINISHED"
+    },
+    "at": "2026-11-15T16:35:59.488595Z",
+    "observedAt": "2026-11-15T16:35:59.488614Z"
+  },
+  {
+    "type": "CASE_FINISHED",
+    "at": "2026-11-15T16:35:59.618558Z",
+    "observedAt": "2026-11-15T16:35:59.618580Z"
+  }
+]

@@ -68,10 +68,12 @@ internal fun rememberReadingBeforeSchedule(
 /** A selected day stays a selected day. A future occurrence never silently replaces its date. */
 internal data class ArrivalSchedule(
     val entries: List<ParishService>, val featured: ParishService?, val relation: String?,
-    val saved: Boolean, val publication: SchedulePublication?, val next: ArrivalScheduleOffer? = null
+    val saved: Boolean, val publication: SchedulePublication?, val next: ArrivalScheduleOffer? = null,
+    val knownPartial: Boolean = false, val sourceUrl: String? = null
 )
 
-internal data class ArrivalScheduleOffer(val service: ParishService, val saved: Boolean, val yearInferred: Boolean)
+internal data class ArrivalScheduleOffer(val service: ParishService, val saved: Boolean, val yearInferred: Boolean,
+    val knownPartial: Boolean = false, val sourceUrl: String? = null)
 
 internal fun arrivalSchedule(church: Parish, date: LocalDate, now: Instant?, state: InternetScheduleState?): ArrivalSchedule {
     val ownState = state?.takeIf { it.parishId == church.id }
@@ -85,6 +87,8 @@ internal fun arrivalSchedule(church: Parish, date: LocalDate, now: Instant?, sta
         .map { ParishService(it.date, it.time, it.title, it.kind) }
     val entries = published.ifEmpty { cached }.distinctBy { "${it.date}|${it.time}|${it.title}" }.sortedBy { it.time }
     val saved = published.isEmpty() && cached.isNotEmpty()
+    val knownPartial = if (published.isNotEmpty()) church.scheduleKnownPartial else cached.isNotEmpty() && publication?.knownPartial == true
+    val sourceUrl = ScheduleUrl.publicSource(if (published.isNotEmpty()) church.sourceUrl else publication?.sourceUrl.orEmpty()).takeIf { knownPartial }
     val localNow = now?.let { runCatching { it.atZone(ZoneId.of(church.timezone)) }.getOrNull() }
     val today = localNow?.toLocalDate() == date
     val recent = if (today && !saved) entries.lastOrNull { service ->
@@ -101,6 +105,7 @@ internal fun arrivalSchedule(church: Parish, date: LocalDate, now: Instant?, sta
     val relation = featured?.let {
         when {
             saved -> "Сохраненное расписание - проверьте изменения"
+            knownPartial -> "Служба из опубликованного расписания"
             inferredYear -> "Время из расписания храма"
             localNow == null -> "По расписанию храма"
             recent != null -> "Возможно, идет · по времени начала"
@@ -111,7 +116,11 @@ internal fun arrivalSchedule(church: Parish, date: LocalDate, now: Instant?, sta
     }
     val next = if (entries.isEmpty() && ownState?.publicationRejected != true && ownState?.sourceNeedsVerification != true)
         nextScheduleOffer(church, date, now, publication) else null
-    return ArrivalSchedule(entries, featured, relation, saved, publication, next)
+    val emptyKnownPartial = next?.knownPartial ?: if (church.schedule.isNotEmpty()) church.scheduleKnownPartial else publication?.knownPartial == true
+    val emptySourceUrl = (next?.sourceUrl ?: ScheduleUrl.publicSource(if (church.schedule.isNotEmpty()) church.sourceUrl else publication?.sourceUrl.orEmpty())).takeIf { emptyKnownPartial }
+    return ArrivalSchedule(entries, featured, relation, saved, publication, next,
+        knownPartial = if (entries.isNotEmpty()) knownPartial else emptyKnownPartial,
+        sourceUrl = if (entries.isNotEmpty()) sourceUrl else emptySourceUrl)
 }
 
 /** Inspect only known dates, retaining the same per-day source priority and validity checks. */
@@ -131,20 +140,24 @@ private fun nextScheduleOffer(church: Parish, selectedDate: LocalDate, now: Inst
             start != null && (now == null || start > now)
         } ?: continue
         val saved = published.isEmpty()
+        val partial = if (saved) publication?.knownPartial == true else church.scheduleKnownPartial
         return ArrivalScheduleOffer(service, saved,
-            publication?.yearInferred == true && (saved || publication.sourceUrl == church.sourceUrl))
+            publication?.yearInferred == true && (saved || publication.sourceUrl == church.sourceUrl),
+            knownPartial = partial,
+            sourceUrl = ScheduleUrl.publicSource(if (saved) publication?.sourceUrl.orEmpty() else church.sourceUrl).takeIf { partial })
     }
     return null
 }
 
 @Composable
 internal fun UpcomingScheduleOffer(offer: ArrivalScheduleOffer, tagPrefix: String,
-    onOpen: ((ParishService) -> Unit)?) {
+    onOpen: ((ParishService) -> Unit)?, onOpenSource: ((String) -> Unit)? = null,
+    partialDescription: String = "Часть расписания не удалось прочитать - проверьте сайт храма") {
     val service = offer.service
     val date = LocalDate.parse(service.date).format(DateTimeFormatter.ofPattern("d MMMM uuuu", Locale.forLanguageTag("ru")))
-    Column(Modifier.fillMaxWidth().testTag("${tagPrefix}_next_service"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.fillMaxWidth().testTag("${tagPrefix}_next_service"), verticalArrangement = Arrangement.spacedBy(if (offer.knownPartial) 12.dp else 8.dp)) {
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-        Text("Ближайшая служба", style = MaterialTheme.typography.titleMedium)
+        Text(if (offer.knownPartial) "Одна из опубликованных служб" else "Ближайшая служба", style = MaterialTheme.typography.titleMedium)
         Text("$date · ${service.time}", style = MaterialTheme.typography.labelLarge,
             modifier = Modifier.testTag("${tagPrefix}_next_date_time"))
         Text(service.title, style = MaterialTheme.typography.bodyLarge,
@@ -161,11 +174,27 @@ internal fun UpcomingScheduleOffer(offer: ArrivalScheduleOffer, tagPrefix: Strin
                     else if (ServiceBookSelection.kindFor(service.title) == null) "Выбрать текст службы" else "Открыть службу")
             }
         }
+        if (offer.knownPartial) PartialScheduleNotice(offer.sourceUrl, onOpenSource, "${tagPrefix}_next", partialDescription)
+    }
+}
+
+/** A compact note and the exact publication link stay with the occurrence they describe. */
+@Composable
+internal fun PartialScheduleNotice(sourceUrl: String?, onOpenSource: ((String) -> Unit)?, tagPrefix: String,
+    description: String = "Часть расписания не удалось прочитать - проверьте сайт храма") {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(description, style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("${tagPrefix}_partial_schedule"))
+        if (sourceUrl != null && onOpenSource != null) TextButton(onClick = { onOpenSource(sourceUrl) },
+            modifier = Modifier.align(Alignment.Start).heightIn(min = 48.dp).testTag("${tagPrefix}_partial_source")) {
+            Text("Проверить расписание")
+        }
     }
 }
 
 /** No data is not the same thing as no services. Keep the distinction visible beside the date. */
-internal fun scheduleEmptyDescription(state: InternetScheduleState?, hasWebsite: Boolean = true, church: Parish? = null): String = when {
+internal fun scheduleEmptyDescription(state: InternetScheduleState?, hasWebsite: Boolean = true, church: Parish? = null,
+    knownPartial: Boolean = false): String = when {
     state?.sourceNeedsVerification == true && state.loading -> "Проверяем, относится ли расписание к выбранному храму. Тексты службы уже можно читать"
     state?.loading == true -> "Проверяем сайт храма. Тексты службы уже можно читать"
     state?.publicationRejected == true -> "Источник не подтверждает прежнее расписание. Обновите его и проверьте изменения"
@@ -174,6 +203,7 @@ internal fun scheduleEmptyDescription(state: InternetScheduleState?, hasWebsite:
         "Пока не удалось подтвердить, что расписание относится к этому храму. Можно проверить на сайте или повторить поиск"
         else "Пока не удалось подтвердить, что расписание относится к этому храму. Можно повторить поиск. Тексты службы уже можно читать"
     hasUnreviewedScheduleSources(state, church) -> "Проверьте название и адрес храма на найденном сайте"
+    knownPartial -> "Не все записи удалось прочитать. Проверьте выбранную дату на сайте храма"
     state?.candidateSearchUnavailable == true && state.website.isBlank() ->
         "Не удалось проверить источники расписания. Повторите поиск"
     state?.status == InternetScheduleStatus.UNAVAILABLE -> if (hasWebsite)
@@ -203,7 +233,8 @@ internal fun canChooseUnverifiedScheduleSource(church: Parish, state: InternetSc
         ScheduleUrl.publicSource(editorWebsite) != null
 }
 
-internal fun scheduleEmptyTitle(state: InternetScheduleState?, hasPublication: Boolean, church: Parish? = null): String = when {
+internal fun scheduleEmptyTitle(state: InternetScheduleState?, hasPublication: Boolean, church: Parish? = null,
+    knownPartial: Boolean = false): String = when {
     state?.sourceNeedsVerification == true && state.loading -> "Проверяем источник расписания"
     state?.loading == true -> "Ищем расписание"
     state?.publicationRejected == true -> "Расписание требует уточнения"
@@ -211,6 +242,7 @@ internal fun scheduleEmptyTitle(state: InternetScheduleState?, hasPublication: B
     state?.sourceNeedsVerification == true -> "Нужно уточнить расписание"
     hasUnreviewedScheduleSources(state, church) -> "Найдены сайты для проверки"
     state?.publication?.hasCurrentParserRevision == false -> "Обновите расписание"
+    knownPartial -> "Расписание прочитано не полностью"
     hasPublication -> "Нет записей на эту дату"
     else -> "Расписание пока не найдено"
 }

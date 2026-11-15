@@ -38,6 +38,7 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
     onReviewScheduleSources: (() -> Unit)? = null, sourceReviewParish: Parish? = null,
     sourceSearchActive: Boolean? = null,
     onSourceSearchDrawn: ((androidx.compose.ui.geometry.Rect, androidx.compose.ui.geometry.Rect) -> Unit)? = null,
+    onOpenScheduleUrl: ((String) -> Unit)? = null,
     onSourceSearchInteraction: () -> Boolean = { true }) {
     val zone = remember(church?.timezone) {
         runCatching { ZoneId.of(church?.timezone ?: "Europe/Moscow") }.getOrDefault(ZoneId.of("Europe/Moscow"))
@@ -202,9 +203,10 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                             } else OutlinedButton(onClick = { open(featured) }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("today_choose_unknown_service")) {
                                 Text("Выбрать текст службы")
                             }
+                            if (schedule?.knownPartial == true) PartialScheduleNotice(schedule.sourceUrl, onOpenScheduleUrl, "today_service")
                             PublishedServiceScopeNote(featured.title, "today_service")
                             ArrivalServiceSourceTitle(featured.title, "today_service")
-                            if (inferredYear) onOpenScheduleSource?.let { source -> OutlinedButton(onClick = source,
+                            if (inferredYear && schedule?.knownPartial != true) onOpenScheduleSource?.let { source -> OutlinedButton(onClick = source,
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("today_verify_schedule_source")) {
                                 Text("Проверить источник")
                             } }
@@ -215,13 +217,17 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                                 PublishedServiceScopeNote(service.title, "today_other_${service.time}")
                             }
                         } else {
-                            Text(scheduleEmptyTitle(ownState, schedule?.publication != null || church.schedule.isNotEmpty(), church),
+                            Text(scheduleEmptyTitle(ownState, schedule?.publication != null || church.schedule.isNotEmpty(), church, schedule?.knownPartial == true),
                                 style = if (schedule?.next == null) MaterialTheme.typography.titleLarge else MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.testTag("today_schedule_empty"))
-                            if (schedule?.next == null) Text(scheduleEmptyDescription(ownState, onOpenScheduleSource != null, church),
-                                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            if (schedule?.next == null) {
+                                val description = scheduleEmptyDescription(ownState, onOpenScheduleSource != null, church, schedule?.knownPartial == true)
+                                if (schedule?.knownPartial == true) PartialScheduleNotice(schedule.sourceUrl, onOpenScheduleUrl, "today_empty", description)
+                                else Text(description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                             schedule?.next?.let { offer ->
-                                UpcomingScheduleOffer(offer, "today", onOpenService ?: { open(it) })
+                                UpcomingScheduleOffer(offer, "today", onOpenService ?: { open(it) }, onOpenScheduleUrl,
+                                    partialDescription = scheduleEmptyDescription(ownState, onOpenScheduleSource != null, church, offer.knownPartial))
                             }
                             if (reviewSources && sourceSearchActive == null) Button(onClick = {
                                 if (currentSourceReviewOwner == sourceReviewOwner && currentChurchId == church.id)
@@ -234,7 +240,7 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("today_refresh_schedule")) {
                                 Icon(Icons.Default.Refresh, null, Modifier.size(20.dp)); Spacer(Modifier.width(12.dp)); Text("Обновить расписание")
                             }
-                            onOpenScheduleSource?.let { source ->
+                            if (schedule?.knownPartial != true || schedule.sourceUrl == null || onOpenScheduleUrl == null) onOpenScheduleSource?.let { source ->
                                 OutlinedButton(onClick = source, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                                     .testTag("today_schedule_source")) {
                                     Icon(Icons.Default.OpenInNew, null, Modifier.size(20.dp))

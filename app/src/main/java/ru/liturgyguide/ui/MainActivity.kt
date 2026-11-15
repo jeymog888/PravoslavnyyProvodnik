@@ -880,6 +880,13 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                             if (migrationCandidate?.migrationNote != null && player.reading == null)
                                 "Тексты дополнены. При открытии вернемся к последней сохраненной фразе" else null
                         ).joinToString(" · ") },
+                        onOpenScheduleUrl = { url ->
+                            if (screen == Screen.MAIN && churchId == resumeChurchId &&
+                                currentScheduleSearchOwner === scheduleSearchOwner && scheduleSearchOwner.isActive() &&
+                                scheduleActionSurface.token === scheduleClickOwner &&
+                                baseChurch?.let(ScheduleEntityIdentity::fingerprint) == scheduleSearchOwner.fingerprint)
+                                ScheduleUrl.publicSource(url)?.let { source -> openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(source))) }
+                        },
                         onOpenScheduleSource = church?.let { scheduleSourceFor(it, internetSchedule) }?.let { url ->
                             { openExternal(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
                         }

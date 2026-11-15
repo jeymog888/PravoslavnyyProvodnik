@@ -548,23 +548,22 @@ abstract class FallbackReadingHarness(protected val churchPage: Boolean, protect
 
     protected fun reveal(tag: String, containerTag: String = contentTag, searchBackwards: Boolean = false,
         onSwipe: () -> Unit = {}): SemanticsNodeInteraction {
-        val container = compose.onNodeWithTag(containerTag)
+        val probe = NativeRevealProbe(compose, containerTag, tag)
         repeat(25) {
             compose.mainClock.advanceTimeBy(250)
             compose.waitForIdle()
-            val viewport = container.getBoundsInRoot()
-            val box = if (exists(tag)) bounds(tag) else null
-            if (box != null && inside(box, viewport)) return compose.onNodeWithTag(tag).assertIsDisplayed()
+            val frame = probe.bounds()
+            val viewport = frame.viewport
+            val box = frame.targetBounds
+            if (box != null && inside(box, viewport) &&
+                frame.target?.clipped?.let { it.right > it.left && it.bottom > it.top } == true) return probe.interaction(frame)
             // LazyColumn can dispose a target above the viewport. The transition knows
             // which direction the earlier service/day lies in even before it is composed.
             val backward = if (box != null) box.top < viewport.top else searchBackwards
-            container.performTouchInput {
-                swipe(Offset(centerX, height * (if (backward) .35f else .8f)),
-                    Offset(centerX, height * (if (backward) .65f else .5f)), durationMillis = 700)
-            }
+            probe.swipe(if (backward) .35f else .8f, if (backward) .65f else .5f, durationMillis = 700)
             onSwipe()
         }
-        throw AssertionError("Could not reveal $tag by bounded touch in $containerTag")
+        probe.fail("Could not reveal $tag by bounded touch in $containerTag")
     }
 
     protected fun alignReadingCardWithViewport() {

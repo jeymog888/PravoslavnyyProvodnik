@@ -28,7 +28,9 @@ data class SchedulePublication(
     val fetchedAt: String, val events: List<InternetService>,
     val documentFormat: String = "html", val linkedFrom: String = "",
     val yearInferred: Boolean = false,
-    val parserRevision: Int = CURRENT_PARSER_REVISION
+    val parserRevision: Int = CURRENT_PARSER_REVISION,
+    // A known omitted current/future row, never an assertion of completeness when false.
+    val knownPartial: Boolean = false
 ) {
     companion object {
         const val LEGACY_PARSER_REVISION = 0
@@ -807,6 +809,7 @@ class InternetScheduleRepository(
         var bestLinkedFrom = ""
         var bestDedicated = false
         var bestYearInferred = false
+        var bestKnownPartial = false
         var previousImage: ScheduleDocument? = null
         var previousImageParent = ""
         val withdrawnDates = mutableSetOf<String>()
@@ -941,7 +944,12 @@ class InternetScheduleRepository(
                 // No relay: a queued consumer can never issue a new hint, even if its use failed.
                 val intents = if (ordinaryDiscovery && queued.intent == null)
                     ScheduleNavigationIntent.issue(parish, root, navigationAttempt, response, parsed, admitted) else emptyMap()
-                discovered.filter { it.url !in visited && (!queued.rescue || it.document) }
+                val viable = retained(parsed.events).filter {
+                    binding?.method !in setOf(ScheduleBindingMethod.CHILD_CHURCH_OWN_SITE,
+                        ScheduleBindingMethod.PUBLISHER_GEOMETRY_CHAIN) || ChildChurchRelation.mainService(it.title)
+                }
+                ScheduleDocumentLinks.fromPublishedPage(html, parsed, discovered, viable)
+                    .filter { it.url !in visited && (!queued.rescue || it.document) }
                     .forEach { link ->
                         val intent = intents[link.url]
                         if (intent != null) {
@@ -1064,11 +1072,12 @@ class InternetScheduleRepository(
             if (events.isNotEmpty() && prefer) {
                 bestEvents = events; source = publicationSource; bestFormat = format; bestLinkedFrom = next.linkedFrom; bestDedicated = dedicated
                 bestYearInferred = parsed.yearInferred
+                bestKnownPartial = parsed.knownPartial
             }
         }
         val publication = bestEvents.takeIf { it.isNotEmpty() }?.let {
             SchedulePublication(parish.id, parish.timezone, website, source, now.toString(), it,
-                documentFormat = bestFormat, linkedFrom = bestLinkedFrom, yearInferred = bestYearInferred)
+                documentFormat = bestFormat, linkedFrom = bestLinkedFrom, yearInferred = bestYearInferred, knownPartial = bestKnownPartial)
         }
         val status = if (publication != null) InternetScheduleStatus.READY else
             if (anyResponse) InternetScheduleStatus.UNSUPPORTED else InternetScheduleStatus.UNAVAILABLE
@@ -1160,7 +1169,11 @@ internal object ScheduleCacheCodec {
             val revision = value.get("parserRevision")?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isNumber }
                 ?.toString()?.takeIf { Regex("0|[1-9]\\d*").matches(it) }?.toIntOrNull()
                 ?: SchedulePublication.LEGACY_PARSER_REVISION
-            SchedulePublication(parish.id, parish.timezone, site, url, fetched, events, format, linkedFrom, yearInferred, revision)
+            val knownPartial = value.get("knownPartial")?.takeUnless { it.isJsonNull }?.let { flag ->
+                require(flag.isJsonPrimitive && flag.asJsonPrimitive.isBoolean)
+                flag.asBoolean
+            } ?: false
+            SchedulePublication(parish.id, parish.timezone, site, url, fetched, events, format, linkedFrom, yearInferred, revision, knownPartial)
         }
         require(!rejected || publication == null)
         val candidateIdentity = field("candidateSearchIdentity")
@@ -1199,16 +1212,16 @@ internal object ScheduleCacheCodec {
 /** Fresh source data replaces the bundle, including its provenance. Rejected data must not resurrect it. */
 fun Parish.withInternetSchedule(state: InternetScheduleState, now: Instant): Parish {
     if (state.parishId != id) return this
-    if (state.sourceNeedsVerification) return copy(schedule = emptyList(), scheduleValidFrom = "", scheduleValidUntil = "",
+    if (state.sourceNeedsVerification) return copy(schedule = emptyList(), scheduleKnownPartial = false, scheduleValidFrom = "", scheduleValidUntil = "",
         website = state.website, sourceUrl = state.sourceUrl, scheduleSource = "Источник требует проверки",
         scheduleCoverage = "", scheduleNote = "Принадлежность расписания этому храму пока не подтверждена. Можно открыть сайт и проверить расписание")
-    if (state.publicationRejected) return copy(schedule = emptyList(), scheduleValidFrom = "", scheduleValidUntil = "",
+    if (state.publicationRejected) return copy(schedule = emptyList(), scheduleKnownPartial = false, scheduleValidFrom = "", scheduleValidUntil = "",
         website = state.website, sourceUrl = state.sourceUrl, scheduleSource = "Страница расписания прихода",
         scheduleCoverage = "", scheduleNote = "Прежнее расписание больше не подтверждено источником")
     val online = state.publication?.takeIf { it.parishId == id && it.timezone == timezone && it.isFresh(now) } ?: return this
     val today = now.atZone(ZoneId.of(timezone)).toLocalDate()
     val events = online.events.filter { LocalDate.parse(it.date) >= today }
-    return copy(website = online.website, sourceUrl = online.sourceUrl,
+    return copy(website = online.website, sourceUrl = online.sourceUrl, scheduleKnownPartial = online.knownPartial,
         scheduleSource = if (online.yearInferred) "Время с сайта прихода; год не указан" else "Страница расписания прихода",
         scheduleValidFrom = events.minOfOrNull { it.date }.orEmpty(),
         scheduleValidUntil = events.maxOfOrNull { it.date }.orEmpty(),

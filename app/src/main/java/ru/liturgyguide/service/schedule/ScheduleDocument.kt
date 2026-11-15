@@ -24,7 +24,14 @@ data class ScheduleDocumentLine(val text: String, val confidence: Int = 100, val
     // The complete direct li element before splitting; every fragment retains all notices.
     val htmlEventRow: String? = null,
     // Bounded complete HTML scope text before splitting; absent text grants no new authority.
-    val htmlScopeText: String? = null)
+    val htmlScopeText: String? = null,
+    // Proven complete HTML calendar cells; IDs are local to this one table.
+    val htmlCalendarRow: ScheduleHtmlCalendarRow? = null,
+    // Complete table/owner notice with bounded row provenance, not an unscoped withdrawal.
+    val htmlCalendarNotice: ScheduleHtmlCalendarNotice? = null,
+    // Exact original text origin. Suppression also requires its notice in the final page.
+    val htmlCalendarScope: ScheduleHtmlCalendarScope? = null,
+    val htmlCalendarScopeAmbiguous: Boolean = false)
 enum class ScheduleOcrFailure { UNSUPPORTED_LAYOUT, CONFLICTING_EVIDENCE }
 data class ScheduleDocumentPage(val lines: List<ScheduleDocumentLine>,
     // Audit-only text from every completed pass, including an unsuccessful repair. Never
@@ -49,7 +56,9 @@ data class ScheduleParseResult(
     val rejectionReason: ScheduleRejectionReason? = null,
     // An explicit cancellation was read, but its dates/building could not be proved.
     // Keep source history without fabricating dated or global withdrawal markers.
-    val unresolvedWithdrawal: Boolean = false
+    val unresolvedWithdrawal: Boolean = false,
+    // Known omitted current/future source rows; false never certifies completeness.
+    val knownPartial: Boolean = false
 )
 
 fun interface ScheduleDocumentExtractor {
@@ -69,7 +78,7 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
         val platform = MyPrihodScheduleHtml.prepare(copy)
         if (platform?.conflict == true) return ScheduleDocument(document.baseUri(), "html",
             listOf(ScheduleDocumentPage(emptyList(), ocrFailure = ScheduleOcrFailure.CONFLICTING_EVIDENCE)))
-        copy.select("script,style,nav,footer,aside,header,[hidden],.sidebar").remove()
+        copy.select("script,style,nav,[role=navigation],footer,aside,header,[hidden],.sidebar").remove()
         // Sibling headings may identify the building for each of several articles. Selecting only
         // the first article would lose that scope and silently discard the selected church's section.
         // Older parish sites use a named content div instead of semantic HTML. Only select
@@ -77,6 +86,15 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
         val body = copy.selectFirst("main,[role=main]") ?: copy.select("#content").singleOrNull()
             ?.takeIf { it.select("h1").size == 1 } ?: copy.body()
         val lines = mutableListOf<ScheduleDocumentLine>()
+        val weekdayTables = ScheduleWeekdayTable.extract(body)
+        // Keep original source words and their venue/heading position. Only an exact
+        // canonical origin may suppress a duplicate withdrawal in the parser.
+        fun calendarOrigin(nodes: List<TextNode>): Pair<ScheduleHtmlCalendarScope?, Boolean> {
+            val origins = nodes.filter { it.wholeText.isNotBlank() }.map { weekdayTables.representedTextNodes[it] }
+            if (origins.none { it != null }) return null to false
+            val complete = origins.takeIf { it.all { origin -> origin != null } }?.distinct()?.singleOrNull()
+            return complete to (complete == null)
+        }
         // An article's date heading may be its sibling. Only headings, never copyright/sidebar years.
         if (body != copy.body()) copy.select("h1").filter { it !in body.getAllElements() }.take(2)
             .forEach { lines += ScheduleDocumentLine(it.text(), headingLevel = 1,
@@ -99,6 +117,7 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
             (between + heading).forEach { dayMembers[it] = id }
         }
         fun plain(element: Element, htmlDayContainer: Int? = null): List<ScheduleDocumentLine> {
+            val (calendarScope, ambiguousOrigin) = calendarOrigin(element.getAllElements().flatMap { it.textNodes() })
             val clone = element.clone()
             // Known ISO calendar cards render the celebrant separately. Keep every word,
             // including cancellation notices, without joining it to the service name.
@@ -114,10 +133,20 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
                     htmlDayContainer = htmlDayContainer,
                     htmlDayHeading = wholeText.takeIf { it.length <= 2_000 && element.tagName().matches(Regex("h[1-6]")) &&
                         dayMembers[element] == htmlDayContainer && htmlDayContainer != null },
-                    htmlEventRow = wholeRow, htmlScopeText = wholeText.takeIf { raw -> raw.length <= 2_000 }) }
+                    htmlEventRow = wholeRow, htmlScopeText = wholeText.takeIf { raw -> raw.length <= 2_000 },
+                    htmlCalendarScope = calendarScope, htmlCalendarScopeAmbiguous = ambiguousOrigin) }
         }
         fun table(element: Element) {
             platform?.tables?.get(element)?.let { lines.addAll(it); return }
+            weekdayTables[element]?.let { calendar ->
+                lines.addAll(calendar.notices)
+                calendar.rows?.let { rows ->
+                    lines += ScheduleDocumentLine("", endsTable = true)
+                    lines.addAll(rows)
+                    lines += ScheduleDocumentLine("", endsTable = true)
+                    return
+                }
+            }
             data class Span(val value: String, var remaining: Int)
             val spans = mutableMapOf<Int, Span>()
             element.select("tr").filter { it.closest("table") == element }.take(600).forEach { row ->
@@ -187,10 +216,18 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
                 "p", "li", "h1", "h2", "h3", "h4", "h5", "h6", "pre" -> lines.addAll(plain(element, htmlDay))
                 else -> {
                     val own = StringBuilder()
-                    fun flush() { if (own.isNotBlank()) { lines += ScheduleDocumentLine(own.toString().trim(), htmlDayContainer = htmlDay); own.clear() } }
+                    val ownNodes = mutableListOf<TextNode>()
+                    fun flush() {
+                        if (own.isNotBlank()) {
+                            val (calendarScope, ambiguousOrigin) = calendarOrigin(ownNodes)
+                            lines += ScheduleDocumentLine(own.toString().trim(), htmlDayContainer = htmlDay,
+                                htmlCalendarScope = calendarScope, htmlCalendarScopeAmbiguous = ambiguousOrigin)
+                        }
+                        own.clear(); ownNodes.clear()
+                    }
                     element.childNodes().forEach { node ->
                         when (node) {
-                            is TextNode -> own.append(node.text())
+                            is TextNode -> { own.append(node.text()); ownNodes += node }
                             is Element -> if (node.tagName() == "br") flush() else { flush(); walk(node, htmlDay) }
                         }
                     }

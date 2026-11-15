@@ -35,8 +35,11 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -90,6 +93,21 @@ class AutomaticSourceContinuationFlowTest(private val dark: Boolean, private val
 
     private inner class Case(val label: String) {
         val id = "$runId-$label-${UUID.randomUUID()}"
+        private val ownedJobs = mutableSetOf<Job>()
+        private var closing = false
+        private suspend fun trackRepositoryJob() {
+            val job = requireNotNull(currentCoroutineContext()[Job])
+            synchronized(ownedJobs) {
+                if (closing) throw CancellationException("Owned case cleanup has started: $id")
+                if (ownedJobs.add(job)) job.invokeOnCompletion {
+                    synchronized(ownedJobs) { ownedJobs.remove(job) }
+                }
+            }
+        }
+        fun closeRepositoryJobs(): List<Job> = synchronized(ownedJobs) {
+            closing = true
+            ownedJobs.toList()
+        }
         val externalStarts = CopyOnWriteArrayList<String>()
         val isolatedContext = object : ContextWrapper(context) {
             override fun getApplicationContext(): Context = this
@@ -222,6 +240,7 @@ class AutomaticSourceContinuationFlowTest(private val dark: Boolean, private val
         // Recording only: all three actions call the real repository unchanged.
         val schedules = object : InternetSchedules by repository {
             override suspend fun refresh(parish: Parish, now: Instant, force: Boolean, sourceOverride: String?): InternetScheduleState {
+                trackRepositoryJob()
                 val number = refreshCalls.incrementAndGet()
                 if (prepareUiWithoutRefresh) return repository.cached(parish).also { refreshCompleted.incrementAndGet() }
                 return try {
@@ -235,6 +254,7 @@ class AutomaticSourceContinuationFlowTest(private val dark: Boolean, private val
             }
             override suspend fun continueSourceSearch(parish: Parish, now: Instant, ticket: ScheduleSourceContinuation,
                 owner: Any): InternetScheduleState? {
+                trackRepositoryJob()
                 automaticCalls.incrementAndGet()
                 val value = owner as AutomaticScheduleSourcePresentation
                 frameProofs += mapOf("drawAcknowledged" to (value.witness != null), "frameAfterDraw" to value.frameAfterDraw,
@@ -249,10 +269,12 @@ class AutomaticSourceContinuationFlowTest(private val dark: Boolean, private val
                 finally { automaticFinished.incrementAndGet() }
             }
             override suspend fun searchOtherSources(parish: Parish, now: Instant): InternetScheduleState {
+                trackRepositoryJob()
                 searchCalls.incrementAndGet()
                 return holdFirstDelivery(repository.searchOtherSources(parish, now)).also { searchCompleted.incrementAndGet() }
             }
             override suspend fun confirmCandidate(parish: Parish, candidateId: String, now: Instant): InternetScheduleState {
+                trackRepositoryJob()
                 confirmations += candidateId
                 return repository.confirmCandidate(parish, candidateId, now).also { confirmed += candidateId }
             }
@@ -287,19 +309,41 @@ class AutomaticSourceContinuationFlowTest(private val dark: Boolean, private val
 
 
     @After fun clean() {
-        try {
-            compose.mainClock.autoAdvance = true
-            if (contentSet) { compose.runOnIdle { active.value = null }; compose.waitForIdle() }
-            for (case in cases) {
-                case.releaseFast.complete(Unit); case.releaseOwn.complete(Unit)
-                case.releaseFirstRequest.complete(Unit); case.releaseSecondRequest.complete(Unit); report(case)
-            }
-        } finally {
-            preferenceNames.forEach { context.deleteSharedPreferences(it) }
-            originalUserPreferences.forEach { (name, before) ->
-                assertEquals("The user's $name must remain unchanged", before, context.getSharedPreferences(name, Context.MODE_PRIVATE).all)
+        var failure: Throwable? = null
+        fun step(action: () -> Unit) {
+            try { action() }
+            catch (next: Throwable) {
+                val first = failure
+                if (first == null) failure = next else if (first !== next) first.addSuppressed(next)
             }
         }
+        // Close admission before touching Compose: failed disposal must not permit a
+        // new writer, or leave an old deferred request alive after preference deletion.
+        val jobs = cases.flatMap { it.closeRepositoryJobs() }.distinct()
+        for (case in cases) {
+            listOf(case.releaseFast, case.releaseOwn, case.releaseFirstRequest, case.releaseSecondRequest)
+                .forEach { gate -> step { gate.complete(Unit) } }
+        }
+        jobs.forEach { job -> step { job.cancel(CancellationException("Owned test cleanup")) } }
+        step {
+            compose.mainClock.autoAdvance = true
+            if (contentSet) { compose.runOnIdle { active.value = null }; compose.waitForIdle() }
+        }
+        var jobsCompleted = false
+        step {
+            runBlocking { withTimeout(15_000) { jobs.forEach { it.join() } } }
+            jobsCompleted = true
+        }
+        cases.forEach { case -> step { report(case) } }
+        // A timed-out writer keeps its owned files for diagnosis rather than being
+        // allowed to recreate deleted preferences later. The timeout still fails cleanup.
+        if (jobsCompleted) preferenceNames.forEach { name -> step {
+            check(context.deleteSharedPreferences(name)) { "Could not delete owned preferences: $name" }
+        } }
+        originalUserPreferences.forEach { (name, before) -> step {
+                assertEquals("The user's $name must remain unchanged", before, context.getSharedPreferences(name, Context.MODE_PRIVATE).all)
+        } }
+        failure?.let { throw it }
     }
 
     @Test fun theActualVisibleFastFrameStartsOneOwnAndTheStripDoesNotMoveOnSuccessOrPartialFailure() {

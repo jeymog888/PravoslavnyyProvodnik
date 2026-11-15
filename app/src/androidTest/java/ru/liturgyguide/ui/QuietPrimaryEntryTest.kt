@@ -264,19 +264,19 @@ private fun quietState(church: Parish, service: ParishService) = InternetSchedul
         listOf(InternetService(service.date, service.time, service.title, service.kind))))
 
 private fun ComposeContentTestRule.quietReveal(tag: String, backwards: Boolean = false): SemanticsNodeInteraction {
+    val probe = NativeRevealProbe(this, "church_content", tag)
     repeat(32) {
         waitForIdle()
-        val viewport = onNodeWithTag("church_content").getBoundsInRoot()
-        val target = onAllNodesWithTag(tag).fetchSemanticsNodes().singleOrNull()
-        val bounds = target?.let { onNodeWithTag(tag).getUnclippedBoundsInRoot() }
-        if (bounds != null && bounds.top >= viewport.top && bounds.bottom <= viewport.bottom) return onNodeWithTag(tag).assertIsDisplayed()
+        val frame = probe.bounds()
+        val viewport = frame.viewport
+        val bounds = frame.targetBounds
+        if (bounds != null && bounds.top >= viewport.top && bounds.bottom <= viewport.bottom &&
+            bounds.left >= viewport.left && bounds.right <= viewport.right &&
+            frame.target?.clipped?.let { it.right > it.left && it.bottom > it.top } == true) return probe.interaction(frame)
         val back = bounds?.let { it.top < viewport.top } ?: backwards
-        onNodeWithTag("church_content").performTouchInput {
-            swipe(Offset(centerX, height * (if (back) .35f else .8f)),
-                Offset(centerX, height * (if (back) .7f else .45f)), durationMillis = 500)
-        }
+        probe.swipe(if (back) .35f else .8f, if (back) .7f else .45f, durationMillis = 500)
     }
-    throw AssertionError("Could not reveal $tag with bounded real touch")
+    probe.fail("Could not reveal $tag with bounded real touch")
 }
 
 private fun ComposeContentTestRule.quietReachReadingAnchor() {

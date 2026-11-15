@@ -42,7 +42,8 @@ object ScheduleHtmlParser {
         // A named building or a dated cancellation needs the general parser's section context,
         // rather than the legacy parser's whole-document rejection or context-free row extraction.
         if (MyPrihodScheduleHtml.appliesTo(document) || structured.pages.any { page -> page.lines.any {
-            it.venue != null || ScheduleVenue.isLabel(it.text) || cancelled.containsMatchIn(it.text)
+            it.htmlCalendarRow != null || it.htmlCalendarNotice != null || it.htmlCalendarScope != null ||
+                it.htmlCalendarScopeAmbiguous || it.venue != null || ScheduleVenue.isLabel(it.text) || cancelled.containsMatchIn(it.text)
         } }) return ScheduleDocumentParser.inspect(structured, today, parish)
         val events = parseLegacy(document, today)
         val known = document.select("[data-day],.bg_ortcal_schedule").any { !ScheduleHtmlDiscussion.contains(it) }

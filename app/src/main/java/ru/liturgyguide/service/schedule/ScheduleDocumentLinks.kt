@@ -99,6 +99,69 @@ object ScheduleDocumentLinks {
         return admitted.map { if (it.document || it.url in pinnedHtml) it else ordered.next() }
     }
 
+    /** Only a proven metadata backlink is unnecessary after a dated publication.
+     * Discovery, source safety and all ambiguous/content edges keep their old behaviour. */
+    internal fun fromPublishedPage(page: Document, parsed: ScheduleParseResult,
+        links: List<ScheduleDocumentLink>, viableEvents: List<InternetService>): List<ScheduleDocumentLink> {
+        if (viableEvents.isEmpty() || viableEvents.any { it !in parsed.events } || parsed.disposition != ScheduleParseDisposition.PARSED || parsed.events.isEmpty() || parsed.yearInferred ||
+            parsed.safetyConflict || parsed.unresolvedWithdrawal || parsed.withdrawsAll ||
+            parsed.withdrawnDates.isNotEmpty() || parsed.withdrawnStarts.isNotEmpty()) return links
+        val owner = page.select("article,.hentry").filterNot(ScheduleHtmlDiscussion::contains).singleOrNull() ?: return links
+        val month = owner.select("h1,h2,h3,h4,h5,h6").filter { it.closest("article,.hentry") === owner &&
+            it.closest("[hidden],[aria-hidden=true],nav,header,footer,aside,[role=navigation]") == null &&
+            (it.parents() + it).none { node -> Regex("(?iu)(display\\s*:\\s*none|visibility\\s*:\\s*hidden)").containsMatchIn(node.attr("style")) }
+        }.mapNotNull { ScheduleWeekdayTable.month(it.text()) }.singleOrNull() ?: return links
+        if (viableEvents.any { runCatching { java.time.YearMonth.from(java.time.LocalDate.parse(it.date)) != month }.getOrDefault(true) }) return links
+        val anchors = page.select("a[href]").filterNot(ScheduleHtmlDiscussion::contains)
+        if (anchors.size > 500) return links
+        val metadata = ".byline,.entry-meta,.post-meta,.postmeta,.post-categories,[itemprop=articleSection]"
+        val navigation = "nav,header,footer,aside,[role=navigation],[role=menu],[role=menubar],.menu,.pager,.pagination,.sidebar,#sidebar"
+        val neutral = Regex("(?iu)^(?:(?:рубрика|категория):?\\s*)?(?:расписание(?:\\s+(?:богослужений|служб))?|богослужения)$")
+        val amendment = Regex("(?iu)(change|updat|revis|cancel|reschedul|(?<![a-z])new(?![a-z])|измен|обнов|уточн|дополн|актуал|(?<![а-яё])(?:новое|новый|новые|сегодня|завтра)(?![а-яё]))")
+        val visible = page.clone().also {
+            ScheduleHtmlDiscussion.removeFrom(it)
+            it.select("script,style").remove()
+        }.body().wholeText()
+        val datedTarget = Regex("(?iu)([0-9]|январ|феврал|март|апрел|ма[йя]|июн|июл|август|сентябр|октябр|ноябр|декабр|januar|februar|march|mart|april|aprel|may|mai|maj|june|july|august|septemb|octob|novemb|decemb|yanvar|fevral|iyun|iyul|avgust|sentyabr|oktyabr|noyabr|dekabr)")
+        fun neutralNavigation(anchor: Element): Boolean = anchor.closest("nav,[role=navigation]") != null &&
+            anchor.closest("article,.hentry,.entry-content,[itemprop=articleBody]") == null
+        fun neutralAnchor(anchor: Element): Boolean {
+            val label = anchor.wholeText()
+            if (label.length > 2_000 || ScheduleVenue.hasUnsafeSharedInput(label) ||
+                !neutral.matches(label.replace('\u00a0', ' ').replace(Regex("\\s+"), " ").trim())) return false
+            if (anchor.select("img,svg,picture,table").isNotEmpty() || anchor.attributes().asList().any { it.key.startsWith("on", true) }) return false
+            for (attribute in listOf("title", "aria-label")) if (anchor.attr(attribute).isNotBlank() &&
+                !neutral.matches(anchor.attr(attribute).trim())) return false
+            val target = runCatching { URI(anchor.absUrl("href")) }.getOrNull() ?: return false
+            if (datedTarget.containsMatchIn(decoded(target.rawPath.orEmpty() + " " + target.rawQuery.orEmpty()))) return false
+            if (visible.length > 20_000 || ScheduleWeekdayTable.unsafe(visible) ||
+                ScheduleCancellation.containsMatchIn(visible) || amendment.containsMatchIn(visible)) return false
+            val context = anchor.closest(metadata) ?: anchor.closest(navigation) ?: return false
+            val complete = owner.wholeText() + " " + context.wholeText() + " " + label + " " + decoded(anchor.attr("href"))
+            return complete.length <= 8_000 && !ScheduleWeekdayTable.unsafe(complete) &&
+                !ScheduleCancellation.containsMatchIn(complete) &&
+                !amendment.containsMatchIn(complete)
+        }
+        fun taxonomy(anchor: Element): Boolean = anchor.closest("article,.hentry") === owner &&
+            anchor.closest(".entry-content,[itemprop=articleBody]") == null && anchor.closest(metadata) != null &&
+            anchor.attr("rel").split(Regex("\\s+")).filter(String::isNotBlank).map { it.lowercase(Locale.ROOT) }.toSet() == setOf("category", "tag")
+        val occurrences = anchors.mapNotNull { anchor ->
+            val published = ScheduleUrl.publicSource(anchor.absUrl("href")) ?: return@mapNotNull null
+            secureHtmlLink(page.baseUri(), published) to anchor
+        }.groupBy({ it.first }, { it.second })
+        return links.filter { link ->
+            if (link.document || link.linkedFrom != page.baseUri()) true
+            else {
+                val same = occurrences[link.url].orEmpty()
+                // A body link, update, cancellation or unknown occurrence retains the GET.
+                val allNeutral = same.isNotEmpty() && same.all(::neutralAnchor)
+                val taxonomyBacklink = same.any(::taxonomy) && same.all { taxonomy(it) || neutralNavigation(it) }
+                val generalNavigation = same.isNotEmpty() && same.all(::neutralNavigation)
+                !(allNeutral && (taxonomyBacklink || generalNavigation))
+            }
+        }
+    }
+
     private fun preferredHtmlAnchor(anchor: Element, url: String): Boolean {
         if (anchor.closest("nav,header,footer,[role=navigation],[role=menu],[role=menubar],.menu,.pager,.pagination,[hidden],[aria-hidden=true],.modal") != null)
             return false

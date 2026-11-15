@@ -437,9 +437,10 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("church_open_service")) {
                                 Text(serviceReadingAction(featured))
                             }
+                            if (schedule.knownPartial) PartialScheduleNotice(schedule.sourceUrl, onOpenUrl, "church_service")
                             PublishedServiceScopeNote(featured.title, "church_service")
                             ArrivalServiceSourceTitle(featured.title, "church_service")
-                            if (cachedPublication?.yearInferred == true && (schedule.saved || cachedPublication.sourceUrl == church.sourceUrl)) {
+                            if (!schedule.knownPartial && cachedPublication?.yearInferred == true && (schedule.saved || cachedPublication.sourceUrl == church.sourceUrl)) {
                                 OutlinedButton(onClick = { onOpenUrl(cachedPublication.sourceUrl) },
                                     modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("church_verify_schedule_source")) {
                                     Text("Проверить источник")
@@ -460,15 +461,20 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                                 }
                             }
                         } else {
-                            Text(scheduleEmptyTitle(ownState, schedule.publication != null || church.schedule.isNotEmpty(), church),
+                            Text(scheduleEmptyTitle(ownState, schedule.publication != null || church.schedule.isNotEmpty(), church, schedule.knownPartial),
                                 style = if (schedule.next == null) MaterialTheme.typography.titleLarge else MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.testTag("church_schedule_empty"))
                             val source = scheduleSourceFor(church, ownState)
-                            if (schedule.next == null) Text(scheduleEmptyDescription(ownState, source != null, church), style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            schedule.next?.let { offer -> UpcomingScheduleOffer(offer, "church", onOpenService) }
+                            if (schedule.next == null) {
+                                val description = scheduleEmptyDescription(ownState, source != null, church, schedule.knownPartial)
+                                if (schedule.knownPartial) PartialScheduleNotice(schedule.sourceUrl, onOpenUrl, "church_empty", description)
+                                else Text(description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            schedule.next?.let { offer -> UpcomingScheduleOffer(offer, "church", onOpenService, onOpenUrl,
+                                partialDescription = scheduleEmptyDescription(ownState, source != null, church, offer.knownPartial)) }
                             if (!sourceSectionVisible) ChurchScheduleSourceActions(church, ownState,
-                                onRefreshSchedule, openSourceEditor.takeIf { onSetScheduleSource != null }, onOpenUrl)
+                                onRefreshSchedule, openSourceEditor.takeIf { onSetScheduleSource != null }, onOpenUrl,
+                                showSource = !schedule.knownPartial || schedule.sourceUrl == null)
                         }
                         if (ownState?.loading == true) Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
@@ -576,13 +582,13 @@ internal fun churchAddressLine(church: Parish): String {
 
 @Composable
 private fun ChurchScheduleSourceActions(church: Parish, state: InternetScheduleState?,
-    onRefreshSchedule: (() -> Unit)?, onEditSource: (() -> Unit)?, onOpenUrl: (String) -> Unit) {
+    onRefreshSchedule: (() -> Unit)?, onEditSource: (() -> Unit)?, onOpenUrl: (String) -> Unit, showSource: Boolean = true) {
     val source = scheduleSourceFor(church, state)
     onRefreshSchedule?.let { refresh -> OutlinedButton(onClick = refresh, enabled = state?.loading != true,
         modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("refresh_schedule")) {
         Icon(Icons.Default.Refresh, null, Modifier.size(20.dp)); Spacer(Modifier.width(12.dp)); Text("Обновить расписание")
     } }
-    source?.let { url ->
+    if (showSource) source?.let { url ->
         OutlinedButton(onClick = { onOpenUrl(url) }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
             .testTag("open_schedule_website")) {
             Icon(Icons.Default.OpenInNew, null, Modifier.size(20.dp))

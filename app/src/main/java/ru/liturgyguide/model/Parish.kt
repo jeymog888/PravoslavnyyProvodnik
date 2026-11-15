@@ -7,6 +7,7 @@ data class Parish(
     val sourceUrl: String, val scheduleSource: String, val scheduleValidFrom: String,
     val scheduleValidUntil: String, val schedule: List<ParishService>,
     val scheduleCoverage: String, val scheduleNote: String,
-    val latitude: Double? = null, val longitude: Double? = null
+    val latitude: Double? = null, val longitude: Double? = null,
+    val scheduleKnownPartial: Boolean = false
 )
 data class ParishService(val date: String, val time: String, val title: String, val kind: String)

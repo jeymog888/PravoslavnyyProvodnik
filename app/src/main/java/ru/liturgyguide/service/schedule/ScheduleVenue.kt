@@ -337,6 +337,27 @@ internal object ScheduleVenue {
         return completePlace(parish.city) == wanted
     }
 
+    /** Only an explicit located, complete different dedication/type proves a foreign row.
+     * Missing locality or an unfamiliar calendar commemoration is still unknown. */
+    internal fun provesDifferentLocatedBuilding(raw: String, parish: Parish?): Boolean {
+        if (parish == null || hasSharedScopeRestriction(raw)) return false
+        if (!Regex("(?iu)(?<![а-яё])(?:в|во)\\s+(?:[а-яё-]+\\s+){0,8}(?:храм[а-яё]*|церк[а-яё]*|собор[а-яё]*|часовн[а-яё]*|придел[а-яё]*)(?![а-яё])")
+                .containsMatchIn(raw)) return false
+        val label = inlineLabel(raw) ?: return false
+        val parsed = slices(label) ?: return false
+        val own = listOfNotNull(ownIdentity(parish.name), ownIdentity(parish.shortName)).filter { identity ->
+            identity.words.isNotEmpty() && !identity.words.all {
+                it.startsWith("икон") || it in setOf("божие", "божья", "матер", "богор")
+            }
+        }
+        return parsed.isNotEmpty() && own.isNotEmpty() && parsed.all { scope ->
+            val wanted = distinctiveName(scope.name)
+            scope.valid && wanted.isNotEmpty() && own.none { identity ->
+                (identity.kind == null || identity.kind == scope.kind) && identity.words.containsAll(wanted)
+            }
+        }
+    }
+
     private fun tokens(text: String): Set<String> = Regex("[а-яёa-z]{3,}").findAll(text.lowercase(Locale.ROOT))
         .map { it.value.replace('ё', 'е') }.filter { word -> word !in functional && generic.none(word::startsWith) }.map { it.take(5) }.toSet()
 }

@@ -1,0 +1,71 @@
+{
+  "classification": "ROOT_PREDECLARED_KNOWN_DEVELOPMENT_SOURCE_ORACLE_NOT_HOLDOUT_SUCCESS",
+  "sourceSha256": "1e87ee032275e9654be3d4185dc284c28b1d332c3ac866e00214bd7f97bd9a38",
+  "today": "2026-11-15",
+  "clockCapturedAt": "2026-11-15T16:35:59.007419Z",
+  "selectedId": "osm:way:367166563",
+  "expectedEvents": [
+    {
+      "date": "2026-11-14",
+      "time": "09:00",
+      "title": "Литургия",
+      "kind": "liturgy"
+    },
+    {
+      "date": "2026-11-15",
+      "time": "09:00",
+      "title": "Литургия",
+      "kind": "liturgy"
+    },
+    {
+      "date": "2026-11-21",
+      "time": "09:00",
+      "title": "Литургия",
+      "kind": "liturgy"
+    },
+    {
+      "date": "2026-11-26",
+      "time": "09:00",
+      "title": "Литургия",
+      "kind": "liturgy"
+    },
+    {
+      "date": "2026-11-29",
+      "time": "09:00",
+      "title": "Литургия",
+      "kind": "liturgy"
+    }
+  ],
+  "knownPartial": true,
+  "sourceComplete": false,
+  "mustNotContainDates": [
+    "2026-11-09",
+    "2026-11-23",
+    "2026-11-28"
+  ],
+  "mustNotInventDates": [
+    "2026-11-08",
+    "2026-11-22"
+  ],
+  "knownCurrentOmissions": [
+    {
+      "date": "2026-11-18",
+      "time": "09:00",
+      "printedService": "Молебен",
+      "reason": "Existing venue guard on raw calendar council phrase, do not grant blanket exemption"
+    },
+    {
+      "date": "2026-11-21",
+      "time": "16:00",
+      "printedService": "Бдение",
+      "reason": "Existing service vocabulary, not expanded here"
+    }
+  ],
+  "limits": [
+    "Import window unchanged today-1..+45",
+    "Past-only mismatch does not establish current knownPartial",
+    "Existing venue/cancellation/source authority rules retained",
+    "No whole-source completeness or independent percentage claim",
+    "Full book content and physical Main flow outside this source oracle"
+  ]
+}
