@@ -153,10 +153,14 @@ class ScheduleSourceReviewFlowTest(private val dark: Boolean) {
         compose.onNodeWithTag("today_review_schedule_sources").performClick()
         compose.waitForIdle()
         // No performScrollTo/scrollToNode here: this is the production anchor's result.
-        compose.onNodeWithTag("schedule_sources_heading").assertIsDisplayed().assertTextEquals("Найденные сайты")
+        compose.onNodeWithTag("schedule_sources_heading").assertIsDisplayed().assertTextEquals(first.name)
         val heading = compose.onNodeWithTag("schedule_sources_heading").getUnclippedBoundsInRoot()
         val viewport = compose.onNodeWithTag("church_content").getBoundsInRoot()
         assertTrue(heading.top >= viewport.top - 1.dp && heading.bottom <= viewport.bottom + 1.dp)
+        val open = compose.onNodeWithTag("open_candidate_${first.id}").assertIsDisplayed()
+        val openBounds = open.getUnclippedBoundsInRoot()
+        assertEquals("The first next action must not be clipped", openBounds, open.getBoundsInRoot())
+        assertTrue(openBounds.top >= viewport.top && openBounds.bottom <= viewport.bottom)
         capture("church_content", "source-heading")
         compose.runOnIdle { assertEquals(0, fallbackCalls) }
         reveal("church_content", "source_details_${first.id}").performClick()
@@ -250,11 +254,14 @@ class ScheduleSourceReviewFlowTest(private val dark: Boolean) {
                 onConfirmScheduleCandidate = { confirmed += it }, onDismissScheduleCandidate = { dismissed += it })
         } }
         fun heldActions(id: String): Pair<() -> Boolean, () -> Boolean> {
-            val confirm = requireNotNull(reveal("church_content", "confirm_candidate_${id}")
-                .fetchSemanticsNode().config[SemanticsActions.OnClick].action)
+            reveal("church_content", "confirm_candidate_${id}")
             if (compose.onAllNodesWithTag("dismiss_candidate_${id}").fetchSemanticsNodes().isEmpty())
                 reveal("church_content", "source_details_${id}").performClick()
-            val dismiss = requireNotNull(reveal("church_content", "dismiss_candidate_${id}")
+            reveal("church_content", "dismiss_candidate_${id}")
+            // Capture both actions only after all reveal/expand/scroll work has finished.
+            val confirm = requireNotNull(compose.onNodeWithTag("confirm_candidate_${id}")
+                .fetchSemanticsNode().config[SemanticsActions.OnClick].action)
+            val dismiss = requireNotNull(compose.onNodeWithTag("dismiss_candidate_${id}")
                 .fetchSemanticsNode().config[SemanticsActions.OnClick].action)
             return confirm to dismiss
         }
@@ -323,7 +330,7 @@ class ScheduleSourceReviewFlowTest(private val dark: Boolean) {
             .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
         assertEquals(1, layouts.size)
         val layout = layouts.single()
-        assertFalse("Action label must remain fully visible", layout.hasVisualOverflow)
+        assertTextFitsLayout(layout, label)
         for (line in 0 until layout.lineCount - 1) {
             val end = layout.getLineEnd(line)
             assertTrue("Do not leave a letter of the action on another line",

@@ -1029,6 +1029,7 @@ fun AppNavigation(container: AppContainer, clock: Clock = Clock.systemUTC(),
                         churches = churches, selectedId = church?.id,
                         internetSchedule = internetSchedule, sourceReviewParish = baseChurch,
                         sourceSearchActive = visibleSourcePresentation?.searching, sourceSearchOrder = visibleSourceOrder,
+                        sourceSearchViewKey = visibleSourcePresentation?.view,
                         onReviewSourceSearch = { reviewVisibleScheduleSources(Screen.CHURCH) },
                         onSourceSearchDrawn = sourceSearchDrawn,
                         onSourceSearchInteraction = {

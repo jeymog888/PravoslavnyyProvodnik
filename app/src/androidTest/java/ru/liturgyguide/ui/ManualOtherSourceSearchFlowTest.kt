@@ -370,7 +370,7 @@ class ManualOtherSourceSearchFlowTest(private val dark: Boolean, private val chu
         compose.onNode(hasText(text) and hasAnyAncestor(hasTestTag(buttonTag)), useUnmergedTree = true)
             .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
         val layout = layouts.single()
-        assertFalse(layout.hasVisualOverflow)
+        assertTextFitsLayout(layout, text)
         for (word in Regex("[^ ]+").findAll(text))
             assertEquals("A word must not break by letters", layout.getLineForOffset(word.range.first), layout.getLineForOffset(word.range.last))
     }

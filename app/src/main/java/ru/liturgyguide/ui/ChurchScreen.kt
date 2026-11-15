@@ -33,6 +33,7 @@ import ru.liturgyguide.service.schedule.InternetScheduleState
 import ru.liturgyguide.service.schedule.InternetScheduleStatus
 import ru.liturgyguide.service.schedule.ScheduleUrl
 import ru.liturgyguide.service.schedule.ScheduleEntityIdentity
+import ru.liturgyguide.service.schedule.ScheduleSourceChangeBlock
 import ru.liturgyguide.service.schedule.permitsOtherSourceSearch
 import java.time.Instant
 import java.time.ZoneId
@@ -66,7 +67,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     onReviewSourceSearch: (() -> Unit)? = null,
     onSourceSearchDrawn: ((androidx.compose.ui.geometry.Rect, androidx.compose.ui.geometry.Rect) -> Unit)? = null,
     onSourceSearchInteraction: () -> Boolean = { true },
-    onFindOtherScheduleSources: (() -> Unit)? = null) {
+    onFindOtherScheduleSources: (() -> Unit)? = null, sourceSearchViewKey: Any? = null) {
     val church = churches.firstOrNull { it.id == selectedId }
     var picker by rememberSaveable { mutableStateOf(false) }
     var adding by rememberSaveable { mutableStateOf(false) }
@@ -218,11 +219,25 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     val sourceChurch = scheduleReviewParish(church, sourceReviewParish)
     val sourceReviewOwner = sourceChurch?.let(ScheduleEntityIdentity::fingerprint)
     val currentSourceReviewOwner by rememberUpdatedState(sourceReviewOwner)
+    val currentSourceSearchViewKey by rememberUpdatedState(sourceSearchViewKey)
+    // A review can free this view's fixed strip; a new view must render its own strip again.
+    var reviewedSourceStrip by remember(sourceReviewOwner, sourceSearchViewKey) { mutableStateOf(false) }
     var handledSourceReview by rememberSaveable(sourceReviewOwner) { mutableIntStateOf(0) }
     val readingBeforeSchedule = rememberReadingBeforeSchedule(listState, church?.id, date, arrival?.featured != null || arrival?.next != null,
         readingKey = "church_reading", personalKey = "church_personal")
+    val sourceGroups = if (sourceChurch != null && ownState != null) scheduleCandidateGroups(sourceChurch, ownState) else emptyList()
     val sourceSectionVisible = sourceChurch != null && ownState != null && onConfirmScheduleCandidate != null &&
-        (scheduleCandidateGroups(sourceChurch, ownState).isNotEmpty() || ownState.candidateSearchUnavailable && !ownState.loading)
+        (sourceGroups.isNotEmpty() || ownState.candidateSearchUnavailable && !ownState.loading)
+    // A presentation change only: no accepted source or safety notice can enter this branch.
+    val compactPending = ownState != null && sourceChurch != null && arrival != null && sourceSectionVisible &&
+        sourceGroups.isNotEmpty() && sourceGroups.none { it.conflicts.isNotEmpty() || it.alreadyChosen || it.blockedByHistory } &&
+        ownState.candidateSearchIdentity == sourceReviewOwner && church?.schedule?.isEmpty() == true &&
+        arrival.entries.isEmpty() && arrival.featured == null && arrival.next == null && ownState.publication == null &&
+        ownState.siteBinding == null && sourceChurch.website.isBlank() && ownState.configuredWebsite.isBlank() &&
+        ownState.website.isBlank() && ownState.sourceUrl.isBlank() && ownState.customSource.isBlank() && ownState.siteEvidenceUrl.isBlank() &&
+        !ownState.loading && !ownState.publicationRejected && !ownState.sourceHasWithdrawals && !ownState.sourceNeedsVerification &&
+        ownState.sourceChangeBlock == ScheduleSourceChangeBlock.NONE
+    val currentCompactPending by rememberUpdatedState(compactPending)
     // Header (optional), identity, day chips, then the optional retained reading cards.
     val hasPersonalCard = church != null && personalStartForDate(userStarts, church, date) != null
     val hasReadingCard = church != null && ((onReadLiturgy != null && !hasPersonalCard) ||
@@ -232,30 +247,51 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
     // Sources are the next stable item, independent of the selected date or featured service.
     val reviewItemIndex = scheduleItemIndex + if (sourceSectionVisible) 1 else 0
     val currentReviewItemIndex by rememberUpdatedState(reviewItemIndex)
-    val reviewScope = rememberCoroutineScope()
+    val reviewScope = key(sourceReviewOwner, sourceSearchViewKey) { rememberCoroutineScope() }
 
     LaunchedEffect(sourceReviewRequest, sourceReviewIdentity, sourceReviewOwner, sourceSectionVisible,
-        ownState?.loading, reviewItemIndex) {
+        ownState?.loading, reviewItemIndex, sourceSearchViewKey) {
         if (church == null || sourceReviewRequest == 0 || sourceReviewRequest == handledSourceReview ||
             sourceReviewIdentity != null && sourceReviewIdentity != sourceReviewOwner) return@LaunchedEffect
         // A pending request may wait for this attempt, but never reset the person's date.
         if (!sourceSectionVisible && ownState?.loading == true) return@LaunchedEffect
+        val reviewView = sourceSearchViewKey
+        val reviewOwner = sourceReviewOwner
+        val collapseAfterReview = compactPending && sourceSearchActive != null
         picker = false; adding = false; locate = false
         withFrameNanos { }
+        if (currentSourceSearchViewKey !== reviewView || currentSourceReviewOwner != reviewOwner) return@LaunchedEffect
         listState.scrollToItem(currentReviewItemIndex)
         withFrameNanos { }
+        if (currentSourceSearchViewKey !== reviewView || currentSourceReviewOwner != reviewOwner) return@LaunchedEffect
         handledSourceReview = sourceReviewRequest
+        if (collapseAfterReview && currentCompactPending) reviewedSourceStrip = true
     }
+    // Render a new source view with its current captures. Durable day/list/review
+    // state and source jobs stay outside this presentation lifetime.
+    key(sourceReviewOwner, sourceSearchViewKey) {
     Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = { Column(Modifier.statusBarsPadding()) {
         if (showBack) PageHeader("Храм", onBack)
     } }, bottomBar = bottomBar) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-        sourceSearchActive?.let { searching ->
+        if (!reviewedSourceStrip) sourceSearchActive?.let { searching ->
             ScheduleSourceSearchStrip(searching, ownState?.candidateSearchUnavailable == true,
                 onReview = { if (currentSourceReviewOwner == sourceReviewOwner && currentChurchId == church?.id) {
                     val review = onReviewSourceSearch
                     if (review != null) review()
-                    else reviewScope.launch { withFrameNanos { }; listState.scrollToItem(currentReviewItemIndex) }
+                    else {
+                        val reviewView = sourceSearchViewKey
+                        val reviewOwner = sourceReviewOwner
+                        val collapseAfterReview = compactPending
+                        reviewScope.launch {
+                            withFrameNanos { }
+                            if (currentSourceSearchViewKey !== reviewView || currentSourceReviewOwner != reviewOwner) return@launch
+                            listState.scrollToItem(currentReviewItemIndex)
+                            withFrameNanos { }
+                            if (currentSourceSearchViewKey === reviewView && currentSourceReviewOwner == reviewOwner &&
+                                collapseAfterReview && currentCompactPending) reviewedSourceStrip = true
+                        }
+                    }
                 } },
                 onDrawn = onSourceSearchDrawn)
         }
@@ -353,7 +389,12 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                     readingItem()
                 }
                 item(key = "church_schedule") {
-                    ArrivalCard(Modifier.testTag("church_schedule_card")) {
+                    if (compactPending) Column(Modifier.fillMaxWidth().testTag("church_schedule_card"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(date.format(DateTimeFormatter.ofPattern("d MMMM uuuu, EEEE", Locale.forLanguageTag("ru"))),
+                            style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("schedule_date"))
+                        Text("Расписание пока не получено", style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("church_schedule_empty"))
+                    } else ArrivalCard(Modifier.testTag("church_schedule_card")) {
                         Text(if (schedule.saved) "Сохраненное расписание" else "Расписание", style = MaterialTheme.typography.titleMedium)
                         Text(date.format(DateTimeFormatter.ofPattern("d MMMM uuuu, EEEE", Locale.forLanguageTag("ru"))),
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -414,14 +455,14 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                     }
                 }
                 if (sourceSectionVisible && ownState != null) item(key = "church_schedule_sources") {
-                    ArrivalCard(Modifier.testTag("church_sources_card")) {
+                    val sourceContent: @Composable ColumnScope.() -> Unit = {
                         val ownerIdentity = ScheduleEntityIdentity.fingerprint(requireNotNull(sourceChurch))
                         ScheduleCandidateChoices(requireNotNull(sourceChurch), ownState,
                             onConfirm = { id -> if (currentSourceReviewOwner == ownerIdentity) onConfirmScheduleCandidate?.invoke(id) },
                             onDismiss = onDismissScheduleCandidate?.let { dismiss ->
                                 { id: String -> if (currentSourceReviewOwner == ownerIdentity) dismiss(id) }
                             }, onOpenUrl = onOpenUrl, stableSourceOrder = sourceSearchOrder,
-                            showSearchDiagnostic = sourceSearchActive == null)
+                            showSearchDiagnostic = sourceSearchActive == null || reviewedSourceStrip, compactPending = compactPending)
                         if (featured == null) ChurchScheduleSourceActions(church, ownState,
                             onRefreshSchedule, openSourceEditor.takeIf { onSetScheduleSource != null }, onOpenUrl)
                         val findOtherSources = onFindOtherScheduleSources
@@ -431,7 +472,11 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                             modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("find_other_schedule_sources")) {
                             Text("Искать другие сайты")
                         }
+                        if (compactPending) ScheduleCheckReceipt(ownState, church.timezone, Modifier.testTag("church_schedule_checked"), church)
                     }
+                    if (compactPending) Column(Modifier.fillMaxWidth().testTag("church_sources_card"),
+                        verticalArrangement = Arrangement.spacedBy(16.dp), content = sourceContent)
+                    else ArrivalCard(Modifier.testTag("church_sources_card"), content = sourceContent)
                 }
                 if (!readingBeforeSchedule) {
                     personalItem()
@@ -474,6 +519,7 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
             }
         }
         }
+    }
     }
     if (church != null) {
         val ownerId = church.id

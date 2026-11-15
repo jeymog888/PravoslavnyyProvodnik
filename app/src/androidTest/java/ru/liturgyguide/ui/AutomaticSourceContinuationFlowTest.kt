@@ -336,7 +336,9 @@ class AutomaticSourceContinuationFlowTest(private val dark: Boolean, private val
         compose.onNodeWithTag("church_content").assertIsDisplayed()
         compose.onNodeWithTag("schedule_sources_heading").assertIsDisplayed()
         assertEquals(1, case.refreshCalls.get()); assertEquals(1, case.automaticCalls.get())
-        compose.onNodeWithTag("schedule_candidates_unavailable").assertDoesNotExist()
+        compose.onNodeWithTag("schedule_source_search_strip").assertDoesNotExist()
+        if (case.partialFailure) compose.onNodeWithTag("schedule_candidates_unavailable").assertExists()
+        else compose.onNodeWithTag("schedule_candidates_unavailable").assertDoesNotExist()
         assertTrue(case.confirmations.isEmpty()); assertTrue(case.books.requests.isEmpty())
     }
 

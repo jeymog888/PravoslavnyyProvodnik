@@ -30,7 +30,7 @@ internal fun ScheduleSourceChangeNotice(state: InternetScheduleState) {
 @Composable
 internal fun ScheduleCandidateChoices(church: Parish, state: InternetScheduleState,
     onConfirm: (String) -> Unit, onDismiss: ((String) -> Unit)?, onOpenUrl: (String) -> Unit,
-    stableSourceOrder: List<String>? = null, showSearchDiagnostic: Boolean = true) {
+    stableSourceOrder: List<String>? = null, showSearchDiagnostic: Boolean = true, compactPending: Boolean = false) {
     val currentGroups = scheduleCandidateGroups(church, state)
     val groups = if (stableSourceOrder != null) currentGroups.sortedBy { group ->
         stableSourceOrder.indexOf(group.sourceUrl).takeIf { it >= 0 } ?: Int.MAX_VALUE
@@ -55,24 +55,29 @@ internal fun ScheduleCandidateChoices(church: Parish, state: InternetScheduleSta
             .singleOrNull { it.sourceUrl == url }
 
     Column(Modifier.fillMaxWidth().testTag("schedule_candidate_choices"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-        Text("Найденные сайты", style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.testTag("schedule_sources_heading").semantics { heading() })
-        Text("Выбранный храм: " + church.name, style = MaterialTheme.typography.bodyMedium)
-        churchAddressLine(church).takeIf(String::isNotBlank)?.let {
-            Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (compactPending) Text("Сайт еще не выбран. Сверьте храм и адрес", style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("schedule_pending_context"))
+        else {
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Text("Найденные сайты", style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.testTag("schedule_sources_heading").semantics { heading() })
+            Text("Выбранный храм: " + church.name, style = MaterialTheme.typography.bodyMedium)
+            churchAddressLine(church).takeIf(String::isNotBlank)?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Text("Откройте сайт и сверьте название и адрес храма. Если они совпадают, нажмите \"Выбрать сайт\" - приложение попробует загрузить расписание",
+                style = MaterialTheme.typography.bodyMedium)
+            if (showSearchDiagnostic && state.candidateSearchUnavailable) Text("Не все источники удалось проверить. Можно повторить поиск",
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.testTag("schedule_candidates_unavailable"))
         }
-        Text("Откройте сайт и сверьте название и адрес храма. Если они совпадают, нажмите \"Выбрать сайт\" - приложение попробует загрузить расписание",
-            style = MaterialTheme.typography.bodyMedium)
-        if (showSearchDiagnostic && state.candidateSearchUnavailable) Text("Не все источники удалось проверить. Можно повторить поиск",
-            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.testTag("schedule_candidates_unavailable"))
         groups.forEach { group -> key(owner, group.sourceUrl) {
             val row = group.representative
             var expanded by rememberSaveable(church.id, group.sourceUrl) { mutableStateOf(false) }
             OutlinedCard(Modifier.fillMaxWidth().testTag("schedule_source_group_${row.id}")) {
-                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(row.name, style = MaterialTheme.typography.titleMedium)
+                Column(Modifier.fillMaxWidth().padding(if (compactPending) 8.dp else 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(row.name, style = MaterialTheme.typography.titleMedium,
+                        modifier = if (compactPending && group === groups.first()) Modifier.testTag("schedule_sources_heading").semantics { heading() } else Modifier)
                     if (row.currentContactAddress.isNotBlank()) {
                         Text("В текущих контактах: " + row.currentContactAddress, style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.testTag("source_current_address_${row.id}"))
@@ -80,10 +85,13 @@ internal fun ScheduleCandidateChoices(church: Parish, state: InternetScheduleSta
                             Text("В справочнике: " + row.address, style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                     } else Text(row.address.ifBlank { "Адрес в карточке не указан" }, style = MaterialTheme.typography.bodyMedium)
-                    Text(group.sourceUrl, style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.testTag("schedule_candidate_url_${row.id}"))
-                    Text(if (group.providerCount > 1) "Найден в ${group.providerCount} справочниках" else row.providerLabel,
-                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    val sourceMetadata: @Composable () -> Unit = {
+                        Text(group.sourceUrl, style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.testTag("schedule_candidate_url_${row.id}"))
+                        Text(if (group.providerCount > 1) "Найден в ${group.providerCount} справочниках" else row.providerLabel,
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    if (!compactPending) sourceMetadata()
                     if (group.alreadyChosen) Text(if (group.conflicts.isEmpty()) "Этот сайт уже выбран"
                         else "Ранее выбранный сайт требует проверки", style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.testTag("schedule_source_already_chosen_${row.id}"))
@@ -119,6 +127,7 @@ internal fun ScheduleCandidateChoices(church: Parish, state: InternetScheduleSta
                             Text(if (state.loading) "Проверяем источник" else "Выбрать сайт")
                         }
                     } }
+                    if (compactPending) sourceMetadata()
                     TextButton(onClick = { expanded = !expanded },
                         modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("source_details_${row.id}")
                             .semantics { stateDescription = if (expanded) "Развернуто" else "Свернуто" }) {
@@ -155,5 +164,8 @@ internal fun ScheduleCandidateChoices(church: Parish, state: InternetScheduleSta
                 }
             }
         } }
+        if (compactPending && showSearchDiagnostic && state.candidateSearchUnavailable) Text("Не все источники удалось проверить. Можно повторить поиск",
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.testTag("schedule_candidates_unavailable"))
     }
 }
