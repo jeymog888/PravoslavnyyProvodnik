@@ -74,15 +74,18 @@ class LiveSealedHoldout12Test {
         val catalogRows = catalogJson.getAsJsonArray("churches").associate { it.asJsonObject["id"].asString to it }
         records.forEach { check(catalogRows[it.getAsJsonObject("selected")["id"].asString] == it["selected"]) }
         val decoded = LocalChurchCatalog.decode(catalogBytes.toString(Charsets.UTF_8).reader(), Instant.now())
-        val resultRows = records.mapIndexed { index, sample -> linkedMapOf<String, Any?>(
+        val resultRows = records.mapIndexedNotNull { index, sample ->
+            if (sample["batch"].asInt != batch) return@mapIndexedNotNull null
+            linkedMapOf<String, Any?>(
             "sealedIndex" to index, "batch" to sample["batch"].asInt,
             "stratum" to sample["stratum"].asString, "sealed100SamplingProbability" to sample["samplingProbability"].asDouble,
             "originalSelected" to sample["selected"], "state" to "NOT_RUN",
             "activity" to "NOT_VERIFIED; sourceTags preserved; no ruins/graves/activity filtering",
-            "applicationSuccess" to false, "primarySourceOracle" to "NOT_REVIEWED"
+            "applicationSuccess" to false, "primarySourceOracle" to "NOT_REVIEWED",
+            "workflowPolicy" to Holdout12SourceCoordinator.WORKFLOW_POLICY
         ) }
         val receipt = linkedMapOf<String, Any?>(
-            "run" to run, "batch" to batch, "startedAt" to Instant.now().toString(),
+            "run" to run, "batch" to batch, "workflowPolicy" to Holdout12SourceCoordinator.WORKFLOW_POLICY, "startedAt" to Instant.now().toString(),
             "sealedSha256" to SEALED_SHA, "catalogSha256" to CATALOG_SHA,
             "sourcePins" to JsonParser.parseString(instrumentation.context.assets.open(PINS_ASSET).bufferedReader().use { it.readText() }),
             "apkSha256" to sha(File(app.applicationInfo.sourceDir)),
@@ -94,7 +97,6 @@ class LiveSealedHoldout12Test {
             "cases" to resultRows, "invariantFailures" to failures,
             "protectedBefore" to original, "harnessPass" to false
         )
-        File(output, "sealed.json").writeBytes(sealedBytes)
         writeJson(File(output, "report.json"), receipt)
         try {
             records.indices.filter { records[it]["batch"].asInt == batch }.forEach { index ->
@@ -105,7 +107,7 @@ class LiveSealedHoldout12Test {
                 val point = GeoPoint(center["latitude"].asDouble, center["longitude"].asDouble)
                 val exact = decoded.nearby(point, 1) { }.singleOrNull { it.id == selected["id"].asString }
                 check(exact != null && exact.name == selected["name"].asString && exact.center == point)
-                val row = resultRows[index]
+                val row = resultRows.single { it["sealedIndex"] == index }
                 val caseDirectory = File(output, "batch-$batch/case-${index.toString().padStart(3, '0')}").also { check(it.mkdirs()) }
                 row["evidenceDirectory"] = caseDirectory.relativeTo(output).path
                 row["state"] = "RUNNING"
@@ -126,7 +128,19 @@ class LiveSealedHoldout12Test {
                     "offlineBookVerified" to rows.count { it["offlineBookVerified"] == true },
                     "externallyOracleConfirmedApplicationSuccess" to 0)
             }
+            receipt["sourceWorkflowSummary"] = holdout12SourceSummary(resultRows)
+            receipt["sourceWorkflowSummaryByStratum"] = listOf("has_website", "no_website").associateWith { stratum ->
+                holdout12SourceSummary(resultRows.filter { it["stratum"] == stratum })
+            }
+            receipt["applicationSuccess"] = false
             receipt["harnessPass"] = failures.isEmpty() && receipt["completedBatchRows"] == 20
+            writeJson(File(output, "summary.json"), linkedMapOf(
+                "run" to run, "batch" to batch, "workflowPolicy" to Holdout12SourceCoordinator.WORKFLOW_POLICY,
+                "finishedAt" to receipt["finishedAt"], "selectedBatchDenominator" to resultRows.size,
+                "sourceWorkflow" to receipt["sourceWorkflowSummary"],
+                "sourceWorkflowByStratum" to receipt["sourceWorkflowSummaryByStratum"],
+                "strata" to receipt["strata"], "applicationSuccess" to false,
+                "readyInterpretation" to "PENDING_PRIMARY_SOURCE_REVIEW", "harnessPass" to receipt["harnessPass"]))
             writeJson(File(output, "report.json"), receipt)
         }
         assertTrue("Invariant failures: ${failures.joinToString()}; product outcomes are in report.json", failures.isEmpty())
@@ -139,6 +153,7 @@ class LiveSealedHoldout12Test {
         row["clock"] = now.toString()
         row["ownedStorage"] = owned.owned.absolutePath
         row["ownedPreferencePrefix"] = owned.prefix
+        holdout12PrepareSourceReceipt(row)
         val source = Recorder(output)
         var parish: Parish? = null
         var repository: InternetScheduleRepository? = null
@@ -173,43 +188,17 @@ class LiveSealedHoldout12Test {
                         moscowSearch = observedPost, ownPools = pools),
                     curatedPublishers = { container.parishes.getOrNull()?.directory?.churches.orEmpty() })
                 repository = repo
-                val steps = mutableListOf<Map<String, Any?>>()
-                row["sourceActions"] = steps
-                var state = repo.cached(selected)
                 row["activePhase"] = "SOURCE"
-                withTimeout(180_000) {
+                val state = withTimeout(180_000) {
                     coroutineScope {
                         val progress = launch { repo.progress.collect { source.progress(it) } }
                         try {
-                            state = repo.refresh(selected, now, force = true)
-                            steps += mapOf("action" to "initialRefresh", "state" to state)
-                            // Only the same policy gate exposed by production. One bounded metadata round.
-                            if (!usable(state, now) && permitsOtherSourceSearch(selected, state)) {
-                                state = repo.searchOtherSources(selected, now)
-                                steps += mapOf("action" to "explicitSearchOtherSources", "state" to state)
-                            }
-                            val tried = mutableSetOf<String>()
-                            val triedUrls = mutableSetOf<String>()
-                            repeat(2) {
-                                if (!usable(state, now)) {
-                                    val candidate = scheduleCandidateGroups(selected, state)
-                                        .filter { !it.alreadyChosen && !it.blockedByHistory }
-                                        .mapNotNull { it.confirmationCandidate }
-                                        .firstOrNull { it.id !in tried && it.sourceUrl !in triedUrls }
-                                    if (candidate != null) {
-                                        tried += candidate.id
-                                        triedUrls += candidate.sourceUrl
-                                        val choice = mapOf("action" to "simulatedCandidateConfirmation", "candidate" to candidate,
-                                            "scope" to "Production eligible first displayed group; no human verification")
-                                        state = repo.confirmCandidate(selected, candidate.id, now)
-                                        steps += choice + mapOf("state" to state)
-                                    }
-                                }
-                            }
+                            Holdout12SourceCoordinator(repo, selected, now, row,
+                                counters = source::counters,
+                                persist = { writeJson(File(output, "case.json"), row) }).run()
                         } finally { progress.cancelAndJoin() }
                     }
                 }
-                row["finalSourceState"] = state
                 row["publicationReadyPendingReview"] = usable(state, now)
                 row["state"] = if (usable(state, now)) "READY_PENDING_PRIMARY_SOURCE_REVIEW" else when {
                     state.sourceNeedsVerification -> "SOURCE_NEEDS_VERIFICATION"
@@ -230,15 +219,18 @@ class LiveSealedHoldout12Test {
                 row["activePhase"] = "COMPLETE"
             }
         } catch (timeout: TimeoutCancellationException) {
+            holdout12MarkSourceInterrupted(row, timeout)
             currentCoroutineContext().ensureActive()
             row["stateBeforeTimeout"] = row["state"]
             row["state"] = if (row["activePhase"] == "BOOK") "BOOK_TIMEOUT_SOURCE_READY_PENDING_REVIEW" else "SOURCE_TIMEOUT"
             if (row["activePhase"] == "BOOK") row["bookState"] = "TIMEOUT"
             row["error"] = timeout.javaClass.simpleName
         } catch (cancelled: CancellationException) {
+            holdout12MarkSourceInterrupted(row, cancelled)
             row["state"] = "CANCELLED"
             throw cancelled
         } catch (error: Exception) {
+            holdout12MarkSourceInterrupted(row, error)
             row["state"] = if (row["activePhase"] == "BOOK") "BOOK_ERROR_SOURCE_READY_PENDING_REVIEW" else "SOURCE_ERROR"
             if (row["activePhase"] == "BOOK") row["bookState"] = "ERROR"
             row["error"] = error.javaClass.name + ": " + error.message.orEmpty().take(2000)
@@ -400,8 +392,7 @@ class LiveSealedHoldout12Test {
         null
     }.getOrNull()
 
-    private fun usable(state: InternetScheduleState, now: Instant) = state.status == InternetScheduleStatus.READY &&
-        !state.sourceNeedsVerification && !state.publicationRejected && state.publication?.let { it.isFresh(now) && it.events.isNotEmpty() } == true
+    private fun usable(state: InternetScheduleState, now: Instant) = holdout12Usable(state, now)
 
     private fun invariant(value: Boolean, message: String) { if (!value) failures += message }
     private fun protectedFiles(): Map<String, String> = mapOf("preferences" to File(app.applicationInfo.dataDir, "shared_prefs"),
@@ -574,6 +565,9 @@ class LiveSealedHoldout12Test {
                 synchronized(failures) { failures += "Call log write failed: ${it.javaClass.simpleName}" }
             }
         }
+        @Synchronized fun counters(): Map<String, Int> = Holdout12SourceCoordinator.COUNTER_NAMES.associateWith { name ->
+            events.count { it["type"] == name }
+        }
         @Synchronized private fun next(): Int = sequence++
         fun omitted(name: String, size: Int, hash: String, reason: String, metadata: Map<String, Any?> = emptyMap()) =
             event(mapOf("type" to "EVIDENCE_OMITTED", "name" to name, "bytes" to size, "sha256" to hash, "reason" to reason, "metadata" to metadata))
@@ -617,7 +611,7 @@ class LiveSealedHoldout12Test {
         fun finish() = event(mapOf("type" to "CASE_FINISHED", "at" to Instant.now().toString()))
     }
 
-    private class OwnedContext(private val original: Context, id: String) : ContextWrapper(original) {
+    internal class OwnedContext(private val original: Context, id: String) : ContextWrapper(original) {
         val prefix = "feoria12-holdout-$id-"
         val owned = File(original.cacheDir, "feoria12-holdout-$id").also { check(!it.exists() && it.mkdirs()) }
         private val names = linkedSetOf<String>()
@@ -685,4 +679,251 @@ class LiveSealedHoldout12Test {
         private const val SEALED_SHA = "e032d861eaf36e9c42ac65b121d6c1a8f7d29979dbe46eaa2f26c59a317d6cbf"
         private const val CATALOG_SHA = "3002f107dc408eec1fcebd31d53d9373b9ac5af6f1fcaf5094d35615e9abc31d"
     }
+}
+
+
+/** Nulls also exist for a case that exits before creating its repository. */
+internal fun holdout12PrepareSourceReceipt(receipt: MutableMap<String, Any?>) {
+    receipt["workflowPolicy"] = Holdout12SourceCoordinator.WORKFLOW_POLICY
+    receipt["initialSourceState"] = null
+    receipt["normalRetry"] = linkedMapOf<String, Any?>("before" to null, "after" to null,
+        "eligible" to null, "decision" to "SKIP", "skipReason" to "INITIAL_NOT_COMPLETED", "attempted" to 0, "completed" to 0)
+    receipt["finalSourceState"] = null
+    receipt["lastCompletedSourceState"] = null
+    receipt["sourceWorkflowStatus"] = "NOT_RUN"
+    receipt["cachedAfterRun"] = null
+    receipt["sourceActions"] = emptyList<Map<String, Any?>>()
+    receipt["sourceActionCounts"] = Holdout12SourceCoordinator.ACTION_NAMES.associateWith {
+        mapOf("attempted" to 0, "completed" to 0)
+    }
+}
+
+/** Test-only workflow shared by the live diagnostic and hermetic InternetSchedules fakes. */
+internal fun holdout12Usable(state: InternetScheduleState, now: Instant) = state.status == InternetScheduleStatus.READY &&
+    !state.sourceNeedsVerification && !state.publicationRejected && state.publication?.let { it.isFresh(now) && it.events.isNotEmpty() } == true
+
+internal class Holdout12SourceCoordinator(
+    private val repo: InternetSchedules,
+    private val selected: Parish,
+    private val now: Instant,
+    private val receipt: MutableMap<String, Any?>,
+    private val counters: () -> Map<String, Int>,
+    private val persist: () -> Unit,
+    private val monotonicNanos: () -> Long = System::nanoTime,
+) {
+    private val actions = mutableListOf<MutableMap<String, Any?>>()
+    private val counts = ACTION_NAMES.associateWith { linkedMapOf("attempted" to 0, "completed" to 0) }
+    private val retry = linkedMapOf<String, Any?>("before" to null, "after" to null,
+        "eligible" to null, "decision" to "PENDING", "skipReason" to null, "attempted" to 0, "completed" to 0)
+
+    suspend fun run(): InternetScheduleState {
+        holdout12PrepareSourceReceipt(receipt)
+        receipt["workflowPolicy"] = WORKFLOW_POLICY
+        receipt["sourceActions"] = actions
+        receipt["sourceActionCounts"] = counts
+        receipt["initialSourceState"] = null
+        receipt["normalRetry"] = retry
+        receipt["finalSourceState"] = null
+        receipt["lastCompletedSourceState"] = null
+        receipt["sourceWorkflowStatus"] = "STARTED"
+        receipt["transportCounterScope"] = COUNTER_CAVEAT
+        val workflowStarted = monotonicNanos()
+        receipt["sourceWorkflowStartedAtMonotonicNanos"] = workflowStarted
+        receipt["sourceWorkflowCountersBefore"] = snapshotCounters()
+        var failure: Throwable? = null
+        try {
+            persist()
+            var state = action("initialRefresh", repo.cached(selected)) {
+                repo.refresh(selected, now, force = true, sourceOverride = null)
+            }
+            receipt["initialSourceState"] = state
+            retry["before"] = state
+            val skip = retrySkipReason(state)
+            retry["eligible"] = skip == null
+            if (skip == null) {
+                // The caller owns the only source deadline. Never create a new budget here.
+                currentCoroutineContext().ensureActive()
+                retry["decision"] = "ATTEMPT"
+                state = action("normalRetry", state) {
+                    repo.refresh(selected, now, force = true, sourceOverride = null)
+                }
+                retry["after"] = state
+            } else {
+                retry["decision"] = "SKIP"
+                retry["skipReason"] = skip
+            }
+            // Reevaluate the existing production gate on the returned retry state.
+            if (!holdout12Usable(state, now) && permitsOtherSourceSearch(selected, state)) {
+                state = action("explicitSearchOtherSources", state) { repo.searchOtherSources(selected, now) }
+            }
+            val tried = mutableSetOf<String>()
+            val triedUrls = mutableSetOf<String>()
+            repeat(2) {
+                if (!holdout12Usable(state, now)) {
+                    val candidate = scheduleCandidateGroups(selected, state)
+                        .filter { !it.alreadyChosen && !it.blockedByHistory }
+                        .mapNotNull { it.confirmationCandidate }
+                        .firstOrNull { it.id !in tried && it.sourceUrl !in triedUrls }
+                    if (candidate != null) {
+                        tried += candidate.id
+                        triedUrls += candidate.sourceUrl
+                        state = action("simulatedCandidateConfirmation", state, mapOf("candidate" to candidate,
+                            "scope" to "Production eligible first displayed group; no human verification")) {
+                            repo.confirmCandidate(selected, candidate.id, now)
+                        }
+                    }
+                }
+            }
+            currentCoroutineContext().ensureActive()
+            receipt["finalSourceState"] = state
+            receipt["sourceWorkflowStatus"] = "COMPLETED"
+            return state
+        } catch (error: Throwable) {
+            failure = error
+            receipt["finalSourceState"] = null
+            receipt["sourceWorkflowStatus"] = status(error)
+            receipt["sourceWorkflowErrorClass"] = error.javaClass.name
+            if (retry["decision"] == "PENDING" || retry["decision"] == "ATTEMPT" && retry["attempted"] == 0) {
+                retry["decision"] = "SKIP"
+                retry["skipReason"] = when {
+                    receipt["initialSourceState"] == null -> "INITIAL_NOT_COMPLETED"
+                    error is TimeoutCancellationException -> "SOURCE_BUDGET_EXHAUSTED"
+                    error is CancellationException -> "CANCELLED"
+                    else -> "INITIAL_NOT_COMPLETED"
+                }
+            }
+            throw error
+        } finally {
+            receipt["sourceWorkflowElapsedMillis"] = (monotonicNanos() - workflowStarted) / 1_000_000
+            val after = snapshotCounters()
+            receipt["sourceWorkflowCountersAfter"] = after
+            @Suppress("UNCHECKED_CAST")
+            val before = receipt["sourceWorkflowCountersBefore"] as Map<String, Int>
+            receipt["sourceWorkflowCounterDeltas"] = delta(before, after)
+            persistWithoutMasking(failure)
+        }
+    }
+
+    private fun retrySkipReason(state: InternetScheduleState): String? = when {
+        state.loading -> "INITIAL_LOADING"
+        state.checkedAt.isBlank() -> "INITIAL_NO_CHECKED_AT"
+        state.customSource.isNotBlank() -> "CUSTOM_SOURCE_PRESENT"
+        state.status !in setOf(InternetScheduleStatus.NO_WEBSITE, InternetScheduleStatus.UNAVAILABLE) -> "STATUS_NOT_ELIGIBLE"
+        holdout12Usable(state, now) -> "USABLE_INITIAL"
+        else -> null
+    }
+
+    private suspend fun action(name: String, before: InternetScheduleState,
+        extra: Map<String, Any?> = emptyMap(), operation: suspend () -> InternetScheduleState): InternetScheduleState {
+        currentCoroutineContext().ensureActive()
+        val started = monotonicNanos()
+        val beforeCounters = snapshotCounters()
+        val entry = linkedMapOf<String, Any?>("action" to name, "ordinal" to actions.size + 1,
+            "status" to "STARTED", "beforeState" to before, "returnedState" to null,
+            "startedAt" to Instant.now().toString(), "startedAtMonotonicNanos" to started,
+            "elapsedMillis" to null, "countersBefore" to beforeCounters, "countersAfter" to null,
+            "counterDeltas" to null, "errorClass" to null).apply { putAll(extra) }
+        actions += entry
+        val count = counts.getValue(name)
+        count["attempted"] = count.getValue("attempted") + 1
+        if (name == "normalRetry") retry["attempted"] = 1
+        var failure: Throwable? = null
+        try {
+            // A failed STARTED write prevents the action rather than hiding its start.
+            persist()
+            return operation().also { returned ->
+                entry["returnedState"] = returned
+                entry["status"] = "COMPLETED"
+                count["completed"] = count.getValue("completed") + 1
+                if (name == "initialRefresh") receipt["initialSourceState"] = returned
+                if (name == "normalRetry") {
+                    retry["completed"] = 1
+                    retry["after"] = returned
+                }
+                receipt["lastCompletedSourceState"] = returned
+            }
+        } catch (error: Throwable) {
+            failure = error
+            entry["status"] = status(error)
+            entry["errorClass"] = error.javaClass.name
+            throw error
+        } finally {
+            entry["elapsedMillis"] = (monotonicNanos() - started) / 1_000_000
+            val after = snapshotCounters()
+            entry["countersAfter"] = after
+            entry["counterDeltas"] = delta(beforeCounters, after)
+            persistWithoutMasking(failure)
+        }
+    }
+
+    private fun persistWithoutMasking(failure: Throwable?) {
+        try { persist() } catch (writeError: Throwable) {
+            if (failure == null) throw writeError
+            failure.addSuppressed(writeError)
+        }
+    }
+    private fun snapshotCounters(): Map<String, Int> {
+        val observed = counters()
+        return COUNTER_NAMES.associateWith { observed[it] ?: 0 }
+    }
+    private fun delta(before: Map<String, Int>, after: Map<String, Int>) =
+        COUNTER_NAMES.associateWith { after.getValue(it) - before.getValue(it) }
+    private fun status(error: Throwable) = holdout12FailureStatus(error)
+
+    companion object {
+        const val WORKFLOW_POLICY = "normal-retry-v2"
+        val ACTION_NAMES = listOf("initialRefresh", "normalRetry", "explicitSearchOtherSources", "simulatedCandidateConfirmation")
+        val COUNTER_NAMES = listOf("GET_START", "MOSCOW_DIRECTORY_SEARCH_START")
+        const val COUNTER_CAVEAT = "Observable GET wrapper starts and directory search wrapper calls only; not total physical HTTP/bootstrap requests"
+    }
+}
+
+internal fun holdout12FailureStatus(error: Throwable) = when (error) {
+    is TimeoutCancellationException -> "TIMEOUT"
+    is CancellationException -> "CANCELLED"
+    else -> "ERROR"
+}
+
+/** Also covers cancellation while the caller closes the progress collector after the coordinator returns. */
+internal fun holdout12MarkSourceInterrupted(receipt: MutableMap<String, Any?>, error: Throwable) {
+    if (receipt["activePhase"] != "SOURCE") return
+    receipt["finalSourceState"] = null
+    receipt["sourceWorkflowStatus"] = holdout12FailureStatus(error)
+    receipt["sourceWorkflowErrorClass"] = error.javaClass.name
+}
+
+/** Safe selected-batch summary: does not carry selected objects or unrun batch rows. */
+internal fun holdout12SourceSummary(rows: List<Map<String, Any?>>): Map<String, Any?> {
+    fun state(row: Map<String, Any?>, field: String) = (row[field] as? InternetScheduleState)?.status?.name ?: "NOT_COMPLETED"
+    @Suppress("UNCHECKED_CAST")
+    fun retry(row: Map<String, Any?>) = row["normalRetry"] as? Map<String, Any?> ?: emptyMap()
+    @Suppress("UNCHECKED_CAST")
+    fun count(row: Map<String, Any?>, action: String, field: String): Int =
+        ((row["sourceActionCounts"] as? Map<String, Map<String, Int>>)?.get(action)?.get(field)) ?: 0
+    @Suppress("UNCHECKED_CAST")
+    fun transport(row: Map<String, Any?>, name: String) = (row["sourceWorkflowCounterDeltas"] as? Map<String, Int>)?.get(name) ?: 0
+    val eligible = rows.filter { retry(it)["eligible"] == true }
+    @Suppress("UNCHECKED_CAST")
+    fun retryAfter(row: Map<String, Any?>) = (retry(row)["after"] as? InternetScheduleState)?.status?.name ?: "NOT_COMPLETED"
+    @Suppress("UNCHECKED_CAST")
+    fun retryTimeout(row: Map<String, Any?>) = (row["sourceActions"] as? List<Map<String, Any?>>).orEmpty()
+        .any { it["action"] == "normalRetry" && it["status"] == "TIMEOUT" }
+    return linkedMapOf("workflowPolicy" to Holdout12SourceCoordinator.WORKFLOW_POLICY,
+        "denominator" to rows.size,
+        "initialOutcomes" to rows.groupingBy { state(it, "initialSourceState") }.eachCount(),
+        "retryEligible" to eligible.size,
+        "retryAttempted" to rows.sumOf { count(it, "normalRetry", "attempted") },
+        "retryCompleted" to rows.sumOf { count(it, "normalRetry", "completed") },
+        "retrySkipped" to rows.count { retry(it)["decision"] == "SKIP" },
+        "retryTimeout" to rows.count(::retryTimeout),
+        "retrySkipReasons" to rows.filter { retry(it)["decision"] == "SKIP" }.groupingBy { retry(it)["skipReason"].toString() }.eachCount(),
+        "retryTransitions" to eligible.groupingBy { state(it, "initialSourceState") + "->" + retryAfter(it) }.eachCount(),
+        "finalSourceStatuses" to rows.groupingBy { state(it, "finalSourceState") }.eachCount(),
+        "finalOutcomes" to rows.groupingBy { it["sourceOutcome"]?.toString() ?: it["state"]?.toString() ?: "NOT_COMPLETED" }.eachCount(),
+        "sourceWorkflowStatuses" to rows.groupingBy { it["sourceWorkflowStatus"]?.toString() ?: "NOT_RUN" }.eachCount(),
+        "actionCounts" to Holdout12SourceCoordinator.ACTION_NAMES.associateWith { name ->
+            mapOf("attempted" to rows.sumOf { count(it, name, "attempted") }, "completed" to rows.sumOf { count(it, name, "completed") }) },
+        "observableTransportCounters" to Holdout12SourceCoordinator.COUNTER_NAMES.associateWith { name -> rows.sumOf { transport(it, name) } },
+        "transportCounterScope" to Holdout12SourceCoordinator.COUNTER_CAVEAT,
+        "readyInterpretation" to "PENDING_PRIMARY_SOURCE_REVIEW", "applicationSuccess" to false)
 }
