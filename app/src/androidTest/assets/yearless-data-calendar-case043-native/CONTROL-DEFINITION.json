@@ -1,0 +1,28 @@
+{
+  "classification": "CONTROLLED_NOT_CAPTURED_HTTP",
+  "role": "Exact existing G2 JVM complete-month inferred+partial control; does not alter primary saved case043 source",
+  "shapeSource": "YearlessDataCalendarRepositoryTest.inferredAndPartialPublicationRoundtripsAndOfflineNeverAssignsTheNewYear/calendar",
+  "civilMonth": "2026-11",
+  "printedYear": null,
+  "unsupportedCurrentRow": {
+    "day": 21,
+    "rawRow": "09:00 — Бдение"
+  },
+  "notSeeded": [
+    "publication",
+    "events",
+    "yearInferred",
+    "knownPartial"
+  ],
+  "responses": [
+    {
+      "classification": "CONTROLLED_NOT_CAPTURED_HTTP",
+      "requestUrl": "https://calendar-native-control.example/",
+      "responseUrl": "https://calendar-native-control.example/",
+      "contentType": "text/html; charset=UTF-8",
+      "fixture": "controlled-inferred-partial.html",
+      "bodyBytes": 2711,
+      "bodySha256": "4d89ff76ac6ab82d0593297f1b20b0d5cef23a3ab0137c6b2b37c08a5eab2258"
+    }
+  ]
+}

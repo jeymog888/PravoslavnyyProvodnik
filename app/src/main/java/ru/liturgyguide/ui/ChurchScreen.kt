@@ -466,6 +466,9 @@ fun ChurchScreen(churches: List<Parish>, selectedId: String?, currentDate: Local
                                 modifier = Modifier.testTag("church_schedule_empty"))
                             val source = scheduleSourceFor(church, ownState)
                             if (schedule.next == null) {
+                                if (schedule.yearInferred) Text("Год не указан - проверьте дату в расписании",
+                                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.testTag("church_empty_inferred_year"))
                                 val description = scheduleEmptyDescription(ownState, source != null, church, schedule.knownPartial)
                                 if (schedule.knownPartial) PartialScheduleNotice(schedule.sourceUrl, onOpenUrl, "church_empty", description)
                                 else Text(description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

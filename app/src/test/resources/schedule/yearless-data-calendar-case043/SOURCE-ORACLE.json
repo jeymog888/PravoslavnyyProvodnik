@@ -1,0 +1,1336 @@
+{
+  "classification": "INDEPENDENT_SOURCE_ONLY_EXPECTED_ORACLE_NO_APP_RUNTIME_NO_PRINTED_YEAR_PROOF",
+  "source": {
+    "knownB5Case": 43,
+    "url": "https://businovohram.ru/raspisanie",
+    "selectedParishId": "osm:way:123186364",
+    "bodyPath": ".local/release12/schedule/holdout-independent-12-b5-20261115-f877307f49/device-evidence/batch-5/case-043/responses/0001.body",
+    "bodyBytes": 55708,
+    "bodySha256": "1ae15d6124694ef7a4c7bd86af4586bc6f63fc2a7e398e8ff4954e5dd6092526",
+    "scriptSha256": "0ea0fc5c5cc11fdaee46c97b5a4acaa70265d41ae9e6a5ccda2d430a7b593e46",
+    "scriptLocatorInActualSource": "script[type=text/plain]#schedule-source",
+    "hostOrIdAllowlistPermitted": false,
+    "printedYear": null,
+    "allMonthHeaderCount": 30,
+    "allMonthTimedRows": 41,
+    "allMonthClosedDays": 8,
+    "weekdayCompatibleNovemberYears2010_2039": [
+      2015,
+      2020,
+      2026,
+      2037
+    ],
+    "actualScheduleDataScriptUses": "new Date/getDate/getMonth for highlighting; not publication-year proof"
+  },
+  "admissionPlan": ".local/release12/integration/weekday-calendar-root/next-data-calendar-plan/PRODUCT-ADMISSION.md",
+  "legacyYearInferenceMustRemainUnchanged": true,
+  "windows": {
+    "fixedB5Clock15": {
+      "instant": "2026-11-15T16:33:43.942168Z",
+      "timezone": "Europe/Moscow",
+      "localDate": "2026-11-15",
+      "importWindowInclusive": [
+        "2026-11-14",
+        "2026-12-30"
+      ],
+      "sourceTimedRowsInWindow": 23,
+      "todayOrFutureSourceRows": 21,
+      "closedDaysInWindow": [
+        "2026-11-16",
+        "2026-11-17",
+        "2026-11-23",
+        "2026-11-24",
+        "2026-11-30"
+      ],
+      "todaySourceTimes": [
+        "06:40",
+        "09:40",
+        "17:00"
+      ],
+      "tomorrowSourceClosed": true,
+      "expectedAcceptedEventCount": "NOT_RUN_DO_NOT_REQUIRE23",
+      "familyCounts": {
+        "HOURS_LITURGY_WITH_EXTRAS": 9,
+        "VIGIL_WITH_CONFESSION": 4,
+        "MOLEBEN_WITH_AKATHIST": 3,
+        "AMBIGUOUS_MATINS_LITURGY_COMPOSITION": 6,
+        "AMBIGUOUS_EVENING_COMPOSITION_WITH_EXTRAS": 1
+      }
+    },
+    "currentCivil16": {
+      "instant": null,
+      "timezone": "Europe/Moscow",
+      "localDate": "2026-11-16",
+      "importWindowInclusive": [
+        "2026-11-15",
+        "2026-12-31"
+      ],
+      "sourceTimedRowsInWindow": 21,
+      "todayOrFutureSourceRows": 18,
+      "closedDaysInWindow": [
+        "2026-11-16",
+        "2026-11-17",
+        "2026-11-23",
+        "2026-11-24",
+        "2026-11-30"
+      ],
+      "todaySourceTimedRows": 0,
+      "todaySourceExactClosed": true,
+      "tomorrowSourceExactClosed": true,
+      "nextRawTimedRowIfAdmissionPermits": {
+        "date": "2026-11-18",
+        "time": "08:00",
+        "semanticFamily": "AMBIGUOUS_MATINS_LITURGY_COMPOSITION",
+        "directReadingRoute": null
+      },
+      "expectedAcceptedEventCount": "NOT_RUN_DO_NOT_REQUIRE21",
+      "familyCounts": {
+        "HOURS_LITURGY_WITH_EXTRAS": 8,
+        "MOLEBEN_WITH_AKATHIST": 3,
+        "AMBIGUOUS_MATINS_LITURGY_COMPOSITION": 6,
+        "VIGIL_WITH_CONFESSION": 3,
+        "AMBIGUOUS_EVENING_COMPOSITION_WITH_EXTRAS": 1
+      }
+    }
+  },
+  "rowsFixed15Window": [
+    {
+      "rawHeader": "СУББОТА,14 ноября",
+      "sourceHeaderLine": 46,
+      "day": 14,
+      "month": 11,
+      "printedWeekday": "СУББОТА",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-14",
+      "otherRaw": [
+        {
+          "sourceLine": 47,
+          "text": "БЕССРЕБРЕННИКОВ И ЧУДОТВОРЦЕВ КОСМЫ И ДАМИАНА АСИЙСКИХ"
+        }
+      ],
+      "sourceLine": 48,
+      "rawRow": "8:00 — Часы.Литургия.Панихида||(иерей Петр,л.х.)",
+      "rawServiceField": "Часы.Литургия.Панихида",
+      "rawDetailsAfterForcedBreak": "(иерей Петр,л.х.)",
+      "normalizedTimeIfAccepted": "08:00",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": "LITURGY",
+        "routePartsPrediction": "HOUR3,HOUR6,LITURGY",
+        "partSetPrediction": "HOURS_LITURGY_TEXTS",
+        "notIncludedOrNotAvailable": [
+          "Панихида"
+        ],
+        "reason": "isHoursLiturgy admits ordinary hours+liturgy; extras stay excluded from the available part-set",
+        "publishedCivilDateRetained": "2026-11-14",
+        "directPartKeyDatesPrediction": {
+          "HOUR3": "2026-11-14",
+          "HOUR6": "2026-11-14",
+          "LITURGY": "2026-11-14"
+        }
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": false,
+      "futureOrTodayFor15": false,
+      "futureOrTodayFor16": false,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": false,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": false
+    },
+    {
+      "rawHeader": "СУББОТА,14 ноября",
+      "sourceHeaderLine": 46,
+      "day": 14,
+      "month": 11,
+      "printedWeekday": "СУББОТА",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-14",
+      "otherRaw": [
+        {
+          "sourceLine": 47,
+          "text": "БЕССРЕБРЕННИКОВ И ЧУДОТВОРЦЕВ КОСМЫ И ДАМИАНА АСИЙСКИХ"
+        }
+      ],
+      "sourceLine": 49,
+      "rawRow": "17:00 — Всенощное бдение.Исповедь||(все духовенство,п.х.)",
+      "rawServiceField": "Всенощное бдение.Исповедь",
+      "rawDetailsAfterForcedBreak": "(все духовенство,п.х.)",
+      "normalizedTimeIfAccepted": "17:00",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "VIGIL_WITH_CONFESSION",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": "VIGIL",
+        "routePartsPrediction": "VIGIL",
+        "partSetPrediction": "PARTIAL_PUBLISHED_TEXT",
+        "notIncludedOrNotAvailable": [
+          "Исповедь"
+        ],
+        "reason": "exact closed vigil+confession grammar; confession does not enter the available text",
+        "publishedCivilDateRetained": "2026-11-14",
+        "directPartKeyDatesPrediction": {
+          "VIGIL": "2026-11-15"
+        }
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": false,
+      "futureOrTodayFor15": false,
+      "futureOrTodayFor16": false,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": false,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": false
+    },
+    {
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,15 ноября",
+      "sourceHeaderLine": 50,
+      "day": 15,
+      "month": 11,
+      "printedWeekday": "ВОСКРЕСЕНЬЕ",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-15",
+      "otherRaw": [
+        {
+          "sourceLine": 51,
+          "text": "НЕДЕЛЯ 24-я ПО ПЯТИДЕСЯТНИЦЕ.МЧЧ.АКИНДИНА,ПИГАСИЯ,АФФОНИЯ И ДР"
+        }
+      ],
+      "sourceLine": 52,
+      "rawRow": "6:40 — Часы.Литургия.Водосвятный молебен.Заупокойная лития||(иерей Петр,л.х.)",
+      "rawServiceField": "Часы.Литургия.Водосвятный молебен.Заупокойная лития",
+      "rawDetailsAfterForcedBreak": "(иерей Петр,л.х.)",
+      "normalizedTimeIfAccepted": "06:40",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": "LITURGY",
+        "routePartsPrediction": "HOUR3,HOUR6,LITURGY",
+        "partSetPrediction": "HOURS_LITURGY_TEXTS",
+        "notIncludedOrNotAvailable": [
+          "Молебен",
+          "Заупокойная лития"
+        ],
+        "reason": "isHoursLiturgy admits ordinary hours+liturgy; extras stay excluded from the available part-set",
+        "publishedCivilDateRetained": "2026-11-15",
+        "directPartKeyDatesPrediction": {
+          "HOUR3": "2026-11-15",
+          "HOUR6": "2026-11-15",
+          "LITURGY": "2026-11-15"
+        }
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": false,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": false
+    },
+    {
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,15 ноября",
+      "sourceHeaderLine": 50,
+      "day": 15,
+      "month": 11,
+      "printedWeekday": "ВОСКРЕСЕНЬЕ",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-15",
+      "otherRaw": [
+        {
+          "sourceLine": 51,
+          "text": "НЕДЕЛЯ 24-я ПО ПЯТИДЕСЯТНИЦЕ.МЧЧ.АКИНДИНА,ПИГАСИЯ,АФФОНИЯ И ДР"
+        }
+      ],
+      "sourceLine": 53,
+      "rawRow": "9:40 — Часы.Литургия.Молебен.Заупокойная лития||(иерей Александр,иерей Павел,п.х.)",
+      "rawServiceField": "Часы.Литургия.Молебен.Заупокойная лития",
+      "rawDetailsAfterForcedBreak": "(иерей Александр,иерей Павел,п.х.)",
+      "normalizedTimeIfAccepted": "09:40",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": "LITURGY",
+        "routePartsPrediction": "HOUR3,HOUR6,LITURGY",
+        "partSetPrediction": "HOURS_LITURGY_TEXTS",
+        "notIncludedOrNotAvailable": [
+          "Молебен",
+          "Заупокойная лития"
+        ],
+        "reason": "isHoursLiturgy admits ordinary hours+liturgy; extras stay excluded from the available part-set",
+        "publishedCivilDateRetained": "2026-11-15",
+        "directPartKeyDatesPrediction": {
+          "HOUR3": "2026-11-15",
+          "HOUR6": "2026-11-15",
+          "LITURGY": "2026-11-15"
+        }
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": false,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": false
+    },
+    {
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,15 ноября",
+      "sourceHeaderLine": 50,
+      "day": 15,
+      "month": 11,
+      "printedWeekday": "ВОСКРЕСЕНЬЕ",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-15",
+      "otherRaw": [
+        {
+          "sourceLine": 51,
+          "text": "НЕДЕЛЯ 24-я ПО ПЯТИДЕСЯТНИЦЕ.МЧЧ.АКИНДИНА,ПИГАСИЯ,АФФОНИЯ И ДР"
+        }
+      ],
+      "sourceLine": 54,
+      "rawRow": "17:00 — Молебен с акафистом Божией Матери пред иконой «Молченская»||(иерей Павел,л.х.)",
+      "rawServiceField": "Молебен с акафистом Божией Матери пред иконой «Молченская»",
+      "rawDetailsAfterForcedBreak": "(иерей Павел,л.х.)",
+      "normalizedTimeIfAccepted": "17:00",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "MOLEBEN_WITH_AKATHIST",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": null,
+        "routePartsPrediction": null,
+        "partSetPrediction": null,
+        "notIncludedOrNotAvailable": [
+          "Молебен",
+          "Акафист"
+        ],
+        "reason": "supported base book not named; choose available texts on same civil date, never replace with liturgy",
+        "publishedCivilDateRetained": "2026-11-15",
+        "directPartKeyDatesPrediction": null
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": false,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": false
+    },
+    {
+      "rawHeader": "СРЕДА,18 ноября",
+      "sourceHeaderLine": 60,
+      "day": 18,
+      "month": 11,
+      "printedWeekday": "СРЕДА",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-18",
+      "otherRaw": [
+        {
+          "sourceLine": 61,
+          "text": "СВТ.ТИХОНА,ПАТРИАРХА МОСКОВСКОГО И ВСЕЯ РУСИ.ОТЦОВ ПОМЕСТНОГО СОБОРА ЦЕРКВИ РУССКОЙ 1917-1918 ГОДОВ"
+        }
+      ],
+      "sourceLine": 62,
+      "rawRow": "8:00 — Полиелейная утреня(помазание).Литургия.Молебен.Заупокойная лития||(иерей Петр,л.х.)",
+      "rawServiceField": "Полиелейная утреня(помазание).Литургия.Молебен.Заупокойная лития",
+      "rawDetailsAfterForcedBreak": "(иерей Петр,л.х.)",
+      "normalizedTimeIfAccepted": "08:00",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "AMBIGUOUS_MATINS_LITURGY_COMPOSITION",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": null,
+        "routePartsPrediction": null,
+        "partSetPrediction": null,
+        "notIncludedOrNotAvailable": [
+          "Молебен",
+          "Заупокойная лития"
+        ],
+        "reason": "matins+liturgy is an ambiguous mixed base composition; cannot select just liturgy or matins automatically",
+        "publishedCivilDateRetained": "2026-11-18",
+        "directPartKeyDatesPrediction": null
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": true
+    },
+    {
+      "rawHeader": "ЧЕТВЕРГ,19 ноября",
+      "sourceHeaderLine": 63,
+      "day": 19,
+      "month": 11,
+      "printedWeekday": "ЧЕТВЕРГ",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-19",
+      "otherRaw": [
+        {
+          "sourceLine": 64,
+          "text": "СВТ.ПАВЛА,ПАТРИАРХА КОНСТАНТИНОПОЛЬСКОГО.ПРП.ВАРЛААМА ХУТЫНСКОГО"
+        }
+      ],
+      "sourceLine": 65,
+      "rawRow": "8:00 — Утреня.Литургия.Молебен.Заупокойная лития||(иерей Петр,л.х.)",
+      "rawServiceField": "Утреня.Литургия.Молебен.Заупокойная лития",
+      "rawDetailsAfterForcedBreak": "(иерей Петр,л.х.)",
+      "normalizedTimeIfAccepted": "08:00",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "AMBIGUOUS_MATINS_LITURGY_COMPOSITION",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": null,
+        "routePartsPrediction": null,
+        "partSetPrediction": null,
+        "notIncludedOrNotAvailable": [
+          "Молебен",
+          "Заупокойная лития"
+        ],
+        "reason": "matins+liturgy is an ambiguous mixed base composition; cannot select just liturgy or matins automatically",
+        "publishedCivilDateRetained": "2026-11-19",
+        "directPartKeyDatesPrediction": null
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": true
+    },
+    {
+      "rawHeader": "ПЯТНИЦА,20 ноября",
+      "sourceHeaderLine": 66,
+      "day": 20,
+      "month": 11,
+      "printedWeekday": "ПЯТНИЦА",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-20",
+      "otherRaw": [
+        {
+          "sourceLine": 67,
+          "text": "МЧЧ.33-Х,В МЕЛИТИНЕ ПОСТРАДАВШИХ.ПРП.ЛАЗАРЯ"
+        }
+      ],
+      "sourceLine": 68,
+      "rawRow": "8:00 — Утреня.Литургия.Молебен.Заупокойная лития||(иерей Павел,л.х.)",
+      "rawServiceField": "Утреня.Литургия.Молебен.Заупокойная лития",
+      "rawDetailsAfterForcedBreak": "(иерей Павел,л.х.)",
+      "normalizedTimeIfAccepted": "08:00",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "AMBIGUOUS_MATINS_LITURGY_COMPOSITION",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": null,
+        "routePartsPrediction": null,
+        "partSetPrediction": null,
+        "notIncludedOrNotAvailable": [
+          "Молебен",
+          "Заупокойная лития"
+        ],
+        "reason": "matins+liturgy is an ambiguous mixed base composition; cannot select just liturgy or matins automatically",
+        "publishedCivilDateRetained": "2026-11-20",
+        "directPartKeyDatesPrediction": null
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": true
+    },
+    {
+      "rawHeader": "ПЯТНИЦА,20 ноября",
+      "sourceHeaderLine": 66,
+      "day": 20,
+      "month": 11,
+      "printedWeekday": "ПЯТНИЦА",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-20",
+      "otherRaw": [
+        {
+          "sourceLine": 67,
+          "text": "МЧЧ.33-Х,В МЕЛИТИНЕ ПОСТРАДАВШИХ.ПРП.ЛАЗАРЯ"
+        }
+      ],
+      "sourceLine": 69,
+      "rawRow": "18:00 — Всенощное бдение.Исповедь||(иерей Павел,л.х.)",
+      "rawServiceField": "Всенощное бдение.Исповедь",
+      "rawDetailsAfterForcedBreak": "(иерей Павел,л.х.)",
+      "normalizedTimeIfAccepted": "18:00",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "VIGIL_WITH_CONFESSION",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": "VIGIL",
+        "routePartsPrediction": "VIGIL",
+        "partSetPrediction": "PARTIAL_PUBLISHED_TEXT",
+        "notIncludedOrNotAvailable": [
+          "Исповедь"
+        ],
+        "reason": "exact closed vigil+confession grammar; confession does not enter the available text",
+        "publishedCivilDateRetained": "2026-11-20",
+        "directPartKeyDatesPrediction": {
+          "VIGIL": "2026-11-21"
+        }
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": true
+    },
+    {
+      "rawHeader": "СУББОТА,21 ноября",
+      "sourceHeaderLine": 70,
+      "day": 21,
+      "month": 11,
+      "printedWeekday": "СУББОТА",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-21",
+      "otherRaw": [
+        {
+          "sourceLine": 71,
+          "text": "СОБОР АРХИСТРАТИГА МИХАИЛА И ПРОЧИХ НЕБЕСНЫХ СИЛ БЕСПЛОТНЫХ"
+        }
+      ],
+      "sourceLine": 72,
+      "rawRow": "8:00 — Часы.Литургия.Панихида||(иерей Александр,л.х.)",
+      "rawServiceField": "Часы.Литургия.Панихида",
+      "rawDetailsAfterForcedBreak": "(иерей Александр,л.х.)",
+      "normalizedTimeIfAccepted": "08:00",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": "LITURGY",
+        "routePartsPrediction": "HOUR3,HOUR6,LITURGY",
+        "partSetPrediction": "HOURS_LITURGY_TEXTS",
+        "notIncludedOrNotAvailable": [
+          "Панихида"
+        ],
+        "reason": "isHoursLiturgy admits ordinary hours+liturgy; extras stay excluded from the available part-set",
+        "publishedCivilDateRetained": "2026-11-21",
+        "directPartKeyDatesPrediction": {
+          "HOUR3": "2026-11-21",
+          "HOUR6": "2026-11-21",
+          "LITURGY": "2026-11-21"
+        }
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": true
+    },
+    {
+      "rawHeader": "СУББОТА,21 ноября",
+      "sourceHeaderLine": 70,
+      "day": 21,
+      "month": 11,
+      "printedWeekday": "СУББОТА",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-21",
+      "otherRaw": [
+        {
+          "sourceLine": 71,
+          "text": "СОБОР АРХИСТРАТИГА МИХАИЛА И ПРОЧИХ НЕБЕСНЫХ СИЛ БЕСПЛОТНЫХ"
+        }
+      ],
+      "sourceLine": 73,
+      "rawRow": "17:00 — Всенощное бдение.Исповедь||(все духовенство,л.х.)",
+      "rawServiceField": "Всенощное бдение.Исповедь",
+      "rawDetailsAfterForcedBreak": "(все духовенство,л.х.)",
+      "normalizedTimeIfAccepted": "17:00",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "VIGIL_WITH_CONFESSION",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": "VIGIL",
+        "routePartsPrediction": "VIGIL",
+        "partSetPrediction": "PARTIAL_PUBLISHED_TEXT",
+        "notIncludedOrNotAvailable": [
+          "Исповедь"
+        ],
+        "reason": "exact closed vigil+confession grammar; confession does not enter the available text",
+        "publishedCivilDateRetained": "2026-11-21",
+        "directPartKeyDatesPrediction": {
+          "VIGIL": "2026-11-22"
+        }
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": true
+    },
+    {
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,22 ноября",
+      "sourceHeaderLine": 74,
+      "day": 22,
+      "month": 11,
+      "printedWeekday": "ВОСКРЕСЕНЬЕ",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-22",
+      "otherRaw": [
+        {
+          "sourceLine": 75,
+          "text": "НЕДЕЛЯ 25-я ПО ПЯТИДЕСЯТНИЦЕ.МЧЧ.ОНИСИФОРА И ПОРФИРИЯ.ИКОНЫ БОЖИЕЙ МАТЕРИ «СКОРОПОСЛУШНИЦА»"
+        }
+      ],
+      "sourceLine": 76,
+      "rawRow": "6:40 — Часы.Литургия.Водосвятный молебен.Заупокойная лития||(иерей Павел,л.х.)",
+      "rawServiceField": "Часы.Литургия.Водосвятный молебен.Заупокойная лития",
+      "rawDetailsAfterForcedBreak": "(иерей Павел,л.х.)",
+      "normalizedTimeIfAccepted": "06:40",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": "LITURGY",
+        "routePartsPrediction": "HOUR3,HOUR6,LITURGY",
+        "partSetPrediction": "HOURS_LITURGY_TEXTS",
+        "notIncludedOrNotAvailable": [
+          "Молебен",
+          "Заупокойная лития"
+        ],
+        "reason": "isHoursLiturgy admits ordinary hours+liturgy; extras stay excluded from the available part-set",
+        "publishedCivilDateRetained": "2026-11-22",
+        "directPartKeyDatesPrediction": {
+          "HOUR3": "2026-11-22",
+          "HOUR6": "2026-11-22",
+          "LITURGY": "2026-11-22"
+        }
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": true
+    },
+    {
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,22 ноября",
+      "sourceHeaderLine": 74,
+      "day": 22,
+      "month": 11,
+      "printedWeekday": "ВОСКРЕСЕНЬЕ",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-22",
+      "otherRaw": [
+        {
+          "sourceLine": 75,
+          "text": "НЕДЕЛЯ 25-я ПО ПЯТИДЕСЯТНИЦЕ.МЧЧ.ОНИСИФОРА И ПОРФИРИЯ.ИКОНЫ БОЖИЕЙ МАТЕРИ «СКОРОПОСЛУШНИЦА»"
+        }
+      ],
+      "sourceLine": 77,
+      "rawRow": "9:40 — Часы.Литургия.Молебен.Заупокойная лития||(иерей Александр,иерей Петр,п.х.)",
+      "rawServiceField": "Часы.Литургия.Молебен.Заупокойная лития",
+      "rawDetailsAfterForcedBreak": "(иерей Александр,иерей Петр,п.х.)",
+      "normalizedTimeIfAccepted": "09:40",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": "LITURGY",
+        "routePartsPrediction": "HOUR3,HOUR6,LITURGY",
+        "partSetPrediction": "HOURS_LITURGY_TEXTS",
+        "notIncludedOrNotAvailable": [
+          "Молебен",
+          "Заупокойная лития"
+        ],
+        "reason": "isHoursLiturgy admits ordinary hours+liturgy; extras stay excluded from the available part-set",
+        "publishedCivilDateRetained": "2026-11-22",
+        "directPartKeyDatesPrediction": {
+          "HOUR3": "2026-11-22",
+          "HOUR6": "2026-11-22",
+          "LITURGY": "2026-11-22"
+        }
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": true
+    },
+    {
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,22 ноября",
+      "sourceHeaderLine": 74,
+      "day": 22,
+      "month": 11,
+      "printedWeekday": "ВОСКРЕСЕНЬЕ",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-22",
+      "otherRaw": [
+        {
+          "sourceLine": 75,
+          "text": "НЕДЕЛЯ 25-я ПО ПЯТИДЕСЯТНИЦЕ.МЧЧ.ОНИСИФОРА И ПОРФИРИЯ.ИКОНЫ БОЖИЕЙ МАТЕРИ «СКОРОПОСЛУШНИЦА»"
+        }
+      ],
+      "sourceLine": 78,
+      "rawRow": "17:00 — Молебен с акафистом прп.Сергию Радонежскому||(иерей Петр,л.х.)",
+      "rawServiceField": "Молебен с акафистом прп.Сергию Радонежскому",
+      "rawDetailsAfterForcedBreak": "(иерей Петр,л.х.)",
+      "normalizedTimeIfAccepted": "17:00",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "MOLEBEN_WITH_AKATHIST",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": null,
+        "routePartsPrediction": null,
+        "partSetPrediction": null,
+        "notIncludedOrNotAvailable": [
+          "Молебен",
+          "Акафист"
+        ],
+        "reason": "supported base book not named; choose available texts on same civil date, never replace with liturgy",
+        "publishedCivilDateRetained": "2026-11-22",
+        "directPartKeyDatesPrediction": null
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": true
+    },
+    {
+      "rawHeader": "СРЕДА,25 ноября",
+      "sourceHeaderLine": 84,
+      "day": 25,
+      "month": 11,
+      "printedWeekday": "СРЕДА",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-25",
+      "otherRaw": [
+        {
+          "sourceLine": 85,
+          "text": "СВТ.ИОАННА МИЛОСТИВОГО,ПАТРИАРХА АЛЕКСАНДРИЙСКОГО"
+        }
+      ],
+      "sourceLine": 86,
+      "rawRow": "8:00 — Утреня.Литургия.Молебен для страждущих недугом пианства.Заупокойная лития||(иерей Петр,л.х.)",
+      "rawServiceField": "Утреня.Литургия.Молебен для страждущих недугом пианства.Заупокойная лития",
+      "rawDetailsAfterForcedBreak": "(иерей Петр,л.х.)",
+      "normalizedTimeIfAccepted": "08:00",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "AMBIGUOUS_MATINS_LITURGY_COMPOSITION",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": null,
+        "routePartsPrediction": null,
+        "partSetPrediction": null,
+        "notIncludedOrNotAvailable": [
+          "Молебен",
+          "Заупокойная лития"
+        ],
+        "reason": "matins+liturgy is an ambiguous mixed base composition; cannot select just liturgy or matins automatically",
+        "publishedCivilDateRetained": "2026-11-25",
+        "directPartKeyDatesPrediction": null
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": true
+    },
+    {
+      "rawHeader": "ЧЕТВЕРГ,26 ноября",
+      "sourceHeaderLine": 87,
+      "day": 26,
+      "month": 11,
+      "printedWeekday": "ЧЕТВЕРГ",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-26",
+      "otherRaw": [
+        {
+          "sourceLine": 88,
+          "text": "СВТ.ИОАННА ЗЛАТОУСТОГО,АРХИЕП.КОНСТАНТИНОПОЛЬСКОГО.ЗАГОВЕНЬЕ НА РОЖДЕСТВЕНСКИЙ(ФИЛИППОВ) ПОСТ"
+        }
+      ],
+      "sourceLine": 89,
+      "rawRow": "8:00 — Полиелейная утреня(помазание).Литургия.Молебен.Заупокойная лития||(иерей Петр,л.х.)",
+      "rawServiceField": "Полиелейная утреня(помазание).Литургия.Молебен.Заупокойная лития",
+      "rawDetailsAfterForcedBreak": "(иерей Петр,л.х.)",
+      "normalizedTimeIfAccepted": "08:00",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "AMBIGUOUS_MATINS_LITURGY_COMPOSITION",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": null,
+        "routePartsPrediction": null,
+        "partSetPrediction": null,
+        "notIncludedOrNotAvailable": [
+          "Молебен",
+          "Заупокойная лития"
+        ],
+        "reason": "matins+liturgy is an ambiguous mixed base composition; cannot select just liturgy or matins automatically",
+        "publishedCivilDateRetained": "2026-11-26",
+        "directPartKeyDatesPrediction": null
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": true
+    },
+    {
+      "rawHeader": "ПЯТНИЦА,27 ноября",
+      "sourceHeaderLine": 90,
+      "day": 27,
+      "month": 11,
+      "printedWeekday": "ПЯТНИЦА",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-27",
+      "otherRaw": [
+        {
+          "sourceLine": 91,
+          "text": "АПОСТОЛА ФИЛИППА"
+        }
+      ],
+      "sourceLine": 92,
+      "rawRow": "8:00 — Полиелейная утреня(помазание).Литургия.Молебен.Заупокойная лития||(иерей Александр,л.х.)",
+      "rawServiceField": "Полиелейная утреня(помазание).Литургия.Молебен.Заупокойная лития",
+      "rawDetailsAfterForcedBreak": "(иерей Александр,л.х.)",
+      "normalizedTimeIfAccepted": "08:00",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "AMBIGUOUS_MATINS_LITURGY_COMPOSITION",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": null,
+        "routePartsPrediction": null,
+        "partSetPrediction": null,
+        "notIncludedOrNotAvailable": [
+          "Молебен",
+          "Заупокойная лития"
+        ],
+        "reason": "matins+liturgy is an ambiguous mixed base composition; cannot select just liturgy or matins automatically",
+        "publishedCivilDateRetained": "2026-11-27",
+        "directPartKeyDatesPrediction": null
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": true
+    },
+    {
+      "rawHeader": "ПЯТНИЦА,27 ноября",
+      "sourceHeaderLine": 90,
+      "day": 27,
+      "month": 11,
+      "printedWeekday": "ПЯТНИЦА",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-27",
+      "otherRaw": [
+        {
+          "sourceLine": 91,
+          "text": "АПОСТОЛА ФИЛИППА"
+        }
+      ],
+      "sourceLine": 93,
+      "rawRow": "18:00 — Вечерня.Утреня с акафистом свт.Иннокентию Иркутскому.Исповедь||(иерей Павел,л.х.)",
+      "rawServiceField": "Вечерня.Утреня с акафистом свт.Иннокентию Иркутскому.Исповедь",
+      "rawDetailsAfterForcedBreak": "(иерей Павел,л.х.)",
+      "normalizedTimeIfAccepted": "18:00",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "AMBIGUOUS_EVENING_COMPOSITION_WITH_EXTRAS",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": null,
+        "routePartsPrediction": null,
+        "partSetPrediction": null,
+        "notIncludedOrNotAvailable": [
+          "Акафист",
+          "Исповедь"
+        ],
+        "reason": "vespers+matins with extras is outside closed combined-evening and partialKind grammar; choice required",
+        "publishedCivilDateRetained": "2026-11-27",
+        "directPartKeyDatesPrediction": null
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": true
+    },
+    {
+      "rawHeader": "СУББОТА,28 ноября",
+      "sourceHeaderLine": 94,
+      "day": 28,
+      "month": 11,
+      "printedWeekday": "СУББОТА",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-28",
+      "otherRaw": [
+        {
+          "sourceLine": 95,
+          "text": "МЧЧ.И ИСПП.ГУРИЯ,САМОНА И АВИВА.НАЧАЛО РОЖДЕСТВЕНСКОГО ПОСТА"
+        }
+      ],
+      "sourceLine": 96,
+      "rawRow": "8:00 — Часы.Литургия.Панихида||(иерей Павел,л.х.)",
+      "rawServiceField": "Часы.Литургия.Панихида",
+      "rawDetailsAfterForcedBreak": "(иерей Павел,л.х.)",
+      "normalizedTimeIfAccepted": "08:00",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": "LITURGY",
+        "routePartsPrediction": "HOUR3,HOUR6,LITURGY",
+        "partSetPrediction": "HOURS_LITURGY_TEXTS",
+        "notIncludedOrNotAvailable": [
+          "Панихида"
+        ],
+        "reason": "isHoursLiturgy admits ordinary hours+liturgy; extras stay excluded from the available part-set",
+        "publishedCivilDateRetained": "2026-11-28",
+        "directPartKeyDatesPrediction": {
+          "HOUR3": "2026-11-28",
+          "HOUR6": "2026-11-28",
+          "LITURGY": "2026-11-28"
+        }
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": true
+    },
+    {
+      "rawHeader": "СУББОТА,28 ноября",
+      "sourceHeaderLine": 94,
+      "day": 28,
+      "month": 11,
+      "printedWeekday": "СУББОТА",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-28",
+      "otherRaw": [
+        {
+          "sourceLine": 95,
+          "text": "МЧЧ.И ИСПП.ГУРИЯ,САМОНА И АВИВА.НАЧАЛО РОЖДЕСТВЕНСКОГО ПОСТА"
+        }
+      ],
+      "sourceLine": 97,
+      "rawRow": "17:00 — Всенощное бдение.Исповедь||(все духовенство,п.х.)",
+      "rawServiceField": "Всенощное бдение.Исповедь",
+      "rawDetailsAfterForcedBreak": "(все духовенство,п.х.)",
+      "normalizedTimeIfAccepted": "17:00",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "VIGIL_WITH_CONFESSION",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": "VIGIL",
+        "routePartsPrediction": "VIGIL",
+        "partSetPrediction": "PARTIAL_PUBLISHED_TEXT",
+        "notIncludedOrNotAvailable": [
+          "Исповедь"
+        ],
+        "reason": "exact closed vigil+confession grammar; confession does not enter the available text",
+        "publishedCivilDateRetained": "2026-11-28",
+        "directPartKeyDatesPrediction": {
+          "VIGIL": "2026-11-29"
+        }
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": true
+    },
+    {
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,29 ноября",
+      "sourceHeaderLine": 98,
+      "day": 29,
+      "month": 11,
+      "printedWeekday": "ВОСКРЕСЕНЬЕ",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-29",
+      "otherRaw": [
+        {
+          "sourceLine": 99,
+          "text": "НЕДЕЛЯ 26-я ПО ПЯТИДЕСЯТНИЦЕ.АПОСТОЛА И ЕВАНГЕЛИСТА МАТФЕЯ"
+        }
+      ],
+      "sourceLine": 100,
+      "rawRow": "6:40 — Часы.Литургия.Водосвятный молебен.Заупокойная лития||(иерей Петр,л.х.)",
+      "rawServiceField": "Часы.Литургия.Водосвятный молебен.Заупокойная лития",
+      "rawDetailsAfterForcedBreak": "(иерей Петр,л.х.)",
+      "normalizedTimeIfAccepted": "06:40",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": "LITURGY",
+        "routePartsPrediction": "HOUR3,HOUR6,LITURGY",
+        "partSetPrediction": "HOURS_LITURGY_TEXTS",
+        "notIncludedOrNotAvailable": [
+          "Молебен",
+          "Заупокойная лития"
+        ],
+        "reason": "isHoursLiturgy admits ordinary hours+liturgy; extras stay excluded from the available part-set",
+        "publishedCivilDateRetained": "2026-11-29",
+        "directPartKeyDatesPrediction": {
+          "HOUR3": "2026-11-29",
+          "HOUR6": "2026-11-29",
+          "LITURGY": "2026-11-29"
+        }
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": true
+    },
+    {
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,29 ноября",
+      "sourceHeaderLine": 98,
+      "day": 29,
+      "month": 11,
+      "printedWeekday": "ВОСКРЕСЕНЬЕ",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-29",
+      "otherRaw": [
+        {
+          "sourceLine": 99,
+          "text": "НЕДЕЛЯ 26-я ПО ПЯТИДЕСЯТНИЦЕ.АПОСТОЛА И ЕВАНГЕЛИСТА МАТФЕЯ"
+        }
+      ],
+      "sourceLine": 101,
+      "rawRow": "9:40 — Часы.Литургия.Молебен.Заупокойная лития||(иерей Александр,иерей Павел,п.х.)",
+      "rawServiceField": "Часы.Литургия.Молебен.Заупокойная лития",
+      "rawDetailsAfterForcedBreak": "(иерей Александр,иерей Павел,п.х.)",
+      "normalizedTimeIfAccepted": "09:40",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": "LITURGY",
+        "routePartsPrediction": "HOUR3,HOUR6,LITURGY",
+        "partSetPrediction": "HOURS_LITURGY_TEXTS",
+        "notIncludedOrNotAvailable": [
+          "Молебен",
+          "Заупокойная лития"
+        ],
+        "reason": "isHoursLiturgy admits ordinary hours+liturgy; extras stay excluded from the available part-set",
+        "publishedCivilDateRetained": "2026-11-29",
+        "directPartKeyDatesPrediction": {
+          "HOUR3": "2026-11-29",
+          "HOUR6": "2026-11-29",
+          "LITURGY": "2026-11-29"
+        }
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": true
+    },
+    {
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,29 ноября",
+      "sourceHeaderLine": 98,
+      "day": 29,
+      "month": 11,
+      "printedWeekday": "ВОСКРЕСЕНЬЕ",
+      "printedYear": null,
+      "dateIfQualifiedCurrentMonth": "2026-11-29",
+      "otherRaw": [
+        {
+          "sourceLine": 99,
+          "text": "НЕДЕЛЯ 26-я ПО ПЯТИДЕСЯТНИЦЕ.АПОСТОЛА И ЕВАНГЕЛИСТА МАТФЕЯ"
+        }
+      ],
+      "sourceLine": 102,
+      "rawRow": "17:00 — Молебен с акафистом Божией Матери пред иконой «Молченская»||(иерей Павел,л.х.)",
+      "rawServiceField": "Молебен с акафистом Божией Матери пред иконой «Молченская»",
+      "rawDetailsAfterForcedBreak": "(иерей Павел,л.х.)",
+      "normalizedTimeIfAccepted": "17:00",
+      "conditionalScheduleKindIfAccepted": "service_block",
+      "scheduleAdmissionResult": "NOT_RUN",
+      "semanticFamily": "MOLEBEN_WITH_AKATHIST",
+      "readingRulePrediction": {
+        "status": "STATIC_REVIEW_NOT_RUNTIME",
+        "requiresServiceFieldTitleBeforeDetails": true,
+        "kindForPrediction": null,
+        "routePartsPrediction": null,
+        "partSetPrediction": null,
+        "notIncludedOrNotAvailable": [
+          "Молебен",
+          "Акафист"
+        ],
+        "reason": "supported base book not named; choose available texts on same civil date, never replace with liturgy",
+        "publishedCivilDateRetained": "2026-11-29",
+        "directPartKeyDatesPrediction": null
+      },
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "futureOrTodayFor15": true,
+      "futureOrTodayFor16": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalFixed15": true,
+      "knownPartialCandidateIfOmittedWithoutWithdrawalCurrent16": true
+    }
+  ],
+  "closedDaysAllMonth": [
+    {
+      "sourceHeaderLine": 6,
+      "rawHeader": "ПОНЕДЕЛЬНИК,2 ноября",
+      "sourceLine": 8,
+      "rawMarker": "СЛУЖБ НЕТ",
+      "dateIfQualifiedCurrentMonth": "2026-11-02",
+      "printedYear": null,
+      "temporalStatus": "CURRENT_MONTH_INTERPRETATION_YEAR_INFERRED_ONLY",
+      "scope": "selected owner and same accepted source only",
+      "notACategoricalPhysicalAbsenceClaim": true,
+      "eligibleFixed15Window": false,
+      "eligibleCurrent16Window": false,
+      "expectedNewWithdrawalsIfWhollyAdmitted": "DATE_SCOPED_ONLY_NOT_MONTH_OR_ALL",
+      "runtime": "NOT_RUN"
+    },
+    {
+      "sourceHeaderLine": 31,
+      "rawHeader": "ПОНЕДЕЛЬНИК,9 ноября",
+      "sourceLine": 33,
+      "rawMarker": "СЛУЖБ НЕТ",
+      "dateIfQualifiedCurrentMonth": "2026-11-09",
+      "printedYear": null,
+      "temporalStatus": "CURRENT_MONTH_INTERPRETATION_YEAR_INFERRED_ONLY",
+      "scope": "selected owner and same accepted source only",
+      "notACategoricalPhysicalAbsenceClaim": true,
+      "eligibleFixed15Window": false,
+      "eligibleCurrent16Window": false,
+      "expectedNewWithdrawalsIfWhollyAdmitted": "DATE_SCOPED_ONLY_NOT_MONTH_OR_ALL",
+      "runtime": "NOT_RUN"
+    },
+    {
+      "sourceHeaderLine": 34,
+      "rawHeader": "ВТОРНИК,10 ноября",
+      "sourceLine": 35,
+      "rawMarker": "СЛУЖБ НЕТ",
+      "dateIfQualifiedCurrentMonth": "2026-11-10",
+      "printedYear": null,
+      "temporalStatus": "CURRENT_MONTH_INTERPRETATION_YEAR_INFERRED_ONLY",
+      "scope": "selected owner and same accepted source only",
+      "notACategoricalPhysicalAbsenceClaim": true,
+      "eligibleFixed15Window": false,
+      "eligibleCurrent16Window": false,
+      "expectedNewWithdrawalsIfWhollyAdmitted": "DATE_SCOPED_ONLY_NOT_MONTH_OR_ALL",
+      "runtime": "NOT_RUN"
+    },
+    {
+      "sourceHeaderLine": 55,
+      "rawHeader": "ПОНЕДЕЛЬНИК,16 ноября",
+      "sourceLine": 57,
+      "rawMarker": "СЛУЖБ НЕТ",
+      "dateIfQualifiedCurrentMonth": "2026-11-16",
+      "printedYear": null,
+      "temporalStatus": "CURRENT_MONTH_INTERPRETATION_YEAR_INFERRED_ONLY",
+      "scope": "selected owner and same accepted source only",
+      "notACategoricalPhysicalAbsenceClaim": true,
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "expectedNewWithdrawalsIfWhollyAdmitted": "DATE_SCOPED_ONLY_NOT_MONTH_OR_ALL",
+      "runtime": "NOT_RUN"
+    },
+    {
+      "sourceHeaderLine": 58,
+      "rawHeader": "ВТОРНИК,17 ноября",
+      "sourceLine": 59,
+      "rawMarker": "СЛУЖБ НЕТ",
+      "dateIfQualifiedCurrentMonth": "2026-11-17",
+      "printedYear": null,
+      "temporalStatus": "CURRENT_MONTH_INTERPRETATION_YEAR_INFERRED_ONLY",
+      "scope": "selected owner and same accepted source only",
+      "notACategoricalPhysicalAbsenceClaim": true,
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "expectedNewWithdrawalsIfWhollyAdmitted": "DATE_SCOPED_ONLY_NOT_MONTH_OR_ALL",
+      "runtime": "NOT_RUN"
+    },
+    {
+      "sourceHeaderLine": 79,
+      "rawHeader": "ПОНЕДЕЛЬНИК,23 ноября",
+      "sourceLine": 81,
+      "rawMarker": "СЛУЖБ НЕТ",
+      "dateIfQualifiedCurrentMonth": "2026-11-23",
+      "printedYear": null,
+      "temporalStatus": "CURRENT_MONTH_INTERPRETATION_YEAR_INFERRED_ONLY",
+      "scope": "selected owner and same accepted source only",
+      "notACategoricalPhysicalAbsenceClaim": true,
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "expectedNewWithdrawalsIfWhollyAdmitted": "DATE_SCOPED_ONLY_NOT_MONTH_OR_ALL",
+      "runtime": "NOT_RUN"
+    },
+    {
+      "sourceHeaderLine": 82,
+      "rawHeader": "ВТОРНИК,24 ноября",
+      "sourceLine": 83,
+      "rawMarker": "СЛУЖБ НЕТ",
+      "dateIfQualifiedCurrentMonth": "2026-11-24",
+      "printedYear": null,
+      "temporalStatus": "CURRENT_MONTH_INTERPRETATION_YEAR_INFERRED_ONLY",
+      "scope": "selected owner and same accepted source only",
+      "notACategoricalPhysicalAbsenceClaim": true,
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "expectedNewWithdrawalsIfWhollyAdmitted": "DATE_SCOPED_ONLY_NOT_MONTH_OR_ALL",
+      "runtime": "NOT_RUN"
+    },
+    {
+      "sourceHeaderLine": 103,
+      "rawHeader": "ПОНЕДЕЛЬНИК,30 ноября",
+      "sourceLine": 105,
+      "rawMarker": "СЛУЖБ НЕТ",
+      "dateIfQualifiedCurrentMonth": "2026-11-30",
+      "printedYear": null,
+      "temporalStatus": "CURRENT_MONTH_INTERPRETATION_YEAR_INFERRED_ONLY",
+      "scope": "selected owner and same accepted source only",
+      "notACategoricalPhysicalAbsenceClaim": true,
+      "eligibleFixed15Window": true,
+      "eligibleCurrent16Window": true,
+      "expectedNewWithdrawalsIfWhollyAdmitted": "DATE_SCOPED_ONLY_NOT_MONTH_OR_ALL",
+      "runtime": "NOT_RUN"
+    }
+  ],
+  "classifierRuleSnapshots": [
+    {
+      "path": "app/src/main/java/ru/liturgyguide/service/schedule/ScheduleDocumentParser.kt",
+      "sha256": "5b38400d11cb5d859e1eeb98a4a63be6cfd9e458d8a72ba38b42ba7bf27b73f0"
+    },
+    {
+      "path": "app/src/main/java/ru/liturgyguide/service/schedule/ScheduleYearInference.kt",
+      "sha256": "57d7a08cc11565d7b00d390ad15e708c88198b2e8131b39230be0f8ba397f1e8"
+    },
+    {
+      "path": "app/src/main/java/ru/liturgyguide/service/schedule/ScheduleVenue.kt",
+      "sha256": "c8e085abe40e80f412df7440d5462ed780928467e70f8b1e44291136f4527922"
+    },
+    {
+      "path": "app/src/main/java/ru/liturgyguide/service/book/ServiceBookSelection.kt",
+      "sha256": "f0b756e228ccda9d6d9e095eafee7f3b74f49a17ffc077cac89e4a471be6f4a0"
+    },
+    {
+      "path": "app/src/main/java/ru/liturgyguide/service/book/PublishedServiceTextScope.kt",
+      "sha256": "f860e09eaf8267b2d303db8a7de24e3ed2b47cc5d158271fa49ed29ffc4e0b5e"
+    }
+  ],
+  "readingScopeCautions": [
+    "schedule kind service_block is distinct from reading kind LITURGY/VIGIL",
+    "timed rows may be omitted by unchanged actual service/venue guard; record exact reason and knownPartial rather than loosen matcher",
+    "raw details after || remain in cancellation/venue safety even if excluded from clean display title",
+    "static route predictions are on the exact raw service field before ||; actual classifier/normalizer NOT_RUN",
+    "HOURS_LITURGY_TEXTS excludes moleben/panikhida/litia; do not claim full text of every published service",
+    "moleben+akathist and mixed matins+liturgy do not acquire guessed book routes",
+    "sourceClosedDay is not a product persistent model or categorical no-services UI assertion",
+    "VIGIL uses next liturgical day once; Hours/Liturgy keep civil date. Ambiguous source fallback is not proof of an exact local composition or full text."
+  ],
+  "negativeScopeContract": [
+    {
+      "scenario": "missing/duplicate/out-of-order date, mismatch weekday, other month, competing blocks",
+      "expected": "NO inferred-month admission; preserve any read same-source ambiguous withdrawal via existing safety path",
+      "runtime": "NOT_RUN"
+    },
+    {
+      "scenario": "archive year in URL/relevant publication/data including2025",
+      "expected": "NO inference2026; no fabricated withdrawal2026",
+      "runtime": "NOT_RUN"
+    },
+    {
+      "scenario": "exact1917-1918 whole commemoration field vs modified/incomplete phrase or adjacent qualifier",
+      "expected": "Only exact historical span can be excluded from publication-year evidence; raw full text and adjacent cancellation/venue remain",
+      "runtime": "NOT_RUN"
+    },
+    {
+      "scenario": "exact СЛУЖБ НЕТ plus timed row/qualifier/ambiguous location in same day",
+      "expected": "No invented date-scoped withdrawal; same-source read contradiction remains unresolved safety",
+      "runtime": "NOT_RUN"
+    },
+    {
+      "scenario": "positive foreign owner or foreign negative day",
+      "expected": "Never revoke selected-parish rows; do not borrow selected identity",
+      "runtime": "NOT_RUN"
+    },
+    {
+      "scenario": "foreign location after || or within raw feast/service field",
+      "expected": "Existing raw venue matcher controls row; clean display cannot hide it, truthful partial if omitted",
+      "runtime": "NOT_RUN"
+    },
+    {
+      "scenario": "own timed row + negated/alternative/unknown venue",
+      "expected": "No guessed positive foreign proof or selected-scope relaxation; preserve uncertainty",
+      "runtime": "NOT_RUN"
+    },
+    {
+      "scenario": "prior same-source selected16Nov event -> exact admitted negative -> later I/O -> cold cache",
+      "expected": "No resurrection16Nov; unrelated date/source unaffected and fetchedAt not refreshed artificially",
+      "runtime": "NOT_RUN"
+    },
+    {
+      "scenario": "offline reopened after next-year rollover",
+      "expected": "Same persisted2026 dates/yearInferred; no re-inference to2027",
+      "runtime": "NOT_RUN"
+    }
+  ],
+  "runtime": "NOT_RUN",
+  "implementationChangedPaths": [],
+  "networkRequests": 0,
+  "commonExpectedProvenanceIfAdmitted": {
+    "printedYear": null,
+    "interpretedYear": 2026,
+    "yearInferred": true,
+    "newPrintedIsoAuthority": false,
+    "eventSourceAndFlagsAtomic": true,
+    "actualAppResult": "NOT_RUN"
+  }
+}

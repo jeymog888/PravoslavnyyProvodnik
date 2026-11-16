@@ -30,13 +30,15 @@ object ScheduleHtmlParser {
 
     /** Empty extraction is not permission to bypass an explicit cancellation or ambiguity. */
     fun inspect(document: Document, today: LocalDate, parish: Parish? = null): ScheduleParseResult {
+        val structured = HtmlScheduleDocumentExtractor.fromHtml(document, today)
+        if (structured.pages.any { page -> page.lines.any { it.htmlYearlessCalendar != null } })
+            return ScheduleDocumentParser.inspect(structured, today, parish)
         val declarative = ScheduleDeclarativeText.prepare(document, today)
         if (declarative?.conflict == true) return ScheduleParseResult(ScheduleParseDisposition.REJECTED, safetyConflict = true)
         if (declarative != null) {
             val expanded = HtmlScheduleDocumentExtractor.fromHtml(declarative.document)
             return ScheduleDocumentParser.inspect(ScheduleDeclarativeText.withDisplayTitles(expanded, declarative.serviceTitles), today, parish)
         }
-        val structured = HtmlScheduleDocumentExtractor.fromHtml(document)
         if (structured.pages.any { it.sourceTruncated })
             return ScheduleParseResult(ScheduleParseDisposition.REJECTED, safetyConflict = true)
         // A named building or a dated cancellation needs the general parser's section context,

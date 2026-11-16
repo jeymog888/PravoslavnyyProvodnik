@@ -1,0 +1,31 @@
+{
+  "knownB5Case": 43,
+  "mode": "KNOWN_CONFIGURED_SOURCE_REPLAY_NOT_FRESH_NETWORK",
+  "requests": [
+    {
+      "requestUrl": "https://www.businovohram.ru/",
+      "responseUrl": "https://businovohram.ru/",
+      "contentType": "text/html; charset=UTF-8",
+      "fixture": "home.html",
+      "networkOriginalBytes": 184470,
+      "networkOriginalSha256": "8a2284984f01739f1fae2c59ef172ea4b2f5ce4a36acffcf44661b2d65a0be25",
+      "savedSanitizedBytes": 184477,
+      "savedSanitizedSha256": "8c2de2b042b467183f1f799324bb94c1304c620775cc8cb8e48497adf923de16",
+      "transformation": "BYTE_PRESERVING_CREDENTIAL_REDACTION",
+      "scope": "Saved credential-redacted body is copied without further changes; no assertion of equal original network bytes"
+    },
+    {
+      "requestUrl": "https://businovohram.ru/raspisanie",
+      "responseUrl": "https://businovohram.ru/raspisanie",
+      "contentType": "text/html; charset=UTF-8",
+      "fixture": "source.html",
+      "networkOriginalBytes": 55701,
+      "networkOriginalSha256": "39928cd17e438dca57cda3a4a250db4761095f56f873937652b94896ca9abdbf",
+      "savedSanitizedBytes": 55708,
+      "savedSanitizedSha256": "1ae15d6124694ef7a4c7bd86af4586bc6f63fc2a7e398e8ff4954e5dd6092526",
+      "transformation": "BYTE_PRESERVING_CREDENTIAL_REDACTION",
+      "scope": "Saved credential-redacted body is copied without further changes; no assertion of equal original network bytes"
+    }
+  ],
+  "originalB5OutcomeUnchanged": true
+}

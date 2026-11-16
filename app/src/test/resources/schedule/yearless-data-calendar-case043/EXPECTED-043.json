@@ -1,0 +1,953 @@
+{
+  "status": "STATIC_EXPECTATION_NOT_RUNTIME",
+  "sourceSha256": "1ae15d6124694ef7a4c7bd86af4586bc6f63fc2a7e398e8ff4954e5dd6092526",
+  "sourceOracleSha256": "aac84fe247033d75ec19f568f5943a197add1bd6d77c0750ec42522d91fe389f",
+  "sourceTimedRowsAll": 41,
+  "conditionalYear": 2026,
+  "printedYear": null,
+  "requiresYearInferred": true,
+  "allRows": [
+    {
+      "sourceLine": 3,
+      "dateIfQualifiedCurrentMonth": "2026-11-01",
+      "time": "06:40",
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,1 ноября",
+      "rawFeasts": [
+        "НЕДЕЛЯ 22-я ПО ПЯТИДЕСЯТНИЦЕ.ПРОР.ИОИЛЯ.МЧ.УАРА И ИЖЕ С НИМ"
+      ],
+      "rawRow": "6:40 — Часы.Литургия.Водосвятный молебен.Заупокойная лития||(иерей Петр,л.х.)",
+      "rawService": "Часы.Литургия.Водосвятный молебен.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Петр,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Часы. Литургия. Водосвятный молебен. Заупокойная лития",
+      "kind": "service_block",
+      "family": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRouteStatic": "HOUR3,HOUR6,LITURGY",
+      "fixed15Window": false,
+      "current16Window": false,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 4,
+      "dateIfQualifiedCurrentMonth": "2026-11-01",
+      "time": "09:40",
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,1 ноября",
+      "rawFeasts": [
+        "НЕДЕЛЯ 22-я ПО ПЯТИДЕСЯТНИЦЕ.ПРОР.ИОИЛЯ.МЧ.УАРА И ИЖЕ С НИМ"
+      ],
+      "rawRow": "9:40 — Часы.Литургия.Молебен.Заупокойная лития||(иерей Александр,иерей Павел,молодежный хор)",
+      "rawService": "Часы.Литургия.Молебен.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Александр,иерей Павел,молодежный хор)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Часы. Литургия. Молебен. Заупокойная лития",
+      "kind": "service_block",
+      "family": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRouteStatic": "HOUR3,HOUR6,LITURGY",
+      "fixed15Window": false,
+      "current16Window": false,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 5,
+      "dateIfQualifiedCurrentMonth": "2026-11-01",
+      "time": "17:00",
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,1 ноября",
+      "rawFeasts": [
+        "НЕДЕЛЯ 22-я ПО ПЯТИДЕСЯТНИЦЕ.ПРОР.ИОИЛЯ.МЧ.УАРА И ИЖЕ С НИМ"
+      ],
+      "rawRow": "17:00 — Молебен с акафистом Божией Матери пред иконой «Молченская»||(иерей Павел,л.х.)",
+      "rawService": "Молебен с акафистом Божией Матери пред иконой «Молченская»",
+      "rawDetails": [
+        "(иерей Павел,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Молебен с акафистом Божией Матери пред иконой «Молченская»",
+      "kind": "service_block",
+      "family": "MOLEBEN_WITH_AKATHIST",
+      "readingRouteStatic": null,
+      "fixed15Window": false,
+      "current16Window": false,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 10,
+      "dateIfQualifiedCurrentMonth": "2026-11-03",
+      "time": "17:00",
+      "rawHeader": "ВТОРНИК,3 ноября",
+      "rawFeasts": [],
+      "rawRow": "17:00 — Всенощное бдение.Исповедь||(иерей Петр,иерей Павел,л.х.)",
+      "rawService": "Всенощное бдение.Исповедь",
+      "rawDetails": [
+        "(иерей Петр,иерей Павел,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Всенощное бдение. Исповедь",
+      "kind": "service_block",
+      "family": "VIGIL_WITH_CONFESSION",
+      "readingRouteStatic": "VIGIL_NEXT_LITURGICAL_DAY",
+      "fixed15Window": false,
+      "current16Window": false,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 13,
+      "dateIfQualifiedCurrentMonth": "2026-11-04",
+      "time": "09:00",
+      "rawHeader": "!СРЕДА,4 ноября",
+      "rawFeasts": [
+        "ПРАЗДНОВАНИЕ КАЗАНСКОЙ ИКОНЕ БОЖИЕЙ МАТЕРИ"
+      ],
+      "rawRow": "9:00 — Часы.Литургия.Праздничный молебен||(иерей Петр,иерей Павел,п.х.)",
+      "rawService": "Часы.Литургия.Праздничный молебен",
+      "rawDetails": [
+        "(иерей Петр,иерей Павел,п.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Часы. Литургия. Праздничный молебен",
+      "kind": "service_block",
+      "family": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRouteStatic": "HOUR3,HOUR6,LITURGY",
+      "fixed15Window": false,
+      "current16Window": false,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 16,
+      "dateIfQualifiedCurrentMonth": "2026-11-05",
+      "time": "08:00",
+      "rawHeader": "ЧЕТВЕРГ,5 ноября",
+      "rawFeasts": [
+        "АПОСТОЛА ИАКОВА,БРАТА ГОСПОДНЯ ПО ПЛОТИ"
+      ],
+      "rawRow": "8:00 — Утреня.Литургия.Молебен.Заупокойная лития||(иерей Павел,л.х.)",
+      "rawService": "Утреня.Литургия.Молебен.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Павел,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Утреня. Литургия. Молебен. Заупокойная лития",
+      "kind": "service_block",
+      "family": "MIXED_OR_OTHER",
+      "readingRouteStatic": null,
+      "fixed15Window": false,
+      "current16Window": false,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 19,
+      "dateIfQualifiedCurrentMonth": "2026-11-06",
+      "time": "08:00",
+      "rawHeader": "ПЯТНИЦА,6 ноября",
+      "rawFeasts": [
+        "ИКОНЫ БОЖИЕЙ МАТЕРИ «ВСЕХ СКОРБЯЩИХ РАДОСТЬ»"
+      ],
+      "rawRow": "8:00 — Полиелейная утреня(помазание).Литургия.Молебен.Заупокойная лития||(иерей Александр,л.х.)",
+      "rawService": "Полиелейная утреня(помазание).Литургия.Молебен.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Александр,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Полиелейная утреня(помазание). Литургия. Молебен. Заупокойная лития",
+      "kind": "service_block",
+      "family": "MIXED_OR_OTHER",
+      "readingRouteStatic": null,
+      "fixed15Window": false,
+      "current16Window": false,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 20,
+      "dateIfQualifiedCurrentMonth": "2026-11-06",
+      "time": "18:00",
+      "rawHeader": "ПЯТНИЦА,6 ноября",
+      "rawFeasts": [
+        "ИКОНЫ БОЖИЕЙ МАТЕРИ «ВСЕХ СКОРБЯЩИХ РАДОСТЬ»"
+      ],
+      "rawRow": "18:00 — Заупокойная утреня(Парастас).Исповедь||(все духовенство,л.х.)",
+      "rawService": "Заупокойная утреня(Парастас).Исповедь",
+      "rawDetails": [
+        "(все духовенство,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Заупокойная утреня(Парастас). Исповедь",
+      "kind": "service_block",
+      "family": "MIXED_OR_OTHER",
+      "readingRouteStatic": null,
+      "fixed15Window": false,
+      "current16Window": false,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 23,
+      "dateIfQualifiedCurrentMonth": "2026-11-07",
+      "time": "06:40",
+      "rawHeader": "СУББОТА,7 ноября",
+      "rawFeasts": [
+        "ДИМИТРИЕВСКАЯ РОДИТЕЛЬСКАЯ СУББОТА"
+      ],
+      "rawRow": "6:40 — Часы.Литургия.Панихида||(иерей Павел,л.х.)",
+      "rawService": "Часы.Литургия.Панихида",
+      "rawDetails": [
+        "(иерей Павел,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Часы. Литургия. Панихида",
+      "kind": "service_block",
+      "family": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRouteStatic": "HOUR3,HOUR6,LITURGY",
+      "fixed15Window": false,
+      "current16Window": false,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 24,
+      "dateIfQualifiedCurrentMonth": "2026-11-07",
+      "time": "09:40",
+      "rawHeader": "СУББОТА,7 ноября",
+      "rawFeasts": [
+        "ДИМИТРИЕВСКАЯ РОДИТЕЛЬСКАЯ СУББОТА"
+      ],
+      "rawRow": "9:40 — Часы.Литургия.Панихида||(иерей Александр,иерей Петр,п.х.)",
+      "rawService": "Часы.Литургия.Панихида",
+      "rawDetails": [
+        "(иерей Александр,иерей Петр,п.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Часы. Литургия. Панихида",
+      "kind": "service_block",
+      "family": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRouteStatic": "HOUR3,HOUR6,LITURGY",
+      "fixed15Window": false,
+      "current16Window": false,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 25,
+      "dateIfQualifiedCurrentMonth": "2026-11-07",
+      "time": "17:00",
+      "rawHeader": "СУББОТА,7 ноября",
+      "rawFeasts": [
+        "ДИМИТРИЕВСКАЯ РОДИТЕЛЬСКАЯ СУББОТА"
+      ],
+      "rawRow": "17:00 — Всенощное бдение.Исповедь||(все духовенство,л.х.)",
+      "rawService": "Всенощное бдение.Исповедь",
+      "rawDetails": [
+        "(все духовенство,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Всенощное бдение. Исповедь",
+      "kind": "service_block",
+      "family": "VIGIL_WITH_CONFESSION",
+      "readingRouteStatic": "VIGIL_NEXT_LITURGICAL_DAY",
+      "fixed15Window": false,
+      "current16Window": false,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 28,
+      "dateIfQualifiedCurrentMonth": "2026-11-08",
+      "time": "06:40",
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,8 ноября",
+      "rawFeasts": [
+        "НЕДЕЛЯ 23-я ПО ПЯТИДЕСЯТНИЦЕ.ВМЧ.ДИМИТРИЯ СОЛУНСКОГО"
+      ],
+      "rawRow": "6:40 — Часы.Литургия.Водосвятный молебен.Заупокойная лития||(иерей Павел,л.х.)",
+      "rawService": "Часы.Литургия.Водосвятный молебен.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Павел,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Часы. Литургия. Водосвятный молебен. Заупокойная лития",
+      "kind": "service_block",
+      "family": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRouteStatic": "HOUR3,HOUR6,LITURGY",
+      "fixed15Window": false,
+      "current16Window": false,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 29,
+      "dateIfQualifiedCurrentMonth": "2026-11-08",
+      "time": "09:40",
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,8 ноября",
+      "rawFeasts": [
+        "НЕДЕЛЯ 23-я ПО ПЯТИДЕСЯТНИЦЕ.ВМЧ.ДИМИТРИЯ СОЛУНСКОГО"
+      ],
+      "rawRow": "9:40 — Часы.Литургия.Молебен.Заупокойная лития||(иерей Александр,иерей Петр,п.х.)",
+      "rawService": "Часы.Литургия.Молебен.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Александр,иерей Петр,п.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Часы. Литургия. Молебен. Заупокойная лития",
+      "kind": "service_block",
+      "family": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRouteStatic": "HOUR3,HOUR6,LITURGY",
+      "fixed15Window": false,
+      "current16Window": false,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 30,
+      "dateIfQualifiedCurrentMonth": "2026-11-08",
+      "time": "17:00",
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,8 ноября",
+      "rawFeasts": [
+        "НЕДЕЛЯ 23-я ПО ПЯТИДЕСЯТНИЦЕ.ВМЧ.ДИМИТРИЯ СОЛУНСКОГО"
+      ],
+      "rawRow": "17:00 — Молебен с акафистом прп.Сергию Радонежскому||(иерей Петр,л.х.)",
+      "rawService": "Молебен с акафистом прп.Сергию Радонежскому",
+      "rawDetails": [
+        "(иерей Петр,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Молебен с акафистом прп. Сергию Радонежскому",
+      "kind": "service_block",
+      "family": "MOLEBEN_WITH_AKATHIST",
+      "readingRouteStatic": null,
+      "fixed15Window": false,
+      "current16Window": false,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 38,
+      "dateIfQualifiedCurrentMonth": "2026-11-11",
+      "time": "08:00",
+      "rawHeader": "СРЕДА,11 ноября",
+      "rawFeasts": [
+        "ПРМЦ.АНАСТАСИИ РИМЛЯНЫНИ.ПРП.АВРАМИЯ ЗАТВОРНИКА"
+      ],
+      "rawRow": "8:00 — Утреня.Литургия.Молебен для страждущих недугом пианства.Заупокойная лития||(иерей Петр,л.х.)",
+      "rawService": "Утреня.Литургия.Молебен для страждущих недугом пианства.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Петр,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Утреня. Литургия. Молебен для страждущих недугом пианства. Заупокойная лития",
+      "kind": "service_block",
+      "family": "MIXED_OR_OTHER",
+      "readingRouteStatic": null,
+      "fixed15Window": false,
+      "current16Window": false,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 41,
+      "dateIfQualifiedCurrentMonth": "2026-11-12",
+      "time": "08:00",
+      "rawHeader": "ЧЕТВЕРГ,12 ноября",
+      "rawFeasts": [
+        "СЩМЧ.ЗИНОВИЯ,ЕП.ЕГЕЙСКОГО,СЕСТРЫ ЕГО МЦ.ЗИНОВИИ"
+      ],
+      "rawRow": "8:00 — Утреня.Литургия.Молебен.Заупокойная лития||(иерей Павел,л.х.)",
+      "rawService": "Утреня.Литургия.Молебен.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Павел,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Утреня. Литургия. Молебен. Заупокойная лития",
+      "kind": "service_block",
+      "family": "MIXED_OR_OTHER",
+      "readingRouteStatic": null,
+      "fixed15Window": false,
+      "current16Window": false,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 44,
+      "dateIfQualifiedCurrentMonth": "2026-11-13",
+      "time": "08:00",
+      "rawHeader": "ПЯТНИЦА,13 ноября",
+      "rawFeasts": [
+        "АПП.ОТ 70-ТИ СТАХИЯ,АМПЛИЯ,УРВАНА И ДР"
+      ],
+      "rawRow": "8:00 — Утреня.Литургия.Молебен.Заупокойная лития||(иерей Александр,л.х.)",
+      "rawService": "Утреня.Литургия.Молебен.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Александр,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Утреня. Литургия. Молебен. Заупокойная лития",
+      "kind": "service_block",
+      "family": "MIXED_OR_OTHER",
+      "readingRouteStatic": null,
+      "fixed15Window": false,
+      "current16Window": false,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 45,
+      "dateIfQualifiedCurrentMonth": "2026-11-13",
+      "time": "18:00",
+      "rawHeader": "ПЯТНИЦА,13 ноября",
+      "rawFeasts": [
+        "АПП.ОТ 70-ТИ СТАХИЯ,АМПЛИЯ,УРВАНА И ДР"
+      ],
+      "rawRow": "18:00 — Вечерня.Утреня с акафистом Божией Матери пред иконой «Неупиваемая чаша».Исповедь||(иерей Павел,л.х.)",
+      "rawService": "Вечерня.Утреня с акафистом Божией Матери пред иконой «Неупиваемая чаша».Исповедь",
+      "rawDetails": [
+        "(иерей Павел,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Вечерня. Утреня с акафистом Божией Матери пред иконой «Неупиваемая чаша». Исповедь",
+      "kind": "service_block",
+      "family": "MIXED_OR_OTHER",
+      "readingRouteStatic": null,
+      "fixed15Window": false,
+      "current16Window": false,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 48,
+      "dateIfQualifiedCurrentMonth": "2026-11-14",
+      "time": "08:00",
+      "rawHeader": "СУББОТА,14 ноября",
+      "rawFeasts": [
+        "БЕССРЕБРЕННИКОВ И ЧУДОТВОРЦЕВ КОСМЫ И ДАМИАНА АСИЙСКИХ"
+      ],
+      "rawRow": "8:00 — Часы.Литургия.Панихида||(иерей Петр,л.х.)",
+      "rawService": "Часы.Литургия.Панихида",
+      "rawDetails": [
+        "(иерей Петр,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Часы. Литургия. Панихида",
+      "kind": "service_block",
+      "family": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRouteStatic": "HOUR3,HOUR6,LITURGY",
+      "fixed15Window": true,
+      "current16Window": false,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 49,
+      "dateIfQualifiedCurrentMonth": "2026-11-14",
+      "time": "17:00",
+      "rawHeader": "СУББОТА,14 ноября",
+      "rawFeasts": [
+        "БЕССРЕБРЕННИКОВ И ЧУДОТВОРЦЕВ КОСМЫ И ДАМИАНА АСИЙСКИХ"
+      ],
+      "rawRow": "17:00 — Всенощное бдение.Исповедь||(все духовенство,п.х.)",
+      "rawService": "Всенощное бдение.Исповедь",
+      "rawDetails": [
+        "(все духовенство,п.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Всенощное бдение. Исповедь",
+      "kind": "service_block",
+      "family": "VIGIL_WITH_CONFESSION",
+      "readingRouteStatic": "VIGIL_NEXT_LITURGICAL_DAY",
+      "fixed15Window": true,
+      "current16Window": false,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 52,
+      "dateIfQualifiedCurrentMonth": "2026-11-15",
+      "time": "06:40",
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,15 ноября",
+      "rawFeasts": [
+        "НЕДЕЛЯ 24-я ПО ПЯТИДЕСЯТНИЦЕ.МЧЧ.АКИНДИНА,ПИГАСИЯ,АФФОНИЯ И ДР"
+      ],
+      "rawRow": "6:40 — Часы.Литургия.Водосвятный молебен.Заупокойная лития||(иерей Петр,л.х.)",
+      "rawService": "Часы.Литургия.Водосвятный молебен.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Петр,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Часы. Литургия. Водосвятный молебен. Заупокойная лития",
+      "kind": "service_block",
+      "family": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRouteStatic": "HOUR3,HOUR6,LITURGY",
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 53,
+      "dateIfQualifiedCurrentMonth": "2026-11-15",
+      "time": "09:40",
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,15 ноября",
+      "rawFeasts": [
+        "НЕДЕЛЯ 24-я ПО ПЯТИДЕСЯТНИЦЕ.МЧЧ.АКИНДИНА,ПИГАСИЯ,АФФОНИЯ И ДР"
+      ],
+      "rawRow": "9:40 — Часы.Литургия.Молебен.Заупокойная лития||(иерей Александр,иерей Павел,п.х.)",
+      "rawService": "Часы.Литургия.Молебен.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Александр,иерей Павел,п.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Часы. Литургия. Молебен. Заупокойная лития",
+      "kind": "service_block",
+      "family": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRouteStatic": "HOUR3,HOUR6,LITURGY",
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 54,
+      "dateIfQualifiedCurrentMonth": "2026-11-15",
+      "time": "17:00",
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,15 ноября",
+      "rawFeasts": [
+        "НЕДЕЛЯ 24-я ПО ПЯТИДЕСЯТНИЦЕ.МЧЧ.АКИНДИНА,ПИГАСИЯ,АФФОНИЯ И ДР"
+      ],
+      "rawRow": "17:00 — Молебен с акафистом Божией Матери пред иконой «Молченская»||(иерей Павел,л.х.)",
+      "rawService": "Молебен с акафистом Божией Матери пред иконой «Молченская»",
+      "rawDetails": [
+        "(иерей Павел,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Молебен с акафистом Божией Матери пред иконой «Молченская»",
+      "kind": "service_block",
+      "family": "MOLEBEN_WITH_AKATHIST",
+      "readingRouteStatic": null,
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 62,
+      "dateIfQualifiedCurrentMonth": "2026-11-18",
+      "time": "08:00",
+      "rawHeader": "СРЕДА,18 ноября",
+      "rawFeasts": [
+        "СВТ.ТИХОНА,ПАТРИАРХА МОСКОВСКОГО И ВСЕЯ РУСИ.ОТЦОВ ПОМЕСТНОГО СОБОРА ЦЕРКВИ РУССКОЙ 1917-1918 ГОДОВ"
+      ],
+      "rawRow": "8:00 — Полиелейная утреня(помазание).Литургия.Молебен.Заупокойная лития||(иерей Петр,л.х.)",
+      "rawService": "Полиелейная утреня(помазание).Литургия.Молебен.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Петр,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Полиелейная утреня(помазание). Литургия. Молебен. Заупокойная лития",
+      "kind": "service_block",
+      "family": "MIXED_OR_OTHER",
+      "readingRouteStatic": null,
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 65,
+      "dateIfQualifiedCurrentMonth": "2026-11-19",
+      "time": "08:00",
+      "rawHeader": "ЧЕТВЕРГ,19 ноября",
+      "rawFeasts": [
+        "СВТ.ПАВЛА,ПАТРИАРХА КОНСТАНТИНОПОЛЬСКОГО.ПРП.ВАРЛААМА ХУТЫНСКОГО"
+      ],
+      "rawRow": "8:00 — Утреня.Литургия.Молебен.Заупокойная лития||(иерей Петр,л.х.)",
+      "rawService": "Утреня.Литургия.Молебен.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Петр,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Утреня. Литургия. Молебен. Заупокойная лития",
+      "kind": "service_block",
+      "family": "MIXED_OR_OTHER",
+      "readingRouteStatic": null,
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 68,
+      "dateIfQualifiedCurrentMonth": "2026-11-20",
+      "time": "08:00",
+      "rawHeader": "ПЯТНИЦА,20 ноября",
+      "rawFeasts": [
+        "МЧЧ.33-Х,В МЕЛИТИНЕ ПОСТРАДАВШИХ.ПРП.ЛАЗАРЯ"
+      ],
+      "rawRow": "8:00 — Утреня.Литургия.Молебен.Заупокойная лития||(иерей Павел,л.х.)",
+      "rawService": "Утреня.Литургия.Молебен.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Павел,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Утреня. Литургия. Молебен. Заупокойная лития",
+      "kind": "service_block",
+      "family": "MIXED_OR_OTHER",
+      "readingRouteStatic": null,
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 69,
+      "dateIfQualifiedCurrentMonth": "2026-11-20",
+      "time": "18:00",
+      "rawHeader": "ПЯТНИЦА,20 ноября",
+      "rawFeasts": [
+        "МЧЧ.33-Х,В МЕЛИТИНЕ ПОСТРАДАВШИХ.ПРП.ЛАЗАРЯ"
+      ],
+      "rawRow": "18:00 — Всенощное бдение.Исповедь||(иерей Павел,л.х.)",
+      "rawService": "Всенощное бдение.Исповедь",
+      "rawDetails": [
+        "(иерей Павел,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Всенощное бдение. Исповедь",
+      "kind": "service_block",
+      "family": "VIGIL_WITH_CONFESSION",
+      "readingRouteStatic": "VIGIL_NEXT_LITURGICAL_DAY",
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 72,
+      "dateIfQualifiedCurrentMonth": "2026-11-21",
+      "time": "08:00",
+      "rawHeader": "СУББОТА,21 ноября",
+      "rawFeasts": [
+        "СОБОР АРХИСТРАТИГА МИХАИЛА И ПРОЧИХ НЕБЕСНЫХ СИЛ БЕСПЛОТНЫХ"
+      ],
+      "rawRow": "8:00 — Часы.Литургия.Панихида||(иерей Александр,л.х.)",
+      "rawService": "Часы.Литургия.Панихида",
+      "rawDetails": [
+        "(иерей Александр,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Часы. Литургия. Панихида",
+      "kind": "service_block",
+      "family": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRouteStatic": "HOUR3,HOUR6,LITURGY",
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 73,
+      "dateIfQualifiedCurrentMonth": "2026-11-21",
+      "time": "17:00",
+      "rawHeader": "СУББОТА,21 ноября",
+      "rawFeasts": [
+        "СОБОР АРХИСТРАТИГА МИХАИЛА И ПРОЧИХ НЕБЕСНЫХ СИЛ БЕСПЛОТНЫХ"
+      ],
+      "rawRow": "17:00 — Всенощное бдение.Исповедь||(все духовенство,л.х.)",
+      "rawService": "Всенощное бдение.Исповедь",
+      "rawDetails": [
+        "(все духовенство,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Всенощное бдение. Исповедь",
+      "kind": "service_block",
+      "family": "VIGIL_WITH_CONFESSION",
+      "readingRouteStatic": "VIGIL_NEXT_LITURGICAL_DAY",
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 76,
+      "dateIfQualifiedCurrentMonth": "2026-11-22",
+      "time": "06:40",
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,22 ноября",
+      "rawFeasts": [
+        "НЕДЕЛЯ 25-я ПО ПЯТИДЕСЯТНИЦЕ.МЧЧ.ОНИСИФОРА И ПОРФИРИЯ.ИКОНЫ БОЖИЕЙ МАТЕРИ «СКОРОПОСЛУШНИЦА»"
+      ],
+      "rawRow": "6:40 — Часы.Литургия.Водосвятный молебен.Заупокойная лития||(иерей Павел,л.х.)",
+      "rawService": "Часы.Литургия.Водосвятный молебен.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Павел,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Часы. Литургия. Водосвятный молебен. Заупокойная лития",
+      "kind": "service_block",
+      "family": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRouteStatic": "HOUR3,HOUR6,LITURGY",
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 77,
+      "dateIfQualifiedCurrentMonth": "2026-11-22",
+      "time": "09:40",
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,22 ноября",
+      "rawFeasts": [
+        "НЕДЕЛЯ 25-я ПО ПЯТИДЕСЯТНИЦЕ.МЧЧ.ОНИСИФОРА И ПОРФИРИЯ.ИКОНЫ БОЖИЕЙ МАТЕРИ «СКОРОПОСЛУШНИЦА»"
+      ],
+      "rawRow": "9:40 — Часы.Литургия.Молебен.Заупокойная лития||(иерей Александр,иерей Петр,п.х.)",
+      "rawService": "Часы.Литургия.Молебен.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Александр,иерей Петр,п.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Часы. Литургия. Молебен. Заупокойная лития",
+      "kind": "service_block",
+      "family": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRouteStatic": "HOUR3,HOUR6,LITURGY",
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 78,
+      "dateIfQualifiedCurrentMonth": "2026-11-22",
+      "time": "17:00",
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,22 ноября",
+      "rawFeasts": [
+        "НЕДЕЛЯ 25-я ПО ПЯТИДЕСЯТНИЦЕ.МЧЧ.ОНИСИФОРА И ПОРФИРИЯ.ИКОНЫ БОЖИЕЙ МАТЕРИ «СКОРОПОСЛУШНИЦА»"
+      ],
+      "rawRow": "17:00 — Молебен с акафистом прп.Сергию Радонежскому||(иерей Петр,л.х.)",
+      "rawService": "Молебен с акафистом прп.Сергию Радонежскому",
+      "rawDetails": [
+        "(иерей Петр,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Молебен с акафистом прп. Сергию Радонежскому",
+      "kind": "service_block",
+      "family": "MOLEBEN_WITH_AKATHIST",
+      "readingRouteStatic": null,
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 86,
+      "dateIfQualifiedCurrentMonth": "2026-11-25",
+      "time": "08:00",
+      "rawHeader": "СРЕДА,25 ноября",
+      "rawFeasts": [
+        "СВТ.ИОАННА МИЛОСТИВОГО,ПАТРИАРХА АЛЕКСАНДРИЙСКОГО"
+      ],
+      "rawRow": "8:00 — Утреня.Литургия.Молебен для страждущих недугом пианства.Заупокойная лития||(иерей Петр,л.х.)",
+      "rawService": "Утреня.Литургия.Молебен для страждущих недугом пианства.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Петр,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Утреня. Литургия. Молебен для страждущих недугом пианства. Заупокойная лития",
+      "kind": "service_block",
+      "family": "MIXED_OR_OTHER",
+      "readingRouteStatic": null,
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 89,
+      "dateIfQualifiedCurrentMonth": "2026-11-26",
+      "time": "08:00",
+      "rawHeader": "ЧЕТВЕРГ,26 ноября",
+      "rawFeasts": [
+        "СВТ.ИОАННА ЗЛАТОУСТОГО,АРХИЕП.КОНСТАНТИНОПОЛЬСКОГО.ЗАГОВЕНЬЕ НА РОЖДЕСТВЕНСКИЙ(ФИЛИППОВ) ПОСТ"
+      ],
+      "rawRow": "8:00 — Полиелейная утреня(помазание).Литургия.Молебен.Заупокойная лития||(иерей Петр,л.х.)",
+      "rawService": "Полиелейная утреня(помазание).Литургия.Молебен.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Петр,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Полиелейная утреня(помазание). Литургия. Молебен. Заупокойная лития",
+      "kind": "service_block",
+      "family": "MIXED_OR_OTHER",
+      "readingRouteStatic": null,
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 92,
+      "dateIfQualifiedCurrentMonth": "2026-11-27",
+      "time": "08:00",
+      "rawHeader": "ПЯТНИЦА,27 ноября",
+      "rawFeasts": [
+        "АПОСТОЛА ФИЛИППА"
+      ],
+      "rawRow": "8:00 — Полиелейная утреня(помазание).Литургия.Молебен.Заупокойная лития||(иерей Александр,л.х.)",
+      "rawService": "Полиелейная утреня(помазание).Литургия.Молебен.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Александр,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Полиелейная утреня(помазание). Литургия. Молебен. Заупокойная лития",
+      "kind": "service_block",
+      "family": "MIXED_OR_OTHER",
+      "readingRouteStatic": null,
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 93,
+      "dateIfQualifiedCurrentMonth": "2026-11-27",
+      "time": "18:00",
+      "rawHeader": "ПЯТНИЦА,27 ноября",
+      "rawFeasts": [
+        "АПОСТОЛА ФИЛИППА"
+      ],
+      "rawRow": "18:00 — Вечерня.Утреня с акафистом свт.Иннокентию Иркутскому.Исповедь||(иерей Павел,л.х.)",
+      "rawService": "Вечерня.Утреня с акафистом свт.Иннокентию Иркутскому.Исповедь",
+      "rawDetails": [
+        "(иерей Павел,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Вечерня. Утреня с акафистом свт. Иннокентию Иркутскому. Исповедь",
+      "kind": "service_block",
+      "family": "MIXED_OR_OTHER",
+      "readingRouteStatic": null,
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 96,
+      "dateIfQualifiedCurrentMonth": "2026-11-28",
+      "time": "08:00",
+      "rawHeader": "СУББОТА,28 ноября",
+      "rawFeasts": [
+        "МЧЧ.И ИСПП.ГУРИЯ,САМОНА И АВИВА.НАЧАЛО РОЖДЕСТВЕНСКОГО ПОСТА"
+      ],
+      "rawRow": "8:00 — Часы.Литургия.Панихида||(иерей Павел,л.х.)",
+      "rawService": "Часы.Литургия.Панихида",
+      "rawDetails": [
+        "(иерей Павел,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Часы. Литургия. Панихида",
+      "kind": "service_block",
+      "family": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRouteStatic": "HOUR3,HOUR6,LITURGY",
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 97,
+      "dateIfQualifiedCurrentMonth": "2026-11-28",
+      "time": "17:00",
+      "rawHeader": "СУББОТА,28 ноября",
+      "rawFeasts": [
+        "МЧЧ.И ИСПП.ГУРИЯ,САМОНА И АВИВА.НАЧАЛО РОЖДЕСТВЕНСКОГО ПОСТА"
+      ],
+      "rawRow": "17:00 — Всенощное бдение.Исповедь||(все духовенство,п.х.)",
+      "rawService": "Всенощное бдение.Исповедь",
+      "rawDetails": [
+        "(все духовенство,п.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Всенощное бдение. Исповедь",
+      "kind": "service_block",
+      "family": "VIGIL_WITH_CONFESSION",
+      "readingRouteStatic": "VIGIL_NEXT_LITURGICAL_DAY",
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 100,
+      "dateIfQualifiedCurrentMonth": "2026-11-29",
+      "time": "06:40",
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,29 ноября",
+      "rawFeasts": [
+        "НЕДЕЛЯ 26-я ПО ПЯТИДЕСЯТНИЦЕ.АПОСТОЛА И ЕВАНГЕЛИСТА МАТФЕЯ"
+      ],
+      "rawRow": "6:40 — Часы.Литургия.Водосвятный молебен.Заупокойная лития||(иерей Петр,л.х.)",
+      "rawService": "Часы.Литургия.Водосвятный молебен.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Петр,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Часы. Литургия. Водосвятный молебен. Заупокойная лития",
+      "kind": "service_block",
+      "family": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRouteStatic": "HOUR3,HOUR6,LITURGY",
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 101,
+      "dateIfQualifiedCurrentMonth": "2026-11-29",
+      "time": "09:40",
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,29 ноября",
+      "rawFeasts": [
+        "НЕДЕЛЯ 26-я ПО ПЯТИДЕСЯТНИЦЕ.АПОСТОЛА И ЕВАНГЕЛИСТА МАТФЕЯ"
+      ],
+      "rawRow": "9:40 — Часы.Литургия.Молебен.Заупокойная лития||(иерей Александр,иерей Павел,п.х.)",
+      "rawService": "Часы.Литургия.Молебен.Заупокойная лития",
+      "rawDetails": [
+        "(иерей Александр,иерей Павел,п.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Часы. Литургия. Молебен. Заупокойная лития",
+      "kind": "service_block",
+      "family": "HOURS_LITURGY_WITH_EXTRAS",
+      "readingRouteStatic": "HOUR3,HOUR6,LITURGY",
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    },
+    {
+      "sourceLine": 102,
+      "dateIfQualifiedCurrentMonth": "2026-11-29",
+      "time": "17:00",
+      "rawHeader": "!ВОСКРЕСЕНЬЕ,29 ноября",
+      "rawFeasts": [
+        "НЕДЕЛЯ 26-я ПО ПЯТИДЕСЯТНИЦЕ.АПОСТОЛА И ЕВАНГЕЛИСТА МАТФЕЯ"
+      ],
+      "rawRow": "17:00 — Молебен с акафистом Божией Матери пред иконой «Молченская»||(иерей Павел,л.х.)",
+      "rawService": "Молебен с акафистом Божией Матери пред иконой «Молченская»",
+      "rawDetails": [
+        "(иерей Павел,л.х.)"
+      ],
+      "expectedScheduleAdmission": "EXPECTED_BY_STATIC_CODE_REVIEW_NOT_RUN",
+      "expectedOmissionReason": null,
+      "expectedTitle": "Молебен с акафистом Божией Матери пред иконой «Молченская»",
+      "kind": "service_block",
+      "family": "MOLEBEN_WITH_AKATHIST",
+      "readingRouteStatic": null,
+      "fixed15Window": true,
+      "current16Window": true,
+      "actualParserResult": "NOT_RUN"
+    }
+  ],
+  "warning": "Counts are source inventory. If unchanged guards lawfully omit any, root records concrete reason and knownPartial rather than weakening a guard to meet this expectation"
+}

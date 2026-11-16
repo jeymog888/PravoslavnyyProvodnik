@@ -221,6 +221,9 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                                 style = if (schedule?.next == null) MaterialTheme.typography.titleLarge else MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.testTag("today_schedule_empty"))
                             if (schedule?.next == null) {
+                                if (schedule?.yearInferred == true) Text("Год не указан - проверьте дату в расписании",
+                                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.testTag("today_empty_inferred_year"))
                                 val description = scheduleEmptyDescription(ownState, onOpenScheduleSource != null, church, schedule?.knownPartial == true)
                                 if (schedule?.knownPartial == true) PartialScheduleNotice(schedule.sourceUrl, onOpenScheduleUrl, "today_empty", description)
                                 else Text(description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

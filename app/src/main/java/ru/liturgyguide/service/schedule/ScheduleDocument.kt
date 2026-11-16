@@ -31,7 +31,11 @@ data class ScheduleDocumentLine(val text: String, val confidence: Int = 100, val
     val htmlCalendarNotice: ScheduleHtmlCalendarNotice? = null,
     // Exact original text origin. Suppression also requires its notice in the final page.
     val htmlCalendarScope: ScheduleHtmlCalendarScope? = null,
-    val htmlCalendarScopeAmbiguous: Boolean = false)
+    val htmlCalendarScopeAmbiguous: Boolean = false,
+    // Extractor-local provenance must never be restored from JSON or make Gson reflect YearMonth.
+    @Transient val htmlYearlessCalendar: ScheduleYearlessCalendarLine? = null,
+    // Exact neutral DOM-menu proof is also transient; JSON cannot establish its authority.
+    @Transient val htmlNavigationLabel: String? = null)
 enum class ScheduleOcrFailure { UNSUPPORTED_LAYOUT, CONFLICTING_EVIDENCE }
 data class ScheduleDocumentPage(val lines: List<ScheduleDocumentLine>,
     // Audit-only text from every completed pass, including an unsuccessful repair. Never
@@ -70,15 +74,17 @@ fun interface ScheduleDocumentExtractor {
 }
 
 object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
-    override suspend fun extract(response: ScheduleResponse): ScheduleDocument? = response.html()?.let(::fromHtml)
+    override suspend fun extract(response: ScheduleResponse): ScheduleDocument? = response.html()?.let { fromHtml(it) }
 
-    fun fromHtml(document: Document): ScheduleDocument {
+    fun fromHtml(document: Document, today: java.time.LocalDate? = null): ScheduleDocument {
         val copy = document.clone()
         ScheduleHtmlDiscussion.removeFrom(copy)
+        val yearlessCalendars = today?.let { ScheduleYearlessDataCalendar.extract(copy, it) }.orEmpty()
         val platform = MyPrihodScheduleHtml.prepare(copy)
         if (platform?.conflict == true) return ScheduleDocument(document.baseUri(), "html",
             listOf(ScheduleDocumentPage(emptyList(), ocrFailure = ScheduleOcrFailure.CONFLICTING_EVIDENCE)))
-        copy.select("script,style,nav,[role=navigation],footer,aside,header,[hidden],.sidebar").remove()
+        copy.select("script,style,nav,[role=navigation],footer,aside,header,[hidden],.sidebar")
+            .filterNot { it in yearlessCalendars }.forEach { it.remove() }
         // Sibling headings may identify the building for each of several articles. Selecting only
         // the first article would lose that scope and silently discard the selected church's section.
         // Older parish sites use a named content div instead of semantic HTML. Only select
@@ -126,6 +132,7 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
             }
             clone.select("br").forEach { it.before("\n") }
             val wholeText = clone.wholeText()
+            val menuLabel = ScheduleHtmlNavigation.isPureMenuLabel(element)
             val wholeRow = wholeText.takeIf { it.length <= 2_000 && element.tagName() == "li" && htmlDayContainer != null && element.parent()?.let(listDays::get) == htmlDayContainer }
             return wholeText.lines().map { it.replace(Regex("[\\t ]+"), " ").trim() }
                 .filter(String::isNotBlank).map { ScheduleDocumentLine(it, struck = element.select("s,del,strike").isNotEmpty(),
@@ -134,6 +141,7 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
                     htmlDayHeading = wholeText.takeIf { it.length <= 2_000 && element.tagName().matches(Regex("h[1-6]")) &&
                         dayMembers[element] == htmlDayContainer && htmlDayContainer != null },
                     htmlEventRow = wholeRow, htmlScopeText = wholeText.takeIf { raw -> raw.length <= 2_000 },
+                    htmlNavigationLabel = it.takeIf { menuLabel && ScheduleHtmlNavigation.neutral(it) },
                     htmlCalendarScope = calendarScope, htmlCalendarScopeAmbiguous = ambiguousOrigin) }
         }
         fun table(element: Element) {
@@ -204,6 +212,7 @@ object HtmlScheduleDocumentExtractor : ScheduleDocumentExtractor {
             lines += ScheduleDocumentLine("", endsTable = true)
         }
         fun walk(element: Element, parentDay: Int? = null) {
+            yearlessCalendars[element]?.let { lines.addAll(it); return }
             val htmlDay = listDays[element] ?: dayMembers[element] ?: parentDay
             if (element.hasClass("sch-day-item")) {
                 lines += ScheduleCalendarCards.extract(element, document.baseUri())

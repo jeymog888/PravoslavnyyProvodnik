@@ -69,7 +69,7 @@ internal fun rememberReadingBeforeSchedule(
 internal data class ArrivalSchedule(
     val entries: List<ParishService>, val featured: ParishService?, val relation: String?,
     val saved: Boolean, val publication: SchedulePublication?, val next: ArrivalScheduleOffer? = null,
-    val knownPartial: Boolean = false, val sourceUrl: String? = null
+    val knownPartial: Boolean = false, val sourceUrl: String? = null, val yearInferred: Boolean = false
 )
 
 internal data class ArrivalScheduleOffer(val service: ParishService, val saved: Boolean, val yearInferred: Boolean,
@@ -118,9 +118,12 @@ internal fun arrivalSchedule(church: Parish, date: LocalDate, now: Instant?, sta
         nextScheduleOffer(church, date, now, publication) else null
     val emptyKnownPartial = next?.knownPartial ?: if (church.schedule.isNotEmpty()) church.scheduleKnownPartial else publication?.knownPartial == true
     val emptySourceUrl = (next?.sourceUrl ?: ScheduleUrl.publicSource(if (church.schedule.isNotEmpty()) church.sourceUrl else publication?.sourceUrl.orEmpty())).takeIf { emptyKnownPartial }
+    val emptyInferredYear = next?.yearInferred ?: (publication?.yearInferred == true &&
+        (church.schedule.isEmpty() || publication.sourceUrl == church.sourceUrl))
     return ArrivalSchedule(entries, featured, relation, saved, publication, next,
         knownPartial = if (entries.isNotEmpty()) knownPartial else emptyKnownPartial,
-        sourceUrl = if (entries.isNotEmpty()) sourceUrl else emptySourceUrl)
+        sourceUrl = if (entries.isNotEmpty()) sourceUrl else emptySourceUrl,
+        yearInferred = if (entries.isNotEmpty()) inferredYear else emptyInferredYear)
 }
 
 /** Inspect only known dates, retaining the same per-day source priority and validity checks. */
