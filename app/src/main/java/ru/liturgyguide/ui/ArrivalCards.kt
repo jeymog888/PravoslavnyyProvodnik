@@ -275,9 +275,36 @@ internal fun scheduleCheckReceipt(state: InternetScheduleState?, timezone: Strin
     return "$result\nПопытка обновления: $checked"
 }
 
+/** A fresh displayed event must belong to the same admissible source and full publication. */
+internal fun isFreshPublishedService(church: Parish?, state: InternetScheduleState?, service: ParishService?, now: Instant?): Boolean {
+    if (church == null || state == null || service == null || now == null) return false
+    val publication = state.publication ?: return false
+    return state.status == InternetScheduleStatus.READY && !state.publicationRejected &&
+        !state.sourceNeedsVerification && !state.sourceHasWithdrawals && state.parishId == church.id &&
+        publication.parishId == church.id && publication.timezone == church.timezone && publication.isFresh(now) &&
+        publication.sourceUrl == state.sourceUrl && publication.sourceUrl == church.sourceUrl &&
+        ScheduleUrl.publicSource(publication.sourceUrl) != null && publication.events.any {
+            it.date == service.date && it.time == service.time && it.title == service.title && it.kind == service.kind
+        }
+}
+
+/** Keep detailed feedback unless this exact fresh event is displayed on the current surface. */
+internal fun visibleScheduleCheckReceipt(state: InternetScheduleState?, timezone: String, church: Parish?,
+    service: ParishService?, now: Instant?): String? {
+    val full = scheduleCheckReceipt(state, timezone, church) ?: return null
+    if (!isFreshPublishedService(church, state, service, now)) return full
+    val zone = runCatching { ZoneId.of(timezone) }.getOrNull() ?: return full
+    val checked = runCatching { Instant.parse(requireNotNull(state).checkedAt).atZone(zone) }.getOrNull() ?: return full
+    val today = requireNotNull(now).atZone(zone).toLocalDate()
+    return if (checked.toLocalDate() == today) "Проверено сегодня в " + checked.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+    else "Проверено: " + checked.format(DateTimeFormatter.ofPattern(
+        if (checked.year == today.year) "d MMMM, HH:mm:ss" else "d MMMM uuuu, HH:mm:ss", Locale.forLanguageTag("ru")))
+}
+
 @Composable
-internal fun ScheduleCheckReceipt(state: InternetScheduleState?, timezone: String, modifier: Modifier = Modifier, church: Parish? = null) {
-    val receipt = scheduleCheckReceipt(state, timezone, church) ?: return
+internal fun ScheduleCheckReceipt(state: InternetScheduleState?, timezone: String, modifier: Modifier = Modifier, church: Parish? = null,
+    visibleService: ParishService? = null, now: Instant? = null) {
+    val receipt = visibleScheduleCheckReceipt(state, timezone, church, visibleService, now) ?: return
     Text(receipt, style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = modifier.semantics { liveRegion = LiveRegionMode.Polite })

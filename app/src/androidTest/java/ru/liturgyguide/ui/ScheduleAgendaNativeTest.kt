@@ -40,6 +40,7 @@ class ScheduleAgendaNativeTest(private val dark: Boolean, width: Int, height: In
         val before = scrollPosition()
         compose.onNodeWithTag("church_agenda_open").performClick()
         compose.onNodeWithTag("schedule_agenda").assertExists()
+        assertSheetSystemBars()
         compose.onNode(hasText("Год не указан - проверьте дату в расписании", substring = false) and hasAnyAncestor(hasTestTag("schedule_agenda"))).assertExists()
         compose.onNode(hasText("Не все записи удалось прочитать", substring = false) and hasAnyAncestor(hasTestTag("schedule_agenda"))).assertExists()
         compose.onNode(hasText("Сохраненное расписание - проверьте изменения", substring = false) and hasAnyAncestor(hasTestTag("schedule_agenda"))).assertExists()
@@ -82,6 +83,7 @@ class ScheduleAgendaNativeTest(private val dark: Boolean, width: Int, height: In
         } }
         compose.onNodeWithTag("church_agenda_open").performClick()
         compose.waitForIdle()
+        assertSheetSystemBars()
         val openedInteractions = interactions
         reveal("schedule_agenda_source", "schedule_agenda_list").performClick()
         compose.runOnIdle { assertEquals(listOf(church.sourceUrl), urls); assertEquals(openedInteractions, interactions) }
@@ -93,6 +95,22 @@ class ScheduleAgendaNativeTest(private val dark: Boolean, width: Int, height: In
         compose.onNodeWithTag("schedule_agenda_close").performClick()
         compose.onNodeWithTag("church_agenda_open").assertDoesNotExist()
         report.put("sourceCallbackOwnerPreserved", true).put("revokedActionsDisabled", true)
+    }
+
+    private fun assertSheetSystemBars() {
+        compose.waitForIdle()
+        androidx.test.espresso.Espresso.onView(androidx.test.espresso.matcher.ViewMatchers.isRoot())
+            .inRoot(androidx.test.espresso.matcher.RootMatchers.isDialog()).check { view, missing ->
+                if (missing != null) throw missing
+                if (android.os.Build.VERSION.SDK_INT >= 30) {
+                    val controller = requireNotNull(requireNotNull(view).windowInsetsController)
+                    val appearance = controller.systemBarsAppearance
+                    assertEquals("Status icons must match the actual selected sheet theme", !dark,
+                        (appearance and android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS) != 0)
+                    assertEquals("Navigation icons must match the actual selected sheet theme", !dark,
+                        (appearance and android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS) != 0)
+                } else error("This selected native window check requires the owned API35 emulator")
+            }
     }
 
     companion object {

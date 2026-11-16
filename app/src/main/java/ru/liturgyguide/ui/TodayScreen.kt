@@ -56,6 +56,17 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
     val inferredYear = schedule?.publication?.let {
         it.yearInferred && (schedule?.saved == true || it.sourceUrl == church?.sourceUrl)
     } == true
+    val readingOwner = church?.id.orEmpty() + "\u0000" + date.toString()
+    var fullReadingForm by rememberSaveable(church?.id, date.toString()) { mutableStateOf<String?>(null) }
+    val retainedReadingControls = fullReadingForm?.takeIf {
+        it.length == readingOwner.length + 4 && it.startsWith(readingOwner + "\u0000")
+    }?.takeLast(3)?.takeIf { controls -> controls.all { it == '0' || it == '1' } }
+    val freshPublished = schedule != null && !schedule.saved && isFreshPublishedService(church, ownState, featured, now)
+    val compactReading = retainedReadingControls == null && freshPublished && churchReadingEntry(church, date, featured,
+        showLiturgy = true, showChooser = true, hasChooser = true, hasOpenService = onOpenService != null) == ChurchReadingEntry.COMPACT
+    val primaryReading = retainedReadingControls?.get(0)?.let { it == '1' } ?: (featured == null && personalStart == null)
+    val inlineChooser = retainedReadingControls?.get(1)?.let { it == '1' } ?: !primaryReading
+    val separateChooser = retainedReadingControls?.get(2)?.let { it == '1' } ?: primaryReading
     var chooserDateIso by rememberSaveable(church?.id) { mutableStateOf<String?>(null) }
     var editingSource by rememberSaveable(church?.id) { mutableStateOf(false) }
     val currentChurchId by rememberUpdatedState(church?.id)
@@ -116,17 +127,27 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
             }
             fun readingItems() {
                 item(key = "today_reading") {
-                    ArrivalCard(Modifier.testTag("today_reading_card"), accent = featured == null && personalStart == null) {
+                    if (compactReading) Box(Modifier.testTag("today_reading_card")) {
+                        ArrivalAction("Выбрать другой текст", Icons.Default.MenuBook,
+                            { if (onSourceSearchInteraction()) chooserDateIso = date.toString() },
+                            Modifier.testTag("today_other_services"))
+                    } else {
+                    SideEffect {
+                        if (retainedReadingControls == null) fullReadingForm = readingOwner + "\u0000" +
+                            (if (primaryReading) "1" else "0") + (if (inlineChooser) "1" else "0") + (if (separateChooser) "1" else "0")
+                    }
+                    ArrivalCard(Modifier.testTag("today_reading_card"), accent = primaryReading) {
                         Text("Читать службу", style = MaterialTheme.typography.titleLarge)
                         Text("Тексты на " + date.format(format) + ": оригинал, доступный русский перевод и объяснения",
                             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        if (featured == null && personalStart == null) Button(onClick = { onOpenBook(date, WorshipKind.LITURGY, false) },
+                        if (primaryReading) Button(onClick = { onOpenBook(date, WorshipKind.LITURGY, false) },
                             modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("start_guide")) { Text("Открыть литургию") }
-                        if (featured != null || personalStart != null) OutlinedButton(onClick = { if (onSourceSearchInteraction()) chooserDateIso = date.toString() },
+                        if (inlineChooser) OutlinedButton(onClick = { if (onSourceSearchInteraction()) chooserDateIso = date.toString() },
                             modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("today_other_services")) { Text("Выбрать другой текст") }
                     }
+                    }
                 }
-                if (featured == null && personalStart == null) item(key = "today_other_texts") {
+                if (!compactReading && separateChooser) item(key = "today_other_texts") {
                     ArrivalAction("Выбрать другой текст", Icons.Default.MenuBook, { if (onSourceSearchInteraction()) chooserDateIso = date.toString() },
                         Modifier.testTag("today_other_services"))
                 }
@@ -271,7 +292,7 @@ fun TodayScreen(church: Parish?, now: Instant, internetSchedule: InternetSchedul
                             CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                             Text(loadingTitle, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("today_schedule_loading"))
                         }
-                        ScheduleCheckReceipt(ownState, church.timezone, Modifier.testTag("today_schedule_checked"), church)
+                        ScheduleCheckReceipt(ownState, church.timezone, Modifier.testTag("today_schedule_checked"), church, featured, now)
                     }
                 }
                 if (!readingBeforeSchedule) personalItem()

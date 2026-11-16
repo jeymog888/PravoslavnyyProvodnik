@@ -96,6 +96,7 @@ internal fun ScheduleAgendaSheet(churchName: String, agenda: ScheduleAgenda, val
     val locale = Locale.forLanguageTag("ru")
     val dateFormat = remember { DateTimeFormatter.ofPattern("d MMMM", Locale.forLanguageTag("ru")) }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        GuideSheetSystemBars()
         Column(Modifier.fillMaxWidth().testTag("schedule_agenda")) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.Top) {
                 Column(Modifier.weight(1f)) {

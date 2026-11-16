@@ -186,7 +186,12 @@ class FallbackReadingEntryContractTest(church: Boolean) : FallbackReadingHarness
         assertTrue("A publication must not displace the card the person is reading", abs(after.top.value - before.top.value) <= 2f)
         capture("ready-anchor", report)
         compose.runOnIdle { assertTrue(calls.books.isEmpty()); assertTrue(calls.services.isEmpty()) }
-        if (!churchPage) compose.onNodeWithTag(primaryTag).assertDoesNotExist()
+        val retainedManual = if (churchPage) emptyList() else
+            listOf(FallbackBookRequest(LocalDate.of(2027, 1, 1), WorshipKind.LITURGY))
+        if (!churchPage) {
+            reveal(primaryTag).assertIsEnabled().assertTextContains("Открыть литургию").performClick()
+            compose.runOnIdle { assertEquals(retainedManual, calls.books); assertTrue(calls.services.isEmpty()) }
+        }
         reveal(officialTag, searchBackwards = true).assertIsEnabled()
         compose.onAllNodesWithTag(officialTag).assertCountEquals(1)
         compose.onNodeWithTag(if (churchPage) "church_service_time" else "today_service_time").assertTextEquals("17:00")
@@ -194,7 +199,7 @@ class FallbackReadingEntryContractTest(church: Boolean) : FallbackReadingHarness
         reveal(officialTag).performClick()
         compose.runOnIdle {
             assertEquals(if (churchPage) listOf(published) else emptyList<ParishService>(), calls.services)
-            assertEquals(if (churchPage) emptyList<FallbackBookRequest>() else
+            assertEquals(retainedManual + if (churchPage) emptyList() else
                 listOf(FallbackBookRequest(LocalDate.of(2027, 1, 1), WorshipKind.VESPERS)), calls.books)
         }
         // A temporary refresh failure must retain the actual published service, not resurrect the fallback.
