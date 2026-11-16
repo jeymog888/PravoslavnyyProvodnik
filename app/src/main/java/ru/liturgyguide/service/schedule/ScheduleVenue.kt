@@ -22,7 +22,9 @@ internal object ScheduleVenue {
     private val calendarFeast = Regex("(?iu)(?<![а-яё])собор\\s+архистратига\\s+михаила\\s+и\\s+прочих\\s+небесных\\s+сил\\s+бесплотных(?![а-яё])")
     // Full name of the council commemoration, including its historical years. An
     // explicit building marker outside this phrase remains subject to venue matching.
-    private val localCouncilFeast = Regex("(?iu)(?<![а-яё])отцов\\s+поместного\\s+собора\\s+церкви\\s+русской\\s+1917[./-]1918\\s+годов(?![а-яё])")
+    private val localCouncilFeast = Regex("(?iu)(?<![а-яё])отцов\\s+поместного\\s+собора\\s+церкви\\s+русской\\s+1917[./–-]1918\\s+годов(?![а-яё])")
+    // The complete historical dedication memory is a calendar name, not a service location.
+    private val lyddaDedicationFeast = Regex("(?iu)(?<![а-яё])обновление\\s+храма\\s+вмч\\.\\s+георгия\\s+в\\s+лидде(?![а-яё])")
     private val shortMichaelFeast = Regex("(?iu)(?<![а-яё])собор(?=\\s+архистратига\\s+михаила(?![а-яё]))")
     private val martyrsFeast = Regex("(?iu)(?<![а-яё])собор(?=\\s+новомучеников(?![а-яё]))")
     private val nameWord = Regex("(?iu)[а-яёa-z-]+")
@@ -55,24 +57,28 @@ internal object ScheduleVenue {
 
     /** Exact already-supported calendar names, for reconstruction within a proven OCR column. */
     internal fun calendarRanges(text: String): List<IntRange> =
-        (calendarFeast.findAll(text) + localCouncilFeast.findAll(text)).map { it.range }.toList()
+        (calendarFeast.findAll(text) + localCouncilFeast.findAll(text) + lyddaDedicationFeast.findAll(text))
+            .map { it.range }.toList()
 
     fun isLabel(text: String): Boolean {
         if (isUnqualifiedStatement(text)) return false
-        val candidate = (parishInLegalName(text) ?: text).replace(calendarFeast, " ").replace(localCouncilFeast, " ")
+        val source = parishInLegalName(text) ?: text
+        val candidate = source.replace(calendarFeast, " ").replace(localCouncilFeast, " ").replace(lyddaDedicationFeast, " ")
         val markers = buildingMarkers(candidate)
         val hasIntroducer = markers.any { introducer.containsMatchIn(candidate.substring(it.range.last + 1)) }
         // A clock must not turn an incomplete named heading into an unscoped section.
         val incompleteIntroducer = hasIntroducer && slices(candidate)?.any { !it.valid } == true
         return markers.isNotEmpty() && !service.containsMatchIn(candidate) &&
             (!clock.containsMatchIn(candidate) || incompleteIntroducer) &&
-            (tokens(candidate).isNotEmpty() || hasIntroducer)
+            // Masking a calendar memory must not hide a remaining nameless "в храме".
+            // Retain that ambiguity as venue evidence; matches() still requires an identity.
+            (tokens(candidate).isNotEmpty() || hasIntroducer || candidate != source)
     }
 
     fun inlineLabel(text: String, calendarDate: LocalDate? = null, datedPreface: Boolean = false): String? {
         if (isUnqualifiedStatement(text)) return null
         parishInLegalName(text)?.let { return it }
-        var candidate = text.replace(calendarFeast, " ").replace(localCouncilFeast, " ")
+        var candidate = text.replace(calendarFeast, " ").replace(localCouncilFeast, " ").replace(lyddaDedicationFeast, " ")
         // A calendar preface before the first clock in a dated service row is not a venue.
         // Standalone building headings, separate venue cells and locations after the clock
         // remain subject to identity checks, including churches dedicated to the same feast.

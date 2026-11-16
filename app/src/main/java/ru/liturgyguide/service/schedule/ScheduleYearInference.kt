@@ -29,7 +29,15 @@ internal object ScheduleYearInference {
         if (printedYear.findAll(sourceLocation).any { it.value.toInt() != today.year }) return emptyMap()
         // A printed stale year must never be replaced by the phone's year, including a
         // two-digit year. A different page of the same document is still publication evidence.
-        if (pages.any { page -> page.lines.any { printedYear.containsMatchIn(it.text) || shortPrintedYear.containsMatchIn(it.text) } }) return emptyMap()
+        if (pages.any { page -> page.lines.any { line ->
+                // Historical years inside a complete known calendar name are not the
+                // publication year. Compare ranges on the same original UTF-16 text;
+                // every year outside those exact spans remains publication evidence.
+                val calendar = ScheduleVenue.calendarRanges(line.text)
+                printedYear.findAll(line.text).any { year -> calendar.none { range ->
+                    year.range.first >= range.first && year.range.last <= range.last
+                } } || shortPrintedYear.containsMatchIn(line.text)
+            } }) return emptyMap()
         return pages.mapIndexedNotNull { index, page -> month(page, today)?.let { index to it } }.toMap()
     }
 
