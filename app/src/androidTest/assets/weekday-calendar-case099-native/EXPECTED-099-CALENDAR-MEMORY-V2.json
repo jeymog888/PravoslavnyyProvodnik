@@ -1,0 +1,107 @@
+{
+  "classification": "DERIVED_V2_EXACT_SOURCE_ROW11_AFTER_CANONICAL_COUNCIL_MEMORY_NOT_HOLDOUT_SUCCESS",
+  "sourceSha256": "1e87ee032275e9654be3d4185dc284c28b1d332c3ac866e00214bd7f97bd9a38",
+  "today": "2026-11-15",
+  "clockCapturedAt": "2026-11-15T16:35:59.007419Z",
+  "selectedId": "osm:way:367166563",
+  "expectedEvents": [
+    {
+      "date": "2026-11-14",
+      "time": "09:00",
+      "title": "Литургия",
+      "kind": "liturgy"
+    },
+    {
+      "date": "2026-11-15",
+      "time": "09:00",
+      "title": "Литургия",
+      "kind": "liturgy"
+    },
+    {
+      "date": "2026-11-18",
+      "time": "09:00",
+      "title": "Молебен",
+      "kind": "service_block"
+    },
+    {
+      "date": "2026-11-21",
+      "time": "09:00",
+      "title": "Литургия",
+      "kind": "liturgy"
+    },
+    {
+      "date": "2026-11-26",
+      "time": "09:00",
+      "title": "Литургия",
+      "kind": "liturgy"
+    },
+    {
+      "date": "2026-11-29",
+      "time": "09:00",
+      "title": "Литургия",
+      "kind": "liturgy"
+    }
+  ],
+  "knownPartial": true,
+  "sourceComplete": false,
+  "mustNotContainDates": [
+    "2026-11-09",
+    "2026-11-23",
+    "2026-11-28"
+  ],
+  "mustNotInventDates": [
+    "2026-11-08",
+    "2026-11-22"
+  ],
+  "knownCurrentOmissions": [
+    {
+      "date": "2026-11-21",
+      "time": "16:00",
+      "printedService": "Бдение",
+      "reason": "Existing service vocabulary, not expanded here"
+    }
+  ],
+  "limits": [
+    "Import window unchanged today-1..+45",
+    "Past-only mismatch does not establish current knownPartial",
+    "Existing venue/cancellation/source authority rules retained",
+    "No whole-source completeness or independent percentage claim",
+    "Full book content and physical Main flow outside this source oracle",
+    "Recovered18Nov Moleben remains service_block and does not select a Liturgy book"
+  ],
+  "historicalOracleFile": "EXPECTED-099.json",
+  "historicalOracleSha256": "adf3676ea2c5edae2de86a3fc7359772d509e1aea66aff6afc7db341d7d486f4",
+  "sourceRowsSha256": "dbe800b5ee68d8e8bfd7a248bfc41aaa0124dc6ba3cabcf554812428de9d2d64",
+  "derivation": "Historical five byte-pinned expectations plus independently transcribed physical row11; no parser output used",
+  "additionalEvents": [
+    {
+      "date": "2026-11-18",
+      "time": "09:00",
+      "title": "Молебен",
+      "kind": "service_block"
+    }
+  ],
+  "additionalSourceProof": {
+    "articleHeading": "Расписание богослужений в ноябре 2026 года",
+    "physicalRow": 11,
+    "sourceCellOriginPhysicalRows": [
+      11,
+      11,
+      11,
+      11,
+      11
+    ],
+    "literalCells": [
+      "Ср.",
+      "18",
+      "Свт. Тихона, патриарха Московского и всея Руси (избрание на Патриарший престол 1917). Отцов Поместного Собора Церкви Русской 1917–1918 годов*.",
+      "9-00",
+      "Молебен"
+    ],
+    "exactRawRow": "<tr><td><strong>Ср.</strong></td><td><strong>18</strong></td><td>Свт. Тихона, патриарха Московского и всея Руси (избрание на Патриарший престол 1917). Отцов Поместного Собора Церкви Русской 1917–1918 годов*.</td><td><strong>9-00</strong></td><td><strong>Молебен</strong></td></tr>",
+    "calendarDate": "2026-11-18",
+    "isoWeekday": 3,
+    "yearInferred": false
+  },
+  "proofKind": "INDEPENDENT_SOURCE_ROW_PROOF_NOT_RUNTIME_RESULT"
+}

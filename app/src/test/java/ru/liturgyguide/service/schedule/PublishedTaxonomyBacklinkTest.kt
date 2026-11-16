@@ -1,5 +1,7 @@
 package ru.liturgyguide.service.schedule
 
+import com.google.gson.JsonParser
+
 import kotlinx.coroutines.runBlocking
 import org.jsoup.Jsoup
 import org.junit.Assert.*
@@ -56,7 +58,7 @@ class PublishedTaxonomyBacklinkTest {
         assertEquals(category, filtered(metadata("Расписание на 17 ноября")).single().url)
     }
 
-    @Test fun exactRecordedArticleKeepsItsFiveRowsAndCannotBeRevokedByAPureTaxonomyJulyExcerpt() = runBlocking {
+    @Test fun exactRecordedArticleKeepsHistoricalFivePlusProvenMolebenWithoutTaxonomyRevocation() = runBlocking {
         val articleBytes = bytes("source.html")
         val archiveBytes = bytes("category.html")
         assertEquals("ef767c606c0e3da559ba99db8fef10fca56d88b98c36d5813b41244b8b1722be", ScheduleSourceCandidate.sha(archiveBytes))
@@ -86,7 +88,15 @@ class PublishedTaxonomyBacklinkTest {
         val state = repository.refresh(parish, Instant.parse("2026-11-15T16:35:59Z"), sourceOverride = articleUrl)
         assertEquals(InternetScheduleStatus.READY, state.status)
         val publication = requireNotNull(state.publication)
-        assertEquals(listOf(14,15,21,26,29).map { InternetService("2026-11-$it", "09:00", "Литургия", "liturgy") }, publication.events)
+        val historicalFive = listOf(14,15,21,26,29).map { InternetService("2026-11-$it", "09:00", "Литургия", "liturgy") }
+        val expectedEvents = (historicalFive + InternetService("2026-11-18", "09:00", "Молебен", "service_block"))
+            .sortedBy { "${it.date}T${it.time}" }
+        val derived = JsonParser.parseString(bytes("EXPECTED-099-CALENDAR-MEMORY-V2.json").toString(Charsets.UTF_8)).asJsonObject
+            .getAsJsonArray("expectedEvents").map { it.asJsonObject.let { e ->
+                InternetService(e["date"].asString, e["time"].asString, e["title"].asString, e["kind"].asString)
+            } }
+        assertEquals(expectedEvents, derived)
+        assertEquals(expectedEvents, publication.events)
         assertTrue(publication.knownPartial)
         assertEquals(articleUrl, publication.sourceUrl)
         assertFalse(state.publicationRejected || state.sourceHasWithdrawals)
@@ -96,7 +106,7 @@ class PublishedTaxonomyBacklinkTest {
         val offline = InternetScheduleRepository(ScheduleTransport { error("Offline cache read must not request HTTP") }, cache,
             siteResolver = ScheduleSiteResolver { null })
         assertEquals(state, offline.cached(parish))
-        assertEquals(5, requireNotNull(offline.cached(parish).publication).events.size)
+        assertEquals(expectedEvents, requireNotNull(offline.cached(parish).publication).events)
     }
 
     @Test fun taxonomyNeedsOnePublicationOwnerOutsideContentAndBothRelationTokens() {

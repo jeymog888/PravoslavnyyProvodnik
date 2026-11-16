@@ -111,9 +111,17 @@ class WeekdayCalendarRootSafetyTest {
             caption = "<caption>Все богослужения отменены</caption>") + neighbors)
         assertEquals(neighborEvents, mixed.events)
         assertEquals(setOf("2026-11-21T09:00"), mixed.withdrawnStarts)
-        val unknown = inspect(calendar(row(feast = "Отцов Поместного Собора Церкви Русской 1917–1918 годов"),
+        val canonical = "Отцов Поместного Собора Церкви Русской 1917–1918 годов"
+        val known = inspect(calendar(row(feast = canonical), caption = "<caption>Все богослужения отменены</caption>") + neighbors)
+        assertEquals(neighborEvents, known.events)
+        assertEquals(setOf("2026-11-21T09:00"), known.withdrawnStarts)
+        assertTrue(known.withdrawnDates.isEmpty())
+        assertFalse(known.withdrawsAll || known.unresolvedWithdrawal || known.safetyConflict)
+        // A genuinely incomplete name keeps the previous unresolved raw-venue safeguard.
+        val unknown = inspect(calendar(row(feast = canonical.removeSuffix(" годов")),
             caption = "<caption>Все богослужения отменены</caption>"))
-        assertTrue(unknown.unresolvedWithdrawal)
+        assertTrue(unknown.unresolvedWithdrawal && unknown.safetyConflict)
+        assertTrue(unknown.events.isEmpty())
         assertTrue(unknown.withdrawnStarts.isEmpty() && unknown.withdrawnDates.isEmpty())
         assertFalse(unknown.withdrawsAll)
     }

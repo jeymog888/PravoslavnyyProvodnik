@@ -21,7 +21,7 @@ class WeekdayCalendarScheduleTest {
         "<tr><td>$weekday</td><td>$day</td><td>$feast</td><td>$clock</td><td>$service</td></tr>"
     private fun calendar(rows: String, heading: String = "Расписание богослужений в ноябре 2026 года", owner: String = "article") =
         "<main><$owner><h2 class='entry-title'>$heading</h2><div class='entry-content'><table><tbody>$rows</tbody></table></div></$owner></main>"
-    private fun expected() = JsonParser.parseString(bytes("EXPECTED-099.json").toString(Charsets.UTF_8)).asJsonObject
+    private fun expected() = JsonParser.parseString(bytes("EXPECTED-099-CALENDAR-MEMORY-V2.json").toString(Charsets.UTF_8)).asJsonObject
         .getAsJsonArray("expectedEvents").map { it.asJsonObject.let { e ->
             InternetService(e["date"].asString, e["time"].asString, e["title"].asString, e["kind"].asString)
         } }
@@ -29,12 +29,28 @@ class WeekdayCalendarScheduleTest {
     @Test fun exactFrozenSourceAndRootPredeclaredOracleAreBytePinned() {
         assertEquals("1e87ee032275e9654be3d4185dc284c28b1d332c3ac866e00214bd7f97bd9a38", sha(bytes("source.html")))
         assertEquals("adf3676ea2c5edae2de86a3fc7359772d509e1aea66aff6afc7db341d7d486f4", sha(bytes("EXPECTED-099.json")))
+        assertEquals("c30fccd89f40794709cb9dfe2712b573c36d711bca5444569b92cfb608eff38d", sha(bytes("EXPECTED-099-CALENDAR-MEMORY-V2.json")))
+        val historical = JsonParser.parseString(bytes("EXPECTED-099.json").toString(Charsets.UTF_8)).asJsonObject
+            .getAsJsonArray("expectedEvents").map { it.asJsonObject.let { e ->
+                InternetService(e["date"].asString, e["time"].asString, e["title"].asString, e["kind"].asString)
+            } }
+        assertEquals(5, historical.size)
+        val additional = InternetService("2026-11-18", "09:00", "Молебен", "service_block")
+        assertEquals((historical + additional).sortedBy { "${it.date}T${it.time}" }, expected())
+        val derived = JsonParser.parseString(bytes("EXPECTED-099-CALENDAR-MEMORY-V2.json").toString(Charsets.UTF_8)).asJsonObject
+        val proof = derived.getAsJsonObject("additionalSourceProof")
+        assertEquals(11, proof["physicalRow"].asInt)
+        val inventory = JsonParser.parseString(bytes("source-rows.json").toString(Charsets.UTF_8)).asJsonObject.getAsJsonArray("rows")
+        val originalRow11 = inventory.single { it.asJsonObject["physicalRow"].asInt == 11 }.asJsonObject
+        assertEquals(originalRow11["literalCells"], proof["literalCells"])
+        assertEquals(originalRow11["sourceCellOriginPhysicalRows"], proof["sourceCellOriginPhysicalRows"])
+        assertTrue(bytes("source.html").toString(Charsets.UTF_8).contains(proof["exactRawRow"].asString))
         val receipt = JsonParser.parseString(bytes("source-receipt.json").toString(Charsets.UTF_8)).asJsonObject
         assertEquals(receipt["originalSha256"].asString, receipt["writtenSha256"].asString)
         assertEquals(sha(bytes("source.html")), receipt["originalSha256"].asString)
     }
 
-    @Test fun actualSourceReturnsOnlyTheFivePredeclaredLiturgiesAndKnownOmissions() {
+    @Test fun actualSourceReturnsHistoricalFivePlusIndependentlyProvenMolebenAndRetainsOtherOmissions() {
         val html = bytes("source.html").toString(Charsets.UTF_8)
         for (result in listOf(inspect(html), ScheduleHtmlParser.inspect(Jsoup.parse(html, base), today, parish))) {
             assertEquals(ScheduleParseDisposition.PARSED, result.disposition)
@@ -216,15 +232,19 @@ class WeekdayCalendarScheduleTest {
         assertFalse(parsed.withdrawsAll || parsed.unresolvedWithdrawal)
     }
 
-    @Test fun isolatedActualNovember18MolebenIsARealCurrentOmission() {
+    @Test fun isolatedActualNovember18MolebenAndKnownNovember21AreBothCompleteRows() {
         val inventory = JsonParser.parseString(bytes("source-rows.json").toString(Charsets.UTF_8)).asJsonObject.getAsJsonArray("rows")
         val cells = inventory.single { it.asJsonObject["physicalRow"].asInt == 11 }.asJsonObject.getAsJsonArray("literalCells").map { it.asString }
         val actualMoleben = "<tr>" + cells.joinToString("") { "<td>$it</td>" } + "</tr>"
         val html = calendar(actualMoleben + row())
         val parsed = inspect(html)
-        assertEquals(listOf(InternetService("2026-11-21", "09:00", "Литургия", "liturgy")), parsed.events)
-        assertTrue(parsed.knownPartial)
-        assertFalse(inspect(html, LocalDate.of(2026, 11, 19)).knownPartial)
+        val both = listOf(InternetService("2026-11-18", "09:00", "Молебен", "service_block"),
+            InternetService("2026-11-21", "09:00", "Литургия", "liturgy"))
+        assertEquals(both, parsed.events)
+        assertFalse(parsed.knownPartial)
+        val followingDay = inspect(html, LocalDate.of(2026, 11, 19))
+        assertEquals(both, followingDay.events)
+        assertFalse(followingDay.knownPartial)
     }
 
     @Test fun aThirtyOneDayMonthWithFourServicesPerDayFitsTheExistingSixHundredRowBound() {

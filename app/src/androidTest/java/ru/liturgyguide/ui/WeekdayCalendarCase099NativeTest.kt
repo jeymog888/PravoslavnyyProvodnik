@@ -37,6 +37,8 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import ru.liturgyguide.model.Parish
 import ru.liturgyguide.model.ParishService
+import ru.liturgyguide.model.WorshipKind
+import ru.liturgyguide.service.book.ServiceBookSelection
 import ru.liturgyguide.service.schedule.*
 import java.io.File
 import java.io.IOException
@@ -211,8 +213,26 @@ class WeekdayCalendarCase099NativeTest(
         val responseRows = rows(mapping, "providerResponses")
         assertEquals(10, responseRows.size)
         assertEquals(sourceUrl, responseRows.single { it["bodyFile"].asString == "responses/0040.body" }["requestedUrl"].asString)
-        val expectedEvents = rows(expected, "expectedEvents").map { gson.fromJson(it, InternetService::class.java) }
-        assertEquals(5, expectedEvents.size)
+        val historicalFive = rows(expected, "expectedEvents").map { gson.fromJson(it, InternetService::class.java) }
+        assertEquals(5, historicalFive.size)
+        // A separate derived oracle augments the immutable original package; never rewrite its inputs.
+        val derivedBytes = bytes("EXPECTED-099-CALENDAR-MEMORY-V2.json")
+        assertEquals("c30fccd89f40794709cb9dfe2712b573c36d711bca5444569b92cfb608eff38d", sha(derivedBytes))
+        val derived = json("EXPECTED-099-CALENDAR-MEMORY-V2.json")
+        assertEquals(sha(bytes("inputs/EXPECTED-099.json")), derived["historicalOracleSha256"].asString)
+        assertEquals(sha(bytes("inputs/case099/responses/0040.body")), derived["sourceSha256"].asString)
+        assertEquals(sha(bytes("inputs/case099-source-rows.json")), derived["sourceRowsSha256"].asString)
+        val rowProof = derived.getAsJsonObject("additionalSourceProof")
+        val originalRow11 = rows(json("inputs/case099-source-rows.json"), "rows").single { it["physicalRow"].asInt == 11 }
+        assertEquals(11, rowProof["physicalRow"].asInt)
+        assertEquals(originalRow11["literalCells"], rowProof["literalCells"])
+        assertEquals(originalRow11["sourceCellOriginPhysicalRows"], rowProof["sourceCellOriginPhysicalRows"])
+        assertTrue(bytes("inputs/case099/responses/0040.body").toString(Charsets.UTF_8).contains(rowProof["exactRawRow"].asString))
+        val additional = rows(derived, "additionalEvents").map { gson.fromJson(it, InternetService::class.java) }
+        assertEquals(listOf(InternetService("2026-11-18", "09:00", "Молебен", "service_block")), additional)
+        val expectedEvents = rows(derived, "expectedEvents").map { gson.fromJson(it, InternetService::class.java) }
+        assertEquals((historicalFive + additional).sortedBy { "${it.date}T${it.time}" }, expectedEvents)
+        assertEquals(6, expectedEvents.size)
 
         val owner = "weekday-calendar-case099-${UUID.randomUUID()}"
         val owned = File(app.cacheDir, owner).apply { check(!exists() && mkdirs()) }
@@ -238,6 +258,9 @@ class WeekdayCalendarCase099NativeTest(
             "passed" to false, "classification" to "KNOWN_CASE099_MANUAL_EXACT_URL_REPLAY_NOT_INDEPENDENT_SUCCESS",
             "entryMode" to "Original blank website; production sourceOverride with exact recorded article0040 URL",
             "owner" to owner, "selectedId" to parish.id, "clock" to now.toString(), "sourceUrl" to sourceUrl,
+            "derivedExpectation" to mapOf("historicalOracleSha256" to sha(bytes("inputs/EXPECTED-099.json")),
+                "derivedOracleSha256" to sha(derivedBytes), "additionalEvents" to additional,
+                "rowProof" to "Source physical row11, same original source SHA, independent manual transcription"),
             "requestedProfile" to mapOf("widthDp" to width, "heightDp" to height, "fontScale" to scale, "dark" to dark),
             "notMeasured" to listOf("coldDiscovery", "freshUserConfirmation", "physicalMain", "physicalProcessRestart",
                 "bookContent", "fullRussianTranslation", "wholeSourceCompleteness", "independentPercentage"),
@@ -308,7 +331,7 @@ class WeekdayCalendarCase099NativeTest(
                 assertFalse(publication.yearInferred)
                 assertTrue(publication.hasCurrentParserRevision)
                 assertTrue(publication.knownPartial)
-                assertEquals("Exact root five-event oracle including past14Nov", expectedEvents, publication.events)
+                assertEquals("Immutable historical five plus independently proven row11, including past14Nov", expectedEvents, publication.events)
                 (expected.getAsJsonArray("mustNotContainDates") + expected.getAsJsonArray("mustNotInventDates")).forEach { forbidden ->
                     assertFalse(publication.events.any { it.date == forbidden.asString })
                 }
@@ -322,7 +345,7 @@ class WeekdayCalendarCase099NativeTest(
                 assertEquals(expectedEvents.filter { LocalDate.parse(it.date) >= date }.map {
                     ParishService(it.date, it.time, it.title, it.kind)
                 }, projected.schedule)
-                assertEquals(4, projected.schedule.size)
+                assertEquals(expectedEvents.count { LocalDate.parse(it.date) >= date }, projected.schedule.size)
 
                 val rawBefore = requireNotNull(cache().read(parish.id))
                 val serialized = JsonParser.parseString(rawBefore).asJsonObject.getAsJsonObject("publication")
@@ -356,6 +379,8 @@ class WeekdayCalendarCase099NativeTest(
                 var generation by mutableIntStateOf(0)
                 val opened = mutableListOf<ParishService>()
                 val sources = mutableListOf<String>()
+                val manualBookChoices = mutableListOf<Triple<LocalDate, WorshipKind, Boolean>>()
+                var allowManualBookChoice = false
                 compose.setContent { GuideTheme(dark) {
                     Box(Modifier.fillMaxSize().testTag("weekday_calendar_native_host")) {
                         if (mounted) key(generation) {
@@ -368,7 +393,10 @@ class WeekdayCalendarCase099NativeTest(
                             else TodayScreen(current.parish, now, current.state, null, null,
                                 onFindChurch = {}, onChurchDetails = {}, onResumeBook = {}, onRefresh = {},
                                 onResumeLegacy = null, bottomBar = {}, onOpenService = { opened += it },
-                                onOpenBook = { _, _, _ -> error("Use the exact provider occurrence callback") },
+                                onOpenBook = { selectedDate, worship, evening ->
+                                    check(allowManualBookChoice) { "A published occurrence must not masquerade as a book route" }
+                                    manualBookChoices += Triple(selectedDate, worship, evening)
+                                },
                                 onOpenScheduleSource = { error("Use the exact URL callback") },
                                 onOpenScheduleUrl = { sources += it })
                         }
@@ -388,7 +416,7 @@ class WeekdayCalendarCase099NativeTest(
                         screen = ScreenCase(church, if (mode == "live") projected else parish,
                             if (mode == "live") imported else cold, mode)
                         generation++
-                        opened.clear(); sources.clear()
+                        opened.clear(); sources.clear(); manualBookChoices.clear(); allowManualBookChoice = false
                     }
                     val prefix = if (church) "church" else "today"
                     val container = if (church) "church_content" else "main_content"
@@ -398,7 +426,9 @@ class WeekdayCalendarCase099NativeTest(
                     val todayText = if (church) "15 ноября 2026, воскресенье" else "15 ноября"
                     val tomorrowText = if (church) "16 ноября 2026, понедельник" else "16 ноября"
                     val featured = expectedEvents.single { it.date == date.toString() }.let { ParishService(it.date, it.time, it.title, it.kind) }
-                    val offer = expectedEvents.single { it.date == "2026-11-21" }.let { ParishService(it.date, it.time, it.title, it.kind) }
+                    val offer = expectedEvents.single { it.date == "2026-11-18" }.let { ParishService(it.date, it.time, it.title, it.kind) }
+                    assertEquals(ParishService("2026-11-18", "09:00", "Молебен", "service_block"), offer)
+                    assertNull("Moleben has no supported book and cannot silently become Liturgy", ServiceBookSelection.kindFor(offer.title))
                     reveal(todayTag, container, true).assertIsSelected()
                     reveal(dateTag, container).assertTextEquals(todayText)
                     reveal("${prefix}_service_time", container).assertTextEquals(featured.time)
@@ -413,7 +443,7 @@ class WeekdayCalendarCase099NativeTest(
                     reveal(tomorrowTag, container, true).performClick().assertIsSelected()
                     reveal(dateTag, container).assertTextEquals(tomorrowText)
                     reveal("${prefix}_schedule_empty", container).assertTextEquals("Расписание прочитано не полностью")
-                    reveal("${prefix}_next_date_time", container).assertTextEquals("21 ноября 2026 · 09:00")
+                    reveal("${prefix}_next_date_time", container).assertTextEquals("18 ноября 2026 · 09:00")
                     reveal("${prefix}_next_title", container).assertTextEquals(offer.title)
                     compose.onNode(hasText("Одна из опубликованных служб") and hasAnyAncestor(hasTestTag("${prefix}_next_service")))
                         .assertExists()
@@ -421,10 +451,55 @@ class WeekdayCalendarCase099NativeTest(
                         .assertTextEquals("Сохраненное расписание - проверьте изменения")
                     compose.onAllNodes(hasClickAction() and hasAnyAncestor(hasTestTag("${prefix}_next_service")))
                         .assertCountEquals(2)
-                    checkBlock("$mode-$prefix-empty16-offer21", container, "${prefix}_open_next_service",
+                    compose.onAllNodes(hasText("Открыть литургию") and hasAnyAncestor(hasTestTag("${prefix}_next_service")))
+                        .assertCountEquals(0)
+                    compose.onAllNodes(hasText("Открыть службу") and hasAnyAncestor(hasTestTag("${prefix}_next_service")))
+                        .assertCountEquals(0)
+                    checkBlock("$mode-$prefix-empty16-offer18-moleben", container, "${prefix}_open_next_service",
                         "${prefix}_next_partial_schedule", "${prefix}_next_partial_source",
                         "Не все записи удалось прочитать. Проверьте выбранную дату на сайте храма",
-                        sourceUrl, offer, opened, sources)
+                        sourceUrl, offer, opened, sources, readingLabel = "Выбрать текст службы")
+                    compose.runOnIdle { assertTrue("The next occurrence callback must not choose a book", manualBookChoices.isEmpty()) }
+                    reveal(dateTag, container, true).assertTextEquals(tomorrowText)
+                    reveal(tomorrowTag, container, true).assertIsSelected()
+                    val beforeManualReading = compose.runOnIdle { opened.toList() }
+                    val beforeManualSources = compose.runOnIdle { sources.toList() }
+                    if (!church) {
+                        // The reading library belongs to the selected16Nov, independently of the next18Nov occurrence.
+                        reveal("today_other_services", container).assertIsEnabled().assertHeightIsAtLeast(48.dp).performClick()
+                        reveal("service_chooser_date", "service_book_chooser").assertTextEquals("Тексты на 16 ноября 2026")
+                        labelFits("service_chooser_date", "Тексты на 16 ноября 2026", taggedText = true)
+                        capture("$mode-$prefix-manual16-chooser")
+                        val manualLiturgy = reveal("service_book_choose_liturgy", "service_book_chooser")
+                            .assertIsEnabled().assertHeightIsAtLeast(48.dp)
+                        compose.runOnIdle { allowManualBookChoice = true }
+                        manualLiturgy.performClick()
+                        compose.runOnIdle {
+                            allowManualBookChoice = false
+                            assertEquals(listOf(Triple(LocalDate.of(2026, 11, 16), WorshipKind.LITURGY, false)), manualBookChoices)
+                            assertEquals(beforeManualReading, opened)
+                            assertEquals(beforeManualSources, sources)
+                        }
+                        compose.onNodeWithTag("service_book_chooser").assertDoesNotExist()
+                        observations += mapOf("label" to "$mode-$prefix-manual16-choice", "date" to "2026-11-16",
+                            "worship" to "LITURGY", "evening" to false, "nextOccurrenceUnchanged" to offer)
+                    } else {
+                        // Retain the previous exact21Nov Liturgy callback through the actual agenda, not as the next offer.
+                        val actual21 = expectedEvents.single { it.date == "2026-11-21" }
+                            .let { ParishService(it.date, it.time, it.title, it.kind) }
+                        reveal("church_agenda_open", container).assertIsEnabled().assertHeightIsAtLeast(48.dp).performClick()
+                        reveal(agendaServiceTag(actual21), "schedule_agenda_list").assertIsEnabled().assertHeightIsAtLeast(48.dp)
+                        capture("$mode-$prefix-agenda21-liturgy")
+                        compose.onNodeWithTag(agendaServiceTag(actual21)).performClick()
+                        compose.runOnIdle {
+                            assertEquals(beforeManualReading + actual21, opened)
+                            assertEquals(beforeManualSources, sources)
+                            assertTrue(manualBookChoices.isEmpty())
+                        }
+                        compose.onNodeWithTag("schedule_agenda").assertDoesNotExist()
+                        observations += mapOf("label" to "$mode-$prefix-agenda21-callback", "event" to actual21,
+                            "selectedDateUnchanged" to "2026-11-16")
+                    }
                     reveal(dateTag, container, true).assertTextEquals(tomorrowText)
                     reveal(tomorrowTag, container, true).assertIsSelected()
                 }
